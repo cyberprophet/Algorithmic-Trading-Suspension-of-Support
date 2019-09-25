@@ -24,6 +24,9 @@ namespace ShareInvest.Strategy
             trend_width = new List<double>(32768);
             short_ema = new List<double>(32768);
             long_ema = new List<double>(32768);
+            short_macd = new List<double>(32768);
+            long_macd = new List<double>(32768);
+            signal_macd = new List<double>(32768);
             ia = new Arcanum();
 
             SendSave += Storage;
@@ -32,8 +35,8 @@ namespace ShareInvest.Strategy
         {
             MakeMA(e.check, e.price);
 
-            int quotient, repeat = 0, quantity, sc = short_ema.Count, lc = long_ema.Count, wc = trend_width.Count;
-            double bo = 0, up = 0, ma = 0, sd, gap, width_gap, sb = sc > 1 ? short_ema[sc - 2] : 0, lb = lc > 1 ? long_ema[lc - 2] : 0, se = sc > 0 ? short_ema.Last() : 0, le = lc > 0 ? long_ema.Last() : 0;
+            int quotient, repeat = 0, quantity, sm = short_macd.Count, lm = long_macd.Count, si = signal_macd.Count, sc = short_ema.Count, lc = long_ema.Count, wc = trend_width.Count;
+            double bo = 0, up = 0, ma = 0, sd, gap, width_gap;
 
             i = lc > 0 ? new EMA() : new Indicator();
 
@@ -46,15 +49,21 @@ namespace ShareInvest.Strategy
             }
             if (e.check == false)
             {
-                short_ema[sc - 1] = i.Make(i.ShortPeriod, sc, e.price, sb);
-                long_ema[lc - 1] = i.Make(i.LongPeriod, lc, e.price, lb);
+                short_ema[sc - 1] = i.Make(i.ShortPeriod, sc, e.price, sc > 1 ? short_ema[sc - 2] : 0);
+                long_ema[lc - 1] = i.Make(i.LongPeriod, lc, e.price, lc > 1 ? long_ema[lc - 2] : 0);
                 trend_width[wc - 1] = b.Width(ma, up, bo);
+                short_macd[sm - 1] = i.Make(Short, sm, e.price, sm > 1 ? short_macd[sm - 2] : 0);
+                long_macd[lm - 1] = i.Make(Long, lm, e.price, lm > 1 ? long_macd[lm - 2] : 0);
+                signal_macd[si - 1] = i.Make(Signal, si, e.price, si > 1 ? signal_macd[si - 2] : 0);
             }
             else
             {
-                short_ema.Add(i.Make(i.ShortPeriod, sc, e.price, se));
-                long_ema.Add(i.Make(i.LongPeriod, lc, e.price, le));
+                short_ema.Add(i.Make(i.ShortPeriod, sc, e.price, sc > 0 ? short_ema.Last() : 0));
+                long_ema.Add(i.Make(i.LongPeriod, lc, e.price, lc > 0 ? long_ema.Last() : 0));
                 trend_width.Add(b.Width(ma, up, bo));
+                short_macd.Add(i.Make(Short, sm, e.price, sm > 0 ? short_macd.Last() : 0));
+                long_macd.Add(i.Make(Long, lm, e.price, lm > 0 ? long_macd.Last() : 0));
+                signal_macd.Add(i.Make(Signal, si, e.price, si > 0 ? signal_macd.Last() : 0));
             }
             gap = sc > 1 ? Trend() : 0;
             width_gap = wc > b.MidPeriod ? TrendWidth() : 0;
@@ -99,7 +108,7 @@ namespace ShareInvest.Strategy
         private int Order(double eg, double wg)
         {
             if (wg != 0 && !double.IsNaN(wg))
-                return eg + wg > 0 ? 1 : -1;
+                return eg + MACD(signal_macd.Count) > 0 ? (eg + MACD(signal_macd.Count) + wg > 0 ? 1 : -1) : (eg + MACD(signal_macd.Count) - wg > 0 ? 1 : -1);
 
             return 0;
         }
@@ -128,6 +137,10 @@ namespace ShareInvest.Strategy
             {
                 return count % b.MidPeriod;
             }
+        }
+        private double MACD(int count)
+        {
+            return short_macd[count - 1] - long_macd[count - 1] - signal_macd[count - 1] - (short_macd[count - 2] - long_macd[count - 2] - signal_macd[count - 2]);
         }
         private int count = -1;
     }

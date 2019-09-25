@@ -149,9 +149,28 @@ namespace ShareInvest.BackTest
         {
             get; set;
         }
+        protected int Short
+        {
+            get; private set;
+        }
+        protected int Long
+        {
+            get; private set;
+        }
+        protected int Signal
+        {
+            get; private set;
+        }
         private int amount;
         private long revenue;
         private double purchase_price;
         private double liquidation;
+
+        public Scalping()
+        {
+            Short = 12;
+            Long = 26;
+            Signal = 9;
+        }
     }
 }
