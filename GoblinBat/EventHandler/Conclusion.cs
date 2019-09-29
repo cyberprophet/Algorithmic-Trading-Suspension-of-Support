@@ -10,7 +10,7 @@ namespace ShareInvest.EventHandler
             {
                 return total;
             }
-            set
+            private set
             {
                 total += value;
             }
@@ -19,6 +19,7 @@ namespace ShareInvest.EventHandler
         {
             this.time = DateTime.ParseExact(time, "HHmmss", null);
             this.commission = commission;
+
             purchase = price;
             Total = commission;
         }
@@ -29,7 +30,7 @@ namespace ShareInvest.EventHandler
 
             amount = quantity;
         }
-        public DateTime time;
+        public DateTime time = DateTime.Now;
         public double commission;
 
         private static int amount;

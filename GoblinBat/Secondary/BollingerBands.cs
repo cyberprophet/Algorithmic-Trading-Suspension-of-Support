@@ -5,10 +5,10 @@ namespace ShareInvest.Secondary
 {
     public class BollingerBands
     {
-        public BollingerBands()
+        public BollingerBands(int mid, int sigma)
         {
-            MidPeriod = 20;
-            Sigma = 2;
+            MidPeriod = mid;
+            Sigma = sigma;
         }
         public double StandardDeviation(int period, double sma, double[] standard_deviation)
         {
@@ -42,11 +42,11 @@ namespace ShareInvest.Secondary
         }
         public int MidPeriod
         {
-            get; set;
+            get; private set;
         }
-        public int Sigma
+        private int Sigma
         {
-            protected get; set;
+            get; set;
         }
     }
 }
