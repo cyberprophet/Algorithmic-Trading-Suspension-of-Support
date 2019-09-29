@@ -11,6 +11,7 @@ namespace ShareInvest.Control
         {
             InitializeComponent();
 
+            gap = chart.Series["Gap"];
             revenue = chart.Series["Revenue"];
             commission = chart.Series["Commission"];
 
@@ -22,10 +23,22 @@ namespace ShareInvest.Control
         {
             int i = e.commission != 0 ? commission.Points.AddXY(e.time, e.commission) : revenue.Points.AddXY(e.time, e.Total);
 
+            if (e.Total > 0)
+            {
+                revenue.Points[i].Color = Color.Maroon;
+
+                return;
+            }
             if (e.Total < 0)
+            {
                 revenue.Points[i].Color = Color.Navy;
+
+                return;
+            }
+            gap.Points.AddXY(e.time, api.Gap);
         }
         private readonly Futures api;
+        private readonly Series gap;
         private readonly Series revenue;
         private readonly Series commission;
     }

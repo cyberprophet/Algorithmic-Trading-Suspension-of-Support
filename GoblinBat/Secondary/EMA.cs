@@ -23,11 +23,11 @@
         }
         public int ShortPeriod
         {
-            get; protected set;
+            get; private set;
         }
         public int LongPeriod
         {
-            get; protected set;
+            get; private set;
         }
     }
 }
