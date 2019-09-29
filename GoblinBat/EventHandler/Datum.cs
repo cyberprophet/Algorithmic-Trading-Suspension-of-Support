@@ -36,6 +36,11 @@ namespace ShareInvest.EventHandler
             price = double.Parse(arr[1]);
             volume = int.Parse(arr[6]);
         }
+        public Datum(bool check, double price)
+        {
+            this.check = check;
+            this.price = price;
+        }
         private bool Confirm(string date)
         {
             if (date.Equals(Register))
