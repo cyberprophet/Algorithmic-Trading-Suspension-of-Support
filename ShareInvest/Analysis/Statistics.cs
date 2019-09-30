@@ -27,9 +27,7 @@ namespace ShareInvest.Analysis
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
 
-                double price = double.Parse(arr[1]);
-
-                Send?.Invoke(this, new Datum(arr[0], price));
+                Send?.Invoke(this, new Datum(arr[0], double.Parse(arr[1])));
             }
             foreach (string rd in new Tick())
             {
@@ -38,9 +36,7 @@ namespace ShareInvest.Analysis
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
 
-                double price = double.Parse(arr[1]);
-
-                Send?.Invoke(this, new Datum(arr[0], price, int.Parse(arr[2])));
+                Send?.Invoke(this, new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
             }
             Send -= Analysis;
 
@@ -113,7 +109,7 @@ namespace ShareInvest.Analysis
 
                     return;
                 }
-                Order(DetermineProfit(e.price, e.volume, secret));
+                Order(Operate(DetermineProfit(e.price, e.volume, secret)));
             }
         }
         private int Operate(int quantity)

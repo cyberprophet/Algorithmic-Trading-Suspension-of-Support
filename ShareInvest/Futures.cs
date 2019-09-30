@@ -6,7 +6,6 @@ using ShareInvest.AutoMessageBox;
 using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
-using ShareInvest.Screen;
 using ShareInvest.Secret;
 
 namespace ShareInvest
@@ -38,11 +37,11 @@ namespace ShareInvest
         }
         public bool PurchaseQuantity
         {
-            get; set;
+            get; private set;
         }
         public bool SellQuantity
         {
-            get; set;
+            get; private set;
         }
         public void SetAPI(AxKHOpenAPI axAPI)
         {
@@ -138,22 +137,24 @@ namespace ShareInvest
                     sb.Append(axAPI.GetCommRealData(e.sRealKey, fid)).Append(',');
 
                 string[] fg = sb.ToString().Split(',');
+                int time = int.Parse(fg[0]);
 
-                if (int.Parse(fg[0].Substring(0, 4)) < 1535)
+                if (time < 153500 && time > 085959)
                 {
                     SellQuantity = int.Parse(fg[4]) < 50 ? true : false;
                     PurchaseQuantity = int.Parse(fg[8]) < 50 ? true : false;
+
+                    return;
                 }
-                else
+                if (time > 153459)
                 {
                     if (fg[52].Contains("-"))
                         fg[52] = fg[52].Substring(1);
 
-                    double price = double.Parse(fg[52]);
+                    Send?.Invoke(this, new Datum(false, double.Parse(fg[52]), Remaining));
 
-                    Send?.Invoke(this, new Datum(false, price, Remaining));
+                    return;
                 }
-                return;
             }
             if (e.sRealType.Equals("장시작시간"))
             {
@@ -210,7 +211,7 @@ namespace ShareInvest
 
                     if (e.sTrCode.Equals("opt50001"))
                     {
-                        remain = axAPI.GetCommData(e.sTrCode, e.sRQName, 0, "잔존일수").Trim();
+                        Remaining = axAPI.GetCommData(e.sTrCode, e.sRQName, 0, "잔존일수").Trim();
 
                         return;
                     }
@@ -248,9 +249,7 @@ namespace ShareInvest
 
                     SendExit?.Invoke(this, new ForceQuit(end));
                 }
-                string login = axAPI.GetLoginInfo("GetServerGubun");
-
-                if (!login.Equals("1"))
+                if (!axAPI.GetLoginInfo("GetServerGubun").Equals("1"))
                     Box.Show("It's a Real Investment.", "Caution", waiting);
 
                 axAPI.KOA_Functions("ShowAccountWindow", "");
@@ -306,18 +305,11 @@ namespace ShareInvest
             request = Delay.GetInstance(delay);
             request.Run();
         }
-        private string Remaining
-        {
-            get
-            {
-                return remain;
-            }
-            set
-            {
-                remain = value;
-            }
-        }
         private bool DeadLine
+        {
+            get; set;
+        }
+        private string Remaining
         {
             get; set;
         }
