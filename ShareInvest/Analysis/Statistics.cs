@@ -113,7 +113,7 @@ namespace ShareInvest.Analysis
 
                     return;
                 }
-                Order(Operate(DetermineProfit(e.price, e.volume, secret)));
+                Order(DetermineProfit(e.price, e.volume, secret));
             }
         }
         private int Operate(int quantity)
@@ -144,6 +144,12 @@ namespace ShareInvest.Analysis
 
             if (api.Quantity < 0 && api.PurchasePrice - 1.5e-1 > price)
                 return volume > secret / 4 ? 1 : 0;
+
+            if (api.Quantity > 0 && api.PurchaseQuantity == true && volume < -secret / 7)
+                return -1;
+
+            if (api.Quantity < 0 && api.SellQuantity == true && volume > secret / 7)
+                return 1;
 
             return 0;
         }

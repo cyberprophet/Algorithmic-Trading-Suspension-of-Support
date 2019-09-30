@@ -36,6 +36,14 @@ namespace ShareInvest
         {
             private get; set;
         }
+        public bool PurchaseQuantity
+        {
+            get; set;
+        }
+        public bool SellQuantity
+        {
+            get; set;
+        }
         public void SetAPI(AxKHOpenAPI axAPI)
         {
             this.axAPI = axAPI;
@@ -76,14 +84,8 @@ namespace ShareInvest
 
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
-            if (!e.sMsg.Contains("신규주문") && !e.sMsg.Contains("지연") && !e.sMsg.Contains("장종료"))
-            {
-                Box.Show(e.sMsg.Substring(8), "Caution", 895);
-
-                string[] arr = e.sRQName.Split(';');
-
-                OnReceiveOrder(Number.GetScreen(), arr[0], int.Parse(arr[1]));
-            }
+            if (!e.sMsg.Contains("신규주문"))
+                Box.Show(e.sMsg.Substring(8), "Caution", waiting / 3);
         }
         private void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {
@@ -112,8 +114,9 @@ namespace ShareInvest
                 string[] arr = sb.ToString().Split(',');
 
                 PurchasePrice = double.Parse(arr[5]);
+                Quantity = arr[9].Equals("1") ? -int.Parse(arr[4]) : int.Parse(arr[4]);
 
-                SendBalance?.Invoke(this, new Conclusion(int.Parse(arr[4]), PurchasePrice, arr[9]));
+                SendBalance?.Invoke(this, new Conclusion(Math.Abs(Quantity), PurchasePrice, arr[9]));
             }
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
@@ -136,7 +139,12 @@ namespace ShareInvest
 
                 string[] fg = sb.ToString().Split(',');
 
-                if (int.Parse(fg[0]) > 153459)
+                if (int.Parse(fg[0].Substring(0, 4)) < 1535)
+                {
+                    SellQuantity = int.Parse(fg[4]) < 50 ? true : false;
+                    PurchaseQuantity = int.Parse(fg[8]) < 50 ? true : false;
+                }
+                else
                 {
                     if (fg[52].Contains("-"))
                         fg[52] = fg[52].Substring(1);
@@ -202,7 +210,7 @@ namespace ShareInvest
 
                     if (e.sTrCode.Equals("opt50001"))
                     {
-                        Remaining = axAPI.GetCommData(e.sTrCode, e.sRQName, 0, "잔존일수").Trim();
+                        remain = axAPI.GetCommData(e.sTrCode, e.sRQName, 0, "잔존일수").Trim();
 
                         return;
                     }
@@ -300,7 +308,14 @@ namespace ShareInvest
         }
         private string Remaining
         {
-            get; set;
+            get
+            {
+                return remain;
+            }
+            set
+            {
+                remain = value;
+            }
         }
         private bool DeadLine
         {
