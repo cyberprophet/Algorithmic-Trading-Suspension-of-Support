@@ -67,14 +67,13 @@ namespace ShareInvest
         }
         public void OnReceiveOrder(string sScreenNo, string sSlbyTP, int lQty)
         {
-            rq = new Task(() =>
+            request.RequestTrData(new Task(() =>
             {
                 Error_code = axAPI.SendOrderFO(string.Concat(sSlbyTP, ';', lQty), sScreenNo, Account, Code, 1, sSlbyTP, "3", Math.Abs(lQty), "", "");
 
                 if (Error_code != 0)
                     new Error(Error_code);
-            });
-            request.RequestTrData(rq);
+            }));
         }
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<ForceQuit> SendExit;
@@ -218,17 +217,7 @@ namespace ShareInvest
                 }
                 if (e.sPrevNext.Equals("2") && !e.sTrCode.Equals("opt50001"))
                 {
-                    rq = new Task(() =>
-                    {
-                        tr = new Opt50028
-                        {
-                            Value = Code,
-                            RQName = Code + Retention,
-                            PrevNext = 2
-                        };
-                        InputValueRqData(tr);
-                    });
-                    request.RequestTrData(rq);
+                    request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = Code, RQName = Code + Retention, PrevNext = 2 })));
 
                     return;
                 }
@@ -276,33 +265,16 @@ namespace ShareInvest
         }
         private void Request()
         {
-            rq = new Task(() =>
-            {
-                tr = new Opt50028
-                {
-                    Value = Code,
-                    RQName = Code + Retention,
-                    PrevNext = 0
-                };
-                InputValueRqData(tr);
-            });
-            request.RequestTrData(rq);
+            request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = Code, RQName = Code + Retention, PrevNext = 0 })));
         }
         private void RemainingDay()
         {
-            rq = new Task(() =>
-            {
-                tr = new Opt50001
-                {
-                    Value = Code
-                };
-                InputValueRqData(tr);
-            });
-            request.RequestTrData(rq);
+            request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = Code })));
         }
         private Futures()
         {
             request = Delay.GetInstance(delay);
+
             request.Run();
         }
         private bool DeadLine
@@ -337,7 +309,5 @@ namespace ShareInvest
         private static Futures api;
 
         private AxKHOpenAPI axAPI;
-        private Task rq;
-        private TR tr;
     }
 }

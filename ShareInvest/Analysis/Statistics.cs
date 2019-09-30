@@ -44,6 +44,8 @@ namespace ShareInvest.Analysis
 
             api.Send += Analysis;
         }
+        public event EventHandler<Datum> Send;
+
         private void Analysis(object sender, Datum e)
         {
             MakeMA(e.check, e.price);
@@ -208,7 +210,5 @@ namespace ShareInvest.Analysis
 
         private int count = -1;
         private int screen;
-
-        public event EventHandler<Datum> Send;
     }
 }
