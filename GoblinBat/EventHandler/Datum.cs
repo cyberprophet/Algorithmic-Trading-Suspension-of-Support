@@ -9,6 +9,7 @@ namespace ShareInvest.EventHandler
 
         public bool check;
         public string time;
+        public string remaining;
         public double price;
         public int volume;
 
@@ -24,7 +25,7 @@ namespace ShareInvest.EventHandler
             this.price = price;
             this.volume = volume;
         }
-        public Datum(StringBuilder sb)
+        public Datum(StringBuilder sb, string remaining)
         {
             arr = sb.ToString().Split(',');
 
@@ -35,9 +36,12 @@ namespace ShareInvest.EventHandler
             time = arr[0];
             price = double.Parse(arr[1]);
             volume = int.Parse(arr[6]);
+
+            this.remaining = remaining;
         }
-        public Datum(bool check, double price)
+        public Datum(bool check, double price, string remaining)
         {
+            this.remaining = remaining;
             this.check = check;
             this.price = price;
         }
