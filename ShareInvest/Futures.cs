@@ -35,6 +35,10 @@ namespace ShareInvest
         {
             private get; set;
         }
+        public string Remaining
+        {
+            get; private set;
+        }
         public bool PurchaseQuantity
         {
             get; private set;
@@ -74,6 +78,10 @@ namespace ShareInvest
                 if (Error_code != 0)
                     new Error(Error_code);
             }));
+        }
+        public void RemainingDay()
+        {
+            request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = Code })));
         }
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<ForceQuit> SendExit;
@@ -126,7 +134,7 @@ namespace ShareInvest
                 foreach (int fid in new 선물시세())
                     sb.Append(axAPI.GetCommRealData(e.sRealKey, fid)).Append(',');
 
-                Send?.Invoke(this, new Datum(sb, Remaining));
+                Send?.Invoke(this, new Datum(sb));
 
                 return;
             }
@@ -140,8 +148,8 @@ namespace ShareInvest
 
                 if (time < 153500 && time > 085959)
                 {
-                    SellQuantity = int.Parse(fg[4]) < 50 ? true : false;
-                    PurchaseQuantity = int.Parse(fg[8]) < 50 ? true : false;
+                    SellQuantity = int.Parse(fg[4]) < 100 ? true : false;
+                    PurchaseQuantity = int.Parse(fg[8]) < 100 ? true : false;
 
                     return;
                 }
@@ -150,7 +158,7 @@ namespace ShareInvest
                     if (fg[52].Contains("-"))
                         fg[52] = fg[52].Substring(1);
 
-                    Send?.Invoke(this, new Datum(false, double.Parse(fg[52]), Remaining));
+                    Send?.Invoke(this, new Datum(false, double.Parse(fg[52])));
 
                     return;
                 }
@@ -267,10 +275,6 @@ namespace ShareInvest
         {
             request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = Code, RQName = Code + Retention, PrevNext = 0 })));
         }
-        private void RemainingDay()
-        {
-            request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = Code })));
-        }
         private Futures()
         {
             request = Delay.GetInstance(delay);
@@ -278,10 +282,6 @@ namespace ShareInvest
             request.Run();
         }
         private bool DeadLine
-        {
-            get; set;
-        }
-        private string Remaining
         {
             get; set;
         }

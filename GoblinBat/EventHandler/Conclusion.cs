@@ -15,11 +15,18 @@ namespace ShareInvest.EventHandler
                 total += value;
             }
         }
+        public double Commission
+        {
+            get; private set;
+        }
+        public DateTime Time
+        {
+            get; private set;
+        }
         public Conclusion(string time, int commission, double price)
         {
-            this.time = DateTime.ParseExact(time, "HHmmss", null);
-            this.commission = commission;
-
+            Time = DateTime.ParseExact(time, "HHmmss", null);
+            Commission = commission;
             purchase = price;
             Total = -commission;
         }
@@ -28,11 +35,9 @@ namespace ShareInvest.EventHandler
             if (quantity - amount < 0)
                 Total = (int)((classification.Equals("1") ? price - purchase : purchase - price) * 250000 * (amount - quantity));
 
+            Time = DateTime.Now;
             amount = quantity;
         }
-        public DateTime time = DateTime.Now;
-        public double commission;
-
         private static int amount;
         private static int total;
         private static double purchase;

@@ -4,11 +4,13 @@ namespace ShareInvest.EventHandler
 {
     public class ForceQuit : EventArgs
     {
-        public int quit;
-
         public ForceQuit(int quit)
         {
-            this.quit = quit;
+            Quit = quit;
+        }
+        public int Quit
+        {
+            get; private set;
         }
     }
 }

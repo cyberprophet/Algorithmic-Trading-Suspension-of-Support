@@ -5,22 +5,33 @@ namespace ShareInvest.EventHandler
 {
     public class Memorize : EventArgs
     {
-        public string date;
-        public string price;
-        public string volume;
-        public string sPrevNext;
-
+        public string Date
+        {
+            get; private set;
+        }
+        public string Price
+        {
+            get; private set;
+        }
+        public string Volume
+        {
+            get; private set;
+        }
+        public string SPrevNext
+        {
+            get; private set;
+        }
         public Memorize(StringBuilder sb)
         {
             string[] arr = sb.ToString().Split(',');
 
-            date = arr[2].Substring(2);
-            price = arr[0];
-            volume = arr[1];
+            Date = arr[2].Substring(2);
+            Price = arr[0];
+            Volume = arr[1];
         }
         public Memorize(string sPrevNext)
         {
-            this.sPrevNext = sPrevNext;
+            SPrevNext = sPrevNext;
         }
     }
 }

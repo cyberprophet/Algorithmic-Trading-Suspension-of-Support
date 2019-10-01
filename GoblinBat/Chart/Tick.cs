@@ -21,11 +21,8 @@ namespace ShareInvest.Chart
 
                 arr = list.Last().Split(',');
 
-                api = Futures.Get();
-
-                api.Retention = arr[0];
+                Futures.Get().Retention = arr[0];
             }
         }
-        private Futures api;
     }
 }

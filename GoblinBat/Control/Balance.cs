@@ -13,26 +13,23 @@ namespace ShareInvest.Control
             revenue = chart.Series["Revenue"];
             commission = chart.Series["Commission"];
 
-            api = Futures.Get();
-
-            api.SendBalance += Make;
+            Futures.Get().SendBalance += Make;
         }
         private void Make(object sender, Conclusion e)
         {
-            if (e.commission != 0)
+            if (e.Commission != 0)
             {
-                commission.Points.AddXY(e.time, e.commission);
+                commission.Points.AddXY(e.Time, e.Commission);
 
                 return;
             }
-            if (e.commission == 0)
+            if (e.Commission == 0)
             {
-                revenue.Points.AddXY(e.time, e.Total);
+                revenue.Points.AddXY(e.Time, e.Total);
 
                 return;
             }
         }
-        private readonly Futures api;
         private readonly Series revenue;
         private readonly Series commission;
     }

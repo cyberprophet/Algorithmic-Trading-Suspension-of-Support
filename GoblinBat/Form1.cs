@@ -31,7 +31,7 @@ namespace ShareInvest.GoblinBat
         }
         private void OnReceiveExit(object sender, ForceQuit e)
         {
-            if (e.quit == 1)
+            if (e.Quit == 1)
             {
                 Dispose();
 

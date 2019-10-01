@@ -48,7 +48,7 @@ namespace ShareInvest.Analysis
 
         private void Analysis(object sender, Datum e)
         {
-            MakeMA(e.check, e.price);
+            MakeMA(e.Check, e.Price);
 
             int repeat = 0, quantity, sc = short_ema.Count, lc = long_ema.Count, wc = trend_width.Count;
             double bo = 0, up = 0, ma = 0, sd, gap, width_gap;
@@ -60,58 +60,61 @@ namespace ShareInvest.Analysis
                 up = b.UpperLimit(ma, sd);
                 bo = b.BottomLine(ma, sd);
             }
-            if (e.check == false)
+            if (e.Check == false)
             {
-                short_ema[sc - 1] = ema.Make(ema.ShortPeriod, sc, e.price, sc > 1 ? short_ema[sc - 2] : 0);
-                long_ema[lc - 1] = ema.Make(ema.LongPeriod, lc, e.price, lc > 1 ? long_ema[lc - 2] : 0);
+                short_ema[sc - 1] = ema.Make(ema.ShortPeriod, sc, e.Price, sc > 1 ? short_ema[sc - 2] : 0);
+                long_ema[lc - 1] = ema.Make(ema.LongPeriod, lc, e.Price, lc > 1 ? long_ema[lc - 2] : 0);
                 trend_width[wc - 1] = b.Width(ma, up, bo);
             }
             else
             {
                 if (sc != 0)
                 {
-                    short_ema.Add(ema.Make(ema.ShortPeriod, sc, e.price, sc > 0 ? short_ema[sc - 1] : 0));
-                    long_ema.Add(ema.Make(ema.LongPeriod, lc, e.price, lc > 0 ? long_ema[lc - 1] : 0));
+                    short_ema.Add(ema.Make(ema.ShortPeriod, sc, e.Price, sc > 0 ? short_ema[sc - 1] : 0));
+                    long_ema.Add(ema.Make(ema.LongPeriod, lc, e.Price, lc > 0 ? long_ema[lc - 1] : 0));
                 }
                 else
                 {
-                    short_ema.Add(ema.Make(e.price));
-                    long_ema.Add(ema.Make(e.price));
+                    short_ema.Add(ema.Make(e.Price));
+                    long_ema.Add(ema.Make(e.Price));
                 }
                 trend_width.Add(b.Width(ma, up, bo));
             }
             gap = sc > 1 ? Trend() : 0;
-            width_gap = wc > b.MidPeriod ? TrendWidth() : 0;
+            width_gap = wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0;
 
             if (api != null)
             {
-                if (e.remaining.Equals("1") && (e.time.Equals("151957") || e.time.Equals("151958") || e.time.Equals("151959") || e.time.Equals("152000")) || e.time.Equals("154458") || e.time.Equals("154459") || e.time.Equals("154500") || e.time.Equals("154454") || e.time.Equals("154455") || e.time.Equals("154456") || e.time.Equals("154457"))
+                if (api.Remaining == null)
+                    api.RemainingDay();
+
+                if (e.Time.Equals("154458") || e.Time.Equals("154459") || e.Time.Equals("154500") || e.Time.Equals("154454") || e.Time.Equals("154455") || e.Time.Equals("154456") || e.Time.Equals("154457") || (e.Time.Equals("151957") || e.Time.Equals("151958") || e.Time.Equals("151959") || e.Time.Equals("152000")) && api.Remaining.Equals("1"))
                 {
                     while (api.Quantity != 0)
                         Order(Operate(api.Quantity > 0 ? -1 : 1));
 
                     return;
                 }
-                if (e.volume > secret || e.volume < -secret)
+                if (e.Volume > secret || e.Volume < -secret)
                 {
                     quantity = Order(gap, width_gap);
 
-                    if (Math.Abs(e.volume) < Math.Abs(e.volume + quantity))
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
                     {
-                        MaximumQuantity = (int)(basicAsset / (e.price * tm * margin));
+                        MaximumQuantity = (int)(basicAsset / (e.Price * tm * margin));
 
                         while (Math.Abs(api.Quantity + quantity) < MaximumQuantity)
                             repeat += Operate(quantity);
                     }
                     else
-                        while (api.Quantity != 0 && (api.Quantity > 0 && e.volume < -secret && api.PurchasePrice >= e.price || api.Quantity < 0 && e.volume > secret && api.PurchasePrice <= e.price))
-                            repeat += Operate(e.volume < 0 ? -1 : 1);
+                        while (api.Quantity != 0 && (api.Quantity > 0 && e.Volume < -secret && api.PurchasePrice >= e.Price || api.Quantity < 0 && e.Volume > secret && api.PurchasePrice <= e.Price))
+                            repeat += Operate(e.Volume < 0 ? -1 : 1);
 
                     Order(repeat);
 
                     return;
                 }
-                Order(Operate(DetermineProfit(e.price, e.volume, secret)));
+                Order(Operate(DetermineProfit(e.Price, e.Volume, secret)));
             }
         }
         private int Operate(int quantity)
@@ -138,15 +141,15 @@ namespace ShareInvest.Analysis
         private int DetermineProfit(double price, int volume, int secret)
         {
             if (api.Quantity > 0 && api.PurchasePrice + 1.5e-1 < price)
-                return volume < -secret / 4 ? -1 : 0;
+                return volume < -secret / 3 ? -1 : 0;
 
             if (api.Quantity < 0 && api.PurchasePrice - 1.5e-1 > price)
-                return volume > secret / 4 ? 1 : 0;
+                return volume > secret / 3 ? 1 : 0;
 
-            if (api.Quantity > 0 && api.PurchaseQuantity == true && volume < -secret / 7)
+            if (api.Quantity > 0 && api.PurchaseQuantity == true && volume < -secret / 3)
                 return -1;
 
-            if (api.Quantity < 0 && api.SellQuantity == true && volume > secret / 7)
+            if (api.Quantity < 0 && api.SellQuantity == true && volume > secret / 3)
                 return 1;
 
             return 0;
@@ -158,10 +161,8 @@ namespace ShareInvest.Analysis
 
             return 0;
         }
-        private double TrendWidth()
+        private double TrendWidth(int wc)
         {
-            int wc = trend_width.Count;
-
             return trend_width[wc - 1] - trend_width[wc - 2];
         }
         private void MakeMA(bool check, double price)

@@ -5,45 +5,50 @@ namespace ShareInvest.EventHandler
 {
     public class Datum : EventArgs
     {
-        private readonly string[] arr;
-
-        public bool check;
-        public string time;
-        public string remaining;
-        public double price;
-        public int volume;
-
+        public bool Check
+        {
+            get; private set;
+        }
+        public string Time
+        {
+            get; private set;
+        }
+        public double Price
+        {
+            get; private set;
+        }
+        public int Volume
+        {
+            get; private set;
+        }
         public Datum(string check, double price)
         {
-            this.check = Confirm(check.Substring(6, 2));
-            this.price = price;
+            Check = Confirm(check.Substring(6, 2));
+            Price = price;
         }
         public Datum(string time, double price, int volume)
         {
-            check = Confirm(time.Substring(9, 1));
-            this.time = time;
-            this.price = price;
-            this.volume = volume;
+            Check = Confirm(time.Substring(9, 1));
+            Time = time;
+            Price = price;
+            Volume = volume;
         }
-        public Datum(StringBuilder sb, string remaining)
+        public Datum(StringBuilder sb)
         {
             arr = sb.ToString().Split(',');
 
             if (arr[1].Contains("-"))
                 arr[1] = arr[1].Substring(1);
 
-            check = Confirm(arr[0].Substring(0, 4));
-            time = arr[0];
-            price = double.Parse(arr[1]);
-            volume = int.Parse(arr[6]);
-
-            this.remaining = remaining;
+            Check = Confirm(arr[0].Substring(0, 4));
+            Time = arr[0];
+            Price = double.Parse(arr[1]);
+            Volume = int.Parse(arr[6]);
         }
-        public Datum(bool check, double price, string remaining)
+        public Datum(bool check, double price)
         {
-            this.remaining = remaining;
-            this.check = check;
-            this.price = price;
+            Check = check;
+            Price = price;
         }
         private bool Confirm(string date)
         {
@@ -58,5 +63,6 @@ namespace ShareInvest.EventHandler
         {
             get; set;
         }
+        private readonly string[] arr;
     }
 }

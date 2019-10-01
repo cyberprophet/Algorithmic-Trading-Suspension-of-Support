@@ -17,19 +17,19 @@ namespace ShareInvest
         }
         private void OnReceiveMemorize(object sender, Memorize e)
         {
-            if (memo.Count > 0 && e.sPrevNext == null)
+            if (memo.Count > 0 && e.SPrevNext == null)
             {
-                memo.Insert(0, string.Concat(e.date, ",", e.price, ",", e.volume));
+                memo.Insert(0, string.Concat(e.Date, ",", e.Price, ",", e.Volume));
 
                 return;
             }
-            if (memo.Count == 0 && e.sPrevNext == null)
+            if (memo.Count == 0 && e.SPrevNext == null)
             {
-                memo.Add(string.Concat(e.date, ",", e.price, ",", e.volume));
+                memo.Add(string.Concat(e.Date, ",", e.Price, ",", e.Volume));
 
                 return;
             }
-            if (e.sPrevNext.Equals("0"))
+            if (e.SPrevNext.Equals("0"))
                 act.BeginInvoke(act.EndInvoke, null);
         }
         private void Save()
