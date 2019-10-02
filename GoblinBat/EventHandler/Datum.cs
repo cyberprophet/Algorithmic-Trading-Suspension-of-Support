@@ -23,7 +23,10 @@ namespace ShareInvest.EventHandler
         }
         public Datum(string check, double price)
         {
-            Check = Confirm(check.Substring(6, 2));
+            check = check.Substring(6, 2);
+
+            Time = check;
+            Check = Confirm(check);
             Price = price;
         }
         public Datum(string time, double price, int volume)
@@ -45,7 +48,7 @@ namespace ShareInvest.EventHandler
             Price = double.Parse(arr[1]);
             Volume = int.Parse(arr[6]);
         }
-        public Datum(bool check,string time, double price)
+        public Datum(bool check, string time, double price)
         {
             Time = time;
             Check = check;

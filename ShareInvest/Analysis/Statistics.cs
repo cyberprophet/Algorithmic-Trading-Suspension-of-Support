@@ -14,9 +14,11 @@ namespace ShareInvest.Analysis
             b = new BollingerBands(20, 2);
             ema = new EMA(5, 60);
             sma = new double[b.MidPeriod];
-            trend_width = new List<double>(16384);
-            short_ema = new List<double>(16384);
-            long_ema = new List<double>(16384);
+            trend_width = new List<double>(32768);
+            short_ema = new List<double>(32768);
+            long_ema = new List<double>(32768);
+            shortDay = new List<double>(512);
+            longDay = new List<double>(512);
 
             Send += Analysis;
 
@@ -50,8 +52,8 @@ namespace ShareInvest.Analysis
         {
             MakeMA(e.Check, e.Price);
 
-            int repeat = 0, quantity, sc = short_ema.Count, lc = long_ema.Count, wc = trend_width.Count;
-            double bo = 0, up = 0, ma = 0, sd, gap, width_gap;
+            int quantity, sc = short_ema.Count, lc = long_ema.Count, wc = trend_width.Count, trend = Analysis(e.Time, e.Price);
+            double bo = 0, up = 0, ma = 0, sd;
 
             if (count > b.MidPeriod - 1)
             {
@@ -80,84 +82,57 @@ namespace ShareInvest.Analysis
                 }
                 trend_width.Add(b.Width(ma, up, bo));
             }
-            gap = sc > 1 ? Trend() : 0;
-            width_gap = wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0;
-
             if (api != null)
             {
+                if (e.Volume > secret || e.Volume < -secret)
+                {
+                    quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
+
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * tm * margin)))
+                        api.OnReceiveOrder(ScreenNo, dic[quantity]);
+
+                    return;
+                }
                 if (api.Remaining == null)
                     api.RemainingDay();
 
                 if (e.Time.Equals("154458") || e.Time.Equals("154459") || e.Time.Equals("154500") || e.Time.Equals("154454") || e.Time.Equals("154455") || e.Time.Equals("154456") || e.Time.Equals("154457") || (e.Time.Equals("151957") || e.Time.Equals("151958") || e.Time.Equals("151959") || e.Time.Equals("152000")) && api.Remaining.Equals("1"))
-                {
-                    while (api.Quantity != 0)
-                        Order(Operate(api.Quantity > 0 ? -1 : 1));
-
-                    return;
-                }
-                if (e.Volume > secret || e.Volume < -secret)
-                {
-                    quantity = Order(gap, width_gap);
-
-                    if (quantity > 0 ? api.PurchaseQuantity == false : api.SellQuantity == false && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
-                    {
-                        MaximumQuantity = (int)(basicAsset / (e.Price * tm * margin));
-
-                        while (Math.Abs(api.Quantity + quantity) < MaximumQuantity)
-                            repeat += Operate(quantity);
-
-                        Order(repeat);
-
-                        return;
-                    }
-                }
-                if (api.Quantity > 0 && e.Volume < -secret && api.PurchasePrice >= e.Price || api.Quantity < 0 && e.Volume > secret && api.PurchasePrice <= e.Price)
-                {
-                    while (api.Quantity != 0)
-                        repeat += Operate(e.Volume < 0 ? -1 : 1);
-
-                    Order(repeat);
-
-                    return;
-                }
-                Order(Operate(DetermineProfit(e.Price, e.Volume, secret)));
+                    for (quantity = Math.Abs(api.Quantity); quantity > 0; quantity--)
+                        api.OnReceiveOrder(ScreenNo, dic[api.Quantity > 0 ? -1 : 1]);
             }
         }
-        private int Operate(int quantity)
+        private int Analysis(string time, double price)
         {
-            api.Quantity += quantity;
+            bool check = time.Length == 6 && !time.Equals("090000") ? false : time.Length == 2 ? true : Confirm(time.Substring(0, 6));
+            int sc = shortDay.Count, lc = longDay.Count;
 
-            return quantity;
-        }
-        private void Order(int repeat)
-        {
-            if (repeat != 0)
+            if (check == false)
             {
-                if (repeat > MaximumQuantity || repeat < -MaximumQuantity)
-                {
-                    api.OnReceiveOrder(ScreenNo, dic[repeat < 0 ? -1 : 1], MaximumQuantity);
-
-                    Order(repeat > 0 ? repeat - MaximumQuantity : repeat + MaximumQuantity);
-
-                    return;
-                }
-                api.OnReceiveOrder(ScreenNo, dic[repeat < 0 ? -1 : 1], repeat);
+                shortDay[sc - 1] = ema.Make(ema.ShortPeriod, sc, price, sc > 1 ? shortDay[sc - 2] : 0);
+                longDay[lc - 1] = ema.Make(ema.LongPeriod, lc, price, lc > 1 ? longDay[lc - 2] : 0);
             }
-        }
-        private int DetermineProfit(double price, int volume, int secret)
-        {
-            if (volume < -secret / 3 && api.Quantity > 0 && (api.PurchaseQuantity == true || api.PurchasePrice - 5d / volume < price))
-                return -1;
+            else
+            {
+                if (sc != 0)
+                {
+                    shortDay.Add(ema.Make(ema.ShortPeriod, sc, price, sc > 0 ? shortDay[sc - 1] : 0));
+                    longDay.Add(ema.Make(ema.LongPeriod, lc, price, lc > 0 ? longDay[lc - 1] : 0));
+                }
+                else
+                {
+                    shortDay.Add(ema.Make(price));
+                    longDay.Add(ema.Make(price));
+                }
+            }
+            sc = shortDay.Count;
+            lc = longDay.Count;
 
-            if (volume > secret / 3 && api.Quantity < 0 && (api.SellQuantity == true || api.PurchasePrice + 5d / volume > price))
-                return 1;
-
-            return 0;
+            return sc > 1 ? shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]) > 0 ? 1 : -1 : 0;
         }
-        private int Order(double eg, double wg)
+        private int Order(double eg, double wg, int trend)
         {
             if (wg != 0 && !double.IsNaN(wg))
-                return eg > 0 ? 1 : -1;
+                return eg > 0 ? 1 + trend : -1 + trend;
 
             return 0;
         }
@@ -178,6 +153,15 @@ namespace ShareInvest.Analysis
 
             return short_ema[sc - 1] - long_ema[lc - 1] - (short_ema[sc - 2] - long_ema[lc - 2]);
         }
+        private bool Confirm(string date)
+        {
+            if (date.Equals(Register))
+                return false;
+
+            Register = date;
+
+            return true;
+        }
         private int Count
         {
             get
@@ -185,16 +169,16 @@ namespace ShareInvest.Analysis
                 return count % b.MidPeriod;
             }
         }
-        private int MaximumQuantity
-        {
-            get; set;
-        }
         private string ScreenNo
         {
             get
             {
                 return (screen++ % 20 + 1000).ToString();
             }
+        }
+        private static string Register
+        {
+            get; set;
         }
         private readonly Dictionary<int, string> dic = new Dictionary<int, string>()
         {
@@ -207,6 +191,8 @@ namespace ShareInvest.Analysis
         private readonly List<double> trend_width;
         private readonly List<double> short_ema;
         private readonly List<double> long_ema;
+        private readonly List<double> shortDay;
+        private readonly List<double> longDay;
         private readonly double[] sma;
 
         private int count = -1;

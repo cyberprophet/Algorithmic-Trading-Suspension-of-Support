@@ -69,11 +69,11 @@ namespace ShareInvest
 
             SendExit?.Invoke(this, new ForceQuit(end));
         }
-        public void OnReceiveOrder(string sScreenNo, string sSlbyTP, int lQty)
+        public void OnReceiveOrder(string sScreenNo, string sSlbyTP)
         {
             request.RequestTrData(new Task(() =>
             {
-                Error_code = axAPI.SendOrderFO(string.Concat(sSlbyTP, ';', lQty), sScreenNo, Account, Code, 1, sSlbyTP, "3", Math.Abs(lQty), "", "");
+                Error_code = axAPI.SendOrderFO("GoblinBat", sScreenNo, Account, Code, 1, sSlbyTP, "3", 1, "", "");
 
                 if (Error_code != 0)
                     new Error(Error_code);
@@ -251,7 +251,7 @@ namespace ShareInvest
 
                 axAPI.KOA_Functions("ShowAccountWindow", "");
                 RemainingDay();
-
+                
                 return;
             }
             Box.Show("등록되지 않은 사용자이거나\n로그인이 원활하지 않습니다.\n프로그램을 종료합니다.", "오류", waiting);
