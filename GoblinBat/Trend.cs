@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
 using ShareInvest.Analysis;
+using ShareInvest.AutoMessageBox;
+using ShareInvest.BackTest;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest.GoblinBat
@@ -8,20 +10,50 @@ namespace ShareInvest.GoblinBat
     public partial class GoblinBat : Form
     {
         private readonly Futures api;
+        private readonly DialogResult dr;
 
         public GoblinBat()
         {
             InitializeComponent();
 
-            api = Futures.Get();
+            dr = Choose.Show("Please Select the Button You Want to Proceed.", "Choose", "Invest", "Exit", "BackTest");
 
-            new Statistics();
-            new Temporary();
+            if (dr == DialogResult.Yes)
+            {
+                api = Futures.Get();
 
-            timer.Start();
-            api.SetAPI(axAPI);
-            api.StartProgress();
-            api.SendExit += OnReceiveExit;
+                new Statistics();
+                new Temporary();
+
+                timer.Start();
+                api.SetAPI(axAPI);
+                api.StartProgress();
+                api.SendExit += OnReceiveExit;
+            }
+            else if (dr == DialogResult.No)
+            {
+                Dispose();
+
+                Environment.Exit(0);
+            }
+            else
+            {
+                axAPI.Dispose();
+                timer.Dispose();
+
+                int i, l = 100;
+
+                for (i = 1; i < l; i++)
+                    new Statistics(i);
+
+                new Storage();
+
+                Box.Show("Complete...!!", "Notice", 3750);
+
+                Dispose();
+
+                Environment.Exit(0);
+            }
         }
         private void GoblinBat_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -40,9 +72,9 @@ namespace ShareInvest.GoblinBat
         }
         private void Timer_Tick(object sender, EventArgs e)
         {
-            Opacity += 7e-5;
+            Opacity += 7e-6;
 
-            if (Opacity > 3.5e-1)
+            if (Opacity > 2.5e-1)
             {
                 timer.Stop();
                 timer.Dispose();

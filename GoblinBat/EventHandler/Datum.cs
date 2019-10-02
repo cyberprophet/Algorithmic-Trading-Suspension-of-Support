@@ -5,6 +5,10 @@ namespace ShareInvest.EventHandler
 {
     public class Datum : EventArgs
     {
+        public int Reaction
+        {
+            get; private set;
+        }
         public bool Check
         {
             get; private set;
@@ -29,9 +33,26 @@ namespace ShareInvest.EventHandler
             Check = Confirm(check);
             Price = price;
         }
+        public Datum(int reaction, string check, double price)
+        {
+            check = check.Substring(6, 2);
+
+            Reaction = reaction;
+            Time = check;
+            Check = Confirm(check);
+            Price = price;
+        }
         public Datum(string time, double price, int volume)
         {
             Check = Confirm(time.Substring(9, 1));
+            Time = time;
+            Price = price;
+            Volume = volume;
+        }
+        public Datum(int reaction, string time, double price, int volume)
+        {
+            Check = Confirm(time.Substring(9, 1));
+            Reaction = reaction;
             Time = time;
             Price = price;
             Volume = volume;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ShareInvest.BackTest;
 using ShareInvest.Chart;
 using ShareInvest.EventHandler;
 using ShareInvest.Secondary;
@@ -9,6 +10,41 @@ namespace ShareInvest.Analysis
 {
     public class Statistics : Conceal
     {
+        public Statistics(int reaction)
+        {
+            info = new Information();
+            b = new BollingerBands(20, 2);
+            ema = new EMA(5, 60);
+            sma = new double[b.MidPeriod];
+            trend_width = new List<double>(32768);
+            short_ema = new List<double>(32768);
+            long_ema = new List<double>(32768);
+            shortDay = new List<double>(512);
+            longDay = new List<double>(512);
+            act = new Action(() => info.Log(reaction));
+
+            Send += Analysis;
+
+            foreach (string rd in new Daily())
+            {
+                string[] arr = rd.Split(',');
+
+                if (arr[1].Contains("-"))
+                    arr[1] = arr[1].Substring(1);
+
+                Send?.Invoke(this, new Datum(reaction, arr[0], double.Parse(arr[1])));
+            }
+            foreach (string rd in new Tick())
+            {
+                string[] arr = rd.Split(',');
+
+                if (arr[1].Contains("-"))
+                    arr[1] = arr[1].Substring(1);
+
+                Send?.Invoke(this, new Datum(reaction, arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
+            }
+            act.BeginInvoke(act.EndInvoke, null);
+        }
         public Statistics()
         {
             b = new BollingerBands(20, 2);
@@ -70,7 +106,7 @@ namespace ShareInvest.Analysis
             }
             else
             {
-                if (sc != 0)
+                if (sc > 0)
                 {
                     short_ema.Add(ema.Make(ema.ShortPeriod, sc, e.Price, sc > 0 ? short_ema[sc - 1] : 0));
                     long_ema.Add(ema.Make(ema.LongPeriod, lc, e.Price, lc > 0 ? long_ema[lc - 1] : 0));
@@ -89,7 +125,7 @@ namespace ShareInvest.Analysis
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
                     if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * tm * margin)))
-                        api.OnReceiveOrder(ScreenNo, dic[quantity]);
+                        api.OnReceiveOrder(ScreenNo, dic[quantity > 0 ? 1 : -1]);
 
                     return;
                 }
@@ -99,6 +135,23 @@ namespace ShareInvest.Analysis
                 if (e.Time.Equals("154458") || e.Time.Equals("154459") || e.Time.Equals("154500") || e.Time.Equals("154454") || e.Time.Equals("154455") || e.Time.Equals("154456") || e.Time.Equals("154457") || (e.Time.Equals("151957") || e.Time.Equals("151958") || e.Time.Equals("151959") || e.Time.Equals("152000")) && api.Remaining.Equals("1"))
                     for (quantity = Math.Abs(api.Quantity); quantity > 0; quantity--)
                         api.OnReceiveOrder(ScreenNo, dic[api.Quantity > 0 ? -1 : 1]);
+            }
+            else if (e.Reaction > 0)
+            {
+                if (e.Time.Length > 2 && e.Time.Substring(6, 4).Equals("1545") || Array.Exists(info.Remaining, o => o.Equals(e.Time)))
+                {
+                    while (info.Quantity != 0)
+                        info.Operate(e.Price, info.Quantity > 0 ? -1 : 1);
+
+                    info.Save(e.Time);
+                }
+                else if (e.Volume > e.Reaction || e.Volume < -e.Reaction)
+                {
+                    quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
+
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * tm * margin)))
+                        info.Operate(e.Price, quantity > 0 ? 1 : -1);
+                }
             }
         }
         private int Analysis(string time, double price)
@@ -110,13 +163,20 @@ namespace ShareInvest.Analysis
             {
                 shortDay[sc - 1] = ema.Make(ema.ShortPeriod, sc, price, sc > 1 ? shortDay[sc - 2] : 0);
                 longDay[lc - 1] = ema.Make(ema.LongPeriod, lc, price, lc > 1 ? longDay[lc - 2] : 0);
+
+                return shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]) > 0 ? 1 : -1;
             }
-            else
+            if (check)
             {
-                if (sc != 0)
+                if (sc > 0)
                 {
                     shortDay.Add(ema.Make(ema.ShortPeriod, sc, price, sc > 0 ? shortDay[sc - 1] : 0));
                     longDay.Add(ema.Make(ema.LongPeriod, lc, price, lc > 0 ? longDay[lc - 1] : 0));
+
+                    sc = shortDay.Count;
+                    lc = longDay.Count;
+
+                    return shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]) > 0 ? 1 : -1;
                 }
                 else
                 {
@@ -185,6 +245,8 @@ namespace ShareInvest.Analysis
             {-1, "1"},
             {1, "2"},
         };
+        private readonly Action act;
+        private readonly Information info;
         private readonly Futures api;
         private readonly BollingerBands b;
         private readonly EMA ema;
