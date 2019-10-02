@@ -99,16 +99,22 @@ namespace ShareInvest.Analysis
                 {
                     quantity = Order(gap, width_gap);
 
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
+                    if (quantity > 0 ? api.PurchaseQuantity == false : api.SellQuantity == false && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
                     {
                         MaximumQuantity = (int)(basicAsset / (e.Price * tm * margin));
 
                         while (Math.Abs(api.Quantity + quantity) < MaximumQuantity)
                             repeat += Operate(quantity);
+
+                        Order(repeat);
+
+                        return;
                     }
-                    else
-                        while (api.Quantity != 0 && (api.Quantity > 0 && e.Volume < -secret && api.PurchasePrice >= e.Price || api.Quantity < 0 && e.Volume > secret && api.PurchasePrice <= e.Price))
-                            repeat += Operate(e.Volume < 0 ? -1 : 1);
+                }
+                if (api.Quantity > 0 && e.Volume < -secret && api.PurchasePrice >= e.Price || api.Quantity < 0 && e.Volume > secret && api.PurchasePrice <= e.Price)
+                {
+                    while (api.Quantity != 0)
+                        repeat += Operate(e.Volume < 0 ? -1 : 1);
 
                     Order(repeat);
 
@@ -140,16 +146,10 @@ namespace ShareInvest.Analysis
         }
         private int DetermineProfit(double price, int volume, int secret)
         {
-            if (api.Quantity > 0 && api.PurchasePrice + 1.5e-1 < price)
-                return volume < -secret / 3 ? -1 : 0;
-
-            if (api.Quantity < 0 && api.PurchasePrice - 1.5e-1 > price)
-                return volume > secret / 3 ? 1 : 0;
-
-            if (api.Quantity > 0 && api.PurchaseQuantity == true && volume < -secret / 3)
+            if (volume < -secret / 3 && api.Quantity > 0 && (api.PurchaseQuantity == true || api.PurchasePrice - 5d / volume < price))
                 return -1;
 
-            if (api.Quantity < 0 && api.SellQuantity == true && volume > secret / 3)
+            if (volume > secret / 3 && api.Quantity < 0 && (api.SellQuantity == true || api.PurchasePrice + 5d / volume > price))
                 return 1;
 
             return 0;

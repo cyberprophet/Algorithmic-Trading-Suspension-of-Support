@@ -45,8 +45,9 @@ namespace ShareInvest.EventHandler
             Price = double.Parse(arr[1]);
             Volume = int.Parse(arr[6]);
         }
-        public Datum(bool check, double price)
+        public Datum(bool check,string time, double price)
         {
+            Time = time;
             Check = check;
             Price = price;
         }

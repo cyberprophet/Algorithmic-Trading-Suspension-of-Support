@@ -17,13 +17,13 @@ namespace ShareInvest.Control
         }
         private void Make(object sender, Conclusion e)
         {
-            if (e.Commission != 0)
+            if (e.Commission != 0 && e.Time != null)
             {
                 commission.Points.AddXY(e.Time, e.Commission);
 
                 return;
             }
-            if (e.Commission == 0)
+            if (e.Commission == 0 && e.Time != null)
             {
                 revenue.Points.AddXY(e.Time, e.Total);
 

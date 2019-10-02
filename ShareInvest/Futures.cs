@@ -158,7 +158,7 @@ namespace ShareInvest
                     if (fg[52].Contains("-"))
                         fg[52] = fg[52].Substring(1);
 
-                    Send?.Invoke(this, new Datum(false, double.Parse(fg[52])));
+                    Send?.Invoke(this, new Datum(false, fg[0], double.Parse(fg[52])));
 
                     return;
                 }

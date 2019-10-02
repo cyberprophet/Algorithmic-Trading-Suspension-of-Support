@@ -7,6 +7,13 @@ namespace ShareInvest.GoblinBat
 {
     public partial class GoblinBat : Form
     {
+        /// <summary>
+        /// private readonly Futures api;
+        /// 
+        /// api = Futures.Get();
+        /// 
+        /// new Statistics();
+        /// </summary>        
         private readonly Futures api;
 
         public GoblinBat()
