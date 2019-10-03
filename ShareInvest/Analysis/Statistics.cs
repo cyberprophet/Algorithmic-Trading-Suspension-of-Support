@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using ShareInvest.BackTest;
 using ShareInvest.Chart;
+using ShareInvest.Control;
 using ShareInvest.EventHandler;
 using ShareInvest.Secondary;
 using ShareInvest.Secret;
@@ -12,6 +13,7 @@ namespace ShareInvest.Analysis
     {
         public Statistics(int reaction)
         {
+            bal = new Balance();
             info = new Information();
             b = new BollingerBands(20, 2);
             ema = new EMA(5, 60);
@@ -22,7 +24,6 @@ namespace ShareInvest.Analysis
             shortDay = new List<double>(512);
             longDay = new List<double>(512);
             act = new Action(() => info.Log(reaction));
-
             Send += Analysis;
 
             foreach (string rd in new Daily())
@@ -47,6 +48,7 @@ namespace ShareInvest.Analysis
         }
         public Statistics()
         {
+            bal = new Balance();
             b = new BollingerBands(20, 2);
             ema = new EMA(5, 60);
             sma = new double[b.MidPeriod];
@@ -55,7 +57,6 @@ namespace ShareInvest.Analysis
             long_ema = new List<double>(32768);
             shortDay = new List<double>(512);
             longDay = new List<double>(512);
-
             Send += Analysis;
 
             foreach (string rd in new Daily())
@@ -77,9 +78,7 @@ namespace ShareInvest.Analysis
                 Send?.Invoke(this, new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
             }
             Send -= Analysis;
-
             api = Futures.Get();
-
             api.Send += Analysis;
         }
         public event EventHandler<Datum> Send;
@@ -164,7 +163,7 @@ namespace ShareInvest.Analysis
                 shortDay[sc - 1] = ema.Make(ema.ShortPeriod, sc, price, sc > 1 ? shortDay[sc - 2] : 0);
                 longDay[lc - 1] = ema.Make(ema.LongPeriod, lc, price, lc > 1 ? longDay[lc - 2] : 0);
 
-                return shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]) > 0 ? 1 : -1;
+                return bal.Gap(time, shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]));
             }
             if (check)
             {
@@ -176,7 +175,7 @@ namespace ShareInvest.Analysis
                     sc = shortDay.Count;
                     lc = longDay.Count;
 
-                    return shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]) > 0 ? 1 : -1;
+                    return bal.Gap(time, shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]));
                 }
                 else
                 {
@@ -187,7 +186,7 @@ namespace ShareInvest.Analysis
             sc = shortDay.Count;
             lc = longDay.Count;
 
-            return sc > 1 ? shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]) > 0 ? 1 : -1 : 0;
+            return lc > 1 ? bal.Gap(time, shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2])) : 0;
         }
         private int Order(double eg, double wg, int trend)
         {
@@ -238,6 +237,7 @@ namespace ShareInvest.Analysis
             {-1, "1"},
             {1, "2"},
         };
+        private readonly Balance bal;
         private readonly Action act;
         private readonly Information info;
         private readonly Futures api;
