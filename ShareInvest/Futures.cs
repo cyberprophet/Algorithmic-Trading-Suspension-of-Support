@@ -39,14 +39,6 @@ namespace ShareInvest
         {
             get; private set;
         }
-        public bool PurchaseQuantity
-        {
-            get; private set;
-        }
-        public bool SellQuantity
-        {
-            get; private set;
-        }
         public void SetAPI(AxKHOpenAPI axAPI)
         {
             this.axAPI = axAPI;
@@ -69,11 +61,11 @@ namespace ShareInvest
 
             SendExit?.Invoke(this, new ForceQuit(end));
         }
-        public void OnReceiveOrder(string sScreenNo, string sSlbyTP)
+        public void OnReceiveOrder(string sSlbyTP)
         {
             request.RequestTrData(new Task(() =>
             {
-                Error_code = axAPI.SendOrderFO("GoblinBat", sScreenNo, Account, Code, 1, sSlbyTP, "3", 1, "", "");
+                Error_code = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "3", 1, "", "");
 
                 if (Error_code != 0)
                     new Error(Error_code);
@@ -144,24 +136,15 @@ namespace ShareInvest
                     sb.Append(axAPI.GetCommRealData(e.sRealKey, fid)).Append(',');
 
                 string[] fg = sb.ToString().Split(',');
-                int time = int.Parse(fg[0]);
 
-                if (time < 153500 && time > 085959)
-                {
-                    SellQuantity = int.Parse(fg[4]) < 100 ? true : false;
-                    PurchaseQuantity = int.Parse(fg[8]) < 100 ? true : false;
-
-                    return;
-                }
-                if (time > 153459)
+                if (int.Parse(fg[0]) > 153459)
                 {
                     if (fg[52].Contains("-"))
                         fg[52] = fg[52].Substring(1);
 
                     Send?.Invoke(this, new Datum(false, fg[0], double.Parse(fg[52])));
-
-                    return;
                 }
+                return;
             }
             if (e.sRealType.Equals("장시작시간"))
             {
@@ -251,7 +234,7 @@ namespace ShareInvest
 
                 axAPI.KOA_Functions("ShowAccountWindow", "");
                 RemainingDay();
-                
+
                 return;
             }
             Box.Show("등록되지 않은 사용자이거나\n로그인이 원활하지 않습니다.\n프로그램을 종료합니다.", "오류", waiting);
@@ -298,6 +281,13 @@ namespace ShareInvest
                 foreach (string val in acc)
                     if (val.Length > 0 && Array.Exists(unique_account, o => o.Equals(val)))
                         account = val;
+            }
+        }
+        private string ScreenNo
+        {
+            get
+            {
+                return (screen++ % 20 + 1000).ToString();
             }
         }
         private int Error_code

@@ -125,7 +125,7 @@ namespace ShareInvest.Analysis
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
                     if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * tm * margin)))
-                        api.OnReceiveOrder(ScreenNo, dic[quantity > 0 ? 1 : -1]);
+                        api.OnReceiveOrder(dic[quantity > 0 ? 1 : -1]);
 
                     return;
                 }
@@ -134,7 +134,7 @@ namespace ShareInvest.Analysis
 
                 if (e.Time.Equals("154458") || e.Time.Equals("154459") || e.Time.Equals("154500") || e.Time.Equals("154454") || e.Time.Equals("154455") || e.Time.Equals("154456") || e.Time.Equals("154457") || (e.Time.Equals("151957") || e.Time.Equals("151958") || e.Time.Equals("151959") || e.Time.Equals("152000")) && api.Remaining.Equals("1"))
                     for (quantity = Math.Abs(api.Quantity); quantity > 0; quantity--)
-                        api.OnReceiveOrder(ScreenNo, dic[api.Quantity > 0 ? -1 : 1]);
+                        api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
             }
             else if (e.Reaction > 0)
             {
@@ -229,13 +229,6 @@ namespace ShareInvest.Analysis
                 return count % b.MidPeriod;
             }
         }
-        private string ScreenNo
-        {
-            get
-            {
-                return (screen++ % 20 + 1000).ToString();
-            }
-        }
         private static string Register
         {
             get; set;
@@ -258,6 +251,5 @@ namespace ShareInvest.Analysis
         private readonly double[] sma;
 
         private int count = -1;
-        private int screen;
     }
 }

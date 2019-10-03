@@ -16,7 +16,7 @@ namespace ShareInvest.GoblinBat
         {
             InitializeComponent();
 
-            dr = Choose.Show("Please Select the Button You Want to Proceed.", "Choose", "Invest", "Exit", "BackTest");
+            dr = Choose.Show("Please Select the Button You Want to Proceed.", "Choose", "Invest", "BackTest", "Exit");
 
             if (dr == DialogResult.Yes)
             {
@@ -32,24 +32,24 @@ namespace ShareInvest.GoblinBat
             }
             else if (dr == DialogResult.No)
             {
-                Dispose();
-
-                Environment.Exit(0);
-            }
-            else
-            {
                 axAPI.Dispose();
                 timer.Dispose();
 
                 int i, l = 100;
 
-                for (i = 1; i < l; i++)
+                for (i = 11; i < l; i++)
                     new Statistics(i);
 
                 new Storage();
 
                 Box.Show("Complete...!!", "Notice", 3750);
 
+                Dispose();
+
+                Environment.Exit(0);
+            }
+            else
+            {
                 Dispose();
 
                 Environment.Exit(0);

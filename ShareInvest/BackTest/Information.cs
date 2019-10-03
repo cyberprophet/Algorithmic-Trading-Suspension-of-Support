@@ -12,9 +12,9 @@ namespace ShareInvest.BackTest
             if (quantity != 0)
             {
                 Quantity += quantity;
-                Commission += (int)(price * tm * commission);
+                Commission += (int)((quantity > 0 ? price + 5e-2 : price - 5e-2) * tm * commission);
                 Liquidation = price;
-                PurchasePrice = price;
+                PurchasePrice = quantity > 0 ? price + 5e-2 : price - 5e-2;
                 Amount = Quantity;
                 CumulativeRevenue += (int)(Liquidation * tm);
             }
@@ -65,10 +65,6 @@ namespace ShareInvest.BackTest
         {
             get; private set;
         }
-        private int Amount
-        {
-            get; set;
-        }
         private double PurchasePrice
         {
             get
@@ -86,10 +82,6 @@ namespace ShareInvest.BackTest
                     purchase = 0;
             }
         }
-        private long CumulativeRevenue
-        {
-            get; set;
-        }
         private double Liquidation
         {
             get
@@ -103,13 +95,24 @@ namespace ShareInvest.BackTest
 
                 else if (Amount < Quantity && Quantity < 1)
                     liquidation = PurchasePrice - value;
+
+                else
+                    liquidation = 0;
             }
+        }
+        private long CumulativeRevenue
+        {
+            get; set;
         }
         private long Revenue
         {
             get; set;
         }
         private long TodayRevenue
+        {
+            get; set;
+        }
+        private int Amount
         {
             get; set;
         }
