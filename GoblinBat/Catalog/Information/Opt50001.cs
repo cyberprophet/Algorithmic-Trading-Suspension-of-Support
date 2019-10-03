@@ -4,14 +4,7 @@ using ShareInvest.Screen;
 namespace ShareInvest.Catalog
 {
     public class Opt50001 : TR, IEnumerable
-    {
-        public IEnumerator GetEnumerator()
-        {
-            int i, l = output.Length;
-
-            for (i = 0; i < l; i++)
-                yield return output[i];
-        }
+    {       
         private readonly string[] output =
         {
             "매도호가5",
@@ -137,6 +130,13 @@ namespace ShareInvest.Catalog
             TrCode = "opt50001";
             PrevNext = 0;
             ScreenNo = Number.GetScreen();
+        }
+        public IEnumerator GetEnumerator()
+        {
+            int i, l = output.Length;
+
+            for (i = 0; i < l; i++)
+                yield return output[i];
         }
     }
 }

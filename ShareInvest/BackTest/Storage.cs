@@ -7,19 +7,6 @@ namespace ShareInvest.BackTest
 {
     public class Storage
     {
-        private readonly int revenue;
-        private readonly int commission;
-        private readonly long cumulative;
-        private readonly string date;
-        private readonly string strategy;
-        private readonly List<Storage> list;
-        private readonly Dictionary<string, int> analysis;
-        private readonly StringBuilder sb;
-        private readonly StringBuilder sb_analysis;
-
-        private DirectoryInfo di;
-        private StreamWriter sw;
-
         public Storage()
         {
             list = new List<Storage>();
@@ -62,7 +49,6 @@ namespace ShareInvest.BackTest
             foreach (KeyValuePair<string, int> kv in analysis)
             {
                 sb = new StringBuilder();
-
                 sb.Append(kv.Key).Append(',');
 
                 foreach (Storage val in list.FindAll(o => o.date.Equals(kv.Key)))
@@ -126,5 +112,16 @@ namespace ShareInvest.BackTest
             this.cumulative = cumulative;
             this.strategy = strategy;
         }
+        private readonly int revenue;
+        private readonly int commission;
+        private readonly long cumulative;
+        private readonly string date;
+        private readonly string strategy;
+        private readonly List<Storage> list;
+        private readonly Dictionary<string, int> analysis;
+        private readonly StringBuilder sb;
+        private readonly StringBuilder sb_analysis;
+        private DirectoryInfo di;
+        private StreamWriter sw;
     }
 }

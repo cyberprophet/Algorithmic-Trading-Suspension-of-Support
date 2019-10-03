@@ -249,7 +249,6 @@ namespace ShareInvest.Analysis
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
         private readonly double[] sma;
-
         private int count = -1;
     }
 }

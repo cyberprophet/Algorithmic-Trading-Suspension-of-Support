@@ -12,7 +12,6 @@ namespace ShareInvest
             memo = new List<string>(32768);
             act = new Action(() => Save());
             api = Futures.Get();
-
             api.SendMemorize += OnReceiveMemorize;
         }
         private void OnReceiveMemorize(object sender, Memorize e)
@@ -55,11 +54,10 @@ namespace ShareInvest
                 Console.WriteLine(ex.ToString());
             }
         }
-        private DirectoryInfo di;
-        private StreamWriter sw;
-
         private readonly Futures api;
         private readonly Action act;
         private readonly List<string> memo;
+        private DirectoryInfo di;
+        private StreamWriter sw;
     }
 }

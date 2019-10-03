@@ -9,9 +9,6 @@ namespace ShareInvest.GoblinBat
 {
     public partial class GoblinBat : Form
     {
-        private readonly Futures api;
-        private readonly DialogResult dr;
-
         public GoblinBat()
         {
             InitializeComponent();
@@ -80,5 +77,7 @@ namespace ShareInvest.GoblinBat
                 timer.Dispose();
             }
         }
+        private readonly Futures api;
+        private readonly DialogResult dr;
     }
 }

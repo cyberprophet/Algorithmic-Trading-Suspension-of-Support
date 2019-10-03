@@ -4,23 +4,6 @@ namespace ShareInvest.Catalog
 {
     public class Opt50028 : TR, IEnumerable
     {
-        public IEnumerator GetEnumerator()
-        {
-            int i, l = output.Length;
-
-            for (i = 0; i < l; i++)
-                yield return output[i];
-        }
-        private readonly string[] output =
-        {
-            "현재가",
-            "거래량",
-            "체결시간",
-            "시가",
-            "고가",
-            "저가",
-            "전일종가"
-        };
         public Opt50028()
         {
             ID = "종목코드;시간단위";
@@ -58,6 +41,23 @@ namespace ShareInvest.Catalog
         {
             get; protected set;
         }
+        public IEnumerator GetEnumerator()
+        {
+            int i, l = output.Length;
+
+            for (i = 0; i < l; i++)
+                yield return output[i];
+        }
+        private readonly string[] output =
+        {
+            "현재가",
+            "거래량",
+            "체결시간",
+            "시가",
+            "고가",
+            "저가",
+            "전일종가"
+        };
         private string code;
     }
 }

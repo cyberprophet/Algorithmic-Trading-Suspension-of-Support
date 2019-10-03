@@ -26,7 +26,7 @@ namespace ShareInvest.Control
         private void Make(object sender, Conclusion e)
         {
             if (e.Commission != 0 && e.Time != null)
-                iar = BeginInvoke(new Action(() => Box.Show("Commission ￦" + e.Commission.ToString("N0"), e.Time.ToString("HH시 mm분 ss초"), 735)));
+                iar = BeginInvoke(new Action(() => Box.Show(string.Concat("Commission ￦", e.Commission.ToString("N0")), e.Time.ToString("HH시 mm분 ss초"), 735)));
 
             else if (e.Commission == 0 && e.Time != null)
                 iar = BeginInvoke(new Action(() => Box.Show(e.Total < 0 ? string.Concat("Total Loss ￦", e.Total.ToString("N0").Substring(1)) : string.Concat("Total Revenue ￦", e.Total.ToString("N0")), e.Time.ToString("HH시 mm분 ss초"), 735)));

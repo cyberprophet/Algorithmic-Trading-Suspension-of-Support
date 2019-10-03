@@ -15,8 +15,6 @@ namespace ShareInvest.Chart
                     if (sr != null)
                         while (sr.EndOfStream == false)
                             list.Add(sr.ReadLine());
-
-                    return list;
                 }
             }
             catch (Exception ex)
@@ -26,7 +24,6 @@ namespace ShareInvest.Chart
             return list;
         }
         protected List<string> list;
-
         private StreamReader sr;
     }
 }

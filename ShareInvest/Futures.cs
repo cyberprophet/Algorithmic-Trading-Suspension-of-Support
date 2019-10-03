@@ -261,7 +261,6 @@ namespace ShareInvest
         private Futures()
         {
             request = Delay.GetInstance(delay);
-
             request.Run();
         }
         private bool DeadLine
@@ -295,9 +294,7 @@ namespace ShareInvest
             get; set;
         }
         private readonly Delay request;
-
         private static Futures api;
-
         private AxKHOpenAPI axAPI;
     }
 }

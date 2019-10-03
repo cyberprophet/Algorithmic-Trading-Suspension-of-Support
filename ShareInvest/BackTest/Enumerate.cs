@@ -7,23 +7,17 @@ namespace ShareInvest.BackTest
 {
     public class Enumerate : IEnumerable
     {
-        private const char separator = '\\';
-
         public IEnumerator GetEnumerator()
         {
             string[] arr, files = Directory.GetFiles(Environment.CurrentDirectory + @"\Log\" + DateTime.Now.ToString("yyMMdd"), "*.csv", SearchOption.AllDirectories);
 
             foreach (string file in files)
             {
-                list = new List<string>();
-
-                list = ReadCSV(file, list);
-
                 arr = file.Split('.');
                 arr = arr[0].Split(separator);
 
-                foreach (string val in list)
-                    yield return string.Concat(arr[8], ",", val);
+                foreach (string val in ReadCSV(file, new List<string>()))
+                    yield return string.Concat(arr[arr.Length - 1], ",", val);
             }
         }
         private List<string> ReadCSV(string file, List<string> list)
@@ -43,7 +37,7 @@ namespace ShareInvest.BackTest
             }
             return list;
         }
+        private const char separator = '\\';
         private StreamReader sr;
-        private List<string> list;
     }
 }
