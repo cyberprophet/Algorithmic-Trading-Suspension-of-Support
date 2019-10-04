@@ -19,10 +19,6 @@ namespace ShareInvest
 
             return api;
         }
-        public double PurchasePrice
-        {
-            get; private set;
-        }
         public int Quantity
         {
             get; set;
@@ -78,7 +74,6 @@ namespace ShareInvest
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<ForceQuit> SendExit;
         public event EventHandler<Datum> Send;
-        public event EventHandler<Conclusion> SendBalance;
 
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
@@ -97,11 +92,8 @@ namespace ShareInvest
                 string[] arr = sb.ToString().Split(',');
 
                 if (!arr[18].Equals(string.Empty))
-                {
-                    double price = double.Parse(arr[17].Contains("-") ? arr[17].Substring(1) : arr[17]);
+                    Box.Show(string.Concat("Commission ￦", (int.Parse(arr[18]) * tm * commission * double.Parse(arr[17].Contains("-") ? arr[17].Substring(1) : arr[17])).ToString("N0")), DateTime.ParseExact(arr[15], "HHmmss", null).ToString("HH시 mm분 ss초"), 935);
 
-                    SendBalance?.Invoke(this, new Conclusion(arr[15], (int)(price * int.Parse(arr[18]) * tm * commission), price));
-                }
                 return;
             }
             if (e.sGubun.Equals("4"))
@@ -111,10 +103,7 @@ namespace ShareInvest
 
                 string[] arr = sb.ToString().Split(',');
 
-                PurchasePrice = double.Parse(arr[5]);
                 Quantity = arr[9].Equals("1") ? -int.Parse(arr[4]) : int.Parse(arr[4]);
-
-                SendBalance?.Invoke(this, new Conclusion(Math.Abs(Quantity), PurchasePrice, arr[9]));
             }
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
@@ -234,7 +223,7 @@ namespace ShareInvest
 
                 axAPI.KOA_Functions("ShowAccountWindow", "");
                 RemainingDay();
-
+                
                 return;
             }
             Box.Show("등록되지 않은 사용자이거나\n로그인이 원활하지 않습니다.\n프로그램을 종료합니다.", "오류", waiting);
@@ -266,7 +255,7 @@ namespace ShareInvest
         private bool DeadLine
         {
             get; set;
-        }
+        } = false;
         private string Account
         {
             get
