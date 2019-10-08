@@ -71,10 +71,6 @@ namespace ShareInvest
         {
             request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = Code })));
         }
-        public event EventHandler<Memorize> SendMemorize;
-        public event EventHandler<ForceQuit> SendExit;
-        public event EventHandler<Datum> Send;
-
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
             if (!e.sMsg.Contains("신규주문"))
@@ -92,7 +88,7 @@ namespace ShareInvest
                 string[] arr = sb.ToString().Split(',');
 
                 if (!arr[18].Equals(string.Empty))
-                    Box.Show(string.Concat("Commission ￦", (int.Parse(arr[18]) * tm * commission * double.Parse(arr[17].Contains("-") ? arr[17].Substring(1) : arr[17])).ToString("N0")), DateTime.ParseExact(arr[15], "HHmmss", null).ToString("HH시 mm분 ss초"), 935);
+                    Box.Show(string.Concat("Conclusion ", arr[17].Contains("-") ? arr[17].Substring(1) : arr[17], "\n", "Commission ￦", (int.Parse(arr[18]) * tm * commission * double.Parse(arr[17].Contains("-") ? arr[17].Substring(1) : arr[17])).ToString("N0")), DateTime.ParseExact(arr[15], "HHmmss", null).ToString("HH시 mm분 ss초"), 1235);
 
                 return;
             }
@@ -147,6 +143,10 @@ namespace ShareInvest
                     DeadLine = true;
 
                     Request();
+
+                    Box.Show("How is Your Profit Today???", "Notice", waiting * 3);
+
+                    SendExit?.Invoke(this, new ForceQuit(end));
                 }
             }
         }
@@ -285,5 +285,8 @@ namespace ShareInvest
         private readonly Delay request;
         private static Futures api;
         private AxKHOpenAPI axAPI;
+        public event EventHandler<Memorize> SendMemorize;
+        public event EventHandler<ForceQuit> SendExit;
+        public event EventHandler<Datum> Send;
     }
 }

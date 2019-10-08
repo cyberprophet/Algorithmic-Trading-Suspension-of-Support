@@ -75,11 +75,10 @@ namespace ShareInvest.Analysis
                 Send?.Invoke(this, new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
             }
             Send -= Analysis;
+            Secret = SetSecret();
             api = Futures.Get();
             api.Send += Analysis;
         }
-        public event EventHandler<Datum> Send;
-
         private void Analysis(object sender, Datum e)
         {
             MakeMA(e.Check, e.Price);
@@ -116,25 +115,29 @@ namespace ShareInvest.Analysis
             }
             if (api != null)
             {
-                if (e.Volume > secret || e.Volume < -secret)
+                if (e.Volume > Secret || e.Volume < -Secret)
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
                     if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * tm * margin)))
-                        api.OnReceiveOrder(dic[quantity > 0 ? 1 : -1]);
+                        api.OnReceiveOrder(dic[quantity]);
+
+                    return;
+                }
+                if (After == false && (e.Time.Equals("154458") || e.Time.Equals("154459") || e.Time.Equals("154500") || e.Time.Equals("154454") || e.Time.Equals("154455") || e.Time.Equals("154456") || e.Time.Equals("154457")))
+                {
+                    After = true;
+
+                    for (quantity = Math.Abs(api.Quantity); quantity > 0; quantity--)
+                        api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
 
                     return;
                 }
                 if (api.Remaining == null)
                     api.RemainingDay();
 
-                if (After == false && (e.Time.Equals("154458") || e.Time.Equals("154459") || e.Time.Equals("154500") || e.Time.Equals("154454") || e.Time.Equals("154455") || e.Time.Equals("154456") || e.Time.Equals("154457") || (e.Time.Equals("151957") || e.Time.Equals("151958") || e.Time.Equals("151959") || e.Time.Equals("152000")) && api.Remaining.Equals("1")))
-                {
-                    for (quantity = Math.Abs(api.Quantity); quantity > 0; quantity--)
-                        api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
-
-                    After = true;
-                }
+                if (e.Time.Equals("151955") || e.Time.Equals("151956") || (e.Time.Equals("151957") || e.Time.Equals("151958") || e.Time.Equals("151959")) && api.Quantity != 0 && api.Remaining.Equals("1"))
+                    api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
             }
             else if (e.Reaction > 0)
             {
@@ -150,7 +153,7 @@ namespace ShareInvest.Analysis
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
                     if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * tm * margin)))
-                        info.Operate(e.Price, quantity > 0 ? 1 : -1);
+                        info.Operate(e.Price, quantity);
                 }
             }
         }
@@ -192,7 +195,7 @@ namespace ShareInvest.Analysis
         private int Order(double eg, double wg, int trend)
         {
             if (wg != 0 && !double.IsNaN(wg))
-                return eg > 0 ? 1 + trend : -1 + trend;
+                return eg > 0 && trend > 0 ? 1 : eg < 0 && trend < 0 ? -1 : 0;
 
             return 0;
         }
@@ -237,6 +240,10 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        private static int Secret
+        {
+            get; set;
+        }
         private readonly Dictionary<int, string> dic = new Dictionary<int, string>()
         {
             {-1, "1"},
@@ -254,5 +261,6 @@ namespace ShareInvest.Analysis
         private readonly List<double> longDay;
         private readonly double[] sma;
         private int count = -1;
+        public event EventHandler<Datum> Send;
     }
 }

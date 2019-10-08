@@ -25,7 +25,7 @@ namespace ShareInvest.AutoMessageBox
             _caption = caption;
             _timeoutTimer = new System.Threading.Timer(OnTimerElapsed, null, timeout, Timeout.Infinite);
 
-            MessageBox.Show(text, caption);
+            MessageBox.Show(text, caption, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);

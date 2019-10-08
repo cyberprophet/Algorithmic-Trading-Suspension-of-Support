@@ -56,6 +56,8 @@ namespace ShareInvest.Control
         {
             if (e.Quit == 1)
             {
+                Box.Show("How was Your Day Today...??", "Notice", 7950);
+
                 Dispose();
 
                 Environment.Exit(0);
