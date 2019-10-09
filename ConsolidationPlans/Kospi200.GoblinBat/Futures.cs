@@ -45,15 +45,18 @@ namespace ShareInvest
             axAPI.OnReceiveChejanData += OnReceiveChejanData;
             axAPI.OnReceiveMsg += OnReceiveMsg;
         }
-        public void StartProgress()
+        public void StartProgress(int type)
         {
             if (axAPI != null)
             {
-                axAPI.CommConnect();
+                ErrorCode = axAPI.CommConnect();
+
+                if (type != 0)
+                    ErrorCode = type;
 
                 return;
             }
-            Box.Show("API Not Found!!", "Caution", waiting);
+            Box.Show("API Not Found. . .", "Caution", waiting);
 
             SendExit?.Invoke(this, new ForceQuit(end));
         }
@@ -61,10 +64,10 @@ namespace ShareInvest
         {
             request.RequestTrData(new Task(() =>
             {
-                Error_code = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "3", 1, "", "");
+                ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "3", 1, "", "");
 
-                if (Error_code != 0)
-                    new Error(Error_code);
+                if (ErrorCode != 0)
+                    new Error(ErrorCode);
             }));
         }
         public void RemainingDay()
@@ -144,7 +147,7 @@ namespace ShareInvest
 
                     Request();
 
-                    Box.Show("How is Your Profit Today???", "Notice", waiting * 3);
+                    Box.Show("How is Your Profit Today. . .???", "Notice", waiting * 3);
 
                     SendExit?.Invoke(this, new ForceQuit(end));
                 }
@@ -210,7 +213,7 @@ namespace ShareInvest
             if (e.nErrCode == 0 && Identify(axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME")) == true)
             {
                 Account = axAPI.GetLoginInfo("ACCLIST");
-                Code = axAPI.GetFutureCodeByIndex(e.nErrCode);
+                Code = ErrorCode == 0 ? axAPI.GetFutureCodeByIndex(e.nErrCode) : axAPI.GetFutureCodeByIndex(ErrorCode);
 
                 if (Account == null)
                 {
@@ -219,7 +222,7 @@ namespace ShareInvest
                     SendExit?.Invoke(this, new ForceQuit(end));
                 }
                 if (!axAPI.GetLoginInfo("GetServerGubun").Equals("1"))
-                    Box.Show("It's a Real Investment.", "Caution", waiting);
+                    Box.Show("It's a Real Investment. . .♬♬♬", "Caution", waiting);
 
                 axAPI.KOA_Functions("ShowAccountWindow", "");
                 RemainingDay();
@@ -238,10 +241,10 @@ namespace ShareInvest
             for (i = 0; i < l; i++)
                 axAPI.SetInputValue(count[i], value[i]);
 
-            Error_code = axAPI.CommRqData(param.RQName, param.TrCode, param.PrevNext, param.ScreenNo);
+            ErrorCode = axAPI.CommRqData(param.RQName, param.TrCode, param.PrevNext, param.ScreenNo);
 
-            if (Error_code != 0)
-                new Error(Error_code);
+            if (ErrorCode != 0)
+                new Error(ErrorCode);
         }
         private void Request()
         {
@@ -278,7 +281,7 @@ namespace ShareInvest
                 return (screen++ % 20 + 1000).ToString();
             }
         }
-        private int Error_code
+        private int ErrorCode
         {
             get; set;
         }

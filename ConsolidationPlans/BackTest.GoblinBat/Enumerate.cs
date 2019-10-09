@@ -9,7 +9,7 @@ namespace ShareInvest.BackTest
     {
         public IEnumerator GetEnumerator()
         {
-            string[] arr, files = Directory.GetFiles(Environment.CurrentDirectory + @"\Log\" + DateTime.Now.ToString("yyMMdd"), "*.csv", SearchOption.AllDirectories);
+            string[] arr, files = Directory.GetFiles(string.Concat(Environment.CurrentDirectory, type, DateTime.Now.ToString("yyMMdd")), "*.csv", SearchOption.AllDirectories);
 
             foreach (string file in files)
             {
@@ -19,6 +19,10 @@ namespace ShareInvest.BackTest
                 foreach (string val in ReadCSV(file, new List<string>()))
                     yield return string.Concat(arr[arr.Length - 1], ",", val);
             }
+        }
+        public Enumerate(int type)
+        {
+            this.type = type > 0 ? @"\Log\Kosdaq150\" : @"\Log\Kospi200\";
         }
         private List<string> ReadCSV(string file, List<string> list)
         {
@@ -37,6 +41,7 @@ namespace ShareInvest.BackTest
             }
             return list;
         }
+        private readonly string type;
         private const char separator = '\\';
         private StreamReader sr;
     }

@@ -13,15 +13,33 @@ namespace ShareInvest
         }
         private void Button_Click(object sender, EventArgs e)
         {
-            if (Kospi200F.Checked)
-            {
-                button.Text = "Progressing...";
-                button.ForeColor = Color.DimGray;
-                button.Font = new Font("Brush Script Std", 11.2F, FontStyle.Italic);
+            ButtonEvent();
 
-                new Kospi200();
-            }
+            if (Kospi200F.Checked)
+                new Korea(0);
+
+            else if (Kosdaq150F.Checked)
+                new Korea(24);
+
+            else if (Nasdaq100F.Checked)
+                Environment.Exit(0);
+
+            else if (Gold.Checked)
+                Environment.Exit(0);
+
+            else if (CrudeOil.Checked)
+                Environment.Exit(0);
+
+            else if (Copper.Checked)
+                Environment.Exit(0);
+
             SetVisibleCore(false);
+        }
+        private void ButtonEvent()
+        {
+            button.Text = "Progressing...";
+            button.ForeColor = Color.DimGray;
+            button.Font = new Font("Brush Script Std", 11.2F, FontStyle.Italic);
         }
     }
 }

@@ -10,9 +10,9 @@ namespace ShareInvest.Analysis
 {
     public class Statistics : Conceal
     {
-        public Statistics(int reaction)
+        public Statistics(int reaction, int type)
         {
-            info = new Information();
+            info = new Information(type);
             b = new BollingerBands(20, 2);
             ema = new EMA(5, 60);
             sma = new double[b.MidPeriod];
@@ -24,7 +24,7 @@ namespace ShareInvest.Analysis
             act = new Action(() => info.Log(reaction));
             Send += Analysis;
 
-            foreach (string rd in new Daily())
+            foreach (string rd in new Daily(type))
             {
                 string[] arr = rd.Split(',');
 
@@ -33,7 +33,7 @@ namespace ShareInvest.Analysis
 
                 Send?.Invoke(this, new Datum(reaction, arr[0], double.Parse(arr[1])));
             }
-            foreach (string rd in new Tick())
+            foreach (string rd in new Tick(type))
             {
                 string[] arr = rd.Split(',');
 
@@ -44,7 +44,7 @@ namespace ShareInvest.Analysis
             }
             act.BeginInvoke(act.EndInvoke, null);
         }
-        public Statistics()
+        public Statistics(int type)
         {
             b = new BollingerBands(20, 2);
             ema = new EMA(5, 60);
@@ -56,7 +56,7 @@ namespace ShareInvest.Analysis
             longDay = new List<double>(512);
             Send += Analysis;
 
-            foreach (string rd in new Daily())
+            foreach (string rd in new Daily(type))
             {
                 string[] arr = rd.Split(',');
 
@@ -65,7 +65,7 @@ namespace ShareInvest.Analysis
 
                 Send?.Invoke(this, new Datum(arr[0], double.Parse(arr[1])));
             }
-            foreach (string rd in new Tick())
+            foreach (string rd in new Tick(type))
             {
                 string[] arr = rd.Split(',');
 
@@ -75,7 +75,7 @@ namespace ShareInvest.Analysis
                 Send?.Invoke(this, new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
             }
             Send -= Analysis;
-            Secret = SetSecret();
+            Secret = SetSecret(type);
             api = Futures.Get();
             api.Send += Analysis;
         }

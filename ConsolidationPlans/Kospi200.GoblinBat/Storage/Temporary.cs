@@ -7,10 +7,11 @@ namespace ShareInvest.Reservoir
 {
     public class Temporary
     {
-        public Temporary()
+        public Temporary(int type)
         {
             memo = new List<string>(32768);
             act = new Action(() => Save());
+            this.type = type > 0 ? @"\TickChart\Kosdaq150\" : @"\TickChart\Kospi200\";
             api = Futures.Get();
             api.SendMemorize += OnReceiveMemorize;
         }
@@ -33,7 +34,7 @@ namespace ShareInvest.Reservoir
         }
         private void Save()
         {
-            string path = Environment.CurrentDirectory + @"\TickChart\", file = api.Code + ".csv";
+            string path = string.Concat(Environment.CurrentDirectory, type), file = api.Code + ".csv";
 
             try
             {
@@ -54,6 +55,7 @@ namespace ShareInvest.Reservoir
                 Console.WriteLine(ex.ToString());
             }
         }
+        private readonly string type;
         private readonly Futures api;
         private readonly Action act;
         private readonly List<string> memo;

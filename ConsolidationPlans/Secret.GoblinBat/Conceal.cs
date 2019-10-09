@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ShareInvest.AutoMessageBox;
 
 namespace ShareInvest.Secret
 {
@@ -20,6 +21,7 @@ namespace ShareInvest.Secret
         }
         protected readonly string[] unique_account =
         {
+            "2770591531",
             "8744695931",
             "8744158731",
             "8744131431",
@@ -35,9 +37,10 @@ namespace ShareInvest.Secret
         {
             return unique.ContainsKey(id) && unique.ContainsValue(name);
         }
-        protected int SetSecret()
+        protected int SetSecret(int type)
         {
-            string[] file = Directory.GetFiles(Environment.CurrentDirectory + @"\Statistics", "*.csv", SearchOption.AllDirectories), arr;
+            string path = type > 0 ? @"\Statistics\Kosdaq150" : @"\Statistics\Kospi200";
+            string[] file = Directory.GetFiles(string.Concat(Environment.CurrentDirectory, path), "*.csv", SearchOption.AllDirectories), arr;
             int temp = 0;
 
             foreach (string val in file)
@@ -51,7 +54,7 @@ namespace ShareInvest.Secret
             }
             try
             {
-                using (StreamReader sr = new StreamReader(Environment.CurrentDirectory + @"\Statistics\" + RecentDate.ToString() + ".csv"))
+                using (StreamReader sr = new StreamReader(string.Concat(Environment.CurrentDirectory, path, @"\", RecentDate.ToString(), ".csv")))
                 {
                     List<string> list = new List<string>();
 
@@ -77,6 +80,7 @@ namespace ShareInvest.Secret
                             high = kv.Value;
                         }
                     }
+                    Box.Show("Secret Number. . .", temp.ToString(), 1375);
                 }
             }
             catch (Exception ex)

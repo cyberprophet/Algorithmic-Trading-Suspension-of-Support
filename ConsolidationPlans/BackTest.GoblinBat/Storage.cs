@@ -7,12 +7,13 @@ namespace ShareInvest.BackTest
 {
     public class Storage
     {
-        public Storage()
+        public Storage(int type)
         {
             list = new List<Storage>();
             analysis = new Dictionary<string, int>();
+            this.type = type > 0 ? @"\Statistics\Kosdaq150\" : @"\Statistics\Kospi200\";
 
-            foreach (string val in new Enumerate())
+            foreach (string val in new Enumerate(type))
             {
                 string[] arr = val.Split(',');
 
@@ -62,7 +63,7 @@ namespace ShareInvest.BackTest
         }
         private void Statistics(StringBuilder sb)
         {
-            string path = Environment.CurrentDirectory + @"\Statistics\", file = DateTime.Now.ToString("yyMMdd") + ".csv";
+            string path = string.Concat(Environment.CurrentDirectory, type), file = DateTime.Now.ToString("yyMMdd") + ".csv";
 
             try
             {
@@ -85,7 +86,7 @@ namespace ShareInvest.BackTest
         {
             list.Add(save);
 
-            string path = Environment.CurrentDirectory + @"\Analysis\", file = save.date + ".csv";
+            string path = string.Concat(Environment.CurrentDirectory, @"\Analysis\", type.Substring(12)), file = save.date + ".csv";
 
             try
             {
@@ -115,6 +116,7 @@ namespace ShareInvest.BackTest
         private readonly int revenue;
         private readonly int commission;
         private readonly long cumulative;
+        private readonly string type;
         private readonly string date;
         private readonly string strategy;
         private readonly List<Storage> list;

@@ -32,7 +32,7 @@ namespace ShareInvest.BackTest
         }
         public void Log(int param)
         {
-            string path = Environment.CurrentDirectory + @"\Log\" + DateTime.Now.ToString("yyMMdd") + @"\", file = param + ".csv";
+            string path = string.Concat(Environment.CurrentDirectory, type, DateTime.Now.ToString("yyMMdd"), @"\"), file = string.Concat(param, ".csv");
 
             try
             {
@@ -53,6 +53,10 @@ namespace ShareInvest.BackTest
             {
                 Console.WriteLine(ex.ToString());
             }
+        }
+        public Information(int type)
+        {
+            this.type = type > 0 ? @"\Log\Kosdaq150\" : @"\Log\Kospi200\";
         }
         public string[] Remaining
         {
@@ -129,6 +133,7 @@ namespace ShareInvest.BackTest
             get; set;
         }
         private readonly List<string> list = new List<string>(64);
+        private readonly string type;
         private const int tm = 250000;
         private const double commission = 3e-5;
         private DirectoryInfo di;
