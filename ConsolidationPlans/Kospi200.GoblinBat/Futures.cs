@@ -91,7 +91,7 @@ namespace ShareInvest
                 string[] arr = sb.ToString().Split(',');
 
                 if (!arr[18].Equals(string.Empty))
-                    Box.Show(string.Concat("Conclusion ", arr[17].Contains("-") ? arr[17].Substring(1) : arr[17], "\n", "Commission ￦", (int.Parse(arr[18]) * tm * commission * double.Parse(arr[17].Contains("-") ? arr[17].Substring(1) : arr[17])).ToString("N0")), DateTime.ParseExact(arr[15], "HHmmss", null).ToString("HH시 mm분 ss초"), 1235);
+                    Box.Show(string.Concat("Conclusion ", arr[17].Contains("-") ? string.Concat("Sell ", arr[17].Substring(1)) : string.Concat("Buy ", arr[17]), "\n", "Commission ￦", (int.Parse(arr[18]) * (arr[3].Substring(0, 3).Equals("101") ? tm : ktm) * commission * double.Parse(arr[17].Contains("-") ? arr[17].Substring(1) : arr[17])).ToString("N0")), DateTime.ParseExact(arr[15], "HHmmss", null).ToString("HH시 mm분 ss초"), waiting / 3);
 
                 return;
             }

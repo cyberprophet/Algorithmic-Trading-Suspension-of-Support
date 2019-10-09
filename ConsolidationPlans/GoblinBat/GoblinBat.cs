@@ -10,6 +10,8 @@ namespace ShareInvest
         public GoblinBat()
         {
             InitializeComponent();
+
+            timer.Start();
         }
         private void Button_Click(object sender, EventArgs e)
         {
@@ -40,6 +42,13 @@ namespace ShareInvest
             button.Text = "Progressing...";
             button.ForeColor = Color.DimGray;
             button.Font = new Font("Brush Script Std", 11.2F, FontStyle.Italic);
+        }
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            Opacity -= 5e-3;
+
+            if (Opacity < 15)
+                timer.Stop();
         }
     }
 }

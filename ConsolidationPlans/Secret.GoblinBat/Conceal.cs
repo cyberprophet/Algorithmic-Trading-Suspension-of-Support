@@ -79,7 +79,7 @@ namespace ShareInvest.Secret
                             temp = kv.Key;
                             high = kv.Value;
                         }
-                    }
+                    }Console.WriteLine(list.Capacity);
                     Box.Show("Secret Number. . .", temp.ToString(), 1375);
                 }
             }
@@ -97,8 +97,10 @@ namespace ShareInvest.Secret
         protected const int delay = 205;
         protected const int end = 1;
         protected const int tm = 250000;
+        protected const int ktm = 10000;
         protected const int basicAsset = 35000000;
         protected const double commission = 3e-5;
         protected const double margin = 7.5e-2;
+        protected const double kqm = 1.665e-1;
     }
 }

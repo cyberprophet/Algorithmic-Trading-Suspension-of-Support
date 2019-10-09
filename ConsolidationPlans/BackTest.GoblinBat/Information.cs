@@ -12,11 +12,11 @@ namespace ShareInvest.BackTest
             if (quantity != 0)
             {
                 Quantity += quantity;
-                Commission += (int)((quantity > 0 ? price + 5e-2 : price - 5e-2) * tm * commission);
+                Commission += (int)((type.Contains("Kospi200") ? (quantity > 0 ? price + 5e-2 : price - 5e-2) * tm : (quantity > 0 ? price + 1e-1 : price - 1e-1) * km) * commission);
                 Liquidation = price;
-                PurchasePrice = quantity > 0 ? price + 5e-2 : price - 5e-2;
+                PurchasePrice = type.Contains("Kospi200") ? quantity > 0 ? price + 5e-2 : price - 5e-2 : quantity > 0 ? price + 1e-1 : price - 1e-1;
                 Amount = Quantity;
-                CumulativeRevenue += (int)(Liquidation * tm);
+                CumulativeRevenue += (int)(Liquidation * (type.Contains("Kospi200") ? tm : km));
             }
         }
         public void Save(string time)
@@ -135,6 +135,7 @@ namespace ShareInvest.BackTest
         private readonly List<string> list = new List<string>(64);
         private readonly string type;
         private const int tm = 250000;
+        private const int km = 10000;
         private const double commission = 3e-5;
         private DirectoryInfo di;
         private StreamWriter sw;

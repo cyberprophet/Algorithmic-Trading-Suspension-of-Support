@@ -32,9 +32,9 @@ namespace ShareInvest.Control
             {
                 axAPI.Dispose();
 
-                int i, l = 100;
+                int i, l = type > 0 ? 50 : 100;
 
-                for (i = 11; i < l; i++)
+                for (i = (type > 0 ? 1 : 11); i < l; i++)
                     new Statistics(i, type);
 
                 new Storage(type);

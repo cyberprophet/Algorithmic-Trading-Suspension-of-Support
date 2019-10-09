@@ -12,6 +12,7 @@ namespace ShareInvest.Analysis
     {
         public Statistics(int reaction, int type)
         {
+            this.type = type;
             info = new Information(type);
             b = new BollingerBands(20, 2);
             ema = new EMA(5, 60);
@@ -46,6 +47,7 @@ namespace ShareInvest.Analysis
         }
         public Statistics(int type)
         {
+            this.type = type;
             b = new BollingerBands(20, 2);
             ema = new EMA(5, 60);
             sma = new double[b.MidPeriod];
@@ -119,12 +121,17 @@ namespace ShareInvest.Analysis
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * tm * margin)))
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
                         api.OnReceiveOrder(dic[quantity]);
 
                     return;
                 }
-                if (After == false && (e.Time.Equals("154458") || e.Time.Equals("154459") || e.Time.Equals("154500") || e.Time.Equals("154454") || e.Time.Equals("154455") || e.Time.Equals("154456") || e.Time.Equals("154457")))
+                if (api.Remaining == null)
+                    api.RemainingDay();
+
+                Time = int.Parse(e.Time);
+
+                if (After == false && Time > 154450)
                 {
                     After = true;
 
@@ -133,10 +140,7 @@ namespace ShareInvest.Analysis
 
                     return;
                 }
-                if (api.Remaining == null)
-                    api.RemainingDay();
-
-                if (e.Time.Equals("151955") || e.Time.Equals("151956") || (e.Time.Equals("151957") || e.Time.Equals("151958") || e.Time.Equals("151959")) && api.Quantity != 0 && api.Remaining.Equals("1"))
+                if (api.Quantity != 0 && api.Remaining.Equals("1") && Time > 151945)
                     api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
             }
             else if (e.Reaction > 0)
@@ -152,7 +156,7 @@ namespace ShareInvest.Analysis
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * tm * margin)))
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
                         info.Operate(e.Price, quantity);
                 }
             }
@@ -225,6 +229,10 @@ namespace ShareInvest.Analysis
 
             return true;
         }
+        private int Time
+        {
+            get; set;
+        }
         private int Count
         {
             get
@@ -260,6 +268,7 @@ namespace ShareInvest.Analysis
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
         private readonly double[] sma;
+        private readonly int type;
         private int count = -1;
         public event EventHandler<Datum> Send;
     }
