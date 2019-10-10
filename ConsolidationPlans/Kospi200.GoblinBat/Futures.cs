@@ -70,6 +70,16 @@ namespace ShareInvest
                     new Error(ErrorCode);
             }));
         }
+        public void OnReceiveOrder(string sSlbyTP, string sPrice)
+        {
+            request.RequestTrData(new Task(() =>
+            {
+                ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "9", 1, sPrice, "");
+
+                if (ErrorCode != 0)
+                    new Error(ErrorCode);
+            }));
+        }
         public void RemainingDay()
         {
             request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = Code })));
@@ -141,13 +151,13 @@ namespace ShareInvest
 
                 string[] tg = sb.ToString().Split(',');
 
-                if (tg[0].Equals("e") && DeadLine == false)
+                if (DeadLine == false && (tg[0].Equals("e") || int.Parse(DateTime.Now.ToString("HHmmss")) > 154501))
                 {
                     DeadLine = true;
 
                     Request();
 
-                    Box.Show("How is Your Profit Today. . .???", "Notice", waiting * 3);
+                    Box.Show("How is Your Profit Today. . .???", "Notice", waiting * 50);
 
                     SendExit?.Invoke(this, new ForceQuit(end));
                 }

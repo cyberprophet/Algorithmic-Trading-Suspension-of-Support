@@ -8,9 +8,9 @@ using ShareInvest.Secret;
 
 namespace ShareInvest.Analysis
 {
-    public class Statistics : Conceal
+    public class PowerfulSwing : Conceal
     {
-        public Statistics(int reaction, int type)
+        public PowerfulSwing(int reaction, int type)
         {
             this.type = type;
             info = new Information(type);
@@ -45,7 +45,7 @@ namespace ShareInvest.Analysis
             }
             act.BeginInvoke(act.EndInvoke, null);
         }
-        public Statistics(int type)
+        public PowerfulSwing(int type)
         {
             this.type = type;
             b = new BollingerBands(20, 2);
@@ -121,8 +121,9 @@ namespace ShareInvest.Analysis
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
-                        api.OnReceiveOrder(dic[quantity]);
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
+                        while (Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
+                            api.OnReceiveOrder(dic[quantity], e.Price.ToString());
 
                     return;
                 }
@@ -156,8 +157,9 @@ namespace ShareInvest.Analysis
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
-                        info.Operate(e.Price, quantity);
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
+                        while (Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
+                            info.Operate(e.Price, quantity);
                 }
             }
         }
@@ -269,7 +271,7 @@ namespace ShareInvest.Analysis
         private readonly List<double> longDay;
         private readonly double[] sma;
         private readonly int type;
-        private const int basicAsset = 35000000;
+        private const int basicAsset = 25000000;
         private int count = -1;
         public event EventHandler<Datum> Send;
     }

@@ -58,6 +58,13 @@ namespace ShareInvest.BackTest
         {
             this.type = type > 0 ? @"\Log\Kosdaq150\" : @"\Log\Kospi200\";
         }
+        public string[] KosdaqRemaining
+        {
+            get; private set;
+        } =
+            {
+                "190911151957"
+            };
         public string[] Remaining
         {
             get; private set;

@@ -12,6 +12,7 @@ namespace ShareInvest.Secret
         {
             { "jhy7264", "주식회사공유인베" },
             { "share9", "주식회사공유인베" },
+            { "share915", "박상우" },
             { "prophet8", "전혜영" },
             { "prophet9", "박상우" }
         };
@@ -31,7 +32,8 @@ namespace ShareInvest.Secret
             "8744760731",
             "8744791131",
             "8744791231",
-            "8744791331"
+            "8744791331",
+            "5019625231"
         };
         protected bool Identify(string id, string name)
         {
@@ -56,13 +58,13 @@ namespace ShareInvest.Secret
             {
                 using (StreamReader sr = new StreamReader(string.Concat(Environment.CurrentDirectory, path, @"\", RecentDate.ToString(), ".csv")))
                 {
-                    List<string> list = new List<string>();
+                    List<string> list = new List<string>(128);
 
                     if (sr != null)
                         while (sr.EndOfStream == false)
                             list.Add(sr.ReadLine());
 
-                    Dictionary<int, long> max = new Dictionary<int, long>();
+                    Dictionary<int, long> max = new Dictionary<int, long>(128);
 
                     file = list[0].Split(',');
                     arr = list[list.Count - 1].Split(',');
@@ -79,7 +81,7 @@ namespace ShareInvest.Secret
                             temp = kv.Key;
                             high = kv.Value;
                         }
-                    }Console.WriteLine(list.Capacity);
+                    }
                     Box.Show("Secret Number. . .", temp.ToString(), 1375);
                 }
             }
@@ -97,10 +99,9 @@ namespace ShareInvest.Secret
         protected const int delay = 205;
         protected const int end = 1;
         protected const int tm = 250000;
-        protected const int ktm = 10000;
-        protected const int basicAsset = 35000000;
+        protected const int ktm = 10000;        
         protected const double commission = 3e-5;
-        protected const double margin = 7.5e-2;
+        protected const double margin = 7.65e-2;
         protected const double kqm = 1.665e-1;
     }
 }

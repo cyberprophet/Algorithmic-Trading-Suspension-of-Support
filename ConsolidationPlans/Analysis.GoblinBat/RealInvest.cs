@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using ShareInvest.BackTest;
 using ShareInvest.Chart.Kospi200;
 using ShareInvest.EventHandler;
 using ShareInvest.SecondaryIndicators;
@@ -8,44 +7,9 @@ using ShareInvest.Secret;
 
 namespace ShareInvest.Analysis
 {
-    public class Statistics : Conceal
+    public class RealInvest : Conceal
     {
-        public Statistics(int reaction, int type)
-        {
-            this.type = type;
-            info = new Information(type);
-            b = new BollingerBands(20, 2);
-            ema = new EMA(5, 60);
-            sma = new double[b.MidPeriod];
-            trend_width = new List<double>(32768);
-            short_ema = new List<double>(32768);
-            long_ema = new List<double>(32768);
-            shortDay = new List<double>(512);
-            longDay = new List<double>(512);
-            act = new Action(() => info.Log(reaction));
-            Send += Analysis;
-
-            foreach (string rd in new Daily(type))
-            {
-                string[] arr = rd.Split(',');
-
-                if (arr[1].Contains("-"))
-                    arr[1] = arr[1].Substring(1);
-
-                Send?.Invoke(this, new Datum(reaction, arr[0], double.Parse(arr[1])));
-            }
-            foreach (string rd in new Tick(type))
-            {
-                string[] arr = rd.Split(',');
-
-                if (arr[1].Contains("-"))
-                    arr[1] = arr[1].Substring(1);
-
-                Send?.Invoke(this, new Datum(reaction, arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
-            }
-            act.BeginInvoke(act.EndInvoke, null);
-        }
-        public Statistics(int type)
+        public RealInvest(int type)
         {
             this.type = type;
             b = new BollingerBands(20, 2);
@@ -77,7 +41,6 @@ namespace ShareInvest.Analysis
                 Send?.Invoke(this, new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
             }
             Send -= Analysis;
-            Secret = SetSecret(type);
             api = Futures.Get();
             api.Send += Analysis;
         }
@@ -117,12 +80,12 @@ namespace ShareInvest.Analysis
             }
             if (api != null)
             {
-                if (e.Volume > Secret || e.Volume < -Secret)
+                if (e.Volume > 2 || e.Volume < -2)
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
                     if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
-                        api.OnReceiveOrder(dic[quantity]);
+                        api.OnReceiveOrder(dic[quantity], e.Price.ToString());
 
                     return;
                 }
@@ -142,23 +105,6 @@ namespace ShareInvest.Analysis
                 }
                 if (api.Quantity != 0 && api.Remaining.Equals("1") && Time > 151945)
                     api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
-            }
-            else if (e.Reaction > 0)
-            {
-                if (e.Time.Length > 2 && e.Time.Substring(6, 4).Equals("1545") || Array.Exists(type > 0 ? info.KosdaqRemaining : info.Remaining, o => o.Equals(e.Time)))
-                {
-                    while (info.Quantity != 0)
-                        info.Operate(e.Price, info.Quantity > 0 ? -1 : 1);
-
-                    info.Save(e.Time);
-                }
-                else if (e.Volume > e.Reaction || e.Volume < -e.Reaction)
-                {
-                    quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
-
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
-                        info.Operate(e.Price, quantity);
-                }
             }
         }
         private int Analysis(string time, double price)
@@ -248,17 +194,11 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
-        private static int Secret
-        {
-            get; set;
-        }
         private readonly Dictionary<int, string> dic = new Dictionary<int, string>()
         {
             {-1, "1"},
             {1, "2"},
         };
-        private readonly Action act;
-        private readonly Information info;
         private readonly Futures api;
         private readonly BollingerBands b;
         private readonly EMA ema;
@@ -269,7 +209,7 @@ namespace ShareInvest.Analysis
         private readonly List<double> longDay;
         private readonly double[] sma;
         private readonly int type;
-        private const int basicAsset = 35000000;
+        private const int basicAsset = 25000000;
         private int count = -1;
         public event EventHandler<Datum> Send;
     }
