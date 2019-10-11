@@ -85,7 +85,7 @@ namespace ShareInvest.Analysis
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
                     if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
-                        api.OnReceiveOrder(dic[quantity], e.Price.ToString());
+                        api.OnReceiveOrder(dic[quantity], e.Price.ToString("0.00"));
 
                     return;
                 }

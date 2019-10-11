@@ -6,6 +6,7 @@ using ShareInvest.AutoMessageBox;
 using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
+using ShareInvest.Identify;
 using ShareInvest.Secret;
 
 namespace ShareInvest
@@ -62,23 +63,29 @@ namespace ShareInvest
         }
         public void OnReceiveOrder(string sSlbyTP)
         {
-            request.RequestTrData(new Task(() =>
+            if (Confirm.Get().CheckCurrent())
             {
-                ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "3", 1, "", "");
+                request.RequestTrData(new Task(() =>
+                {
+                    ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "3", 1, "", "");
 
-                if (ErrorCode != 0)
-                    new Error(ErrorCode);
-            }));
+                    if (ErrorCode != 0)
+                        new Error(ErrorCode);
+                }));
+            }
         }
         public void OnReceiveOrder(string sSlbyTP, string sPrice)
         {
-            request.RequestTrData(new Task(() =>
+            if (Confirm.Get().CheckCurrent())
             {
-                ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "9", 1, sPrice, "");
+                request.RequestTrData(new Task(() =>
+                {
+                    ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "9", 1, sPrice, "");
 
-                if (ErrorCode != 0)
-                    new Error(ErrorCode);
-            }));
+                    if (ErrorCode != 0)
+                        new Error(ErrorCode);
+                }));
+            }
         }
         public void RemainingDay()
         {
@@ -86,8 +93,7 @@ namespace ShareInvest
         }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
-            if (!e.sMsg.Contains("신규주문"))
-                Box.Show(e.sMsg.Substring(8), "Caution", waiting / 3);
+            SendConfirm?.Invoke(this, new EventHandler.Identify(string.Concat(DateTime.Now.ToString("H시 m분 s초"), string.Empty, e.sMsg.Substring(8))));
         }
         private void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {
@@ -113,6 +119,7 @@ namespace ShareInvest
                 string[] arr = sb.ToString().Split(',');
 
                 Quantity = arr[9].Equals("1") ? -int.Parse(arr[4]) : int.Parse(arr[4]);
+                SendConfirm?.Invoke(this, new EventHandler.Identify(confirm));
             }
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
@@ -300,6 +307,7 @@ namespace ShareInvest
         private AxKHOpenAPI axAPI;
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<ForceQuit> SendExit;
+        public event EventHandler<EventHandler.Identify> SendConfirm;
         public event EventHandler<Datum> Send;
     }
 }

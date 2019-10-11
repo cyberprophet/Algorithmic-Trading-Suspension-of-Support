@@ -4,6 +4,7 @@ using ShareInvest.Analysis;
 using ShareInvest.AutoMessageBox;
 using ShareInvest.BackTest;
 using ShareInvest.EventHandler;
+using ShareInvest.Identify;
 using ShareInvest.Reservoir;
 using ShareInvest.SelectableMessageBox;
 
@@ -14,7 +15,7 @@ namespace ShareInvest.Control
         public Korea()
         {
             InitializeComponent();
-
+            Confirm.Get().Show();
             api = Futures.Get();
             new RealInvest(24);
             new Temporary(24);
@@ -25,11 +26,11 @@ namespace ShareInvest.Control
         public Korea(int type)
         {
             InitializeComponent();
-
             dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Trading", "BackTest", "Exit");
 
             if (dr == DialogResult.Yes)
             {
+                Confirm.Get().Show();
                 api = Futures.Get();
                 dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Shallow", "Powerful", "Exit");
 

@@ -37,6 +37,8 @@ namespace ShareInvest.Secret
         };
         protected bool Identify(string id, string name)
         {
+            confirm = string.Concat(id.Substring(0, 1).ToUpper(), id.Substring(1));
+
             return unique.ContainsKey(id) && unique.ContainsValue(name);
         }
         protected int SetSecret(int type)
@@ -92,6 +94,7 @@ namespace ShareInvest.Secret
             return temp;
         }
         protected StringBuilder sb;
+        protected string confirm;
         protected string account;
         protected int screen;
         protected const string it = "Information that already Exists";
@@ -99,7 +102,7 @@ namespace ShareInvest.Secret
         protected const int delay = 205;
         protected const int end = 1;
         protected const int tm = 250000;
-        protected const int ktm = 10000;        
+        protected const int ktm = 10000;
         protected const double commission = 3e-5;
         protected const double margin = 7.65e-2;
         protected const double kqm = 1.665e-1;
