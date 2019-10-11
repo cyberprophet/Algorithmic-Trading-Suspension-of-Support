@@ -67,7 +67,6 @@ namespace ShareInvest.Secret
                             list.Add(sr.ReadLine());
 
                     Dictionary<int, long> max = new Dictionary<int, long>(128);
-
                     file = list[0].Split(',');
                     arr = list[list.Count - 1].Split(',');
 
@@ -98,6 +97,7 @@ namespace ShareInvest.Secret
         protected string account;
         protected int screen;
         protected const string it = "Information that already Exists";
+        protected const string pt = "ProhibitTrading";
         protected const int waiting = 3500;
         protected const int delay = 205;
         protected const int end = 1;

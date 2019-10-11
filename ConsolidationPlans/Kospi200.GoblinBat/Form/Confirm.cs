@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 
 namespace ShareInvest.Identify
 {
@@ -17,13 +18,19 @@ namespace ShareInvest.Identify
         }
         private void OnReceiveIdentify(object sender, EventHandler.Identify e)
         {
-            checkBox.Text = e.Confirm;
+            checkBox.Text = string.Concat(DateTime.Now.ToString("H시 m분 s초  "), e.Confirm);
         }
         private Confirm()
         {
             InitializeComponent();
 
             Futures.Get().SendConfirm += OnReceiveIdentify;
+        }
+        private void Confirm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            cf.Dispose();
+            Dispose();
+            Environment.Exit(0);
         }
         private static Confirm cf;
     }

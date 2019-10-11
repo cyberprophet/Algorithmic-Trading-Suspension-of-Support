@@ -179,7 +179,6 @@ namespace ShareInvest.Analysis
                 {
                     shortDay.Add(ema.Make(ema.ShortPeriod, sc, price, sc > 0 ? shortDay[sc - 1] : 0));
                     longDay.Add(ema.Make(ema.LongPeriod, lc, price, lc > 0 ? longDay[lc - 1] : 0));
-
                     sc = shortDay.Count;
                     lc = longDay.Count;
 

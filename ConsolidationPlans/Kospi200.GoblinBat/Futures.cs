@@ -39,7 +39,6 @@ namespace ShareInvest
         public void SetAPI(AxKHOpenAPI axAPI)
         {
             this.axAPI = axAPI;
-
             axAPI.OnEventConnect += OnEventConnect;
             axAPI.OnReceiveTrData += OnReceiveTrData;
             axAPI.OnReceiveRealData += OnReceiveRealData;
@@ -58,34 +57,35 @@ namespace ShareInvest
                 return;
             }
             Box.Show("API Not Found. . .", "Caution", waiting);
-
             SendExit?.Invoke(this, new ForceQuit(end));
         }
         public void OnReceiveOrder(string sSlbyTP)
         {
-            if (Confirm.Get().CheckCurrent())
+            request.RequestTrData(new Task(() =>
             {
-                request.RequestTrData(new Task(() =>
-                {
+                if (Confirm.Get().CheckCurrent())
                     ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "3", 1, "", "");
 
-                    if (ErrorCode != 0)
-                        new Error(ErrorCode);
-                }));
-            }
+                else
+                    Box.Show(pt, "Notice", waiting / 3);
+
+                if (ErrorCode != 0)
+                    new Error(ErrorCode);
+            }));
         }
         public void OnReceiveOrder(string sSlbyTP, string sPrice)
         {
-            if (Confirm.Get().CheckCurrent())
+            request.RequestTrData(new Task(() =>
             {
-                request.RequestTrData(new Task(() =>
-                {
+                if (Confirm.Get().CheckCurrent())
                     ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "9", 1, sPrice, "");
 
-                    if (ErrorCode != 0)
-                        new Error(ErrorCode);
-                }));
-            }
+                else
+                    Box.Show(pt, "Notice", waiting / 3);
+
+                if (ErrorCode != 0)
+                    new Error(ErrorCode);
+            }));
         }
         public void RemainingDay()
         {
@@ -93,7 +93,8 @@ namespace ShareInvest
         }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
-            SendConfirm?.Invoke(this, new EventHandler.Identify(string.Concat(DateTime.Now.ToString("H시 m분 s초"), string.Empty, e.sMsg.Substring(8))));
+            if (!e.sMsg.Contains("신규주문"))
+                SendConfirm?.Invoke(this, new EventHandler.Identify(e.sMsg.Substring(8)));
         }
         private void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {
@@ -119,7 +120,7 @@ namespace ShareInvest
                 string[] arr = sb.ToString().Split(',');
 
                 Quantity = arr[9].Equals("1") ? -int.Parse(arr[4]) : int.Parse(arr[4]);
-                SendConfirm?.Invoke(this, new EventHandler.Identify(confirm));
+                SendConfirm?.Invoke(this, new EventHandler.Identify(string.Concat(confirm, " holds ", arr[9].Equals("1") ? "Sell " : "Buy ", arr[4], " Contracts for ", arr[2], ".")));
             }
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
@@ -158,15 +159,10 @@ namespace ShareInvest
 
                 string[] tg = sb.ToString().Split(',');
 
-                if (DeadLine == false && (tg[0].Equals("e") || int.Parse(DateTime.Now.ToString("HHmmss")) > 154501))
+                if (DeadLine == false && tg[0].Equals("e"))
                 {
                     DeadLine = true;
-
                     Request();
-
-                    Box.Show("How is Your Profit Today. . .???", "Notice", waiting * 50);
-
-                    SendExit?.Invoke(this, new ForceQuit(end));
                 }
             }
         }
@@ -243,11 +239,10 @@ namespace ShareInvest
 
                 axAPI.KOA_Functions("ShowAccountWindow", "");
                 RemainingDay();
-
+                
                 return;
             }
             Box.Show("등록되지 않은 사용자이거나\n로그인이 원활하지 않습니다.\n프로그램을 종료합니다.", "오류", waiting);
-
             SendExit?.Invoke(this, new ForceQuit(end));
         }
         private void InputValueRqData(TR param)
