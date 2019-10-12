@@ -22,7 +22,7 @@ namespace ShareInvest
                 new Korea(24);
 
             else if (Nasdaq100F.Checked)
-                Environment.Exit(0);
+                new World();
 
             else if (Gold.Checked)
                 Environment.Exit(0);

@@ -19,6 +19,17 @@ namespace ShareInvest.BackTest
                 CumulativeRevenue += (int)(Liquidation * (type.Contains("Kospi200") ? tm : km));
             }
         }
+        public void Save(string time, double[] open)
+        {
+            Revenue = CumulativeRevenue - Commission;
+            TodayCommission = Commission - TempCommission;
+
+            if (TodayCommission != 0)
+                list.Add(string.Concat(DateTime.ParseExact(time.Substring(0, 6), "yyMMdd", CultureInfo.CurrentCulture).ToString("yy-MM-dd"), ',', TodayCommission, ',', Revenue - TodayRevenue, ',', CumulativeRevenue - Commission, ',', open[0], ',', open[1], ',', open[2]));
+
+            TempCommission = Commission;
+            TodayRevenue = Revenue;
+        }
         public void Save(string time)
         {
             Revenue = CumulativeRevenue - Commission;
@@ -139,7 +150,7 @@ namespace ShareInvest.BackTest
         {
             get; set;
         }
-        private readonly List<string> list = new List<string>(64);
+        private readonly List<string> list = new List<string>(128);
         private readonly string type;
         private const int tm = 250000;
         private const int km = 10000;

@@ -12,6 +12,7 @@ namespace ShareInvest.Catalog
         public Dictionary<int, string> ec = new Dictionary<int, string>()
         {
             {0, "정상처리"},
+            {-1,  "미접속상태"},
             {-10, "실패"},
             {-11, "조건번호 없음"},
             {-12, "조건번호와 조건식 불일치"},

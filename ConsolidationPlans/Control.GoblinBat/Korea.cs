@@ -32,13 +32,13 @@ namespace ShareInvest.Control
             {
                 Confirm.Get().Show();
                 api = Futures.Get();
-                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Shallow", "Powerful", "Exit");
+                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Manual", "Automatic", "Exit");
 
                 if (dr == DialogResult.Yes)
                     new Statistics(type);
 
                 else if (dr == DialogResult.No)
-                    new PowerfulSwing(type);
+                    new SubtleSwing(type);
 
                 else
                     OnReceiveExit();
@@ -51,7 +51,7 @@ namespace ShareInvest.Control
             else if (dr == DialogResult.No)
             {
                 axAPI.Dispose();
-                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Shallow", "Powerful", "Exit");
+                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Shallow", "Subtle", "Exit");
 
                 int i, l = type > 0 ? 50 : 100;
 
@@ -61,7 +61,7 @@ namespace ShareInvest.Control
                         new Statistics(i, type);
 
                     else if (dr == DialogResult.No)
-                        new PowerfulSwing(i, type);
+                        new SubtleSwing(i, type);
 
                     else
                         OnReceiveExit();

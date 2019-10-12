@@ -10,24 +10,24 @@ namespace ShareInvest.BackTest
         public Storage(int type)
         {
             list = new List<Storage>();
-            analysis = new Dictionary<string, int>();
+            analysis = new Dictionary<string, string>();
             this.type = type > 0 ? @"\Statistics\Kosdaq150\" : @"\Statistics\Kospi200\";
 
             foreach (string val in new Enumerate(type))
             {
                 string[] arr = val.Split(',');
 
-                Save(new Storage(arr[1], int.Parse(arr[2]), int.Parse(arr[3]), long.Parse(arr[4]), arr[0]));
+                list.Add(new Storage(arr));
             }
             int i = 0, count = list.Count;
             string[] squence = new string[count];
-            long[] total = new long[count];
+            string[] total = new string[count];
 
             foreach (Storage val in list)
             {
                 total[i] = val.cumulative;
                 squence[i++] = val.strategy;
-                analysis[val.date] = val.commission;
+                analysis[val.date] = val.open > 0 ? string.Concat((val.open - val.se).ToString("N4"), ",", (val.se - val.le).ToString("N4")) : val.commission;
             }
             sb = new StringBuilder();
             sb_analysis = new StringBuilder();
@@ -47,7 +47,7 @@ namespace ShareInvest.BackTest
             }
             Statistics(sb);
 
-            foreach (KeyValuePair<string, int> kv in analysis)
+            foreach (KeyValuePair<string, string> kv in analysis)
             {
                 sb = new StringBuilder();
                 sb.Append(kv.Key).Append(',');
@@ -82,45 +82,31 @@ namespace ShareInvest.BackTest
                 Console.WriteLine(ex.ToString());
             }
         }
-        private void Save(Storage save)
+        private Storage(string[] arr)
         {
-            list.Add(save);
-
-            string path = string.Concat(Environment.CurrentDirectory, @"\Analysis\", type.Substring(12)), file = save.date + ".csv";
-
-            try
+            if (arr.Length > 5)
             {
-                di = new DirectoryInfo(path);
-
-                if (di.Exists == false)
-                    di.Create();
-
-                using (sw = new StreamWriter(path + file, true))
-                {
-                    sw.WriteLine(string.Concat(save.strategy, ',', save.revenue, ',', save.cumulative, ',', save.commission));
-                }
+                open = double.Parse(arr[5]);
+                se = double.Parse(arr[6]);
+                le = double.Parse(arr[7]);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+            date = arr[1];
+            revenue = arr[3];
+            cumulative = arr[4];
+            strategy = arr[0];
+            commission = arr[2];
         }
-        private Storage(string date, int commission, int revenue, long cumulative, string strategy)
-        {
-            this.date = date;
-            this.commission = commission;
-            this.revenue = revenue;
-            this.cumulative = cumulative;
-            this.strategy = strategy;
-        }
-        private readonly int revenue;
-        private readonly int commission;
-        private readonly long cumulative;
+        private readonly double open;
+        private readonly double se;
+        private readonly double le;
+        private readonly string commission;
+        private readonly string revenue;
+        private readonly string cumulative;
         private readonly string type;
         private readonly string date;
         private readonly string strategy;
         private readonly List<Storage> list;
-        private readonly Dictionary<string, int> analysis;
+        private readonly Dictionary<string, string> analysis;
         private readonly StringBuilder sb;
         private readonly StringBuilder sb_analysis;
         private DirectoryInfo di;
