@@ -41,11 +41,11 @@ namespace ShareInvest.Secret
 
             return unique.ContainsKey(id) && unique.ContainsValue(name);
         }
-        protected int SetSecret(int type)
+        protected string SetSecret(int type)
         {
-            string path = type > 0 ? @"\Statistics\Kosdaq150" : @"\Statistics\Kospi200";
+            string path = type > 0 ? @"\Statistics\Kosdaq150" : @"\Statistics\Kospi200", secret = string.Empty;
             string[] file = Directory.GetFiles(string.Concat(Environment.CurrentDirectory, path), "*.csv", SearchOption.AllDirectories), arr;
-            int temp = 0;
+            int temp;
 
             foreach (string val in file)
             {
@@ -66,31 +66,31 @@ namespace ShareInvest.Secret
                         while (sr.EndOfStream == false)
                             list.Add(sr.ReadLine());
 
-                    Dictionary<int, long> max = new Dictionary<int, long>(128);
+                    Dictionary<string, long> max = new Dictionary<string, long>(128);
                     file = list[0].Split(',');
                     arr = list[list.Count - 1].Split(',');
 
                     for (temp = 1; temp < file.Length - 1; temp++)
-                        max[int.Parse(file[temp])] = long.Parse(arr[temp]);
+                        max[file[temp]] = long.Parse(arr[temp]);
 
                     long high = 0;
 
-                    foreach (KeyValuePair<int, long> kv in max)
+                    foreach (KeyValuePair<string, long> kv in max)
                     {
                         if (kv.Value > high)
                         {
-                            temp = kv.Key;
+                            secret = kv.Key;
                             high = kv.Value;
                         }
                     }
-                    Box.Show("Secret Number. . .", temp.ToString(), 1375);
+                    Box.Show("Secret Number. . .", string.Concat(secret, " ￦", high.ToString("N0")), waiting);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
-            return temp;
+            return secret;
         }
         protected StringBuilder sb;
         protected string confirm;
@@ -106,5 +106,6 @@ namespace ShareInvest.Secret
         protected const double commission = 3e-5;
         protected const double margin = 7.65e-2;
         protected const double kqm = 1.665e-1;
+        protected const double value = 5e-2;
     }
 }

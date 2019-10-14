@@ -9,6 +9,10 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
+        public int Tick
+        {
+            get; private set;
+        }
         public bool Check
         {
             get; private set;
@@ -42,6 +46,15 @@ namespace ShareInvest.EventHandler
             Check = Confirm(check);
             Price = price;
         }
+        public Datum(int reaction, int tick, string check, double price)
+        {
+            check = check.Substring(6, 2);
+            Tick = tick;
+            Reaction = reaction;
+            Time = check;
+            Check = Confirm(check);
+            Price = price;
+        }
         public Datum(string time, double price, int volume)
         {
             Check = Confirm(time.Substring(9, 1));
@@ -52,6 +65,15 @@ namespace ShareInvest.EventHandler
         public Datum(int reaction, string time, double price, int volume)
         {
             Check = Confirm(time.Substring(9, 1));
+            Reaction = reaction;
+            Time = time;
+            Price = price;
+            Volume = volume;
+        }
+        public Datum(int reaction, int tick, string time, double price, int volume)
+        {
+            Check = Confirm(time.Substring(9, 1));
+            Tick = tick;
             Reaction = reaction;
             Time = time;
             Price = price;

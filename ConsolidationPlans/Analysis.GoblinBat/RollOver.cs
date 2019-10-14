@@ -27,7 +27,7 @@ namespace ShareInvest.Analysis
 
             foreach (string rd in new Daily(type))
             {
-                string[] arr = rd.Split(',');
+                arr = rd.Split(',');
 
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
@@ -36,7 +36,7 @@ namespace ShareInvest.Analysis
             }
             foreach (string rd in new Tick(type))
             {
-                string[] arr = rd.Split(',');
+                arr = rd.Split(',');
 
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
@@ -60,7 +60,7 @@ namespace ShareInvest.Analysis
 
             foreach (string rd in new Daily(type))
             {
-                string[] arr = rd.Split(',');
+                arr = rd.Split(',');
 
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
@@ -69,7 +69,7 @@ namespace ShareInvest.Analysis
             }
             foreach (string rd in new Tick(type))
             {
-                string[] arr = rd.Split(',');
+                arr = rd.Split(',');
 
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
@@ -77,7 +77,8 @@ namespace ShareInvest.Analysis
                 Send?.Invoke(this, new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
             }
             Send -= Analysis;
-            Secret = SetSecret(type);
+            arr = SetSecret(type).Split('^');
+            Secret = int.Parse(arr[0]);
             api = Futures.Get();
             api.Send += Analysis;
         }
@@ -142,7 +143,7 @@ namespace ShareInvest.Analysis
 
                     info.Save(e.Time);
                 }
-                else if (Math.Abs(e.Volume) > e.Reaction && StopLoss(trend))
+                else if (StopLoss(trend) && Math.Abs(e.Volume) > e.Reaction)
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
@@ -269,6 +270,7 @@ namespace ShareInvest.Analysis
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
         private readonly double[] sma;
+        private readonly string[] arr;
         private readonly int type;
         private const int basicAsset = 35000000;
         private int count = -1;

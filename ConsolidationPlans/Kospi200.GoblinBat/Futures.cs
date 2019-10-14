@@ -36,6 +36,10 @@ namespace ShareInvest
         {
             get; private set;
         }
+        public double PurchasePrice
+        {
+            get; private set;
+        }
         public void SetAPI(AxKHOpenAPI axAPI)
         {
             this.axAPI = axAPI;
@@ -120,6 +124,7 @@ namespace ShareInvest
                 string[] arr = sb.ToString().Split(',');
 
                 Quantity = arr[9].Equals("1") ? -int.Parse(arr[4]) : int.Parse(arr[4]);
+                PurchasePrice = double.Parse(arr[5].Contains("-") ? arr[5].Substring(1) : arr[5]);
                 SendConfirm?.Invoke(this, new EventHandler.Identify(string.Concat(confirm, " holds ", arr[9].Equals("1") ? "Sell " : "Buy ", arr[4], " Contracts for ", arr[2], ".")));
             }
         }
@@ -239,7 +244,7 @@ namespace ShareInvest
 
                 axAPI.KOA_Functions("ShowAccountWindow", "");
                 RemainingDay();
-                
+
                 return;
             }
             Box.Show("등록되지 않은 사용자이거나\n로그인이 원활하지 않습니다.\n프로그램을 종료합니다.", "오류", waiting);

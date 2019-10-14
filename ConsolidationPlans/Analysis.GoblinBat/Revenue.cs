@@ -8,9 +8,9 @@ using ShareInvest.Secret;
 
 namespace ShareInvest.Analysis
 {
-    public class PowerfulSwing : Conceal
+    public class Revenue : Conceal
     {
-        public PowerfulSwing(int reaction, int type)
+        public Revenue(int reaction, int tick, int type)
         {
             this.type = type;
             info = new Information(type);
@@ -22,7 +22,7 @@ namespace ShareInvest.Analysis
             long_ema = new List<double>(32768);
             shortDay = new List<double>(512);
             longDay = new List<double>(512);
-            act = new Action(() => info.Log(reaction));
+            act = new Action(() => info.Log(reaction, tick));
             Send += Analysis;
 
             foreach (string rd in new Daily(type))
@@ -32,7 +32,7 @@ namespace ShareInvest.Analysis
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
 
-                Send?.Invoke(this, new Datum(reaction, arr[0], double.Parse(arr[1])));
+                Send?.Invoke(this, new Datum(reaction, tick, arr[0], double.Parse(arr[1])));
             }
             foreach (string rd in new Tick(type))
             {
@@ -41,11 +41,11 @@ namespace ShareInvest.Analysis
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
 
-                Send?.Invoke(this, new Datum(reaction, arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
+                Send?.Invoke(this, new Datum(reaction, tick, arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
             }
             act.BeginInvoke(act.EndInvoke, null);
         }
-        public PowerfulSwing(int type)
+        public Revenue(int type)
         {
             this.type = type;
             b = new BollingerBands(20, 2);
@@ -79,6 +79,7 @@ namespace ShareInvest.Analysis
             Send -= Analysis;
             arr = SetSecret(type).Split('^');
             Secret = int.Parse(arr[0]);
+            Tick = int.Parse(arr[1]);
             api = Futures.Get();
             api.Send += Analysis;
         }
@@ -122,9 +123,8 @@ namespace ShareInvest.Analysis
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
-                        while (Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
-                            api.OnReceiveOrder(dic[quantity], e.Price.ToString());
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
+                        api.OnReceiveOrder(dic[quantity]);
 
                     return;
                 }
@@ -144,6 +144,8 @@ namespace ShareInvest.Analysis
                 }
                 if (api.Quantity != 0 && api.Remaining.Equals("1") && Time > 151945)
                     api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
+
+                SetRevenue(e.Price, trend);
             }
             else if (e.Reaction > 0)
             {
@@ -158,10 +160,11 @@ namespace ShareInvest.Analysis
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
-                        while (Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
-                            info.Operate(e.Price, quantity);
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
+                        info.Operate(e.Price, quantity);
                 }
+                else
+                    SetRevenue(e.Price, trend, e.Tick);
             }
         }
         private int Analysis(string time, double price)
@@ -182,7 +185,6 @@ namespace ShareInvest.Analysis
                 {
                     shortDay.Add(ema.Make(ema.ShortPeriod, sc, price, sc > 0 ? shortDay[sc - 1] : 0));
                     longDay.Add(ema.Make(ema.LongPeriod, lc, price, lc > 0 ? longDay[lc - 1] : 0));
-
                     sc = shortDay.Count;
                     lc = longDay.Count;
 
@@ -198,6 +200,29 @@ namespace ShareInvest.Analysis
             lc = longDay.Count;
 
             return lc > 1 ? shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]) > 0 ? 1 : -1 : 0;
+        }
+        private void SetRevenue(double price, int trend)
+        {
+            if (trend > 0 && api.Quantity > 0 && price > api.PurchasePrice + Tick * value)
+            {
+                api.OnReceiveOrder(dic[-1]);
+
+                return;
+            }
+            if (trend < 0 && api.Quantity < 0 && price < api.PurchasePrice - Tick * value)
+            {
+                api.OnReceiveOrder(dic[1]);
+
+                return;
+            }
+        }
+        private void SetRevenue(double price, int trend, int tick)
+        {
+            if (trend > 0 && info.Quantity > 0 && price > info.PurchasePrice + tick * value)
+                info.Operate(price, -1);
+
+            else if (trend < 0 && info.Quantity < 0 && price < info.PurchasePrice - tick * value)
+                info.Operate(price, 1);
         }
         private int Order(double eg, double wg, int trend)
         {
@@ -233,6 +258,10 @@ namespace ShareInvest.Analysis
             return true;
         }
         private int Time
+        {
+            get; set;
+        }
+        private int Tick
         {
             get; set;
         }
@@ -273,7 +302,7 @@ namespace ShareInvest.Analysis
         private readonly double[] sma;
         private readonly string[] arr;
         private readonly int type;
-        private const int basicAsset = 25000000;
+        private const int basicAsset = 35000000;
         private int count = -1;
         public event EventHandler<Datum> Send;
     }

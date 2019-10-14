@@ -32,13 +32,13 @@ namespace ShareInvest.Control
             {
                 Confirm.Get().Show();
                 api = Futures.Get();
-                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Manual", "RollOver", "Exit");
+                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Manual", "Revenue", "Exit");
 
                 if (dr == DialogResult.Yes)
                     new Statistics(type);
 
                 else if (dr == DialogResult.No)
-                    new RollOver(type);
+                    new Revenue(type);
 
                 else
                     OnReceiveExit();
@@ -51,9 +51,9 @@ namespace ShareInvest.Control
             else if (dr == DialogResult.No)
             {
                 axAPI.Dispose();
-                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Shallow", "RollOver", "Exit");
+                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Shallow", "Revenue", "Exit");
 
-                int i, l = type > 0 ? 50 : 100;
+                int i, l = type > 0 ? 50 : 100, j, h = 20;
 
                 for (i = type > 0 ? 1 : 10; i < l; i++)
                 {
@@ -61,7 +61,8 @@ namespace ShareInvest.Control
                         new Statistics(i, type);
 
                     else if (dr == DialogResult.No)
-                        new RollOver(i, type);
+                        for (j = 2; j < h; j++)
+                            new Revenue(i, j, type);
 
                     else
                         OnReceiveExit();

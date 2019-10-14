@@ -65,6 +65,30 @@ namespace ShareInvest.BackTest
                 Console.WriteLine(ex.ToString());
             }
         }
+        public void Log(int param, int tick)
+        {
+            string path = string.Concat(Environment.CurrentDirectory, type, DateTime.Now.ToString("yyMMdd"), @"\"), file = string.Concat(param, '^', tick, ".csv");
+
+            try
+            {
+                di = new DirectoryInfo(path);
+
+                if (di.Exists == false)
+                    di.Create();
+
+                using (sw = new StreamWriter(path + file))
+                {
+                    foreach (string val in list)
+                        if (val.Length > 0)
+                            sw.WriteLine(val);
+                }
+                list.Clear();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
         public Information(int type)
         {
             this.type = type > 0 ? @"\Log\Kosdaq150\" : @"\Log\Kospi200\";
@@ -87,13 +111,13 @@ namespace ShareInvest.BackTest
         {
             get; private set;
         }
-        private double PurchasePrice
+        public double PurchasePrice
         {
             get
             {
                 return purchase;
             }
-            set
+            private set
             {
                 if (Math.Abs(Amount) < Math.Abs(Quantity) && Quantity != 0)
                 {

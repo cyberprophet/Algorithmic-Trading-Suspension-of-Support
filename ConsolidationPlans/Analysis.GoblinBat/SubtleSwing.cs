@@ -28,7 +28,7 @@ namespace ShareInvest.Analysis
 
             foreach (string rd in new Daily(type))
             {
-                string[] arr = rd.Split(',');
+                arr = rd.Split(',');
 
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
@@ -37,7 +37,7 @@ namespace ShareInvest.Analysis
             }
             foreach (string rd in new Tick(type))
             {
-                string[] arr = rd.Split(',');
+                arr = rd.Split(',');
 
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
@@ -61,7 +61,7 @@ namespace ShareInvest.Analysis
 
             foreach (string rd in new Daily(type))
             {
-                string[] arr = rd.Split(',');
+                arr = rd.Split(',');
 
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
@@ -70,7 +70,7 @@ namespace ShareInvest.Analysis
             }
             foreach (string rd in new Tick(type))
             {
-                string[] arr = rd.Split(',');
+                arr = rd.Split(',');
 
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
@@ -78,7 +78,8 @@ namespace ShareInvest.Analysis
                 Send?.Invoke(this, new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
             }
             Send -= Analysis;
-            Secret = SetSecret(type);
+            arr = SetSecret(type).Split('^');
+            Secret = int.Parse(arr[0]);
             api = Futures.Get();
             api.Send += Analysis;
         }
@@ -281,6 +282,7 @@ namespace ShareInvest.Analysis
         private readonly List<double> long_ema;
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
+        private readonly string[] arr;
         private readonly double[] sma;
         private readonly double[] open;
         private readonly int type;
