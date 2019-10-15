@@ -12,17 +12,6 @@ namespace ShareInvest.Control
 {
     public partial class Korea : UserControl
     {
-        public Korea()
-        {
-            InitializeComponent();
-            Confirm.Get().Show();
-            api = Futures.Get();
-            new RealInvest(24);
-            new Temporary(24);
-            api.SetAPI(axAPI);
-            api.StartProgress(24);
-            api.SendExit += OnReceiveExit;
-        }
         public Korea(int type)
         {
             InitializeComponent();
@@ -32,7 +21,6 @@ namespace ShareInvest.Control
             {
                 Confirm.Get().Show();
                 api = Futures.Get();
-                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Manual", "Revenue", "Exit");
 
                 if (dr == DialogResult.Yes)
                     new Statistics(type);
@@ -51,7 +39,6 @@ namespace ShareInvest.Control
             else if (dr == DialogResult.No)
             {
                 axAPI.Dispose();
-                dr = Choose.Show("Please Select the Button You Want to Proceed. . .", "Choose", "Shallow", "Revenue", "Exit");
 
                 int i, l = type > 0 ? 50 : 100, j, h = 20;
 

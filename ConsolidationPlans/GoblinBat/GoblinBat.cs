@@ -33,9 +33,6 @@ namespace ShareInvest
             else if (Copper.Checked)
                 Environment.Exit(0);
 
-            else if (Real.Checked)
-                new Korea();
-
             SetVisibleCore(false);
         }
         private void ButtonEvent()

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using ShareInvest.AutoMessageBox;
+using ShareInvest.EventHandler;
+using ShareInvest.Identify;
 
 namespace ShareInvest.Secret
 {
@@ -43,7 +46,7 @@ namespace ShareInvest.Secret
         }
         protected string SetSecret(int type)
         {
-            string path = type > 0 ? @"\Statistics\Kosdaq150" : @"\Statistics\Kospi200", secret = string.Empty;
+            string path = type > 0 ? @"\Statistics\Kosdaq150" : @"\Statistics\Kospi200";
             string[] file = Directory.GetFiles(string.Concat(Environment.CurrentDirectory, path), "*.csv", SearchOption.AllDirectories), arr;
             int temp;
 
@@ -73,24 +76,31 @@ namespace ShareInvest.Secret
                     for (temp = 1; temp < file.Length - 1; temp++)
                         max[file[temp]] = long.Parse(arr[temp]);
 
-                    long high = 0;
-
-                    foreach (KeyValuePair<string, long> kv in max)
+                    using (Choice ch = new Choice())
                     {
-                        if (kv.Value > high)
+                        SendText += ch.OnReceiveText;
+
+                        foreach (KeyValuePair<string, long> kv in max.OrderByDescending(o => o.Value))
                         {
-                            secret = kv.Key;
-                            high = kv.Value;
+                            if (ch.Count > 29)
+                                break;
+
+                            SendText.Invoke(this, new Memorize(string.Concat(kv.Key, " ￦", kv.Value.ToString("N0"))));
                         }
+                        ch.ShowDialog();
+                        Box.Show(string.Concat(ch.TempText), "The Chosen Strategy is Number. . .", waiting);
+                        arr = ch.TempText.Split('￦');
+                        ch.Dispose();
+
+                        return arr[0].Trim();
                     }
-                    Box.Show("Secret Number. . .", string.Concat(secret, " ￦", high.ToString("N0")), waiting);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
-            return secret;
+            return "1^1";
         }
         protected StringBuilder sb;
         protected string confirm;
@@ -107,5 +117,6 @@ namespace ShareInvest.Secret
         protected const double margin = 7.65e-2;
         protected const double kqm = 1.665e-1;
         protected const double value = 5e-2;
+        public event EventHandler<Memorize> SendText;
     }
 }
