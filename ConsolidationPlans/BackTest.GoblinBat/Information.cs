@@ -19,6 +19,18 @@ namespace ShareInvest.BackTest
                 CumulativeRevenue += (int)(Liquidation * (type.Contains("Kospi200") ? tm : km));
             }
         }
+        public void OperateScalping(double price, int quantity)
+        {
+            if (quantity != 0)
+            {
+                Quantity += quantity;
+                Commission += (int)((type.Contains("Kospi200") ? price * tm : price * km) * commission);
+                Liquidation = price;
+                PurchasePrice = price;
+                Amount = Quantity;
+                CumulativeRevenue += (int)(Liquidation * (type.Contains("Kospi200") ? tm : km));
+            }
+        }
         public void Save(string time, double[] open)
         {
             Revenue = CumulativeRevenue - Commission;
@@ -44,6 +56,30 @@ namespace ShareInvest.BackTest
         public void Log(int param)
         {
             string path = string.Concat(Environment.CurrentDirectory, type, DateTime.Now.ToString("yyMMdd"), @"\"), file = string.Concat(param, ".csv");
+
+            try
+            {
+                di = new DirectoryInfo(path);
+
+                if (di.Exists == false)
+                    di.Create();
+
+                using (sw = new StreamWriter(path + file))
+                {
+                    foreach (string val in list)
+                        if (val.Length > 0)
+                            sw.WriteLine(val);
+                }
+                list.Clear();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+        public void Log(int param, int se, int le)
+        {
+            string path = string.Concat(Environment.CurrentDirectory, type, DateTime.Now.ToString("yyMMdd"), @"\"), file = string.Concat(param, '^', se, '^', le, ".csv");
 
             try
             {

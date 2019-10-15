@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ShareInvest.Communicate;
 using ShareInvest.Control;
 
 namespace ShareInvest

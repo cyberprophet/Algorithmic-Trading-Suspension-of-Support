@@ -21,16 +21,7 @@ namespace ShareInvest.Control
             {
                 Confirm.Get().Show();
                 api = Futures.Get();
-
-                if (dr == DialogResult.Yes)
-                    new Statistics(type);
-
-                else if (dr == DialogResult.No)
-                    new Revenue(type);
-
-                else
-                    OnReceiveExit();
-
+                new Statistics(type);
                 new Temporary(type);
                 api.SetAPI(axAPI);
                 api.StartProgress(type);
@@ -39,21 +30,11 @@ namespace ShareInvest.Control
             else if (dr == DialogResult.No)
             {
                 axAPI.Dispose();
-
-                int i, l = type > 0 ? 50 : 100, j, h = 20;
+                int i, l = type > 0 ? 50 : 100;
 
                 for (i = type > 0 ? 1 : 10; i < l; i++)
-                {
-                    if (dr == DialogResult.Yes)
-                        new Statistics(i, type);
+                    new Statistics(i, type);
 
-                    else if (dr == DialogResult.No)
-                        for (j = 2; j < h; j++)
-                            new Revenue(i, j, type);
-
-                    else
-                        OnReceiveExit();
-                }
                 new Storage(type);
                 Box.Show("Complete. . .♬", "Notice", 3750);
                 OnReceiveExit();
