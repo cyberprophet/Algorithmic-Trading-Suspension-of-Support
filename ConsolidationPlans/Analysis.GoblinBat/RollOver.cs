@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ShareInvest.BackTest;
-using ShareInvest.Chart.Kospi200;
+using ShareInvest.Chart;
 using ShareInvest.EventHandler;
 using ShareInvest.SecondaryIndicators;
 using ShareInvest.Secret;

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ShareInvest.Chart.Kospi200
+namespace ShareInvest.Chart
 {
     public class Daily : Fetch, IEnumerable
     {

@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using ShareInvest.BackTest;
-using ShareInvest.Chart;
 using ShareInvest.EventHandler;
 using ShareInvest.SecondaryIndicators;
 using ShareInvest.Secret;
+using ShareInvest.Connect;
+using ShareInvest.Chart;
 
 namespace ShareInvest.Analysis
 {
-    public class Revenue : Conceal
+    class StatisticsKosdaq150:Conceal
     {
-        public Revenue(int reaction, int tick, int type)
+        public StatisticsKosdaq150(int reaction, int type)
         {
             this.type = type;
             info = new Information(type);
@@ -22,7 +23,7 @@ namespace ShareInvest.Analysis
             long_ema = new List<double>(32768);
             shortDay = new List<double>(512);
             longDay = new List<double>(512);
-            act = new Action(() => info.Log(reaction, tick));
+            act = new Action(() => info.Log(reaction));
             Send += Analysis;
 
             foreach (string rd in new Daily(type))
@@ -32,7 +33,7 @@ namespace ShareInvest.Analysis
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
 
-                Send?.Invoke(this, new Datum(reaction, tick, arr[0], double.Parse(arr[1])));
+                Send?.Invoke(this, new Datum(reaction, arr[0], double.Parse(arr[1])));
             }
             foreach (string rd in new Tick(type))
             {
@@ -41,11 +42,11 @@ namespace ShareInvest.Analysis
                 if (arr[1].Contains("-"))
                     arr[1] = arr[1].Substring(1);
 
-                Send?.Invoke(this, new Datum(reaction, tick, arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
+                Send?.Invoke(this, new Datum(reaction, arr[0], double.Parse(arr[1]), int.Parse(arr[2])));
             }
             act.BeginInvoke(act.EndInvoke, null);
         }
-        public Revenue(int type)
+        public StatisticsKosdaq150(int type)
         {
             this.type = type;
             b = new BollingerBands(20, 2);
@@ -79,8 +80,7 @@ namespace ShareInvest.Analysis
             Send -= Analysis;
             arr = SetSecret(type).Split('^');
             Secret = int.Parse(arr[0]);
-            Tick = int.Parse(arr[1]);
-            api = Futures.Get();
+            api = ConnectKosdaq150.Get();
             api.Send += Analysis;
         }
         private void Analysis(object sender, Datum e)
@@ -105,16 +105,8 @@ namespace ShareInvest.Analysis
             }
             else
             {
-                if (sc > 0)
-                {
-                    short_ema.Add(ema.Make(ema.ShortPeriod, sc, e.Price, sc > 0 ? short_ema[sc - 1] : 0));
-                    long_ema.Add(ema.Make(ema.LongPeriod, lc, e.Price, lc > 0 ? long_ema[lc - 1] : 0));
-                }
-                else
-                {
-                    short_ema.Add(ema.Make(e.Price));
-                    long_ema.Add(ema.Make(e.Price));
-                }
+                short_ema.Add(sc > 0 ? ema.Make(ema.ShortPeriod, sc, e.Price, short_ema[sc - 1]) : ema.Make(e.Price));
+                long_ema.Add(lc > 0 ? ema.Make(ema.LongPeriod, lc, e.Price, long_ema[lc - 1]) : ema.Make(e.Price));
                 trend_width.Add(b.Width(ma, up, bo));
             }
             if (api != null)
@@ -123,7 +115,7 @@ namespace ShareInvest.Analysis
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(api.Quantity + quantity) < (int)(basicAsset / (e.Price * ktm * kqm)))
                         api.OnReceiveOrder(dic[quantity]);
 
                     return;
@@ -144,8 +136,6 @@ namespace ShareInvest.Analysis
                 }
                 if (api.Quantity != 0 && api.Remaining.Equals("1") && Time > 151945)
                     api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
-
-                SetRevenue(e.Price, trend);
             }
             else if (e.Reaction > 0)
             {
@@ -160,11 +150,9 @@ namespace ShareInvest.Analysis
                 {
                     quantity = Order(sc > 1 ? Trend() : 0, wc > b.MidPeriod ? TrendWidth(trend_width.Count) : 0, trend);
 
-                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * (type > 0 ? ktm * kqm : tm * margin))))
+                    if (Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs(info.Quantity + quantity) < (int)(basicAsset / (e.Price * ktm * kqm)))
                         info.Operate(e.Price, quantity);
                 }
-                else
-                    SetRevenue(e.Price, trend, e.Tick);
             }
         }
         private int Analysis(string time, double price)
@@ -200,29 +188,6 @@ namespace ShareInvest.Analysis
             lc = longDay.Count;
 
             return lc > 1 ? shortDay[sc - 1] - longDay[lc - 1] - (shortDay[sc - 2] - longDay[lc - 2]) > 0 ? 1 : -1 : 0;
-        }
-        private void SetRevenue(double price, int trend)
-        {
-            if (trend > 0 && api.Quantity > 0 && price > api.PurchasePrice + Tick * value)
-            {
-                api.OnReceiveOrder(dic[-1]);
-
-                return;
-            }
-            if (trend < 0 && api.Quantity < 0 && price < api.PurchasePrice - Tick * value)
-            {
-                api.OnReceiveOrder(dic[1]);
-
-                return;
-            }
-        }
-        private void SetRevenue(double price, int trend, int tick)
-        {
-            if (trend > 0 && info.Quantity > 0 && price > info.PurchasePrice + tick * value)
-                info.Operate(price, -1);
-
-            else if (trend < 0 && info.Quantity < 0 && price < info.PurchasePrice - tick * value)
-                info.Operate(price, 1);
         }
         private int Order(double eg, double wg, int trend)
         {
@@ -261,10 +226,6 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
-        private int Tick
-        {
-            get; set;
-        }
         private int Count
         {
             get
@@ -291,7 +252,7 @@ namespace ShareInvest.Analysis
         };
         private readonly Action act;
         private readonly Information info;
-        private readonly Futures api;
+        private readonly ConnectKosdaq150 api;
         private readonly BollingerBands b;
         private readonly EMA ema;
         private readonly List<double> trend_width;
@@ -302,7 +263,7 @@ namespace ShareInvest.Analysis
         private readonly double[] sma;
         private readonly string[] arr;
         private readonly int type;
-        private const int basicAsset = 35000000;
+        private const int basicAsset = 25000000;
         private int count = -1;
         public event EventHandler<Datum> Send;
     }

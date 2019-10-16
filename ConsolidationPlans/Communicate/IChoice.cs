@@ -4,7 +4,19 @@
     {
         int Type
         {
-            get; set;
+            get;
+        }
+        int Index
+        {
+            get;
+        }
+        int Length
+        {
+            get;
+        }
+        string Path
+        {
+            get;
         }
     }
 }

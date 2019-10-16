@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace ShareInvest.Chart.Kospi200
+namespace ShareInvest.Chart
 {
     public class Tick : Fetch, IEnumerable
     {
