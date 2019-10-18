@@ -1,14 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using ShareInvest.Communicate;
-using ShareInvest.Const;
+﻿using System.Windows.Forms;
+using ShareInvest.EventHandler;
 
 namespace ShareInvest.Control
 {
@@ -17,17 +8,17 @@ namespace ShareInvest.Control
         public Progress()
         {
             InitializeComponent();
-            int i, j, h, x = 100, y = 100, z = 100;
+        }
+        public void Rate(object sender, ProgressRate pr)
+        {
+            if (pr.Result.IsCompleted)
+            {
+                if (progressBar.Value > 1000)
+                    progressBar.Value = 0;
 
-            for (i = 1; i < x; i++)
-                for (j = 5; j < y; j++)
-                    for (h = 5; h < z; h++)
-                        new SpecifyKospi200
-                        {
-                            Reaction = i,
-                            ShortMinPeriod = j,
-                            ShortDayPeriod = h
-                        };
+                progressBar.Value += 1;
+            }
+            Application.DoEvents();
         }
     }
 }
