@@ -16,9 +16,9 @@ namespace ShareInvest.Kospi200
         public Kospi200()
         {
             InitializeComponent();
-            ChooseResult(Choose.Show("Please Select the Button You Want to Proceed. . .", "ShareInvest GoblinBat Kospi200 TradingSystem", "Trading", "BackTest", "Exit"));
+            Trading(ChooseResult(Choose.Show("Please Select the Button You Want to Proceed. . .", "ShareInvest GoblinBat Kospi200 TradingSystem", "Trading", "BackTest", "Exit")));
         }
-        private void ChooseResult(DialogResult result)
+        private string[] ChooseResult(DialogResult result)
         {
             if (result.Equals(DialogResult.Yes))
             {
@@ -28,22 +28,10 @@ namespace ShareInvest.Kospi200
                     Size = ca.Size;
                     ca.Dock = DockStyle.Fill;
                     StartPosition = FormStartPosition.CenterScreen;
+                    ca.SendQuit += OnReceiveDialogClose;
                     ShowDialog();
 
-                    string[] arr = ca.TempText.Split('.');
-
-                    using (new ConnectKHOpenAPI(new SpecifyKospi200
-                    {
-                        Division = true,
-                        Reaction = int.Parse(arr[0]),
-                        ShortMinPeriod = int.Parse(arr[1]),
-                        ShortDayPeriod = int.Parse(arr[2]),
-                        LongMinPeriod = int.Parse(arr[3]),
-                        LongDayPeriod = int.Parse(arr[4])
-                    }))
-                    {
-
-                    }
+                    return ca.TempText.Split('.');
                 }
             }
             else if (result.Equals(DialogResult.No))
@@ -61,29 +49,43 @@ namespace ShareInvest.Kospi200
             }
             Dispose();
             Environment.Exit(0);
+
+            return null;
+        }
+        private void Trading(string[] st)
+        {
+            new ConnectKHOpenAPI(new SpecifyKospi200
+            {
+                Division = true,
+                Reaction = int.Parse(st[0]),
+                ShortMinPeriod = int.Parse(st[1]),
+                ShortDayPeriod = int.Parse(st[2]),
+                LongMinPeriod = int.Parse(st[3]),
+                LongDayPeriod = int.Parse(st[4])
+            });
         }
         private void BackTesting()
         {
-            int i, j, h, f, g, reaction = 100, period = 21;
+            int i, j, h, f, g, reaction = 100;
 
-            for (i = 1; i < reaction; i++)
-                for (j = 5; j < period; j++)
-                    for (h = 5; h < period; h++)
-                        for (g = 20; g < period * 5 - 5; g++)
-                            for (f = 20; f < period * 5 - 5; f++)
+            for (i = 10; i < reaction; i++)
+                for (j = 0; j < sp.Length; j++)
+                    for (h = 0; h < sp.Length; h++)
+                        for (g = 0; g < lp.Length; g++)
+                            for (f = 0; f < lp.Length; f++)
                             {
-                                if (j >= h || g >= f)
+                                if (sp[j] >= lp[g] || sp[h] >= lp[f])
                                     continue;
 
                                 IAsyncResult result = BeginInvoke(new Action(() => new Strategy(new SpecifyKospi200
                                 {
                                     Division = true,
                                     Reaction = i,
-                                    ShortMinPeriod = j,
-                                    ShortDayPeriod = h,
-                                    LongMinPeriod = g,
-                                    LongDayPeriod = f,
-                                    Strategy = string.Concat(i.ToString("D2"), '^', j.ToString("D2"), '^', h.ToString("D2"), '^', g.ToString("D2"), '^', f.ToString("D2"))
+                                    ShortMinPeriod = sp[j],
+                                    ShortDayPeriod = sp[h],
+                                    LongMinPeriod = lp[g],
+                                    LongDayPeriod = lp[f],
+                                    Strategy = string.Concat(i.ToString("D2"), '^', sp[j].ToString("D2"), '^', sp[h].ToString("D2"), '^', lp[g].ToString("D2"), '^', lp[f].ToString("D2"))
                                 })));
                                 EndInvoke(result);
                                 SendRate?.Invoke(this, new ProgressRate(result));
@@ -91,6 +93,12 @@ namespace ShareInvest.Kospi200
             new Storage();
             Box.Show("The Analysis was Successful. . .♬", "Notice", 3750);
         }
+        private void OnReceiveDialogClose(object sender, ForceQuit e)
+        {
+            Close();
+        }
+        private readonly int[] sp = { 3, 5, 10, 15, 20 };
+        private readonly int[] lp = { 20, 35, 60, 90, 120 };
         public event EventHandler<ProgressRate> SendRate;
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows.Forms;
 using ShareInvest.Communicate;
 using ShareInvest.Const;
+using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
 
 namespace ShareInvest.Control
@@ -30,6 +31,7 @@ namespace ShareInvest.Control
             arr = sender.ToString().Split(':');
             arr = arr[1].Split('￦');
             TempText = arr[0].Trim();
+            SendQuit?.Invoke(this, new ForceQuit(1));
         }
         private void SetSecret()
         {
@@ -67,29 +69,30 @@ namespace ShareInvest.Control
         {
             file = list[0].Split(',');
             Count = ip.Turn;
-            count = new long[file.Length];
+            count = new long[file.Length - 1];
+            int i;
 
             do
             {
                 arr = list[list.Count - ip.Turn].Split(',');
                 Count--;
 
-                for (int i = 0; i < arr.Length - 1; i++)
+                for (i = 0; i < count.Length; i++)
                     count[i] += long.Parse(arr[i + 1]);
             }
             while (Count > 1);
 
-            for (Count = 0; Count < file.Length - 1; Count++)
-                ip.DescendingSort[file[Count + 1]] = count[Count];
+            for (i = 0; i < count.Length; i++)
+                ip.DescendingSort[file[i + 1]] = count[i];
 
-            Count = 0;
+            i = 0;
 
             foreach (KeyValuePair<string, long> kv in ip.DescendingSort.OrderByDescending(o => o.Value))
             {
-                if (Count > 13)
+                if (i > 13)
                     break;
 
-                string.Concat(ip.FindByName, Count++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " ￦", kv.Value.ToString("N0"));
+                string.Concat(ip.FindByName, i++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " ￦", kv.Value.ToString("N0"));
             }
         }
         private int RecentDate
@@ -110,5 +113,6 @@ namespace ShareInvest.Control
             new MakeUpWeekly(),
             new MakeUpMonthly()
         };
+        public event EventHandler<ForceQuit> SendQuit;
     }
 }
