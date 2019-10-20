@@ -39,6 +39,7 @@ namespace ShareInvest.Analysize
             api = PublicFutures.Get();
             api.Retention = Retention;
             result = Choose.Show("Decide How to Order. . .", "Notice", "MarketPrice", "SpecifyPrice", "DotHighPrice");
+            om = order[result];
             api.Send += Analysis;
         }
         private int Analysis(string time, double price)
@@ -124,19 +125,17 @@ namespace ShareInvest.Analysize
 
                 if (api != null && Math.Abs(api.Quantity + quantity) < max)
                 {
-                    om = order[result];
-                    om.SlbyTP = dic[quantity];
-
                     if (!result.Equals(DialogResult.Yes))
-                        order[result].Price = (result.Equals(DialogResult.No) ? e.Price : quantity > 0 ? e.Price + st.ErrorRate : e.Price - st.ErrorRate).ToString();
+                        om.Price = (result.Equals(DialogResult.No) ? e.Price : quantity > 0 ? e.Price + st.ErrorRate : e.Price - st.ErrorRate).ToString();
 
+                    om.SlbyTP = dic[quantity];
                     api.OnReceiveOrder(om);
                 }
                 else if (info != null && Math.Abs(info.Quantity + quantity) < max)
                     info.Operate(e.Price, quantity);
             }
         }
-        private int Order(double min, int day)
+        private int Order(int min, int day)
         {
             return min > 0 && day > 0 ? 1 : min < 0 && day < 0 ? -1 : 0;
         }
@@ -191,12 +190,13 @@ namespace ShareInvest.Analysize
         };
         private readonly Dictionary<DialogResult, IOrderMethod> order = new Dictionary<DialogResult, IOrderMethod>()
         {
-            {DialogResult.Yes, new MarketOrder{ }},
-            {DialogResult.No, new MostFavorableOrder{ }},
-            {DialogResult.Cancel,new MostFavorableOrder{ }}
+            {DialogResult.Yes, new MarketOrder()},
+            {DialogResult.No, new MostFavorableOrder()},
+            {DialogResult.Cancel,new MostFavorableOrder()}
         };
-        private readonly DialogResult result;
         private readonly IStrategy st;
+        private readonly IOrderMethod om;
+        private readonly DialogResult result;
         private readonly EMA ema;
         private readonly Information info;
         private readonly PublicFutures api;
@@ -204,7 +204,6 @@ namespace ShareInvest.Analysize
         private readonly List<double> longEMA;
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
-        private IOrderMethod om;
         public event EventHandler<Datum> Send;
     }
 }
