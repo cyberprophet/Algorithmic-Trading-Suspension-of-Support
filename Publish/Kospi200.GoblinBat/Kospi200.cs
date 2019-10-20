@@ -7,6 +7,7 @@ using ShareInvest.BackTest;
 using ShareInvest.Const;
 using ShareInvest.Control;
 using ShareInvest.EventHandler;
+using ShareInvest.Publish;
 using ShareInvest.SelectableMessageBox;
 
 namespace ShareInvest.Kospi200
@@ -25,8 +26,8 @@ namespace ShareInvest.Kospi200
                 using (ChooseAnalysis ca = new ChooseAnalysis())
                 {
                     panel.Controls.Add(ca);
-                    Size = ca.Size;
                     ca.Dock = DockStyle.Fill;
+                    Size = ca.Size;
                     StartPosition = FormStartPosition.CenterScreen;
                     ca.SendQuit += OnReceiveDialogClose;
                     ShowDialog();
@@ -54,41 +55,49 @@ namespace ShareInvest.Kospi200
         }
         private void Trading(string[] st)
         {
-            new ConnectKHOpenAPI(new SpecifyKospi200
+            using (ConnectKHOpenAPI api = new ConnectKHOpenAPI(new SpecifyKospi200
             {
-                Division = true,
+                Division = false,
                 Reaction = int.Parse(st[0]),
                 ShortMinPeriod = int.Parse(st[1]),
                 ShortDayPeriod = int.Parse(st[2]),
                 LongMinPeriod = int.Parse(st[3]),
                 LongDayPeriod = int.Parse(st[4])
-            });
+            }))
+            {
+                panel.Controls.Add(api);
+                panel.Controls.Add(ConfirmOrder.Get());
+                Location = new Point(15, 15);
+                StartPosition = FormStartPosition.Manual;
+                Size = api.Size;
+                api.Dock = DockStyle.Fill;
+                api.Hide();
+                ShowDialog();
+            }
+            Dispose();
+            Environment.Exit(0);
         }
         private void BackTesting()
         {
             int i, j, h, f, g, reaction = 100;
 
             for (i = 10; i < reaction; i++)
-                for (j = 0; j < sp.Length; j++)
-                    for (h = 0; h < sp.Length; h++)
-                        for (g = 0; g < lp.Length; g++)
-                            for (f = 0; f < lp.Length; f++)
+                for (j = 0; j < smp.Length; j++)
+                    for (h = 0; h < sdp.Length; h++)
+                        for (g = 0; g < lmp.Length; g++)
+                            for (f = 0; f < ldp.Length; f++)
                             {
-                                if (sp[j] >= lp[g] || sp[h] >= lp[f])
-                                    continue;
-
-                                IAsyncResult result = BeginInvoke(new Action(() => new Strategy(new SpecifyKospi200
+                                new Strategy(new SpecifyKospi200
                                 {
                                     Division = true,
                                     Reaction = i,
-                                    ShortMinPeriod = sp[j],
-                                    ShortDayPeriod = sp[h],
-                                    LongMinPeriod = lp[g],
-                                    LongDayPeriod = lp[f],
-                                    Strategy = string.Concat(i.ToString("D2"), '^', sp[j].ToString("D2"), '^', sp[h].ToString("D2"), '^', lp[g].ToString("D2"), '^', lp[f].ToString("D2"))
-                                })));
-                                EndInvoke(result);
-                                SendRate?.Invoke(this, new ProgressRate(result));
+                                    ShortMinPeriod = smp[j],
+                                    ShortDayPeriod = sdp[h],
+                                    LongMinPeriod = lmp[g],
+                                    LongDayPeriod = ldp[f],
+                                    Strategy = string.Concat(i.ToString("D2"), '^', smp[j].ToString("D2"), '^', sdp[h].ToString("D2"), '^', lmp[g].ToString("D2"), '^', ldp[f].ToString("D2"))
+                                });
+                                SendRate?.Invoke(this, new ProgressRate(reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
                             }
             new Storage();
             Box.Show("The Analysis was Successful. . .♬", "Notice", 3750);
@@ -97,8 +106,10 @@ namespace ShareInvest.Kospi200
         {
             Close();
         }
-        private readonly int[] sp = { 3, 5, 10, 15, 20 };
-        private readonly int[] lp = { 20, 35, 60, 90, 120 };
+        private readonly int[] smp = { 3, 5, 7 };
+        private readonly int[] lmp = { 20, 35, 60 };
+        private readonly int[] sdp = { 3, 5, 7 };
+        private readonly int[] ldp = { 20, 35, 60 };
         public event EventHandler<ProgressRate> SendRate;
     }
 }

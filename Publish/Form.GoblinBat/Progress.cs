@@ -11,13 +11,11 @@ namespace ShareInvest.Control
         }
         public void Rate(object sender, ProgressRate pr)
         {
-            if (pr.Result.IsCompleted)
-            {
-                if (progressBar.Value > 1000)
-                    progressBar.Value = 0;
+            if (progressBar.Maximum != pr.Result)
+                progressBar.Maximum = pr.Result;
 
-                progressBar.Value += 1;
-            }
+            progressBar.Value += 1;
+
             Application.DoEvents();
         }
     }

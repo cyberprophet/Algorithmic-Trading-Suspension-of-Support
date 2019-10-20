@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using AxKHOpenAPILib;
 using ShareInvest.AutoMessageBox;
 using ShareInvest.Catalog;
@@ -60,23 +61,12 @@ namespace ShareInvest.Publish
             Box.Show("API Not Found. . .", "Caution", waiting);
             SendExit?.Invoke(this, new ForceQuit(end));
         }
-        public void OnReceiveOrder(string sSlbyTP)
+        public void OnReceiveOrder(IOrderMethod om)
         {
             request.RequestTrData(new Task(() =>
             {
                 if (ConfirmOrder.Get().CheckCurrent())
-                    ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "3", 1, "", "");
-
-                if (ErrorCode != 0)
-                    new Error(ErrorCode);
-            }));
-        }
-        public void OnReceiveOrder(string sSlbyTP, string sPrice)
-        {
-            request.RequestTrData(new Task(() =>
-            {
-                if (ConfirmOrder.Get().CheckCurrent())
-                    ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, sSlbyTP, "9", 1, sPrice, "");
+                    ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, om.SlbyTP, om.OrdTp, 1, om.Price, "");
 
                 if (ErrorCode != 0)
                     new Error(ErrorCode);
@@ -221,20 +211,18 @@ namespace ShareInvest.Publish
         {
             if (e.nErrCode == 0)
             {
-                Account = axAPI.GetLoginInfo("ACCLIST");
-                Code = ErrorCode == 0 ? axAPI.GetFutureCodeByIndex(e.nErrCode) : axAPI.GetFutureCodeByIndex(ErrorCode);
-
-                if (Account == null)
+                if (axAPI.GetLoginInfo("GetServerGubun").Equals("1"))
                 {
-                    Box.Show("This Account is not Registered.", "Caution", waiting);
-
+                    Box.Show("No Mock Investment. . .♬♬♬", "Caution", waiting);
                     SendExit?.Invoke(this, new ForceQuit(end));
                 }
-                if (!axAPI.GetLoginInfo("GetServerGubun").Equals("1"))
-                    Box.Show("It's a Real Investment. . .♬♬♬", "Caution", waiting);
-
+                Account = axAPI.GetLoginInfo("ACCLIST");
+                Code = ErrorCode == 0 ? axAPI.GetFutureCodeByIndex(e.nErrCode) : axAPI.GetFutureCodeByIndex(ErrorCode);
                 axAPI.KOA_Functions("ShowAccountWindow", "");
                 RemainingDay();
+
+                if (DialogResult.OK == MessageBox.Show("Do You Want to Retrieve Recent Data?", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question))
+                    Request();
 
                 return;
             }

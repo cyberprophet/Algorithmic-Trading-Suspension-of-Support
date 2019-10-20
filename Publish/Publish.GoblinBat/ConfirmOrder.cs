@@ -4,7 +4,7 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.Publish
 {
-    public partial class ConfirmOrder : Form
+    public partial class ConfirmOrder : UserControl
     {
         public static ConfirmOrder Get()
         {
@@ -25,12 +25,6 @@ namespace ShareInvest.Publish
         {
             InitializeComponent();
             PublicFutures.Get().SendConfirm += OnReceiveIdentify;
-        }
-        private void ConfirmOrder_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            cf.Dispose();
-            Dispose();
-            Environment.Exit(0);
         }
         private static ConfirmOrder cf;
     }

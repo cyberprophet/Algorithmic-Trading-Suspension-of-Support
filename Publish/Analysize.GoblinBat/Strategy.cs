@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 using ShareInvest.BackTest;
 using ShareInvest.Chart;
 using ShareInvest.Communicate;
+using ShareInvest.Const;
 using ShareInvest.EventHandler;
 using ShareInvest.Publish;
 using ShareInvest.SecondaryIndicators;
+using ShareInvest.SelectableMessageBox;
 
 namespace ShareInvest.Analysize
 {
@@ -21,21 +24,21 @@ namespace ShareInvest.Analysize
             Send += Analysis;
             this.st = st;
 
-            if (st.Reaction > 0)
-            {
+            if (st.Division)
                 info = new Information(st);
-                act = new Action(() => info.Log());
-            }
+
             GetChart();
 
-            if (st.Reaction > 0)
+            if (st.Division)
             {
-                act.BeginInvoke(act.EndInvoke, null);
+                info.Log();
 
                 return;
             }
             Send -= Analysis;
             api = PublicFutures.Get();
+            api.Retention = Retention;
+            result = Choose.Show("Decide How to Order. . .", "Notice", "MarketPrice", "SpecifyPrice", "DotHighPrice");
             api.Send += Analysis;
         }
         private int Analysis(string time, double price)
@@ -79,39 +82,58 @@ namespace ShareInvest.Analysize
         {
             int quantity = Order(Analysis(e.Check, e.Price), Analysis(e.Time, e.Price));
 
-            if (Math.Abs(e.Volume) > e.Reaction && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && Math.Abs((api != null ? api.Quantity : info.Quantity) + quantity) < (int)(st.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)))
+            if (info != null && (e.Time.Length > 2 && e.Time.Substring(6, 4).Equals("1545") || Array.Exists(st.Type > 0 ? info.Kosdaq : info.Kospi, o => o.Equals(e.Time))))
             {
-                if (api != null)
-                {
-                    api.OnReceiveOrder(dic[quantity]);
+                while (info.Quantity != 0)
+                    info.Operate(e.Price, info.Quantity > 0 ? -1 : 1);
 
-                    return;
-                }
-                info.Operate(e.Price, quantity);
+                info.Save(e.Time);
+
+                return;
             }
-            else if (api != null && api.Quantity != 0)
+            if (api != null && api.Quantity != 0)
             {
                 if (api.Remaining == null)
                     api.RemainingDay();
 
                 Time = int.Parse(e.Time);
 
-                if (After == false && Time > 154450)
+                if (api.Quantity != 0 && api.Remaining.Equals("1") && Time > 151945)
+                {
+                    api.OnReceiveOrder(new MarketOrder
+                    {
+                        SlbyTP = dic[api.Quantity > 0 ? -1 : 1]
+                    });
+                    return;
+                }
+                else if (After == false && Time > 154450)
                 {
                     After = true;
 
                     for (quantity = Math.Abs(api.Quantity); quantity > 0; quantity--)
-                        api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
+                        api.OnReceiveOrder(new MarketOrder
+                        {
+                            SlbyTP = dic[api.Quantity > 0 ? -1 : 1]
+                        });
+                    return;
                 }
-                else if (api.Quantity != 0 && api.Remaining.Equals("1") && Time > 151945)
-                    api.OnReceiveOrder(dic[api.Quantity > 0 ? -1 : 1]);
             }
-            else if (st.Division && e.Time.Length > 2 && e.Time.Substring(6, 4).Equals("1545") || Array.Exists(st.Type > 0 ? info.KosdaqRemaining : info.Remaining, o => o.Equals(e.Time)))
+            if (Math.Abs(e.Volume) > e.Reaction && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
             {
-                while (info.Quantity != 0)
-                    info.Operate(e.Price, info.Quantity > 0 ? -1 : 1);
+                int max = (int)(st.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate));
 
-                info.Save(e.Time);
+                if (api != null && Math.Abs(api.Quantity + quantity) < max)
+                {
+                    om = order[result];
+                    om.SlbyTP = dic[quantity];
+
+                    if (!result.Equals(DialogResult.Yes))
+                        order[result].Price = (result.Equals(DialogResult.No) ? e.Price : quantity > 0 ? e.Price + st.ErrorRate : e.Price - st.ErrorRate).ToString();
+
+                    api.OnReceiveOrder(om);
+                }
+                else if (info != null && Math.Abs(info.Quantity + quantity) < max)
+                    info.Operate(e.Price, quantity);
             }
         }
         private int Order(double min, int day)
@@ -128,6 +150,7 @@ namespace ShareInvest.Analysize
                     if (arr[1].Contains("-"))
                         arr[1] = arr[1].Substring(1);
 
+                    Retention = arr[0];
                     Send?.Invoke(this, arr.Length > 2 ? new Datum(st.Reaction, arr[0], double.Parse(arr[1]), int.Parse(arr[2])) : new Datum(st.Reaction, arr[0], double.Parse(arr[1])));
                 }
         }
@@ -152,6 +175,10 @@ namespace ShareInvest.Analysize
         {
             get; set;
         }
+        private string Retention
+        {
+            get; set;
+        }
         private readonly string[] chart =
         {
             "Day",
@@ -162,15 +189,22 @@ namespace ShareInvest.Analysize
             {-1, "1"},
             {1, "2"},
         };
+        private readonly Dictionary<DialogResult, IOrderMethod> order = new Dictionary<DialogResult, IOrderMethod>()
+        {
+            {DialogResult.Yes, new MarketOrder{ }},
+            {DialogResult.No, new MostFavorableOrder{ }},
+            {DialogResult.Cancel,new MostFavorableOrder{ }}
+        };
+        private readonly DialogResult result;
         private readonly IStrategy st;
         private readonly EMA ema;
-        private readonly Action act;
         private readonly Information info;
         private readonly PublicFutures api;
         private readonly List<double> shortEMA;
         private readonly List<double> longEMA;
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
+        private IOrderMethod om;
         public event EventHandler<Datum> Send;
     }
 }

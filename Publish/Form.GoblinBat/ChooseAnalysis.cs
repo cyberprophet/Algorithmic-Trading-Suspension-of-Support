@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -20,11 +21,25 @@ namespace ShareInvest.Control
         public ChooseAnalysis()
         {
             InitializeComponent();
-            SetSecret();
+            file = SetSecret().Split('^');
+            cumulative.Text = string.Concat(cumulative.Text, " [", file[0], "]");
+            recent.Text = string.Concat(recent.Text, " [", file[1], "]");
 
             foreach (IMakeUp val in mp)
                 for (Count = 0; Count < 14; Count++)
+                {
                     string.Concat(val.FindByName, Count).FindByName<Button>(this).Click += ButtonClick;
+
+                    if (string.Concat(val.FindByName, Count).FindByName<Button>(this).Text.Contains("-"))
+                    {
+                        string.Concat(val.FindByName, Count).FindByName<Button>(this).ForeColor = Color.DeepSkyBlue;
+                        string.Concat(val.FindByName, Count).FindByName<Button>(this).Text = string.Concat(val.FindByName, Count).FindByName<Button>(this).Text.Replace("-", string.Empty);
+
+                        continue;
+                    }
+                    string.Concat(val.FindByName, Count).FindByName<Button>(this).ForeColor = Color.Maroon;
+                }
+            Size = new Size(350, 150);
         }
         private void ButtonClick(object sender, EventArgs e)
         {
@@ -33,7 +48,7 @@ namespace ShareInvest.Control
             TempText = arr[0].Trim();
             SendQuit?.Invoke(this, new ForceQuit(1));
         }
-        private void SetSecret()
+        private string SetSecret()
         {
             file = Directory.GetFiles(string.Concat(Environment.CurrentDirectory, @"\Statistics\"), "*.csv", SearchOption.AllDirectories);
 
@@ -58,12 +73,15 @@ namespace ShareInvest.Control
 
                     foreach (IMakeUp val in mp)
                         MakeUp(list, val);
+
+                    return string.Concat(list[1].Substring(0, 8), "^", list[list.Count - 2].Substring(0, 8));
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
+            return string.Empty;
         }
         private void MakeUp(List<string> list, IMakeUp ip)
         {
@@ -74,7 +92,7 @@ namespace ShareInvest.Control
 
             do
             {
-                arr = list[list.Count - ip.Turn].Split(',');
+                arr = list[list.Count - Count].Split(',');
                 Count--;
 
                 for (i = 0; i < count.Length; i++)
@@ -109,8 +127,8 @@ namespace ShareInvest.Control
         {
             new MakeUpCumulative(),
             new MakeUpRecentDate(),
-            new MakeUpBiweekly(),
             new MakeUpWeekly(),
+            new MakeUpBiweekly(),
             new MakeUpMonthly()
         };
         public event EventHandler<ForceQuit> SendQuit;

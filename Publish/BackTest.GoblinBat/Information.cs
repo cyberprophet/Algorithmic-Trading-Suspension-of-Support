@@ -24,10 +24,7 @@ namespace ShareInvest.BackTest
         {
             Revenue = CumulativeRevenue - Commission;
             TodayCommission = Commission - TempCommission;
-
-            if (TodayCommission != 0)
-                list.Add(string.Concat(DateTime.ParseExact(time.Substring(0, 6), "yyMMdd", CultureInfo.CurrentCulture).ToString("yy-MM-dd"), ',', TodayCommission, ',', Revenue - TodayRevenue, ',', CumulativeRevenue - Commission));
-
+            list.Add(string.Concat(DateTime.ParseExact(time.Substring(0, 6), "yyMMdd", CultureInfo.CurrentCulture).ToString("yy-MM-dd"), ',', TodayCommission, ',', Revenue - TodayRevenue, ',', CumulativeRevenue - Commission));
             TempCommission = Commission;
             TodayRevenue = Revenue;
         }
@@ -59,14 +56,14 @@ namespace ShareInvest.BackTest
         {
             this.st = st;
         }
-        public string[] KosdaqRemaining
+        public string[] Kosdaq
         {
             get; private set;
         } =
             {
                 "190911151957"
             };
-        public string[] Remaining
+        public string[] Kospi
         {
             get; private set;
         } =

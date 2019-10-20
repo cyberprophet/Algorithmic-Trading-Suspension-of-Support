@@ -4,14 +4,13 @@ namespace ShareInvest.EventHandler
 {
     public class ProgressRate : EventArgs
     {
-        public IAsyncResult Result
+        public int Result
         {
             get; private set;
         }
-        public ProgressRate(IAsyncResult result)
+        public ProgressRate(int result)
         {
             Result = result;
         }
-
     }
 }

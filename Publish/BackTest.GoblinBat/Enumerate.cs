@@ -14,11 +14,11 @@ namespace ShareInvest.BackTest
 
             foreach (string file in files)
             {
-                arr = file.Split('.');
-                arr = arr[0].Split('\\');
+                arr = file.Split('\\');
+                arr = arr[arr.Length - 1].Split('.');
 
                 foreach (string val in ReadCSV(file, new List<string>()))
-                    yield return string.Concat(arr[arr.Length - 1], ",", val);
+                    yield return string.Concat(arr[0], ",", val);
             }
         }
     }
