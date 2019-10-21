@@ -10,7 +10,7 @@ namespace ShareInvest.Chart
     {
         public IEnumerator GetEnumerator()
         {
-            foreach (string val in ReadCSV(Array.Find(files, o => o.Contains(chart)), type[chart]))
+            foreach (string val in ReadCSV(Array.Find(Directory.GetFiles(Environment.CurrentDirectory, "*.csv", SearchOption.AllDirectories), o => o.Contains(chart)), type[chart]))
                 yield return val;
         }
         public Fetch(string chart)
@@ -22,7 +22,6 @@ namespace ShareInvest.Chart
             {"Day", new List<string>(256)},
             {"Tick", new List<string>(2097152)}
         };
-        private readonly string[] files = Directory.GetFiles(Environment.CurrentDirectory, "*.csv", SearchOption.AllDirectories);
         private readonly string chart;
     }
 }

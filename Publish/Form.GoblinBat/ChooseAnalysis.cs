@@ -50,9 +50,7 @@ namespace ShareInvest.Control
         }
         private string SetSecret()
         {
-            file = Directory.GetFiles(string.Concat(Environment.CurrentDirectory, @"\Statistics\"), "*.csv", SearchOption.AllDirectories);
-
-            foreach (string val in file)
+            foreach (string val in Directory.GetFiles(string.Concat(Environment.CurrentDirectory, @"\Statistics\"), "*.csv", SearchOption.AllDirectories))
             {
                 arr = val.Split('\\');
                 arr = arr[arr.Length - 1].Split('.');

@@ -7,15 +7,11 @@ namespace ShareInvest.FindByName
     {
         public static T FindByName<T>(this object targetClass, string name) where T : class
         {
-            FieldInfo fi = targetClass.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
-
-            return fi.GetValue(targetClass) as T;
+            return targetClass.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(targetClass) as T;
         }
         public static T FindByName<T>(this string name, object targetClass) where T : class
         {
-            FieldInfo fi = targetClass.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
-
-            return fi.GetValue(targetClass) as T;
+            return targetClass.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic).GetValue(targetClass) as T;
         }
         public static Button Button(string name, object targetClass)
         {

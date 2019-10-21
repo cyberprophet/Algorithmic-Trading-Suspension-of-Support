@@ -33,7 +33,7 @@ namespace ShareInvest.Publish
         }
         private void Save()
         {
-            string path = string.Concat(Environment.CurrentDirectory, @"\TickChart\"), file = api.Code + ".csv";
+            string path = string.Concat(Environment.CurrentDirectory, @"\TickChart\");
 
             try
             {
@@ -42,7 +42,7 @@ namespace ShareInvest.Publish
                 if (di.Exists == false)
                     di.Create();
 
-                using (sw = new StreamWriter(path + file, true))
+                using (sw = new StreamWriter(string.Concat(path, api.Code, ".csv"), true))
                 {
                     foreach (string val in memo)
                         if (val.Length > 0)

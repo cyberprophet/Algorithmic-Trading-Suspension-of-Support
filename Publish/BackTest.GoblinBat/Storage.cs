@@ -60,7 +60,7 @@ namespace ShareInvest.BackTest
         }
         private void Statistics(StringBuilder sb)
         {
-            string dt = DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), path = string.Concat(Environment.CurrentDirectory, @"\Statistics\"), file = dt + ".csv";
+            string path = string.Concat(Environment.CurrentDirectory, @"\Statistics\");
 
             try
             {
@@ -69,7 +69,7 @@ namespace ShareInvest.BackTest
                 if (di.Exists == false)
                     di.Create();
 
-                using (sw = new StreamWriter(path + file, true))
+                using (sw = new StreamWriter(string.Concat(path, DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"), true))
                 {
                     sw.WriteLine(sb);
                 }
