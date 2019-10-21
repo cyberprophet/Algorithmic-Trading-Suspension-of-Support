@@ -107,7 +107,7 @@ namespace ShareInvest.Publish
 
                 Quantity = arr[9].Equals("1") ? -int.Parse(arr[4]) : int.Parse(arr[4]);
                 PurchasePrice = double.Parse(arr[5].Contains("-") ? arr[5].Substring(1) : arr[5]);
-                SendConfirm?.Invoke(this, new Identify(confirm, string.Concat(" holds ", arr[9].Equals("1") ? "Sell " : "Buy ", arr[4], " Contracts for ", arr[2], ".")));
+                SendConfirm?.Invoke(this, new Identify(confirm, st, string.Concat(" holds ", arr[9].Equals("1") ? "Sell " : "Buy ", arr[4], " Contracts for ", arr[2], ".")));
             }
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)

@@ -9,9 +9,9 @@ namespace ShareInvest.EventHandler
         {
             Confirm = confirm;
         }
-        public Identify(IConfirm id, string confirm)
+        public Identify(IConfirm id, IStrategy st, string confirm)
         {
-            Confirm = string.Concat(id.Confirm, confirm);
+            Confirm = string.Concat(st.Strategy, ".", id.Confirm, confirm);
         }
         public string Confirm
         {

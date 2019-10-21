@@ -62,7 +62,8 @@ namespace ShareInvest.Kospi200
                 ShortMinPeriod = int.Parse(st[1]),
                 ShortDayPeriod = int.Parse(st[2]),
                 LongMinPeriod = int.Parse(st[3]),
-                LongDayPeriod = int.Parse(st[4])
+                LongDayPeriod = int.Parse(st[4]),
+                Strategy = string.Concat(st[0], ".", st[1], ".", st[2], ".", st[3], ".", st[4])
             }))
             {
                 panel.Controls.Add(api);
@@ -105,7 +106,16 @@ namespace ShareInvest.Kospi200
         }
         private void OnReceiveDialogClose(object sender, ForceQuit e)
         {
-            Close();
+            try
+            {
+                Close();
+            }
+            catch (Exception ex)
+            {
+                Box.Show(string.Concat(ex.ToString(), "\nQuit the Program."), "Exception", 3750);
+                Dispose();
+                Environment.Exit(0);
+            }
         }
         private readonly int[] smp = { 2, 3, 5, 7 };
         private readonly int[] lmp = { 20, 35, 60 };

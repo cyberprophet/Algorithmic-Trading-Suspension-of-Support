@@ -19,7 +19,7 @@ namespace ShareInvest.Publish
         }
         private void OnReceiveIdentify(object sender, Identify e)
         {
-            checkBox.Text = string.Concat(DateTime.Now.ToString("H시 m분 s초  "), e.Confirm);
+            checkBox.Text = string.Concat(DateTime.Now.ToString("H시 m분 s초  No."), e.Confirm);
         }
         private ConfirmOrder()
         {
