@@ -10,9 +10,17 @@ namespace ShareInvest.BackTest
     {
         public IEnumerator GetEnumerator()
         {
-            string[] arr, files = Directory.GetFiles(string.Concat(Environment.CurrentDirectory, @"\Log\", DateTime.Now.ToString("yyMMdd")), "*.csv", SearchOption.AllDirectories);
+            string[] arr;
 
-            foreach (string file in files)
+            foreach (string val in Directory.GetDirectories(Environment.CurrentDirectory, @"\Log\"))
+            {
+                arr = val.Split('\\');
+                int recent = int.Parse(arr[arr.Length - 1]);
+
+                if (recent > RecentDate)
+                    RecentDate = recent;
+            }
+            foreach (string file in Directory.GetFiles(string.Concat(Environment.CurrentDirectory, @"\Log\", RecentDate), "*.csv", SearchOption.AllDirectories))
             {
                 arr = file.Split('\\');
                 arr = arr[arr.Length - 1].Split('.');
@@ -20,6 +28,10 @@ namespace ShareInvest.BackTest
                 foreach (string val in ReadCSV(file, new List<string>()))
                     yield return string.Concat(arr[0], ",", val);
             }
+        }
+        private int RecentDate
+        {
+            get; set;
         }
     }
 }
