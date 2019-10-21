@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using ShareInvest.AutoMessageBox;
 
 namespace ShareInvest.BackTest
 {
@@ -60,10 +61,9 @@ namespace ShareInvest.BackTest
         }
         private void Statistics(StringBuilder sb)
         {
-            string path = string.Concat(Environment.CurrentDirectory, @"\Statistics\");
-
             try
             {
+                string path = string.Concat(Environment.CurrentDirectory, @"\Statistics\");
                 di = new DirectoryInfo(path);
 
                 if (di.Exists == false)
@@ -76,7 +76,8 @@ namespace ShareInvest.BackTest
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                Environment.Exit(0);
             }
         }
         private Storage(string[] arr)

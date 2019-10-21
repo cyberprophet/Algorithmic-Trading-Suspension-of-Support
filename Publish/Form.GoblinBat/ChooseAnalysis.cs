@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using ShareInvest.AutoMessageBox;
 using ShareInvest.Communicate;
 using ShareInvest.Const;
 using ShareInvest.EventHandler;
@@ -77,7 +78,8 @@ namespace ShareInvest.Control
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                Environment.Exit(0);
             }
             return string.Empty;
         }

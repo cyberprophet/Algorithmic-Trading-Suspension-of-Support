@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ShareInvest.AutoMessageBox;
 
 namespace ShareInvest.RetrieveInformation
 {
@@ -19,7 +20,8 @@ namespace ShareInvest.RetrieveInformation
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                Environment.Exit(0);
             }
             return list;
         }

@@ -9,14 +9,14 @@ namespace ShareInvest.Control
 {
     public partial class ConnectKHOpenAPI : UserControl
     {
-        public ConnectKHOpenAPI(IStrategy st)
+        public ConnectKHOpenAPI(IConfirm confirm, IStrategy st)
         {
             InitializeComponent();
             api = PublicFutures.Get();
             new Strategy(st);
             new Temporary().Send += OnReceiveExit;
             api.SetAPI(axAPI);
-            api.StartProgress(st);
+            api.StartProgress(confirm, st);
         }
         private void OnReceiveExit(object sender, ForceQuit e)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ShareInvest.AutoMessageBox;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest.Publish
@@ -51,7 +52,8 @@ namespace ShareInvest.Publish
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                Environment.Exit(0);
             }
             Send?.Invoke(this, new ForceQuit(1));
         }

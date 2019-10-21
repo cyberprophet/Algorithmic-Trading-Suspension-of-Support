@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using ShareInvest.AutoMessageBox;
 using ShareInvest.RetrieveInformation;
 
 namespace ShareInvest.BackTest
@@ -12,13 +13,21 @@ namespace ShareInvest.BackTest
         {
             string[] arr;
 
-            foreach (string val in Directory.GetDirectories(Environment.CurrentDirectory, @"\Log\"))
+            try
             {
-                arr = val.Split('\\');
-                int recent = int.Parse(arr[arr.Length - 1]);
+                foreach (string val in Directory.GetDirectories(string.Concat(Environment.CurrentDirectory, @"\Log\")))
+                {
+                    arr = val.Split('\\');
+                    int recent = int.Parse(arr[arr.Length - 1]);
 
-                if (recent > RecentDate)
-                    RecentDate = recent;
+                    if (recent > RecentDate)
+                        RecentDate = recent;
+                }
+            }
+            catch (Exception ex)
+            {
+                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                Environment.Exit(0);
             }
             foreach (string file in Directory.GetFiles(string.Concat(Environment.CurrentDirectory, @"\Log\", RecentDate), "*.csv", SearchOption.AllDirectories))
             {

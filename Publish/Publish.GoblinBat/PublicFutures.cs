@@ -6,7 +6,6 @@ using AxKHOpenAPILib;
 using ShareInvest.AutoMessageBox;
 using ShareInvest.Catalog;
 using ShareInvest.Communicate;
-using ShareInvest.Const;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 
@@ -50,12 +49,16 @@ namespace ShareInvest.Publish
             axAPI.OnReceiveChejanData += OnReceiveChejanData;
             axAPI.OnReceiveMsg += OnReceiveMsg;
         }
-        public void StartProgress(IStrategy st)
+        public void StartProgress(IConfirm confirm, IStrategy st)
         {
             if (axAPI != null)
             {
+                this.confirm = confirm;
                 this.st = st;
                 ErrorCode = axAPI.CommConnect();
+
+                if (st.Type > 0)
+                    ErrorCode = st.Type;
 
                 return;
             }
@@ -223,8 +226,10 @@ namespace ShareInvest.Publish
                 RemainingDay();
 
                 if (DialogResult.OK == MessageBox.Show("Do You Want to Retrieve Recent Data?", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question))
+                {
+                    Delay.delay = 4150;
                     Request();
-
+                }
                 return;
             }
             Box.Show("등록되지 않은 사용자이거나\n로그인이 원활하지 않습니다.\n프로그램을 종료합니다.", "오류", waiting);
@@ -249,7 +254,6 @@ namespace ShareInvest.Publish
         }
         private PublicFutures()
         {
-            confirm = new FreeVersion();
             request = Delay.GetInstance(delay);
             request.Run();
         }
@@ -283,6 +287,7 @@ namespace ShareInvest.Publish
         {
             get; set;
         }
+        private IConfirm confirm;
         private IStrategy st;
         private AxKHOpenAPI axAPI;
         private StringBuilder sb;
@@ -293,7 +298,6 @@ namespace ShareInvest.Publish
         private const int delay = 205;
         private const int end = 1;
         private static PublicFutures api;
-        private readonly IConfirm confirm;
         private readonly Delay request;
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<ForceQuit> SendExit;

@@ -10,14 +10,14 @@ using ShareInvest.EventHandler;
 using ShareInvest.Publish;
 using ShareInvest.SelectableMessageBox;
 
-namespace ShareInvest.Kospi200
+namespace ShareInvest.Kosdaq150
 {
-    public partial class Kospi200 : Form
+    public partial class Kosdaq150 : Form
     {
-        public Kospi200()
+        public Kosdaq150()
         {
             InitializeComponent();
-            Trading(ChooseResult(Choose.Show("Please Select the Button You Want to Proceed. . .", "ShareInvest GoblinBat Kospi200 TradingSystem", "Trading", "BackTest", "Exit")));
+            Trading(ChooseResult(Choose.Show("Please Select the Button You Want to Proceed. . .", "ShareInvest GoblinBat Kosdaq150 TradingSystem", "Trading", "BackTest", "Exit")));
         }
         private string[] ChooseResult(DialogResult result)
         {
@@ -55,7 +55,7 @@ namespace ShareInvest.Kospi200
         }
         private void Trading(string[] st)
         {
-            using (ConnectKHOpenAPI api = new ConnectKHOpenAPI(new FreeVersion(), new SpecifyKospi200
+            using (ConnectKHOpenAPI api = new ConnectKHOpenAPI(new FreeVersion(), new SpecifyKosdaq150
             {
                 Division = false,
                 Reaction = int.Parse(st[0]),
@@ -81,15 +81,15 @@ namespace ShareInvest.Kospi200
         }
         private void BackTesting()
         {
-            int i, j, h, f, g, reaction = 100;
+            int i, j, h, f, g, reaction = 50;
 
-            for (i = 10; i < reaction; i++)
+            for (i = 1; i < reaction; i++)
                 for (j = 0; j < smp.Length; j++)
                     for (h = 0; h < sdp.Length; h++)
                         for (g = 0; g < lmp.Length; g++)
                             for (f = 0; f < ldp.Length; f++)
                             {
-                                new Strategy(new SpecifyKospi200
+                                new Strategy(new SpecifyKosdaq150
                                 {
                                     Division = true,
                                     Reaction = i,
@@ -116,15 +116,15 @@ namespace ShareInvest.Kospi200
                 Environment.Exit(0);
             }
         }
-        private void Kospi200_FormClosing(object sender, FormClosingEventArgs e)
+        private void Kosdaq150_FormClosing(object sender, FormClosingEventArgs e)
         {
             Dispose();
             Environment.Exit(0);
         }
-        private readonly int[] smp = { 2, 3, 5, 7 };
-        private readonly int[] lmp = { 20, 35, 60 };
-        private readonly int[] sdp = { 2, 3, 5, 7 };
-        private readonly int[] ldp = { 20, 35, 60 };
+        private readonly int[] smp = { 5 };
+        private readonly int[] lmp = { 60 };
+        private readonly int[] sdp = { 5 };
+        private readonly int[] ldp = { 60 };
         public event EventHandler<ProgressRate> SendRate;
     }
 }

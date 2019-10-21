@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using ShareInvest.AutoMessageBox;
 using ShareInvest.BackTest;
 using ShareInvest.Chart;
 using ShareInvest.Communicate;
@@ -141,17 +142,25 @@ namespace ShareInvest.Analysize
         }
         private void GetChart()
         {
-            foreach (string val in chart)
-                foreach (string rd in new Fetch(val))
-                {
-                    string[] arr = rd.Split(',');
+            try
+            {
+                foreach (string val in chart)
+                    foreach (string rd in new Fetch(val))
+                    {
+                        string[] arr = rd.Split(',');
 
-                    if (arr[1].Contains("-"))
-                        arr[1] = arr[1].Substring(1);
+                        if (arr[1].Contains("-"))
+                            arr[1] = arr[1].Substring(1);
 
-                    Retention = arr[0];
-                    Send?.Invoke(this, arr.Length > 2 ? new Datum(st.Reaction, arr[0], double.Parse(arr[1]), int.Parse(arr[2])) : new Datum(st.Reaction, arr[0], double.Parse(arr[1])));
-                }
+                        Retention = arr[0];
+                        Send?.Invoke(this, arr.Length > 2 ? new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])) : new Datum(arr[0], double.Parse(arr[1])));
+                    }
+            }
+            catch (Exception ex)
+            {
+                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                Environment.Exit(0);
+            }
         }
         private bool ConfirmDate(string date)
         {

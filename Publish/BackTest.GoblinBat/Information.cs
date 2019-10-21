@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using ShareInvest.AutoMessageBox;
 using ShareInvest.Communicate;
 
 namespace ShareInvest.BackTest
@@ -30,16 +31,15 @@ namespace ShareInvest.BackTest
         }
         public void Log()
         {
-            string dt = DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), path = string.Concat(Environment.CurrentDirectory, @"\Log\", dt, @"\"), file = string.Concat(st.Strategy, ".csv");
-
             try
             {
+                string path = string.Concat(Environment.CurrentDirectory, @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
                 di = new DirectoryInfo(path);
 
                 if (di.Exists == false)
                     di.Create();
 
-                using (sw = new StreamWriter(path + file))
+                using (sw = new StreamWriter(string.Concat(path, st.Strategy, ".csv")))
                 {
                     foreach (string val in list)
                         if (val.Length > 0)
@@ -49,7 +49,8 @@ namespace ShareInvest.BackTest
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                Environment.Exit(0);
             }
         }
         public Information(IStrategy st)
