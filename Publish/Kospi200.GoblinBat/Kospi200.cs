@@ -72,6 +72,7 @@ namespace ShareInvest.Kospi200
                 Size = api.Size;
                 api.Dock = DockStyle.Fill;
                 api.Hide();
+                api.SendQuit += OnReceiveDialogClose;
                 ShowDialog();
             }
             Dispose();
@@ -106,9 +107,9 @@ namespace ShareInvest.Kospi200
         {
             Close();
         }
-        private readonly int[] smp = { 3, 5, 7 };
+        private readonly int[] smp = { 2, 3, 5, 7 };
         private readonly int[] lmp = { 20, 35, 60 };
-        private readonly int[] sdp = { 3, 5, 7 };
+        private readonly int[] sdp = { 2, 3, 5, 7 };
         private readonly int[] ldp = { 20, 35, 60 };
         public event EventHandler<ProgressRate> SendRate;
     }

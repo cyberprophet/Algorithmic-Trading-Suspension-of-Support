@@ -6,6 +6,7 @@ using AxKHOpenAPILib;
 using ShareInvest.AutoMessageBox;
 using ShareInvest.Catalog;
 using ShareInvest.Communicate;
+using ShareInvest.Const;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 
@@ -106,7 +107,7 @@ namespace ShareInvest.Publish
 
                 Quantity = arr[9].Equals("1") ? -int.Parse(arr[4]) : int.Parse(arr[4]);
                 PurchasePrice = double.Parse(arr[5].Contains("-") ? arr[5].Substring(1) : arr[5]);
-                SendConfirm?.Invoke(this, new Identify(string.Concat(Confirm, " holds ", arr[9].Equals("1") ? "Sell " : "Buy ", arr[4], " Contracts for ", arr[2], ".")));
+                SendConfirm?.Invoke(this, new Identify(confirm, string.Concat(" holds ", arr[9].Equals("1") ? "Sell " : "Buy ", arr[4], " Contracts for ", arr[2], ".")));
             }
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
@@ -209,7 +210,7 @@ namespace ShareInvest.Publish
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
-            if (e.nErrCode == 0)
+            if (e.nErrCode == 0 && confirm.Identify(axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME")))
             {
                 if (axAPI.GetLoginInfo("GetServerGubun").Equals("1"))
                 {
@@ -248,6 +249,7 @@ namespace ShareInvest.Publish
         }
         private PublicFutures()
         {
+            confirm = new FreeVersion();
             request = Delay.GetInstance(delay);
             request.Run();
         }
@@ -257,11 +259,18 @@ namespace ShareInvest.Publish
         } = false;
         private string Account
         {
-            get; set;
-        }
-        private string Confirm
-        {
-            get; set;
+            get
+            {
+                return account;
+            }
+            set
+            {
+                string[] acc = value.Split(';');
+
+                foreach (string val in acc)
+                    if (val.Length > 0 && val.Substring(8, 2).Equals("31"))
+                        account = val;
+            }
         }
         private string ScreenNo
         {
@@ -278,11 +287,13 @@ namespace ShareInvest.Publish
         private AxKHOpenAPI axAPI;
         private StringBuilder sb;
         private int screen;
+        private string account;
         private const string it = "Information that already Exists";
         private const int waiting = 3500;
         private const int delay = 205;
         private const int end = 1;
         private static PublicFutures api;
+        private readonly IConfirm confirm;
         private readonly Delay request;
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<ForceQuit> SendExit;

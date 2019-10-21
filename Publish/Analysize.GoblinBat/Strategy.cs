@@ -119,7 +119,7 @@ namespace ShareInvest.Analysize
                     return;
                 }
             }
-            if (Math.Abs(e.Volume) > e.Reaction && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
+            if ((e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
             {
                 int max = (int)(st.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate));
 
@@ -192,7 +192,7 @@ namespace ShareInvest.Analysize
         {
             {DialogResult.Yes, new MarketOrder()},
             {DialogResult.No, new MostFavorableOrder()},
-            {DialogResult.Cancel,new MostFavorableOrder()}
+            {DialogResult.Cancel, new MostFavorableOrder()}
         };
         private readonly IStrategy st;
         private readonly IOrderMethod om;

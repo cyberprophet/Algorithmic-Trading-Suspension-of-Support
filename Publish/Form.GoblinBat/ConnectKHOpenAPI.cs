@@ -20,8 +20,9 @@ namespace ShareInvest.Control
         }
         private void OnReceiveExit(object sender, ForceQuit e)
         {
-            Environment.Exit(0);
+            SendQuit?.Invoke(this, new ForceQuit(1));
         }
         private readonly PublicFutures api;
+        public event EventHandler<ForceQuit> SendQuit;
     }
 }

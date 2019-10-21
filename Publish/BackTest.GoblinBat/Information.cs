@@ -30,7 +30,7 @@ namespace ShareInvest.BackTest
         }
         public void Log()
         {
-            string path = string.Concat(Environment.CurrentDirectory, @"\Log\", DateTime.Now.ToString("yyMMdd"), @"\"), file = string.Concat(st.Strategy, ".csv");
+            string dt = DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), path = string.Concat(Environment.CurrentDirectory, @"\Log\", dt, @"\"), file = string.Concat(st.Strategy, ".csv");
 
             try
             {

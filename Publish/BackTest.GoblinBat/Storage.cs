@@ -60,7 +60,7 @@ namespace ShareInvest.BackTest
         }
         private void Statistics(StringBuilder sb)
         {
-            string path = string.Concat(Environment.CurrentDirectory, @"\Statistics\"), file = DateTime.Now.ToString("yyMMdd") + ".csv";
+            string dt = DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), path = string.Concat(Environment.CurrentDirectory, @"\Statistics\"), file = dt + ".csv";
 
             try
             {
