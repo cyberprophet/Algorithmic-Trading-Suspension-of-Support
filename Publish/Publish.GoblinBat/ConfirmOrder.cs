@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
 
@@ -20,6 +21,16 @@ namespace ShareInvest.Publish
         private void OnReceiveIdentify(object sender, Identify e)
         {
             checkBox.Text = string.Concat(DateTime.Now.ToString("H시 m분 s초  No."), e.Confirm);
+        }
+        private void CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (CheckCurrent())
+            {
+                checkBox.ForeColor = Color.Ivory;
+
+                return;
+            }
+            checkBox.ForeColor = Color.Maroon;
         }
         private ConfirmOrder()
         {

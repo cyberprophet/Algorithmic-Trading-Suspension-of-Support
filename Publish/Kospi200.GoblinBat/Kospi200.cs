@@ -116,11 +116,6 @@ namespace ShareInvest.Kospi200
                 Environment.Exit(0);
             }
         }
-        private void Kospi200_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            Dispose();
-            Environment.Exit(0);
-        }
         private readonly int[] smp = { 2, 3, 5, 7 };
         private readonly int[] lmp = { 20, 35, 60 };
         private readonly int[] sdp = { 2, 3, 5, 7 };

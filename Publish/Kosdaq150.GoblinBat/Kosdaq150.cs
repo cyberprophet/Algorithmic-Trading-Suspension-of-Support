@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Analysize;
 using ShareInvest.AutoMessageBox;
@@ -25,10 +25,15 @@ namespace ShareInvest.Kosdaq150
             {
                 using (ChooseAnalysis ca = new ChooseAnalysis())
                 {
+                    tableLayoutPanel.SuspendLayout();
+                    panel.SuspendLayout();
+                    tableLayoutPanel.RowStyles.Clear();
+                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 37)));
+                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 63)));
                     panel.Controls.Add(ca);
                     ca.Dock = DockStyle.Fill;
-                    Size = ca.Size;
-                    StartPosition = FormStartPosition.CenterScreen;
+                    panel.ResumeLayout();
+                    tableLayoutPanel.ResumeLayout();
                     ca.SendQuit += OnReceiveDialogClose;
                     ShowDialog();
 
@@ -39,13 +44,19 @@ namespace ShareInvest.Kosdaq150
             {
                 using (Progress pro = new Progress())
                 {
+                    tableLayoutPanel.SuspendLayout();
+                    panel.SuspendLayout();
+                    tableLayoutPanel.RowStyles.Clear();
+                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70)));
+                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 30)));
                     panel.Controls.Add(pro);
-                    Size = pro.Size;
                     pro.Dock = DockStyle.Fill;
-                    Location = new Point(3, 1010);
-                    Show();
+                    panel.ResumeLayout();
+                    tableLayoutPanel.ResumeLayout();
                     SendRate += pro.Rate;
-                    BackTesting();
+                    new Task(() => BackTesting(pro)).Start();
+                    SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
+                    ShowDialog();
                 }
             }
             Dispose();
@@ -66,24 +77,30 @@ namespace ShareInvest.Kosdaq150
                 Strategy = string.Concat(st[0], ".", st[1], ".", st[2], ".", st[3], ".", st[4])
             }))
             {
+                ConfirmOrder cf = ConfirmOrder.Get();
+                tableLayoutPanel.SuspendLayout();
+                panel.SuspendLayout();
+                tableLayoutPanel.RowStyles.Clear();
+                tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70)));
+                tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 50)));
                 panel.Controls.Add(api);
-                panel.Controls.Add(ConfirmOrder.Get());
-                Location = new Point(15, 15);
-                StartPosition = FormStartPosition.Manual;
-                Size = api.Size;
+                panel.Controls.Add(cf);
+                cf.Dock = DockStyle.Fill;
                 api.Dock = DockStyle.Fill;
                 api.Hide();
+                panel.ResumeLayout();
+                tableLayoutPanel.ResumeLayout();
                 api.SendQuit += OnReceiveDialogClose;
                 ShowDialog();
             }
             Dispose();
             Environment.Exit(0);
         }
-        private void BackTesting()
+        private void BackTesting(Progress pro)
         {
-            int i, j, h, f, g, reaction = 50;
+            int i, j, h, f, g;
 
-            for (i = 1; i < reaction; i++)
+            for (i = 1; i < Reaction; i++)
                 for (j = 0; j < smp.Length; j++)
                     for (h = 0; h < sdp.Length; h++)
                         for (g = 0; g < lmp.Length; g++)
@@ -99,10 +116,11 @@ namespace ShareInvest.Kosdaq150
                                     LongDayPeriod = ldp[f],
                                     Strategy = string.Concat(i.ToString("D2"), '^', smp[j].ToString("D2"), '^', sdp[h].ToString("D2"), '^', lmp[g].ToString("D2"), '^', ldp[f].ToString("D2"))
                                 });
-                                SendRate?.Invoke(this, new ProgressRate(reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
+                                pro.ProgressBarValue += 1;
                             }
             new Storage();
             Box.Show("The Analysis was Successful. . .♬", "Notice", 3750);
+            Environment.Exit(0);
         }
         private void OnReceiveDialogClose(object sender, ForceQuit e)
         {
@@ -116,11 +134,10 @@ namespace ShareInvest.Kosdaq150
                 Environment.Exit(0);
             }
         }
-        private void Kosdaq150_FormClosing(object sender, FormClosingEventArgs e)
+        private int Reaction
         {
-            Dispose();
-            Environment.Exit(0);
-        }
+            get; set;
+        } = 50;
         private readonly int[] smp = { 5 };
         private readonly int[] lmp = { 60 };
         private readonly int[] sdp = { 5 };

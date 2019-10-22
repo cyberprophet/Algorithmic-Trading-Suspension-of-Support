@@ -14,9 +14,15 @@ namespace ShareInvest.Control
             if (progressBar.Maximum != pr.Result)
                 progressBar.Maximum = pr.Result;
 
-            progressBar.Value += 1;
-
-            Application.DoEvents();
+            timer.Start();
+        }
+        public int ProgressBarValue
+        {
+            get; set;
+        }
+        private void TimerTick(object sender, System.EventArgs e)
+        {
+            progressBar.Value = ProgressBarValue;
         }
     }
 }
