@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest.Control
@@ -20,7 +21,7 @@ namespace ShareInvest.Control
         {
             get; set;
         }
-        private void TimerTick(object sender, System.EventArgs e)
+        private void TimerTick(object sender, EventArgs e)
         {
             progressBar.Value = ProgressBarValue;
         }

@@ -25,15 +25,11 @@ namespace ShareInvest.Kosdaq150
             {
                 using (ChooseAnalysis ca = new ChooseAnalysis())
                 {
-                    tableLayoutPanel.SuspendLayout();
-                    panel.SuspendLayout();
                     tableLayoutPanel.RowStyles.Clear();
-                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 37)));
-                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 63)));
+                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 43)));
+                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 57)));
                     panel.Controls.Add(ca);
                     ca.Dock = DockStyle.Fill;
-                    panel.ResumeLayout();
-                    tableLayoutPanel.ResumeLayout();
                     ca.SendQuit += OnReceiveDialogClose;
                     ShowDialog();
 
@@ -44,15 +40,11 @@ namespace ShareInvest.Kosdaq150
             {
                 using (Progress pro = new Progress())
                 {
-                    tableLayoutPanel.SuspendLayout();
-                    panel.SuspendLayout();
                     tableLayoutPanel.RowStyles.Clear();
                     tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70)));
                     tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 30)));
                     panel.Controls.Add(pro);
                     pro.Dock = DockStyle.Fill;
-                    panel.ResumeLayout();
-                    tableLayoutPanel.ResumeLayout();
                     SendRate += pro.Rate;
                     new Task(() => BackTesting(pro)).Start();
                     SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
@@ -78,8 +70,6 @@ namespace ShareInvest.Kosdaq150
             }))
             {
                 ConfirmOrder cf = ConfirmOrder.Get();
-                tableLayoutPanel.SuspendLayout();
-                panel.SuspendLayout();
                 tableLayoutPanel.RowStyles.Clear();
                 tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70)));
                 tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 50)));
@@ -88,8 +78,6 @@ namespace ShareInvest.Kosdaq150
                 cf.Dock = DockStyle.Fill;
                 api.Dock = DockStyle.Fill;
                 api.Hide();
-                panel.ResumeLayout();
-                tableLayoutPanel.ResumeLayout();
                 api.SendQuit += OnReceiveDialogClose;
                 ShowDialog();
             }

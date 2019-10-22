@@ -23,8 +23,6 @@ namespace ShareInvest.Control
         {
             InitializeComponent();
             file = SetSecret().Split('^');
-            cumulative.Text = string.Concat(cumulative.Text, " [", file[0], "]");
-            recent.Text = string.Concat(recent.Text, " [", file[1], "]");
 
             foreach (IMakeUp val in mp)
                 for (Count = 0; Count < 14; Count++)
@@ -40,7 +38,8 @@ namespace ShareInvest.Control
                     }
                     string.Concat(val.FindByName, Count).FindByName<Button>(this).ForeColor = Color.Maroon;
                 }
-            Size = new Size(350, 150);
+            cumulative.Text = string.Concat(cumulative.Text, " [", file[0], "]");
+            recent.Text = string.Concat(recent.Text, " [", file[1], "]");
         }
         private void ButtonClick(object sender, EventArgs e)
         {
