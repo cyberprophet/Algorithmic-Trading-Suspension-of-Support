@@ -213,13 +213,13 @@ namespace ShareInvest.Publish
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
-            if (e.nErrCode == 0 && confirm.Identify(axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME")))
+            if (axAPI.GetLoginInfo("GetServerGubun").Equals("1"))
             {
-                if (axAPI.GetLoginInfo("GetServerGubun").Equals("1"))
-                {
-                    Box.Show("No Mock Investment. . .♬♬♬", "Caution", waiting);
-                    SendExit?.Invoke(this, new ForceQuit(end));
-                }
+                Box.Show("등록되지 않은 사용자이거나 모의투자로 접속하셨습니다.\n\n프로그램을 종료합니다.", "오류", waiting);
+                SendExit?.Invoke(this, new ForceQuit(end));
+            }
+            else if (e.nErrCode == 0 && confirm.Identify(axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME")))
+            {
                 Account = axAPI.GetLoginInfo("ACCLIST");
                 Code = ErrorCode == 0 ? axAPI.GetFutureCodeByIndex(e.nErrCode) : axAPI.GetFutureCodeByIndex(ErrorCode);
                 axAPI.KOA_Functions("ShowAccountWindow", "");
@@ -230,10 +230,8 @@ namespace ShareInvest.Publish
                     Delay.delay = 4150;
                     Request();
                 }
-                return;
+                SendConfirm?.Invoke(this, new Identify("The Remaining Validity Period is ", Remaining));
             }
-            Box.Show("등록되지 않은 사용자이거나\n로그인이 원활하지 않습니다.\n프로그램을 종료합니다.", "오류", waiting);
-            SendExit?.Invoke(this, new ForceQuit(end));
         }
         private void InputValueRqData(TR param)
         {

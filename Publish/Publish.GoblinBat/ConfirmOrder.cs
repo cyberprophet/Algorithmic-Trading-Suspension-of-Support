@@ -20,7 +20,7 @@ namespace ShareInvest.Publish
         }
         private void OnReceiveIdentify(object sender, Identify e)
         {
-            checkBox.Text = string.Concat(DateTime.Now.ToString("H시 m분 s초  No."), e.Confirm);
+            checkBox.Text = e.Confirm != null ? string.Concat(DateTime.Now.ToString("H시 m분 s초  No."), e.Confirm) : string.Concat(e.Remaining, " Days.");
         }
         private void CheckBox_CheckedChanged(object sender, EventArgs e)
         {

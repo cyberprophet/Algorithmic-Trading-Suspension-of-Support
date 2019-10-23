@@ -17,6 +17,7 @@ namespace ShareInvest.Control
             new Temporary().Send += OnReceiveExit;
             api.SetAPI(axAPI);
             api.StartProgress(confirm, st);
+            api.SendExit += OnReceiveExit;
         }
         private void OnReceiveExit(object sender, ForceQuit e)
         {
