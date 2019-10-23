@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Analysize;
 using ShareInvest.AutoMessageBox;
@@ -17,7 +18,20 @@ namespace ShareInvest.Kospi200
         public Kospi200()
         {
             InitializeComponent();
+            GetTermsAndConditions();
             Trading(ChooseResult(Choose.Show("Please Select the Button You Want to Proceed. . .", "ShareInvest GoblinBat Kospi200 TradingSystem", "Trading", "BackTest", "Exit")));
+        }
+        private void GetTermsAndConditions()
+        {
+            using (TermsConditions tc = new TermsConditions())
+            {
+                panel.Controls.Add(tc);
+                tc.Dock = DockStyle.Fill;
+                Size = tc.Size;
+                StartPosition = FormStartPosition.CenterScreen;
+                tc.SendQuit += OnReceiveDialogClose;
+                ShowDialog();
+            }
         }
         private string[] ChooseResult(DialogResult result)
         {
@@ -43,9 +57,10 @@ namespace ShareInvest.Kospi200
                     Size = pro.Size;
                     pro.Dock = DockStyle.Fill;
                     Location = new Point(3, 1010);
-                    Show();
                     SendRate += pro.Rate;
-                    BackTesting();
+                    new Task(() => BackTesting(pro)).Start();
+                    SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
+                    ShowDialog();
                 }
             }
             Dispose();
@@ -66,11 +81,13 @@ namespace ShareInvest.Kospi200
                 Strategy = string.Concat(st[0], ".", st[1], ".", st[2], ".", st[3], ".", st[4])
             }))
             {
+                ConfirmOrder cf = ConfirmOrder.Get();
                 panel.Controls.Add(api);
-                panel.Controls.Add(ConfirmOrder.Get());
+                panel.Controls.Add(cf);
                 Location = new Point(15, 15);
                 StartPosition = FormStartPosition.Manual;
-                Size = api.Size;
+                Size = cf.Size;
+                cf.Dock = DockStyle.Fill;
                 api.Dock = DockStyle.Fill;
                 api.Hide();
                 api.SendQuit += OnReceiveDialogClose;
@@ -79,11 +96,11 @@ namespace ShareInvest.Kospi200
             Dispose();
             Environment.Exit(0);
         }
-        private void BackTesting()
+        private void BackTesting(Progress pro)
         {
-            int i, j, h, f, g, reaction = 100;
+            int i, j, h, f, g;
 
-            for (i = 10; i < reaction; i++)
+            for (i = 10; i < Reaction; i++)
                 for (j = 0; j < smp.Length; j++)
                     for (h = 0; h < sdp.Length; h++)
                         for (g = 0; g < lmp.Length; g++)
@@ -99,10 +116,11 @@ namespace ShareInvest.Kospi200
                                     LongDayPeriod = ldp[f],
                                     Strategy = string.Concat(i.ToString("D2"), '^', smp[j].ToString("D2"), '^', sdp[h].ToString("D2"), '^', lmp[g].ToString("D2"), '^', ldp[f].ToString("D2"))
                                 });
-                                SendRate?.Invoke(this, new ProgressRate(reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
+                                pro.ProgressBarValue += 1;
                             }
             new Storage();
             Box.Show("The Analysis was Successful. . .♬", "Notice", 3750);
+            Environment.Exit(0);
         }
         private void OnReceiveDialogClose(object sender, ForceQuit e)
         {
@@ -116,10 +134,14 @@ namespace ShareInvest.Kospi200
                 Environment.Exit(0);
             }
         }
+        private int Reaction
+        {
+            get; set;
+        } = 100;
         private readonly int[] smp = { 2, 3, 5, 7 };
-        private readonly int[] lmp = { 20, 35, 60 };
+        private readonly int[] lmp = { 10, 20, 35, 60 };
         private readonly int[] sdp = { 2, 3, 5, 7 };
-        private readonly int[] ldp = { 20, 35, 60 };
+        private readonly int[] ldp = { 10, 20, 35, 60 };
         public event EventHandler<ProgressRate> SendRate;
     }
 }

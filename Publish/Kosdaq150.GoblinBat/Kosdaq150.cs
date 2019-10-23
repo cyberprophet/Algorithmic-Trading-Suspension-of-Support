@@ -26,8 +26,8 @@ namespace ShareInvest.Kosdaq150
                 using (ChooseAnalysis ca = new ChooseAnalysis())
                 {
                     tableLayoutPanel.RowStyles.Clear();
-                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 43)));
-                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 57)));
+                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 39)));
+                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 705.25F)));
                     panel.Controls.Add(ca);
                     ca.Dock = DockStyle.Fill;
                     ca.SendQuit += OnReceiveDialogClose;
@@ -126,10 +126,10 @@ namespace ShareInvest.Kosdaq150
         {
             get; set;
         } = 50;
-        private readonly int[] smp = { 5 };
-        private readonly int[] lmp = { 60 };
-        private readonly int[] sdp = { 5 };
-        private readonly int[] ldp = { 60 };
+        private readonly int[] smp = { 2, 3, 5, 7 };
+        private readonly int[] lmp = { 10, 20, 35, 60 };
+        private readonly int[] sdp = { 2, 3, 5, 7 };
+        private readonly int[] ldp = { 10, 20, 35, 60 };
         public event EventHandler<ProgressRate> SendRate;
     }
 }
