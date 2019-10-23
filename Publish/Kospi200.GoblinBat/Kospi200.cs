@@ -39,9 +39,9 @@ namespace ShareInvest.Kospi200
             {
                 using (ChooseAnalysis ca = new ChooseAnalysis())
                 {
+                    Size = new Size(5, 5);
                     panel.Controls.Add(ca);
                     ca.Dock = DockStyle.Fill;
-                    Size = ca.Size;
                     StartPosition = FormStartPosition.CenterScreen;
                     ca.SendQuit += OnReceiveDialogClose;
                     ShowDialog();
@@ -53,10 +53,11 @@ namespace ShareInvest.Kospi200
             {
                 using (Progress pro = new Progress())
                 {
-                    panel.Controls.Add(pro);
-                    Size = pro.Size;
-                    pro.Dock = DockStyle.Fill;
+                    Size = new Size(5, 5);
+                    StartPosition = FormStartPosition.Manual;
                     Location = new Point(3, 1010);
+                    panel.Controls.Add(pro);
+                    pro.Dock = DockStyle.Fill;
                     SendRate += pro.Rate;
                     new Task(() => BackTesting(pro)).Start();
                     SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
