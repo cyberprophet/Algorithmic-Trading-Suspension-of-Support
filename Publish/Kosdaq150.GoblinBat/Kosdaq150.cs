@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Analysize;
@@ -17,7 +18,25 @@ namespace ShareInvest.Kosdaq150
         public Kosdaq150()
         {
             InitializeComponent();
+            GetTermsAndConditions();
             Trading(ChooseResult(Choose.Show("Please Select the Button You Want to Proceed. . .", "ShareInvest GoblinBat Kosdaq150 TradingSystem", "Trading", "BackTest", "Exit")));
+        }
+        private void GetTermsAndConditions()
+        {
+            using (TermsConditions tc = new TermsConditions())
+            {
+                tableLayoutPanel.RowStyles.Clear();
+                tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 0)));
+                tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100)));
+                webBrowser.Hide();
+                panel.Controls.Add(tc);
+                panel.BorderStyle = BorderStyle.Fixed3D;
+                Size = tc.Size;
+                tc.Dock = DockStyle.Fill;
+                StartPosition = FormStartPosition.CenterScreen;
+                tc.SendQuit += OnReceiveDialogClose;
+                ShowDialog();
+            }
         }
         private string[] ChooseResult(DialogResult result)
         {
@@ -25,9 +44,10 @@ namespace ShareInvest.Kosdaq150
             {
                 using (ChooseAnalysis ca = new ChooseAnalysis())
                 {
+                    Size = new Size(5, 5);
                     tableLayoutPanel.RowStyles.Clear();
-                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 39)));
-                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 705.25F)));
+                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 0)));
+                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100)));
                     panel.Controls.Add(ca);
                     ca.Dock = DockStyle.Fill;
                     ca.SendQuit += OnReceiveDialogClose;
@@ -42,9 +62,12 @@ namespace ShareInvest.Kosdaq150
                 {
                     tableLayoutPanel.RowStyles.Clear();
                     tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70)));
-                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 30)));
+                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 31)));
                     panel.Controls.Add(pro);
                     pro.Dock = DockStyle.Fill;
+                    panel.BorderStyle = BorderStyle.None;
+                    WindowState = FormWindowState.Maximized;
+                    webBrowser.Show();
                     SendRate += pro.Rate;
                     new Task(() => BackTesting(pro)).Start();
                     SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
@@ -70,6 +93,7 @@ namespace ShareInvest.Kosdaq150
             }))
             {
                 ConfirmOrder cf = ConfirmOrder.Get();
+                webBrowser.Show();
                 tableLayoutPanel.RowStyles.Clear();
                 tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70)));
                 tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 50)));
@@ -78,6 +102,8 @@ namespace ShareInvest.Kosdaq150
                 cf.Dock = DockStyle.Fill;
                 api.Dock = DockStyle.Fill;
                 api.Hide();
+                panel.BorderStyle = BorderStyle.None;
+                WindowState = FormWindowState.Maximized;
                 api.SendQuit += OnReceiveDialogClose;
                 ShowDialog();
             }
