@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.Communicate
 {
-    public interface IStrategy : IStopLossAndRevenue
+    public interface IStrategy : IStopLossAndRevenue, IPath
     {
         enum Futures
         {

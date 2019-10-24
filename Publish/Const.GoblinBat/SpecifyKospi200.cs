@@ -77,6 +77,10 @@ namespace ShareInvest.Const
         {
             get; set;
         }
+        public string PathLog
+        {
+            get; set;
+        }
         public IStopLossAndRevenue.StopLossAndRevenue Stop
         {
             get; set;

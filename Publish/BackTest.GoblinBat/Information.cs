@@ -33,13 +33,12 @@ namespace ShareInvest.BackTest
         {
             try
             {
-                string path = string.Concat(Environment.CurrentDirectory, @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
-                di = new DirectoryInfo(path);
+                di = new DirectoryInfo(st.PathLog);
 
                 if (di.Exists == false)
                     di.Create();
 
-                using (sw = new StreamWriter(string.Concat(path, st.Strategy, ".csv")))
+                using (sw = new StreamWriter(string.Concat(st.PathLog, st.Strategy, ".csv")))
                 {
                     foreach (string val in list)
                         if (val.Length > 0)

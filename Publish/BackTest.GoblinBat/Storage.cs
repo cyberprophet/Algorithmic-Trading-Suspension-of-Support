@@ -8,8 +8,9 @@ namespace ShareInvest.BackTest
 {
     public class Storage
     {
-        public Storage()
+        public Storage(string path)
         {
+            this.path = path;
             list = new List<Storage>();
             analysis = new Dictionary<string, string>();
 
@@ -63,13 +64,12 @@ namespace ShareInvest.BackTest
         {
             try
             {
-                string path = string.Concat(Environment.CurrentDirectory, @"\Statistics\");
-                di = new DirectoryInfo(path);
+                di = new DirectoryInfo(string.Concat(Environment.CurrentDirectory, @"\Statistics\"));
 
                 if (di.Exists == false)
                     di.Create();
 
-                using (sw = new StreamWriter(string.Concat(path, DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"), true))
+                using (sw = new StreamWriter(path, true))
                 {
                     sw.WriteLine(sb);
                 }
@@ -93,6 +93,7 @@ namespace ShareInvest.BackTest
         private readonly string cumulative;
         private readonly string date;
         private readonly string strategy;
+        private readonly string path;
         private readonly List<Storage> list;
         private readonly Dictionary<string, string> analysis;
         private readonly StringBuilder sb;

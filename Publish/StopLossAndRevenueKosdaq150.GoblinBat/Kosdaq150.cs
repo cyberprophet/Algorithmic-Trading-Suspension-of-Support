@@ -55,7 +55,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                 panel.Controls.Add(pro);
                 pro.Dock = DockStyle.Fill;
                 SendRate += pro.Rate;
-                new Task(() => BackTesting(pro)).Start();
+                new Task(() => BackTesting(pro, string.Concat(Environment.CurrentDirectory, @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"), string.Concat(Environment.CurrentDirectory, @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\"))).Start();
                 SendRate?.Invoke(this, new ProgressRate(Enum.GetValues(typeof(IStopLossAndRevenue.StopLossAndRevenue)).Length * revenue.Length * stoploss.Length * Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
                 ShowDialog();
             }
@@ -96,7 +96,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
             Dispose();
             Environment.Exit(0);
         }
-        private void BackTesting(Progress pro)
+        private void BackTesting(Progress pro, string strategy, string log)
         {
             int i, j, h, f, g, s, r;
 
@@ -110,7 +110,8 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                                         foreach (IStopLossAndRevenue.StopLossAndRevenue val in Enum.GetValues(typeof(IStopLossAndRevenue.StopLossAndRevenue)))
                                         {
                                             new Strategy(new SpecifyKosdaq150
-                                            {
+                                            {                                                
+                                                PathLog = log,
                                                 BasicAssets = 5000000,
                                                 StopLoss = stoploss[s],
                                                 Revenue = revenue[r],
@@ -125,7 +126,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                                             });
                                             pro.ProgressBarValue += 1;
                                         }
-            new Storage();
+            new Storage(strategy);
             Box.Show("The Analysis was Successful. . .♬", "Notice", 3750);
             Environment.Exit(0);
         }
@@ -145,12 +146,12 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
         {
             get;
         } = 30;
-        private readonly int[] stoploss = { 10, 15, 20, 25, 30, 35 };
+        private readonly int[] stoploss = { 10, 15, 20, 25 };
         private readonly int[] revenue = { 10, 15, 20, 25, 30, 35 };
-        private readonly int[] smp = { 2, 3, 5, 7 };
-        private readonly int[] lmp = { 10, 20, 35, 60 };
-        private readonly int[] sdp = { 2, 3, 5, 7 };
-        private readonly int[] ldp = { 10, 20, 35 };
+        private readonly int[] smp = { 2, 3, 7 };
+        private readonly int[] lmp = { 10, 20 };
+        private readonly int[] sdp = { 2, 3, 7 };
+        private readonly int[] ldp = { 10, 20 };
         public event EventHandler<ProgressRate> SendRate;
     }
 }

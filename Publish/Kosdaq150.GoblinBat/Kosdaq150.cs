@@ -65,7 +65,7 @@ namespace ShareInvest.Kosdaq150
                 WindowState = FormWindowState.Maximized;
                 webBrowser.Show();
                 SendRate += pro.Rate;
-                new Task(() => BackTesting(pro)).Start();
+                new Task(() => BackTesting(pro, string.Concat(Environment.CurrentDirectory, @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"), string.Concat(Environment.CurrentDirectory, @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\"))).Start();
                 SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
                 ShowDialog();
             }
@@ -107,7 +107,7 @@ namespace ShareInvest.Kosdaq150
             Dispose();
             Environment.Exit(0);
         }
-        private void BackTesting(Progress pro)
+        private void BackTesting(Progress pro, string strategy, string log)
         {
             int i, j, h, f, g;
 
@@ -119,6 +119,7 @@ namespace ShareInvest.Kosdaq150
                             {
                                 new Strategy(new SpecifyKosdaq150
                                 {
+                                    PathLog = log,
                                     Stop = IStopLossAndRevenue.StopLossAndRevenue.UnUsed,
                                     BasicAssets = 5000000,
                                     Division = true,
@@ -131,7 +132,7 @@ namespace ShareInvest.Kosdaq150
                                 });
                                 pro.ProgressBarValue += 1;
                             }
-            new Storage();
+            new Storage(strategy);
             Box.Show("The Analysis was Successful. . .♬", "Notice", 3750);
             Environment.Exit(0);
         }

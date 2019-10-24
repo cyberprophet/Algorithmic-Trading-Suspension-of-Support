@@ -7,7 +7,7 @@ namespace ShareInvest.Const
         public SpecifyKosdaq150()
         {
             Type = (int)IStrategy.Futures.Kosdaq150;
-            TransactionMultiplier = 10000;            
+            TransactionMultiplier = 10000;
             MarginRate = 1.665e-1;
             Commission = 3e-5;
             ErrorRate = 1e-1;
@@ -74,6 +74,10 @@ namespace ShareInvest.Const
             get; private set;
         }
         public string Strategy
+        {
+            get; set;
+        }
+        public string PathLog
         {
             get; set;
         }
