@@ -23,56 +23,50 @@ namespace ShareInvest.Kosdaq150
         }
         private void GetTermsAndConditions()
         {
-            using (TermsConditions tc = new TermsConditions())
-            {
-                tableLayoutPanel.RowStyles.Clear();
-                tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 0)));
-                tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100)));
-                webBrowser.Hide();
-                panel.Controls.Add(tc);
-                panel.BorderStyle = BorderStyle.Fixed3D;
-                Size = tc.Size;
-                tc.Dock = DockStyle.Fill;
-                StartPosition = FormStartPosition.CenterScreen;
-                tc.SendQuit += OnReceiveDialogClose;
-                ShowDialog();
-            }
+            using TermsConditions tc = new TermsConditions();
+            tableLayoutPanel.RowStyles.Clear();
+            tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 0)));
+            tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100)));
+            webBrowser.Hide();
+            panel.Controls.Add(tc);
+            panel.BorderStyle = BorderStyle.Fixed3D;
+            Size = tc.Size;
+            tc.Dock = DockStyle.Fill;
+            StartPosition = FormStartPosition.CenterScreen;
+            tc.SendQuit += OnReceiveDialogClose;
+            ShowDialog();
         }
         private string[] ChooseResult(DialogResult result)
         {
             if (result.Equals(DialogResult.Yes))
             {
-                using (ChooseAnalysis ca = new ChooseAnalysis())
-                {
-                    Size = new Size(5, 5);
-                    tableLayoutPanel.RowStyles.Clear();
-                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 0)));
-                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100)));
-                    panel.Controls.Add(ca);
-                    ca.Dock = DockStyle.Fill;
-                    ca.SendQuit += OnReceiveDialogClose;
-                    ShowDialog();
+                using ChooseAnalysis ca = new ChooseAnalysis();
+                Size = new Size(5, 5);
+                tableLayoutPanel.RowStyles.Clear();
+                tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 0)));
+                tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 100)));
+                panel.Controls.Add(ca);
+                ca.Dock = DockStyle.Fill;
+                ca.SendQuit += OnReceiveDialogClose;
+                ShowDialog();
 
-                    return ca.TempText.Split('.');
-                }
+                return ca.TempText.Split('.');
             }
             else if (result.Equals(DialogResult.No))
             {
-                using (Progress pro = new Progress())
-                {
-                    tableLayoutPanel.RowStyles.Clear();
-                    tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70)));
-                    tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 31)));
-                    panel.Controls.Add(pro);
-                    pro.Dock = DockStyle.Fill;
-                    panel.BorderStyle = BorderStyle.None;
-                    WindowState = FormWindowState.Maximized;
-                    webBrowser.Show();
-                    SendRate += pro.Rate;
-                    new Task(() => BackTesting(pro)).Start();
-                    SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
-                    ShowDialog();
-                }
+                using Progress pro = new Progress();
+                tableLayoutPanel.RowStyles.Clear();
+                tableLayoutPanel.Controls.Add(webBrowser, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 70)));
+                tableLayoutPanel.Controls.Add(panel, 0, tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 31)));
+                panel.Controls.Add(pro);
+                pro.Dock = DockStyle.Fill;
+                panel.BorderStyle = BorderStyle.None;
+                WindowState = FormWindowState.Maximized;
+                webBrowser.Show();
+                SendRate += pro.Rate;
+                new Task(() => BackTesting(pro)).Start();
+                SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
+                ShowDialog();
             }
             Dispose();
             Environment.Exit(0);

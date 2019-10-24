@@ -1,7 +1,12 @@
 ﻿namespace ShareInvest.Communicate
 {
-    public interface IStrategy
+    public interface IStrategy : IStopLossAndRevenue
     {
+        enum Futures
+        {
+            Kospi200 = 0,
+            Kosdaq150 = 24
+        }
         int Type
         {
             get;
@@ -51,6 +56,10 @@
             get;
         }
         string Strategy
+        {
+            get;
+        }
+        IStopLossAndRevenue.StopLossAndRevenue Stop
         {
             get;
         }

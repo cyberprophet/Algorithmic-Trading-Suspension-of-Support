@@ -50,30 +50,28 @@ namespace ShareInvest.Control
         }
         private string SetSecret()
         {
-            foreach (string val in Directory.GetFiles(string.Concat(Environment.CurrentDirectory, @"\Statistics\"), "*.csv", SearchOption.AllDirectories))
-            {
-                arr = val.Split('\\');
-                arr = arr[arr.Length - 1].Split('.');
-                int count = int.Parse(arr[0]);
-
-                if (count > RecentDate)
-                    RecentDate = count;
-            }
             try
             {
-                using (StreamReader sr = new StreamReader(string.Concat(Environment.CurrentDirectory, @"\Statistics\", RecentDate.ToString(), ".csv")))
+                foreach (string val in Directory.GetFiles(string.Concat(Environment.CurrentDirectory, @"\Statistics\"), "*.csv", SearchOption.AllDirectories))
                 {
-                    List<string> list = new List<string>(256);
+                    arr = val.Split('\\');
+                    arr = arr[arr.Length - 1].Split('.');
+                    int count = int.Parse(arr[0]);
 
-                    if (sr != null)
-                        while (sr.EndOfStream == false)
-                            list.Add(sr.ReadLine());
-
-                    foreach (IMakeUp val in mp)
-                        MakeUp(list, val);
-
-                    return string.Concat(list[1].Substring(0, 8), "^", list[list.Count - 2].Substring(0, 8));
+                    if (count > RecentDate)
+                        RecentDate = count;
                 }
+                using StreamReader sr = new StreamReader(string.Concat(Environment.CurrentDirectory, @"\Statistics\", RecentDate.ToString(), ".csv"));
+                List<string> list = new List<string>(256);
+
+                if (sr != null)
+                    while (sr.EndOfStream == false)
+                        list.Add(sr.ReadLine());
+
+                foreach (IMakeUp val in mp)
+                    MakeUp(list, val);
+
+                return string.Concat(list[1].Substring(0, 8), "^", list[list.Count - 2].Substring(0, 8));
             }
             catch (Exception ex)
             {

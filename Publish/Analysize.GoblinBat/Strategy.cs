@@ -90,6 +90,7 @@ namespace ShareInvest.Analysize
                     info.Operate(e.Price, info.Quantity > 0 ? -1 : 1);
 
                 info.Save(e.Time);
+                st.Activate = true;
 
                 return;
             }
@@ -120,20 +121,39 @@ namespace ShareInvest.Analysize
                     return;
                 }
             }
-            if ((e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
+            if ((e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && st.Activate)
             {
                 int max = (int)(st.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate));
 
-                if (api != null && Math.Abs(api.Quantity + quantity) < max)
+                if (api != null && Math.Abs(api.Quantity + quantity) < max && api.OnReceiveBalance)
                 {
                     if (!result.Equals(DialogResult.Yes))
                         om.Price = (result.Equals(DialogResult.No) ? e.Price : quantity > 0 ? e.Price + st.ErrorRate : e.Price - st.ErrorRate).ToString();
 
                     om.SlbyTP = dic[quantity];
                     api.OnReceiveOrder(om);
+                    api.OnReceiveBalance = false;
                 }
                 else if (info != null && Math.Abs(info.Quantity + quantity) < max)
                     info.Operate(e.Price, quantity);
+
+                return;
+            }
+            if (e.Volume != 0 && st.Stop != 0)
+            {
+                int action = st.SetActivate(api != null ? api.Quantity : info.Quantity, e.Price, api != null ? api.PurchasePrice : info.PurchasePrice);
+
+                if (action != 0 && api != null && api.OnReceiveBalance)
+                {
+                    if (!result.Equals(DialogResult.Yes))
+                        om.Price = (result.Equals(DialogResult.No) ? e.Price : action > 0 ? e.Price + st.ErrorRate : e.Price - st.ErrorRate).ToString();
+
+                    om.SlbyTP = dic[action];
+                    api.OnReceiveOrder(om);
+                    api.OnReceiveBalance = false;
+                }
+                else if (action != 0 && info != null)
+                    info.Operate(e.Price, action);
             }
         }
         private int Order(int min, int day)

@@ -6,12 +6,13 @@ namespace ShareInvest.Const
     {
         public SpecifyKospi200()
         {
-            Type = 0;
+            Type = (int)IStrategy.Futures.Kospi200;
             TransactionMultiplier = 250000;
             BasicAssets = 35000000;
             MarginRate = 7.65e-2;
             Commission = 3e-5;
             ErrorRate = 5e-2;
+            Activate = true;
         }
         public int Type
         {
@@ -41,11 +42,23 @@ namespace ShareInvest.Const
         {
             get; private set;
         }
+        public int StopLoss
+        {
+            get; set;
+        }
+        public int Revenue
+        {
+            get; set;
+        }
         public long BasicAssets
         {
             get; private set;
         }
         public bool Division
+        {
+            get; set;
+        }
+        public bool Activate
         {
             get; set;
         }
@@ -64,6 +77,34 @@ namespace ShareInvest.Const
         public string Strategy
         {
             get; set;
+        }
+        public IStopLossAndRevenue.StopLossAndRevenue Stop
+        {
+            get; set;
+        }
+        public int SetActivate(int quantity, double price, double purchase)
+        {
+            if (quantity > 0 && price - purchase > Revenue * ErrorRate && (Stop.Equals(IStopLossAndRevenue.StopLossAndRevenue.UseAll) || Stop.Equals(IStopLossAndRevenue.StopLossAndRevenue.OnlyRevenue)))
+            {
+                Activate = false;
+                return -1;
+            }
+            if (quantity > 0 && purchase - price > StopLoss * ErrorRate && (Stop.Equals(IStopLossAndRevenue.StopLossAndRevenue.UseAll) || Stop.Equals(IStopLossAndRevenue.StopLossAndRevenue.OnlyStopLoss)))
+            {
+                Activate = false;
+                return -1;
+            }
+            if (quantity < 0 && purchase - price > Revenue * ErrorRate && (Stop.Equals(IStopLossAndRevenue.StopLossAndRevenue.UseAll) || Stop.Equals(IStopLossAndRevenue.StopLossAndRevenue.OnlyRevenue)))
+            {
+                Activate = false;
+                return 1;
+            }
+            if (quantity < 0 && price - purchase > StopLoss * ErrorRate && (Stop.Equals(IStopLossAndRevenue.StopLossAndRevenue.UseAll) || Stop.Equals(IStopLossAndRevenue.StopLossAndRevenue.OnlyStopLoss)))
+            {
+                Activate = false;
+                return 1;
+            }
+            return 0;
         }
     }
 }

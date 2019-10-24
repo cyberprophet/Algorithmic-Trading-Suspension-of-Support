@@ -23,46 +23,40 @@ namespace ShareInvest.Kospi200
         }
         private void GetTermsAndConditions()
         {
-            using (TermsConditions tc = new TermsConditions())
-            {
-                panel.Controls.Add(tc);
-                tc.Dock = DockStyle.Fill;
-                Size = tc.Size;
-                StartPosition = FormStartPosition.CenterScreen;
-                tc.SendQuit += OnReceiveDialogClose;
-                ShowDialog();
-            }
+            using TermsConditions tc = new TermsConditions();
+            panel.Controls.Add(tc);
+            tc.Dock = DockStyle.Fill;
+            Size = tc.Size;
+            StartPosition = FormStartPosition.CenterScreen;
+            tc.SendQuit += OnReceiveDialogClose;
+            ShowDialog();
         }
         private string[] ChooseResult(DialogResult result)
         {
             if (result.Equals(DialogResult.Yes))
             {
-                using (ChooseAnalysis ca = new ChooseAnalysis())
-                {
-                    Size = new Size(5, 5);
-                    panel.Controls.Add(ca);
-                    ca.Dock = DockStyle.Fill;
-                    StartPosition = FormStartPosition.CenterScreen;
-                    ca.SendQuit += OnReceiveDialogClose;
-                    ShowDialog();
+                using ChooseAnalysis ca = new ChooseAnalysis();
+                Size = new Size(5, 5);
+                panel.Controls.Add(ca);
+                ca.Dock = DockStyle.Fill;
+                StartPosition = FormStartPosition.CenterScreen;
+                ca.SendQuit += OnReceiveDialogClose;
+                ShowDialog();
 
-                    return ca.TempText.Split('.');
-                }
+                return ca.TempText.Split('.');
             }
             else if (result.Equals(DialogResult.No))
             {
-                using (Progress pro = new Progress())
-                {
-                    Size = new Size(5, 5);
-                    StartPosition = FormStartPosition.Manual;
-                    Location = new Point(3, 1010);
-                    panel.Controls.Add(pro);
-                    pro.Dock = DockStyle.Fill;
-                    SendRate += pro.Rate;
-                    new Task(() => BackTesting(pro)).Start();
-                    SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
-                    ShowDialog();
-                }
+                using Progress pro = new Progress();
+                Size = new Size(5, 5);
+                StartPosition = FormStartPosition.Manual;
+                Location = new Point(3, 1010);
+                panel.Controls.Add(pro);
+                pro.Dock = DockStyle.Fill;
+                SendRate += pro.Rate;
+                new Task(() => BackTesting(pro)).Start();
+                SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
+                ShowDialog();
             }
             Dispose();
             Environment.Exit(0);

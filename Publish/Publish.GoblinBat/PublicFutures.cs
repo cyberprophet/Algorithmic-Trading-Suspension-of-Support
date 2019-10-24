@@ -20,6 +20,10 @@ namespace ShareInvest.Publish
 
             return api;
         }
+        public bool OnReceiveBalance
+        {
+            get; set;
+        }
         public int Quantity
         {
             get; private set;
@@ -83,7 +87,10 @@ namespace ShareInvest.Publish
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
             if (!e.sMsg.Contains("신규주문"))
+            {
                 SendConfirm?.Invoke(this, new Identify(e.sMsg.Substring(8)));
+                OnReceiveBalance = true;
+            }
         }
         private void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {
@@ -97,8 +104,10 @@ namespace ShareInvest.Publish
                 string[] arr = sb.ToString().Split(',');
 
                 if (!arr[18].Equals(string.Empty))
-                    Box.Show(string.Concat("Conclusion ", arr[17].Contains("-") ? string.Concat("Sell ", arr[17].Substring(1)) : string.Concat("Buy ", arr[17]), "\n", "Commission ￦", (int.Parse(arr[18]) * st.TransactionMultiplier * st.Commission * double.Parse(arr[17].Contains("-") ? arr[17].Substring(1) : arr[17])).ToString("N0")), DateTime.ParseExact(arr[15], "HHmmss", null).ToString("HH시 mm분 ss초"), waiting / 3);
-
+                {
+                    Box.Show(string.Concat("Conclusion ", arr[17].Contains("-") ? string.Concat("Sell ", arr[17].Substring(1)) : string.Concat("Buy ", arr[17]), "\n", "Commission ￦", (int.Parse(arr[18]) * st.TransactionMultiplier * st.Commission * double.Parse(arr[17].Contains("-") ? arr[17].Substring(1) : arr[17])).ToString("N0")), DateTime.ParseExact(arr[15], "HHmmss", null).ToString("HH시 mm분 ss초"), waiting / 5);
+                    OnReceiveBalance = true;
+                }
                 return;
             }
             if (e.sGubun.Equals("4"))

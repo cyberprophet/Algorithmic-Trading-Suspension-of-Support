@@ -17,7 +17,8 @@ namespace ShareInvest.Const
         }
         private readonly Dictionary<string, string> unique = new Dictionary<string, string>()
         {
-
+            { "jhy7264", "주식회사공유인베" },
+            { "share9", "주식회사공유인베" }
         };
     }
 }
