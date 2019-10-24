@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using ShareInvest.Analysize;
 using ShareInvest.AutoMessageBox;
 using ShareInvest.BackTest;
+using ShareInvest.Communicate;
 using ShareInvest.Const;
 using ShareInvest.Control;
 using ShareInvest.EventHandler;
@@ -67,6 +68,8 @@ namespace ShareInvest.Kospi200
         {
             using (ConnectKHOpenAPI api = new ConnectKHOpenAPI(new FreeVersion(), new SpecifyKospi200
             {
+                Stop = IStopLossAndRevenue.StopLossAndRevenue.UnUsed,
+                BasicAssets = 35000000,
                 Division = false,
                 Reaction = int.Parse(st[0]),
                 ShortMinPeriod = int.Parse(st[1]),
@@ -79,7 +82,7 @@ namespace ShareInvest.Kospi200
                 ConfirmOrder cf = ConfirmOrder.Get();
                 panel.Controls.Add(api);
                 panel.Controls.Add(cf);
-                Location = new Point(15, 15);
+                Location = new Point(2, 1000);
                 StartPosition = FormStartPosition.Manual;
                 Size = cf.Size;
                 cf.Dock = DockStyle.Fill;
@@ -103,6 +106,8 @@ namespace ShareInvest.Kospi200
                             {
                                 new Strategy(new SpecifyKospi200
                                 {
+                                    Stop = IStopLossAndRevenue.StopLossAndRevenue.UnUsed,
+                                    BasicAssets = 35000000,
                                     Division = true,
                                     Reaction = i,
                                     ShortMinPeriod = smp[j],
@@ -126,7 +131,7 @@ namespace ShareInvest.Kospi200
             catch (Exception ex)
             {
                 Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
-                Environment.Exit(0);
+                Application.Restart();
             }
         }
         private int Reaction

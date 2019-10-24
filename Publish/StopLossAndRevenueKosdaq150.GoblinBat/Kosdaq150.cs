@@ -68,6 +68,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
         {
             using (ConnectKHOpenAPI api = new ConnectKHOpenAPI(new VerifyIdentity(), new SpecifyKosdaq150
             {
+                BasicAssets = 5000000,
                 StopLoss = int.Parse(st[0]),
                 Revenue = int.Parse(st[1]),
                 Stop = (IStopLossAndRevenue.StopLossAndRevenue)int.Parse(st[2]),
@@ -83,7 +84,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                 ConfirmOrder cf = ConfirmOrder.Get();
                 panel.Controls.Add(api);
                 panel.Controls.Add(cf);
-                Location = new Point(3, 960);
+                Location = new Point(2, 950);
                 StartPosition = FormStartPosition.Manual;
                 Size = cf.Size;
                 cf.Dock = DockStyle.Fill;
@@ -110,6 +111,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                                         {
                                             new Strategy(new SpecifyKosdaq150
                                             {
+                                                BasicAssets = 5000000,
                                                 StopLoss = stoploss[s],
                                                 Revenue = revenue[r],
                                                 Stop = val,
@@ -136,7 +138,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
             catch (Exception ex)
             {
                 Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
-                Environment.Exit(0);
+                Application.Restart();
             }
         }
         private int Reaction

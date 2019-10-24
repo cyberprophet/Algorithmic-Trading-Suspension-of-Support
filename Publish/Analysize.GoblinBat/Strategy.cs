@@ -139,7 +139,7 @@ namespace ShareInvest.Analysize
 
                 return;
             }
-            if (e.Volume != 0 && st.Stop != 0)
+            if (e.Volume != 0 && st.Stop != 0 && (api != null || info != null))
             {
                 int action = st.SetActivate(api != null ? api.Quantity : info.Quantity, e.Price, api != null ? api.PurchasePrice : info.PurchasePrice);
 

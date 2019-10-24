@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using ShareInvest.Analysize;
 using ShareInvest.AutoMessageBox;
 using ShareInvest.BackTest;
+using ShareInvest.Communicate;
 using ShareInvest.Const;
 using ShareInvest.Control;
 using ShareInvest.EventHandler;
@@ -77,6 +78,8 @@ namespace ShareInvest.Kosdaq150
         {
             using (ConnectKHOpenAPI api = new ConnectKHOpenAPI(new FreeVersion(), new SpecifyKosdaq150
             {
+                Stop = IStopLossAndRevenue.StopLossAndRevenue.UnUsed,
+                BasicAssets = 5000000,
                 Division = false,
                 Reaction = int.Parse(st[0]),
                 ShortMinPeriod = int.Parse(st[1]),
@@ -116,6 +119,8 @@ namespace ShareInvest.Kosdaq150
                             {
                                 new Strategy(new SpecifyKosdaq150
                                 {
+                                    Stop = IStopLossAndRevenue.StopLossAndRevenue.UnUsed,
+                                    BasicAssets = 5000000,
                                     Division = true,
                                     Reaction = i,
                                     ShortMinPeriod = smp[j],
@@ -139,7 +144,7 @@ namespace ShareInvest.Kosdaq150
             catch (Exception ex)
             {
                 Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
-                Environment.Exit(0);
+                Application.Restart();
             }
         }
         private int Reaction

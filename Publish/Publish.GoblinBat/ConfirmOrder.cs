@@ -30,13 +30,16 @@ namespace ShareInvest.Publish
 
                 return;
             }
+            api.OnReceiveBalance = true;
             checkBox.ForeColor = Color.Maroon;
         }
         private ConfirmOrder()
         {
             InitializeComponent();
-            PublicFutures.Get().SendConfirm += OnReceiveIdentify;
+            api = PublicFutures.Get();
+            api.SendConfirm += OnReceiveIdentify;
         }
+        private readonly PublicFutures api;
         private static ConfirmOrder cf;
     }
 }

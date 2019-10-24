@@ -8,7 +8,6 @@ namespace ShareInvest.Const
         {
             Type = (int)IStrategy.Futures.Kospi200;
             TransactionMultiplier = 250000;
-            BasicAssets = 35000000;
             MarginRate = 7.65e-2;
             Commission = 3e-5;
             ErrorRate = 5e-2;
@@ -52,7 +51,7 @@ namespace ShareInvest.Const
         }
         public long BasicAssets
         {
-            get; private set;
+            get; set;
         }
         public bool Division
         {
