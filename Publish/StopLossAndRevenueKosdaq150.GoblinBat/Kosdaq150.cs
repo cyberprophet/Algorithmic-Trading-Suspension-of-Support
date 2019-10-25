@@ -51,7 +51,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                 using Progress pro = new Progress();
                 Size = new Size(5, 5);
                 StartPosition = FormStartPosition.Manual;
-                Location = new Point(3, 960);
+                Location = new Point(1, 971);
                 panel.Controls.Add(pro);
                 pro.Dock = DockStyle.Fill;
                 SendRate += pro.Rate;

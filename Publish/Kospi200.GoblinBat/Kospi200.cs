@@ -51,7 +51,7 @@ namespace ShareInvest.Kospi200
                 using Progress pro = new Progress();
                 Size = new Size(5, 5);
                 StartPosition = FormStartPosition.Manual;
-                Location = new Point(3, 1010);
+                Location = new Point(1, 1010);
                 panel.Controls.Add(pro);
                 pro.Dock = DockStyle.Fill;
                 SendRate += pro.Rate;
