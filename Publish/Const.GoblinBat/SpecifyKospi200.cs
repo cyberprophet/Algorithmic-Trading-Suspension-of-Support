@@ -37,6 +37,14 @@ namespace ShareInvest.Const
         {
             get; set;
         }
+        public int ShortTickPeriod
+        {
+            get; set;
+        }
+        public int LongTickPeriod
+        {
+            get; set;
+        }
         public int TransactionMultiplier
         {
             get; private set;

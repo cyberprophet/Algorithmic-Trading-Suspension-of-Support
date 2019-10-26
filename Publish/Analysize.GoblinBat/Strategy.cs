@@ -22,7 +22,10 @@ namespace ShareInvest.Analysize
             longEMA = new List<double>(32768);
             shortDay = new List<double>(512);
             longDay = new List<double>(512);
+            shortTick = new List<double>(2097152);
+            longTick = new List<double>(2097152);
             Send += Analysis;
+            SendTick += new StatisticalAnalysisOnWidth().Analysis;
             this.st = st;
 
             if (st.Division)
@@ -42,6 +45,20 @@ namespace ShareInvest.Analysize
             result = Choose.Show("Decide How to Order. . .", "Notice", "MarketPrice", "SpecifyPrice", "DotHighPrice");
             om = order[result];
             api.Send += Analysis;
+        }
+        private int Analysis(double price)
+        {
+            int sc = shortTick.Count, lc = longTick.Count;
+            shortTick.Add(sc > 0 ? ema.Make(st.ShortTickPeriod, sc, price, shortTick[sc - 1]) : ema.Make(price));
+            longTick.Add(lc > 0 ? ema.Make(st.LongTickPeriod, lc, price, longTick[lc - 1]) : ema.Make(price));
+
+            if (sc < 2 || lc < 2)
+                return 0;
+
+            double slGap = shortTick[sc] - longTick[lc];
+            SendTick?.Invoke(this, new TickWidthGap(price, slGap, price - shortTick[sc]));
+
+            return slGap - (shortTick[sc - 1] - longTick[lc - 1]) > 0 ? 1 : -1;
         }
         private int Analysis(string time, double price)
         {
@@ -82,7 +99,7 @@ namespace ShareInvest.Analysize
         }
         private void Analysis(object sender, Datum e)
         {
-            int quantity = Order(Analysis(e.Check, e.Price), Analysis(e.Time, e.Price));
+            int quantity = Order(Analysis(e.Price), Analysis(e.Check, e.Price), Analysis(e.Time, e.Price));
 
             if (info != null && (e.Time.Length > 2 && e.Time.Substring(6, 4).Equals("1545") || Array.Exists(st.Type > 0 ? info.Kosdaq : info.Kospi, o => o.Equals(e.Time))))
             {
@@ -156,9 +173,9 @@ namespace ShareInvest.Analysize
                     info.Operate(e.Price, action);
             }
         }
-        private int Order(int min, int day)
+        private int Order(int tick, int min, int day)
         {
-            return min > 0 && day > 0 ? 1 : min < 0 && day < 0 ? -1 : 0;
+            return tick > 0 && min > 0 && day > 0 ? 1 : tick < 0 && min < 0 && day < 0 ? -1 : 0;
         }
         private void GetChart()
         {
@@ -233,6 +250,9 @@ namespace ShareInvest.Analysize
         private readonly List<double> longEMA;
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
+        private readonly List<double> shortTick;
+        private readonly List<double> longTick;
         public event EventHandler<Datum> Send;
+        public event EventHandler<TickWidthGap> SendTick;
     }
 }

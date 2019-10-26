@@ -86,6 +86,8 @@ namespace ShareInvest.Kosdaq150
                 ShortDayPeriod = int.Parse(st[2]),
                 LongMinPeriod = int.Parse(st[3]),
                 LongDayPeriod = int.Parse(st[4]),
+                ShortTickPeriod = 5,
+                LongTickPeriod = 60,
                 Strategy = string.Concat(st[0], ".", st[1], ".", st[2], ".", st[3], ".", st[4])
             }))
             {
@@ -128,6 +130,8 @@ namespace ShareInvest.Kosdaq150
                                     ShortDayPeriod = sdp[h],
                                     LongMinPeriod = lmp[g],
                                     LongDayPeriod = ldp[f],
+                                    ShortTickPeriod = 5,
+                                    LongTickPeriod = 60,
                                     Strategy = string.Concat(i.ToString("D2"), '^', smp[j].ToString("D2"), '^', sdp[h].ToString("D2"), '^', lmp[g].ToString("D2"), '^', ldp[f].ToString("D2"))
                                 });
                                 pro.ProgressBarValue += 1;

@@ -31,6 +31,14 @@
         {
             get;
         }
+        int ShortTickPeriod
+        {
+            get;
+        }
+        int LongTickPeriod
+        {
+            get;
+        }
         int TransactionMultiplier
         {
             get;

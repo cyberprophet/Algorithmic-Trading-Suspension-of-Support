@@ -78,6 +78,8 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                 ShortDayPeriod = int.Parse(st[5]),
                 LongMinPeriod = int.Parse(st[6]),
                 LongDayPeriod = int.Parse(st[7]),
+                ShortTickPeriod = 5,
+                LongTickPeriod = 60,
                 Strategy = string.Concat(st[0], ".", st[1], ".", st[2], ".", st[3], ".", st[4], ".", st[5], ".", st[6], ".", st[7])
             }))
             {
@@ -124,6 +126,8 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                                                 ShortDayPeriod = sdp[h],
                                                 LongMinPeriod = lmp[g],
                                                 LongDayPeriod = ldp[f],
+                                                ShortTickPeriod = 5,
+                                                LongTickPeriod = 60,
                                                 Strategy = string.Concat(stoploss[s].ToString("D2"), '^', revenue[r].ToString("D2"), '^', ((int)val).ToString("D2"), '^', i.ToString("D2"), '^', smp[j].ToString("D2"), '^', sdp[h].ToString("D2"), '^', lmp[g].ToString("D2"), '^', ldp[f].ToString("D2"))
                                             });
                                             pro.ProgressBarValue += 1;
