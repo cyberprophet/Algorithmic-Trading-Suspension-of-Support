@@ -87,7 +87,9 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                 Location = new Point(2, 950);
                 StartPosition = FormStartPosition.Manual;
                 Size = cf.Size;
+                Opacity = 0.65;
                 cf.Dock = DockStyle.Fill;
+                cf.BackColor = Color.FromArgb(203,212,206);
                 api.Dock = DockStyle.Fill;
                 api.Hide();
                 api.SendQuit += OnReceiveDialogClose;
@@ -110,7 +112,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                                         foreach (IStopLossAndRevenue.StopLossAndRevenue val in Enum.GetValues(typeof(IStopLossAndRevenue.StopLossAndRevenue)))
                                         {
                                             new Strategy(new SpecifyKosdaq150
-                                            {                                                
+                                            {
                                                 PathLog = log,
                                                 BasicAssets = 5000000,
                                                 StopLoss = stoploss[s],
@@ -145,13 +147,13 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
         private int Reaction
         {
             get;
-        } = 30;
-        private readonly int[] stoploss = { 10, 15, 20, 25 };
-        private readonly int[] revenue = { 10, 15, 20, 25, 30, 35 };
-        private readonly int[] smp = { 2, 3, 7 };
-        private readonly int[] lmp = { 10, 20 };
-        private readonly int[] sdp = { 2, 3, 7 };
-        private readonly int[] ldp = { 10, 20 };
+        } = 25;
+        private readonly int[] stoploss = { 7, 10, 12, 15 };
+        private readonly int[] revenue = { 20, 25, 30, 35 };
+        private readonly int[] smp = { 2, 3, 5 };
+        private readonly int[] lmp = { 10, 15, 20 };
+        private readonly int[] sdp = { 2, 3, 5 };
+        private readonly int[] ldp = { 10, 15, 20 };
         public event EventHandler<ProgressRate> SendRate;
     }
 }

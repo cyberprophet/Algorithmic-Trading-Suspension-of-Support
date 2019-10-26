@@ -85,7 +85,9 @@ namespace ShareInvest.Kospi200
                 Location = new Point(2, 1000);
                 StartPosition = FormStartPosition.Manual;
                 Size = cf.Size;
+                Opacity = 0.65;
                 cf.Dock = DockStyle.Fill;
+                cf.BackColor = Color.FromArgb(203, 212, 206);
                 api.Dock = DockStyle.Fill;
                 api.Hide();
                 api.SendQuit += OnReceiveDialogClose;
