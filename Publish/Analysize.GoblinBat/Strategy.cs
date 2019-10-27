@@ -181,17 +181,16 @@ namespace ShareInvest.Analysize
         {
             try
             {
-                foreach (string val in chart)
-                    foreach (string rd in new Fetch(val))
-                    {
-                        string[] arr = rd.Split(',');
+                foreach (string rd in new Fetch())
+                {
+                    string[] arr = rd.Split(',');
 
-                        if (arr[1].Contains("-"))
-                            arr[1] = arr[1].Substring(1);
+                    if (arr[1].Contains("-"))
+                        arr[1] = arr[1].Substring(1);
 
-                        Retention = arr[0];
-                        Send?.Invoke(this, arr.Length > 2 ? new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])) : new Datum(arr[0], double.Parse(arr[1])));
-                    }
+                    Retention = arr[0];
+                    Send?.Invoke(this, arr.Length > 2 ? new Datum(arr[0], double.Parse(arr[1]), int.Parse(arr[2])) : new Datum(arr[0], double.Parse(arr[1])));
+                }
             }
             catch (Exception ex)
             {
@@ -224,11 +223,6 @@ namespace ShareInvest.Analysize
         {
             get; set;
         }
-        private readonly string[] chart =
-        {
-            "Day",
-            "Tick"
-        };
         private readonly Dictionary<int, string> dic = new Dictionary<int, string>()
         {
             {-1, "1"},

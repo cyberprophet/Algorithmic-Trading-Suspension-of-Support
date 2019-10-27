@@ -11,7 +11,6 @@ using ShareInvest.Control;
 using ShareInvest.EventHandler;
 using ShareInvest.Publish;
 using ShareInvest.SelectableMessageBox;
-using ShareInvest.StatisticsForWidth;
 
 namespace ShareInvest.Kospi200
 {
@@ -56,7 +55,6 @@ namespace ShareInvest.Kospi200
                 panel.Controls.Add(pro);
                 pro.Dock = DockStyle.Fill;
                 SendRate += pro.Rate;
-                new Task(() => new WidthStatistics()).Start();
                 new Task(() => BackTesting(pro, string.Concat(Environment.CurrentDirectory, @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"), string.Concat(Environment.CurrentDirectory, @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\"))).Start();
                 SendRate?.Invoke(this, new ProgressRate(Reaction * smp.Length * sdp.Length * lmp.Length * ldp.Length));
                 ShowDialog();
