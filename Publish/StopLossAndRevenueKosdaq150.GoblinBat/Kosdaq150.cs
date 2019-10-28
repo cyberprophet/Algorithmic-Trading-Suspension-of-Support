@@ -91,7 +91,7 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
                 Size = cf.Size;
                 Opacity = 0.65;
                 cf.Dock = DockStyle.Fill;
-                cf.BackColor = Color.FromArgb(203,212,206);
+                cf.BackColor = Color.FromArgb(203, 212, 206);
                 api.Dock = DockStyle.Fill;
                 api.Hide();
                 api.SendQuit += OnReceiveDialogClose;
@@ -152,12 +152,12 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
         {
             get;
         } = 25;
-        private readonly int[] stoploss = { 7, 10, 12, 15 };
-        private readonly int[] revenue = { 20, 25, 30, 35 };
+        private readonly int[] stoploss = { 10, 12, 15, 18 };
+        private readonly int[] revenue = { 24, 27, 30, 33 };
         private readonly int[] smp = { 2, 3, 5 };
         private readonly int[] lmp = { 10, 15, 20 };
-        private readonly int[] sdp = { 2, 3, 5 };
-        private readonly int[] ldp = { 10, 15, 20 };
+        private readonly int[] sdp = { 2, 3 };
+        private readonly int[] ldp = { 15, 20 };
         public event EventHandler<ProgressRate> SendRate;
     }
 }

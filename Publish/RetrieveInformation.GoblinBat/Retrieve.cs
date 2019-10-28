@@ -12,12 +12,10 @@ namespace ShareInvest.RetrieveInformation
         {
             try
             {
-                using (sr = new StreamReader(file))
-                {
-                    if (sr != null)
-                        while (sr.EndOfStream == false)
-                            list.Add(sr.ReadLine());
-                }
+                using StreamReader sr = new StreamReader(file);
+                if (sr != null)
+                    while (sr.EndOfStream == false)
+                        list.Add(sr.ReadLine());
             }
             catch (Exception ex)
             {
@@ -46,7 +44,6 @@ namespace ShareInvest.RetrieveInformation
         {
             get; private set;
         } = new List<string>(2097152);
-        private StreamReader sr;
         private static Retrieve retrieve;
     }
 }

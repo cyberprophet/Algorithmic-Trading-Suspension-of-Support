@@ -23,7 +23,7 @@ namespace ShareInvest.Publish
         public bool OnReceiveBalance
         {
             get; set;
-        }
+        } = true;
         public int Quantity
         {
             get; private set;

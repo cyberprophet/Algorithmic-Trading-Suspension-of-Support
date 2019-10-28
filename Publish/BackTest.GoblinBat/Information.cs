@@ -33,12 +33,12 @@ namespace ShareInvest.BackTest
         {
             try
             {
-                di = new DirectoryInfo(st.PathLog);
+                DirectoryInfo di = new DirectoryInfo(st.PathLog);
 
                 if (di.Exists == false)
                     di.Create();
 
-                using (sw = new StreamWriter(string.Concat(st.PathLog, st.Strategy, ".csv")))
+                using (StreamWriter sw = new StreamWriter(string.Concat(st.PathLog, st.Strategy, ".csv")))
                 {
                     foreach (string val in list)
                         if (val.Length > 0)
@@ -139,8 +139,6 @@ namespace ShareInvest.BackTest
         }
         private readonly List<string> list = new List<string>(128);
         private readonly IStrategy st;
-        private DirectoryInfo di;
-        private StreamWriter sw;
         private double purchase;
         private double liquidation;
     }

@@ -64,15 +64,13 @@ namespace ShareInvest.BackTest
         {
             try
             {
-                di = new DirectoryInfo(string.Concat(Environment.CurrentDirectory, @"\Statistics\"));
+                DirectoryInfo di = new DirectoryInfo(string.Concat(Environment.CurrentDirectory, @"\Statistics\"));
 
                 if (di.Exists == false)
                     di.Create();
 
-                using (sw = new StreamWriter(path, true))
-                {
-                    sw.WriteLine(sb);
-                }
+                using StreamWriter sw = new StreamWriter(path, true);
+                sw.WriteLine(sb);
             }
             catch (Exception ex)
             {
@@ -98,7 +96,5 @@ namespace ShareInvest.BackTest
         private readonly Dictionary<string, string> analysis;
         private readonly StringBuilder sb;
         private readonly StringBuilder sb_analysis;
-        private DirectoryInfo di;
-        private StreamWriter sw;
     }
 }

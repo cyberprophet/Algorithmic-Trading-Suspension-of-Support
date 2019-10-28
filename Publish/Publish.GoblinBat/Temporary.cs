@@ -38,17 +38,15 @@ namespace ShareInvest.Publish
 
             try
             {
-                di = new DirectoryInfo(path);
+                DirectoryInfo di = new DirectoryInfo(path);
 
                 if (di.Exists == false)
                     di.Create();
 
-                using (sw = new StreamWriter(string.Concat(path, api.Code, ".csv"), true))
-                {
-                    foreach (string val in memo)
-                        if (val.Length > 0)
-                            sw.WriteLine(val);
-                }
+                using StreamWriter sw = new StreamWriter(string.Concat(path, api.Code, ".csv"), true);
+                foreach (string val in memo)
+                    if (val.Length > 0)
+                        sw.WriteLine(val);
             }
             catch (Exception ex)
             {
@@ -60,8 +58,6 @@ namespace ShareInvest.Publish
         private readonly PublicFutures api;
         private readonly Action act;
         private readonly List<string> memo;
-        private DirectoryInfo di;
-        private StreamWriter sw;
         public event EventHandler<ForceQuit> Send;
     }
 }
