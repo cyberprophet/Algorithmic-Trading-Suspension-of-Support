@@ -16,10 +16,15 @@ namespace ShareInvest.Const
         {
             get; set;
         }
+        public int Qty
+        {
+            get; set;
+        }
         public MarketOrder()
         {
             OrdTp = "3";
             Price = "";
+            Qty = 1;
         }
     }
 }

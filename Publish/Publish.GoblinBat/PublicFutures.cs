@@ -69,12 +69,26 @@ namespace ShareInvest.Publish
             Box.Show("API Not Found. . .", "Caution", waiting);
             SendExit?.Invoke(this, new ForceQuit(end));
         }
+        public void StartProgress(IStrategy st, IConfirm confirm)
+        {
+            if (axAPI != null)
+            {
+                this.confirm = confirm;
+                this.st = st;
+                ErrorCode = axAPI.CommConnect();
+                ErrorCode = 915;
+
+                return;
+            }
+            Box.Show("API Not Found. . .", "Caution", waiting);
+            SendExit?.Invoke(this, new ForceQuit(end));
+        }
         public void OnReceiveOrder(IOrderMethod om)
         {
             request.RequestTrData(new Task(() =>
             {
                 if (ConfirmOrder.Get().CheckCurrent())
-                    ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, om.SlbyTP, om.OrdTp, 1, om.Price, "");
+                    ErrorCode = axAPI.SendOrderFO("GoblinBat", ScreenNo, Account, Code, 1, om.SlbyTP, om.OrdTp, om.Qty, om.Price, "");
 
                 if (ErrorCode != 0)
                     new Error(ErrorCode);
@@ -229,12 +243,21 @@ namespace ShareInvest.Publish
                 axAPI.KOA_Functions("ShowAccountWindow", "");
                 RemainingDay();
 
-                if (DialogResult.OK == MessageBox.Show("Do You Want to Retrieve Recent Data?", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question))
+                if (DialogResult.Yes == MessageBox.Show("Do You Want to Retrieve Recent Data?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
                 {
                     Delay.delay = 4150;
                     Request();
                 }
                 SendConfirm?.Invoke(this, new Identify("The Remaining Validity Period is ", Remaining));
+
+                return;
+            }
+            else if (ErrorCode.Equals(915) && e.nErrCode.Equals(0))
+            {
+                Account = axAPI.GetLoginInfo("ACCLIST");
+                Code = axAPI.GetFutureCodeByIndex(e.nErrCode);
+                axAPI.KOA_Functions("ShowAccountWindow", "");
+                RemainingDay();
 
                 return;
             }

@@ -16,9 +16,14 @@ namespace ShareInvest.Const
         {
             get; set;
         }
+        public int Qty
+        {
+            get; private set;
+        }
         public MostFavorableOrder()
         {
             OrdTp = "9";
+            Qty = 1;
         }
     }
 }

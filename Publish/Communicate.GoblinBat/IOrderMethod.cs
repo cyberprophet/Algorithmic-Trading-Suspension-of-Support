@@ -14,5 +14,9 @@
         {
             get; set;
         }
+        int Qty
+        {
+            get; 
+        }
     }
 }
