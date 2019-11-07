@@ -236,7 +236,7 @@ namespace ShareInvest.Publish
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
-            if (!axAPI.GetLoginInfo("GetServerGubun").Equals("1") && e.nErrCode == 0 && confirm.Identify(axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME")))
+            if (!axAPI.GetLoginInfo("GetServerGubun").Equals("1") && e.nErrCode == 0 && confirm.Identify(axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME")) && !ErrorCode.Equals(915))
             {
                 Account = axAPI.GetLoginInfo("ACCLIST");
                 Code = ErrorCode == 0 ? axAPI.GetFutureCodeByIndex(e.nErrCode) : axAPI.GetFutureCodeByIndex(ErrorCode);

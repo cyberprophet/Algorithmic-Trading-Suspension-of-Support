@@ -14,9 +14,9 @@ namespace ShareInvest.BackTest
             if (quantity != 0)
             {
                 Quantity += quantity;
-                Commission += (int)((quantity > 0 ? price + st.ErrorRate : price - st.ErrorRate) * st.TransactionMultiplier * st.Commission);
+                Commission += (int)((quantity > 0 ? price + (st.Type.Equals(0) ? st.ErrorRate : st.ErrorRate * 5) : price - (st.Type.Equals(0) ? st.ErrorRate : st.ErrorRate * 5)) * st.TransactionMultiplier * st.Commission);
                 Liquidation = price;
-                PurchasePrice = quantity > 0 ? price + st.ErrorRate : price - st.ErrorRate;
+                PurchasePrice = quantity > 0 ? price + (st.Type.Equals(0) ? st.ErrorRate : st.ErrorRate * 5) : price - (st.Type.Equals(0) ? st.ErrorRate : st.ErrorRate * 5);
                 Amount = Quantity;
                 CumulativeRevenue += (int)(Liquidation * st.TransactionMultiplier);
             }

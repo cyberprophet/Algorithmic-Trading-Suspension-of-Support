@@ -152,12 +152,12 @@ namespace ShareInvest.Kosdaq150.StopLossAndRevenue
         {
             get;
         } = 25;
-        private readonly int[] stoploss = { 10, 12, 15, 18 };
-        private readonly int[] revenue = { 24, 27, 30, 33 };
+        private readonly int[] stoploss = { 5, 7, 10, 12 };
+        private readonly int[] revenue = { 15, 20, 25, 30, 35 };
         private readonly int[] smp = { 2, 3, 5 };
         private readonly int[] lmp = { 10, 15, 20 };
         private readonly int[] sdp = { 2, 3 };
-        private readonly int[] ldp = { 15, 20 };
+        private readonly int[] ldp = { 10, 15, 20 };
         public event EventHandler<ProgressRate> SendRate;
     }
 }
