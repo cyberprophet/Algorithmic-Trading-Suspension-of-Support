@@ -59,12 +59,10 @@ namespace ShareInvest.StatisticsForWidth
                 if (di.Exists == false)
                     di.Create();
 
-                using (StreamWriter sw = new StreamWriter(string.Concat(path, name, ".csv")))
-                {
-                    foreach (double[] tick in widthTick)
-                        if (tick[1] != 0)
-                            sw.WriteLine(string.Concat(tick[0], ',', tick[1], ',', tick[2]));
-                }
+                using StreamWriter sw = new StreamWriter(string.Concat(path, name, ".csv"));
+                foreach (double[] tick in widthTick)
+                    if (tick[1] != 0)
+                        sw.WriteLine(string.Concat(tick[0], ',', tick[1], ',', tick[2]));
             }
             catch (Exception ex)
             {

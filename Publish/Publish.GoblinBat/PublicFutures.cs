@@ -238,31 +238,32 @@ namespace ShareInvest.Publish
         {
             if (!axAPI.GetLoginInfo("GetServerGubun").Equals("1") && e.nErrCode == 0 && confirm.Identify(axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME")) && !ErrorCode.Equals(915))
             {
-                Account = axAPI.GetLoginInfo("ACCLIST");
-                Code = ErrorCode == 0 ? axAPI.GetFutureCodeByIndex(e.nErrCode) : axAPI.GetFutureCodeByIndex(ErrorCode);
-                axAPI.KOA_Functions("ShowAccountWindow", "");
-                RemainingDay();
-
                 if (DialogResult.Yes == MessageBox.Show("Do You Want to Retrieve Recent Data?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
                 {
                     Delay.delay = 4150;
                     Request();
                 }
-                SendConfirm?.Invoke(this, new Identify("The Remaining Validity Period is ", Remaining));
+                SendConfirm?.Invoke(this, new Identify("The Remaining Validity Period is ", CallBasicInformation(e.nErrCode)));
 
                 return;
             }
             else if (ErrorCode.Equals(915) && e.nErrCode.Equals(0))
             {
-                Account = axAPI.GetLoginInfo("ACCLIST");
-                Code = axAPI.GetFutureCodeByIndex(e.nErrCode);
-                axAPI.KOA_Functions("ShowAccountWindow", "");
-                RemainingDay();
+                CallBasicInformation(e.nErrCode);
 
                 return;
             }
             Box.Show("등록되지 않은 사용자이거나 모의투자로 접속하셨습니다.\n\n프로그램을 종료합니다.", "오류", waiting);
             SendExit?.Invoke(this, new ForceQuit(end));
+        }
+        private string CallBasicInformation(int callCode)
+        {
+            Account = axAPI.GetLoginInfo("ACCLIST");
+            Code = ErrorCode == 0 ? axAPI.GetFutureCodeByIndex(callCode) : axAPI.GetFutureCodeByIndex(ErrorCode);
+            RemainingDay();
+            axAPI.KOA_Functions("ShowAccountWindow", "");
+
+            return Remaining;
         }
         private void InputValueRqData(TR param)
         {
