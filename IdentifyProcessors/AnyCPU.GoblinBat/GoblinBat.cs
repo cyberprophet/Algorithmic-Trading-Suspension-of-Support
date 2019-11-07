@@ -14,19 +14,20 @@ namespace ShareInvest.AnyCPU
         public GoblinBat()
         {
             InitializeComponent();
-            Activate(Choose.Show("Please Select the Button You Want to Proceed. . .", "ShareInvest GoblinBat Kospi200 TradingSystem", "Trading", "BackTest", "Exit"));
+            Activate((int)Choose.Show("Please Select the Button You Want to Proceed. . .", "ShareInvest GoblinBat Kospi200 TradingSystem", "Trading", "BackTest", "Exit"));
         }
-        private void Activate(DialogResult result)
+        private void Activate(int result)
         {
             GetTermsAndConditions();
             SetVisibleCore(false);
 
-            if (((int)result).Equals(6))
+            if (result.Equals(6))
                 Process.Start(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\..\..\"), "*.exe", SearchOption.AllDirectories), o => o.Contains("Trading.exe")));
 
-            else if (((int)result).Equals(7))
+            else if (result.Equals(7))
                 Process.Start(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\..\..\"), "*.exe", SearchOption.AllDirectories), o => o.Contains("BackTesting.exe")));
 
+            Dispose();
             Environment.Exit(0);
         }
         private void GetTermsAndConditions()
@@ -48,7 +49,8 @@ namespace ShareInvest.AnyCPU
             catch (Exception ex)
             {
                 Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
-                Application.Restart();
+                Dispose();
+                Environment.Exit(0);
             }
         }
     }
