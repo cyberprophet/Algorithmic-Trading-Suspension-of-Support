@@ -12,13 +12,11 @@ namespace ShareInvest.Kospi200HedgeVersion
         }
         private void StartTrading()
         {
-            using (ConnectKHOpenAPI api = new ConnectKHOpenAPI())
-            {
-                Controls.Add(api);
-                api.Dock = DockStyle.Fill;
-                api.Hide();
-                ShowDialog();
-            }
+            using ConnectKHOpenAPI api = new ConnectKHOpenAPI();
+            Controls.Add(api);
+            api.Dock = DockStyle.Fill;
+            api.Hide();
+            ShowDialog();
         }
     }
 }
