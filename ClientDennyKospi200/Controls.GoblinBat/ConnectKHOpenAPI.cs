@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using ShareInvest.Catalog;
 using ShareInvest.OpenAPI;
 
 namespace ShareInvest.Controls
@@ -10,7 +11,7 @@ namespace ShareInvest.Controls
             InitializeComponent();
             api = ConnectAPI.Get();
             api.SetAPI(axAPI);
-            api.StartProgress();
+            api.StartProgress(new RealType());
             new Temporary();
         }
         private readonly ConnectAPI api;

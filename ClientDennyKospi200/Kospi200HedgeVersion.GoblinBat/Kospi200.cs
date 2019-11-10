@@ -1,5 +1,8 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 using ShareInvest.Controls;
+using ShareInvest.EventHandler;
+using ShareInvest.SecondaryForms;
 
 namespace ShareInvest.Kospi200HedgeVersion
 {
@@ -16,7 +19,16 @@ namespace ShareInvest.Kospi200HedgeVersion
             Controls.Add(api);
             api.Dock = DockStyle.Fill;
             api.Hide();
+            new AccountSelection().SendSelection += OnReceiveAccount;
             ShowDialog();
+        }
+        private void OnReceiveAccount(object sender, Account e)
+        {
+            account.Text = e.Selection;
+        }
+        private void Account_TextChanged(object sender, EventArgs e)
+        {
+            account.Text.Trim('-');
         }
     }
 }

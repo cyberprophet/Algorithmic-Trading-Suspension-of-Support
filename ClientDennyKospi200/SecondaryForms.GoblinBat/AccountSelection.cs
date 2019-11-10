@@ -1,38 +1,38 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
+using ShareInvest.AutoMessageBox;
 using ShareInvest.EventHandler;
 using ShareInvest.OpenAPI;
 
 namespace ShareInvest.SecondaryForms
 {
-    public partial class AccountSelection : UserControl
+    public partial class AccountSelection : Form
     {
-        public static AccountSelection Get()
+        public AccountSelection()
         {
-            if (account == null)
-                account = new AccountSelection();
-
-            return account;
+            InitializeComponent();
+            ConnectAPI.Get().SendAccount += OnReceiveAccount;
         }
         private void OnReceiveAccount(object sender, Account e)
         {
             foreach (string acc in e.AccountCategory)
-                Box.Items.Add(acc);
-        }
-        private ComboBox Box
-        {
-            get; set;
-        }
-        private AccountSelection()
-        {
-            Box = new ComboBox
+                if (acc.Length > 0 && acc.Substring(8).Equals("31"))
+                    comboBox.Items.Add(acc.Insert(4, "-").Insert(9, "-"));
+
+            if (comboBox.Items.Count > 0)
             {
-                DropDownStyle = ComboBoxStyle.DropDownList,
-                Dock = DockStyle.Fill
-            };
-            Controls.Add(Box);
-            InitializeComponent();
-            ConnectAPI.Get().SendAccount += OnReceiveAccount;
+                ShowDialog();
+
+                return;
+            }
+            Box.Show("The Futures Option Account does not Exist.\n\nQuit the program.", "Notice", 3750);
+            Environment.Exit(0);
         }
-        private static AccountSelection account;
+        private void ComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            SendSelection?.Invoke(this, new Account(comboBox.Text));
+            Close();
+        }
+        public event EventHandler<Account> SendSelection;
     }
 }

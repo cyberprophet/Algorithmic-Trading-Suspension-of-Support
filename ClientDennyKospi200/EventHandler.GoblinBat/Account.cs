@@ -8,8 +8,18 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
+        public string Selection
+        {
+            get; private set;
+        }
         public Account(string account)
         {
+            if (account.Contains("-"))
+            {
+                Selection = account;
+
+                return;
+            }
             AccountCategory = account.Split(';');
         }
     }

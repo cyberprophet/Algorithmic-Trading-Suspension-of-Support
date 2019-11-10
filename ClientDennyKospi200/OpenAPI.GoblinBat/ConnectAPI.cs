@@ -23,10 +23,11 @@ namespace ShareInvest.OpenAPI
             axAPI.OnReceiveChejanData += OnReceiveChejanData;
             axAPI.OnReceiveMsg += OnReceiveMsg;
         }
-        public void StartProgress()
+        public void StartProgress(IRealType type)
         {
             if (axAPI != null)
             {
+                this.type = type;
                 ErrorCode = axAPI.CommConnect();
 
                 return;
@@ -180,9 +181,24 @@ namespace ShareInvest.OpenAPI
         }
         private void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {
+            sb = new StringBuilder(256);
+
+            foreach (int fid in type.Catalog[int.Parse(e.sGubun)])
+                sb.Append(axAPI.GetChejanData(fid)).Append(';');
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
+            sb = new StringBuilder(512);
+
+            foreach (int fid in type.Catalog[Array.FindIndex(Enum.GetNames(typeof(IRealType.RealType)), o => o.Equals(e.sRealType))])
+                sb.Append(axAPI.GetCommRealData(e.sRealKey, fid)).Append(';');
+
+            if (e.sRealKey.Substring(0, 3).Equals("101"))
+            {
+                SendDatum?.Invoke(this, new Datum(sb));
+
+                return;
+            }
         }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
@@ -201,10 +217,12 @@ namespace ShareInvest.OpenAPI
             request = Delay.GetInstance(205);
             request.Run();
         }
+        private IRealType type;
         private StringBuilder sb;
         private AxKHOpenAPI axAPI;
         private readonly Delay request;
         private static ConnectAPI api;
+        public event EventHandler<Datum> SendDatum;
         public event EventHandler<Account> SendAccount;
         public event EventHandler<Memorize> SendMemorize;
     }
