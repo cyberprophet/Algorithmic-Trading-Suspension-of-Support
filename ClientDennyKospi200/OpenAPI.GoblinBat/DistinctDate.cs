@@ -11,18 +11,14 @@ namespace ShareInvest.OpenAPI
     {
         protected string GetDistinctDate(int usWeekNumber)
         {
-            return (usWeekNumber > 2 || DateTime.Now.DayOfWeek.Equals("Friday") && usWeekNumber == 2) ? DateTime.Now.AddMonths(1).ToString("yyyyMM") : DateTime.Now.ToString("yyyyMM");
+            DayOfWeek dt = DateTime.Now.AddDays(1 - DateTime.Now.Day).DayOfWeek;
+            int check = dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 3 : 2;
+
+            return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString("yyyyMM") : DateTime.Now.ToString("yyyyMM");
         }
         protected string Retention(string code)
         {
-            if (!code.Substring(0, 3).Equals("101"))
-            {
-                foreach (string retention in Retrieve.Get().ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\"), string.Concat(code, ".csv"), SearchOption.AllDirectories), o => o.Contains(code)), new List<string>(256)))
-                    code = retention.Substring(0, 12);
-
-                return code;
-            }
-            foreach (string retention in Retrieve.Get().ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\"), "*.csv", SearchOption.AllDirectories), o => o.Contains("Tick")), new List<string>(2097152)))
+            foreach (string retention in code.Substring(0, 3).Equals("101") ? Retrieve.Get().ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\"), "*.csv", SearchOption.AllDirectories), o => o.Contains("Tick")), new List<string>(2097152)) : Retrieve.Get().ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\"), string.Concat(code, ".csv"), SearchOption.AllDirectories), o => o.Contains(code)), new List<string>(1280)))
                 code = retention.Substring(0, 12);
 
             return code;

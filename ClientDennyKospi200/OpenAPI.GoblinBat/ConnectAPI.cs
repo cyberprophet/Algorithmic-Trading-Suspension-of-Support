@@ -83,7 +83,6 @@ namespace ShareInvest.OpenAPI
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
-            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST")));
             string exclusion, date = GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
             List<string> code = new List<string>
             {
@@ -100,17 +99,22 @@ namespace ShareInvest.OpenAPI
                     code.Add(exclusion);
                 }
             code.RemoveAt(1);
+            Delay.delay = 615;
 
             foreach (string output in code)
                 RemainingDay(output);
 
+            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST")));
             axAPI.KOA_Functions("ShowAccountWindow", "");
 
             if (DialogResult.Yes == MessageBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 40 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
             {
                 Delay.delay = 4150;
                 Request(code[0]);
+
+                return;
             }
+            Delay.delay = 205;
         }
         private void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {

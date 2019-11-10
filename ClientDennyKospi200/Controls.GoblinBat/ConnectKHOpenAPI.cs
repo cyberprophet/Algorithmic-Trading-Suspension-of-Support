@@ -11,6 +11,7 @@ namespace ShareInvest.Controls
             api = ConnectAPI.Get();
             api.SetAPI(axAPI);
             api.StartProgress();
+            new Temporary();
         }
         private readonly ConnectAPI api;
     }
