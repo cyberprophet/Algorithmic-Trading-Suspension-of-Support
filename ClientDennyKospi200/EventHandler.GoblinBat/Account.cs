@@ -1,14 +1,15 @@
 ﻿using System;
+using ShareInvest.Interface;
 
 namespace ShareInvest.EventHandler
 {
-    public class Account : EventArgs
+    public class Account : EventArgs, IAccount
     {
         public string[] AccountCategory
         {
             get; private set;
         }
-        public string Selection
+        public string AccNo
         {
             get; private set;
         }
@@ -16,7 +17,7 @@ namespace ShareInvest.EventHandler
         {
             if (account.Contains("-"))
             {
-                Selection = account;
+                AccNo = account;
 
                 return;
             }

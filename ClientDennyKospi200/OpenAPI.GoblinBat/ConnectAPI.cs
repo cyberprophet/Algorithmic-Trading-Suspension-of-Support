@@ -30,15 +30,33 @@ namespace ShareInvest.OpenAPI
                 this.type = type;
                 ErrorCode = axAPI.CommConnect();
 
+                if (ErrorCode != 0)
+                    new Error(ErrorCode);
+
                 return;
             }
             Environment.Exit(0);
         }
-        public void RemainingDay(string code)
+        public void OnReceiveOrder(IStrategy order, string sSlbyTP)
         {
-            request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = code, RQName = code })));
+            request.RequestTrData(new Task(() =>
+            {
+                //if (ConfirmOrder.Get().CheckCurrent())
+                ErrorCode = axAPI.SendOrderFO(string.Concat(order.Code, ScreenNo), ScreenNo, order.AccNo.Replace("-", string.Empty), order.Code, 1, sSlbyTP, order.OrdTp, order.Qty, order.Price, "");
+
+                if (ErrorCode != 0)
+                    new Error(ErrorCode);
+            }));
         }
         public Dictionary<int, string> Code
+        {
+            get; private set;
+        }
+        public bool OnReceiveBalance
+        {
+            get; set;
+        } = true;
+        public int Quantity
         {
             get; private set;
         }
@@ -58,6 +76,9 @@ namespace ShareInvest.OpenAPI
                 axAPI.SetInputValue(count[i], value[i]);
 
             ErrorCode = axAPI.CommRqData(param.RQName, param.TrCode, param.PrevNext, param.ScreenNo);
+
+            if (ErrorCode != 0)
+                new Error(ErrorCode);
         }
         private void FixUp(StringBuilder sb, string code)
         {
@@ -81,6 +102,10 @@ namespace ShareInvest.OpenAPI
 
                     break;
                 }
+        }
+        private void RemainingDay(string code)
+        {
+            request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = code, RQName = code })));
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
@@ -115,6 +140,7 @@ namespace ShareInvest.OpenAPI
 
                 return;
             }
+            SendConfirm?.Invoke(this, new Identify("It is valid until ", DateTime.ParseExact(Code[0].Substring(18, 8), "yyyyMMdd", null)));
             Delay.delay = 205;
         }
         private void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -193,7 +219,7 @@ namespace ShareInvest.OpenAPI
             foreach (int fid in type.Catalog[Array.FindIndex(Enum.GetNames(typeof(IRealType.RealType)), o => o.Equals(e.sRealType))])
                 sb.Append(axAPI.GetCommRealData(e.sRealKey, fid)).Append(';');
 
-            if (e.sRealKey.Substring(0, 3).Equals("101"))
+            if (e.sRealKey.Length > 7 && e.sRealKey.Substring(0, 3).Equals("101"))
             {
                 SendDatum?.Invoke(this, new Datum(sb));
 
@@ -211,12 +237,20 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
+        private string ScreenNo
+        {
+            get
+            {
+                return (screen++ % 20 + 1000).ToString();
+            }
+        }
         private ConnectAPI()
         {
             Code = new Dictionary<int, string>();
             request = Delay.GetInstance(205);
             request.Run();
         }
+        private int screen;
         private IRealType type;
         private StringBuilder sb;
         private AxKHOpenAPI axAPI;
@@ -224,6 +258,7 @@ namespace ShareInvest.OpenAPI
         private static ConnectAPI api;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Account> SendAccount;
+        public event EventHandler<Identify> SendConfirm;
         public event EventHandler<Memorize> SendMemorize;
     }
 }

@@ -17,6 +17,17 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
+        public Datum(string date, double price)
+        {
+            Time = date;
+            Price = price;
+        }
+        public Datum(string date, double price, int volume)
+        {
+            Time = date;
+            Price = price;
+            Volume = volume;
+        }
         public Datum(StringBuilder sb)
         {
             string[] arr = sb.ToString().Split(';');
@@ -28,8 +39,6 @@ namespace ShareInvest.EventHandler
                 arr[1] = arr[1].Substring(1);
 
             Price = double.Parse(arr[1]);
-
-            return;
         }
     }
 }

@@ -19,14 +19,20 @@ namespace ShareInvest.SecondaryForms
                 if (acc.Length > 0 && acc.Substring(8).Equals("31"))
                     comboBox.Items.Add(acc.Insert(4, "-").Insert(9, "-"));
 
-            if (comboBox.Items.Count > 0)
+            if (comboBox.Items.Count > 1)
             {
                 ShowDialog();
 
                 return;
             }
-            Box.Show("The Futures Option Account does not Exist.\n\nQuit the program.", "Notice", 3750);
-            Environment.Exit(0);
+            if (comboBox.Items.Count < 1)
+            {
+                Box.Show("The Futures Option Account does not Exist.\n\nQuit the program.", "Notice", 3750);
+                Environment.Exit(0);
+
+                return;
+            }
+            SendSelection?.Invoke(this, new Account(comboBox.Items[0].ToString()));
         }
         private void ComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {

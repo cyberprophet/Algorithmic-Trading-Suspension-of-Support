@@ -1,5 +1,4 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 using ShareInvest.SecondaryForms;
@@ -24,11 +23,7 @@ namespace ShareInvest.Kospi200HedgeVersion
         }
         private void OnReceiveAccount(object sender, Account e)
         {
-            account.Text = e.Selection;
-        }
-        private void Account_TextChanged(object sender, EventArgs e)
-        {
-            account.Text.Trim('-');
+            account.Text = e.AccNo;
         }
     }
 }

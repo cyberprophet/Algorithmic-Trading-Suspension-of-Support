@@ -2,7 +2,7 @@
 {
     public interface IAccount
     {
-        string Account
+        string AccNo
         {
             get;
         }
