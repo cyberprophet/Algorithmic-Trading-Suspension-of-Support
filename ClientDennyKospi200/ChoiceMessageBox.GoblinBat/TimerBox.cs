@@ -7,7 +7,6 @@ namespace ShareInvest.TimerMessageBox
 {
     public class TimerBox
     {
-  
         public static DialogResult Show(string text, uint uTimeout)
         {
             Setup("", uTimeout);
@@ -52,12 +51,12 @@ namespace ShareInvest.TimerMessageBox
         {
             Setup(caption, uTimeout);
             return MessageBox.Show(owner, text, caption, buttons);
-        }       
+        }
         public static DialogResult Show(IWin32Window owner, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, uint uTimeout)
         {
             Setup(caption, uTimeout);
             return MessageBox.Show(owner, text, caption, buttons, icon);
-        }      
+        }
         public static DialogResult Show(IWin32Window owner, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defButton, uint uTimeout)
         {
             Setup(caption, uTimeout);
@@ -70,21 +69,21 @@ namespace ShareInvest.TimerMessageBox
         }
         [DllImport("User32.dll")]
         public static extern UIntPtr SetTimer(IntPtr hWnd, UIntPtr nIDEvent, uint uElapse, TimerProc lpTimerFunc);
-                [DllImport("User32.dll")]
+        [DllImport("User32.dll")]
         public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
-                [DllImport("user32.dll")]
+        [DllImport("user32.dll")]
         public static extern IntPtr SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hInstance, int threadId);
-                [DllImport("user32.dll")]
-        public static extern int UnhookWindowsHookEx(IntPtr idHook);
-                [DllImport("user32.dll")]
+        [DllImport("user32.dll")]
         public static extern IntPtr CallNextHookEx(IntPtr idHook, int nCode, IntPtr wParam, IntPtr lParam);
-                [DllImport("user32.dll")]
+        [DllImport("user32.dll")]
+        public static extern int UnhookWindowsHookEx(IntPtr idHook);
+        [DllImport("user32.dll")]
         public static extern int GetWindowTextLength(IntPtr hWnd);
-                [DllImport("user32.dll")]
+        [DllImport("user32.dll")]
         public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int maxLength);
-                [DllImport("user32.dll")]
+        [DllImport("user32.dll")]
         public static extern int EndDialog(IntPtr hDlg, IntPtr nResult);
-                [StructLayout(LayoutKind.Sequential)]
+        [StructLayout(LayoutKind.Sequential)]
         public struct CWPRETSTRUCT
         {
             public IntPtr lResult;
@@ -93,15 +92,6 @@ namespace ShareInvest.TimerMessageBox
             public uint message;
             public IntPtr hwnd;
         };
-        private static void Setup(string caption, uint uTimeout)
-        {
-            if (hHook != IntPtr.Zero)
-                throw new NotSupportedException("multiple calls are not supported");
-
-            hookTimeout = uTimeout;
-            hookCaption = caption ?? "";
-            hHook = SetWindowsHookEx(WH_CALLWNDPROCRET, hookProc, IntPtr.Zero, AppDomain.GetCurrentThreadId());
-        }
         private static IntPtr MessageBoxHookProc(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode < 0)
@@ -126,6 +116,15 @@ namespace ShareInvest.TimerMessageBox
                 }
             }
             return CallNextHookEx(hook, nCode, wParam, lParam);
+        }
+        private static void Setup(string caption, uint uTimeout)
+        {
+            if (hHook != IntPtr.Zero)
+                throw new NotSupportedException("multiple calls are not supported");
+
+            hookTimeout = uTimeout;
+            hookCaption = caption ?? "";
+            hHook = SetWindowsHookEx(WH_CALLWNDPROCRET, hookProc, IntPtr.Zero, AppDomain.GetCurrentThreadId());
         }
         private static void MessageBoxTimerProc(IntPtr hWnd, uint uMsg, UIntPtr nIDEvent, uint dwTime)
         {
@@ -157,6 +156,6 @@ namespace ShareInvest.TimerMessageBox
         private static readonly TimerProc hookTimer;
         private static uint hookTimeout;
         private static string hookCaption;
-        private static IntPtr hHook;     
+        private static IntPtr hHook;
     }
 }
