@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
-using ShareInvest.AutoMessageBox;
+using System.Windows.Forms;
+using System;
+using ShareInvest.TimerMessageBox;
 
 namespace ShareInvest.Catalog
 {
@@ -7,7 +9,8 @@ namespace ShareInvest.Catalog
     {
         public Error(int error)
         {
-            Box.Show(ec[error], "Caution", 951);
+            if (TimerBox.Show(string.Concat(ec[error], "\n\nIt is Recommended to Restart.\n\nDo you Want to Continue?"), "Caution", MessageBoxButtons.YesNo, MessageBoxIcon.Question, 1500).Equals((DialogResult)7))
+                  Environment.Exit(0);
         }
         public Dictionary<int, string> ec = new Dictionary<int, string>()
         {

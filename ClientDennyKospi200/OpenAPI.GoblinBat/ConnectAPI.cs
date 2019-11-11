@@ -9,6 +9,7 @@ using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
+using ShareInvest.TimerMessageBox;
 
 namespace ShareInvest.OpenAPI
 {
@@ -41,8 +42,8 @@ namespace ShareInvest.OpenAPI
         {
             request.RequestTrData(new Task(() =>
             {
-                //if (ConfirmOrder.Get().CheckCurrent())
-                ErrorCode = axAPI.SendOrderFO(string.Concat(order.Code, ScreenNo), ScreenNo, order.AccNo.Replace("-", string.Empty), order.Code, 1, sSlbyTP, order.OrdTp, order.Qty, order.Price, "");
+                if (ConfirmOrder.Get().CheckCurrent())
+                    ErrorCode = axAPI.SendOrderFO(string.Concat(order.Code, ScreenNo), ScreenNo, order.AccNo.Replace("-", string.Empty), order.Code, 1, sSlbyTP, order.OrdTp, order.Qty, order.Price, "");
 
                 if (ErrorCode != 0)
                     new Error(ErrorCode);
@@ -133,7 +134,7 @@ namespace ShareInvest.OpenAPI
             SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST")));
             axAPI.KOA_Functions("ShowAccountWindow", "");
 
-            if (DialogResult.Yes == MessageBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 40 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question))
+            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 40 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 41752).Equals((DialogResult)6))
             {
                 Delay.delay = 4150;
                 Request(code[0]);
