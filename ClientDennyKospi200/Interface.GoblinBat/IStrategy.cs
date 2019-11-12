@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.Interface
 {
-    public interface IStrategy : IAccount, IStatistics
+    public interface IStrategy
     {
         string OrdTp
         {
@@ -8,15 +8,15 @@
         }
         string Price
         {
-            get; set;
+            get;
         }
-        string Code
+        string SlbyTP
         {
             get;
         }
         int Qty
         {
             get;
-        }     
+        }
     }
 }

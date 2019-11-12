@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ShareInvest.AutoMessageBox;
+using ShareInvest.Const;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 using ShareInvest.OpenAPI;
@@ -25,13 +26,17 @@ namespace ShareInvest.Analysize
             api = ConnectAPI.Get();
             api.SendDatum += Analysis;
         }
+        public void SetAccount(IAccount account)
+        {
+            this.account = account;
+        }
         private void Analysis(object sender, Datum e)
         {
             int quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
 
-            if (api != null && Math.Abs(api.Quantity + quantity) < (int)(strategy.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
+            if (api != null && Math.Abs(api.Quantity + quantity) < (int)(account.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
             {
-                api.OnReceiveOrder(strategy, dic[quantity]);
+                api.OnReceiveOrder(account, new PurchaseInformation {SlbyTP= dic[quantity] });
                 api.OnReceiveBalance = false;
             }
         }
@@ -102,8 +107,8 @@ namespace ShareInvest.Analysize
             {1, "2"},
         };
         private const string initiation = "090000";
+        private IAccount account;
         private readonly IStatistics st;
-        private readonly IStrategy strategy;
         private readonly EMA ema;
         private readonly ConnectAPI api;
         private readonly List<double> shortDay;

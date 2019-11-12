@@ -1,9 +1,9 @@
 ﻿using System;
-using ShareInvest.Interface;
+using System.Text;
 
 namespace ShareInvest.EventHandler
 {
-    public class Account : EventArgs, IAccount
+    public class Account : EventArgs
     {
         public string[] AccountCategory
         {
@@ -12,10 +12,6 @@ namespace ShareInvest.EventHandler
         public string AccNo
         {
             get; private set;
-        }
-        public long BasicAssets
-        {
-            get;
         }
         public string ID
         {
@@ -28,7 +24,7 @@ namespace ShareInvest.EventHandler
         public string Server
         {
             get; private set;
-        }
+        }       
         public Account(string account, string id, string name, string server)
         {
             AccountCategory = account.Split(';');

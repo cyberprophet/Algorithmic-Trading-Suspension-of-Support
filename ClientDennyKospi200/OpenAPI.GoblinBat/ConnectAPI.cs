@@ -38,12 +38,16 @@ namespace ShareInvest.OpenAPI
             }
             Environment.Exit(0);
         }
-        public void OnReceiveOrder(IStrategy order, string sSlbyTP)
+        public void LookUpTheDeposit(string account)
+        {
+            request.RequestTrData(new Task(() => InputValueRqData(new OPW20010 { Value = string.Concat(account.Replace("-", string.Empty), ";;00") })));
+        }
+        public void OnReceiveOrder(IAccount account, IStrategy order)
         {
             request.RequestTrData(new Task(() =>
             {
                 if (ConfirmOrder.Get().CheckCurrent())
-                    ErrorCode = axAPI.SendOrderFO(string.Concat(order.Code, ScreenNo), ScreenNo, order.AccNo.Replace("-", string.Empty), order.Code, 1, sSlbyTP, order.OrdTp, order.Qty, order.Price, "");
+                    ErrorCode = axAPI.SendOrderFO(string.Concat(account.Code, ScreenNo), ScreenNo, account.AccNo.Replace("-", string.Empty), account.Code, 1, order.SlbyTP, order.OrdTp, order.Qty, order.Price, "");
 
                 if (ErrorCode != 0)
                     new Error(ErrorCode);
@@ -99,9 +103,17 @@ namespace ShareInvest.OpenAPI
                 if (kv.Value.Substring(0, 8).Equals(code.Substring(0, 8)))
                 {
                     if (Code[kv.Key + 1] != null)
+                    {
                         request.RequestTrData(new Task(() => InputValueRqData(new Opt50066 { Value = Code[kv.Key + 1].Substring(0, 8), RQName = string.Concat(Code[kv.Key + 1].Substring(0, 8), Retention(Code[kv.Key + 1].Substring(0, 8))).Substring(0, 20), PrevNext = 0 })));
 
-                    break;
+                        break;
+                    }
+                    SendConfirm?.Invoke(this, new Identify("The latest Data Collection is Complete."));
+
+                    if (TimerBox.Show("The latest Data Collection is Complete.\n\nDo You Want to Continue with BackTesting??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter 30 Seconds the Program is Terminated.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 31752).Equals((DialogResult)6))
+                        Console.WriteLine("Start BackTesting.");
+
+                    Environment.Exit(0);
                 }
         }
         private void RemainingDay(string code)
@@ -110,6 +122,7 @@ namespace ShareInvest.OpenAPI
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
+            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST"), axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME"), axAPI.GetLoginInfo("GetServerGubun")));
             string exclusion, date = GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
             List<string> code = new List<string>
             {
@@ -127,7 +140,6 @@ namespace ShareInvest.OpenAPI
                 }
             code.RemoveAt(1);
             Delay.delay = 615;
-            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST"), axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME"), axAPI.GetLoginInfo("GetServerGubun")));
 
             foreach (string output in code)
                 RemainingDay(output);
@@ -205,6 +217,12 @@ namespace ShareInvest.OpenAPI
             foreach (string item in Array.Find(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))))
                 sb.Append(axAPI.GetCommData(e.sTrCode, e.sRQName, 0, item).Trim()).Append(';');
 
+            if (Array.FindIndex(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))).Equals(1))
+            {
+                SendDeposit?.Invoke(this, new Deposit(sb));
+
+                return;
+            }
             FixUp(sb, e.sRQName);
         }
         private void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
@@ -275,6 +293,7 @@ namespace ShareInvest.OpenAPI
         private AxKHOpenAPI axAPI;
         private readonly Delay request;
         private static ConnectAPI api;
+        public event EventHandler<Deposit> SendDeposit;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Account> SendAccount;
         public event EventHandler<Identify> SendConfirm;

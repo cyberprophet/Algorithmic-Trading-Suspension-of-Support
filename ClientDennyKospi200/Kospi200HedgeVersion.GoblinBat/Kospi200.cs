@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ShareInvest.Analysize;
 using ShareInvest.Const;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
@@ -46,18 +47,26 @@ namespace ShareInvest.Kospi200HedgeVersion
         private void OnReceiveClose(object sender, DialogClose e)
         {
             SuspendLayout();
-            StartTrading(ConfirmOrder.Get(), new AccountSelection(), new ConnectKHOpenAPI(new Specify
+            StartTrading(ConfirmOrder.Get(), new AccountSelection(), new ConnectKHOpenAPI());
+            strategy = new Strategy(new Specify
             {
                 Reaction = e.Reaction,
                 ShortDayPeriod = e.ShortDay,
                 ShortTickPeriod = e.ShortTick,
                 LongDayPeriod = e.LongDay,
                 LongTickPeriod = e.LongTick
-            }));
+            });
         }
         private void OnReceiveAccount(object sender, Account e)
         {
             account.Text = e.AccNo;
+            ConnectAPI api = ConnectAPI.Get();
+            api.SendDeposit += OnReceiveDeposit;
+            api.LookUpTheDeposit(e.AccNo);
+        }
+        private void OnReceiveDeposit(object sender, Deposit e)
+        {
+            strategy.SetAccount(new InQuiry { });
         }
         private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -73,5 +82,6 @@ namespace ShareInvest.Kospi200HedgeVersion
             { 900, 700 },
             { 600, 350 }
         };
+        private Strategy strategy;
     }
 }

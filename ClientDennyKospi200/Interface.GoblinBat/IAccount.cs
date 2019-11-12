@@ -10,5 +10,9 @@
         {
             get;
         }
+        string Code
+        {
+            get;
+        }
     }
 }
