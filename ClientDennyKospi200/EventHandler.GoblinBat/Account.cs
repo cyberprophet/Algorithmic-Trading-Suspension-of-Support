@@ -13,15 +13,33 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public Account(string account)
+        public long BasicAssets
         {
-            if (account.Contains("-"))
-            {
-                AccNo = account;
-
-                return;
-            }
+            get;
+        }
+        public string ID
+        {
+            get; private set;
+        }
+        public string Name
+        {
+            get; private set;
+        }
+        public string Server
+        {
+            get; private set;
+        }
+        public Account(string account, string id, string name, string server)
+        {
             AccountCategory = account.Split(';');
+            ID = id;
+            Name = name;
+            Server = server;
+        }
+        public Account(string account, string id)
+        {
+            AccNo = account;
+            ID = id;
         }
     }
 }

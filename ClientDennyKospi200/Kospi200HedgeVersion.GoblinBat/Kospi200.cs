@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ShareInvest.Const;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 using ShareInvest.OpenAPI;
@@ -13,30 +14,46 @@ namespace ShareInvest.Kospi200HedgeVersion
         public Kospi200()
         {
             InitializeComponent();
-            StartTrading(ConfirmOrder.Get(), new ChooseAnalysis());
+            ChooseStrategy(new ChooseAnalysis(), new SelectStrategies());
             Dispose();
             Environment.Exit(0);
         }
-        private void StartTrading(ConfirmOrder order, ChooseAnalysis analysis)
+        private void ChooseStrategy(ChooseAnalysis analysis, SelectStrategies strategy)
         {
-            using ConnectKHOpenAPI api = new ConnectKHOpenAPI();
-            Size = new Size(1650, 900);
-            Controls.Add(api);
+            analysis.SendClose += strategy.OnReceiveClose;
+            strategy.OnReceiveClose(analysis.Key.Split('^'));
             splitContainerStrategy.Panel1.Controls.Add(analysis);
-            splitContainerBalance.Panel2.Controls.Add(order);
+            splitContainerStrategy.Panel2.Controls.Add(strategy);
             analysis.Dock = DockStyle.Fill;
+            strategy.Dock = DockStyle.Fill;
+            Size = new Size(1650, 920);
+            splitContainerStrategy.SplitterDistance = 287;
+            splitContainerStrategy.BackColor = Color.FromArgb(121, 133, 130);
+            strategy.SendClose += OnReceiveClose;
+            ShowDialog();
+        }
+        private void StartTrading(ConfirmOrder order, AccountSelection account, ConnectKHOpenAPI api)
+        {
+            Controls.Add(api);
+            splitContainerBalance.Panel2.Controls.Add(order);
             api.Dock = DockStyle.Fill;
             order.Dock = DockStyle.Fill;
             order.BackColor = Color.FromArgb(203, 212, 206);
             api.Hide();
-            new AccountSelection().SendSelection += OnReceiveAccount;
-            analysis.SendClose += OnReceiveClose;
-            ShowDialog();
-            analysis.Dispose();
+            account.SendSelection += OnReceiveAccount;
+            ResumeLayout();
         }
         private void OnReceiveClose(object sender, DialogClose e)
         {
-            splitContainerStrategy.Panel1.Controls.Clear();
+            SuspendLayout();
+            StartTrading(ConfirmOrder.Get(), new AccountSelection(), new ConnectKHOpenAPI(new Specify
+            {
+                Reaction = e.Reaction,
+                ShortDayPeriod = e.ShortDay,
+                ShortTickPeriod = e.ShortTick,
+                LongDayPeriod = e.LongDay,
+                LongTickPeriod = e.LongTick
+            }));
         }
         private void OnReceiveAccount(object sender, Account e)
         {
@@ -52,7 +69,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             get;
         } =
         {
-            { 1650, 900 },
+            { 1650, 920 },
             { 900, 700 },
             { 600, 350 }
         };

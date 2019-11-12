@@ -127,14 +127,15 @@ namespace ShareInvest.OpenAPI
                 }
             code.RemoveAt(1);
             Delay.delay = 615;
+            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST"), axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME"), axAPI.GetLoginInfo("GetServerGubun")));
 
             foreach (string output in code)
                 RemainingDay(output);
 
-            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST")));
-            axAPI.KOA_Functions("ShowAccountWindow", "");
+            if (TimerBox.Show("Are You using Automatic Login??\n\nIf You aren't using It,\nClick No.\n\nAfter 30 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 31752).Equals((DialogResult)7))
+                axAPI.KOA_Functions("ShowAccountWindow", "");
 
-            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 40 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 41752).Equals((DialogResult)6))
+            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 25 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 25752).Equals((DialogResult)6))
             {
                 Delay.delay = 4150;
                 Request(code[0]);
@@ -220,15 +221,28 @@ namespace ShareInvest.OpenAPI
             foreach (int fid in type.Catalog[Array.FindIndex(Enum.GetNames(typeof(IRealType.RealType)), o => o.Equals(e.sRealType))])
                 sb.Append(axAPI.GetCommRealData(e.sRealKey, fid)).Append(';');
 
-            if (e.sRealKey.Length > 7 && e.sRealKey.Substring(0, 3).Equals("101"))
+            if (e.sRealType.Equals(Enum.GetName(typeof(IRealType.RealType), 1)) && e.sRealKey.Substring(0, 3).Equals("101"))
             {
                 SendDatum?.Invoke(this, new Datum(sb));
+
+                return;
+            }
+            if (e.sRealType.Equals(Enum.GetName(typeof(IRealType.RealType), 7)) && sb.ToString().Substring(0, 1).Equals("e") && DeadLine == false)
+            {
+                DeadLine = true;
+                Delay.delay = 4150;
+                Request(Code[0].Substring(0, 8));
 
                 return;
             }
         }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
+            if (!e.sMsg.Contains("신규주문"))
+            {
+                SendConfirm?.Invoke(this, new Identify(e.sMsg.Substring(8)));
+                OnReceiveBalance = true;
+            }
         }
         private int ErrorCode
         {
@@ -238,6 +252,10 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
+        private bool DeadLine
+        {
+            get; set;
+        } = false;
         private string ScreenNo
         {
             get

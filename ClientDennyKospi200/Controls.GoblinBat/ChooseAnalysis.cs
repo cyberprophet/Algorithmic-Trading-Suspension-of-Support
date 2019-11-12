@@ -15,7 +15,7 @@ namespace ShareInvest.Controls
 {
     public partial class ChooseAnalysis : UserControl
     {
-        public string TempText
+        public string Key
         {
             get; private set;
         }
@@ -46,9 +46,7 @@ namespace ShareInvest.Controls
         private void ButtonClick(object sender, EventArgs e)
         {
             arr = sender.ToString().Split(':');
-            arr = arr[1].Split('￦');
-            TempText = arr[0].Trim();
-            SendClose?.Invoke(this, new DialogClose(0));
+            SendClose?.Invoke(this, new DialogClose(arr[1].Split('￦')));
         }
         private string SetSecret()
         {
@@ -109,7 +107,20 @@ namespace ShareInvest.Controls
                 if (i > 13)
                     break;
 
+                if (i < 1)
+                    FindBest(ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1, kv.Value, kv.Key);
+
                 string.Concat(ip.FindByName, i++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " ￦", kv.Value.ToString("N0"));
+            }
+        }
+        private void FindBest(int denominator, long molecule, string key)
+        {
+            double temp = (double)molecule / denominator;
+
+            if (Quotient < temp && denominator > 1)
+            {
+                Quotient = temp;
+                Key = key;
             }
         }
         private int RecentDate
@@ -117,6 +128,10 @@ namespace ShareInvest.Controls
             get; set;
         }
         private int Count
+        {
+            get; set;
+        }
+        private double Quotient
         {
             get; set;
         }

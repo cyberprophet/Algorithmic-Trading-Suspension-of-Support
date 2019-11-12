@@ -16,7 +16,8 @@ namespace ShareInvest.Interface
             장시작시간 = 7,
             주문체결 = 0,
             파생잔고 = 4,
-            주식예상체결 = 10
+            주식예상체결 = 10,
+            파생실시간상하한 = 11
         }
         IEnumerable[] Catalog
         {

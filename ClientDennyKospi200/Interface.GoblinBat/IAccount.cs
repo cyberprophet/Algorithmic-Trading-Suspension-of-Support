@@ -6,5 +6,9 @@
         {
             get;
         }
+        long BasicAssets
+        {
+            get;
+        }
     }
 }

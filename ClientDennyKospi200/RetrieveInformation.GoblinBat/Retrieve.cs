@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ShareInvest.Interface;
 
 namespace ShareInvest.RetrieveInformation
 {
-    public class Retrieve
+    public class Retrieve : IFetch
     {
         public List<string> ReadCSV(string file, List<string> list)
         {

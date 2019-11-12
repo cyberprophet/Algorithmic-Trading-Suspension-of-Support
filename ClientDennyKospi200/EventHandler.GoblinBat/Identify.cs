@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using ShareInvest.Interface;
 
 namespace ShareInvest.EventHandler
 {
@@ -10,9 +9,9 @@ namespace ShareInvest.EventHandler
         {
             Remaining = string.Concat(message, remaining.ToString("D", new CultureInfo("en-US")));
         }
-        public Identify(IConfirm id, string confirm)
+        public Identify(string confirm)
         {
-            Confirm = string.Concat(id.Confirm, confirm);
+            Confirm = confirm;
         }
         public string Confirm
         {

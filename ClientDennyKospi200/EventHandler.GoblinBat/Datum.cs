@@ -19,7 +19,7 @@ namespace ShareInvest.EventHandler
         }
         public Datum(string date, double price)
         {
-            Time = date;
+            Time = date.Substring(6, 2);
             Price = price;
         }
         public Datum(string date, double price, int volume)
