@@ -10,9 +10,5 @@
         {
             get;
         }
-        string Code
-        {
-            get;
-        }
     }
 }

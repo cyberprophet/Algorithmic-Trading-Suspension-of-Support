@@ -21,7 +21,8 @@ namespace ShareInvest.Catalog
            new 장시작시간(),
            new 옵션시세(),
            new 선물옵션우선호가(),
-           new 주식예상체결()
+           new 주식예상체결(),
+           new 파생실시간상하한()
         };
     }
 }

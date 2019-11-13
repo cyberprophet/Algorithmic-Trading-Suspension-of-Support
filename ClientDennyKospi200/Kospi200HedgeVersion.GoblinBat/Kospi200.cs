@@ -5,6 +5,7 @@ using ShareInvest.Analysize;
 using ShareInvest.Const;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
+using ShareInvest.FindByName;
 using ShareInvest.OpenAPI;
 using ShareInvest.SecondaryForms;
 
@@ -60,18 +61,52 @@ namespace ShareInvest.Kospi200HedgeVersion
         private void OnReceiveAccount(object sender, Account e)
         {
             account.Text = e.AccNo;
+            id.Text = e.ID;
             ConnectAPI api = ConnectAPI.Get();
             api.SendDeposit += OnReceiveDeposit;
             api.LookUpTheDeposit(e.AccNo);
         }
         private void OnReceiveDeposit(object sender, Deposit e)
         {
-            strategy.SetAccount(new InQuiry { });
+            for (int i = 0; i < e.ArrayDeposit.Length; i++)
+                if (e.ArrayDeposit[i].Length > 0)
+                    string.Concat("balance", i).FindByName<Label>(this).Text = int.Parse(e.ArrayDeposit[i]).ToString("N0");
+
+            splitContainerAccount.BackColor = Color.FromArgb(121, 133, 130);
+            tabControl.SelectedIndex = 1;
+            strategy.SetAccount(new InQuiry { AccNo = account.Text, BasicAssets = long.Parse(e.ArrayDeposit[26]) });
         }
-        private void TabControl_SelectedIndexChanged(object sender, EventArgs e)
+        private void TabControlSelectedIndexChanged(object sender, EventArgs e)
         {
             Size = new Size(FormSizes[tabControl.SelectedIndex, 0], FormSizes[tabControl.SelectedIndex, 1]);
             CenterToScreen();
+        }
+        private void ServerCheckedChanged(object sender, EventArgs e)
+        {
+            if (CheckCurrent)
+            {
+                server.Text = "During Auto Renew";
+                server.ForeColor = Color.Ivory;
+                account.ForeColor = Color.Ivory;
+                id.ForeColor = Color.Ivory;
+                timer.Start();
+
+                return;
+            }
+            timer.Stop();
+            server.Text = "Stop Renewal";
+            server.ForeColor = Color.Maroon;
+        }
+        private void TimerTick(object sender, EventArgs e)
+        {
+            ConnectAPI.Get().LookUpTheDeposit(account.Text);
+        }
+        private bool CheckCurrent
+        {
+            get
+            {
+                return server.Checked;
+            }
         }
         private int[,] FormSizes
         {
@@ -79,7 +114,7 @@ namespace ShareInvest.Kospi200HedgeVersion
         } =
         {
             { 1650, 920 },
-            { 900, 700 },
+            { 750, 370 },
             { 600, 350 }
         };
         private Strategy strategy;

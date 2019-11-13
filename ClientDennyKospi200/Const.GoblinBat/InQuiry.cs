@@ -12,9 +12,5 @@ namespace ShareInvest.Const
         {
             get; set;
         }
-        public string Code
-        {
-            get; set;
-        }
     }
 }
