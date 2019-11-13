@@ -11,7 +11,7 @@ namespace ShareInvest.EventHandler
         }
         public Identify(string confirm)
         {
-            Confirm = confirm;
+            Confirm = confirm.Contains("되었습니다") ? string.Concat(confirm, ".") : confirm;
         }
         public string Confirm
         {

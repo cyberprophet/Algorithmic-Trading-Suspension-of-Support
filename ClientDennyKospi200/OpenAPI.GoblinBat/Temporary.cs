@@ -12,8 +12,7 @@ namespace ShareInvest.OpenAPI
         public Temporary()
         {
             memo = new List<string>(32768);
-            api = ConnectAPI.Get();
-            api.SendMemorize += OnReceiveMemorize;
+            ConnectAPI.Get().SendMemorize += OnReceiveMemorize;
         }
         private void OnReceiveMemorize(object sender, Memorize e)
         {
@@ -55,7 +54,6 @@ namespace ShareInvest.OpenAPI
                 Environment.Exit(0);
             }
         }
-        private readonly ConnectAPI api;
         private readonly List<string> memo;
     }
 }

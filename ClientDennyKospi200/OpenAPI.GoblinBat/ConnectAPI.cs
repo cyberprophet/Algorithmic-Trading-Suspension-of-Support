@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -106,18 +107,11 @@ namespace ShareInvest.OpenAPI
             foreach (KeyValuePair<int, string> kv in Code)
                 if (kv.Value.Substring(0, 8).Equals(code.Substring(0, 8)))
                 {
-                    if (Code[kv.Key + 1] != null)
-                    {
-                        request.RequestTrData(new Task(() => InputValueRqData(new Opt50066 { Value = Code[kv.Key + 1].Substring(0, 8), RQName = string.Concat(Code[kv.Key + 1].Substring(0, 8), Retention(Code[kv.Key + 1].Substring(0, 8))).Substring(0, 20), PrevNext = 0 })));
+                    if (Code.Last().Key.Equals(kv.Key))
+                        SendConfirm?.Invoke(this, new Identify("The latest Data Collection is Complete."));
 
-                        break;
-                    }
-                    SendConfirm?.Invoke(this, new Identify("The latest Data Collection is Complete."));
-
-                    if (TimerBox.Show("The latest Data Collection is Complete.\n\nDo You Want to Continue with BackTesting??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter 30 Seconds the Program is Terminated.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 31752).Equals((DialogResult)6))
-                        Console.WriteLine("Start BackTesting.");
-
-                    Environment.Exit(0);
+                    request.RequestTrData(new Task(() => InputValueRqData(new Opt50066 { Value = Code[kv.Key + 1].Substring(0, 8), RQName = string.Concat(Code[kv.Key + 1].Substring(0, 8), Retention(Code[kv.Key + 1].Substring(0, 8))).Substring(0, 20), PrevNext = 0 })));
+                    SendConfirm?.Invoke(this, new Identify("Continues to look up " + Code[kv.Key + 1].Substring(0, 8) + "\nChart for the " + kv.Key + " Time."));
                 }
         }
         private void RemainingDay(string code)
@@ -141,23 +135,23 @@ namespace ShareInvest.OpenAPI
 
                     code.Add(exclusion);
                 }
-            if (TimerBox.Show("Are You using Automatic Login??\n\nIf You aren't using It,\nClick No.\n\nAfter 5 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 5617).Equals((DialogResult)7))
-                axAPI.KOA_Functions("ShowAccountWindow", "");
-
             code.RemoveAt(1);
-            Delay.delay = 615;
+            Delay.delay = 415;
             SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST"), axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME"), axAPI.GetLoginInfo("GetServerGubun")));
 
             foreach (string output in code)
                 RemainingDay(output);
 
-            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 5 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 5752).Equals((DialogResult)6))
+            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 25 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 45752).Equals((DialogResult)6))
             {
                 Delay.delay = 4150;
                 Request(code[0]);
 
                 return;
             }
+            if (TimerBox.Show("Are You using Automatic Login??\n\nIf You aren't using It,\nClick No.\n\nAfter 5 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 5617).Equals((DialogResult)7))
+                axAPI.KOA_Functions("ShowAccountWindow", "");
+
             SendConfirm?.Invoke(this, new Identify("It is valid until ", DateTime.ParseExact(Code[0].Substring(18, 8), "yyyyMMdd", null)));
             Delay.delay = 205;
         }
@@ -238,7 +232,7 @@ namespace ShareInvest.OpenAPI
                     break;
 
                 case 2:
-                    Console.WriteLine(sb);
+                    SendHolding?.Invoke(this, new Holding(sb.ToString()));
                     break;
             }
         }
@@ -313,6 +307,7 @@ namespace ShareInvest.OpenAPI
         public event EventHandler<Deposit> SendDeposit;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Account> SendAccount;
+        public event EventHandler<Holding> SendHolding;
         public event EventHandler<Identify> SendConfirm;
         public event EventHandler<Memorize> SendMemorize;
     }

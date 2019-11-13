@@ -34,21 +34,25 @@ namespace ShareInvest.Kospi200HedgeVersion
             strategy.SendClose += OnReceiveClose;
             ShowDialog();
         }
-        private void StartTrading(ConfirmOrder order, AccountSelection account, ConnectKHOpenAPI api)
+        private void StartTrading(Balance bal, ConfirmOrder order, AccountSelection account, ConnectKHOpenAPI api)
         {
             Controls.Add(api);
             splitContainerBalance.Panel2.Controls.Add(order);
+            splitContainerBalance.Panel1.Controls.Add(bal);
             api.Dock = DockStyle.Fill;
             order.Dock = DockStyle.Fill;
-            order.BackColor = Color.FromArgb(203, 212, 206);
+            bal.Dock = DockStyle.Fill;
+            bal.BackColor = Color.FromArgb(203, 212, 206);
+            order.BackColor = Color.FromArgb(121, 133, 130);
             api.Hide();
             account.SendSelection += OnReceiveAccount;
+            splitContainerBalance.SplitterDistance = 605;
             ResumeLayout();
         }
         private void OnReceiveClose(object sender, DialogClose e)
         {
             SuspendLayout();
-            StartTrading(ConfirmOrder.Get(), new AccountSelection(), new ConnectKHOpenAPI());
+            StartTrading(Balance.Get(), ConfirmOrder.Get(), new AccountSelection(), new ConnectKHOpenAPI());
             strategy = new Strategy(new Specify
             {
                 Reaction = e.Reaction,
@@ -115,7 +119,7 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             { 1650, 920 },
             { 750, 370 },
-            { 600, 350 }
+            { 650, 250 }
         };
         private Strategy strategy;
     }
