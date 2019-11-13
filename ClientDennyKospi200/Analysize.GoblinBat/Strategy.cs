@@ -36,7 +36,7 @@ namespace ShareInvest.Analysize
 
             if (api != null && Math.Abs(api.Quantity + quantity) < (int)(account.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
             {
-                api.OnReceiveOrder(account, new PurchaseInformation {SlbyTP= dic[quantity] });
+                api.OnReceiveOrder(account, new PurchaseInformation { SlbyTP = dic[quantity] });
                 api.OnReceiveBalance = false;
             }
         }

@@ -40,14 +40,18 @@ namespace ShareInvest.OpenAPI
         }
         public void LookUpTheDeposit(string account)
         {
-            request.RequestTrData(new Task(() => InputValueRqData(new OPW20010 { Value = string.Concat(account.Replace("-", string.Empty), ";;00") })));
+            request.RequestTrData(new Task(() =>
+            {
+                InputValueRqData(new OPW20007 { Value = string.Concat(account.Replace("-", string.Empty), ";;00") });
+                InputValueRqData(new OPW20010 { Value = string.Concat(account.Replace("-", string.Empty), ";;00") });
+            }));
         }
         public void OnReceiveOrder(IAccount account, IStrategy order)
         {
             request.RequestTrData(new Task(() =>
             {
                 if (ConfirmOrder.Get().CheckCurrent())
-                    ErrorCode = axAPI.SendOrderFO(string.Concat(Code[0].Substring(0,8), ScreenNo), ScreenNo, account.AccNo.Replace("-", string.Empty), Code[0].Substring(0, 8), 1, order.SlbyTP, order.OrdTp, order.Qty, order.Price, "");
+                    ErrorCode = axAPI.SendOrderFO(string.Concat(Code[0].Substring(0, 8), ScreenNo), ScreenNo, account.AccNo.Replace("-", string.Empty), Code[0].Substring(0, 8), 1, order.SlbyTP, order.OrdTp, order.Qty, order.Price, "");
 
                 if (ErrorCode != 0)
                     new Error(ErrorCode);
@@ -122,7 +126,6 @@ namespace ShareInvest.OpenAPI
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
-            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST"), axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME"), axAPI.GetLoginInfo("GetServerGubun")));
             string exclusion, date = GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
             List<string> code = new List<string>
             {
@@ -138,16 +141,17 @@ namespace ShareInvest.OpenAPI
 
                     code.Add(exclusion);
                 }
+            if (TimerBox.Show("Are You using Automatic Login??\n\nIf You aren't using It,\nClick No.\n\nAfter 5 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 5617).Equals((DialogResult)7))
+                axAPI.KOA_Functions("ShowAccountWindow", "");
+
             code.RemoveAt(1);
             Delay.delay = 615;
+            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST"), axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME"), axAPI.GetLoginInfo("GetServerGubun")));
 
             foreach (string output in code)
                 RemainingDay(output);
 
-            if (TimerBox.Show("Are You using Automatic Login??\n\nIf You aren't using It,\nClick No.\n\nAfter 30 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 31752).Equals((DialogResult)7))
-                axAPI.KOA_Functions("ShowAccountWindow", "");
-
-            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 25 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 25752).Equals((DialogResult)6))
+            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 5 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 5752).Equals((DialogResult)6))
             {
                 Delay.delay = 4150;
                 Request(code[0]);
@@ -213,17 +217,30 @@ namespace ShareInvest.OpenAPI
                 return;
             }
             sb = new StringBuilder(512);
+            int i, cnt = axAPI.GetRepeatCnt(e.sTrCode, e.sRQName);
 
-            foreach (string item in Array.Find(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))))
-                sb.Append(axAPI.GetCommData(e.sTrCode, e.sRQName, 0, item).Trim()).Append(';');
-
-            if (Array.FindIndex(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))).Equals(1))
+            for (i = 0; i < (cnt > 0 ? cnt : cnt + 1); i++)
             {
-                SendDeposit?.Invoke(this, new Deposit(sb));
+                foreach (string item in Array.Find(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))))
+                    sb.Append(axAPI.GetCommData(e.sTrCode, e.sRQName, i, item).Trim()).Append(';');
 
-                return;
+                if (cnt > 0)
+                    sb.Append("*");
             }
-            FixUp(sb, e.sRQName);
+            switch (Array.FindIndex(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))))
+            {
+                case 0:
+                    FixUp(sb, e.sRQName);
+                    break;
+
+                case 1:
+                    SendDeposit?.Invoke(this, new Deposit(sb));
+                    break;
+
+                case 2:
+                    Console.WriteLine(sb);
+                    break;
+            }
         }
         private void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {

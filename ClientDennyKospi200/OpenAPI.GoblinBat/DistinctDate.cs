@@ -26,7 +26,8 @@ namespace ShareInvest.OpenAPI
         protected readonly IEnumerable[] catalog =
         {
             new Opt50001(),
-            new OPW20010()
+            new OPW20010(),
+            new OPW20007()
         };
         protected const string it = "Information that already Exists";
     }
