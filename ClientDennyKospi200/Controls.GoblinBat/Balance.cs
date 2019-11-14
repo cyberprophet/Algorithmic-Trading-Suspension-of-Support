@@ -1,5 +1,4 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
 using ShareInvest.OpenAPI;
@@ -17,6 +16,9 @@ namespace ShareInvest.Controls
         }
         private void OnReceiveBalance(object sender, Holding e)
         {
+            balGrid.Rows.Clear();
+            balGrid.AutoSize = true;
+
             foreach (string info in e.Hold)
             {
                 string[] arr = new string[7];
@@ -60,6 +62,14 @@ namespace ShareInvest.Controls
                     balGrid.Rows.Add(arr);
                 }
             }
+            if (balGrid.Rows.Count < 1)
+            {
+                balGrid.Hide();
+
+                return;
+            }
+            balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            balGrid.Cursor = Cursors.Hand;
         }
         private Balance()
         {

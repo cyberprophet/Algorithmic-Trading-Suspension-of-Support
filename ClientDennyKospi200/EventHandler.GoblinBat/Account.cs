@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace ShareInvest.EventHandler
 {
@@ -24,7 +23,7 @@ namespace ShareInvest.EventHandler
         public string Server
         {
             get; private set;
-        }       
+        }
         public Account(string account, string id, string name, string server)
         {
             AccountCategory = account.Split(';');
@@ -35,7 +34,7 @@ namespace ShareInvest.EventHandler
         public Account(string account, string id)
         {
             AccNo = account;
-            ID = id;
+            ID = string.Concat(id.Substring(0, 1).ToUpper(), id.Substring(1));
         }
     }
 }

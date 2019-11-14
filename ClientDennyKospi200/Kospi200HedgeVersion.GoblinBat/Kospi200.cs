@@ -46,7 +46,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             order.BackColor = Color.FromArgb(121, 133, 130);
             api.Hide();
             account.SendSelection += OnReceiveAccount;
-            splitContainerBalance.SplitterDistance = 605;
+            splitContainerBalance.SplitterDistance = 544;
             ResumeLayout();
         }
         private void OnReceiveClose(object sender, DialogClose e)
@@ -83,6 +83,7 @@ namespace ShareInvest.Kospi200HedgeVersion
         private void TabControlSelectedIndexChanged(object sender, EventArgs e)
         {
             Size = new Size(FormSizes[tabControl.SelectedIndex, 0], FormSizes[tabControl.SelectedIndex, 1]);
+            splitContainerBalance.AutoScaleMode = AutoScaleMode.Font;
             CenterToScreen();
         }
         private void ServerCheckedChanged(object sender, EventArgs e)
@@ -119,7 +120,7 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             { 1650, 920 },
             { 750, 370 },
-            { 650, 250 }
+            { 594, 321 }
         };
         private Strategy strategy;
     }

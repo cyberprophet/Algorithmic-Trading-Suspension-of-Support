@@ -135,9 +135,12 @@ namespace ShareInvest.OpenAPI
 
                     code.Add(exclusion);
                 }
+            if (TimerBox.Show("Are You using Automatic Login??\n\nIf You aren't using It,\nClick No.\n\nAfter 5 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 5617).Equals((DialogResult)7))
+                axAPI.KOA_Functions("ShowAccountWindow", "");
+
+            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST"), axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME"), axAPI.GetLoginInfo("GetServerGubun")));
             code.RemoveAt(1);
             Delay.delay = 415;
-            SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST"), axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME"), axAPI.GetLoginInfo("GetServerGubun")));
 
             foreach (string output in code)
                 RemainingDay(output);
@@ -149,9 +152,6 @@ namespace ShareInvest.OpenAPI
 
                 return;
             }
-            if (TimerBox.Show("Are You using Automatic Login??\n\nIf You aren't using It,\nClick No.\n\nAfter 5 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 5617).Equals((DialogResult)7))
-                axAPI.KOA_Functions("ShowAccountWindow", "");
-
             SendConfirm?.Invoke(this, new Identify("It is valid until ", DateTime.ParseExact(Code[0].Substring(18, 8), "yyyyMMdd", null)));
             Delay.delay = 205;
         }
