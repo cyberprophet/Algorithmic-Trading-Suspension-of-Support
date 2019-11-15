@@ -23,6 +23,13 @@ namespace ShareInvest.OpenAPI
 
             return code;
         }
+        protected bool GetConclusion(string[] param)
+        {
+            if (param[18].Equals(string.Empty))
+                return false;
+
+            return true;
+        }
         protected readonly IEnumerable[] catalog =
         {
             new Opt50001(),

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Forms;
 
 namespace ShareInvest.EventHandler
 {
@@ -24,6 +25,10 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
+        public int Hedge
+        {
+            get; private set;
+        }
         public object Sender
         {
             get; private set;
@@ -37,8 +42,9 @@ namespace ShareInvest.EventHandler
             LongDay = int.Parse(param[2]);
             LongTick = int.Parse(param[3]);
             Reaction = int.Parse(param[4]);
+            Hedge = int.Parse(param[5]);
         }
-        public DialogClose(object sender, decimal shortDay, decimal shortTick, decimal longDay, decimal longTick, decimal reaction)
+        public DialogClose(CheckState state, object sender, decimal shortDay, decimal shortTick, decimal longDay, decimal longTick, decimal reaction)
         {
             Sender = sender;
             ShortDay = (int)shortDay;
@@ -46,14 +52,16 @@ namespace ShareInvest.EventHandler
             LongDay = (int)longDay;
             LongTick = (int)longTick;
             Reaction = (int)reaction;
+            Hedge = (int)state;
         }
-        public DialogClose(decimal shortDay, decimal shortTick, decimal longDay, decimal longTick, decimal reaction)
+        public DialogClose(CheckState state, decimal shortDay, decimal shortTick, decimal longDay, decimal longTick, decimal reaction)
         {
             ShortDay = (int)shortDay;
             ShortTick = (int)shortTick;
             LongDay = (int)longDay;
             LongTick = (int)longTick;
             Reaction = (int)reaction;
+            Hedge = (int)state;
         }
     }
 }

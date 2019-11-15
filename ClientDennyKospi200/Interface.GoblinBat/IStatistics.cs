@@ -22,6 +22,10 @@
         {
             get;
         }
+        int HedgeType
+        {
+            get;
+        }
         int TransactionMultiplier
         {
             get;
@@ -37,6 +41,12 @@
         double ErrorRate
         {
             get;
+        }
+        enum Hedge
+        {
+            UnUsed = 0,
+            Hedge = 1,
+            DoubleHedge = 2
         }
     }
 }

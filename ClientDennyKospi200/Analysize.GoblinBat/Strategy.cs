@@ -34,10 +34,15 @@ namespace ShareInvest.Analysize
         {
             int quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
 
-            
             if (api != null && Math.Abs(api.Quantity + quantity) < (int)(account.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
             {
-                api.OnReceiveOrder(account, new PurchaseInformation { SlbyTP = dic[quantity] });
+                api.OnReceiveOrder(new PurchaseInformation
+                {
+                    SlbyTP = dic[quantity],
+                    OrdTp = Enum.GetName(typeof(IStrategy.OrderType), 3),
+                    Price = string.Empty,
+                    Qty = Math.Abs(quantity)
+                });
                 api.OnReceiveBalance = false;
             }
         }

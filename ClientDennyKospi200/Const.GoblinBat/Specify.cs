@@ -24,10 +24,14 @@ namespace ShareInvest.Const
         {
             get; set;
         }
+        public int HedgeType
+        {
+            get; set;
+        }
         public int TransactionMultiplier
         {
             get;
-        } = 250000;     
+        } = 250000;
         public double MarginRate
         {
             get;

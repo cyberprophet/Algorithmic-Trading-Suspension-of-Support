@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
@@ -30,7 +31,7 @@ namespace ShareInvest.OpenAPI
             if (e.Confirm != null && e.Confirm.Equals(message))
             {
                 if (TimerBox.Show(string.Concat(message, "\n\nDo You Want to Continue with BackTesting??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter 30 Seconds the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 31752).Equals((DialogResult)6))
-                    Console.WriteLine("Start BackTesting.");
+                    Process.Start("BackTesting.exe");
 
                 Dispose();
                 Environment.Exit(0);

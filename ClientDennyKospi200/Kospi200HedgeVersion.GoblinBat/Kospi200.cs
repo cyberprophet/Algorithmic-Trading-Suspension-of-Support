@@ -59,7 +59,8 @@ namespace ShareInvest.Kospi200HedgeVersion
                 ShortDayPeriod = e.ShortDay,
                 ShortTickPeriod = e.ShortTick,
                 LongDayPeriod = e.LongDay,
-                LongTickPeriod = e.LongTick
+                LongTickPeriod = e.LongTick,
+                HedgeType = e.Hedge
             });
         }
         private void OnReceiveAccount(object sender, Account e)

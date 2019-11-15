@@ -41,18 +41,21 @@ namespace ShareInvest.OpenAPI
         }
         public void LookUpTheDeposit(string account)
         {
+            if (account.Contains("-"))
+                Account = account.Replace("-", string.Empty);
+
             request.RequestTrData(new Task(() =>
             {
-                InputValueRqData(new OPW20007 { Value = string.Concat(account.Replace("-", string.Empty), ";;00") });
-                InputValueRqData(new OPW20010 { Value = string.Concat(account.Replace("-", string.Empty), ";;00") });
+                InputValueRqData(new OPW20007 { Value = string.Concat(Account, ";;00") });
+                InputValueRqData(new OPW20010 { Value = string.Concat(Account, ";;00") });
             }));
         }
-        public void OnReceiveOrder(IAccount account, IStrategy order)
+        public void OnReceiveOrder(IStrategy order)
         {
             request.RequestTrData(new Task(() =>
             {
                 if (ConfirmOrder.Get().CheckCurrent())
-                    ErrorCode = axAPI.SendOrderFO(string.Concat(Code[0].Substring(0, 8), ScreenNo), ScreenNo, account.AccNo.Replace("-", string.Empty), Code[0].Substring(0, 8), 1, order.SlbyTP, order.OrdTp, order.Qty, order.Price, "");
+                    ErrorCode = axAPI.SendOrderFO(string.Concat(Code[0].Substring(0, 8), ScreenNo), ScreenNo, Account, Code[0].Substring(0, 8), 1, order.SlbyTP, order.OrdTp, order.Qty, order.Price, "");
 
                 if (ErrorCode != 0)
                     new Error(ErrorCode);
@@ -120,12 +123,13 @@ namespace ShareInvest.OpenAPI
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
+            int i;
             string exclusion, date = GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
             List<string> code = new List<string>
             {
                 axAPI.GetFutureCodeByIndex(e.nErrCode)
             };
-            for (int i = 2; i < 4; i++)
+            for (i = 2; i < 4; i++)
                 foreach (var om in axAPI.GetActPriceList().Split(';'))
                 {
                     exclusion = axAPI.GetOptionCode(om.Insert(3, "."), i, date);
@@ -140,12 +144,12 @@ namespace ShareInvest.OpenAPI
 
             SendAccount?.Invoke(this, new Account(axAPI.GetLoginInfo("ACCLIST"), axAPI.GetLoginInfo("USER_ID"), axAPI.GetLoginInfo("USER_NAME"), axAPI.GetLoginInfo("GetServerGubun")));
             code.RemoveAt(1);
-            Delay.delay = 415;
+            Delay.delay = 615;
 
             foreach (string output in code)
                 RemainingDay(output);
 
-            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 25 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 45752).Equals((DialogResult)6))
+            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 25 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 105752).Equals((DialogResult)6))
             {
                 Delay.delay = 4150;
                 Request(code[0]);
@@ -242,6 +246,20 @@ namespace ShareInvest.OpenAPI
 
             foreach (int fid in type.Catalog[int.Parse(e.sGubun)])
                 sb.Append(axAPI.GetChejanData(fid)).Append(';');
+
+            if (e.sGubun.Equals("4"))
+            {
+                string[] param = sb.ToString().Split(';');
+                SendConfirm?.Invoke(this, new Identify(string.Concat(" holds ", param[9].Equals("1") ? "Sell " : "Buy ", param[4], " Contracts for ", param[2], ".")));
+                LookUpTheDeposit(Account);
+
+                if (param[1].Substring(0, 3).Equals("101"))
+                    Quantity = param[9].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
+
+                return;
+            }
+            if (e.sGubun.Equals("0"))
+                OnReceiveBalance = GetConclusion(sb.ToString().Split(';'));
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
@@ -291,6 +309,10 @@ namespace ShareInvest.OpenAPI
             {
                 return (screen++ % 20 + 1000).ToString();
             }
+        }
+        private string Account
+        {
+            get; set;
         }
         private ConnectAPI()
         {
