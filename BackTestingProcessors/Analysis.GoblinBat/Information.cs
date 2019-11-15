@@ -20,12 +20,10 @@ namespace ShareInvest.BackTesting.Analysis
                 CumulativeRevenue += (int)(Liquidation * st.TransactionMultiplier);
             }
         }
-        public void Save(string time)
+        public void Save(string time, double price)
         {
             Revenue = CumulativeRevenue - Commission;
-            TodayCommission = Commission - TempCommission;
-            list.Add(string.Concat(DateTime.ParseExact(time.Substring(0, 6), "yyMMdd", CultureInfo.CurrentCulture).ToString("yy-MM-dd"), ',', TodayCommission, ',', Revenue - TodayRevenue, ',', CumulativeRevenue - Commission));
-            TempCommission = Commission;
+            list.Add(string.Concat(DateTime.ParseExact(time.Substring(0, 6), "yyMMdd", CultureInfo.CurrentCulture).ToString("yy-MM-dd"), ',', (long)(Quantity.Equals(0) ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * st.TransactionMultiplier * Math.Abs(Quantity)), ',', Revenue - TodayRevenue, ',', CumulativeRevenue - Commission));
             TodayRevenue = Revenue;
         }
         public void Log()
@@ -118,14 +116,6 @@ namespace ShareInvest.BackTesting.Analysis
             get; set;
         }
         private int Commission
-        {
-            get; set;
-        }
-        private int TodayCommission
-        {
-            get; set;
-        }
-        private int TempCommission
         {
             get; set;
         }

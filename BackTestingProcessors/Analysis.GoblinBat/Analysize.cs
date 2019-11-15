@@ -49,10 +49,7 @@ namespace ShareInvest.BackTesting.Analysis
 
             if (e.Time.Length > 2 && e.Time.Substring(6, 4).Equals("1545") || Array.Exists(info.Kospi, o => o.Equals(e.Time)))
             {
-                while (info.Quantity != 0)
-                    info.Operate(e.Price, info.Quantity > 0 ? -1 : 1);
-
-                info.Save(e.Time);
+                info.Save(e.Time, e.Price);
 
                 return;
             }

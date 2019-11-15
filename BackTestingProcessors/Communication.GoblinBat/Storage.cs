@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace ShareInvest.Communication
@@ -9,8 +10,8 @@ namespace ShareInvest.Communication
     {
         public Storage(string path)
         {
-            list = new List<Storage>();
-            analysis = new Dictionary<string, string>();
+            list = new List<Storage>(128);
+            analysis = new Dictionary<string, long>();
 
             foreach (string val in new Enumerate())
             {
@@ -24,12 +25,12 @@ namespace ShareInvest.Communication
 
             foreach (Storage val in list)
             {
-                total[i] = val.cumulative;
+                total[i] = (long.Parse(val.cumulative) + val.unrealized).ToString();
                 squence[i++] = val.strategy;
-                analysis[val.date] = val.commission;
+                analysis[val.date] = val.unrealized;
             }
-            sb = new StringBuilder();
-            sb_analysis = new StringBuilder();
+            sb = new StringBuilder(128);
+            sb_analysis = new StringBuilder(128);
 
             for (i = 0; i < count - 1; i++)
             {
@@ -46,14 +47,21 @@ namespace ShareInvest.Communication
             }
             Statistics(sb, path);
 
-            foreach (KeyValuePair<string, string> kv in analysis)
+            foreach (KeyValuePair<string, long> kv in analysis)
             {
-                sb = new StringBuilder();
+                sb = new StringBuilder(128);
                 sb.Append(kv.Key).Append(',');
 
                 foreach (Storage val in list.FindAll(o => o.date.Equals(kv.Key)))
-                    sb.Append(val.revenue).Append(',');
+                {
+                    if (kv.Key.Equals(analysis.Last().Key))
+                    {
+                        sb.Append(long.Parse(val.revenue) + kv.Value).Append(',');
 
+                        continue;
+                    }
+                    sb.Append(val.revenue).Append(',');
+                }
                 Statistics(sb, path);
             }
             Statistics(sb_analysis, path);
@@ -82,15 +90,15 @@ namespace ShareInvest.Communication
             revenue = arr[3];
             cumulative = arr[4];
             strategy = arr[0];
-            commission = arr[2];
+            unrealized = long.Parse(arr[2]);
         }
-        private readonly string commission;
+        private readonly long unrealized;
         private readonly string revenue;
         private readonly string cumulative;
         private readonly string date;
         private readonly string strategy;
         private readonly List<Storage> list;
-        private readonly Dictionary<string, string> analysis;
+        private readonly Dictionary<string, long> analysis;
         private readonly StringBuilder sb;
         private readonly StringBuilder sb_analysis;
     }
