@@ -13,6 +13,14 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             get; set;
         }
+        public int Rate(int max)
+        {
+            progressBar.Maximum = max;
+            timer.Interval = 15;
+            timer.Start();
+
+            return max / 110;
+        }
         private void TimerTick(object sender, EventArgs e)
         {
             progressBar.Value = ProgressBarValue;

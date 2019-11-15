@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 using ShareInvest.BackTesting.SettingsScreen;
+using ShareInvest.Market;
 
 namespace ShareInvest.BackTesting
 {
@@ -22,7 +23,21 @@ namespace ShareInvest.BackTesting
             pro.Width = gs.Width;
             splitContainer.SplitterDistance = gs.Height;
             CenterToScreen();
+            gs.SetProgress(pro);
+            gs.SendMarket += OnReceiveMarket;
             ShowDialog();
+        }
+        private void OnReceiveMarket(object sender, OpenMarket e)
+        {
+            try
+            {
+                Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                Environment.Exit(0);
+            }
         }
     }
 }
