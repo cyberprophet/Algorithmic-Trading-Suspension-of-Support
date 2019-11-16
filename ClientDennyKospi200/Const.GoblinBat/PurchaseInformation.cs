@@ -4,6 +4,10 @@ namespace ShareInvest.Const
 {
     public class PurchaseInformation : IStrategy
     {
+        public string Code
+        {
+            get; set;
+        }
         public string OrdTp
         {
             get; set;

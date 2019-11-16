@@ -2,6 +2,10 @@
 {
     public interface IStrategy
     {
+        string Code
+        {
+            get;
+        }
         string OrdTp
         {
             get;

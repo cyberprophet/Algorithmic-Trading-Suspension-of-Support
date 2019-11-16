@@ -1,6 +1,9 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
+using ShareInvest.Const;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface;
 using ShareInvest.OpenAPI;
 
 namespace ShareInvest.Controls
@@ -14,8 +17,40 @@ namespace ShareInvest.Controls
 
             return bal;
         }
+        public void OnReceiveLiquidate(object sender, Liquidate e)
+        {
+            EnCash = true;
+            OrderType = e.EnCash.SlbyTP.Equals("1") ? "C" : "P";
+        }
         private void OnReceiveBalance(object sender, Holding e)
         {
+            if (EnCash)
+            {
+                EnCash = false;
+                api.OnReceiveBalance = false;
+                int price = 0;
+                string code = string.Empty;
+
+                foreach (string en in e.Hold)
+                    if (en.Length > 0)
+                    {
+                        string[] temp = en.Split(';');
+
+                        if (temp[0].Substring(0, 3).Equals("101") || temp[1].Substring(0, 1).Equals(OrderType))
+                            continue;
+
+                        if (int.Parse(temp[5]) > price)
+                            code = temp[0];
+                    }
+                api.OnReceiveOrder(new PurchaseInformation
+                {
+                    Code = code,
+                    SlbyTP = "1",
+                    OrdTp = Enum.GetName(typeof(IStrategy.OrderType), 3),
+                    Price = string.Empty,
+                    Qty = 1
+                });
+            }
             balGrid.Rows.Clear();
             balGrid.AutoSize = true;
 
@@ -71,17 +106,27 @@ namespace ShareInvest.Controls
             balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
             balGrid.Cursor = Cursors.Hand;
         }
+        private string OrderType
+        {
+            get; set;
+        }
+        private bool EnCash
+        {
+            get; set;
+        }
         private Balance()
         {
             InitializeComponent();
             balGrid.ColumnCount = 7;
             balGrid.BackgroundColor = Color.FromArgb(121, 133, 130);
-            ConnectAPI.Get().SendHolding += OnReceiveBalance;
+            api = ConnectAPI.Get();
+            api.SendHolding += OnReceiveBalance;
 
             for (int i = 0; i < columns.Length; i++)
                 balGrid.Columns[i].Name = columns[i];
         }
         private readonly string[] columns = { "종목코드", "종목명", "구분", "수량", "매입가", "현재가", "평가손익" };
+        private readonly ConnectAPI api;
         private static Balance bal;
     }
 }

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using ShareInvest.AutoMessageBox;
 using ShareInvest.Const;
+using ShareInvest.Controls;
 using ShareInvest.EventHandler;
+using ShareInvest.FindbyOptionsCode;
 using ShareInvest.Interface;
 using ShareInvest.OpenAPI;
 using ShareInvest.RetrieveInformation;
@@ -25,6 +27,7 @@ namespace ShareInvest.Analysize
             Send -= Analysis;
             api = ConnectAPI.Get();
             api.SendDatum += Analysis;
+            SendLiquidate += Balance.Get().OnReceiveLiquidate;
         }
         public void SetAccount(IAccount account)
         {
@@ -36,14 +39,48 @@ namespace ShareInvest.Analysize
 
             if (api != null && Math.Abs(api.Quantity + quantity) < (int)(account.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
             {
-                api.OnReceiveOrder(new PurchaseInformation
+                IStrategy strategy = new PurchaseInformation
                 {
+                    Code = api.Code[0].Substring(0, 8),
                     SlbyTP = dic[quantity],
                     OrdTp = Enum.GetName(typeof(IStrategy.OrderType), 3),
                     Price = string.Empty,
                     Qty = Math.Abs(quantity)
-                });
+                };
+                api.OnReceiveOrder(strategy);
                 api.OnReceiveBalance = false;
+                double temp = 0;
+                string code = string.Empty;
+                bool check = api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0;
+
+                if (check == false)
+                    foreach (KeyValuePair<string, double> kv in api.OptionsCalling)
+                    {
+                        double approximation = e.Price * st.MarginRate * st.ErrorRate - kv.Value;
+
+                        if (approximation > 0 && temp < approximation && quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201"))
+                        {
+                            temp = approximation;
+                            code = kv.Key;
+                        }
+                    }
+                for (int i = 0; i < st.HedgeType; i++)
+                {
+                    if (check == false)
+                    {
+                        api.OnReceiveOrder(new PurchaseInformation
+                        {
+                            Code = i > 1 ? code = new FindbyOptions().Code(code) : code,
+                            SlbyTP = "2",
+                            OrdTp = Enum.GetName(typeof(IStrategy.OrderType), 3),
+                            Price = string.Empty,
+                            Qty = Math.Abs(quantity)
+                        });
+                        api.OnReceiveBalance = false;
+                    }
+                    else if (check)
+                        SendLiquidate?.Invoke(this, new Liquidate(strategy));
+                }
             }
         }
         private int Analysis(double price)
@@ -122,5 +159,6 @@ namespace ShareInvest.Analysize
         private readonly List<double> shortTick;
         private readonly List<double> longTick;
         public event EventHandler<Datum> Send;
+        public event EventHandler<Liquidate> SendLiquidate;
     }
 }

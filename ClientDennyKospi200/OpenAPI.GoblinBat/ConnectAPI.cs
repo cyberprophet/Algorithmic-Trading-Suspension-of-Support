@@ -54,14 +54,18 @@ namespace ShareInvest.OpenAPI
         {
             request.RequestTrData(new Task(() =>
             {
-                if (ConfirmOrder.Get().CheckCurrent())
-                    ErrorCode = axAPI.SendOrderFO(string.Concat(Code[0].Substring(0, 8), ScreenNo), ScreenNo, Account, Code[0].Substring(0, 8), 1, order.SlbyTP, order.OrdTp, order.Qty, order.Price, "");
+                if (ConfirmOrder.Get().CheckCurrent() && !order.Code.Equals(string.Empty))
+                    ErrorCode = axAPI.SendOrderFO(string.Concat(order.Code, ScreenNo), ScreenNo, Account, order.Code, 1, order.SlbyTP, order.OrdTp, order.Qty, order.Price, "");
 
                 if (ErrorCode != 0)
                     new Error(ErrorCode);
             }));
         }
         public Dictionary<int, string> Code
+        {
+            get; private set;
+        }
+        public Dictionary<string, double> OptionsCalling
         {
             get; private set;
         }
@@ -93,11 +97,9 @@ namespace ShareInvest.OpenAPI
             if (ErrorCode != 0)
                 new Error(ErrorCode);
         }
-        private void FixUp(StringBuilder sb, string code)
+        private void FixUp(string[] param, string code)
         {
-            string[] arr = sb.ToString().Split(';');
-
-            Code[Squence++] = string.Concat(code, ";", arr[72], ";", arr[63], ";", arr[45]);
+            Code[Squence++] = string.Concat(code, ";", param[72], ";", param[63], ";", param[45]);
         }
         private void Request(string code)
         {
@@ -228,7 +230,7 @@ namespace ShareInvest.OpenAPI
             switch (Array.FindIndex(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))))
             {
                 case 0:
-                    FixUp(sb, e.sRQName);
+                    FixUp(sb.ToString().Split(';'), e.sRQName);
                     break;
 
                 case 1:
@@ -264,23 +266,31 @@ namespace ShareInvest.OpenAPI
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
             sb = new StringBuilder(512);
+            int index = Array.FindIndex(Enum.GetNames(typeof(IRealType.RealType)), o => o.Equals(e.sRealType));
 
-            foreach (int fid in type.Catalog[Array.FindIndex(Enum.GetNames(typeof(IRealType.RealType)), o => o.Equals(e.sRealType))])
+            foreach (int fid in type.Catalog[index])
                 sb.Append(axAPI.GetCommRealData(e.sRealKey, fid)).Append(';');
 
-            if (e.sRealType.Equals(Enum.GetName(typeof(IRealType.RealType), 1)) && e.sRealKey.Substring(0, 3).Equals("101"))
+            switch (index)
             {
-                SendDatum?.Invoke(this, new Datum(sb));
+                case 1:
+                    if (e.sRealKey.Substring(0, 3).Equals("101"))
+                        SendDatum?.Invoke(this, new Datum(sb));
+                    break;
 
-                return;
-            }
-            if (e.sRealType.Equals(Enum.GetName(typeof(IRealType.RealType), 7)) && sb.ToString().Substring(0, 1).Equals("e") && DeadLine == false)
-            {
-                DeadLine = true;
-                Delay.delay = 4150;
-                Request(Code[0].Substring(0, 8));
+                case 5:
+                    string[] find = sb.ToString().Split(';');
+                    OptionsCalling[e.sRealKey] = double.Parse(find[1]);
+                    break;
 
-                return;
+                case 7:
+                    if (sb.ToString().Substring(0, 1).Equals("e") && DeadLine == false)
+                    {
+                        DeadLine = true;
+                        Delay.delay = 4150;
+                        Request(Code[0].Substring(0, 8));
+                    }
+                    break;
             }
         }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
@@ -316,7 +326,8 @@ namespace ShareInvest.OpenAPI
         }
         private ConnectAPI()
         {
-            Code = new Dictionary<int, string>();
+            OptionsCalling = new Dictionary<string, double>(128);
+            Code = new Dictionary<int, string>(128);
             request = Delay.GetInstance(205);
             request.Run();
         }
