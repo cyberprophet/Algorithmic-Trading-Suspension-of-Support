@@ -23,8 +23,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private void StartBackTesting(IStrategySetting set)
         {
-            int max = set.EstimatedTime();
-            button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(max).ToString("N0"), " Minutes.");
+            Max = set.EstimatedTime();
+            button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(Max).ToString("N0"), " Minutes.");
             button.ForeColor = Color.Maroon;
             checkBox.ForeColor = Color.DarkRed;
             checkBox.Text = "BackTesting";
@@ -59,7 +59,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                         });
                                         pro.ProgressBarValue++;
 
-                                        if (max.Equals(pro.ProgressBarValue))
+                                        if (Max.Equals(pro.ProgressBarValue))
                                         {
                                             new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"));
                                             SetMarketTick();
@@ -107,6 +107,9 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             if (CheckCurrent && button.ForeColor.Equals(Color.Gold))
                 StartBackTesting(set);
+
+            else if (button.ForeColor.Equals(Color.Maroon))
+                button.Text = string.Concat(((Max - pro.ProgressBarValue) / 230).ToString("N0"), " Minutes left to Complete.");
         }
         private int[] SetValue(int sp, int interval, int destination)
         {
@@ -141,6 +144,10 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 return checkBox.Checked;
             }
+        }
+        private int Max
+        {
+            get; set;
         }
         private Progress pro;
         private IStrategySetting set;
