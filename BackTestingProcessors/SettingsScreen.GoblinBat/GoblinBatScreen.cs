@@ -109,7 +109,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 StartBackTesting(set);
 
             else if (button.ForeColor.Equals(Color.Maroon))
-                button.Text = string.Concat(((Max - pro.ProgressBarValue) / 230).ToString("N0"), " Minutes left to Complete.");
+                button.Text = string.Concat(((Max - pro.ProgressBarValue) / 210).ToString("N0"), " Minutes left to Complete.");
         }
         private int[] SetValue(int sp, int interval, int destination)
         {

@@ -19,7 +19,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             timer.Interval = 15;
             timer.Start();
 
-            return max / 230;
+            return max / 210;
         }
         private void TimerTick(object sender, EventArgs e)
         {
