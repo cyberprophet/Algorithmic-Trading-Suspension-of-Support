@@ -45,6 +45,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                     }
                                     new Task(() =>
                                     {
+                                        pro.ProgressBarValue++;
+
                                         new Analysize(new Specify
                                         {
                                             ShortTickPeriod = sTick,
@@ -57,9 +59,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                             PathLog = path,
                                             Strategy = string.Concat(sDay.ToString("D2"), '^', sTick.ToString("D2"), '^', lDay.ToString("D2"), '^', lTick.ToString("D2"), '^', reaction.ToString("D2"), '^', hedge.ToString("D2"))
                                         });
-                                        pro.ProgressBarValue++;
-
-                                        if (Max.Equals(pro.ProgressBarValue))
+                                        if (Max.Equals(pro.ProgressBarValue) && TimerBox.Show("Back Testing is Complete.\n\nDo You Want to Store the Data?\n\nIf Not Selected,\nIt will be Saved after 30 Seconds and the Program will Exit.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
                                         {
                                             new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"));
                                             SetMarketTick();
@@ -97,10 +97,10 @@ namespace ShareInvest.BackTesting.SettingsScreen
 
                     return;
                 }
-                button.Text = "The Recommended Time is 900 Minutes.";
+                button.Text = string.Concat("Click to Recommend ", DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 3650 : 900, " Minutes and Save Existing Data.");
                 button.ForeColor = Color.Ivory;
                 checkBox.ForeColor = Color.Ivory;
-                checkBox.Text = "Guide";
+                checkBox.Text = "Process";
             }
         }
         private void ButtonClick(object sender, EventArgs e)
@@ -108,6 +108,11 @@ namespace ShareInvest.BackTesting.SettingsScreen
             if (CheckCurrent && button.ForeColor.Equals(Color.Gold))
                 StartBackTesting(set);
 
+            else if (button.ForeColor.Equals(Color.Ivory) && TimerBox.Show("Do You Want to Store Only Existing Data\nWithout Back Testing?\n\nIf Not Selected,\nIt will be Saved after 30 Seconds and the Program will Exit.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
+            {
+                new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"));
+                SetMarketTick();
+            }
             else if (button.ForeColor.Equals(Color.Maroon))
                 button.Text = string.Concat(((Max - pro.ProgressBarValue) / 210).ToString("N0"), " Minutes left to Complete.");
         }

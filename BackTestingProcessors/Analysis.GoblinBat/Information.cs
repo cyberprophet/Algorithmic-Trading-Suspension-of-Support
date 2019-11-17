@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using ShareInvest.Communication;
+using ShareInvest.Options;
 
 namespace ShareInvest.BackTesting.Analysis
 {
@@ -52,6 +53,7 @@ namespace ShareInvest.BackTesting.Analysis
         public Information(IStrategy st)
         {
             this.st = st;
+            hedge = new Hedge(st);
         }
         public string[] Kospi
         {
@@ -120,6 +122,7 @@ namespace ShareInvest.BackTesting.Analysis
             get; set;
         }
         private readonly List<string> list = new List<string>(128);
+        private readonly Hedge hedge;
         private readonly IStrategy st;
         private double purchase;
         private double liquidation;
