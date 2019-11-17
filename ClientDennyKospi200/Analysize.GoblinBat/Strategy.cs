@@ -58,7 +58,7 @@ namespace ShareInvest.Analysize
                     {
                         double approximation = e.Price * st.MarginRate * st.ErrorRate - kv.Value;
 
-                        if (approximation > 0 && temp < approximation && quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201"))
+                        if (approximation > 0 && temp < approximation && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
                         {
                             temp = approximation;
                             code = kv.Key;
