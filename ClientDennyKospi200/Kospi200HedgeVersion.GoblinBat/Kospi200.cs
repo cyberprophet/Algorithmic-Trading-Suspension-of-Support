@@ -37,8 +37,8 @@ namespace ShareInvest.Kospi200HedgeVersion
         private void StartTrading(Balance bal, ConfirmOrder order, AccountSelection account, ConnectKHOpenAPI api)
         {
             Controls.Add(api);
-            splitContainerBalance.Panel2.Controls.Add(order);
-            splitContainerBalance.Panel1.Controls.Add(bal);
+            splitContainerBalance.Panel1.Controls.Add(order);
+            splitContainerBalance.Panel2.Controls.Add(bal);
             api.Dock = DockStyle.Fill;
             order.Dock = DockStyle.Fill;
             bal.Dock = DockStyle.Fill;
@@ -46,7 +46,9 @@ namespace ShareInvest.Kospi200HedgeVersion
             order.BackColor = Color.FromArgb(121, 133, 130);
             api.Hide();
             account.SendSelection += OnReceiveAccount;
-            splitContainerBalance.SplitterDistance = 544;
+            splitContainerBalance.SplitterDistance = 475;
+            order.SendTab += OnReceiveTabControl;
+            bal.SendReSize += OnReceiveSize;
             ResumeLayout();
         }
         private void OnReceiveClose(object sender, DialogClose e)
@@ -75,11 +77,25 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             for (int i = 0; i < e.ArrayDeposit.Length; i++)
                 if (e.ArrayDeposit[i].Length > 0)
-                    string.Concat("balance", i).FindByName<Label>(this).Text = int.Parse(e.ArrayDeposit[i]).ToString("N0");
+                    string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.ArrayDeposit[i]).ToString("N0");
 
             splitContainerAccount.BackColor = Color.FromArgb(121, 133, 130);
             tabControl.SelectedIndex = 1;
-            strategy.SetAccount(new InQuiry { AccNo = account.Text, BasicAssets = long.Parse(e.ArrayDeposit[26]) });
+            strategy.SetAccount(new InQuiry { AccNo = account.Text, BasicAssets = long.Parse(e.ArrayDeposit[20]) });
+        }
+        private void OnReceiveSize(object sender, GridReSize e)
+        {
+            if (e.ReSize > 172)
+            {
+
+            }
+            splitContainerBalance.SplitterDistance = splitContainerBalance.Height - e.ReSize - splitContainerBalance.SplitterWidth;
+            timer.Stop();
+            CenterToScreen();
+        }
+        private void OnReceiveTabControl(object sender, Mining e)
+        {
+            tabControl.SelectedIndex = e.Tab;
         }
         private void TabControlSelectedIndexChanged(object sender, EventArgs e)
         {
@@ -116,12 +132,12 @@ namespace ShareInvest.Kospi200HedgeVersion
         }
         private int[,] FormSizes
         {
-            get;
+            get; set;
         } =
         {
             { 1650, 920 },
             { 750, 370 },
-            { 594, 321 }
+            { 594, 315 }
         };
         private Strategy strategy;
     }

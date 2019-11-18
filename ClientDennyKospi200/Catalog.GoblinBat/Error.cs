@@ -10,7 +10,7 @@ namespace ShareInvest.Catalog
         public Error(int error)
         {
             if (TimerBox.Show(string.Concat(ec[error], "\n\nIt is Recommended to Restart.\n\nDo you Want to Continue?"), "Caution", MessageBoxButtons.YesNo, MessageBoxIcon.Question, 1735).Equals((DialogResult)7))
-                  Environment.Exit(0);
+                Environment.Exit(0);
         }
         public Dictionary<int, string> ec = new Dictionary<int, string>()
         {
@@ -38,6 +38,7 @@ namespace ShareInvest.Catalog
             {-206, "조회가능한 FID수 초과.\t(한번에 조회 가능한 FID개수는 최대 100개)"},
             {-207, "실시간 해제오류"},
             {-209, "시세조회제한"},
+            {-211, "" },
             {-300, "입력값 오류"},
             {-301, "계좌비밀번호 없음"},
             {-302, "타인계좌 사용오류"},

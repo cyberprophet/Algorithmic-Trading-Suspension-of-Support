@@ -43,7 +43,7 @@ namespace ShareInvest.Analysize
                 {
                     Code = api.Code[0].Substring(0, 8),
                     SlbyTP = dic[quantity],
-                    OrdTp = Enum.GetName(typeof(IStrategy.OrderType), 3),
+                    OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
                     Price = string.Empty,
                     Qty = Math.Abs(quantity)
                 };
@@ -58,9 +58,9 @@ namespace ShareInvest.Analysize
                     {
                         double approximation = e.Price * st.MarginRate * st.ErrorRate - kv.Value;
 
-                        if (approximation > 0 && temp < approximation && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
+                        if (approximation > 0 && temp < kv.Value && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
                         {
-                            temp = approximation;
+                            temp = kv.Value;
                             code = kv.Key;
                         }
                     }
@@ -70,13 +70,14 @@ namespace ShareInvest.Analysize
                     {
                         api.OnReceiveOrder(new PurchaseInformation
                         {
-                            Code = i > 1 ? code = new FindbyOptions().Code(code) : code,
+                            Code = code,
                             SlbyTP = "2",
-                            OrdTp = Enum.GetName(typeof(IStrategy.OrderType), 3),
+                            OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
                             Price = string.Empty,
                             Qty = Math.Abs(quantity)
                         });
                         api.OnReceiveBalance = false;
+                        code = new FindbyOptions().Code(code);
                     }
                     else if (check)
                         SendLiquidate?.Invoke(this, new Liquidate(strategy));

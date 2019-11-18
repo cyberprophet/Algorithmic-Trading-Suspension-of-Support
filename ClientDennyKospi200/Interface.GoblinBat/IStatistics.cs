@@ -42,11 +42,14 @@
         {
             get;
         }
-        enum Hedge
+        enum Numeric
         {
-            UnUsed = 0,
-            Hedge = 1,
-            DoubleHedge = 2
+            ShortDay = 0,
+            ShortTick = 1,
+            LongDay = 2,
+            LongTick = 3,
+            Reaction = 4,
+            Hedge = 5
         }
     }
 }

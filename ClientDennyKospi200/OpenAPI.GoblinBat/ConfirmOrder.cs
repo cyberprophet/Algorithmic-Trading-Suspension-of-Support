@@ -37,6 +37,7 @@ namespace ShareInvest.OpenAPI
                 Environment.Exit(0);
             }
             checkBox.Text = e.Confirm != null ? string.Concat(DateTime.Now.ToString("H시 m분 s초\n"), e.Confirm) : string.Concat(e.Remaining, ".");
+            SendTab?.Invoke(this, new Mining(2));
         }
         private void CheckBox_CheckedChanged(object sender, EventArgs e)
         {
@@ -52,5 +53,6 @@ namespace ShareInvest.OpenAPI
         private const string message = "The latest Data Collection is Complete.";
         private readonly ConnectAPI api;
         private static ConfirmOrder cf;
+        public event EventHandler<Mining> SendTab;
     }
 }

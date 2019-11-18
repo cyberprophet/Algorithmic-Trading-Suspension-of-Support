@@ -19,14 +19,14 @@ namespace ShareInvest.Controls
         }
         public void OnReceiveLiquidate(object sender, Liquidate e)
         {
-            EnCash = true;
+            EnCash++;
             OrderType = e.EnCash.SlbyTP.Equals("1") ? "C" : "P";
         }
         private void OnReceiveBalance(object sender, Holding e)
         {
-            if (EnCash)
+            if (EnCash > 0)
             {
-                EnCash = false;
+                EnCash--;
                 api.OnReceiveBalance = false;
                 int price = 0;
                 string code = string.Empty;
@@ -46,11 +46,12 @@ namespace ShareInvest.Controls
                 {
                     Code = code,
                     SlbyTP = "1",
-                    OrdTp = Enum.GetName(typeof(IStrategy.OrderType), 3),
+                    OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
                     Price = string.Empty,
                     Qty = 1
                 });
             }
+            balGrid.SuspendLayout();
             balGrid.Rows.Clear();
             balGrid.AutoSize = true;
 
@@ -63,54 +64,55 @@ namespace ShareInvest.Controls
                 {
                     foreach (string val in info.Split(';'))
                     {
-                        string temp = val;
+                        if (val.Equals(string.Empty))
+                            break;
 
                         switch (i)
                         {
                             case 0:
                             case 1:
+                                arr[i++] = val;
                                 break;
 
                             case 2:
-                                temp = val.Equals("1") ? "매도" : "매수";
+                                arr[i++] = val.Equals("1") ? "매도" : "매수";
                                 break;
 
                             case 3:
                             case 6:
-                                temp = int.Parse(temp).ToString("N0");
+                                arr[i++] = int.Parse(val).ToString("N0");
                                 break;
 
                             case 4:
                             case 5:
-                                temp = (double.Parse(temp) / 100).ToString("N2");
-                                break;
-
-                            case 7:
-                            case 8:
+                                arr[i++] = (double.Parse(val) / 100).ToString("N2");
                                 break;
                         }
-                        if (i > 6)
-                            break;
-
-                        arr[i++] = temp;
                     }
-                    balGrid.Rows.Add(arr);
+                    if (arr[0] != null)
+                        balGrid.Rows.Add(arr);
                 }
             }
-            if (balGrid.Rows.Count < 1)
+            SendReSize?.Invoke(this, new GridReSize(balGrid.Rows.GetRowsHeight(DataGridViewElementStates.None)));
+
+            if (balGrid.Rows.Count > 0)
             {
-                balGrid.Hide();
+                balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+                balGrid.Cursor = Cursors.Hand;
+                balGrid.AutoResizeRows();
+                balGrid.AutoResizeColumns();
+                balGrid.ResumeLayout();
+                balGrid.Show();
 
                 return;
             }
-            balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-            balGrid.Cursor = Cursors.Hand;
+            balGrid.Hide();
         }
         private string OrderType
         {
             get; set;
         }
-        private bool EnCash
+        private int EnCash
         {
             get; set;
         }
@@ -128,5 +130,6 @@ namespace ShareInvest.Controls
         private readonly string[] columns = { "종목코드", "종목명", "구분", "수량", "매입가", "현재가", "평가손익" };
         private readonly ConnectAPI api;
         private static Balance bal;
+        public event EventHandler<GridReSize> SendReSize;
     }
 }

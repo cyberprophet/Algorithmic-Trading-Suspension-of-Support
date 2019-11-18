@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
+using ShareInvest.FindByName;
 using ShareInvest.Interface;
 using ShareInvest.TimerMessageBox;
 
@@ -17,32 +18,13 @@ namespace ShareInvest.Controls
         }
         public void OnReceiveClose(object sender, DialogClose e)
         {
-            numericReaction.Value = e.Reaction;
-            numericShortTick.Value = e.ShortTick;
-            numericShortDay.Value = e.ShortDay;
-            numericLongTick.Value = e.LongTick;
-            numericLongDay.Value = e.LongDay;
-            checkHedge.CheckState = (CheckState)e.Hedge;
+            for (int i = 0; i < e.Param.Length; i++)
+                string.Concat("numeric", Enum.GetName(typeof(IStatistics.Numeric), i)).FindByName<NumericUpDown>(this).Value = int.Parse(e.Param[i]);
         }
         public void OnReceiveClose(string[] param)
         {
-            numericShortDay.Value = int.Parse(param[0]);
-            numericShortTick.Value = int.Parse(param[1]);
-            numericLongDay.Value = int.Parse(param[2]);
-            numericLongTick.Value = int.Parse(param[3]);
-            numericReaction.Value = int.Parse(param[4]);
-            checkHedge.CheckState = (CheckState)int.Parse(param[5]);
-        }
-        private void CheckHedgeCheckStateChanged(object sender, EventArgs e)
-        {
-            checkHedge.Text = Enum.GetName(typeof(IStatistics.Hedge), (int)checkHedge.CheckState);
-            checkHedge.ForeColor = Color.FromArgb(255 - (int)checkHedge.CheckState * 120, 255 - (int)checkHedge.CheckState * 60, 255 - (int)checkHedge.CheckState * 30);
-
-            if (checkHedge.CheckState.Equals(CheckState.Unchecked))
-                checkHedge.BackColor = Color.FromArgb(121, 133, 130);
-
-            else
-                checkHedge.BackColor = Color.SlateGray;
+            for (int i = 0; i < param.Length; i++)
+                string.Concat("numeric", Enum.GetName(typeof(IStatistics.Numeric), i)).FindByName<NumericUpDown>(this).Value = int.Parse(param[i]);
         }
         private void ButtonTradingClick(object sender, EventArgs e)
         {
@@ -50,7 +32,7 @@ namespace ShareInvest.Controls
             {
                 buttonTrading.ForeColor = Color.DarkRed;
                 buttonTrading.Text = "Trading.";
-                SendClose?.Invoke(this, new DialogClose(checkHedge.CheckState, sender, numericShortDay.Value, numericShortTick.Value, numericLongDay.Value, numericLongTick.Value, numericReaction.Value));
+                SendClose?.Invoke(this, new DialogClose(numericHedge.Value, sender, numericShortDay.Value, numericShortTick.Value, numericLongDay.Value, numericLongTick.Value, numericReaction.Value));
             }
         }
         private void TimerTick(object sender, EventArgs e)
@@ -63,7 +45,7 @@ namespace ShareInvest.Controls
                 buttonTrading.Text = "Trading.";
                 timer.Stop();
                 timer.Dispose();
-                SendClose?.Invoke(this, new DialogClose(checkHedge.CheckState, numericShortDay.Value, numericShortTick.Value, numericLongDay.Value, numericLongTick.Value, numericReaction.Value));
+                SendClose?.Invoke(this, new DialogClose(numericHedge.Value, numericShortDay.Value, numericShortTick.Value, numericLongDay.Value, numericLongTick.Value, numericReaction.Value));
             }
         }
         public event EventHandler<DialogClose> SendClose;

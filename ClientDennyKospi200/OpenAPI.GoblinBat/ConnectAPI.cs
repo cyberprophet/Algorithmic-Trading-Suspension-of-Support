@@ -100,6 +100,7 @@ namespace ShareInvest.OpenAPI
         private void FixUp(string[] param, string code)
         {
             Code[Squence++] = string.Concat(code, ";", param[72], ";", param[63], ";", param[45]);
+            SendConfirm?.Invoke(this, new Identify(string.Concat(param[72], "\nis Receiving Data for Trading.")));
         }
         private void Request(string code)
         {
@@ -151,7 +152,7 @@ namespace ShareInvest.OpenAPI
             foreach (string output in code)
                 RemainingDay(output);
 
-            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 25 Seconds to Receive Data.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 105752).Equals((DialogResult)6))
+            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 25 Seconds to Receive Data.\n\n\nWarning\n\nReceiving Information for Trading.\n\nIf You have Access to Trading,\nPlease don't Click.\n\nWhen Reception is Complete,\nProceed to the Next Step.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, (uint)code.Count * 639).Equals((DialogResult)6))
             {
                 Delay.delay = 4150;
                 Request(code[0]);
@@ -216,6 +217,9 @@ namespace ShareInvest.OpenAPI
                 Request(e.sRQName);
                 return;
             }
+            if (e.sTrCode.Contains("KOA"))
+                return;
+
             sb = new StringBuilder(512);
             int i, cnt = axAPI.GetRepeatCnt(e.sTrCode, e.sRQName);
 
@@ -280,7 +284,7 @@ namespace ShareInvest.OpenAPI
 
                 case 5:
                     string[] find = sb.ToString().Split(';');
-                    OptionsCalling[e.sRealKey] = double.Parse(find[1]);
+                    OptionsCalling[e.sRealKey] = double.Parse(find[1].Contains("-") ? find[1].Substring(1) : find[1]);
                     break;
 
                 case 7:
