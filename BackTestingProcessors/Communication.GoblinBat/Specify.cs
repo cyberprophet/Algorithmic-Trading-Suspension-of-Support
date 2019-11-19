@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using ShareInvest.RetrieveOptions;
 
 namespace ShareInvest.Communication
 {
@@ -57,7 +56,7 @@ namespace ShareInvest.Communication
         {
             get; set;
         }
-        public Dictionary<string, Dictionary<string, List<OptionsRepository>>> Repository
+        public Dictionary<string, Dictionary<string, Dictionary<ulong, double>>> Repository
         {
             get; set;
         }

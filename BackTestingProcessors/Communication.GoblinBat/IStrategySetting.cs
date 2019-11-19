@@ -2,13 +2,11 @@
 {
     public interface IStrategySetting
     {
-        enum Hedge
-        {
-            UnUsed = 0,
-            Hedge = 1,
-            DoubleHedge = 2
-        }
         long Capital
+        {
+            get; set;
+        }
+        int[] Hedge
         {
             get; set;
         }

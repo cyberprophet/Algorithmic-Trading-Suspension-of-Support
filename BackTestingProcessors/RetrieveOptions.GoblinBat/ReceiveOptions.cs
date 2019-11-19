@@ -6,10 +6,10 @@ namespace ShareInvest.RetrieveOptions
 {
     public class ReceiveOptions
     {
-        public ReceiveOptions(List<OptionsRepository> list)
+        public ReceiveOptions(Dictionary<ulong, double> list)
         {
             this.list = list;
-            temp = new Dictionary<string, List<OptionsRepository>>(512);
+            temp = new Dictionary<string, Dictionary<ulong, double>>(512);
             options = Options.Get();
             options.SendRepository += OnReceiveOptions;
 
@@ -26,7 +26,7 @@ namespace ShareInvest.RetrieveOptions
                     Code = e.Code;
                     FileName = e.FileName;
                 }
-                list.Add(new OptionsRepository(e.Date, e.Price));
+                list[ulong.Parse(e.Date)] = e.Price;
 
                 if (e.EndOfStream)
                 {
@@ -40,12 +40,12 @@ namespace ShareInvest.RetrieveOptions
             if (!e.Code.Equals(Code) && !e.FileName.Equals(FileName))
             {
                 options.Repository[FileName] = temp;
-                temp = new Dictionary<string, List<OptionsRepository>>(512);
+                temp = new Dictionary<string, Dictionary<ulong, double>>(512);
                 FileName = e.FileName;
             }
-            list = new List<OptionsRepository>(512)
+            list = new Dictionary<ulong, double>(512)
             {
-                new OptionsRepository(e.Date, e.Price)
+                { ulong.Parse(e.Date), e.Price }
             };
             Code = e.Code;
         }
@@ -58,7 +58,7 @@ namespace ShareInvest.RetrieveOptions
             get; set;
         }
         private readonly Options options;
-        private Dictionary<string, List<OptionsRepository>> temp;
-        private List<OptionsRepository> list;
+        private Dictionary<string, Dictionary<ulong, double>> temp;
+        private Dictionary<ulong, double> list;
     }
 }

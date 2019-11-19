@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 using ShareInvest.Communication;
-using ShareInvest.RetrieveOptions;
 
 namespace ShareInvest.Options
 {
@@ -11,38 +11,29 @@ namespace ShareInvest.Options
         public Hedge(IStrategy strategy)
         {
             this.strategy = strategy;
-            bal = new List<Balance>(64);
-            con = new List<Conclusion>(64);
+            conclusion = new StringBuilder(64);
         }
         public void Operate(bool check, string time, double price, int quantity)
         {
             DateTime now = GetTime(time);
-            string date = GetDistinctDate(now, CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
+            string code = string.Empty, date = GetDistinctDate(now, CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(now.AddDays(1 - now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
+            double temp = 0;
+            ulong conclusion = ulong.Parse(time);
 
             if (check == false && strategy.Repository.ContainsKey(date))
-                con.Add(new Conclusion(date, time, quantity, price));
-
-            else if (check && strategy.Repository.ContainsKey(date))
-                bal.Add(new Balance(date, time, quantity, price));
-        }
-        public long SettleProfits()
-        {
-            /*
-            foreach (KeyValuePair<string, List<OptionsRepository>> kv in strategy.Repository[date])
             {
-                if (kv.Value.Exists(o => o.Date.Equals(time)) && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
-                {
-                    double close = kv.Value.Find(o => o.Date.Equals(time)).Price;
-
-                    if (temp < close && price * strategy.MarginRate * strategy.ErrorRate - close > 0)
+                foreach (KeyValuePair<string, Dictionary<ulong, double>> kv in strategy.Repository[date])
+                    if (kv.Value.TryGetValue(conclusion, out double close) && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")) && temp < close && price * strategy.MarginRate * strategy.ErrorRate - close > 0)
                     {
                         temp = close;
                         code = kv.Key;
                     }
-                }
+                this.conclusion.Append(code).Append(';').Append(temp).Append(';');
             }
-            */
-            return 0;
+            else if (check && strategy.Repository.ContainsKey(date))
+            {
+
+            }
         }
         private string FindbyCode(string code)
         {
@@ -61,8 +52,7 @@ namespace ShareInvest.Options
         {
             return new DateTime(2000 + int.Parse(time.Substring(0, 2)), int.Parse(time.Substring(2, 2)), int.Parse(time.Substring(4, 2)), int.Parse(time.Substring(6, 2)), int.Parse(time.Substring(8, 2)), int.Parse(time.Substring(10, 2)));
         }
-        private readonly List<Conclusion> con;
-        private readonly List<Balance> bal;
         private readonly IStrategy strategy;
+        private readonly StringBuilder conclusion;
     }
 }

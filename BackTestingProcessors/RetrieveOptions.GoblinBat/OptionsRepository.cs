@@ -35,10 +35,5 @@ namespace ShareInvest.RetrieveOptions
             Price = double.Parse(temp[1].Contains("-") ? temp[1].Substring(1) : temp[1]);
             EndOfStream = end;
         }
-        public OptionsRepository(string date, double price)
-        {
-            Date = date;
-            Price = price;
-        }
     }
 }

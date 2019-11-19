@@ -4,7 +4,7 @@ namespace ShareInvest.RetrieveOptions
 {
     public interface IOptions
     {
-        Dictionary<string, Dictionary<string, List<OptionsRepository>>> Repository
+        Dictionary<string, Dictionary<string, Dictionary<ulong, double>>> Repository
         {
             get;
         }

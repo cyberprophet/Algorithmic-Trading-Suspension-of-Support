@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ShareInvest.Communication
+﻿namespace ShareInvest.Communication
 {
     public class StrategySetting : IStrategySetting
     {
@@ -28,11 +26,15 @@ namespace ShareInvest.Communication
         {
             get; set;
         }
+        public int[] Hedge
+        {
+            get; set;
+        }
         public int EstimatedTime()
         {
             int count = 0;
 
-            foreach (int hedge in Enum.GetValues(typeof(IStrategySetting.Hedge)))
+            foreach (int hedge in Hedge)
                 foreach (int ld in LongDay)
                     foreach (int lt in LongTick)
                         foreach (int sd in ShortDay)

@@ -32,9 +32,9 @@ namespace ShareInvest.BackTesting.SettingsScreen
             checkBox.Text = "BackTesting";
             string path = string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
             IOptions options = Options.Get();
-            new ReceiveOptions(new List<OptionsRepository>(4096));
+            new ReceiveOptions(new Dictionary<ulong, double>(256));
 
-            foreach (int hedge in Enum.GetValues(typeof(IStrategySetting.Hedge)))
+            foreach (int hedge in set.Hedge)
                 foreach (int reaction in set.Reaction)
                     foreach (int sTick in set.ShortTick)
                         foreach (int sDay in set.ShortDay)
@@ -93,6 +93,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                         LongTick = SetValue((int)numericPLT.Value, (int)numericILT.Value, (int)numericDLT.Value),
                         LongDay = SetValue((int)numericPLD.Value, (int)numericILD.Value, (int)numericDLD.Value),
                         Reaction = SetValue((int)numericPR.Value, (int)numericIR.Value, (int)numericDR.Value),
+                        Hedge = SetValue((int)numericPH.Value, (int)numericIH.Value, (int)numericDH.Value),
                         Capital = (long)numericCapital.Value
                     };
                     button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(set.EstimatedTime()).ToString("N0"), " Minutes.");
@@ -145,6 +146,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 LongTick = SetValue((int)numericPLT.Value, (int)numericILT.Value, (int)numericDLT.Value),
                 LongDay = SetValue((int)numericPLD.Value, (int)numericILD.Value, (int)numericDLD.Value),
                 Reaction = SetValue((int)numericPR.Value, (int)numericIR.Value, (int)numericDR.Value),
+                Hedge = SetValue((int)numericPH.Value, (int)numericIH.Value, (int)numericDH.Value),
                 Capital = (long)numericCapital.Value
             });
         }
