@@ -83,6 +83,8 @@ namespace ShareInvest.Analysize
                         SendLiquidate?.Invoke(this, new Liquidate(strategy));
                 }
             }
+            if (api != null && (int)(account.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)) < api.Quantity)
+                Box.Show("Trading is Difficult\n\nif You don't Fill the Set Amount.", "Lack of Deposit", 1752);
         }
         private int Analysis(double price)
         {

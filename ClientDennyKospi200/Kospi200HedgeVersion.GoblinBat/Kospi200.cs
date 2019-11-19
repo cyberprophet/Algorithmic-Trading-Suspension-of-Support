@@ -46,7 +46,8 @@ namespace ShareInvest.Kospi200HedgeVersion
             order.BackColor = Color.FromArgb(121, 133, 130);
             api.Hide();
             account.SendSelection += OnReceiveAccount;
-            splitContainerBalance.SplitterDistance = 475;
+            splitContainerBalance.Panel2MinSize = 3;
+            splitContainerBalance.Panel1MinSize = 96;
             order.SendTab += OnReceiveTabControl;
             bal.SendReSize += OnReceiveSize;
             ResumeLayout();
@@ -71,7 +72,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             id.Text = e.ID;
             ConnectAPI api = ConnectAPI.Get();
             api.SendDeposit += OnReceiveDeposit;
-            api.LookUpTheDeposit(e.AccNo);
+            api.LookUpTheDeposit(e.AccNo, true);
         }
         private void OnReceiveDeposit(object sender, Deposit e)
         {
@@ -85,13 +86,15 @@ namespace ShareInvest.Kospi200HedgeVersion
         }
         private void OnReceiveSize(object sender, GridReSize e)
         {
-            if (e.ReSize > 172)
-            {
-
-            }
             splitContainerBalance.SplitterDistance = splitContainerBalance.Height - e.ReSize - splitContainerBalance.SplitterWidth;
             timer.Stop();
             CenterToScreen();
+
+            if (e.Count < 8)
+                FormSizes[2, 1] = 315;
+
+            else if (e.Count > 7)
+                FormSizes[2, 1] = 328 + (e.Count - 7) * 21;
         }
         private void OnReceiveTabControl(object sender, Mining e)
         {
@@ -121,7 +124,8 @@ namespace ShareInvest.Kospi200HedgeVersion
         }
         private void TimerTick(object sender, EventArgs e)
         {
-            ConnectAPI.Get().LookUpTheDeposit(account.Text);
+            ConnectAPI api = ConnectAPI.Get();
+            api.LookUpTheDeposit(account.Text, api.OnReceiveBalance);
         }
         private bool CheckCurrent
         {

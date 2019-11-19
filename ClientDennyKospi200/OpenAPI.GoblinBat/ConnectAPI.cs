@@ -39,16 +39,17 @@ namespace ShareInvest.OpenAPI
             }
             Environment.Exit(0);
         }
-        public void LookUpTheDeposit(string account)
+        public void LookUpTheDeposit(string account, bool swap)
         {
             if (account.Contains("-"))
                 Account = account.Replace("-", string.Empty);
 
-            request.RequestTrData(new Task(() =>
-            {
-                InputValueRqData(new OPW20007 { Value = string.Concat(Account, ";;00") });
-                InputValueRqData(new OPW20010 { Value = string.Concat(Account, ";;00") });
-            }));
+            if (swap)
+                request.RequestTrData(new Task(() =>
+                {
+                    InputValueRqData(new OPW20007 { Value = string.Concat(Account, ";;00") });
+                    InputValueRqData(new OPW20010 { Value = string.Concat(Account, ";;00") });
+                }));
         }
         public void OnReceiveOrder(IStrategy order)
         {
@@ -152,7 +153,7 @@ namespace ShareInvest.OpenAPI
             foreach (string output in code)
                 RemainingDay(output);
 
-            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 25 Seconds to Receive Data.\n\n\nWarning\n\nReceiving Information for Trading.\n\nIf You have Access to Trading,\nPlease don't Click.\n\nWhen Reception is Complete,\nProceed to the Next Step.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, (uint)code.Count * 639).Equals((DialogResult)6))
+            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 35 Seconds to Receive Data.\n\n\nWarning\n\nReceiving Information for Trading.\n\nIf You have Access to Trading,\nPlease don't Click.\n\nWhen Reception is Complete,\nProceed to the Next Step.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, (uint)code.Count * 647).Equals((DialogResult)6))
             {
                 Delay.delay = 4150;
                 Request(code[0]);
@@ -229,7 +230,16 @@ namespace ShareInvest.OpenAPI
                     sb.Append(axAPI.GetCommData(e.sTrCode, e.sRQName, i, item).Trim()).Append(';');
 
                 if (cnt > 0)
+                {
                     sb.Append("*");
+
+                    if (DeadLine && sb.ToString().Substring(0, 3).Equals("101"))
+                    {
+                        string[] temp = sb.ToString().Split(';');
+                        Quantity = temp[2].Equals("1") ? -int.Parse(temp[3]) : int.Parse(temp[3]);
+                        DeadLine = false;
+                    }
+                }
             }
             switch (Array.FindIndex(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))))
             {
@@ -255,12 +265,13 @@ namespace ShareInvest.OpenAPI
 
             if (e.sGubun.Equals("4"))
             {
+                LookUpTheDeposit(Account, OnReceiveBalance);
                 string[] param = sb.ToString().Split(';');
-                SendConfirm?.Invoke(this, new Identify(string.Concat(" holds ", param[9].Equals("1") ? "Sell " : "Buy ", param[4], " Contracts for ", param[2], ".")));
-                LookUpTheDeposit(Account);
 
                 if (param[1].Substring(0, 3).Equals("101"))
                     Quantity = param[9].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
+
+                SendConfirm?.Invoke(this, new Identify(string.Concat(" holds ", param[9].Equals("1") ? "Sell " : "Buy ", param[4], " Contracts for ", param[2], ".")));
 
                 return;
             }
@@ -316,7 +327,7 @@ namespace ShareInvest.OpenAPI
         private bool DeadLine
         {
             get; set;
-        } = false;
+        } = true;
         private string ScreenNo
         {
             get

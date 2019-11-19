@@ -93,16 +93,15 @@ namespace ShareInvest.Controls
                         balGrid.Rows.Add(arr);
                 }
             }
-            SendReSize?.Invoke(this, new GridReSize(balGrid.Rows.GetRowsHeight(DataGridViewElementStates.None)));
-
             if (balGrid.Rows.Count > 0)
             {
+                balGrid.Show();
                 balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
                 balGrid.Cursor = Cursors.Hand;
                 balGrid.AutoResizeRows();
                 balGrid.AutoResizeColumns();
                 balGrid.ResumeLayout();
-                balGrid.Show();
+                SendReSize?.Invoke(this, new GridReSize(balGrid.Rows.GetRowsHeight(DataGridViewElementStates.None), balGrid.Rows.Count));
 
                 return;
             }
