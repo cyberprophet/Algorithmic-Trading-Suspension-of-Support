@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -7,6 +8,7 @@ using System.Windows.Forms;
 using ShareInvest.BackTesting.Analysis;
 using ShareInvest.Communication;
 using ShareInvest.Market;
+using ShareInvest.RetrieveOptions;
 
 namespace ShareInvest.BackTesting.SettingsScreen
 {
@@ -29,6 +31,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
             checkBox.ForeColor = Color.DarkRed;
             checkBox.Text = "BackTesting";
             string path = string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
+            IOptions options = Options.Get();
+            new ReceiveOptions(new List<OptionsRepository>(4096));
 
             foreach (int hedge in Enum.GetValues(typeof(IStrategySetting.Hedge)))
                 foreach (int reaction in set.Reaction)
@@ -49,6 +53,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
 
                                         new Analysize(new Specify
                                         {
+                                            Repository = options.Repository,
                                             ShortTickPeriod = sTick,
                                             ShortDayPeriod = sDay,
                                             LongTickPeriod = lTick,

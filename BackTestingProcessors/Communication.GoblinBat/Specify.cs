@@ -1,4 +1,7 @@
-﻿namespace ShareInvest.Communication
+﻿using System.Collections.Generic;
+using ShareInvest.RetrieveOptions;
+
+namespace ShareInvest.Communication
 {
     public class Specify : IStrategy
     {
@@ -51,6 +54,10 @@
             get; set;
         }
         public string PathLog
+        {
+            get; set;
+        }
+        public Dictionary<string, Dictionary<string, List<OptionsRepository>>> Repository
         {
             get; set;
         }

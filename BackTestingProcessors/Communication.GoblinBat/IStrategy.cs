@@ -1,6 +1,8 @@
-﻿namespace ShareInvest.Communication
+﻿using ShareInvest.RetrieveOptions;
+
+namespace ShareInvest.Communication
 {
-    public interface IStrategy
+    public interface IStrategy : IOptions
     {
         int Hedge
         {

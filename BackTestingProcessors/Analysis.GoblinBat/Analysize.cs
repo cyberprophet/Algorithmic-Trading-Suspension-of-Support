@@ -56,7 +56,7 @@ namespace ShareInvest.BackTesting.Analysis
             if ((e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
             {
                 if (Math.Abs(info.Quantity + quantity) < (int)(st.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)))
-                    info.Operate(e.Price, quantity);
+                    info.Operate(e.Price, quantity, e.Time);
 
                 return;
             }
