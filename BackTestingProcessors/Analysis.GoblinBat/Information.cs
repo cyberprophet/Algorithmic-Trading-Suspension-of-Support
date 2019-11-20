@@ -26,8 +26,8 @@ namespace ShareInvest.BackTesting.Analysis
         }
         public void Save(string time, double price)
         {
-            Revenue = CumulativeRevenue - Commission + OptionsRevenue;
-            list.Add(string.Concat(DateTime.ParseExact(time.Substring(0, 6), "yyMMdd", CultureInfo.CurrentCulture).ToString("yy-MM-dd"), ',', (long)(Quantity.Equals(0) ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * st.TransactionMultiplier * Math.Abs(Quantity)), ',', Revenue - TodayRevenue, ',', CumulativeRevenue - Commission + OptionsRevenue));
+            Revenue = CumulativeRevenue - Commission - hedge.OptionsRevenue;
+            list.Add(string.Concat(DateTime.ParseExact(time.Substring(0, 6), "yyMMdd", CultureInfo.CurrentCulture).ToString("yy-MM-dd"), ',', (long)(Quantity.Equals(0) ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * st.TransactionMultiplier * Math.Abs(Quantity)), ',', Revenue - TodayRevenue, ',', CumulativeRevenue - Commission - hedge.OptionsRevenue));
             TodayRevenue = Revenue;
         }
         public void Log()
@@ -113,10 +113,6 @@ namespace ShareInvest.BackTesting.Analysis
             get; set;
         }
         private long TodayRevenue
-        {
-            get; set;
-        }
-        private long OptionsRevenue
         {
             get; set;
         }

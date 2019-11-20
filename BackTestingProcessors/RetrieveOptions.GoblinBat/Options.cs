@@ -13,7 +13,7 @@ namespace ShareInvest.RetrieveOptions
 
             return options;
         }
-        public Dictionary<string, Dictionary<string, Dictionary<ulong, double>>> Repository
+        public Dictionary<string, Dictionary<string, Dictionary<string, double>>> Repository
         {
             get; internal set;
         }
@@ -33,7 +33,7 @@ namespace ShareInvest.RetrieveOptions
         }
         private Options()
         {
-            Repository = new Dictionary<string, Dictionary<string, Dictionary<ulong, double>>>(256);
+            Repository = new Dictionary<string, Dictionary<string, Dictionary<string, double>>>(256);
         }
         private static Options options;
         public event EventHandler<OptionsRepository> SendRepository;

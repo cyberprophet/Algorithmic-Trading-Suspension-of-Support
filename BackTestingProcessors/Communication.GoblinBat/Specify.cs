@@ -56,7 +56,7 @@ namespace ShareInvest.Communication
         {
             get; set;
         }
-        public Dictionary<string, Dictionary<string, Dictionary<ulong, double>>> Repository
+        public Dictionary<string, Dictionary<string, Dictionary<string, double>>> Repository
         {
             get; set;
         }

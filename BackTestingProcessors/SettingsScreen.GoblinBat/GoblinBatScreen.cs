@@ -32,7 +32,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             checkBox.Text = "BackTesting";
             string path = string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
             IOptions options = Options.Get();
-            new ReceiveOptions(new Dictionary<ulong, double>(256));
+            new ReceiveOptions(new Dictionary<string, double>(256));
 
             foreach (int hedge in set.Hedge)
                 foreach (int reaction in set.Reaction)
@@ -116,8 +116,13 @@ namespace ShareInvest.BackTesting.SettingsScreen
 
             else if (button.ForeColor.Equals(Color.Ivory) && TimerBox.Show("Do You Want to Store Only Existing Data\nWithout Back Testing?\n\nIf Not Selected,\nIt will be Saved after 30 Seconds and the Program will Exit.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
             {
-                new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"));
-                SetMarketTick();
+                pro.Maximum = SetMaximum();
+
+                new Task(() =>
+                {
+                    new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"));
+                    SetMarketTick();
+                }).Start();
             }
             else if (button.ForeColor.Equals(Color.Maroon))
                 button.Text = string.Concat(((Max - pro.ProgressBarValue) / 210).ToString("N0"), " Minutes left to Complete.");
@@ -149,6 +154,35 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 Hedge = SetValue((int)numericPH.Value, (int)numericIH.Value, (int)numericDH.Value),
                 Capital = (long)numericCapital.Value
             });
+        }
+        private void TimerStorageTick(object sender, EventArgs e)
+        {
+            pro.ProgressBarValue++;
+            Application.DoEvents();
+        }
+        private int SetMaximum()
+        {
+            string[] temp;
+            int date = 0;
+
+            try
+            {
+                foreach (string val in Directory.GetDirectories(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\")))
+                {
+                    temp = val.Split('\\');
+                    int recent = int.Parse(temp[temp.Length - 1]);
+
+                    if (recent > date)
+                        date = recent;
+                }
+                timerStorage.Start();
+            }
+            catch (Exception ex)
+            {
+                TimerBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                Environment.Exit(0);
+            }
+            return Directory.GetFiles(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\", date), "*.csv", SearchOption.AllDirectories).Length;
         }
         private bool CheckCurrent
         {

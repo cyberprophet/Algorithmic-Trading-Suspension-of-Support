@@ -13,6 +13,10 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             get; set;
         }
+        public int Maximum
+        {
+            get; set;
+        }
         public int Rate(int max)
         {
             progressBar.Maximum = max;
@@ -23,7 +27,17 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private void TimerTick(object sender, EventArgs e)
         {
+            if (Maximum > 0 && Swap == false)
+            {
+                Swap = true;
+                progressBar.Maximum = Maximum;
+                ProgressBarValue = 0;
+            }
             progressBar.Value = ProgressBarValue;
+        }
+        private bool Swap
+        {
+            get; set;
         }
     }
 }
