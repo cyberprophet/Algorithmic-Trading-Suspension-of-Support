@@ -17,7 +17,8 @@ namespace ShareInvest.Communication
             }
             catch (Exception ex)
             {
-                list.Add(ex.ToString());
+                TimerBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                Environment.Exit(0);
             }
             return list;
         }

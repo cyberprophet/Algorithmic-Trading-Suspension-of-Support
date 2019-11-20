@@ -14,14 +14,38 @@ namespace ShareInvest.BackTesting.SettingsScreen
 {
     public partial class GoblinBatScreen : UserControl
     {
-        public GoblinBatScreen()
+        public GoblinBatScreen(IAsset asset)
         {
+            this.asset = asset;
             InitializeComponent();
+            BackColor = Color.FromArgb(121, 133, 130);
+            numericCapital.Value = asset.Assets;
+            labelH.Text = asset.Hedge.ToString();
+            labelR.Text = asset.Reaction.ToString();
+            labelSD.Text = asset.ShortDayPeriod.ToString();
+            labelST.Text = asset.ShortTickPeriod.ToString();
+            labelLD.Text = asset.LongDayPeriod.ToString();
+            labelLT.Text = asset.LongTickPeriod.ToString();
+            ran = new Random();
         }
         public void SetProgress(Progress pro)
         {
             this.pro = pro;
             timer.Start();
+        }
+        private int SetOptimize(IAsset asset)
+        {
+            set = new StrategySetting
+            {
+                ShortTick = SetValue(asset.ShortTickPeriod - ran.Next(asset.ShortTickPeriod / 2), ran.Next(1, asset.ShortTickPeriod), asset.ShortTickPeriod + ran.Next(asset.ShortTickPeriod)),
+                ShortDay = SetValue(asset.ShortDayPeriod - ran.Next(asset.ShortDayPeriod / 2), ran.Next(1, asset.ShortDayPeriod), asset.ShortDayPeriod + ran.Next(asset.ShortDayPeriod)),
+                LongTick = SetValue(asset.LongTickPeriod - ran.Next(asset.LongTickPeriod / 2), ran.Next(1, asset.LongTickPeriod), asset.LongTickPeriod + ran.Next(asset.LongTickPeriod)),
+                LongDay = SetValue(asset.LongDayPeriod - ran.Next(asset.LongDayPeriod / 2), ran.Next(1, asset.LongDayPeriod), asset.LongDayPeriod + ran.Next(asset.LongDayPeriod)),
+                Reaction = SetValue(asset.Reaction - ran.Next(10, 30), ran.Next(1, 3), asset.Reaction + ran.Next(10, 30)),
+                Hedge = SetValue(0, 1, ran.Next(1, 5)),
+                Capital = asset.Assets
+            };
+            return set.EstimatedTime();
         }
         private void StartBackTesting(IStrategySetting set)
         {
@@ -129,6 +153,12 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private int[] SetValue(int sp, int interval, int destination)
         {
+            if (sp > destination)
+            {
+                SetOptimize(asset);
+
+                return null;
+            }
             int[] value = new int[(destination - sp) / interval + 1];
             int i;
 
@@ -140,20 +170,18 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private void TimerTick(object sender, EventArgs e)
         {
             timer.Stop();
+            int setting;
 
             if (TimerBox.Show("Start Back Testing.\n\nClick 'No' to Do this Manually.\n\nIf Not Selected,\nIt will Automatically Proceed after 20 Seconds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 25617).Equals((DialogResult)7))
                 return;
 
-            StartBackTesting(new StrategySetting
+            do
             {
-                ShortTick = SetValue((int)numericPST.Value, (int)numericIST.Value, (int)numericDST.Value),
-                ShortDay = SetValue((int)numericPSD.Value, (int)numericISD.Value, (int)numericDSD.Value),
-                LongTick = SetValue((int)numericPLT.Value, (int)numericILT.Value, (int)numericDLT.Value),
-                LongDay = SetValue((int)numericPLD.Value, (int)numericILD.Value, (int)numericDLD.Value),
-                Reaction = SetValue((int)numericPR.Value, (int)numericIR.Value, (int)numericDR.Value),
-                Hedge = SetValue((int)numericPH.Value, (int)numericIH.Value, (int)numericDH.Value),
-                Capital = (long)numericCapital.Value
-            });
+                setting = SetOptimize(asset);
+            }
+            while (setting < 205 * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 3500 : 850) || setting > 205 * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 3800 : 950));
+
+            StartBackTesting(set);
         }
         private void TimerStorageTick(object sender, EventArgs e)
         {
@@ -197,6 +225,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private Progress pro;
         private IStrategySetting set;
+        private readonly IAsset asset;
+        private readonly Random ran;
         public event EventHandler<OpenMarket> SendMarket;
     }
 }

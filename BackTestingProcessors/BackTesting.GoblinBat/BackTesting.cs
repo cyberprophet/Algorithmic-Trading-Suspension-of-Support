@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using ShareInvest.AssetManagement;
 using ShareInvest.BackTesting.SettingsScreen;
 using ShareInvest.Market;
 
@@ -10,7 +11,7 @@ namespace ShareInvest.BackTesting
         public BackTesting()
         {
             InitializeComponent();
-            StartingPoint(new GoblinBatScreen(), new Progress());
+            StartingPoint(new GoblinBatScreen(new Asset()), new Progress());
             Dispose();
             Environment.Exit(0);
         }

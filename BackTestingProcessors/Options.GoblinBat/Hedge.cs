@@ -44,7 +44,7 @@ namespace ShareInvest.Options
                     if (temp > 0)
                     {
                         if (check == false)
-                            OptionsRevenue += (long)(strategy.TransactionMultiplier * temp) - (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
+                            OptionsRevenue += (long)(strategy.TransactionMultiplier * temp) + (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
 
                         else if (check)
                             OptionsRevenue -= (long)(strategy.TransactionMultiplier * temp) - (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
