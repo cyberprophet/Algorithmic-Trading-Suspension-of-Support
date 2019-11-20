@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ShareInvest.AutoMessageBox;
+using ShareInvest.Basic;
 using ShareInvest.Const;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
@@ -32,6 +33,7 @@ namespace ShareInvest.Analysize
         public void SetAccount(IAccount account)
         {
             this.account = account;
+            new BasicMaterial(account, st);
         }
         private void Analysis(object sender, Datum e)
         {

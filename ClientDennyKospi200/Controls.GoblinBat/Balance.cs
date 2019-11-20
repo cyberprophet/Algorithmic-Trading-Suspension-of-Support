@@ -39,8 +39,13 @@ namespace ShareInvest.Controls
                         if (temp[0].Substring(0, 3).Equals("101") || temp[1].Substring(0, 1).Equals(OrderType))
                             continue;
 
-                        if (int.Parse(temp[5]) > price)
+                        int close = int.Parse(temp[5]);
+
+                        if (close > price)
+                        {
                             code = temp[0];
+                            price = close;
+                        }
                     }
                 api.OnReceiveOrder(new PurchaseInformation
                 {
