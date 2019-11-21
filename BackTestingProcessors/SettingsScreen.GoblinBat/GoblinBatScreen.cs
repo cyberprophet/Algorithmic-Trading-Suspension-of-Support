@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.BackTesting.Analysis;
 using ShareInvest.Communication;
+using ShareInvest.Information;
 using ShareInvest.Market;
 using ShareInvest.RetrieveOptions;
 
@@ -37,11 +38,11 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             set = new StrategySetting
             {
-                ShortTick = SetValue(asset.ShortTickPeriod - ran.Next(asset.ShortTickPeriod / 2), ran.Next(1, asset.ShortTickPeriod), asset.ShortTickPeriod + ran.Next(asset.ShortTickPeriod)),
-                ShortDay = SetValue(asset.ShortDayPeriod - ran.Next(asset.ShortDayPeriod / 2), ran.Next(1, asset.ShortDayPeriod), asset.ShortDayPeriod + ran.Next(asset.ShortDayPeriod)),
-                LongTick = SetValue(asset.LongTickPeriod - ran.Next(asset.LongTickPeriod / 2), ran.Next(1, asset.LongTickPeriod), asset.LongTickPeriod + ran.Next(asset.LongTickPeriod)),
-                LongDay = SetValue(asset.LongDayPeriod - ran.Next(asset.LongDayPeriod / 2), ran.Next(1, asset.LongDayPeriod), asset.LongDayPeriod + ran.Next(asset.LongDayPeriod)),
-                Reaction = SetValue(asset.Reaction - ran.Next(10, 30), ran.Next(1, 3), asset.Reaction + ran.Next(10, 30)),
+                ShortTick = SetValue(asset.ShortTickPeriod - ran.Next(asset.ShortTickPeriod - 1), ran.Next(1, asset.ShortTickPeriod / 2), asset.ShortTickPeriod + ran.Next(asset.ShortTickPeriod)),
+                ShortDay = SetValue(asset.ShortDayPeriod - ran.Next(asset.ShortDayPeriod - 1), ran.Next(1, asset.ShortDayPeriod / 2), asset.ShortDayPeriod + ran.Next(asset.ShortDayPeriod)),
+                LongTick = SetValue(asset.LongTickPeriod - ran.Next(asset.LongTickPeriod - 1), ran.Next(1, asset.LongTickPeriod / 2), asset.LongTickPeriod + ran.Next(asset.LongTickPeriod)),
+                LongDay = SetValue(asset.LongDayPeriod - ran.Next(asset.LongDayPeriod - 1), ran.Next(1, asset.LongDayPeriod / 2), asset.LongDayPeriod + ran.Next(asset.LongDayPeriod)),
+                Reaction = SetValue(asset.Reaction - ran.Next(10, 50), ran.Next(1, 3), asset.Reaction + ran.Next(0, 30)),
                 Hedge = SetValue(0, 1, ran.Next(1, 5)),
                 Capital = asset.Assets
             };
@@ -54,9 +55,11 @@ namespace ShareInvest.BackTesting.SettingsScreen
             button.ForeColor = Color.Maroon;
             checkBox.ForeColor = Color.DarkRed;
             checkBox.Text = "BackTesting";
+            new Transmit(asset.Account, set.Capital);
             string path = string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
             IOptions options = Options.Get();
             new ReceiveOptions(new Dictionary<string, double>(256));
+            timerStorage.Start();
 
             foreach (int hedge in set.Hedge)
                 foreach (int reaction in set.Reaction)
@@ -73,8 +76,6 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                     }
                                     new Task(() =>
                                     {
-                                        pro.ProgressBarValue++;
-
                                         new Analysize(new Specify
                                         {
                                             Repository = options.Repository,
@@ -88,21 +89,23 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                             PathLog = path,
                                             Strategy = string.Concat(sDay.ToString("D2"), '^', sTick.ToString("D2"), '^', lDay.ToString("D2"), '^', lTick.ToString("D2"), '^', reaction.ToString("D2"), '^', hedge.ToString("D2"))
                                         });
-                                        if (Max.Equals(pro.ProgressBarValue) && TimerBox.Show("Back Testing is Complete.\n\nDo You Want to Store the Data?\n\nIf Not Selected,\nIt will be Saved after 30 Seconds and the Program will Exit.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
-                                        {
-                                            new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"));
-                                            SetMarketTick();
-                                        }
+                                        pro.ProgressBarValue++;
                                     }).Start();
                                     Application.DoEvents();
                                 }
         }
         private void SetMarketTick()
         {
-            if (TimerBox.Show("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter 30 Seconds the Program is Terminated.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
+            InterLink = true;
+            pro.Maximum = pro.Retry(SetMaximum());
+            new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"));
+
+            if (TimerBox.Show("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter 5 Minutes the Program is Terminated.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 332735).Equals((DialogResult)6))
                 Process.Start("Kospi200.exe");
 
             SendMarket?.Invoke(this, new OpenMarket(0));
+            Application.ExitThread();
+            Application.Exit();
         }
         private void CheckBoxCheckedChanged(object sender, EventArgs e)
         {
@@ -127,7 +130,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
 
                     return;
                 }
-                button.Text = string.Concat("Click to Recommend ", DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 3650 : 900, " Minutes and Save Existing Data.");
+                button.Text = string.Concat("Click to Recommend ", DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 870 : 870, " Minutes and Save Existing Data.");
                 button.ForeColor = Color.Ivory;
                 checkBox.ForeColor = Color.Ivory;
                 checkBox.Text = "Process";
@@ -140,25 +143,14 @@ namespace ShareInvest.BackTesting.SettingsScreen
 
             else if (button.ForeColor.Equals(Color.Ivory) && TimerBox.Show("Do You Want to Store Only Existing Data\nWithout Back Testing?\n\nIf Not Selected,\nIt will be Saved after 30 Seconds and the Program will Exit.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
             {
-                pro.Maximum = SetMaximum();
-
-                new Task(() =>
-                {
-                    new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"));
-                    SetMarketTick();
-                }).Start();
+                timerStorage.Start();
+                SetMarketTick();
             }
             else if (button.ForeColor.Equals(Color.Maroon))
-                button.Text = string.Concat(((Max - pro.ProgressBarValue) / 210).ToString("N0"), " Minutes left to Complete.");
+                button.Text = string.Concat(((Max - pro.ProgressBarValue) / 155).ToString("N0"), " Minutes left to Complete.");
         }
         private int[] SetValue(int sp, int interval, int destination)
         {
-            if (sp > destination)
-            {
-                SetOptimize(asset);
-
-                return null;
-            }
             int[] value = new int[(destination - sp) / interval + 1];
             int i;
 
@@ -179,13 +171,19 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 setting = SetOptimize(asset);
             }
-            while (setting < 205 * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 3500 : 850) || setting > 205 * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 3800 : 950));
+            while (setting < 155 * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 840 : 840) || setting > 155 * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 900 : 900));
 
             StartBackTesting(set);
+            timer.Dispose();
         }
         private void TimerStorageTick(object sender, EventArgs e)
         {
-            pro.ProgressBarValue++;
+            if (Max.Equals(pro.ProgressBarValue) && InterLink == false)
+                SetMarketTick();
+
+            if (InterLink && pro.Maximum > pro.ProgressBarValue)
+                pro.ProgressBarValue++;
+
             Application.DoEvents();
         }
         private int SetMaximum()
@@ -203,7 +201,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     if (recent > date)
                         date = recent;
                 }
-                timerStorage.Start();
+                timerStorage.Interval = 15;
             }
             catch (Exception ex)
             {
@@ -218,6 +216,10 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 return checkBox.Checked;
             }
+        }
+        private bool InterLink
+        {
+            get; set;
         }
         private int Max
         {

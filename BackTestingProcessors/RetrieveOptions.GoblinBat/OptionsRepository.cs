@@ -31,7 +31,7 @@ namespace ShareInvest.RetrieveOptions
             temp = temp[temp.Length - 1].Split('.');
             Code = temp[0];
             temp = data.Split(',');
-            Date = temp[0];
+            Date = temp[0].Substring(0, 11);
             Price = double.Parse(temp[1].Contains("-") ? temp[1].Substring(1) : temp[1]);
             EndOfStream = end;
         }

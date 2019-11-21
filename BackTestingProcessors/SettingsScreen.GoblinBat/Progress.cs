@@ -23,7 +23,15 @@ namespace ShareInvest.BackTesting.SettingsScreen
             timer.Interval = 15;
             timer.Start();
 
-            return max / 210;
+            return max / 155;
+        }
+        public int Retry(int max)
+        {
+            progressBar.Maximum = max;
+            ProgressBarValue = 0;
+            timer.Start();
+
+            return max;
         }
         private void TimerTick(object sender, EventArgs e)
         {

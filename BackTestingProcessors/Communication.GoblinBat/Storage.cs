@@ -8,13 +8,6 @@ namespace ShareInvest.Communication
 {
     public class Storage
     {
-        public int Count
-        {
-            get
-            {
-                return list.Count;
-            }
-        }
         public Storage(string path)
         {
             list = new List<Storage>(128);

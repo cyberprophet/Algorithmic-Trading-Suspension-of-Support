@@ -23,40 +23,25 @@ namespace ShareInvest.Options
 
             if (strategy.Repository.ContainsKey(date))
             {
-                for (int i = 0; i < strategy.Hedge; i++)
+                foreach (KeyValuePair<string, Dictionary<string, double>> kv in strategy.Repository[date])
+                    if (kv.Value.TryGetValue(time.Substring(0, 11), out double close) && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")) && temp < close && price * strategy.MarginRate * rate[strategy.Hedge] - close > 0)
+                    {
+                        temp = close;
+                        code = FindbyCode(kv.Key);
+                    }
+                temp = 0;
+
+                if (strategy.Repository[date].TryGetValue(code, out Dictionary<string, double> find))
                 {
-                    if (i == 0)
-                    {
-                        foreach (KeyValuePair<string, Dictionary<string, double>> kv in strategy.Repository[date])
-                            if (kv.Value.TryGetValue(time, out double close) && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")) && temp < close && price * strategy.MarginRate * strategy.ErrorRate - close > 0)
-                            {
-                                temp = close;
-                                code = kv.Key;
-                            }
-                    }
-                    else if (i > 0)
-                    {
-                        strategy.Repository[date].TryGetValue(code, out Dictionary<string, double> dic);
+                    foreach (KeyValuePair<string, double> kv in find)
+                        if (time.Contains(kv.Key) && temp < kv.Value && price * strategy.MarginRate * rate[strategy.Hedge] - kv.Value > 0)
+                            temp = kv.Value;
 
-                        if (dic.TryGetValue(time, out double close) && price * strategy.MarginRate * strategy.ErrorRate - close > 0)
-                            temp = close;
-                    }
-                    if (temp > 0)
-                    {
-                        if (check == false)
-                            OptionsRevenue += (long)(strategy.TransactionMultiplier * temp) + (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
+                    if (temp > 0 && check == false)
+                        OptionsRevenue += (long)(strategy.TransactionMultiplier * temp) + (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
 
-                        else if (check)
-                            OptionsRevenue -= (long)(strategy.TransactionMultiplier * temp) - (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
-
-                        if (i + 2 > strategy.Hedge)
-                            break;
-                    }
-                    if (!code.Equals(string.Empty))
-                    {
-                        code = FindbyCode(code);
-                        temp = 0;
-                    }
+                    else if (temp > 0 && check)
+                        OptionsRevenue -= (long)(strategy.TransactionMultiplier * temp) - (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
                 }
             }
         }
@@ -77,6 +62,15 @@ namespace ShareInvest.Options
         {
             return new DateTime(2000 + int.Parse(time.Substring(0, 2)), int.Parse(time.Substring(2, 2)), int.Parse(time.Substring(4, 2)), int.Parse(time.Substring(6, 2)), int.Parse(time.Substring(8, 2)), int.Parse(time.Substring(10, 2)));
         }
+        private readonly Dictionary<int, double> rate = new Dictionary<int, double>()
+        {
+            {0, 0 },
+            {1, 0.05 },
+            {2, 0.1 },
+            {3, 0.135 },
+            {4, 0.17 },
+            {5, 0.205 }
+        };
         private readonly IStrategy strategy;
     }
 }
