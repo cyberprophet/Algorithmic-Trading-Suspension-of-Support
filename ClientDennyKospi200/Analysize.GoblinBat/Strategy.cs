@@ -30,16 +30,24 @@ namespace ShareInvest.Analysize
             api.SendDatum += Analysis;
             SendLiquidate += Balance.Get().OnReceiveLiquidate;
         }
-        public void SetAccount(IAccount account)
+        public bool SetAccount(IAccount account)
         {
             this.account = account;
             new BasicMaterial(account, st);
+
+            return false;
+        }
+        private double Max(double price)
+        {
+            double futures = price * st.TransactionMultiplier * st.MarginRate;
+
+            return account.BasicAssets / futures + futures * rate[st.HedgeType];
         }
         private void Analysis(object sender, Datum e)
         {
             int quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
 
-            if (api != null && Math.Abs(api.Quantity + quantity) < (int)(account.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
+            if (api != null && Math.Abs(api.Quantity + quantity) < Max(e.Price) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
             {
                 IStrategy strategy = new PurchaseInformation
                 {
@@ -53,40 +61,29 @@ namespace ShareInvest.Analysize
                 api.OnReceiveBalance = false;
                 double temp = 0;
                 string code = string.Empty;
-                bool check = api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0;
 
-                if (check == false)
-                    foreach (KeyValuePair<string, double> kv in api.OptionsCalling)
-                    {
-                        double approximation = e.Price * st.MarginRate * st.ErrorRate - kv.Value;
-
-                        if (approximation > 0 && temp < kv.Value && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
-                        {
-                            temp = kv.Value;
-                            code = kv.Key;
-                        }
-                    }
-                for (int i = 0; i < st.HedgeType; i++)
+                if (api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0)
                 {
-                    if (check == false)
-                    {
-                        api.OnReceiveOrder(new PurchaseInformation
-                        {
-                            Code = code,
-                            SlbyTP = "2",
-                            OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
-                            Price = string.Empty,
-                            Qty = Math.Abs(quantity)
-                        });
-                        api.OnReceiveBalance = false;
-                        code = new FindbyOptions().Code(code);
-                    }
-                    else if (check)
-                        SendLiquidate?.Invoke(this, new Liquidate(strategy));
+                    SendLiquidate?.Invoke(this, new Liquidate(strategy));
+
+                    return;
                 }
+                foreach (KeyValuePair<string, double> kv in api.OptionsCalling)
+                    if (e.Price * st.MarginRate * rate[st.HedgeType] - kv.Value > 0 && temp < kv.Value && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
+                    {
+                        temp = kv.Value;
+                        code = new FindbyOptions().Code(kv.Key);
+                    }
+                api.OnReceiveOrder(new PurchaseInformation
+                {
+                    Code = code,
+                    SlbyTP = "2",
+                    OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
+                    Price = string.Empty,
+                    Qty = Math.Abs(quantity)
+                });
+                api.OnReceiveBalance = false;
             }
-            if (api != null && (int)(account.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)) < api.Quantity)
-                Box.Show("Trading is Difficult\n\nif You don't Fill the Set Amount.", "Lack of Deposit", 1752);
         }
         private int Analysis(double price)
         {
@@ -153,6 +150,15 @@ namespace ShareInvest.Analysize
         {
             {-1, "1"},
             {1, "2"},
+        };
+        private readonly Dictionary<int, double> rate = new Dictionary<int, double>()
+        {
+            {0, 0 },
+            {1, 0.05 },
+            {2, 0.1 },
+            {3, 0.135 },
+            {4, 0.17 },
+            {5, 0.205 }
         };
         private const string initiation = "090000";
         private IAccount account;

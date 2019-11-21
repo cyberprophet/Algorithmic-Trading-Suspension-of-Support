@@ -45,11 +45,16 @@ namespace ShareInvest.OpenAPI
                 Account = account.Replace("-", string.Empty);
 
             if (swap)
+            {
+                request.RequestTrData(new Task(() =>
+                {
+                    InputValueRqData(new OPW20010 { Value = string.Concat(Account, ";;00") });
+                }));
                 request.RequestTrData(new Task(() =>
                 {
                     InputValueRqData(new OPW20007 { Value = string.Concat(Account, ";;00") });
-                    InputValueRqData(new OPW20010 { Value = string.Concat(Account, ";;00") });
                 }));
+            }
         }
         public void OnReceiveOrder(IStrategy order)
         {
@@ -153,7 +158,7 @@ namespace ShareInvest.OpenAPI
             foreach (string output in code)
                 RemainingDay(output);
 
-            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 35 Seconds to Receive Data.\n\nDo Not Receive while the Market is Operating.\n\nWarning\n\nReceiving Information for Trading.\n\nIf You have Access to Trading,\nPlease don't Click.\n\nWhen Reception is Complete,\nProceed to the Next Step.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, (uint)code.Count * 647).Equals((DialogResult)6))
+            if (TimerBox.Show("Do You Want to Retrieve Recent Data?\n\nPress 'YES' after 35 Seconds to Receive Data.\n\nDo Not Receive while the Market is Operating.\n\nWarning\n\nReceiving Information for Trading.\n\nIf You have Access to Trading,\nPlease don't Click.\n\nWhen Reception is Complete,\nProceed to the Next Step.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, (uint)code.Count * 743).Equals((DialogResult)6))
             {
                 Delay.delay = 4150;
                 Request(code[0]);

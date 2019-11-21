@@ -6,8 +6,10 @@ using ShareInvest.Const;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
+using ShareInvest.Management;
 using ShareInvest.OpenAPI;
 using ShareInvest.SecondaryForms;
+using ShareInvest.TimerMessageBox;
 
 namespace ShareInvest.Kospi200HedgeVersion
 {
@@ -81,13 +83,35 @@ namespace ShareInvest.Kospi200HedgeVersion
                     string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.ArrayDeposit[i]).ToString("N0");
 
             splitContainerAccount.BackColor = Color.FromArgb(121, 133, 130);
-            tabControl.SelectedIndex = 1;
-            strategy.SetAccount(new InQuiry { AccNo = account.Text, BasicAssets = long.Parse(e.ArrayDeposit[20]) });
+
+            if (Account)
+            {
+                string[] assets = new Assets().ReadCSV().Split(',');
+                long temp = 0, backtesting = long.Parse(assets[1]), trading = long.Parse(e.ArrayDeposit[20]);
+                DialogResult result = TimerBox.Show("Are You using Automatic Login??\n\nThe Automatic Login Compares the Asset setup\namount with the Current Asset during the Back Testing\nand sets a Small amount as a Deposit.\n\nIf You aren't using It,\nClick 'Cancel'.\n\nAfter 5 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 5617);
+
+                switch (result)
+                {
+                    case DialogResult.OK:
+                        temp = backtesting >= trading ? trading : backtesting;
+                        break;
+
+                    case DialogResult.Cancel:
+
+                        if (TimerBox.Show(string.Concat("The set amount at the Time of the Test is ￦", backtesting.ToString("N0"), "\nand the Current Assets are ￦", trading.ToString("N0"), ".\n\nClick 'Yes' to set it to ￦", backtesting.ToString("N0"), ".\n\nIf You don't Choose,\nYou'll Set it as Current Asset."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 8712).Equals(DialogResult.No))
+                            temp = trading;
+
+                        else
+                            temp = backtesting;
+
+                        break;
+                }
+                Account = strategy.SetAccount(new InQuiry { AccNo = account.Text, BasicAssets = temp });
+            }
         }
         private void OnReceiveSize(object sender, GridReSize e)
         {
             splitContainerBalance.SplitterDistance = splitContainerBalance.Height - e.ReSize - splitContainerBalance.SplitterWidth;
-            timer.Stop();
             CenterToScreen();
 
             if (e.Count < 8)
@@ -114,6 +138,7 @@ namespace ShareInvest.Kospi200HedgeVersion
                 server.ForeColor = Color.Ivory;
                 account.ForeColor = Color.Ivory;
                 id.ForeColor = Color.Ivory;
+                timer.Interval = 9531;
                 timer.Start();
 
                 return;
@@ -134,6 +159,10 @@ namespace ShareInvest.Kospi200HedgeVersion
                 return server.Checked;
             }
         }
+        private bool Account
+        {
+            get; set;
+        } = true;
         private int[,] FormSizes
         {
             get; set;
