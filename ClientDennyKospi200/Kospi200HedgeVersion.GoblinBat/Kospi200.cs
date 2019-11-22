@@ -83,12 +83,19 @@ namespace ShareInvest.Kospi200HedgeVersion
                     string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.ArrayDeposit[i]).ToString("N0");
 
             splitContainerAccount.BackColor = Color.FromArgb(121, 133, 130);
+            long trading = long.Parse(e.ArrayDeposit[20]), deposit = long.Parse(e.ArrayDeposit[19]);
 
+            if (Account == false)
+            {
+                strategy.SetDeposit(new InQuiry { AccNo = account.Text, BasicAssets = deposit < trading || deposit < Deposit ? deposit : Deposit });
+
+                return;
+            }
             if (Account)
             {
                 string[] assets = new Assets().ReadCSV().Split(',');
-                long temp = 0, backtesting = long.Parse(assets[1]), trading = long.Parse(e.ArrayDeposit[20]);
-                DialogResult result = TimerBox.Show("Are You using Automatic Login??\n\nThe Automatic Login Compares the Asset setup\namount with the Current Asset during the Back Testing\nand sets a Small amount as a Deposit.\n\nIf You aren't using It,\nClick 'Cancel'.\n\nAfter 5 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 5617);
+                long temp = 0, backtesting = long.Parse(assets[1]);
+                DialogResult result = TimerBox.Show("Are You using Automatic Login??\n\nThe Automatic Login Compares the Asset setup\namount with the Current Asset during the Back Testing\nand sets a Small amount as a Deposit.\n\nIf You aren't using It,\nClick 'Cancel'.\n\nAfter 10 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 9617);
 
                 switch (result)
                 {
@@ -98,7 +105,7 @@ namespace ShareInvest.Kospi200HedgeVersion
 
                     case DialogResult.Cancel:
 
-                        if (TimerBox.Show(string.Concat("The set amount at the Time of the Test is ￦", backtesting.ToString("N0"), "\nand the Current Assets are ￦", trading.ToString("N0"), ".\n\nClick 'Yes' to set it to ￦", backtesting.ToString("N0"), ".\n\nIf You don't Choose,\nYou'll Set it as Current Asset."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 8712).Equals(DialogResult.No))
+                        if (TimerBox.Show(string.Concat("The set amount at the Time of the Test is ￦", backtesting.ToString("N0"), "\nand the Current Assets are ￦", trading.ToString("N0"), ".\n\nClick 'Yes' to set it to ￦", backtesting.ToString("N0"), ".\n\nIf You don't Choose,\nYou'll Set it as Current Asset."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 9712).Equals(DialogResult.No))
                             temp = trading;
 
                         else
@@ -106,6 +113,7 @@ namespace ShareInvest.Kospi200HedgeVersion
 
                         break;
                 }
+                Deposit = temp;
                 Account = strategy.SetAccount(new InQuiry { AccNo = account.Text, BasicAssets = temp });
             }
         }
@@ -123,6 +131,8 @@ namespace ShareInvest.Kospi200HedgeVersion
         private void OnReceiveTabControl(object sender, Mining e)
         {
             tabControl.SelectedIndex = e.Tab;
+
+            ConfirmOrder.Get().SendTab -= OnReceiveTabControl;
         }
         private void TabControlSelectedIndexChanged(object sender, EventArgs e)
         {
@@ -151,6 +161,10 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             ConnectAPI api = ConnectAPI.Get();
             api.LookUpTheDeposit(account.Text, api.OnReceiveBalance);
+        }
+        private long Deposit
+        {
+            get; set;
         }
         private bool CheckCurrent
         {

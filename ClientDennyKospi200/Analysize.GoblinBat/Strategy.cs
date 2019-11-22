@@ -37,17 +37,21 @@ namespace ShareInvest.Analysize
 
             return false;
         }
+        public void SetDeposit(IAccount account)
+        {
+            this.account = account;
+        }
         private double Max(double price)
         {
             double futures = price * st.TransactionMultiplier * st.MarginRate;
 
-            return account.BasicAssets / futures + futures * rate[st.HedgeType];
+            return account.BasicAssets / (futures + futures * rate[st.HedgeType]);
         }
         private void Analysis(object sender, Datum e)
         {
             int quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
 
-            if (api != null && Math.Abs(api.Quantity + quantity) < Max(e.Price) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
+            if (api != null && Math.Abs(api.Quantity + quantity) < Max(e.Price) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && api.OnReceiveBalance && Math.Abs(e.Volume) > st.Reaction)
             {
                 IStrategy strategy = new PurchaseInformation
                 {
@@ -68,19 +72,34 @@ namespace ShareInvest.Analysize
 
                     return;
                 }
-                foreach (KeyValuePair<string, double> kv in api.OptionsCalling)
-                    if (e.Price * st.MarginRate * rate[st.HedgeType] - kv.Value > 0 && temp < kv.Value && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
+                if (st.HedgeType > 0)
+                {
+                    foreach (KeyValuePair<string, double> kv in api.OptionsCalling)
+                        if (e.Price * st.MarginRate * rate[st.HedgeType] - kv.Value > 0 && temp < kv.Value && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
+                        {
+                            temp = kv.Value;
+                            code = new FindbyOptions().Code(kv.Key);
+                        }
+                    api.OnReceiveOrder(new PurchaseInformation
                     {
-                        temp = kv.Value;
-                        code = new FindbyOptions().Code(kv.Key);
-                    }
+                        Code = code,
+                        SlbyTP = "2",
+                        OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
+                        Price = string.Empty,
+                        Qty = Math.Abs(quantity)
+                    });
+                }
+                return;
+            }
+            if (api != null && Math.Abs(api.Quantity) > Max(e.Price) && api.OnReceiveBalance)
+            {
                 api.OnReceiveOrder(new PurchaseInformation
                 {
-                    Code = code,
-                    SlbyTP = "2",
+                    Code = api.Code[0].Substring(0, 8),
+                    SlbyTP = api.Quantity > 0 ? "1" : "2",
                     OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
                     Price = string.Empty,
-                    Qty = Math.Abs(quantity)
+                    Qty = 1
                 });
                 api.OnReceiveBalance = false;
             }

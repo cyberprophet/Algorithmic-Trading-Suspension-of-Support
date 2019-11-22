@@ -27,7 +27,6 @@ namespace ShareInvest.Controls
             if (EnCash > 0)
             {
                 EnCash--;
-                api.OnReceiveBalance = false;
                 int price = 0;
                 string code = string.Empty;
 
@@ -47,14 +46,15 @@ namespace ShareInvest.Controls
                             price = close;
                         }
                     }
-                api.OnReceiveOrder(new PurchaseInformation
-                {
-                    Code = code,
-                    SlbyTP = "1",
-                    OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
-                    Price = string.Empty,
-                    Qty = 1
-                });
+                if (price > 0)
+                    api.OnReceiveOrder(new PurchaseInformation
+                    {
+                        Code = code,
+                        SlbyTP = "1",
+                        OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
+                        Price = string.Empty,
+                        Qty = 1
+                    });
             }
             balGrid.SuspendLayout();
             balGrid.Rows.Clear();

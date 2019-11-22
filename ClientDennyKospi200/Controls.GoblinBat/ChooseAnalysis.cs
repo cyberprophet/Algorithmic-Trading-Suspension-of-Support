@@ -10,6 +10,7 @@ using ShareInvest.Const;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
 using ShareInvest.Interface;
+using ShareInvest.Management;
 
 namespace ShareInvest.Controls
 {
@@ -22,6 +23,8 @@ namespace ShareInvest.Controls
         public ChooseAnalysis()
         {
             InitializeComponent();
+            string[] assets = new Assets().ReadCSV().Split(',');
+            Assets = long.Parse(assets[1]);
             CleanUp(SetSecret().Split('^'));
         }
         private void CleanUp(string[] file)
@@ -46,7 +49,7 @@ namespace ShareInvest.Controls
         private void ButtonClick(object sender, EventArgs e)
         {
             arr = sender.ToString().Split(':');
-            SendClose?.Invoke(this, new DialogClose(arr[1].Split('￦')));
+            SendClose?.Invoke(this, new DialogClose(arr[1].Split(' ')));
         }
         private string SetSecret()
         {
@@ -110,7 +113,7 @@ namespace ShareInvest.Controls
                 if (i < 1)
                     FindBest(ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1, kv.Value, kv.Key);
 
-                string.Concat(ip.FindByName, i++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " ￦", kv.Value.ToString("N0"));
+                string.Concat(ip.FindByName, i++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " Day", (kv.Value / Assets / (ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1)).ToString("P"));
             }
         }
         private void FindBest(int denominator, long molecule, string key)
@@ -128,6 +131,10 @@ namespace ShareInvest.Controls
             get; set;
         }
         private int Count
+        {
+            get; set;
+        }
+        private double Assets
         {
             get; set;
         }

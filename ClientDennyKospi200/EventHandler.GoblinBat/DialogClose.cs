@@ -38,7 +38,7 @@ namespace ShareInvest.EventHandler
         }
         public DialogClose(string[] param)
         {
-            Param = param[0].Split('.');
+            Param = param[1].Split('.');
         }
         public DialogClose(decimal hedge, object sender, decimal shortDay, decimal shortTick, decimal longDay, decimal longTick, decimal reaction)
         {
