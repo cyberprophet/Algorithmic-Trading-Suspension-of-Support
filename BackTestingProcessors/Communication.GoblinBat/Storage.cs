@@ -29,6 +29,7 @@ namespace ShareInvest.Communication
                 squence[i++] = val.strategy;
                 analysis[val.date] = val.unrealized;
             }
+            GC.Collect();
             sb = new StringBuilder(128);
             sb_analysis = new StringBuilder(128);
 

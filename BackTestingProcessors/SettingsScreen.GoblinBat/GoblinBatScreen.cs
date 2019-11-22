@@ -38,11 +38,11 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             set = new StrategySetting
             {
-                ShortTick = SetValue(asset.ShortTickPeriod - ran.Next(asset.ShortTickPeriod - 1), ran.Next(1, asset.ShortTickPeriod / 2), asset.ShortTickPeriod + ran.Next(asset.ShortTickPeriod)),
+                ShortTick = SetValue(asset.ShortTickPeriod - ran.Next(asset.ShortTickPeriod - 1), ran.Next(5, asset.ShortTickPeriod / 2), asset.ShortTickPeriod + ran.Next(asset.ShortTickPeriod)),
                 ShortDay = SetValue(asset.ShortDayPeriod - ran.Next(asset.ShortDayPeriod - 1), ran.Next(1, asset.ShortDayPeriod / 2), asset.ShortDayPeriod + ran.Next(asset.ShortDayPeriod)),
-                LongTick = SetValue(asset.LongTickPeriod - ran.Next(asset.LongTickPeriod - 1), ran.Next(1, asset.LongTickPeriod / 2), asset.LongTickPeriod + ran.Next(asset.LongTickPeriod)),
+                LongTick = SetValue(asset.LongTickPeriod - ran.Next(asset.LongTickPeriod - 1), ran.Next(5, asset.LongTickPeriod / 2), asset.LongTickPeriod + ran.Next(asset.LongTickPeriod)),
                 LongDay = SetValue(asset.LongDayPeriod - ran.Next(asset.LongDayPeriod - 1), ran.Next(1, asset.LongDayPeriod / 2), asset.LongDayPeriod + ran.Next(asset.LongDayPeriod)),
-                Reaction = SetValue(asset.Reaction - ran.Next(10, 50), ran.Next(1, 3), asset.Reaction + ran.Next(0, 30)),
+                Reaction = SetValue(asset.Reaction - ran.Next(asset.Reaction - 10), ran.Next(1, 3), asset.Reaction + ran.Next(asset.Reaction)),
                 Hedge = SetValue(0, 1, ran.Next(1, 5)),
                 Capital = asset.Assets
             };
@@ -57,8 +57,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             checkBox.Text = "BackTesting";
             new Transmit(asset.Account, set.Capital);
             string path = string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
-            IOptions options = Options.Get();
-            new ReceiveOptions(new Dictionary<string, double>(256));
+            IOptions options = new Options();
             timerStorage.Start();
 
             foreach (int hedge in set.Hedge)
@@ -98,7 +97,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             InterLink = true;
             pro.Maximum = pro.Retry(SetMaximum());
-            new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"));
+            new Task(() => new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"))).Start();
 
             if (TimerBox.Show("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter 5 Minutes the Program is Terminated.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 332735).Equals((DialogResult)6))
                 Process.Start("Kospi200.exe");

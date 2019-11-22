@@ -6,36 +6,76 @@ namespace ShareInvest.RetrieveOptions
 {
     public class Options : IOptions
     {
-        public static Options Get()
-        {
-            if (options == null)
-                options = new Options();
-
-            return options;
-        }
         public Dictionary<string, Dictionary<string, Dictionary<string, double>>> Repository
         {
-            get; internal set;
+            get; private set;
         }
-        internal void ReadCSV(string file)
+        public Options()
+        {
+            list = new Dictionary<string, double>(512);
+            temp = new Dictionary<string, Dictionary<string, double>>(512);
+            Repository = new Dictionary<string, Dictionary<string, Dictionary<string, double>>>(512);
+
+            foreach (string file in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\Chart\"), "*.csv", SearchOption.AllDirectories))
+                if (!file.Contains("Day") && !file.Contains("Tick"))
+                    ReadCSV(file);
+        }
+        private void ReadCSV(string file)
         {
             try
             {
                 using StreamReader sr = new StreamReader(file);
                 if (sr != null)
                     while (sr.EndOfStream == false)
-                        SendRepository?.Invoke(this, new OptionsRepository(file, sr.ReadLine(), sr.EndOfStream));
+                        OnReceiveOptions(new OptionsRepository(file, sr.ReadLine(), sr.EndOfStream));
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
         }
-        private Options()
+        private void OnReceiveOptions(OptionsRepository e)
         {
-            Repository = new Dictionary<string, Dictionary<string, Dictionary<string, double>>>(256);
+            if (e.Code.Equals(Code) || Code == null)
+            {
+                if (Code == null)
+                {
+                    Code = e.Code;
+                    FileName = e.FileName;
+                }
+                list[e.Date] = e.Price;
+
+                if (e.EndOfStream)
+                {
+                    temp[Code] = list;
+                    Repository[FileName] = temp;
+                }
+                return;
+            }
+            temp[Code] = list;
+
+            if (!e.Code.Equals(Code) && !e.FileName.Equals(FileName))
+            {
+                Repository[FileName] = temp;
+                temp = new Dictionary<string, Dictionary<string, double>>(512);
+                FileName = e.FileName;
+            }
+            list = new Dictionary<string, double>(512)
+            {
+                { e.Date, e.Price }
+            };
+            Code = e.Code;
+            GC.Collect();
         }
-        private static Options options;
-        public event EventHandler<OptionsRepository> SendRepository;
+        private string Code
+        {
+            get; set;
+        }
+        private string FileName
+        {
+            get; set;
+        }
+        private Dictionary<string, Dictionary<string, double>> temp;
+        private Dictionary<string, double> list;
     }
 }

@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace ShareInvest.RetrieveOptions
+﻿namespace ShareInvest.RetrieveOptions
 {
-    public class OptionsRepository : EventArgs
+    public class OptionsRepository
     {
         public string Code
         {
