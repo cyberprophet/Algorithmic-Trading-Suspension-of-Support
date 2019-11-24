@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using ShareInvest.AutoMessageBox;
 using ShareInvest.Interface;
 
@@ -50,7 +51,7 @@ namespace ShareInvest.Basic
             LongTickPeriod = statistics.LongTickPeriod;
             Reaction = statistics.Reaction;
             HedgeType = statistics.HedgeType;
-            new Task(() => Save(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\BasicMaterial\Trading\"))).Start();
+            new Task(() => Save(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\Trading\"))).Start();
         }
         private void Save(string path)
         {

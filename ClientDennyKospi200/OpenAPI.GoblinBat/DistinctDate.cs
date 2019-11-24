@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.RetrieveInformation;
 
@@ -18,7 +19,7 @@ namespace ShareInvest.OpenAPI
         }
         protected string Retention(string code)
         {
-            foreach (string retention in code.Substring(0, 3).Equals("101") ? Retrieve.Get().ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\"), "*.csv", SearchOption.AllDirectories), o => o.Contains("Tick")), new List<string>(2097152)) : Retrieve.Get().ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\"), string.Concat(code, ".csv"), SearchOption.AllDirectories), o => o.Contains(code)), new List<string>(1280)))
+            foreach (string retention in code.Substring(0, 3).Equals("101") ? Retrieve.Get().ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Application.StartupPath, @"..\"), "*.csv", SearchOption.AllDirectories), o => o.Contains("Tick")), new List<string>(2097152)) : Retrieve.Get().ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Application.StartupPath, @"..\"), string.Concat(code, ".csv"), SearchOption.AllDirectories), o => o.Contains(code)), new List<string>(1280)))
                 code = retention.Substring(0, 12);
 
             return code;

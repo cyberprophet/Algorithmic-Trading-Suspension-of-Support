@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Windows.Forms;
 using ShareInvest.AutoMessageBox;
 using ShareInvest.EventHandler;
 
@@ -32,7 +33,7 @@ namespace ShareInvest.OpenAPI
         }
         private void Save(string code, string append)
         {
-            string path = code.Substring(0, 3).Equals("101") ? string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Chart\") : string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Chart\", append, @"\");
+            string path = code.Substring(0, 3).Equals("101") ? string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Chart\") : string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Chart\", append, @"\");
 
             try
             {

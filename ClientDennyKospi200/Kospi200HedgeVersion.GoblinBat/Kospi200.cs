@@ -130,9 +130,13 @@ namespace ShareInvest.Kospi200HedgeVersion
         }
         private void OnReceiveTabControl(object sender, Mining e)
         {
-            tabControl.SelectedIndex = e.Tab;
-
-            ConfirmOrder.Get().SendTab -= OnReceiveTabControl;
+            if (e.Tab != 9 && Tap == false)
+            {
+                Tap = true;
+                tabControl.SelectedIndex = e.Tab;
+            }
+            else if (e.Tab == 9 && Tap)
+                Close();
         }
         private void TabControlSelectedIndexChanged(object sender, EventArgs e)
         {
@@ -172,6 +176,10 @@ namespace ShareInvest.Kospi200HedgeVersion
             {
                 return server.Checked;
             }
+        }
+        private bool Tap
+        {
+            get; set;
         }
         private bool Account
         {

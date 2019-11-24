@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Windows.Forms;
 using ShareInvest.TimerMessageBox;
 
 namespace ShareInvest.Management
@@ -14,7 +15,7 @@ namespace ShareInvest.Management
 
             try
             {
-                foreach (string val in Directory.GetFiles(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\BasicMaterial\BackTesting\"), "*.csv", SearchOption.AllDirectories))
+                foreach (string val in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\BackTesting\"), "*.csv", SearchOption.AllDirectories))
                 {
                     temp = val.Split('\\');
                     temp = temp[temp.Length - 1].Split('.');
@@ -23,7 +24,7 @@ namespace ShareInvest.Management
                     if (count > recent)
                         recent = count;
                 }
-                using StreamReader sr = new StreamReader(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\BasicMaterial\BackTesting\", recent, ".csv"));
+                using StreamReader sr = new StreamReader(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\BackTesting\", recent, ".csv"));
                 if (sr != null)
                     while (sr.EndOfStream == false)
                         assets = sr.ReadLine();

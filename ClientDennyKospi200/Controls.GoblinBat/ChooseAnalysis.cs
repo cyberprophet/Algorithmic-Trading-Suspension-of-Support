@@ -55,7 +55,7 @@ namespace ShareInvest.Controls
         {
             try
             {
-                foreach (string val in Directory.GetFiles(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\"), "*.csv", SearchOption.AllDirectories))
+                foreach (string val in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\"), "*.csv", SearchOption.AllDirectories))
                 {
                     arr = val.Split('\\');
                     arr = arr[arr.Length - 1].Split('.');
@@ -64,7 +64,7 @@ namespace ShareInvest.Controls
                     if (count > RecentDate)
                         RecentDate = count;
                 }
-                using StreamReader sr = new StreamReader(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", RecentDate.ToString(), ".csv"));
+                using StreamReader sr = new StreamReader(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", RecentDate.ToString(), ".csv"));
                 List<string> list = new List<string>(256);
 
                 if (sr != null)
