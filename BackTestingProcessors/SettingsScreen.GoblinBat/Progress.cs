@@ -29,6 +29,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             progressBar.Maximum = max;
             ProgressBarValue = 0;
+            timer.Interval = 15;
             timer.Start();
 
             return max;
@@ -42,6 +43,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 ProgressBarValue = 0;
             }
             progressBar.Value = ProgressBarValue;
+            Application.DoEvents();
         }
         private bool Swap
         {

@@ -11,6 +11,7 @@ namespace ShareInvest.Communication
         public IEnumerator GetEnumerator()
         {
             string[] arr;
+            int i = 0;
 
             try
             {
@@ -30,11 +31,22 @@ namespace ShareInvest.Communication
             }
             foreach (string file in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", RecentDate), "*.csv", SearchOption.AllDirectories))
             {
+                if (i++ > 5500)
+                {
+                    GC.Collect();
+                    i = 0;
+                }
+                Application.DoEvents();
                 arr = file.Split('\\');
                 arr = arr[arr.Length - 1].Split('.');
 
-                foreach (string val in ReadCSV(file, new List<string>()))
+                foreach (string val in ReadCSV(file, new List<string>(64)))
+                {
+                    if (val.Split(',').Length < 4)
+                        break;
+
                     yield return string.Concat(arr[0], ",", val);
+                }
             }
         }
         private List<string> ReadCSV(string file, List<string> list)

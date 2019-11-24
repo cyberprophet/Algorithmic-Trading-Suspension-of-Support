@@ -37,11 +37,11 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             set = new StrategySetting
             {
-                ShortTick = SetValue(asset.ShortTickPeriod - ran.Next(asset.ShortTickPeriod - 1), ran.Next(5, asset.ShortTickPeriod / 2), asset.ShortTickPeriod + ran.Next(asset.ShortTickPeriod)),
-                ShortDay = SetValue(asset.ShortDayPeriod - ran.Next(asset.ShortDayPeriod - 1), ran.Next(1, asset.ShortDayPeriod / 2), asset.ShortDayPeriod + ran.Next(asset.ShortDayPeriod)),
-                LongTick = SetValue(asset.LongTickPeriod - ran.Next(asset.LongTickPeriod - 1), ran.Next(5, asset.LongTickPeriod / 2), asset.LongTickPeriod + ran.Next(asset.LongTickPeriod)),
-                LongDay = SetValue(asset.LongDayPeriod - ran.Next(asset.LongDayPeriod - 1), ran.Next(1, asset.LongDayPeriod / 2), asset.LongDayPeriod + ran.Next(asset.LongDayPeriod)),
-                Reaction = SetValue(asset.Reaction - ran.Next(asset.Reaction - 10), ran.Next(1, 3), asset.Reaction + ran.Next(asset.Reaction)),
+                ShortTick = SetValue(asset.ShortTickPeriod < 50 ? 50 : ran.Next(50, asset.ShortTickPeriod - 1), ran.Next(5, asset.ShortTickPeriod), ran.Next(50, asset.ShortTickPeriod * 5)),
+                LongTick = SetValue(asset.LongTickPeriod < 300 ? 300 : ran.Next(300, asset.LongTickPeriod - 1), ran.Next(50, asset.LongTickPeriod), ran.Next(300, asset.LongTickPeriod * 5)),
+                ShortDay = SetValue(2, ran.Next(1, 5), ran.Next(2, asset.ShortDayPeriod)),
+                LongDay = SetValue(asset.LongDayPeriod < 5 ? 5 : ran.Next(asset.LongDayPeriod - 1), ran.Next(5, asset.LongDayPeriod), ran.Next(5, asset.LongDayPeriod * 5)),
+                Reaction = SetValue(ran.Next(15, 30), ran.Next(1, 3), ran.Next(30, 100)),
                 Hedge = SetValue(0, 1, ran.Next(1, 5)),
                 Capital = asset.Assets
             };
@@ -98,8 +98,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
             pro.Maximum = pro.Retry(SetMaximum());
             new Task(() => new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"))).Start();
 
-            if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", 0.015 * pro.Maximum / 60, " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)pro.Maximum).Equals((DialogResult)6))
-                Process.Start("Kospi200.exe");
+            if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", (int)(0.003 * pro.Maximum / 60), " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)(3 * pro.Maximum)).Equals((DialogResult)6))
+                Process.Start(string.Concat(Application.StartupPath, @"\Kospi200.exe"));
 
             SendMarket?.Invoke(this, new OpenMarket(0));
             Application.ExitThread();
@@ -180,8 +180,13 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 SetMarketTick();
 
             if (InterLink && pro.Maximum > pro.ProgressBarValue)
-                pro.ProgressBarValue++;
+            {
+                if (pro.Maximum - 20 > pro.ProgressBarValue)
+                    pro.ProgressBarValue += 17;
 
+                else if (pro.Maximum - 20 < pro.ProgressBarValue)
+                    pro.ProgressBarValue++;
+            }
             Application.DoEvents();
         }
         private int SetMaximum()
