@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 
 namespace ShareInvest.Communication
 {
@@ -13,7 +14,7 @@ namespace ShareInvest.Communication
 
             try
             {
-                foreach (string val in Directory.GetDirectories(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\")))
+                foreach (string val in Directory.GetDirectories(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\")))
                 {
                     arr = val.Split('\\');
                     int recent = int.Parse(arr[arr.Length - 1]);
@@ -27,7 +28,7 @@ namespace ShareInvest.Communication
                 TimerBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
                 Environment.Exit(0);
             }
-            foreach (string file in Directory.GetFiles(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\", RecentDate), "*.csv", SearchOption.AllDirectories))
+            foreach (string file in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", RecentDate), "*.csv", SearchOption.AllDirectories))
             {
                 arr = file.Split('\\');
                 arr = arr[arr.Length - 1].Split('.');

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Windows.Forms;
 using ShareInvest.Communication;
 
 namespace ShareInvest.AssetManagement
@@ -58,7 +59,7 @@ namespace ShareInvest.AssetManagement
 
             try
             {
-                foreach (string val in Directory.GetFiles(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\BasicMaterial\Trading\"), "*.csv", SearchOption.AllDirectories))
+                foreach (string val in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\Trading\"), "*.csv", SearchOption.AllDirectories))
                 {
                     temp = val.Split('\\');
                     temp = temp[temp.Length - 1].Split('.');
@@ -67,7 +68,7 @@ namespace ShareInvest.AssetManagement
                     if (count > recent)
                         recent = count;
                 }
-                using StreamReader sr = new StreamReader(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\BasicMaterial\Trading\", recent, ".csv"));
+                using StreamReader sr = new StreamReader(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\Trading\", recent, ".csv"));
                 if (sr != null)
                     while (sr.EndOfStream == false)
                         assets = sr.ReadLine();

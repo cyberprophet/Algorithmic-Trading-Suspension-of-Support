@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using ShareInvest.Communication;
 
 namespace ShareInvest.Information
@@ -29,7 +30,7 @@ namespace ShareInvest.Information
         {
             Account = account;
             BasicAssets = assets;
-            new Task(() => Save(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\BasicMaterial\BackTesting\"))).Start();
+            new Task(() => Save(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\BackTesting\"))).Start();
         }
         public string Account
         {

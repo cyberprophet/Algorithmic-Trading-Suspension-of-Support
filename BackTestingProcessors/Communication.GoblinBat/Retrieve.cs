@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 
 namespace ShareInvest.Communication
 {
@@ -24,8 +25,8 @@ namespace ShareInvest.Communication
         }
         private Retrieve()
         {
-            DayChart = ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\"), "*.csv", SearchOption.AllDirectories), o => o.Contains("Day")), DayChart);
-            TickChart = ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\"), "*.csv", SearchOption.AllDirectories), o => o.Contains("Tick")), TickChart);
+            DayChart = ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Application.StartupPath, @"..\"), "*.csv", SearchOption.AllDirectories), o => o.Contains("Day")), DayChart);
+            TickChart = ReadCSV(Array.Find(Directory.GetFiles(Path.Combine(Application.StartupPath, @"..\"), "*.csv", SearchOption.AllDirectories), o => o.Contains("Tick")), TickChart);
         }
         public static Retrieve Get()
         {

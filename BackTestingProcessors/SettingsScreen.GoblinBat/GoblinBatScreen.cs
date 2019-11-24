@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -56,7 +55,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             checkBox.ForeColor = Color.DarkRed;
             checkBox.Text = "BackTesting";
             new Transmit(asset.Account, set.Capital);
-            string path = string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
+            string path = string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
             IOptions options = new Options();
             timerStorage.Start();
 
@@ -97,9 +96,9 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             InterLink = true;
             pro.Maximum = pro.Retry(SetMaximum());
-            new Task(() => new Storage(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"))).Start();
+            new Task(() => new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"))).Start();
 
-            if (TimerBox.Show("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter 5 Minutes the Program is Terminated.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 332735).Equals((DialogResult)6))
+            if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", 0.015 * pro.Maximum / 60, " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)pro.Maximum).Equals((DialogResult)6))
                 Process.Start("Kospi200.exe");
 
             SendMarket?.Invoke(this, new OpenMarket(0));
@@ -192,7 +191,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
 
             try
             {
-                foreach (string val in Directory.GetDirectories(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\")))
+                foreach (string val in Directory.GetDirectories(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\")))
                 {
                     temp = val.Split('\\');
                     int recent = int.Parse(temp[temp.Length - 1]);
@@ -207,7 +206,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 TimerBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
                 Environment.Exit(0);
             }
-            return Directory.GetFiles(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Log\", date), "*.csv", SearchOption.AllDirectories).Length;
+            return Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", date), "*.csv", SearchOption.AllDirectories).Length;
         }
         private bool CheckCurrent
         {

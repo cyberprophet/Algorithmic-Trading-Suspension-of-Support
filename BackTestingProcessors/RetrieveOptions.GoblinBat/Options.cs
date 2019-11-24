@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Windows.Forms;
 
 namespace ShareInvest.RetrieveOptions
 {
@@ -16,7 +17,7 @@ namespace ShareInvest.RetrieveOptions
             temp = new Dictionary<string, Dictionary<string, double>>(512);
             Repository = new Dictionary<string, Dictionary<string, Dictionary<string, double>>>(512);
 
-            foreach (string file in Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, @"..\Chart\"), "*.csv", SearchOption.AllDirectories))
+            foreach (string file in Directory.GetFiles(Path.Combine(Application.StartupPath, @"..\Chart\"), "*.csv", SearchOption.AllDirectories))
                 if (!file.Contains("Day") && !file.Contains("Tick"))
                     ReadCSV(file);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace ShareInvest.Communication
 {
@@ -71,7 +72,7 @@ namespace ShareInvest.Communication
         {
             try
             {
-                DirectoryInfo di = new DirectoryInfo(string.Concat(Path.Combine(Environment.CurrentDirectory, @"..\"), @"\Statistics\"));
+                DirectoryInfo di = new DirectoryInfo(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\"));
 
                 if (di.Exists == false)
                     di.Create();
