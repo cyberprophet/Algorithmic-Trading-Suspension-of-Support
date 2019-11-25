@@ -37,10 +37,10 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             set = new StrategySetting
             {
-                ShortTick = SetValue(asset.ShortTickPeriod < 50 ? 50 : ran.Next(50, asset.ShortTickPeriod - 1), ran.Next(5, asset.ShortTickPeriod), ran.Next(50, asset.ShortTickPeriod * 5)),
-                LongTick = SetValue(asset.LongTickPeriod < 300 ? 300 : ran.Next(300, asset.LongTickPeriod - 1), ran.Next(50, asset.LongTickPeriod), ran.Next(300, asset.LongTickPeriod * 5)),
+                ShortTick = SetValue(asset.ShortTickPeriod < 50 ? 50 : ran.Next(50, asset.ShortTickPeriod), ran.Next(5, asset.ShortTickPeriod), ran.Next(100, asset.ShortTickPeriod * 5)),
+                LongTick = SetValue(asset.LongTickPeriod < 300 ? 300 : ran.Next(300, asset.LongTickPeriod), ran.Next(50, asset.LongTickPeriod), ran.Next(500, asset.LongTickPeriod * 5)),
                 ShortDay = SetValue(2, ran.Next(1, 5), ran.Next(2, asset.ShortDayPeriod)),
-                LongDay = SetValue(asset.LongDayPeriod < 5 ? 5 : ran.Next(asset.LongDayPeriod - 1), ran.Next(5, asset.LongDayPeriod), ran.Next(5, asset.LongDayPeriod * 5)),
+                LongDay = SetValue(asset.LongDayPeriod < 5 ? 5 : ran.Next(5, asset.LongDayPeriod), ran.Next(5, asset.LongDayPeriod), ran.Next(20, asset.LongDayPeriod * 5)),
                 Reaction = SetValue(ran.Next(15, 30), ran.Next(1, 3), ran.Next(30, 100)),
                 Hedge = SetValue(0, 1, ran.Next(1, 5)),
                 Capital = asset.Assets
@@ -57,7 +57,9 @@ namespace ShareInvest.BackTesting.SettingsScreen
             new Transmit(asset.Account, set.Capital);
             string path = string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
             IOptions options = new Options();
+            timerStorage.Interval = 71315;
             timerStorage.Start();
+            GC.Collect();
 
             foreach (int hedge in set.Hedge)
                 foreach (int reaction in set.Reaction)
@@ -184,7 +186,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 if (pro.Maximum - 20 > pro.ProgressBarValue)
                     pro.ProgressBarValue += 17;
 
-                else if (pro.Maximum - 20 < pro.ProgressBarValue)
+                else if (pro.Maximum > pro.ProgressBarValue)
                     pro.ProgressBarValue++;
             }
             Application.DoEvents();
@@ -193,6 +195,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             string[] temp;
             int date = 0;
+            TimerBox.Show("Save the Analysis.\n\nThis Last Step takes about 5 to 15 Minutes.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information, 183572);
 
             try
             {

@@ -33,10 +33,10 @@ namespace ShareInvest.Communication
             {
                 if (i++ > 5500)
                 {
+                    Application.DoEvents();
                     GC.Collect();
                     i = 0;
                 }
-                Application.DoEvents();
                 arr = file.Split('\\');
                 arr = arr[arr.Length - 1].Split('.');
 
@@ -47,6 +47,7 @@ namespace ShareInvest.Communication
 
                     yield return string.Concat(arr[0], ",", val);
                 }
+                Application.DoEvents();
             }
         }
         private List<string> ReadCSV(string file, List<string> list)

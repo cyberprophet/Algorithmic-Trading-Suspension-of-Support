@@ -19,7 +19,10 @@ namespace ShareInvest.RetrieveOptions
 
             foreach (string file in Directory.GetFiles(Path.Combine(Application.StartupPath, @"..\Chart\"), "*.csv", SearchOption.AllDirectories))
                 if (!file.Contains("Day") && !file.Contains("Tick"))
+                {
                     ReadCSV(file);
+                    Count++;
+                }            
         }
         private void ReadCSV(string file)
         {
@@ -66,7 +69,16 @@ namespace ShareInvest.RetrieveOptions
                 { e.Date, e.Price }
             };
             Code = e.Code;
-            GC.Collect();
+
+            if (Count > 10)
+            {
+                GC.Collect();
+                Count = 0;
+            }
+        }
+        private int Count
+        {
+            get; set;
         }
         private string Code
         {
