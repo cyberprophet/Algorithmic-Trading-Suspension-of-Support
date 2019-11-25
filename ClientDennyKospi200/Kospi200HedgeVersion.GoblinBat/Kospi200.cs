@@ -152,7 +152,7 @@ namespace ShareInvest.Kospi200HedgeVersion
                 server.ForeColor = Color.Ivory;
                 account.ForeColor = Color.Ivory;
                 id.ForeColor = Color.Ivory;
-                timer.Interval = 9531;
+                timer.Interval = 19531;
                 timer.Start();
 
                 return;
@@ -165,6 +165,12 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             ConnectAPI api = ConnectAPI.Get();
             api.LookUpTheDeposit(account.Text, api.OnReceiveBalance);
+
+            if (DateTime.Now.Hour > 14 && DateTime.Now.Minute > 44)
+            {
+                timer.Stop();
+                timer.Dispose();
+            }
         }
         private long Deposit
         {

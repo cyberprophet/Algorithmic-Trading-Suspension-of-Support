@@ -75,6 +75,10 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
+        public bool Remaining
+        {
+            get; private set;
+        }
         public bool OnReceiveBalance
         {
             get; set;
@@ -107,6 +111,9 @@ namespace ShareInvest.OpenAPI
         {
             Code[Squence++] = string.Concat(code, ";", param[72], ";", param[63], ";", param[45]);
             SendConfirm?.Invoke(this, new Identify(string.Concat(param[72], "\nis Receiving Data for Trading.")));
+
+            if (code.Contains("101") && param[63].Equals(DateTime.Now.ToString("yyyyMMdd")))
+                Remaining = true;
         }
         private void Request(string code)
         {

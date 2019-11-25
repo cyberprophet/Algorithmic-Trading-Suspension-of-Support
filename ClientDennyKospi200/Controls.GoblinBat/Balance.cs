@@ -20,7 +20,7 @@ namespace ShareInvest.Controls
         public void OnReceiveLiquidate(object sender, Liquidate e)
         {
             EnCash++;
-            OrderType = e.EnCash.SlbyTP.Equals("1") ? "C" : "P";
+            OrderType = e.EnCash.SlbyTP.Equals("1") ? "201" : "301";
         }
         private void OnReceiveBalance(object sender, Holding e)
         {
@@ -31,21 +31,23 @@ namespace ShareInvest.Controls
                 string code = string.Empty;
 
                 foreach (string en in e.Hold)
-                    if (en.Length > 0)
+                {
+                    if (en.Equals(string.Empty))
+                        break;
+
+                    string[] temp = en.Split(';');
+
+                    if (temp[0].Length > 0 && (temp[0].Substring(0, 3).Equals("101") || temp[0].Substring(0, 3).Equals(OrderType)))
+                        continue;
+
+                    int close = int.Parse(temp[5]);
+
+                    if (close > price)
                     {
-                        string[] temp = en.Split(';');
-
-                        if (temp[0].Substring(0, 3).Equals("101") || temp[1].Substring(0, 1).Equals(OrderType))
-                            continue;
-
-                        int close = int.Parse(temp[5]);
-
-                        if (close > price)
-                        {
-                            code = temp[0];
-                            price = close;
-                        }
+                        code = temp[0];
+                        price = close;
                     }
+                }
                 if (price > 0)
                     api.OnReceiveOrder(new PurchaseInformation
                     {
@@ -65,38 +67,35 @@ namespace ShareInvest.Controls
                 string[] arr = new string[7];
                 int i = 0;
 
-                if (info.Length > 0)
+                foreach (string val in info.Split(';'))
                 {
-                    foreach (string val in info.Split(';'))
+                    if (val.Equals(string.Empty))
+                        break;
+
+                    switch (i)
                     {
-                        if (val.Equals(string.Empty))
+                        case 0:
+                        case 1:
+                            arr[i++] = val;
                             break;
 
-                        switch (i)
-                        {
-                            case 0:
-                            case 1:
-                                arr[i++] = val;
-                                break;
+                        case 2:
+                            arr[i++] = val.Equals("1") ? "매도" : "매수";
+                            break;
 
-                            case 2:
-                                arr[i++] = val.Equals("1") ? "매도" : "매수";
-                                break;
+                        case 3:
+                        case 6:
+                            arr[i++] = int.Parse(val).ToString("N0");
+                            break;
 
-                            case 3:
-                            case 6:
-                                arr[i++] = int.Parse(val).ToString("N0");
-                                break;
-
-                            case 4:
-                            case 5:
-                                arr[i++] = (double.Parse(val) / 100).ToString("N2");
-                                break;
-                        }
+                        case 4:
+                        case 5:
+                            arr[i++] = (double.Parse(val) / 100).ToString("N2");
+                            break;
                     }
-                    if (arr[0] != null)
-                        balGrid.Rows.Add(arr);
                 }
+                if (arr[0] != null)
+                    balGrid.Rows.Add(arr);
             }
             if (balGrid.Rows.Count > 0)
             {

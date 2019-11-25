@@ -39,6 +39,9 @@ namespace ShareInvest.Analysize
         }
         public void SetDeposit(IAccount account)
         {
+            if (this.account.BasicAssets > account.BasicAssets)
+                new BasicMaterial(account, st);
+
             this.account = account;
         }
         private double Max(double price)

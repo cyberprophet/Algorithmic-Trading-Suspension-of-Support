@@ -43,6 +43,7 @@ namespace ShareInvest.Basic
         }
         public BasicMaterial(IAccount account, IStatistics statistics)
         {
+            new Task(() => Save(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\Trading\"))).Start();
             AccNo = account.AccNo;
             BasicAssets = account.BasicAssets;
             ShortDayPeriod = statistics.ShortDayPeriod;
@@ -51,7 +52,6 @@ namespace ShareInvest.Basic
             LongTickPeriod = statistics.LongTickPeriod;
             Reaction = statistics.Reaction;
             HedgeType = statistics.HedgeType;
-            new Task(() => Save(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\Trading\"))).Start();
         }
         private void Save(string path)
         {

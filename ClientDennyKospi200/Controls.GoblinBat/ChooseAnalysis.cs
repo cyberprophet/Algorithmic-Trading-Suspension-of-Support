@@ -113,7 +113,7 @@ namespace ShareInvest.Controls
                 if (i < 1)
                     FindBest(ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1, kv.Value, kv.Key);
 
-                string.Concat(ip.FindByName, i++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " Day", (kv.Value / Assets / (ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1)).ToString("P"));
+                string.Concat(ip.FindByName, i++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " Day", (kv.Value / Assets / (ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1)).ToString("P3"));
             }
         }
         private void FindBest(int denominator, long molecule, string key)
@@ -150,7 +150,8 @@ namespace ShareInvest.Controls
             new MakeUpRecentDate(),
             new MakeUpWeekly(),
             new MakeUpBiweekly(),
-            new MakeUpMonthly()
+            new MakeUpMonthly(),
+            new MakeUpFor3Months()
         };
         public event EventHandler<DialogClose> SendClose;
     }
