@@ -7,7 +7,6 @@ using System.Windows.Forms;
 using ShareInvest.BackTesting.Analysis;
 using ShareInvest.Communication;
 using ShareInvest.Information;
-using ShareInvest.Market;
 using ShareInvest.RetrieveOptions;
 
 namespace ShareInvest.BackTesting.SettingsScreen
@@ -90,6 +89,9 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                             Strategy = string.Concat(sDay.ToString("D2"), '^', sTick.ToString("D2"), '^', lDay.ToString("D2"), '^', lTick.ToString("D2"), '^', reaction.ToString("D2"), '^', hedge.ToString("D2"))
                                         });
                                         pro.ProgressBarValue++;
+
+                                        if (Max <= pro.ProgressBarValue && InterLink == false)
+                                            SetMarketTick();
                                     }).Start();
                                     Application.DoEvents();
                                 }
@@ -97,13 +99,15 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private void SetMarketTick()
         {
             InterLink = true;
-            pro.Maximum = pro.Retry(SetMaximum());
+            TimerBox.Show("Save the Analysis.\n\nThis Last Step takes about 5 to 15 Minutes.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)Max);
+            pro.Maximum = SetMaximum();
+            GC.Collect();
+            pro.Retry();
             new Task(() => new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"))).Start();
 
             if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", (int)(0.003 * pro.Maximum / 60), " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)(3 * pro.Maximum)).Equals((DialogResult)6))
                 Process.Start(string.Concat(Application.StartupPath, @"\Kospi200.exe"));
 
-            SendMarket?.Invoke(this, new OpenMarket(0));
             Application.ExitThread();
             Application.Exit();
         }
@@ -135,13 +139,18 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 checkBox.ForeColor = Color.Ivory;
                 checkBox.Text = "Process";
             }
+            if (CheckCurrent && checkBox.Text.Equals("Interrupt") && pro.ProgressBarValue > Max && InterLink == false)
+                SetMarketTick();
+
+            if (CheckCurrent)
+                checkBox.Text = "Interrupt";
         }
         private void ButtonClick(object sender, EventArgs e)
         {
             if (CheckCurrent && button.ForeColor.Equals(Color.Gold))
                 StartBackTesting(set);
 
-            else if (button.ForeColor.Equals(Color.Ivory) && TimerBox.Show("Do You Want to Store Only Existing Data\nWithout Back Testing?\n\nIf Not Selected,\nIt will be Saved after 30 Seconds and the Program will Exit.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
+            else if (InterLink == false && button.ForeColor.Equals(Color.Ivory) && TimerBox.Show("Do You Want to Store Only Existing Data\nWithout Back Testing?\n\nIf Not Selected,\nIt will be Saved after 30 Seconds and the Program will Exit.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
             {
                 timerStorage.Start();
                 SetMarketTick();
@@ -178,7 +187,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private void TimerStorageTick(object sender, EventArgs e)
         {
-            if (Max.Equals(pro.ProgressBarValue) && InterLink == false)
+            if (Max <= pro.ProgressBarValue && InterLink == false)
                 SetMarketTick();
 
             if (InterLink && pro.Maximum > pro.ProgressBarValue)
@@ -195,7 +204,6 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             string[] temp;
             int date = 0;
-            TimerBox.Show("Save the Analysis.\n\nThis Last Step takes about 5 to 15 Minutes.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information, 183572);
 
             try
             {
@@ -235,6 +243,5 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private IStrategySetting set;
         private readonly IAsset asset;
         private readonly Random ran;
-        public event EventHandler<OpenMarket> SendMarket;
     }
 }
