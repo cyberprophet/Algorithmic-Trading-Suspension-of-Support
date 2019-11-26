@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.C2010;
 using ShareInvest.C2012;
+using ShareInvest.Control;
+using ShareInvest.EventHandler;
 using ShareInvest.Guide;
 using ShareInvest.NetFramework;
 using ShareInvest.OpenAPI;
@@ -55,23 +57,58 @@ namespace ShareInvest.Install
             {
                 SuspendLayout();
                 tableLayoutPanel.Hide();
+                GetTermsAndConditions();
                 WindowState = FormWindowState.Minimized;
-                using GoblinBat gb = new GoblinBat();
-                Controls.Add(gb);
-                SetVisibleCore(false);
-                gb.Dock = DockStyle.Fill;
-                WindowState = FormWindowState.Maximized;
-                Opacity = 0.95;
-                ResumeLayout();
+                Controls.Clear();
 
-                if (DialogResult.OK.Equals(MessageBox.Show("The Installation is Complete.\n\nPlease Register Your OpenAPI.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1)))
-                    ShowDialog();
+                return;
+            }
+        }
+        private void GetControls(GoblinBat gb)
+        {
+            Controls.Clear();
+            Controls.Add(gb);
+            gb.Dock = DockStyle.Fill;
+            WindowState = FormWindowState.Maximized;
+            Opacity = 0.95;
+            ResumeLayout();
 
+            if (DialogResult.OK.Equals(MessageBox.Show("The Installation is Complete.\n\nPlease Register Your OpenAPI.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1)))
+            {
+                FormBorderStyle = FormBorderStyle.Fixed3D;
+                Show();
+            }
+            else
+            {
                 Close();
                 Dispose();
                 Application.Exit();
-
-                return;
+            }
+        }
+        private void GetTermsAndConditions()
+        {
+            using TermsConditions tc = new TermsConditions();
+            Controls.Add(tc);
+            tc.Dock = DockStyle.Fill;
+            Size = tc.Size;
+            StartPosition = FormStartPosition.CenterScreen;
+            tc.SendQuit += OnReceiveDialogClose;
+            SetVisibleCore(false);
+            ResumeLayout();
+            ShowDialog();
+            tc.SendQuit -= OnReceiveDialogClose;
+        }
+        private void OnReceiveDialogClose(object sender, ForceQuit e)
+        {
+            try
+            {
+                SuspendLayout();
+                GetControls(new GoblinBat());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Application.Restart();
             }
         }
     }
