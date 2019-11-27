@@ -22,7 +22,7 @@ namespace ShareInvest.RetrieveOptions
                 {
                     ReadCSV(file);
                     Count++;
-                }            
+                }
         }
         private void ReadCSV(string file)
         {
@@ -35,7 +35,8 @@ namespace ShareInvest.RetrieveOptions
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                Environment.Exit(0);
             }
         }
         private void OnReceiveOptions(OptionsRepository e)
