@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ShareInvest.Log.Message;
 
 namespace ShareInvest.Information
 {
@@ -21,6 +22,7 @@ namespace ShareInvest.Information
             }
             catch (Exception ex)
             {
+                new LogMessage().Record("Exception", ex.ToString());
                 MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }

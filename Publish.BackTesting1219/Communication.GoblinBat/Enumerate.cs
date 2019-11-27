@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using ShareInvest.Log.Message;
 
 namespace ShareInvest.Communication
 {
@@ -12,6 +13,7 @@ namespace ShareInvest.Communication
         {
             string[] arr;
             int i = 0;
+            GC.Collect();
 
             try
             {
@@ -23,15 +25,17 @@ namespace ShareInvest.Communication
                     if (recent > RecentDate)
                         RecentDate = recent;
                 }
+                GC.Collect();
             }
             catch (Exception ex)
             {
+                new LogMessage().Record("Exception", ex.ToString());
                 MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
             foreach (string file in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", RecentDate), "*.csv", SearchOption.AllDirectories))
             {
-                if (i++ > 5500)
+                if (i++ > 2500)
                 {
                     Application.DoEvents();
                     GC.Collect();
@@ -61,6 +65,7 @@ namespace ShareInvest.Communication
             }
             catch (Exception ex)
             {
+                new LogMessage().Record("Exception", ex.ToString());
                 MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }

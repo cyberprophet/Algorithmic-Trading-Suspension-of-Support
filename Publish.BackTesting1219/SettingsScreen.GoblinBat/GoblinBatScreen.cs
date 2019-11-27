@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using ShareInvest.BackTesting.Analysis;
 using ShareInvest.Communication;
 using ShareInvest.Information;
+using ShareInvest.Log.Message;
 using ShareInvest.RetrieveOptions;
 
 namespace ShareInvest.BackTesting.SettingsScreen
@@ -99,7 +100,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             pro.Maximum = SetMaximum();
             GC.Collect();
             pro.Retry();
-            new Task(() => new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), ".csv"))).Start();
+            new Task(() => new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Ticks, ".csv"))).Start();
 
             if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", (int)(0.003 * pro.Maximum / 60), " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)(3 * pro.Maximum)).Equals((DialogResult)6))
                 Process.Start(string.Concat(Application.StartupPath, @"\Kospi200.exe"));
@@ -209,6 +210,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             }
             catch (Exception ex)
             {
+                new LogMessage().Record("Exception", ex.ToString());
                 MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
