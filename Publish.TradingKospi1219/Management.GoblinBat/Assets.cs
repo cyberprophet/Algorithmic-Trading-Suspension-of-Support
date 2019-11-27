@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Windows.Forms;
-using ShareInvest.TimerMessageBox;
+using ShareInvest.Log.Message;
 
 namespace ShareInvest.Management
 {
@@ -31,7 +31,8 @@ namespace ShareInvest.Management
             }
             catch (Exception ex)
             {
-                TimerBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                new LogMessage().Record("Error", ex.ToString());
+                MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
             return assets;

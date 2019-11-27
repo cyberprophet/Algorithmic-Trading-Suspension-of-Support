@@ -2,8 +2,8 @@
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ShareInvest.AutoMessageBox;
 using ShareInvest.Interface;
+using ShareInvest.Log.Message;
 
 namespace ShareInvest.Basic
 {
@@ -67,7 +67,8 @@ namespace ShareInvest.Basic
             }
             catch (Exception ex)
             {
-                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                new LogMessage().Record("Error", ex.ToString());
+                MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
         }

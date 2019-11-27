@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using ShareInvest.AutoMessageBox;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 using ShareInvest.Basic;
 using ShareInvest.Const;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 using ShareInvest.FindbyOptionsCode;
 using ShareInvest.Interface;
+using ShareInvest.Log.Message;
 using ShareInvest.OpenAPI;
 using ShareInvest.RetrieveInformation;
 using ShareInvest.SecondaryIndicators;
@@ -92,6 +94,8 @@ namespace ShareInvest.Analysize
                         Qty = Math.Abs(quantity)
                     });
                 }
+                new Task(() => new LogMessage().Record("Order", string.Concat(DateTime.Now.ToLongTimeString(), "\n", e.Time, "\n", e.Price, "\n", code, "\n", temp)));
+
                 return;
             }
             if (api != null && Math.Abs(api.Quantity) > Max(e.Price) && api.OnReceiveBalance)
@@ -160,7 +164,8 @@ namespace ShareInvest.Analysize
             }
             catch (Exception ex)
             {
-                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                new LogMessage().Record("Error", ex.ToString());
+                MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
         }

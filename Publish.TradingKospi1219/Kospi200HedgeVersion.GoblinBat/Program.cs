@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
 
 namespace ShareInvest.Kospi200HedgeVersion
@@ -8,9 +10,31 @@ namespace ShareInvest.Kospi200HedgeVersion
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Kospi200());
+            string[] temp;
+
+            foreach (string file in Directory.GetFiles(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "*.lnk", SearchOption.TopDirectoryOnly))
+            {
+                temp = file.Split('\\');
+                temp = temp[temp.Length - 1].Split('.');
+
+                if (temp[0].Equals("Kospi200"))
+                    Operation = true;
+            }
+            if (Operation)
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.Run(new Kospi200());
+
+                return;
+            }
+            MessageBox.Show("You didn't Agree to the 'GoblinBat' program\nTerms and Conditions.\n\nAccept the Terms and Conditions\non the Installation Screen.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Process.Start(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Install.exe"));
+            Application.Exit();
+        }
+        static bool Operation
+        {
+            get; set;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ShareInvest.Analysize;
 using ShareInvest.Const;
@@ -15,25 +16,33 @@ namespace ShareInvest.Kospi200HedgeVersion
 {
     public partial class Kospi200 : Form
     {
+        [DllImport("user32.dll")]
+        public static extern IntPtr SendMessageW(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
         public Kospi200()
         {
             InitializeComponent();
-            ChooseStrategy(new ChooseAnalysis(), new SelectStrategies());
+            SuspendLayout();
+            SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
+            ChooseStrategy(new GuideGoblinBat(), new ChooseAnalysis(), new SelectStrategies());
             Dispose();
             Environment.Exit(0);
         }
-        private void ChooseStrategy(ChooseAnalysis analysis, SelectStrategies strategy)
+        private void ChooseStrategy(GuideGoblinBat guide, ChooseAnalysis analysis, SelectStrategies strategy)
         {
             analysis.SendClose += strategy.OnReceiveClose;
             strategy.OnReceiveClose(analysis.Key.Split('^'));
             splitContainerStrategy.Panel1.Controls.Add(analysis);
             splitContainerStrategy.Panel2.Controls.Add(strategy);
+            splitContainerGuide.Panel1.Controls.Add(guide);
             analysis.Dock = DockStyle.Fill;
             strategy.Dock = DockStyle.Fill;
+            guide.Dock = DockStyle.Fill;
             Size = new Size(1650, 920);
             splitContainerStrategy.SplitterDistance = 287;
             splitContainerStrategy.BackColor = Color.FromArgb(121, 133, 130);
+            splitContainerGuide.Panel1.BackColor = Color.FromArgb(121, 133, 130);
             strategy.SendClose += OnReceiveClose;
+            ResumeLayout();
             ShowDialog();
         }
         private void StartTrading(Balance bal, ConfirmOrder order, AccountSelection account, ConnectKHOpenAPI api)
@@ -143,6 +152,19 @@ namespace ShareInvest.Kospi200HedgeVersion
             Size = new Size(FormSizes[tabControl.SelectedIndex, 0], FormSizes[tabControl.SelectedIndex, 1]);
             splitContainerBalance.AutoScaleMode = AutoScaleMode.Font;
             CenterToScreen();
+
+            if (tabControl.SelectedIndex.Equals(3))
+            {
+                webBrowser.Navigate(@"https://sharecompany.tistory.com/guestbook");
+                splitContainerGuide.Panel2.BackColor = Color.FromArgb(118, 130, 127);
+                SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_UP);
+                webBrowser.Hide();
+
+                return;
+            }
+            SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_DOWN);
+            webBrowser.Navigate(@"https://youtu.be/d1MQsMr4pxQ");
+            SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
         }
         private void ServerCheckedChanged(object sender, EventArgs e)
         {
@@ -195,8 +217,13 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             { 1650, 920 },
             { 750, 370 },
-            { 594, 315 }
+            { 594, 315 },
+            { 405, 450 }
         };
+        private const int APPCOMMAND_VOLUME_MUTE = 0x80000;
+        private const int APPCOMMAND_VOLUME_UP = 0xA0000;
+        private const int APPCOMMAND_VOLUME_DOWN = 0x90000;
+        private const int WM_APPCOMMAND = 0x319;
         private Strategy strategy;
     }
 }

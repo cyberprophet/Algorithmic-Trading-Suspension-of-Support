@@ -10,6 +10,7 @@ using ShareInvest.Const;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
 using ShareInvest.Interface;
+using ShareInvest.Log.Message;
 using ShareInvest.Management;
 
 namespace ShareInvest.Controls
@@ -59,7 +60,7 @@ namespace ShareInvest.Controls
                 {
                     arr = val.Split('\\');
                     arr = arr[arr.Length - 1].Split('.');
-                    int count = int.Parse(arr[0]);
+                    long count = long.Parse(arr[0]);
 
                     if (count > RecentDate)
                         RecentDate = count;
@@ -78,7 +79,8 @@ namespace ShareInvest.Controls
             }
             catch (Exception ex)
             {
-                Box.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                new LogMessage().Record("Error", ex.ToString());
+                MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
             return string.Empty;
@@ -126,7 +128,7 @@ namespace ShareInvest.Controls
                 Key = key;
             }
         }
-        private int RecentDate
+        private long RecentDate
         {
             get; set;
         }

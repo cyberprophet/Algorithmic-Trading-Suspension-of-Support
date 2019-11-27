@@ -277,7 +277,6 @@ namespace ShareInvest.OpenAPI
 
             if (e.sGubun.Equals("4"))
             {
-                LookUpTheDeposit(Account, OnReceiveBalance);
                 string[] param = sb.ToString().Split(';');
 
                 if (param[1].Substring(0, 3).Equals("101"))
@@ -288,7 +287,7 @@ namespace ShareInvest.OpenAPI
                 return;
             }
             if (e.sGubun.Equals("0"))
-                OnReceiveBalance = GetConclusion(sb.ToString().Split(';'));
+                LookUpTheDeposit(Account, OnReceiveBalance = GetConclusion(sb.ToString().Split(';')));
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
