@@ -26,7 +26,7 @@ namespace ShareInvest.Communication
             }
             catch (Exception ex)
             {
-                TimerBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
             foreach (string file in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", RecentDate), "*.csv", SearchOption.AllDirectories))
@@ -61,7 +61,7 @@ namespace ShareInvest.Communication
             }
             catch (Exception ex)
             {
-                TimerBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
             return list;

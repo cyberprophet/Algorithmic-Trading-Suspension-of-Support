@@ -56,8 +56,6 @@ namespace ShareInvest.BackTesting.SettingsScreen
             new Transmit(asset.Account, set.Capital);
             string path = string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
             IOptions options = new Options();
-            timerStorage.Interval = 71315;
-            timerStorage.Start();
             GC.Collect();
 
             foreach (int hedge in set.Hedge)
@@ -88,9 +86,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                             PathLog = path,
                                             Strategy = string.Concat(sDay.ToString("D2"), '^', sTick.ToString("D2"), '^', lDay.ToString("D2"), '^', lTick.ToString("D2"), '^', reaction.ToString("D2"), '^', hedge.ToString("D2"))
                                         });
-                                        pro.ProgressBarValue++;
-
-                                        if (Max <= pro.ProgressBarValue && InterLink == false)
+                                        if (Max <= ++pro.ProgressBarValue && InterLink == false)
                                             SetMarketTick();
                                     }).Start();
                                     Application.DoEvents();
@@ -151,10 +147,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 StartBackTesting(set);
 
             else if (InterLink == false && button.ForeColor.Equals(Color.Ivory) && TimerBox.Show("Do You Want to Store Only Existing Data\nWithout Back Testing?\n\nIf Not Selected,\nIt will be Saved after 30 Seconds and the Program will Exit.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
-            {
-                timerStorage.Start();
                 SetMarketTick();
-            }
+
             else if (button.ForeColor.Equals(Color.Maroon))
                 button.Text = string.Concat(((Max - pro.ProgressBarValue) / 155).ToString("N0"), " Minutes left to Complete.");
         }
@@ -187,17 +181,12 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private void TimerStorageTick(object sender, EventArgs e)
         {
-            if (Max <= pro.ProgressBarValue && InterLink == false)
-                SetMarketTick();
+            if (InterLink && pro.Maximum - 20 > pro.ProgressBarValue)
+                pro.ProgressBarValue += 17;
 
-            if (InterLink && pro.Maximum > pro.ProgressBarValue)
-            {
-                if (pro.Maximum - 20 > pro.ProgressBarValue)
-                    pro.ProgressBarValue += 17;
+            else if (InterLink && pro.Maximum > pro.ProgressBarValue)
+                pro.ProgressBarValue++;
 
-                else if (pro.Maximum > pro.ProgressBarValue)
-                    pro.ProgressBarValue++;
-            }
             Application.DoEvents();
         }
         private int SetMaximum()
@@ -216,10 +205,11 @@ namespace ShareInvest.BackTesting.SettingsScreen
                         date = recent;
                 }
                 timerStorage.Interval = 15;
+                timerStorage.Start();
             }
             catch (Exception ex)
             {
-                TimerBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", 3750);
+                MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
             return Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", date), "*.csv", SearchOption.AllDirectories).Length;
