@@ -154,17 +154,21 @@ namespace ShareInvest.Kospi200HedgeVersion
             CenterToScreen();
 
             if (tabControl.SelectedIndex.Equals(3))
-            {
-                webBrowser.Navigate(@"https://sharecompany.tistory.com/guestbook");
-                splitContainerGuide.Panel2.BackColor = Color.FromArgb(118, 130, 127);
-                SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_UP);
-                webBrowser.Hide();
+                BeginInvoke(new Action(() =>
+                {
+                    webBrowser.Navigate(@"https://sharecompany.tistory.com/guestbook");
+                    splitContainerGuide.Panel2.BackColor = Color.FromArgb(118, 130, 127);
+                    SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_UP);
+                    webBrowser.Hide();
+                }));
 
-                return;
-            }
-            SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_DOWN);
-            webBrowser.Navigate(@"https://youtu.be/d1MQsMr4pxQ");
-            SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
+            else if (tabControl.SelectedIndex.Equals(1))
+                BeginInvoke(new Action(() =>
+                {
+                    SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_DOWN);
+                    webBrowser.Navigate(@"https://youtu.be/d1MQsMr4pxQ");
+                    SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
+                }));
         }
         private void ServerCheckedChanged(object sender, EventArgs e)
         {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Basic;
 using ShareInvest.Const;
@@ -70,6 +69,7 @@ namespace ShareInvest.Analysize
                 api.OnReceiveBalance = false;
                 double temp = 0;
                 string code = string.Empty;
+                new LogMessage().Record("Order", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price));
 
                 if (api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0)
                 {
@@ -93,22 +93,26 @@ namespace ShareInvest.Analysize
                         Price = string.Empty,
                         Qty = Math.Abs(quantity)
                     });
+                    new LogMessage().Record("Options", string.Concat(DateTime.Now.ToLongTimeString(), "*", code, "*", temp, "*Buy"));
                 }
-                new Task(() => new LogMessage().Record("Order", string.Concat(DateTime.Now.ToLongTimeString(), "\n", e.Time, "\n", e.Price, "\n", code, "\n", temp)));
-
                 return;
             }
             if (api != null && Math.Abs(api.Quantity) > Max(e.Price) && api.OnReceiveBalance)
             {
-                api.OnReceiveOrder(new PurchaseInformation
+                IStrategy strategy = new PurchaseInformation
                 {
                     Code = api.Code[0].Substring(0, 8),
                     SlbyTP = api.Quantity > 0 ? "1" : "2",
                     OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
                     Price = string.Empty,
                     Qty = 1
-                });
+                };
+                api.OnReceiveOrder(strategy);
                 api.OnReceiveBalance = false;
+                new LogMessage().Record("Liquidate", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price));
+
+                if (api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0)
+                    SendLiquidate?.Invoke(this, new Liquidate(strategy));
             }
         }
         private int Analysis(double price)
