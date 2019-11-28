@@ -92,7 +92,7 @@ namespace ShareInvest.Kospi200HedgeVersion
                     string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.ArrayDeposit[i]).ToString("N0");
 
             splitContainerAccount.BackColor = Color.FromArgb(121, 133, 130);
-            long trading = long.Parse(e.ArrayDeposit[20]), deposit = long.Parse(e.ArrayDeposit[19]);
+            long trading = long.Parse(e.ArrayDeposit[20]), deposit = long.Parse(e.ArrayDeposit[18]);
 
             if (Account == false)
             {

@@ -67,6 +67,22 @@ namespace ShareInvest.OpenAPI
                     new Error(ErrorCode);
             }));
         }
+        public bool RollOver(int quantity)
+        {
+            Remaining = false;
+            Squence = 0;
+            request.RequestTrData(new Task(() =>
+            {
+                ErrorCode = axAPI.SendOrderFO("RollOver", ScreenNo, Account, Code[0].Substring(0, 8), 1, quantity > 0 ? "1" : "2", ((int)IStrategy.OrderType.시장가).ToString(), Math.Abs(quantity), string.Empty, string.Empty);
+
+                if (ErrorCode != 0)
+                    new Error(ErrorCode);
+            }));
+            axAPI.SetRealRemove("ALL", axAPI.GetFutureCodeByIndex(0));
+            RemainingDay(axAPI.GetFutureCodeByIndex(1));
+
+            return false;
+        }
         public Dictionary<int, string> Code
         {
             get; private set;

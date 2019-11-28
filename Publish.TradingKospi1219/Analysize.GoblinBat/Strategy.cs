@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Basic;
 using ShareInvest.Const;
@@ -55,8 +56,14 @@ namespace ShareInvest.Analysize
         {
             int quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
 
-            if (api != null && Math.Abs(api.Quantity + quantity) < Max(e.Price) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && api.OnReceiveBalance && Math.Abs(e.Volume) > st.Reaction)
+            if (api != null && Math.Abs(api.Quantity + quantity) < Max(e.Price) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction))
             {
+                if (api.Remaining && Math.Abs(api.Quantity) > 0)
+                {
+                    api.OnReceiveBalance = api.RollOver(quantity);
+
+                    return;
+                }
                 IStrategy strategy = new PurchaseInformation
                 {
                     Code = api.Code[0].Substring(0, 8),
@@ -69,7 +76,7 @@ namespace ShareInvest.Analysize
                 api.OnReceiveBalance = false;
                 double temp = 0;
                 string code = string.Empty;
-                new LogMessage().Record("Order", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price));
+                new Task(() => new LogMessage().Record("Order", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price))).Start();
 
                 if (api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0)
                 {
@@ -93,7 +100,7 @@ namespace ShareInvest.Analysize
                         Price = string.Empty,
                         Qty = Math.Abs(quantity)
                     });
-                    new LogMessage().Record("Options", string.Concat(DateTime.Now.ToLongTimeString(), "*", code, "*", temp, "*Buy"));
+                    new Task(() => new LogMessage().Record("Options", string.Concat(DateTime.Now.ToLongTimeString(), "*", code, "*", temp, "*Buy"))).Start();
                 }
                 return;
             }
@@ -109,11 +116,13 @@ namespace ShareInvest.Analysize
                 };
                 api.OnReceiveOrder(strategy);
                 api.OnReceiveBalance = false;
-                new LogMessage().Record("Liquidate", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price));
+                SendLiquidate?.Invoke(this, new Liquidate(strategy));
+                new Task(() => new LogMessage().Record("Liquidate", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price))).Start();
 
-                if (api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0)
-                    SendLiquidate?.Invoke(this, new Liquidate(strategy));
+                return;
             }
+            if (api != null && api.Remaining && api.OnReceiveBalance && Math.Abs(api.Quantity) > 0 && int.Parse(e.Time) > 151949)
+                api.OnReceiveBalance = api.RollOver(api.Quantity);
         }
         private int Analysis(double price)
         {
