@@ -58,6 +58,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             string path = string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
             IOptions options = new Options();
             GC.Collect();
+            Count = Process.GetCurrentProcess().Threads.Count;
 
             foreach (int hedge in set.Hedge)
                 foreach (int reaction in set.Reaction)
@@ -88,21 +89,28 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                             Strategy = string.Concat(sDay.ToString("D2"), '^', sTick.ToString("D2"), '^', lDay.ToString("D2"), '^', lTick.ToString("D2"), '^', reaction.ToString("D2"), '^', hedge.ToString("D2"))
                                         });
                                         if (Max <= ++pro.ProgressBarValue && InterLink == false)
-                                            SetMarketTick();
+                                            SetMarketTick(GC.GetTotalMemory(true));
                                     }).Start();
                                     Application.DoEvents();
                                 }
         }
-        private void SetMarketTick()
+        private void SetMarketTick(long wait)
         {
             InterLink = true;
-            TimerBox.Show("Save the Analysis.\n\nThis Last Step takes about 5 to 15 Minutes.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)Max);
+
+            for (long i = 0; i < wait; i++)
+                if (Count - 5 > Process.GetCurrentProcess().Threads.Count)
+                {
+                    GC.Collect();
+
+                    break;
+                }
             pro.Maximum = SetMaximum();
             GC.Collect();
             pro.Retry();
             new Task(() => new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Ticks, ".csv"))).Start();
 
-            if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", (int)(0.003 * pro.Maximum / 60), " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)(3 * pro.Maximum)).Equals((DialogResult)6))
+            if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", pro.Maximum / 20000, " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)pro.Maximum * 3).Equals((DialogResult)6))
                 Process.Start(string.Concat(Application.StartupPath, @"\Kospi200.exe"));
 
             Application.ExitThread();
@@ -137,7 +145,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 checkBox.Text = "Process";
             }
             if (CheckCurrent && checkBox.Text.Equals("Interrupt") && pro.ProgressBarValue > Max && InterLink == false)
-                SetMarketTick();
+                SetMarketTick(0);
 
             if (CheckCurrent)
                 checkBox.Text = "Interrupt";
@@ -148,7 +156,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 StartBackTesting(set);
 
             else if (InterLink == false && button.ForeColor.Equals(Color.Ivory) && TimerBox.Show("Do You Want to Store Only Existing Data\nWithout Back Testing?\n\nIf Not Selected,\nIt will be Saved after 30 Seconds and the Program will Exit.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 32735).Equals((DialogResult)6))
-                SetMarketTick();
+                SetMarketTick(0);
 
             else if (button.ForeColor.Equals(Color.Maroon))
                 button.Text = string.Concat(((Max - pro.ProgressBarValue) / 155).ToString("N0"), " Minutes left to Complete.");
@@ -183,7 +191,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private void TimerStorageTick(object sender, EventArgs e)
         {
             if (InterLink && pro.Maximum - 20 > pro.ProgressBarValue)
-                pro.ProgressBarValue += 17;
+                pro.ProgressBarValue += 15;
 
             else if (InterLink && pro.Maximum > pro.ProgressBarValue)
                 pro.ProgressBarValue++;
@@ -214,7 +222,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
-            return Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", date), "*.csv", SearchOption.AllDirectories).Length;
+            return Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", date), "*.csv", SearchOption.TopDirectoryOnly).Length;
         }
         private bool CheckCurrent
         {
@@ -228,6 +236,10 @@ namespace ShareInvest.BackTesting.SettingsScreen
             get; set;
         }
         private int Max
+        {
+            get; set;
+        }
+        private int Count
         {
             get; set;
         }
