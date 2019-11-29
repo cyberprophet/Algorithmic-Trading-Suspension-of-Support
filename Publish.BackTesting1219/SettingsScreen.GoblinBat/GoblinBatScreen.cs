@@ -36,17 +36,25 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private int SetOptimize(IAsset asset)
         {
-            set = new StrategySetting
+            try
             {
-                ShortTick = SetValue(50, ran.Next(5, 20), ran.Next(asset.ShortTickPeriod < 50 ? 70 : asset.ShortTickPeriod, asset.ShortTickPeriod * 5)),
-                LongTick = SetValue(200, ran.Next(50, 200), ran.Next(asset.LongTickPeriod < 200 ? 210 : asset.LongTickPeriod, asset.LongTickPeriod * 5)),
-                ShortDay = SetValue(2, ran.Next(1, 3), ran.Next(5, asset.ShortDayPeriod * 5)),
-                LongDay = SetValue(5, ran.Next(5, 15), ran.Next(20, asset.LongDayPeriod * 5)),
-                Reaction = SetValue(ran.Next(15, 30), ran.Next(1, 5), ran.Next(85, 100)),
-                Hedge = SetValue(0, 1, ran.Next(1, 5)),
-                Capital = asset.Assets
-            };
-            return set.EstimatedTime();
+                set = new StrategySetting
+                {
+                    ShortTick = SetValue(50, ran.Next(5, 20), ran.Next(asset.ShortTickPeriod < 50 ? 70 : asset.ShortTickPeriod, asset.ShortTickPeriod * 5)),
+                    LongTick = SetValue(200, ran.Next(50, 200), ran.Next(asset.LongTickPeriod < 200 ? 210 : asset.LongTickPeriod, asset.LongTickPeriod * 5)),
+                    ShortDay = SetValue(2, ran.Next(1, 3), ran.Next(5, asset.ShortDayPeriod * 5)),
+                    LongDay = SetValue(5, ran.Next(5, 15), ran.Next(20, asset.LongDayPeriod * 5)),
+                    Reaction = SetValue(ran.Next(15, 30), ran.Next(1, 5), ran.Next(85, 100)),
+                    Hedge = SetValue(0, 1, ran.Next(1, 5)),
+                    Capital = asset.Assets
+                };
+                return set.EstimatedTime();
+            }
+            catch (Exception ex)
+            {
+                new LogMessage().Record("Exception", ex.ToString());
+            }
+            return 0;
         }
         private void StartBackTesting(IStrategySetting set)
         {
