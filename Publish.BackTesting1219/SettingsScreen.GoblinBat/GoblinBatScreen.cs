@@ -14,8 +14,9 @@ namespace ShareInvest.BackTesting.SettingsScreen
 {
     public partial class GoblinBatScreen : UserControl
     {
-        public GoblinBatScreen(IAsset asset)
+        public GoblinBatScreen(int count, IAsset asset)
         {
+            Count = count;
             this.asset = asset;
             InitializeComponent();
             BackColor = Color.FromArgb(121, 133, 130);
@@ -37,11 +38,11 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             set = new StrategySetting
             {
-                ShortTick = SetValue(asset.ShortTickPeriod < 50 ? 50 : ran.Next(50, asset.ShortTickPeriod), ran.Next(5, asset.ShortTickPeriod), ran.Next(100, asset.ShortTickPeriod * 5)),
-                LongTick = SetValue(asset.LongTickPeriod < 300 ? 300 : ran.Next(300, asset.LongTickPeriod), ran.Next(50, asset.LongTickPeriod), ran.Next(500, asset.LongTickPeriod * 5)),
-                ShortDay = SetValue(2, ran.Next(1, 5), ran.Next(2, asset.ShortDayPeriod)),
-                LongDay = SetValue(asset.LongDayPeriod < 5 ? 5 : ran.Next(5, asset.LongDayPeriod), ran.Next(5, asset.LongDayPeriod), ran.Next(20, asset.LongDayPeriod * 5)),
-                Reaction = SetValue(ran.Next(15, 30), ran.Next(1, 3), ran.Next(30, 100)),
+                ShortTick = SetValue(50, ran.Next(5, 20), ran.Next(asset.ShortTickPeriod < 50 ? 70 : asset.ShortTickPeriod, asset.ShortTickPeriod * 5)),
+                LongTick = SetValue(200, ran.Next(50, 200), ran.Next(asset.LongTickPeriod < 200 ? 210 : asset.LongTickPeriod, asset.LongTickPeriod * 5)),
+                ShortDay = SetValue(2, ran.Next(1, 3), ran.Next(5, asset.ShortDayPeriod * 5)),
+                LongDay = SetValue(5, ran.Next(5, 15), ran.Next(20, asset.LongDayPeriod * 5)),
+                Reaction = SetValue(ran.Next(15, 30), ran.Next(1, 5), ran.Next(85, 100)),
                 Hedge = SetValue(0, 1, ran.Next(1, 5)),
                 Capital = asset.Assets
             };
@@ -97,20 +98,19 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private void SetMarketTick(long wait)
         {
             InterLink = true;
+            GC.Collect();
 
             for (long i = 0; i < wait; i++)
-                if (Count - 5 > Process.GetCurrentProcess().Threads.Count)
-                {
-                    GC.Collect();
-
+                if (Count > Process.GetCurrentProcess().Threads.Count)
                     break;
-                }
-            pro.Maximum = SetMaximum();
-            GC.Collect();
-            pro.Retry();
-            new Task(() => new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Ticks, ".csv"))).Start();
 
-            if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", pro.Maximum / 20000, " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)pro.Maximum * 3).Equals((DialogResult)6))
+            pro.Maximum = SetMaximum();
+            pro.Retry();
+            GC.Collect();
+            new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Ticks, ".csv"));
+            GC.Collect();
+
+            if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", pro.Maximum / 60000, " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)pro.Maximum).Equals((DialogResult)6))
                 Process.Start(string.Concat(Application.StartupPath, @"\Kospi200.exe"));
 
             Application.ExitThread();
@@ -144,11 +144,19 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 checkBox.ForeColor = Color.Ivory;
                 checkBox.Text = "Process";
             }
-            if (CheckCurrent && checkBox.Text.Equals("Interrupt") && pro.ProgressBarValue > Max && InterLink == false)
-                SetMarketTick(0);
+            else if (CheckCurrent == false)
+            {
+                checkBox.Text = GC.GetTotalMemory(false).ToString("N0");
+                checkBox.Font = new Font(checkBox.Font.Name, 11.75F, FontStyle.Regular);
 
-            if (CheckCurrent)
-                checkBox.Text = "Interrupt";
+                if (TimerBox.Show("Do You want to Clean Up the Accumulated Memory?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 1325).Equals(DialogResult.OK))
+                    GC.Collect();
+            }
+            else if (CheckCurrent)
+            {
+                checkBox.Text = string.Concat("Parallel ", Process.GetCurrentProcess().Threads.Count - Count > 0 ? (Process.GetCurrentProcess().Threads.Count - Count).ToString("N0") : "END");
+                checkBox.Font = new Font(checkBox.Font.Name, 15.75F, FontStyle.Regular);
+            }
         }
         private void ButtonClick(object sender, EventArgs e)
         {
@@ -164,9 +172,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private int[] SetValue(int sp, int interval, int destination)
         {
             int[] value = new int[(destination - sp) / interval + 1];
-            int i;
 
-            for (i = 0; i < value.Length; i++)
+            for (int i = 0; i < value.Length; i++)
                 value[i] = sp + interval * i;
 
             return value;

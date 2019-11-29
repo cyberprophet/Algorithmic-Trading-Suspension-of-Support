@@ -71,6 +71,8 @@ namespace ShareInvest.Communication
         }
         private void Statistics(StringBuilder sb, string path)
         {
+            Application.DoEvents();
+
             try
             {
                 DirectoryInfo di = new DirectoryInfo(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\"));

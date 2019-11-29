@@ -7,10 +7,10 @@ namespace ShareInvest.BackTesting
 {
     public partial class BackTesting : Form
     {
-        public BackTesting()
+        public BackTesting(int count)
         {
             InitializeComponent();
-            StartingPoint(new GoblinBatScreen(new Asset()), new Progress());
+            StartingPoint(new GoblinBatScreen(count, new Asset()), new Progress());
             Dispose();
             Environment.Exit(0);
         }

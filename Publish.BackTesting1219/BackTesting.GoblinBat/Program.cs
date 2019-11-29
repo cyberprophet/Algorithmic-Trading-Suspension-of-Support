@@ -24,7 +24,7 @@ namespace ShareInvest.BackTesting
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new BackTesting());
+                Application.Run(new BackTesting(Process.GetCurrentProcess().Threads.Count));
 
                 return;
             }
