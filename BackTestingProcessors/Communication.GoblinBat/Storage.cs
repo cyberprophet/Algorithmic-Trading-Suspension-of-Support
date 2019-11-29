@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using ShareInvest.Log.Message;
 
 namespace ShareInvest.Communication
 {
@@ -56,6 +57,8 @@ namespace ShareInvest.Communication
 
                 foreach (Storage val in list.FindAll(o => o.date.Equals(kv.Key)))
                 {
+                    Application.DoEvents();
+
                     if (kv.Key.Equals(analysis.Last().Key))
                     {
                         sb.Append(long.Parse(val.revenue) + kv.Value).Append(',');
@@ -70,6 +73,8 @@ namespace ShareInvest.Communication
         }
         private void Statistics(StringBuilder sb, string path)
         {
+            Application.DoEvents();
+
             try
             {
                 DirectoryInfo di = new DirectoryInfo(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\"));
@@ -82,6 +87,7 @@ namespace ShareInvest.Communication
             }
             catch (Exception ex)
             {
+                new LogMessage().Record("Exception", ex.ToString());
                 MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
