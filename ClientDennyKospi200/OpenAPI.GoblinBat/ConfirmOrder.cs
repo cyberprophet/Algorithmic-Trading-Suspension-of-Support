@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
+using ShareInvest.Log.Message;
 using ShareInvest.TimerMessageBox;
 
 namespace ShareInvest.OpenAPI
@@ -37,6 +38,7 @@ namespace ShareInvest.OpenAPI
             }
             checkBox.Text = e.Confirm != null ? string.Concat(DateTime.Now.ToString("H시 m분 s초\n"), e.Confirm) : string.Concat(e.Remaining, ".");
             SendTab?.Invoke(this, new Mining(2));
+            BeginInvoke(new Action(() => new LogMessage().Record("Kiwoom", checkBox.Text)));
         }
         private void CheckBox_CheckedChanged(object sender, EventArgs e)
         {

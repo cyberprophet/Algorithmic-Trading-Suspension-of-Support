@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ShareInvest.Const;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
+using ShareInvest.Log.Message;
 using ShareInvest.OpenAPI;
 
 namespace ShareInvest.Controls
@@ -57,6 +58,7 @@ namespace ShareInvest.Controls
                         Price = string.Empty,
                         Qty = 1
                     });
+                BeginInvoke(new Action(() => new LogMessage().Record("Options", string.Concat(DateTime.Now.ToLongTimeString(), "*", code, "*", (price / (double)100).ToString("N2"), "*", "Sell"))));
             }
             balGrid.SuspendLayout();
             balGrid.Rows.Clear();
