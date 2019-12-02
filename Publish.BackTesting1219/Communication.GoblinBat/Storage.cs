@@ -12,8 +12,8 @@ namespace ShareInvest.Communication
     {
         public Storage(string path)
         {
-            list = new List<Storage>(128);
-            analysis = new Dictionary<string, long>();
+            list = new List<Storage>(1024);
+            analysis = new Dictionary<string, long>(128);
 
             foreach (string val in new Enumerate())
             {
@@ -53,9 +53,10 @@ namespace ShareInvest.Communication
             foreach (KeyValuePair<string, long> kv in analysis)
             {
                 sb = new StringBuilder(128);
+                GC.Collect();
                 sb.Append(kv.Key).Append(',');
 
-                foreach (Storage val in list.FindAll(o => o.date.Equals(kv.Key)))
+                foreach (Storage val in list.FindAll(o => o.date.Equals(kv.Key)).AsParallel())
                 {
                     if (kv.Key.Equals(analysis.Last().Key))
                     {

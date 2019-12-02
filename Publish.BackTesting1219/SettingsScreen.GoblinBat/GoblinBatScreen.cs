@@ -8,6 +8,7 @@ using ShareInvest.BackTesting.Analysis;
 using ShareInvest.Communication;
 using ShareInvest.Information;
 using ShareInvest.Log.Message;
+using ShareInvest.MassProcessingTechnology;
 using ShareInvest.RetrieveOptions;
 
 namespace ShareInvest.BackTesting.SettingsScreen
@@ -115,7 +116,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             pro.Maximum = SetMaximum();
             pro.Retry();
             GC.Collect();
-            new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Ticks, ".csv"));
+            new BulkProcessing(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Ticks, ".csv"));
             GC.Collect();
 
             if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", pro.Maximum / 60000, " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)pro.Maximum).Equals((DialogResult)6))
@@ -162,7 +163,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             }
             else if (CheckCurrent)
             {
-                checkBox.Text = string.Concat("Parallel ", Process.GetCurrentProcess().Threads.Count - Count > 0 ? (Process.GetCurrentProcess().Threads.Count - Count).ToString("N0") : "END");
+                checkBox.Text = string.Concat("Parallel ", Process.GetCurrentProcess().Threads.Count - Count > 0 ? (Process.GetCurrentProcess().Threads.Count - Count).ToString("N0") : "End");
                 checkBox.Font = new Font(checkBox.Font.Name, 15.75F, FontStyle.Regular);
             }
         }
