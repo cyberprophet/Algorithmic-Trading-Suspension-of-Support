@@ -35,11 +35,10 @@ namespace ShareInvest.Communication
             }
             foreach (string file in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", RecentDate), "*.csv", SearchOption.AllDirectories))
             {
-                if (i++ > 2500)
+                if (i++ % 2500 == 0)
                 {
                     Application.DoEvents();
                     GC.Collect();
-                    i = 0;
                 }
                 arr = file.Split('\\');
                 arr = arr[arr.Length - 1].Split('.');

@@ -8,6 +8,7 @@ using ShareInvest.BackTesting.Analysis;
 using ShareInvest.Communication;
 using ShareInvest.Information;
 using ShareInvest.Log.Message;
+using ShareInvest.MassProcessingTechnology;
 using ShareInvest.RetrieveOptions;
 
 namespace ShareInvest.BackTesting.SettingsScreen
@@ -16,7 +17,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
     {
         public GoblinBatScreen(int count, IAsset asset)
         {
-            Count = count;
+            this.count = count;
             this.asset = asset;
             InitializeComponent();
             BackColor = Color.FromArgb(121, 133, 130);
@@ -59,7 +60,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private void StartBackTesting(IStrategySetting set)
         {
             Max = set.EstimatedTime();
-            button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(Max).ToString("N0"), " Minutes.");
+            button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(Max, count).ToString("N0"), " Minutes.");
             button.ForeColor = Color.Maroon;
             checkBox.ForeColor = Color.DarkRed;
             checkBox.Text = "BackTesting";
@@ -115,7 +116,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             pro.Maximum = SetMaximum();
             pro.Retry();
             GC.Collect();
-            new Storage(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Ticks, ".csv"));
+            new BulkProcessing(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Ticks, ".csv"));
             GC.Collect();
 
             if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", pro.Maximum / 60000, " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)pro.Maximum).Equals((DialogResult)6))
@@ -140,7 +141,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                         Hedge = SetValue((int)numericPH.Value, (int)numericIH.Value, (int)numericDH.Value),
                         Capital = (long)numericCapital.Value
                     };
-                    button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(set.EstimatedTime()).ToString("N0"), " Minutes.");
+                    button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(set.EstimatedTime(), count).ToString("N0"), " Minutes.");
                     checkBox.Text = "Reset";
                     checkBox.ForeColor = Color.Yellow;
                     button.ForeColor = Color.Gold;
@@ -175,7 +176,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 SetMarketTick(0);
 
             else if (button.ForeColor.Equals(Color.Maroon))
-                button.Text = string.Concat(((Max - pro.ProgressBarValue) / 155).ToString("N0"), " Minutes left to Complete.");
+                button.Text = string.Concat(((Max - pro.ProgressBarValue) / count).ToString("N0"), " Minutes left to Complete.");
         }
         private int[] SetValue(int sp, int interval, int destination)
         {
@@ -200,7 +201,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 setting = SetOptimize(asset);
             }
-            while (setting < 155 * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 840 : 840) || setting > 155 * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 900 : 900));
+            while (setting < count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 935 : 935) || setting > count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 985 : 985));
 
             StartBackTesting(set);
         }
@@ -261,6 +262,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private Progress pro;
         private IStrategySetting set;
+        private readonly int count;
         private readonly IAsset asset;
         private readonly Random ran;
     }

@@ -1,6 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
+using ShareInvest.EstimatedTime;
 
 namespace ShareInvest.BackTesting
 {
@@ -11,7 +12,7 @@ namespace ShareInvest.BackTesting
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new BackTesting(Process.GetCurrentProcess().Threads.Count));
+            Application.Run(new BackTesting(new Expectancy().EstimatedTime(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\"))));
         }
     }
 }
