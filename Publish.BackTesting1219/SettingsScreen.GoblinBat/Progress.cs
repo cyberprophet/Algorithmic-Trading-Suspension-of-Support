@@ -17,13 +17,13 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             get; set;
         }
-        public int Rate(int max)
+        public int Rate(int max, int count)
         {
             progressBar.Maximum = max;
             timer.Interval = 15;
             timer.Start();
 
-            return max / 155;
+            return max / count;
         }
         public void Retry()
         {
