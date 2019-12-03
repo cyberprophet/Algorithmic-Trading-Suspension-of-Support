@@ -46,7 +46,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     ShortDay = SetValue(2, ran.Next(1, 3), ran.Next(5, asset.ShortDayPeriod * 5)),
                     LongDay = SetValue(5, ran.Next(5, 15), ran.Next(20, asset.LongDayPeriod * 5)),
                     Reaction = SetValue(ran.Next(15, 30), ran.Next(1, 5), ran.Next(85, 100)),
-                    Hedge = SetValue(0, 1, ran.Next(1, 5)),
+                    Hedge = SetValue(0, 1, ran.Next(0, 5)),
                     Capital = asset.Assets
                 };
                 return set.EstimatedTime();
@@ -199,7 +199,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 setting = SetOptimize(asset);
             }
-            while (setting < count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 840 : 840) || setting > count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 900 : 900));
+            while (setting < count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 935 : 935) || setting > count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 985 : 985));
 
             StartBackTesting(set);
             timer.Dispose();
