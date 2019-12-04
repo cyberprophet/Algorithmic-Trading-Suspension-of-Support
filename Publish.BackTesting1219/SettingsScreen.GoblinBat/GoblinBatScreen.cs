@@ -99,7 +99,10 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                             Strategy = string.Concat(sDay.ToString("D2"), '^', sTick.ToString("D2"), '^', lDay.ToString("D2"), '^', lTick.ToString("D2"), '^', reaction.ToString("D2"), '^', hedge.ToString("D2"))
                                         });
                                         if (Max <= ++pro.ProgressBarValue && InterLink == false)
+                                        {
+                                            button.ForeColor = Color.Ivory;
                                             SetMarketTick(GC.GetTotalMemory(true));
+                                        }
                                     }).Start();
                                     Application.DoEvents();
                                 }
