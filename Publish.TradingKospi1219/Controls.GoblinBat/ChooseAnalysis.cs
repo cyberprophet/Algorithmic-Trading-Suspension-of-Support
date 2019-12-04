@@ -5,7 +5,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using ShareInvest.AutoMessageBox;
 using ShareInvest.Const;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
