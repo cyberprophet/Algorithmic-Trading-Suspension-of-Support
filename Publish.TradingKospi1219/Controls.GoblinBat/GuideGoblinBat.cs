@@ -25,7 +25,7 @@ namespace ShareInvest.Controls
                 browser.GetWebBrowser(@"https://www.youtube.com/channel/UC7AfV6_2hoQ27XBxQH9P3lA/videos?view_as=subscriber", 1355, 741);
 
             else if (sender.Equals(connect1))
-                browser.GetWebBrowser(@"https://youtu.be/d1MQsMr4pxQ", 685, 485);
+                browser.GetWebBrowser(@"https://www.youtube.com/watch?v=X0m2mpZ1CSg", 685, 485);
 
             else if (sender.Equals(connect2))
                 browser.GetWebBrowser(@"https://youtu.be/d1MQsMr4pxQ", 685, 485);
@@ -38,6 +38,6 @@ namespace ShareInvest.Controls
 
             browser.ShowDialog();
         }
-        private readonly string[] name = { "Manual", "", "", "", "GuestBook" };
+        private readonly string[] name = { "Manual", "Intro", "", "", "GuestBook" };
     }
 }

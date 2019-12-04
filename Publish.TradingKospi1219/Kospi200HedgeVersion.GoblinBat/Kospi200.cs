@@ -161,7 +161,6 @@ namespace ShareInvest.Kospi200HedgeVersion
                     SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_UP);
                     webBrowser.Hide();
                 }));
-
             else if (tabControl.SelectedIndex.Equals(1))
                 BeginInvoke(new Action(() =>
                 {
@@ -219,7 +218,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             get; set;
         } =
         {
-            { 1650, 920 },
+            { 1680, 920 },
             { 750, 370 },
             { 594, 315 },
             { 405, 450 }

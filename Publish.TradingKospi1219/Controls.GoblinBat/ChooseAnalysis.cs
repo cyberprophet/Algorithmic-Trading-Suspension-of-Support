@@ -34,6 +34,7 @@ namespace ShareInvest.Controls
                 for (Count = 0; Count < 14; Count++)
                 {
                     string.Concat(val.FindByName, Count).FindByName<Button>(this).Click += ButtonClick;
+                    string.Concat(val.FindByName, Count).FindByName<Button>(this).Font = new Font(string.Concat(val.FindByName, Count).FindByName<Button>(this).Font.Name, 10.25F, FontStyle.Regular);
 
                     if (string.Concat(val.FindByName, Count).FindByName<Button>(this).Text.Contains("-"))
                     {
