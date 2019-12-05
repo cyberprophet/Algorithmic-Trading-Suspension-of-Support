@@ -35,18 +35,18 @@ namespace ShareInvest.BackTesting.SettingsScreen
             this.pro = pro;
             timer.Start();
         }
-        private int SetOptimize(IAsset asset)
+        private int SetOptimize(IAsset asset, int repeat)
         {
             try
             {
                 set = new StrategySetting
                 {
-                    ShortTick = SetValue(50, ran.Next(5, 20), ran.Next(asset.ShortTickPeriod < 50 ? 70 : asset.ShortTickPeriod, asset.ShortTickPeriod * 5)),
-                    LongTick = SetValue(200, ran.Next(50, 200), ran.Next(asset.LongTickPeriod < 200 ? 210 : asset.LongTickPeriod, asset.LongTickPeriod * 5)),
-                    ShortDay = SetValue(2, ran.Next(1, 3), ran.Next(5, asset.ShortDayPeriod * 5)),
-                    LongDay = SetValue(5, ran.Next(5, 15), ran.Next(20, asset.LongDayPeriod * 5)),
-                    Reaction = SetValue(ran.Next(15, 30), ran.Next(1, 5), ran.Next(85, 100)),
-                    Hedge = SetValue(0, 1, ran.Next(1, 5)),
+                    ShortTick = SetValue(ran.Next(asset.ShortTickPeriod / 3, asset.ShortTickPeriod), ran.Next(15, 50), ran.Next(asset.ShortTickPeriod, asset.ShortTickPeriod * 5)),
+                    LongTick = SetValue(ran.Next(asset.LongTickPeriod / 3, asset.LongTickPeriod), ran.Next(30, 150), ran.Next(asset.LongTickPeriod, asset.LongTickPeriod * 5)),
+                    ShortDay = SetValue(2, ran.Next(1, 3), ran.Next(asset.ShortDayPeriod, asset.ShortDayPeriod * 3)),
+                    LongDay = SetValue(ran.Next(asset.LongDayPeriod / 3, asset.LongDayPeriod), ran.Next(1, 10), ran.Next(asset.LongDayPeriod, asset.LongDayPeriod * 3)),
+                    Reaction = SetValue(ran.Next(asset.Reaction / 3, asset.Reaction), ran.Next(1, 5), ran.Next(asset.Reaction, asset.Reaction * 2)),
+                    Hedge = SetValue(0, 1, ran.Next(0, 5)),
                     Capital = asset.Assets
                 };
                 return set.EstimatedTime();
@@ -54,6 +54,14 @@ namespace ShareInvest.BackTesting.SettingsScreen
             catch (Exception ex)
             {
                 new LogMessage().Record("Exception", ex.ToString());
+
+                if (TimerBox.Show("Run the Program Again and Set it Manually.", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 3157).Equals(DialogResult.OK))
+                    Application.Restart();
+            }
+            finally
+            {
+                if (repeat % 5000 == 0 && TimerBox.Show("Run the Program Again and Set it Manually.", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 3157).Equals(DialogResult.OK))
+                    Application.Restart();
             }
             return 0;
         }
@@ -69,6 +77,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             IOptions options = new Options();
             GC.Collect();
             Count = Process.GetCurrentProcess().Threads.Count;
+            InterLink = false;
 
             foreach (int hedge in set.Hedge)
                 foreach (int reaction in set.Reaction)
@@ -158,8 +167,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
             }
             else if (CheckCurrent == false)
             {
-                checkBox.Text = GC.GetTotalMemory(false).ToString("N0");
-                checkBox.Font = new Font(checkBox.Font.Name, 11.75F, FontStyle.Regular);
+                checkBox.Text = string.Concat(pro.ProgressBarValue.ToString("N0"), " / ", Max.ToString("N0"));
+                checkBox.Font = new Font(checkBox.Font.Name, 10.25F, FontStyle.Regular);
 
                 if (TimerBox.Show("Do You want to Clean Up the Accumulated Memory?", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 1325).Equals(DialogResult.OK))
                     GC.Collect();
@@ -194,19 +203,21 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private void TimerTick(object sender, EventArgs e)
         {
             timer.Stop();
-            int setting;
-            timer.Dispose();
+            int setting, repeat = 0;
 
             if (TimerBox.Show("Start Back Testing.\n\nClick 'No' to Do this Manually.\n\nIf Not Selected,\nIt will Automatically Proceed after 20 Seconds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 25617).Equals((DialogResult)7))
                 return;
 
             do
             {
-                setting = SetOptimize(asset);
+                checkBox.Text = repeat++.ToString("N0");
+                setting = SetOptimize(asset, repeat);
+                Application.DoEvents();
             }
-            while (setting < count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 935 : 935) || setting > count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 985 : 985));
+            while (setting < count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 915 : 915) || setting > count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 965 : 965));
 
             StartBackTesting(set);
+            timer.Dispose();
         }
         private void TimerStorageTick(object sender, EventArgs e)
         {
