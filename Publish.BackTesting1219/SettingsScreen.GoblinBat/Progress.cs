@@ -20,7 +20,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         public int Rate(int max, int count)
         {
             progressBar.Maximum = max;
-            timer.Interval = 15;
+            timer.Interval = 395;
             timer.Start();
 
             return max / count;

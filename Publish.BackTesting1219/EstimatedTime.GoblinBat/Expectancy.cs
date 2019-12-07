@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Log.Message;
 
@@ -25,7 +26,10 @@ namespace ShareInvest.EstimatedTime
                 }
                 temp = Directory.GetFiles(string.Concat(path, date), "*.csv", SearchOption.TopDirectoryOnly);
 
-                foreach (string str in temp)
+                Parallel.ForEach(temp, new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 1.5)
+                }, (str) =>
                 {
                     DateTime dt = new FileInfo(str).CreationTime;
 
@@ -34,7 +38,7 @@ namespace ShareInvest.EstimatedTime
 
                     if (DateTime.Compare(dt, min) < 0)
                         min = dt;
-                }
+                });
                 return (int)(temp.Length / max.Subtract(min).TotalMinutes);
             }
             catch (Exception ex)
