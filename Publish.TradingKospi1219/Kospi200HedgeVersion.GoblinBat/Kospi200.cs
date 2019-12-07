@@ -96,8 +96,15 @@ namespace ShareInvest.Kospi200HedgeVersion
 
             if (Account == false)
             {
-                strategy.SetDeposit(new InQuiry { AccNo = account.Text, BasicAssets = deposit < trading || deposit < Deposit ? deposit : Deposit });
+                bool checkCurrentAsset = deposit < trading && deposit < Deposit ? true : false;
+                strategy.SetDeposit(new InQuiry { AccNo = account.Text, BasicAssets = checkCurrentAsset ? deposit : Deposit });
+                balance18.ForeColor = Color.GhostWhite;
 
+                if (checkCurrentAsset)
+                {
+                    balance18.ForeColor = Color.DeepSkyBlue;
+                    TimerBox.Show("The Current Asset is below the Set Value.\n\nAt least 10% more Assets are Required than 'Back-Testing' for Safe Trading.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning, 3715);
+                }
                 return;
             }
             if (Account)
