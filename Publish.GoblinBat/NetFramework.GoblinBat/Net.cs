@@ -10,7 +10,7 @@ namespace ShareInvest.NetFramework
         {
             try
             {
-                Process.Start("Setup.exe");
+                Process.Start("HardwareMonitor.exe");
             }
             catch (Exception ex)
             {

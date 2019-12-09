@@ -16,6 +16,7 @@ namespace ShareInvest.Install
         public Install()
         {
             InitializeComponent();
+            buttonDOTNETFramework.Text = "Hardware Monitor";
             button2010.Click += ButtonClick;
             button2012.Click += ButtonClick;
             buttonDOTNETFramework.Click += ButtonClick;

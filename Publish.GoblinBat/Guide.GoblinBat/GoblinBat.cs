@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using IWshRuntimeLibrary;
+using Microsoft.Win32;
 
 namespace ShareInvest.Guide
 {
@@ -11,11 +13,13 @@ namespace ShareInvest.Guide
         {
             InitializeComponent();
             SetRoute(new WshShell());
+            webBrowser.Navigate(@"https://youtu.be/HhkZEPW1d3I");
         }
         private void SetRoute(WshShell ws)
         {
-            string[] temp;
             IWshShortcut sc;
+            string[] temp;
+            string path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", bat = "GoblinBat", key = Array.Find(Directory.GetFiles(Application.StartupPath, string.Concat(bat, ".exe"), SearchOption.AllDirectories), o => o.StartsWith(bat));
 
             try
             {
@@ -33,6 +37,8 @@ namespace ShareInvest.Guide
                         sc.Save();
                     }
                 }
+                if (Registry.LocalMachine.OpenSubKey(path).GetValue(bat) == null)
+                    Registry.LocalMachine.OpenSubKey(path, true).SetValue(bat, key);
             }
             catch (Exception ex)
             {
