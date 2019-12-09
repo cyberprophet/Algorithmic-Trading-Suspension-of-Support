@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using IWshRuntimeLibrary;
 using Microsoft.Win32;
@@ -12,33 +11,48 @@ namespace ShareInvest.Guide
         public GoblinBat()
         {
             InitializeComponent();
-            SetRoute(new WshShell());
             webBrowser.Navigate(@"https://youtu.be/HhkZEPW1d3I");
         }
-        private void SetRoute(WshShell ws)
+        public void SetRoute(WshShell ws)
         {
             IWshShortcut sc;
+            IAsyncResult result;
             string[] temp;
-            string path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", bat = "GoblinBat", key = Array.Find(Directory.GetFiles(Application.StartupPath, string.Concat(bat, ".exe"), SearchOption.AllDirectories), o => o.StartsWith(bat));
+            string path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", bat = "GoblinBat", key = string.Empty;
+            var registry = Registry.CurrentUser.OpenSubKey(path);
 
             try
             {
-                foreach (string file in Directory.GetFiles(Environment.CurrentDirectory, "*.exe", SearchOption.AllDirectories))
+                result = BeginInvoke(new Action(() =>
                 {
-                    temp = file.Split('\\');
-                    temp = temp[temp.Length - 1].Split('.');
+                    key = Array.Find(Directory.GetFiles(Application.StartupPath, "*.exe", SearchOption.AllDirectories), o => o.Contains(string.Concat(bat, ".exe")));
 
-                    if (Array.Exists(repeat, o => o.Equals(temp[0])))
+                    foreach (string file in Directory.GetFiles(Environment.CurrentDirectory, "*.exe", SearchOption.AllDirectories))
                     {
-                        sc = (IWshShortcut)ws.CreateShortcut(string.Concat(desk, @"\", temp[0], ".lnk"));
-                        sc.TargetPath = file;
-                        sc.Description = file.Contains(trading) ? "GoblinBatTraing" : "GoblinBatBackTesting";
-                        sc.IconLocation = file.Replace("exe", "ico");
-                        sc.Save();
+                        temp = file.Split('\\');
+                        temp = temp[temp.Length - 1].Split('.');
+
+                        if (Array.Exists(repeat, o => o.Equals(temp[0])))
+                        {
+                            sc = (IWshShortcut)ws.CreateShortcut(string.Concat(desk, @"\", temp[0], ".lnk"));
+                            sc.TargetPath = file;
+                            sc.Description = file.Contains(trading) ? "GoblinBatTraing" : "GoblinBatBackTesting";
+                            sc.IconLocation = file.Replace("exe", "ico");
+                            sc.Save();
+                        }
                     }
+                }));
+                EndInvoke(result);
+
+                if (registry.GetValue(bat) != null)
+                {
+                    registry.Close();
+                    registry = Registry.CurrentUser.OpenSubKey(path, true);
+                    registry.DeleteValue(bat);
                 }
-                if (Registry.LocalMachine.OpenSubKey(path).GetValue(bat) == null)
-                    Registry.LocalMachine.OpenSubKey(path, true).SetValue(bat, key);
+                registry.Close();
+                registry = Registry.CurrentUser.OpenSubKey(path, true);
+                registry.SetValue(bat, key);
             }
             catch (Exception ex)
             {

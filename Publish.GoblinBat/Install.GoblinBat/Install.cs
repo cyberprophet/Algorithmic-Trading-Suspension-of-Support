@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using IWshRuntimeLibrary;
 using ShareInvest.C2010;
 using ShareInvest.C2012;
 using ShareInvest.Control;
@@ -61,9 +63,11 @@ namespace ShareInvest.Install
                 GetTermsAndConditions();
                 WindowState = FormWindowState.Minimized;
                 Controls.Clear();
-
-                return;
             }
+            Process.Start("shutdown.exe", "-r");
+            Dispose();
+            Application.ExitThread();
+            Application.Exit();
         }
         private void GetControls(GoblinBat gb)
         {
@@ -73,12 +77,13 @@ namespace ShareInvest.Install
             WindowState = FormWindowState.Maximized;
             Opacity = 0.95;
             ResumeLayout();
+            Show();
+            Application.DoEvents();
+            gb.SetRoute(new WshShell());
 
             if (DialogResult.OK.Equals(MessageBox.Show("The Installation is Complete.\n\nPlease Register Your OpenAPI.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1)))
-            {
                 FormBorderStyle = FormBorderStyle.Fixed3D;
-                Show();
-            }
+
             else
             {
                 Close();
