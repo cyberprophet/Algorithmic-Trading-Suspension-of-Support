@@ -4,6 +4,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Const;
 using ShareInvest.EventHandler;
@@ -17,6 +18,10 @@ namespace ShareInvest.Controls
     public partial class ChooseAnalysis : UserControl
     {
         public string Key
+        {
+            get; private set;
+        }
+        public ColorFactory ColorFactory
         {
             get; private set;
         }
@@ -56,17 +61,24 @@ namespace ShareInvest.Controls
         {
             try
             {
-                foreach (string val in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\"), "*.csv", SearchOption.AllDirectories))
+                long recent = 0, count;
+
+                Parallel.ForEach(Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\"), "*.csv", SearchOption.AllDirectories), new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 1.5)
+                }, (val) =>
                 {
                     arr = val.Split('\\');
                     arr = arr[arr.Length - 1].Split('.');
-                    long count = long.Parse(arr[0]);
+                    count = long.Parse(arr[0]);
 
-                    if (count > RecentDate)
-                        RecentDate = count;
-                }
-                using StreamReader sr = new StreamReader(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", RecentDate.ToString(), ".csv"));
+                    if (count > recent)
+                        recent = count;
+                });
+                using StreamReader sr = new StreamReader(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", recent.ToString(), ".csv"));
+                ColorFactory = new ColorFactory();
                 List<string> list = new List<string>(256);
+                SendColor += ColorFactory.OnReceiveColor;
 
                 if (sr != null)
                     while (sr.EndOfStream == false)
@@ -90,7 +102,7 @@ namespace ShareInvest.Controls
             file = list[0].Split(',');
             Count = ip.Turn;
             count = new long[file.Length - 1];
-            int i;
+            int i, check = 0;
 
             do
             {
@@ -109,14 +121,16 @@ namespace ShareInvest.Controls
 
             foreach (KeyValuePair<string, long> kv in ip.DescendingSort.OrderByDescending(o => o.Value))
             {
-                if (i > 13)
-                    break;
+                if (i < 14)
+                {
+                    if (i < 1)
+                        FindBest(ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1, kv.Value, kv.Key);
 
-                if (i < 1)
-                    FindBest(ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1, kv.Value, kv.Key);
-
-                string.Concat(ip.FindByName, i++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " Day", (kv.Value / Assets / (ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1)).ToString("P3"));
+                    string.Concat(ip.FindByName, i++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " Day", (kv.Value / Assets / (ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1)).ToString("P3"));
+                }
+                check += kv.Value > 0 ? 1 : -1;
             }
+            SendColor?.Invoke(this, new Statistics(check > 0 ? Color.Maroon : check < 0 ? Color.DeepSkyBlue : Color.Ivory, ip.Turn, check / (double)ip.DescendingSort.Count));
         }
         private void FindBest(int denominator, long molecule, string key)
         {
@@ -127,10 +141,6 @@ namespace ShareInvest.Controls
                 Quotient = temp;
                 Key = key;
             }
-        }
-        private long RecentDate
-        {
-            get; set;
         }
         private int Count
         {
@@ -156,5 +166,6 @@ namespace ShareInvest.Controls
             new MakeUpFor3Months()
         };
         public event EventHandler<DialogClose> SendClose;
+        public event EventHandler<Statistics> SendColor;
     }
 }

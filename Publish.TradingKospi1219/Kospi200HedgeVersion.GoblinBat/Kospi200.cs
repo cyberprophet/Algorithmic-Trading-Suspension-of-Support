@@ -42,6 +42,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             splitContainerStrategy.BackColor = Color.FromArgb(121, 133, 130);
             splitContainerGuide.Panel1.BackColor = Color.FromArgb(121, 133, 130);
             strategy.SendClose += OnReceiveClose;
+            strategy.OnReceiveColor(analysis.ColorFactory);
             ResumeLayout();
             ShowDialog();
         }
@@ -67,15 +68,18 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             SuspendLayout();
             StartTrading(Balance.Get(), ConfirmOrder.Get(), new AccountSelection(), new ConnectKHOpenAPI());
-            strategy = new Strategy(new Specify
+            result = BeginInvoke(new Action(() =>
             {
-                Reaction = e.Reaction,
-                ShortDayPeriod = e.ShortDay,
-                ShortTickPeriod = e.ShortTick,
-                LongDayPeriod = e.LongDay,
-                LongTickPeriod = e.LongTick,
-                HedgeType = e.Hedge
-            });
+                strategy = new Strategy(new Specify
+                {
+                    Reaction = e.Reaction,
+                    ShortDayPeriod = e.ShortDay,
+                    ShortTickPeriod = e.ShortTick,
+                    LongDayPeriod = e.LongDay,
+                    LongTickPeriod = e.LongTick,
+                    HedgeType = e.Hedge
+                });
+            }));
         }
         private void OnReceiveAccount(object sender, Account e)
         {
@@ -92,6 +96,7 @@ namespace ShareInvest.Kospi200HedgeVersion
                     string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.ArrayDeposit[i]).ToString("N0");
 
             splitContainerAccount.BackColor = Color.FromArgb(121, 133, 130);
+            EndInvoke(result);
             long trading = long.Parse(e.ArrayDeposit[20]), deposit = long.Parse(e.ArrayDeposit[18]);
 
             if (Account == false)
@@ -235,5 +240,6 @@ namespace ShareInvest.Kospi200HedgeVersion
         private const int APPCOMMAND_VOLUME_DOWN = 0x90000;
         private const int WM_APPCOMMAND = 0x319;
         private Strategy strategy;
+        private IAsyncResult result;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
+using ShareInvest.Const;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
 using ShareInvest.Interface;
@@ -15,6 +16,21 @@ namespace ShareInvest.Controls
             InitializeComponent();
             timer.Interval = 2753;
             timer.Start();
+        }
+        public void OnReceiveColor(ColorFactory cf)
+        {
+            labelShortTick.ForeColor = cf.Recent;
+            labelShortDay.ForeColor = cf.Weekly;
+            labelLongTick.ForeColor = cf.Biweekly;
+            labelLongDay.ForeColor = cf.Monthly;
+            labelReaction.ForeColor = cf.For3Months;
+            labelHedge.ForeColor = cf.Cumulative;
+            labelShortTick.Text = string.Concat(labelShortTick.Text, cf.StrRecent);
+            labelShortDay.Text = string.Concat(labelShortDay.Text, cf.StrWeekly);
+            labelLongTick.Text = string.Concat(labelLongTick.Text, cf.StrBiweekly);
+            labelLongDay.Text = string.Concat(labelLongDay.Text, cf.StrMonthly);
+            labelReaction.Text = string.Concat(labelReaction.Text, cf.StrFor3Months);
+            labelHedge.Text = string.Concat(labelHedge.Text, cf.StrCumulative);
         }
         public void OnReceiveClose(object sender, DialogClose e)
         {
