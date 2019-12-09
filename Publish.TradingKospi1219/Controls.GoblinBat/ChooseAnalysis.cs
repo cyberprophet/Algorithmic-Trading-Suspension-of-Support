@@ -27,6 +27,7 @@ namespace ShareInvest.Controls
         }
         public ChooseAnalysis()
         {
+            Keys = new Dictionary<int, string>();
             InitializeComponent();
             string[] assets = new Assets().ReadCSV().Split(',');
             Assets = long.Parse(assets[1]);
@@ -62,6 +63,7 @@ namespace ShareInvest.Controls
             try
             {
                 long recent = 0, count;
+                double best = 0, find;
 
                 Parallel.ForEach(Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\"), "*.csv", SearchOption.AllDirectories), new ParallelOptions
                 {
@@ -79,13 +81,23 @@ namespace ShareInvest.Controls
                 ColorFactory = new ColorFactory();
                 List<string> list = new List<string>(256);
                 SendColor += ColorFactory.OnReceiveColor;
+                int turn = 0;
 
                 if (sr != null)
                     while (sr.EndOfStream == false)
                         list.Add(sr.ReadLine());
 
                 foreach (IMakeUp val in mp)
-                    MakeUp(list, val);
+                {
+                    find = MakeUp(list, val);
+
+                    if (best < find && val.Turn != 2)
+                    {
+                        best = find;
+                        turn = val.Turn;
+                    }
+                }
+                Key = Keys[turn];
 
                 return string.Concat(list[1].Substring(0, 8), "^", list[list.Count - 2].Substring(0, 8));
             }
@@ -97,12 +109,13 @@ namespace ShareInvest.Controls
             }
             return string.Empty;
         }
-        private void MakeUp(List<string> list, IMakeUp ip)
+        private double MakeUp(List<string> list, IMakeUp ip)
         {
             file = list[0].Split(',');
             Count = ip.Turn;
             count = new long[file.Length - 1];
             int i, check = 0;
+            double best;
 
             do
             {
@@ -124,23 +137,16 @@ namespace ShareInvest.Controls
                 if (i < 14)
                 {
                     if (i < 1)
-                        FindBest(ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1, kv.Value, kv.Key);
+                        Keys[ip.Turn] = kv.Key;
 
                     string.Concat(ip.FindByName, i++).FindByName<Button>(this).Text = string.Concat(kv.Key.Replace('^', '.'), " Day", (kv.Value / Assets / (ip.FindByName.Equals("cumulative") ? list.Count - 2 : ip.Turn - 1)).ToString("P3"));
                 }
                 check += kv.Value > 0 ? 1 : -1;
             }
-            SendColor?.Invoke(this, new Statistics(check > 0 ? Color.Maroon : check < 0 ? Color.DeepSkyBlue : Color.Ivory, ip.Turn, check / (double)ip.DescendingSort.Count));
-        }
-        private void FindBest(int denominator, long molecule, string key)
-        {
-            double temp = (double)molecule / denominator;
+            best = check / (double)ip.DescendingSort.Count;
+            SendColor?.Invoke(this, new Statistics(check > 0 ? Color.Maroon : check < 0 ? Color.DeepSkyBlue : Color.Ivory, ip.Turn, best));
 
-            if (Quotient < temp && denominator > 1)
-            {
-                Quotient = temp;
-                Key = key;
-            }
+            return best;
         }
         private int Count
         {
@@ -150,7 +156,7 @@ namespace ShareInvest.Controls
         {
             get; set;
         }
-        private double Quotient
+        private Dictionary<int, string> Keys
         {
             get; set;
         }
