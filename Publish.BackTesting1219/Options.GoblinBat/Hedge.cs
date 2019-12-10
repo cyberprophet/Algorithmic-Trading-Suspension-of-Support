@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using ShareInvest.Communication;
 
 namespace ShareInvest.Options
@@ -11,9 +12,10 @@ namespace ShareInvest.Options
         {
             get; private set;
         }
-        public Hedge(IStrategy strategy)
+        public Hedge(IStrategy strategy, Dictionary<string, uint> balance)
         {
             this.strategy = strategy;
+            this.balance = balance;
         }
         public void Operate(bool check, string time, double price, int quantity)
         {
@@ -21,6 +23,11 @@ namespace ShareInvest.Options
             string code = string.Empty, date = GetDistinctDate(now, CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(now.AddDays(1 - now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
             double temp = 0;
 
+            if (!date.Equals(Date))
+            {
+                Date = date;
+                balance.Clear();
+            }
             if (strategy.Repository.ContainsKey(date))
             {
                 foreach (KeyValuePair<string, Dictionary<string, double>> kv in strategy.Repository[date])
@@ -38,12 +45,41 @@ namespace ShareInvest.Options
                             temp = kv.Value;
 
                     if (temp > 0 && check == false)
+                    {
                         OptionsRevenue += (long)(strategy.TransactionMultiplier * temp) + (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
+                        balance[code] = balance.ContainsKey(code) ? balance[code] + 1 : 1;
+                    }
+                    else if (check && balance.Count > 0)
+                    {
+                        uint amount = 0;
 
-                    else if (temp > 0 && check)
-                        OptionsRevenue -= (long)(strategy.TransactionMultiplier * temp) - (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
+                        foreach (KeyValuePair<string, uint> kv in balance)
+                            if (kv.Value > amount)
+                            {
+                                amount = kv.Value;
+                                code = kv.Key;
+                            }
+                        balance[code] = balance[code] - 1;
+
+                        if (strategy.Repository[date].TryGetValue(code, out Dictionary<string, double> revenue))
+                        {
+                            temp = FindRevenue(revenue, time, 11);
+                            OptionsRevenue -= (long)(strategy.TransactionMultiplier * temp) - (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
+                        }
+                    }
+                    while (balance.ContainsValue(0))
+                        balance.Remove(balance.First(o => o.Value < 1).Key);
                 }
             }
+        }
+        private double FindRevenue(Dictionary<string, double> revenue, string time, int index)
+        {
+            double temp = revenue.FirstOrDefault(o => o.Key.Substring(0, index).Equals(time.Substring(0, index))).Value;
+
+            if (temp == 0)
+                return FindRevenue(revenue, time, index - 1);
+
+            return temp;
         }
         private string FindbyCode(string code)
         {
@@ -62,6 +98,10 @@ namespace ShareInvest.Options
         {
             return new DateTime(2000 + int.Parse(time.Substring(0, 2)), int.Parse(time.Substring(2, 2)), int.Parse(time.Substring(4, 2)), int.Parse(time.Substring(6, 2)), int.Parse(time.Substring(8, 2)), int.Parse(time.Substring(10, 2)));
         }
+        private string Date
+        {
+            get; set;
+        }
         private readonly Dictionary<int, double> rate = new Dictionary<int, double>()
         {
             {0, 0 },
@@ -71,6 +111,7 @@ namespace ShareInvest.Options
             {4, 0.17 },
             {5, 0.205 }
         };
+        private readonly Dictionary<string, uint> balance;
         private readonly IStrategy strategy;
     }
 }

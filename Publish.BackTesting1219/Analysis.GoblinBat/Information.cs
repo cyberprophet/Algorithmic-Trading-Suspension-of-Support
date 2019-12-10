@@ -28,8 +28,8 @@ namespace ShareInvest.BackTesting.Analysis
         }
         public void Save(string time, double price)
         {
-            Revenue = CumulativeRevenue - Commission - hedge.OptionsRevenue;
-            list.Add(string.Concat(DateTime.ParseExact(time.Substring(0, 6), "yyMMdd", CultureInfo.CurrentCulture).ToString("yy-MM-dd"), ',', (long)(Quantity.Equals(0) ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * st.TransactionMultiplier * Math.Abs(Quantity)), ',', Revenue - TodayRevenue, ',', CumulativeRevenue - Commission - hedge.OptionsRevenue));
+            Revenue = CumulativeRevenue - Commission;
+            list.Add(string.Concat(DateTime.ParseExact(time.Substring(0, 6), "yyMMdd", CultureInfo.CurrentCulture).ToString("yy-MM-dd"), ',', (long)(Quantity.Equals(0) ? 0 - hedge.OptionsRevenue : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * st.TransactionMultiplier * Math.Abs(Quantity) - hedge.OptionsRevenue), ',', Revenue - TodayRevenue, ',', CumulativeRevenue - Commission));
             TodayRevenue = Revenue;
         }
         public void Log()
@@ -59,7 +59,7 @@ namespace ShareInvest.BackTesting.Analysis
         public Information(IStrategy st)
         {
             this.st = st;
-            hedge = new Hedge(st);
+            hedge = new Hedge(st, new Dictionary<string, uint>());
         }
         public string[] Kospi
         {

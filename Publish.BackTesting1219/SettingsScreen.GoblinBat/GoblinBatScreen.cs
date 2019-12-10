@@ -41,12 +41,12 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 set = new StrategySetting
                 {
-                    ShortTick = SetValue(ran.Next(asset.ShortTickPeriod / 2, asset.ShortTickPeriod), ran.Next(5, 55), ran.Next(asset.ShortTickPeriod, asset.ShortTickPeriod * 3)),
-                    LongTick = SetValue(ran.Next(asset.LongTickPeriod / 2, asset.LongTickPeriod), ran.Next(10, 110), ran.Next(asset.LongTickPeriod, asset.LongTickPeriod * 3)),
-                    ShortDay = SetValue(2, ran.Next(1, 3), ran.Next(asset.ShortDayPeriod, asset.ShortDayPeriod * 2)),
-                    LongDay = SetValue(ran.Next(asset.LongDayPeriod / 2, asset.LongDayPeriod), ran.Next(1, 25), ran.Next(asset.LongDayPeriod, asset.LongDayPeriod * 2)),
-                    Reaction = SetValue(ran.Next(asset.Reaction / 2, asset.Reaction), ran.Next(1, 3), ran.Next(asset.Reaction, asset.Reaction * 2)),
-                    Hedge = SetValue(0, 1, ran.Next(0, 5)),
+                    ShortTick = SetValue(ran.Next(asset.ShortTickPeriod / 3, asset.ShortTickPeriod), ran.Next(5, 51), ran.Next(asset.ShortTickPeriod, asset.ShortTickPeriod * 2)),
+                    LongTick = SetValue(ran.Next(asset.LongTickPeriod / 3, asset.LongTickPeriod), ran.Next(5, 51), ran.Next(asset.LongTickPeriod, asset.LongTickPeriod * 2)),
+                    ShortDay = SetValue(2, ran.Next(1, 4), ran.Next(asset.ShortDayPeriod, asset.ShortDayPeriod * 2)),
+                    LongDay = SetValue(ran.Next(asset.LongDayPeriod / 3, asset.LongDayPeriod), ran.Next(1, 11), ran.Next(asset.LongDayPeriod, asset.LongDayPeriod * 2)),
+                    Reaction = SetValue(ran.Next(asset.Reaction / 3, asset.Reaction), ran.Next(1, 4), ran.Next(asset.Reaction, asset.Reaction * 2)),
+                    Hedge = SetValue(0, 1, ran.Next(0, 6)),
                     Capital = asset.Assets
                 };
                 return set.EstimatedTime();
@@ -82,8 +82,6 @@ namespace ShareInvest.BackTesting.SettingsScreen
             checkBox.Text = "BackTesting";
             new Transmit(asset.Account, set.Capital);
             string path = string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
-            GC.Collect();
-            Count = Process.GetCurrentProcess().Threads.Count;
             InterLink = false;
             List<Specify> list = new List<Specify>(131072);
 
@@ -107,6 +105,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
                                             PathLog = path,
                                             Strategy = string.Concat(sDay.ToString("D2"), '^', sTick.ToString("D2"), '^', lDay.ToString("D2"), '^', lTick.ToString("D2"), '^', reaction.ToString("D2"), '^', hedge.ToString("D2"))
                                         });
+            GC.Collect();
+            Count = Process.GetCurrentProcess().Threads.Count;
             new Task(() =>
             {
                 Parallel.ForEach(list, new ParallelOptions
@@ -139,7 +139,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             GC.Collect();
 
             if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", pro.Maximum / 60000, " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)pro.Maximum).Equals((DialogResult)6))
-                Process.Start(string.Concat(Application.StartupPath, @"\Kospi200.exe"));
+                Process.Start("shutdown.exe", "-r");
 
             Application.ExitThread();
             Application.Exit();
