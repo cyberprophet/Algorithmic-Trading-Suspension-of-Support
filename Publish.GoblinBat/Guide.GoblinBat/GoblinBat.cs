@@ -42,7 +42,11 @@ namespace ShareInvest.Guide
                         }
                     }
                 }));
-                EndInvoke(result);
+                do
+                {
+                    Application.DoEvents();
+                }
+                while (result.IsCompleted == false);
 
                 if (registry.GetValue(bat) != null)
                 {

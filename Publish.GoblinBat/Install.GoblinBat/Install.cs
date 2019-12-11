@@ -10,6 +10,7 @@ using ShareInvest.EventHandler;
 using ShareInvest.Guide;
 using ShareInvest.NetFramework;
 using ShareInvest.OpenAPI;
+using ShareInvest.TimerBoxs;
 
 namespace ShareInvest.Install
 {
@@ -24,7 +25,22 @@ namespace ShareInvest.Install
             buttonDOTNETFramework.Click += ButtonClick;
             buttonGoblinBat.Click += ButtonClick;
             buttonOpenAPI.Click += ButtonClick;
-            MessageBox.Show("The GoblinBat Works Correctly when\nAll Elements are Installed.\n\nClick on a Program\nthat is Not Installed.\n\nThe GoblinBat must be Installed Last.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            SuspendLayout();
+
+            if (TimerBox.Show("The GoblinBat Works Correctly when\nAll Elements are Installed.\n\nClick on a Program\nthat is Not Installed.\n\nThe GoblinBat must be Installed Last.\n\nThe Default Font is\n'Brush Script Std'.\n\nClick 'Yes' to Change to\n'Consolas'.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 15732).Equals(DialogResult.Yes))
+                SetControlsChangeFont(Controls, new Font("Consolas", Font.Size + 3.5F, FontStyle.Regular));
+
+            ResumeLayout();
+        }
+        private void SetControlsChangeFont(System.Windows.Forms.Control.ControlCollection controls, Font font)
+        {
+            foreach (System.Windows.Forms.Control control in controls)
+            {
+                control.Font = font;
+
+                if (control.Controls.Count > 0)
+                    SetControlsChangeFont(control.Controls, font);
+            }
         }
         private void ButtonClick(object sender, EventArgs e)
         {
@@ -78,7 +94,6 @@ namespace ShareInvest.Install
             Opacity = 0.95;
             ResumeLayout();
             Show();
-            Application.DoEvents();
             gb.SetRoute(new WshShell());
 
             if (DialogResult.OK.Equals(MessageBox.Show("The Installation is Complete.\n\nPlease Register Your OpenAPI.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1)))
@@ -101,6 +116,7 @@ namespace ShareInvest.Install
             tc.SendQuit += OnReceiveDialogClose;
             SetVisibleCore(false);
             ResumeLayout();
+            Process.Start("Font.exe");
             ShowDialog();
             tc.SendQuit -= OnReceiveDialogClose;
         }
@@ -110,6 +126,7 @@ namespace ShareInvest.Install
             {
                 SuspendLayout();
                 GetControls(new GoblinBat());
+                Application.DoEvents();
             }
             catch (Exception ex)
             {
