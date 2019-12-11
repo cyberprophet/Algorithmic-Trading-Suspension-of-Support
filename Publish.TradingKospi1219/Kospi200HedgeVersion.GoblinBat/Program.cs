@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Windows.Forms;
+using ShareInvest.TimerMessageBox;
 
 namespace ShareInvest.Kospi200HedgeVersion
 {
@@ -25,8 +26,12 @@ namespace ShareInvest.Kospi200HedgeVersion
             if (operation)
             {
                 while (DateTime.Now.Hour < 8)
-                    Thread.Sleep(60000);
+                {
+                    if (TimerBox.Show("Inspection Time\n\nFrom Midnight to 8:00\n\nPress 'OK' to Force the Connection.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 15712).Equals(DialogResult.OK))
+                        break;
 
+                    Thread.Sleep(60000);
+                }
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.Run(new Kospi200());

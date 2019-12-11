@@ -41,6 +41,20 @@ namespace ShareInvest.Controls
                     if (temp[0].Length > 0 && (temp[0].Substring(0, 3).Equals("101") || temp[0].Substring(0, 3).Equals(OrderType)))
                         continue;
 
+                    if (!temp[0].Substring(0, 3).Equals("101") && temp[2].Equals("1"))
+                    {
+                        api.OnReceiveOrder(new PurchaseInformation
+                        {
+                            Code = temp[0],
+                            SlbyTP = "2",
+                            OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
+                            Price = string.Empty,
+                            Qty = 1
+                        });
+                        BeginInvoke(new Action(() => new LogMessage().Record("Options", string.Concat(DateTime.Now.ToLongTimeString(), "*", temp[0], "*", (int.Parse(temp[5]) / (double)100).ToString("N2"), "*", "Revise"))));
+
+                        continue;
+                    }
                     int close = int.Parse(temp[5]);
 
                     if (close > price)

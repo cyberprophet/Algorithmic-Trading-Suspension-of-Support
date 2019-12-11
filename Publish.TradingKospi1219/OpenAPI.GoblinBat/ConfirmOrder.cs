@@ -32,9 +32,11 @@ namespace ShareInvest.OpenAPI
             if (e.Confirm != null && e.Confirm.Equals(message))
             {
                 if (TimerBox.Show(string.Concat(message, "\n\nDo You Want to Continue with BackTesting??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter 35 Seconds the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 35752).Equals((DialogResult)6))
-                    Process.Start(string.Concat(Application.StartupPath, @"\BackTesting.exe"));
+                    Process.Start("shutdown.exe", "-r");
 
                 SendTab?.Invoke(this, new Mining(9));
+
+                return;
             }
             checkBox.Text = e.Confirm != null ? string.Concat(DateTime.Now.ToString("H시 m분 s초\n"), e.Confirm) : string.Concat(e.Remaining, ".");
             SendTab?.Invoke(this, new Mining(2));

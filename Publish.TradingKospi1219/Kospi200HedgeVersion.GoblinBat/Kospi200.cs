@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ShareInvest.Analysize;
 using ShareInvest.Const;
@@ -11,23 +10,40 @@ using ShareInvest.Management;
 using ShareInvest.OpenAPI;
 using ShareInvest.SecondaryForms;
 using ShareInvest.TimerMessageBox;
+using ShareInvest.VolumeControl;
 
 namespace ShareInvest.Kospi200HedgeVersion
 {
     public partial class Kospi200 : Form
     {
-        [DllImport("user32.dll")]
-        public static extern IntPtr SendMessageW(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
         public Kospi200()
         {
             InitializeComponent();
             SuspendLayout();
-            SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
-            ChooseStrategy(new GuideGoblinBat(), new ChooseAnalysis(), new SelectStrategies());
+            Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
+            ChooseStrategy(TimerBox.Show("The Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new ChooseAnalysis(), new SelectStrategies());
             Dispose();
             Environment.Exit(0);
         }
-        private void ChooseStrategy(GuideGoblinBat guide, ChooseAnalysis analysis, SelectStrategies strategy)
+        private void SetControlsChangeFont(DialogResult result, Control.ControlCollection controls, Font font)
+        {
+            if (result.Equals(DialogResult.OK))
+                foreach (Control control in controls)
+                {
+                    string name = control.GetType().Name;
+
+                    if (control.Font.Name.Equals("Brush Script Std") && (name.Equals("CheckBox") || name.Equals("Label") || name.Equals("Button") || name.Equals("TabControl")))
+                    {
+                        control.Font = control.Text.Contains("%") ? font : new Font("Consolas", font.Size + 3.15F, FontStyle.Bold);
+
+                        if (name.Equals("Label") && control.Text.Contains("%"))
+                            control.Padding = new Padding(0, 0, 0, 3);
+                    }
+                    if (control.Controls.Count > 0)
+                        SetControlsChangeFont(DialogResult.OK, control.Controls, font);
+                }
+        }
+        private void ChooseStrategy(DialogResult result, GuideGoblinBat guide, ChooseAnalysis analysis, SelectStrategies strategy)
         {
             analysis.SendClose += strategy.OnReceiveClose;
             strategy.OnReceiveClose(analysis.Key.Split('^'));
@@ -37,12 +53,14 @@ namespace ShareInvest.Kospi200HedgeVersion
             analysis.Dock = DockStyle.Fill;
             strategy.Dock = DockStyle.Fill;
             guide.Dock = DockStyle.Fill;
+            font = result;
             Size = new Size(1650, 920);
             splitContainerStrategy.SplitterDistance = 287;
             splitContainerStrategy.BackColor = Color.FromArgb(121, 133, 130);
             splitContainerGuide.Panel1.BackColor = Color.FromArgb(121, 133, 130);
             strategy.SendClose += OnReceiveClose;
             strategy.OnReceiveColor(analysis.ColorFactory);
+            SetControlsChangeFont(result, Controls, new Font("Consolas", Font.Size, FontStyle.Regular));
             ResumeLayout();
             ShowDialog();
         }
@@ -62,6 +80,11 @@ namespace ShareInvest.Kospi200HedgeVersion
             splitContainerBalance.Panel1MinSize = 96;
             order.SendTab += OnReceiveTabControl;
             bal.SendReSize += OnReceiveSize;
+
+            if (font.Equals(DialogResult.OK))
+                foreach (Control control in order.Controls.Find("checkBox", true))
+                    control.Font = new Font("Consolas", control.Font.Size + 0.75F, FontStyle.Bold);
+
             ResumeLayout();
         }
         private void OnReceiveClose(object sender, DialogClose e)
@@ -80,6 +103,11 @@ namespace ShareInvest.Kospi200HedgeVersion
                     HedgeType = e.Hedge
                 });
             }));
+            do
+            {
+                Application.DoEvents();
+            }
+            while (result.IsCompleted == false);
         }
         private void OnReceiveAccount(object sender, Account e)
         {
@@ -96,7 +124,6 @@ namespace ShareInvest.Kospi200HedgeVersion
                     string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.ArrayDeposit[i]).ToString("N0");
 
             splitContainerAccount.BackColor = Color.FromArgb(121, 133, 130);
-            EndInvoke(result);
             long trading = long.Parse(e.ArrayDeposit[20]), deposit = long.Parse(e.ArrayDeposit[18]);
 
             if (Account == false)
@@ -170,15 +197,15 @@ namespace ShareInvest.Kospi200HedgeVersion
                 {
                     webBrowser.Navigate(@"https://sharecompany.tistory.com/guestbook");
                     splitContainerGuide.Panel2.BackColor = Color.FromArgb(118, 130, 127);
-                    SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_UP);
+                    Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_UP);
                     webBrowser.Hide();
                 }));
             else if (tabControl.SelectedIndex.Equals(1))
                 BeginInvoke(new Action(() =>
                 {
-                    SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_DOWN);
+                    Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_DOWN);
                     webBrowser.Navigate(@"https://youtu.be/d1MQsMr4pxQ");
-                    SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
+                    Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
                 }));
         }
         private void ServerCheckedChanged(object sender, EventArgs e)
@@ -240,6 +267,7 @@ namespace ShareInvest.Kospi200HedgeVersion
         private const int APPCOMMAND_VOLUME_DOWN = 0x90000;
         private const int WM_APPCOMMAND = 0x319;
         private Strategy strategy;
+        private DialogResult font;
         private IAsyncResult result;
     }
 }

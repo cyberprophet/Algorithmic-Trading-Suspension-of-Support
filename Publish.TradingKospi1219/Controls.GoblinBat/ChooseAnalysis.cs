@@ -144,7 +144,7 @@ namespace ShareInvest.Controls
                 check += kv.Value > 0 ? 1 : -1;
             }
             best = check / (double)ip.DescendingSort.Count;
-            SendColor?.Invoke(this, new Statistics(check > 0 ? Color.Maroon : check < 0 ? Color.DeepSkyBlue : Color.Ivory, ip.Turn, best));
+            SendColor?.Invoke(this, new Statistics(check > 0 ? Color.Maroon : check < 0 ? Color.Navy : Color.Ivory, ip.Turn, best));
 
             return best;
         }

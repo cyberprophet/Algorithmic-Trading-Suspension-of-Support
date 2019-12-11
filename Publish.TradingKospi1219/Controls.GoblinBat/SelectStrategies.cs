@@ -25,12 +25,12 @@ namespace ShareInvest.Controls
             labelLongDay.ForeColor = cf.Monthly;
             labelReaction.ForeColor = cf.For3Months;
             labelHedge.ForeColor = cf.Cumulative;
-            labelShortTick.Text = string.Concat(labelShortTick.Text, cf.StrRecent);
-            labelShortDay.Text = string.Concat(labelShortDay.Text, cf.StrWeekly);
-            labelLongTick.Text = string.Concat(labelLongTick.Text, cf.StrBiweekly);
-            labelLongDay.Text = string.Concat(labelLongDay.Text, cf.StrMonthly);
-            labelReaction.Text = string.Concat(labelReaction.Text, cf.StrFor3Months);
-            labelHedge.Text = string.Concat(labelHedge.Text, cf.StrCumulative);
+            labelShortTick.Text = string.Concat(labelShortTick.Text, cf.StrRecent.Contains("-") ? cf.StrRecent.Replace("-", "") : cf.StrRecent);
+            labelShortDay.Text = string.Concat(labelShortDay.Text, cf.StrWeekly.Contains("-") ? cf.StrWeekly.Replace("-", "") : cf.StrWeekly);
+            labelLongTick.Text = string.Concat(labelLongTick.Text, cf.StrBiweekly.Contains("-") ? cf.StrBiweekly.Replace("-", "") : cf.StrBiweekly);
+            labelLongDay.Text = string.Concat(labelLongDay.Text, cf.StrMonthly.Contains("-") ? cf.StrMonthly.Replace("-", "") : cf.StrMonthly);
+            labelReaction.Text = string.Concat(labelReaction.Text, cf.StrFor3Months.Contains("-") ? cf.StrFor3Months.Replace("-", "") : cf.StrFor3Months);
+            labelHedge.Text = string.Concat(labelHedge.Text, cf.StrCumulative.Contains("-") ? cf.StrCumulative.Replace("-", "") : cf.StrCumulative);
         }
         public void OnReceiveClose(object sender, DialogClose e)
         {
