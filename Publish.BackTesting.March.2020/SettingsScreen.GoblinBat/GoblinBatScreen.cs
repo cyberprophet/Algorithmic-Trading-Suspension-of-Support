@@ -10,6 +10,7 @@ using ShareInvest.Communication;
 using ShareInvest.Information;
 using ShareInvest.Log.Message;
 using ShareInvest.MassProcessingTechnology;
+using ShareInvest.RemainingDate;
 using ShareInvest.RetrieveOptions;
 
 namespace ShareInvest.BackTesting.SettingsScreen
@@ -33,7 +34,18 @@ namespace ShareInvest.BackTesting.SettingsScreen
         public void SetProgress(Progress pro)
         {
             this.pro = pro;
+            BeginInvoke(new Action(() => SetNumeric(0)));
             timer.Start();
+        }
+        private void SetNumeric(decimal param)
+        {
+            foreach (string name in Enum.GetNames(typeof(IFindbyName.Numeric)))
+            {
+                name.FindByName<NumericUpDown>(this).Minimum = 0;
+                name.FindByName<NumericUpDown>(this).Maximum = ulong.MaxValue;
+                name.FindByName<NumericUpDown>(this).Value = param;
+                name.FindByName<NumericUpDown>(this).Increment = 1;
+            }
         }
         private int SetOptimize(IAsset asset, int repeat)
         {
@@ -109,13 +121,14 @@ namespace ShareInvest.BackTesting.SettingsScreen
             Count = Process.GetCurrentProcess().Threads.Count;
             new Task(() =>
             {
+                Remaining remaining = new Remaining();
                 Parallel.ForEach(list, new ParallelOptions
                 {
                     MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 1.5)
                 },
                 new Action<Specify>((analysis) =>
                 {
-                    new Analysize(analysis);
+                    new Analysize(remaining, analysis);
                     pro.ProgressBarValue++;
                 }));
                 list.Clear();

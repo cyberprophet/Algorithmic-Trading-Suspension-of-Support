@@ -36,8 +36,10 @@ namespace ShareInvest.BackTesting
             if (result.Equals(DialogResult.OK))
                 foreach (Control control in controls)
                 {
-                    if (control.Name.Contains("label") || control.Name.Equals("button") || control.Name.Equals("checkBox"))
-                        control.Font = control.Text.Contains("by Day") ? new Font("Consolas", Font.Size - 1.25F, FontStyle.Bold) : font;
+                    string name = control.GetType().Name;
+
+                    if (name.Equals("Label") || name.Equals("Button") || name.Equals("CheckBox"))
+                        control.Font = control.Text.Contains("by Day") ? new Font("Consolas", Font.Size - 1.75F, FontStyle.Bold) : control.Text.Contains(" Value") ? new Font("Consolas", Font.Size - 1.25F, FontStyle.Bold) : font;
 
                     if (control.Controls.Count > 0)
                         SetControlsChangeFont(DialogResult.OK, control.Controls, font);

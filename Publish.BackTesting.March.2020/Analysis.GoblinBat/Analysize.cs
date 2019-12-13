@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using ShareInvest.Communication;
 using ShareInvest.Log.Message;
+using ShareInvest.RemainingDate;
 
 namespace ShareInvest.BackTesting.Analysis
 {
     public class Analysize
     {
-        public Analysize(IStrategy st)
+        public Analysize(Remaining remaining, IStrategy st)
         {
             ema = new EMA();
             shortDay = new List<double>(512);
@@ -18,6 +19,7 @@ namespace ShareInvest.BackTesting.Analysis
             Send += Analysis;
             this.st = st;
             info = new Information(st);
+            this.remaining = remaining;
             GetChart();
             info.Log();
         }
@@ -47,7 +49,7 @@ namespace ShareInvest.BackTesting.Analysis
         }
         private void Analysis(object sender, Datum e)
         {
-            int quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
+            int i, quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
 
             if (e.Time.Length > 2 && e.Time.Substring(6, 4).Equals("1545") || Array.Exists(info.Kospi, o => o.Equals(e.Time)))
             {
@@ -62,6 +64,9 @@ namespace ShareInvest.BackTesting.Analysis
 
                 return;
             }
+            if (Array.Exists(remaining.Date, o => o.Equals(e.Time)) && Math.Abs(info.Quantity) > 0)
+                for (i = info.Quantity; i > 0; i--)
+                    info.Operate(e.Price, info.Quantity > 0 ? -1 : 1, e.Time);
         }
         private int Order(int tick, int day)
         {
@@ -105,6 +110,7 @@ namespace ShareInvest.BackTesting.Analysis
         private readonly IStrategy st;
         private readonly EMA ema;
         private readonly Information info;
+        private readonly Remaining remaining;
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
         private readonly List<double> shortTick;
