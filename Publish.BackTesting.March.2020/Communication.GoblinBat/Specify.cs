@@ -4,6 +4,10 @@ namespace ShareInvest.Communication
 {
     public class Specify : IStrategy
     {
+        public int Percent
+        {
+            get; set;
+        }
         public int Hedge
         {
             get; set;
@@ -32,7 +36,27 @@ namespace ShareInvest.Communication
         {
             get;
         } = 250000;
+        public int Base
+        {
+            get; set;
+        }
+        public int Quantity
+        {
+            get; set;
+        }
+        public int Time
+        {
+            get; set;
+        }
         public long BasicAssets
+        {
+            get; set;
+        }
+        public double Max
+        {
+            get; set;
+        }
+        public double Sigma
         {
             get; set;
         }

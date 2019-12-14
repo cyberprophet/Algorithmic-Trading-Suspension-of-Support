@@ -4,6 +4,10 @@ namespace ShareInvest.Communication
 {
     public interface IStrategy : IOptions
     {
+        int Percent
+        {
+            get;
+        }
         int Hedge
         {
             get;
@@ -32,6 +36,18 @@ namespace ShareInvest.Communication
         {
             get;
         }
+        int Base
+        {
+            get;
+        }
+        int Quantity
+        {
+            get;
+        }
+        int Time
+        {
+            get;
+        }
         long BasicAssets
         {
             get;
@@ -45,6 +61,14 @@ namespace ShareInvest.Communication
             get;
         }
         double ErrorRate
+        {
+            get;
+        }
+        double Max
+        {
+            get;
+        }
+        double Sigma
         {
             get;
         }

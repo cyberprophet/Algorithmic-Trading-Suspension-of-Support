@@ -1,4 +1,7 @@
-﻿namespace ShareInvest.Communication
+﻿using System;
+using System.Threading.Tasks;
+
+namespace ShareInvest.Communication
 {
     public class StrategySetting : IStrategySetting
     {
@@ -30,22 +33,48 @@
         {
             get; set;
         }
+        public int[] Base
+        {
+            get; set;
+        }
+        public int[] Sigma
+        {
+            get; set;
+        }
+        public int[] Percent
+        {
+            get; set;
+        }
+        public int[] Max
+        {
+            get; set;
+        }
+        public int[] Quantity
+        {
+            get; set;
+        }
+        public int[] Time
+        {
+            get; set;
+        }
         public int EstimatedTime()
         {
             int count = 0;
 
-            foreach (int hedge in Hedge)
-                foreach (int ld in LongDay)
-                    foreach (int lt in LongTick)
-                        foreach (int sd in ShortDay)
-                            foreach (int st in ShortTick)
-                                foreach (int r in Reaction)
-                                {
-                                    if (st >= lt || sd >= ld)
-                                        continue;
-
-                                    count++;
-                                }
+            foreach (int h in Hedge)
+                foreach (int t in Time)
+                    foreach (int m in Max)
+                        foreach (int p in Percent)
+                            foreach (int s in Sigma)
+                                foreach (int b in Base)
+                                    foreach (int r in Reaction)
+                                        foreach (int q in Quantity)
+                                            foreach (int shortTick in ShortTick)
+                                                foreach (int longTick in LongTick)
+                                                    foreach (int shortDay in ShortDay)
+                                                        foreach (int longDay in LongDay)
+                                                            if (shortTick < longTick && shortDay < longDay && int.MaxValue.Equals(count++))
+                                                                return 0;
             return count;
         }
     }

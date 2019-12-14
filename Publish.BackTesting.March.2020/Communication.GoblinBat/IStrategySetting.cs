@@ -30,6 +30,30 @@
         {
             get; set;
         }
+        int[] Base
+        {
+            get; set;
+        }
+        int[] Sigma
+        {
+            get; set;
+        }
+        int[] Percent
+        {
+            get; set;
+        }
+        int[] Max
+        {
+            get; set;
+        }
+        int[] Quantity
+        {
+            get; set;
+        }
+        int[] Time
+        {
+            get; set;
+        }
         int EstimatedTime();
     }
 }

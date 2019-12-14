@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.BackTesting.Analysis;
@@ -12,6 +13,7 @@ using ShareInvest.Log.Message;
 using ShareInvest.MassProcessingTechnology;
 using ShareInvest.RemainingDate;
 using ShareInvest.RetrieveOptions;
+using ShareInvest.SettingValue;
 
 namespace ShareInvest.BackTesting.SettingsScreen
 {
@@ -24,28 +26,98 @@ namespace ShareInvest.BackTesting.SettingsScreen
             InitializeComponent();
             BackColor = Color.FromArgb(121, 133, 130);
             numericCapital.Value = asset.Assets;
-            labelH.Text = asset.Hedge.ToString();
-            labelR.Text = asset.Reaction.ToString();
-            labelSD.Text = asset.ShortDayPeriod.ToString();
-            labelST.Text = asset.ShortTickPeriod.ToString();
-            labelLD.Text = asset.LongDayPeriod.ToString();
-            labelLT.Text = asset.LongTickPeriod.ToString();
         }
         public void SetProgress(Progress pro)
         {
             this.pro = pro;
-            BeginInvoke(new Action(() => SetNumeric(0)));
-            timer.Start();
-        }
-        private void SetNumeric(decimal param)
-        {
-            foreach (string name in Enum.GetNames(typeof(IFindbyName.Numeric)))
+            SuspendLayout();
+            IAsyncResult result = BeginInvoke(new Action(() =>
             {
-                name.FindByName<NumericUpDown>(this).Minimum = 0;
-                name.FindByName<NumericUpDown>(this).Maximum = ulong.MaxValue;
-                name.FindByName<NumericUpDown>(this).Value = param;
-                name.FindByName<NumericUpDown>(this).Increment = 1;
+                ran = new Random();
+                SetLabelUsed();
+                SetNumeric(new RecallSettings().GetSettingValue());
+            }));
+            timer.Start();
+
+            do
+            {
+                Application.DoEvents();
             }
+            while (result.IsCompleted == false);
+
+            ResumeLayout();
+        }
+        private void SetLabelUsed()
+        {
+            foreach (var temp in Enum.GetValues(typeof(IFindbyName.LabelUsed)))
+            {
+                uint value = uint.Parse(asset.Temp[(int)temp + 2]);
+                temp.ToString().FindByName<Label>(this).Text = value.ToString("N0");
+
+                if ((int)temp != 0 && (int)temp != 2)
+                {
+                    CheckBox check = Enum.GetName(typeof(IFindbyName.CheckBoxUsed), (int)temp).FindByName<CheckBox>(this);
+                    check.Checked = true;
+                    check.CheckStateChanged += CheckBoxClick;
+                    check.CheckState = value > 0 ? CheckState.Checked : CheckState.Unchecked;
+                }
+            }
+        }
+        private void CheckBoxClick(object sender, EventArgs e)
+        {
+            CheckBox cb = (CheckBox)sender;
+            int index = (int)Enum.Parse(typeof(IFindbyName.CheckBoxUsed), cb.Name);
+            NumericUpDown down = Enum.GetName(typeof(IFindbyName.Numeric), 3 * index).FindByName<NumericUpDown>(this);
+            NumericUpDown up = Enum.GetName(typeof(IFindbyName.Numeric), 3 * index + 2).FindByName<NumericUpDown>(this);
+            down.Minimum = 0;
+            up.Minimum = 0;
+
+            if (cb.CheckState.Equals(CheckState.Checked))
+            {
+                cb.ForeColor = Color.Gold;
+                down.Value = ran.Next(1, 3);
+                up.Value = ran.Next(3, 6);
+
+                return;
+            }
+            down.Value = 0;
+            up.Value = 0;
+            cb.ForeColor = Color.Maroon;
+        }
+        private void SetNumeric(string[] param)
+        {
+            foreach (var name in Enum.GetValues(typeof(IFindbyName.Numeric)))
+            {
+                NumericUpDown temp = name.ToString().FindByName<NumericUpDown>(this);
+                temp.Minimum = 0;
+                temp.Maximum = uint.MaxValue;
+                temp.Value = uint.Parse(param[(int)name]);
+                temp.Increment = 1;
+            }
+        }
+        private StrategySetting GetNumericValue(Array array)
+        {
+            int[] temp = new int[array.Length];
+
+            foreach (var name in array)
+                temp[(int)name] = (int)name.ToString().FindByName<NumericUpDown>(this).Value;
+
+            return new StrategySetting
+            {
+                ShortTick = SetValue(temp[0], temp[1], temp[2]),
+                ShortDay = SetValue(temp[3], temp[4], temp[5]),
+                LongTick = SetValue(temp[6], temp[7], temp[8]),
+                LongDay = SetValue(temp[9], temp[10], temp[11]),
+                Reaction = SetValue(temp[12], temp[13], temp[14]),
+                Hedge = SetValue(temp[15], temp[16], temp[17]),
+                Base = SetValue(temp[18], temp[19], temp[20]),
+                Sigma = SetValue(temp[21], temp[22], temp[23]),
+                Percent = SetValue(temp[24], temp[25], temp[26]),
+                Max = SetValue(temp[27], temp[28], temp[29]),
+                Quantity = SetValue(temp[30], temp[31], temp[32]),
+                Time = SetValue(temp[33], temp[34], temp[35]),
+                Capital = (long)numericCapital.Value
+            };
         }
         private int SetOptimize(IAsset asset, int repeat)
         {
@@ -53,12 +125,18 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 set = new StrategySetting
                 {
-                    ShortTick = SetValue(ran.Next(asset.ShortTickPeriod / 5, asset.ShortTickPeriod), ran.Next(3, 21), ran.Next(asset.ShortTickPeriod, asset.ShortTickPeriod * 2)),
-                    LongTick = SetValue(ran.Next(asset.LongTickPeriod / 5, asset.LongTickPeriod), ran.Next(5, 51), ran.Next(asset.LongTickPeriod, asset.LongTickPeriod * 2)),
-                    ShortDay = SetValue(2, ran.Next(1, 4), ran.Next(asset.ShortDayPeriod, asset.ShortDayPeriod * 2)),
-                    LongDay = SetValue(ran.Next(asset.LongDayPeriod / 5, asset.LongDayPeriod), ran.Next(1, 6), ran.Next(asset.LongDayPeriod, asset.LongDayPeriod * 2)),
-                    Reaction = SetValue(ran.Next(asset.Reaction / 5, asset.Reaction), ran.Next(1, 4), ran.Next(asset.Reaction, asset.Reaction * 2)),
-                    Hedge = SetValue(0, 1, ran.Next(0, 6)),
+                    ShortTick = SetValue(ran.Next(asset.ShortTickPeriod - 20, asset.ShortTickPeriod), ran.Next(5, 21), ran.Next(asset.ShortTickPeriod, asset.ShortTickPeriod + 20)),
+                    LongTick = SetValue(ran.Next(asset.LongTickPeriod - 50, asset.LongTickPeriod), ran.Next(15, 51), ran.Next(asset.LongTickPeriod, asset.LongTickPeriod + 50)),
+                    ShortDay = SetValue(2, ran.Next(1, 4), ran.Next(asset.ShortDayPeriod, asset.ShortDayPeriod + 6)),
+                    LongDay = SetValue(ran.Next(asset.LongDayPeriod - 5, asset.LongDayPeriod), ran.Next(5, 11), ran.Next(asset.LongDayPeriod, asset.LongDayPeriod + 5)),
+                    Reaction = SetValue(ran.Next(asset.Reaction - 15, asset.Reaction), ran.Next(1, 6), ran.Next(asset.Reaction, asset.Reaction + 15)),
+                    Hedge = SetValue(0, ran.Next(1, 4), ran.Next(0, 6)),
+                    Base = SetValue(ran.Next(asset.Base - 50, asset.Base), ran.Next(15, 51), ran.Next(asset.Base, asset.Base + 50)),
+                    Sigma = SetValue(ran.Next(asset.Sigma - 5, asset.Sigma), ran.Next(1, 4), ran.Next(asset.Sigma, asset.Sigma + 6)),
+                    Percent = SetValue(ran.Next(asset.Percent - 10, asset.Percent), ran.Next(1, 6), ran.Next(asset.Percent, asset.Percent + 11)),
+                    Max = SetValue(ran.Next(asset.Max - 10, asset.Max), ran.Next(5, 11), ran.Next(asset.Max, 101)),
+                    Quantity = SetValue(ran.Next(1), ran.Next(1, 6), ran.Next(1, 11)),
+                    Time = SetValue(ran.Next(1), ran.Next(1, 6), ran.Next(1, 11)),
                     Capital = asset.Assets
                 };
                 return set.EstimatedTime();
@@ -97,26 +175,38 @@ namespace ShareInvest.BackTesting.SettingsScreen
             InterLink = false;
             List<Specify> list = new List<Specify>(131072);
 
-            foreach (int hedge in set.Hedge)
-                foreach (int reaction in set.Reaction)
-                    foreach (int sTick in set.ShortTick)
-                        foreach (int sDay in set.ShortDay)
-                            foreach (int lTick in set.LongTick)
-                                foreach (int lDay in set.LongDay)
-                                    if (sTick < lTick && sDay < lDay)
-                                        list.Add(new Specify
-                                        {
-                                            Repository = options.Repository,
-                                            ShortTickPeriod = sTick,
-                                            ShortDayPeriod = sDay,
-                                            LongTickPeriod = lTick,
-                                            LongDayPeriod = lDay,
-                                            Reaction = reaction,
-                                            Hedge = hedge,
-                                            BasicAssets = set.Capital,
-                                            PathLog = path,
-                                            Strategy = string.Concat(sDay.ToString("D2"), '^', sTick.ToString("D2"), '^', lDay.ToString("D2"), '^', lTick.ToString("D2"), '^', reaction.ToString("D2"), '^', hedge.ToString("D2"))
-                                        });
+            foreach (int time in set.Time)
+                foreach (int quantity in set.Quantity)
+                    foreach (int max in set.Max)
+                        foreach (int percent in set.Percent)
+                            foreach (int sigma in set.Sigma)
+                                foreach (int baseBand in set.Base)
+                                    foreach (int hedge in set.Hedge)
+                                        foreach (int reaction in set.Reaction)
+                                            foreach (int sTick in set.ShortTick)
+                                                foreach (int sDay in set.ShortDay)
+                                                    foreach (int lTick in set.LongTick)
+                                                        foreach (int lDay in set.LongDay)
+                                                            if (sTick < lTick && sDay < lDay)
+                                                                list.Add(new Specify
+                                                                {
+                                                                    Time = time,
+                                                                    Quantity = quantity,
+                                                                    Max = max,
+                                                                    Percent = percent,
+                                                                    Sigma = sigma,
+                                                                    Base = baseBand,
+                                                                    Repository = options.Repository,
+                                                                    ShortTickPeriod = sTick,
+                                                                    ShortDayPeriod = sDay,
+                                                                    LongTickPeriod = lTick,
+                                                                    LongDayPeriod = lDay,
+                                                                    Reaction = reaction,
+                                                                    Hedge = hedge,
+                                                                    BasicAssets = set.Capital,
+                                                                    PathLog = path,
+                                                                    Strategy = string.Concat(sTick.ToString(), '^', sDay.ToString(), '^', lTick.ToString(), '^', lDay.ToString(), '^', reaction.ToString(), '^', hedge.ToString(), '^', baseBand.ToString(), '^', sigma.ToString(), '^', percent.ToString(), '^', max.ToString(), '^', quantity.ToString(), '^', time.ToString())
+                                                                });
             GC.Collect();
             Count = Process.GetCurrentProcess().Threads.Count;
             new Task(() =>
@@ -157,26 +247,36 @@ namespace ShareInvest.BackTesting.SettingsScreen
             Application.ExitThread();
             Application.Exit();
         }
+        private bool CheckNullValue(Array param)
+        {
+            foreach (var interval in param)
+                if (interval.ToString().FindByName<NumericUpDown>(this).Value == 0 && (int)interval % 3 == 1)
+                    return false;
+
+            return true;
+        }
         private void CheckBoxCheckedChanged(object sender, EventArgs e)
         {
-            if (!button.ForeColor.Equals(Color.Maroon))
+            if (!button.ForeColor.Equals(Color.Maroon) && CheckNullValue(Enum.GetValues(typeof(IFindbyName.Numeric))))
             {
                 if (button.ForeColor.Equals(Color.Ivory) && CheckCurrent)
                 {
-                    set = new StrategySetting
+                    IAsyncResult result = BeginInvoke(new Action(() =>
                     {
-                        ShortTick = SetValue((int)numericPST.Value, (int)numericIST.Value, (int)numericDST.Value),
-                        ShortDay = SetValue((int)numericPSD.Value, (int)numericISD.Value, (int)numericDSD.Value),
-                        LongTick = SetValue((int)numericPLT.Value, (int)numericILT.Value, (int)numericDLT.Value),
-                        LongDay = SetValue((int)numericPLD.Value, (int)numericILD.Value, (int)numericDLD.Value),
-                        Reaction = SetValue((int)numericPR.Value, (int)numericIR.Value, (int)numericDR.Value),
-                        Hedge = SetValue((int)numericPH.Value, (int)numericIH.Value, (int)numericDH.Value),
-                        Capital = (long)numericCapital.Value
-                    };
-                    button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(set.EstimatedTime(), count).ToString("N0"), " Minutes.");
-                    checkBox.Text = "Reset";
-                    checkBox.ForeColor = Color.Yellow;
-                    button.ForeColor = Color.Gold;
+                        set = GetNumericValue(Enum.GetValues(typeof(IFindbyName.Numeric)));
+                        checkBox.Text = "Loading. . .";
+                        Application.DoEvents();
+                        button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(set.EstimatedTime(), count).ToString("N0"), " Minutes.");
+                        checkBox.Text = "Reset";
+                        checkBox.ForeColor = Color.Yellow;
+                        buttonSave.ForeColor = Color.Khaki;
+                        button.ForeColor = Color.Gold;
+                    }));
+                    do
+                    {
+                        Application.DoEvents();
+                    }
+                    while (result.IsCompleted == false);
 
                     return;
                 }
@@ -187,6 +287,13 @@ namespace ShareInvest.BackTesting.SettingsScreen
             }
             else if (CheckCurrent == false)
             {
+                if (Max == 0)
+                {
+                    checkBox.Text = "Set It Again";
+                    checkBox.ForeColor = Color.Crimson;
+
+                    return;
+                }
                 checkBox.Text = string.Concat(pro.ProgressBarValue.ToString("N0"), " / ", Max.ToString("N0"));
                 checkBox.Font = new Font(checkBox.Font.Name, checkBox.Font.Name.Equals("Consolas") ? 8.25F : 10.25F, FontStyle.Regular);
 
@@ -212,10 +319,14 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private int[] SetValue(int sp, int interval, int destination)
         {
-            int[] value = new int[(destination - sp) / interval + 1];
+            bool check = sp > destination;
+            int[] value = new int[(check ? sp - destination : destination - sp) / interval + 1];
 
             for (int i = 0; i < value.Length; i++)
                 value[i] = sp + interval * i;
+
+            if (check)
+                TimerBox.Show("The Start Value is Greater than the End Value.\n\nThe Error is Very likely to Occur in the Operation.\n\nSet It Again.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning, 7351);
 
             return value;
         }
@@ -247,6 +358,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             while (setting < count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 915 : 915) || setting > count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 965 : 965));
 
             checkBox.Font = new Font(checkBox.Font.Name, checkBox.Font.Name.Equals("Consolas") ? 13.25F : 15.75F, FontStyle.Regular);
+            GC.Collect();
             StartBackTesting(set);
             timer.Dispose();
         }
@@ -259,6 +371,19 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 pro.ProgressBarValue++;
 
             Application.DoEvents();
+        }
+        private void ButtonSaveClick(object sender, EventArgs e)
+        {
+            if (buttonSave.ForeColor.Equals(Color.Maroon))
+                return;
+
+            buttonSave.ForeColor = Color.Maroon;
+            StringBuilder sb = new StringBuilder();
+
+            foreach (string name in Enum.GetNames(typeof(IFindbyName.Numeric)))
+                sb.Append(name.FindByName<NumericUpDown>(this).Value).Append(',');
+
+            new SaveSetting().SetSettingValue(sb);
         }
         private int SetMaximum()
         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Communication;
 using ShareInvest.Log.Message;
@@ -40,19 +41,53 @@ namespace ShareInvest.AssetManagement
         {
             get; private set;
         }
+        public int Base
+        {
+            get; private set;
+        }
+        public int Sigma
+        {
+            get; private set;
+        }
+        public int Percent
+        {
+            get; private set;
+        }
+        public int Max
+        {
+            get; private set;
+        }
+        public int Quantity
+        {
+            get; private set;
+        }
+        public int Time
+        {
+            get; private set;
+        }
+        public string[] Temp
+        {
+            get; private set;
+        }
         public Asset()
         {
-            string[] temp = ReadCSV().Split(',');
-            Account = temp[0];
-            Assets = long.Parse(temp[1]);
-            ShortDayPeriod = int.Parse(temp[2]);
-            ShortTickPeriod = int.Parse(temp[3]);
-            LongDayPeriod = int.Parse(temp[4]);
-            LongTickPeriod = int.Parse(temp[5]);
-            Reaction = int.Parse(temp[6]);
-            Hedge = int.Parse(temp[7]);
+            Temp = GetStrategyUsed();
+            Account = Temp[0];
+            Assets = long.Parse(Temp[1]);
+            ShortDayPeriod = int.Parse(Temp[2]);
+            ShortTickPeriod = int.Parse(Temp[3]);
+            LongDayPeriod = int.Parse(Temp[4]);
+            LongTickPeriod = int.Parse(Temp[5]);
+            Reaction = int.Parse(Temp[6]);
+            Hedge = int.Parse(Temp[7]);
+            Base = int.Parse(Temp[8]);
+            Sigma = int.Parse(Temp[9]);
+            Percent = int.Parse(Temp[10]);
+            Max = int.Parse(Temp[11]);
+            Quantity = int.Parse(Temp[12]);
+            Time = int.Parse(Temp[13]);
         }
-        private string ReadCSV()
+        private string[] GetStrategyUsed()
         {
             string[] temp;
             ulong recent = 0;
@@ -60,7 +95,7 @@ namespace ShareInvest.AssetManagement
 
             try
             {
-                foreach (string val in Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\Trading\"), "*.csv", SearchOption.AllDirectories))
+                Parallel.ForEach(Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\Trading\"), "*.csv", SearchOption.AllDirectories), (val) =>
                 {
                     temp = val.Split('\\');
                     temp = temp[temp.Length - 1].Split('.');
@@ -68,7 +103,7 @@ namespace ShareInvest.AssetManagement
 
                     if (count > recent)
                         recent = count;
-                }
+                });
                 using StreamReader sr = new StreamReader(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\Trading\", recent, ".csv"));
                 if (sr != null)
                     while (sr.EndOfStream == false)
@@ -80,7 +115,7 @@ namespace ShareInvest.AssetManagement
                 MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 Environment.Exit(0);
             }
-            return assets;
+            return assets.Split(',');
         }
     }
 }

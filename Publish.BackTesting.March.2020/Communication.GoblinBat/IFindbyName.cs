@@ -2,6 +2,34 @@
 {
     public interface IFindbyName
     {
+        enum CheckBoxUsed
+        {
+            checkBoxShortDay = 1,
+            checkBoxLongDay = 3,
+            checkBoxReaction = 4,
+            checkBoxHedge = 5,
+            checkBoxBase = 6,
+            checkBoxSigma = 7,
+            checkBoxPercent = 8,
+            checkBoxMax = 9,
+            checkBoxQuantity = 10,
+            checkBoxTime = 11
+        }
+        enum LabelUsed
+        {
+            labelST = 0,
+            labelSD = 1,
+            labelLT = 2,
+            labelLD = 3,
+            labelR = 4,
+            labelH = 5,
+            labelBase = 6,
+            labelSigma = 7,
+            labelPercent = 8,
+            labelMax = 9,
+            labelQuantity = 10,
+            labelTime = 11
+        }
         enum Numeric
         {
             numericPST = 0,
