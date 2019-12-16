@@ -28,7 +28,7 @@ namespace ShareInvest.Indicators
                 if ((per - percent[1] > 0 || per - percent[0] < 0) && width > Before)
                     repeat = repeat > 0 ? repeat-- : 0;
 
-                else
+                else if (per - percent[1] < 0 && per - percent[0] > 0 && width < Before)
                     repeat++;
 
                 Before = width;

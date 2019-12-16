@@ -67,7 +67,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private void CheckBoxClick(object sender, EventArgs e)
         {
             CheckBox cb = (CheckBox)sender;
-            bool check = cb.Name.Equals("checkBoxBase") || cb.Name.Equals("checkBoxSigma") || cb.Name.Equals("checkBoxPercent") || cb.Name.Equals("checkBoxMax") ? true : false;
+            bool day = cb.Name.Equals("checkBoxShortDay") || cb.Name.Equals("checkBoxLongDay") ? true : false, check = cb.Name.Equals("checkBoxBase") || cb.Name.Equals("checkBoxSigma") || cb.Name.Equals("checkBoxPercent") || cb.Name.Equals("checkBoxMax") ? true : false;
             int index = (int)Enum.Parse(typeof(IFindbyName.CheckBoxUsed), cb.Name);
             NumericUpDown down = Enum.GetName(typeof(IFindbyName.Numeric), 3 * index).FindByName<NumericUpDown>(this);
             NumericUpDown up = Enum.GetName(typeof(IFindbyName.Numeric), 3 * index + 2).FindByName<NumericUpDown>(this);
@@ -87,6 +87,11 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     checkBoxPercent.CheckState = CheckState.Checked;
                     checkBoxMax.CheckState = CheckState.Checked;
                 }
+                if (day)
+                {
+                    checkBoxShortDay.CheckState = CheckState.Checked;
+                    checkBoxLongDay.CheckState = CheckState.Checked;
+                }
                 return;
             }
             down.Value = 0;
@@ -99,6 +104,11 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 checkBoxSigma.CheckState = CheckState.Unchecked;
                 checkBoxPercent.CheckState = CheckState.Unchecked;
                 checkBoxMax.CheckState = CheckState.Unchecked;
+            }
+            if (day)
+            {
+                checkBoxShortDay.CheckState = CheckState.Unchecked;
+                checkBoxLongDay.CheckState = CheckState.Unchecked;
             }
         }
         private void SetNumeric(string[] param)
@@ -189,16 +199,16 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     {
                         ShortTick = SetValue(ran.Next((int)(asset.ShortTickPeriod * 0.75), asset.ShortTickPeriod), ran.Next(5, 21), ran.Next(asset.ShortTickPeriod, (int)(asset.ShortTickPeriod * 1.25))),
                         LongTick = SetValue(ran.Next((int)(asset.LongTickPeriod * 0.75), asset.LongTickPeriod), ran.Next(15, 51), ran.Next(asset.LongTickPeriod, (int)(asset.LongTickPeriod * 1.25))),
-                        ShortDay = SetValue(2, ran.Next(1, 4), ran.Next(asset.ShortDayPeriod, (int)(asset.ShortDayPeriod * 1.25))),
+                        ShortDay = SetValue(0, ran.Next(1, 4), ran.Next(asset.ShortDayPeriod, (int)(asset.ShortDayPeriod * 1.25))),
                         LongDay = SetValue(ran.Next((int)(asset.LongDayPeriod * 0.75), asset.LongDayPeriod), ran.Next(5, 11), ran.Next(asset.LongDayPeriod, (int)(asset.LongDayPeriod * 1.25))),
                         Reaction = SetValue(ran.Next((int)(asset.Reaction * 0.75), asset.Reaction), ran.Next(1, 6), ran.Next(asset.Reaction, (int)(asset.Reaction * 1.25))),
                         Hedge = SetValue(0, ran.Next(1, 4), ran.Next(0, 6)),
                         Base = SetValue(ran.Next((int)(asset.Base * 0.75), asset.Base), ran.Next(15, 51), ran.Next(asset.Base, (int)(asset.Base * 1.25))),
                         Sigma = SetValue(ran.Next((int)(asset.Sigma * 0.75), asset.Sigma), ran.Next(1, 4), ran.Next(asset.Sigma, (int)(asset.Sigma * 1.25))),
                         Percent = SetValue(ran.Next((int)(asset.Percent * 0.75), asset.Percent), ran.Next(1, 6), ran.Next(asset.Percent, (int)(asset.Percent * 1.1))),
-                        Max = SetValue(1, ran.Next(1, 11), ran.Next(asset.Max, (int)(asset.Max * 1.1))),
-                        Quantity = SetValue(ran.Next(1), ran.Next(1, 6), ran.Next(1, 11)),
-                        Time = SetValue(ran.Next(1), ran.Next(1, 6), ran.Next(1, 11)),
+                        Max = SetValue(0, ran.Next(1, 11), ran.Next(asset.Max, (int)(asset.Max * 1.1))),
+                        Quantity = SetValue(0, ran.Next(1, 6), ran.Next(1, 11)),
+                        Time = SetValue(0, ran.Next(1, 6), ran.Next(1, 11)),
                         Capital = asset.Assets
                     };
                     estimate = set.EstimatedTime();
