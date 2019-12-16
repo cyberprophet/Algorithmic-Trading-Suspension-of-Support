@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using ShareInvest.Communication;
+using ShareInvest.Indicators;
 using ShareInvest.Log.Message;
 using ShareInvest.RemainingDate;
 
@@ -12,9 +13,11 @@ namespace ShareInvest.BackTesting.Analysis
         public Analysize(Remaining remaining, IStrategy st)
         {
             ema = new EMA();
+            over = new BollingerBands(st.Sigma * 0.1, st.Base, st.Percent * 1e-2, st.Max * 1e-3);
             shortDay = new List<double>(512);
             longDay = new List<double>(512);
             shortTick = new List<double>(2097152);
+            baseTick = new List<double>(2097152);
             longTick = new List<double>(2097152);
             Send += Analysis;
             this.st = st;
@@ -25,8 +28,9 @@ namespace ShareInvest.BackTesting.Analysis
         }
         private int Analysis(double price)
         {
-            int sc = shortTick.Count, lc = longTick.Count;
+            int sc = shortTick.Count, lc = longTick.Count, bc = baseTick.Count;
             shortTick.Add(sc > 0 ? ema.Make(st.ShortTickPeriod, sc, price, shortTick[sc - 1]) : ema.Make(price));
+            baseTick.Add(bc > 0 ? ema.Make(st.Base, bc, price, baseTick[bc - 1]) : ema.Make(price));
             longTick.Add(lc > 0 ? ema.Make(st.LongTickPeriod, lc, price, longTick[lc - 1]) : ema.Make(price));
 
             return (sc < 2 || lc < 2) ? 0 : shortTick[sc] - longTick[lc] - (shortTick[sc - 1] - longTick[lc - 1]) > 0 ? 1 : -1;
@@ -49,7 +53,8 @@ namespace ShareInvest.BackTesting.Analysis
         }
         private void Analysis(object sender, Datum e)
         {
-            int i, quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
+            int i, quantity = st.ShortDayPeriod > 0 && st.LongDayPeriod > 0 ? Order(Analysis(e.Price), Analysis(e.Time, e.Price)) : Order(Analysis(e.Price));
+            double max = over.GetJudgingOverHeating(st.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate), e.Price, baseTick[baseTick.Count - 1]);
 
             if (e.Time.Length > 2 && e.Time.Substring(6, 4).Equals("1545") || Array.Exists(info.Kospi, o => o.Equals(e.Time)))
             {
@@ -59,8 +64,11 @@ namespace ShareInvest.BackTesting.Analysis
             }
             if ((e.Volume > st.Reaction || e.Volume < -st.Reaction) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity))
             {
-                if (Math.Abs(info.Quantity + quantity) < (int)(st.BasicAssets / (e.Price * st.TransactionMultiplier * st.MarginRate)))
+                if (Math.Abs(info.Quantity + quantity) < max)
                     info.Operate(e.Price, quantity, e.Time);
+
+                else if (Math.Abs(info.Quantity) > max)
+                    info.Operate(e.Price, info.Quantity > 0 ? -1 : 1, e.Time);
 
                 return;
             }
@@ -71,6 +79,10 @@ namespace ShareInvest.BackTesting.Analysis
         private int Order(int tick, int day)
         {
             return tick > 0 && day > 0 ? 1 : tick < 0 && day < 0 ? -1 : 0;
+        }
+        private int Order(int tick)
+        {
+            return tick > 0 ? 1 : tick < 0 ? -1 : 0;
         }
         private void GetChart()
         {
@@ -109,11 +121,13 @@ namespace ShareInvest.BackTesting.Analysis
         private const string initiation = "090000";
         private readonly IStrategy st;
         private readonly EMA ema;
+        private readonly BollingerBands over;
         private readonly Information info;
         private readonly Remaining remaining;
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
         private readonly List<double> shortTick;
+        private readonly List<double> baseTick;
         private readonly List<double> longTick;
         public event EventHandler<Datum> Send;
     }

@@ -31,7 +31,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             this.pro = pro;
             SuspendLayout();
-            IAsyncResult result = BeginInvoke(new Action(() =>
+            result = BeginInvoke(new Action(() =>
             {
                 ran = new Random();
                 SetLabelUsed();
@@ -45,6 +45,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             }
             while (result.IsCompleted == false);
 
+            EndInvoke(result);
             ResumeLayout();
         }
         private void SetLabelUsed()
@@ -66,6 +67,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private void CheckBoxClick(object sender, EventArgs e)
         {
             CheckBox cb = (CheckBox)sender;
+            bool check = cb.Name.Equals("checkBoxBase") || cb.Name.Equals("checkBoxSigma") || cb.Name.Equals("checkBoxPercent") || cb.Name.Equals("checkBoxMax") ? true : false;
             int index = (int)Enum.Parse(typeof(IFindbyName.CheckBoxUsed), cb.Name);
             NumericUpDown down = Enum.GetName(typeof(IFindbyName.Numeric), 3 * index).FindByName<NumericUpDown>(this);
             NumericUpDown up = Enum.GetName(typeof(IFindbyName.Numeric), 3 * index + 2).FindByName<NumericUpDown>(this);
@@ -75,14 +77,29 @@ namespace ShareInvest.BackTesting.SettingsScreen
             if (cb.CheckState.Equals(CheckState.Checked))
             {
                 cb.ForeColor = Color.Gold;
-                down.Value = ran.Next(1, 3);
-                up.Value = ran.Next(3, 6);
+                down.Value = ran.Next((int)down.Minimum, (int)down.Maximum);
+                up.Value = ran.Next((int)up.Minimum, (int)up.Maximum);
 
+                if (check)
+                {
+                    checkBoxBase.CheckState = CheckState.Checked;
+                    checkBoxSigma.CheckState = CheckState.Checked;
+                    checkBoxPercent.CheckState = CheckState.Checked;
+                    checkBoxMax.CheckState = CheckState.Checked;
+                }
                 return;
             }
             down.Value = 0;
             up.Value = 0;
             cb.ForeColor = Color.Maroon;
+
+            if (check)
+            {
+                checkBoxBase.CheckState = CheckState.Unchecked;
+                checkBoxSigma.CheckState = CheckState.Unchecked;
+                checkBoxPercent.CheckState = CheckState.Unchecked;
+                checkBoxMax.CheckState = CheckState.Unchecked;
+            }
         }
         private void SetNumeric(string[] param)
         {
@@ -90,8 +107,48 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 NumericUpDown temp = name.ToString().FindByName<NumericUpDown>(this);
                 temp.Minimum = 0;
-                temp.Maximum = uint.MaxValue;
-                temp.Value = uint.Parse(param[(int)name]);
+                temp.ThousandsSeparator = true;
+                temp.Maximum = name switch
+                {
+                    IFindbyName.Numeric.numericPST => 200,
+                    IFindbyName.Numeric.numericIST => 50,
+                    IFindbyName.Numeric.numericDST => 500,
+                    IFindbyName.Numeric.numericPSD => 15,
+                    IFindbyName.Numeric.numericISD => 10,
+                    IFindbyName.Numeric.numericDSD => 50,
+                    IFindbyName.Numeric.numericPLT => 500,
+                    IFindbyName.Numeric.numericILT => 300,
+                    IFindbyName.Numeric.numericDLT => 3000,
+                    IFindbyName.Numeric.numericPLD => 50,
+                    IFindbyName.Numeric.numericILD => 50,
+                    IFindbyName.Numeric.numericDLD => 250,
+                    IFindbyName.Numeric.numericPR => 50,
+                    IFindbyName.Numeric.numericIR => 10,
+                    IFindbyName.Numeric.numericDR => 150,
+                    IFindbyName.Numeric.numericPH => 5,
+                    IFindbyName.Numeric.numericIH => 5,
+                    IFindbyName.Numeric.numericDH => 5,
+                    IFindbyName.Numeric.numericPB => 1000,
+                    IFindbyName.Numeric.numericIB => 2500,
+                    IFindbyName.Numeric.numericDB => 5000,
+                    IFindbyName.Numeric.numericPS => 30,
+                    IFindbyName.Numeric.numericIS => 50,
+                    IFindbyName.Numeric.numericDS => 100,
+                    IFindbyName.Numeric.numericPP => 100,
+                    IFindbyName.Numeric.numericIP => 20,
+                    IFindbyName.Numeric.numericDP => 200,
+                    IFindbyName.Numeric.numericPM => 100,
+                    IFindbyName.Numeric.numericIM => 500,
+                    IFindbyName.Numeric.numericDM => 1000,
+                    IFindbyName.Numeric.numericPQ => 10,
+                    IFindbyName.Numeric.numericIQ => 30,
+                    IFindbyName.Numeric.numericDQ => 50,
+                    IFindbyName.Numeric.numericPT => 10,
+                    IFindbyName.Numeric.numericIT => 30,
+                    IFindbyName.Numeric.numericDT => 50,
+                    _ => throw new Exception()
+                };
+                temp.Value = int.Parse(param[(int)name]);
                 temp.Increment = 1;
             }
         }
@@ -121,25 +178,36 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         private int SetOptimize(IAsset asset, int repeat)
         {
+            int estimate = 0;
+            result = null;
+
             try
             {
-                set = new StrategySetting
+                result = BeginInvoke(new Action(() =>
                 {
-                    ShortTick = SetValue(ran.Next(asset.ShortTickPeriod - 20, asset.ShortTickPeriod), ran.Next(5, 21), ran.Next(asset.ShortTickPeriod, asset.ShortTickPeriod + 20)),
-                    LongTick = SetValue(ran.Next(asset.LongTickPeriod - 50, asset.LongTickPeriod), ran.Next(15, 51), ran.Next(asset.LongTickPeriod, asset.LongTickPeriod + 50)),
-                    ShortDay = SetValue(2, ran.Next(1, 4), ran.Next(asset.ShortDayPeriod, asset.ShortDayPeriod + 6)),
-                    LongDay = SetValue(ran.Next(asset.LongDayPeriod - 5, asset.LongDayPeriod), ran.Next(5, 11), ran.Next(asset.LongDayPeriod, asset.LongDayPeriod + 5)),
-                    Reaction = SetValue(ran.Next(asset.Reaction - 15, asset.Reaction), ran.Next(1, 6), ran.Next(asset.Reaction, asset.Reaction + 15)),
-                    Hedge = SetValue(0, ran.Next(1, 4), ran.Next(0, 6)),
-                    Base = SetValue(ran.Next(asset.Base - 50, asset.Base), ran.Next(15, 51), ran.Next(asset.Base, asset.Base + 50)),
-                    Sigma = SetValue(ran.Next(asset.Sigma - 5, asset.Sigma), ran.Next(1, 4), ran.Next(asset.Sigma, asset.Sigma + 6)),
-                    Percent = SetValue(ran.Next(asset.Percent - 10, asset.Percent), ran.Next(1, 6), ran.Next(asset.Percent, asset.Percent + 11)),
-                    Max = SetValue(ran.Next(asset.Max - 10, asset.Max), ran.Next(5, 11), ran.Next(asset.Max, 101)),
-                    Quantity = SetValue(ran.Next(1), ran.Next(1, 6), ran.Next(1, 11)),
-                    Time = SetValue(ran.Next(1), ran.Next(1, 6), ran.Next(1, 11)),
-                    Capital = asset.Assets
-                };
-                return set.EstimatedTime();
+                    set = new StrategySetting
+                    {
+                        ShortTick = SetValue(ran.Next((int)(asset.ShortTickPeriod * 0.75), asset.ShortTickPeriod), ran.Next(5, 21), ran.Next(asset.ShortTickPeriod, (int)(asset.ShortTickPeriod * 1.25))),
+                        LongTick = SetValue(ran.Next((int)(asset.LongTickPeriod * 0.75), asset.LongTickPeriod), ran.Next(15, 51), ran.Next(asset.LongTickPeriod, (int)(asset.LongTickPeriod * 1.25))),
+                        ShortDay = SetValue(2, ran.Next(1, 4), ran.Next(asset.ShortDayPeriod, (int)(asset.ShortDayPeriod * 1.25))),
+                        LongDay = SetValue(ran.Next((int)(asset.LongDayPeriod * 0.75), asset.LongDayPeriod), ran.Next(5, 11), ran.Next(asset.LongDayPeriod, (int)(asset.LongDayPeriod * 1.25))),
+                        Reaction = SetValue(ran.Next((int)(asset.Reaction * 0.75), asset.Reaction), ran.Next(1, 6), ran.Next(asset.Reaction, (int)(asset.Reaction * 1.25))),
+                        Hedge = SetValue(0, ran.Next(1, 4), ran.Next(0, 6)),
+                        Base = SetValue(ran.Next((int)(asset.Base * 0.75), asset.Base), ran.Next(15, 51), ran.Next(asset.Base, (int)(asset.Base * 1.25))),
+                        Sigma = SetValue(ran.Next((int)(asset.Sigma * 0.75), asset.Sigma), ran.Next(1, 4), ran.Next(asset.Sigma, (int)(asset.Sigma * 1.25))),
+                        Percent = SetValue(ran.Next((int)(asset.Percent * 0.75), asset.Percent), ran.Next(1, 6), ran.Next(asset.Percent, (int)(asset.Percent * 1.1))),
+                        Max = SetValue(1, ran.Next(1, 11), ran.Next(asset.Max, (int)(asset.Max * 1.1))),
+                        Quantity = SetValue(ran.Next(1), ran.Next(1, 6), ran.Next(1, 11)),
+                        Time = SetValue(ran.Next(1), ran.Next(1, 6), ran.Next(1, 11)),
+                        Capital = asset.Assets
+                    };
+                    estimate = set.EstimatedTime();
+                }));
+                do
+                {
+                    Application.DoEvents();
+                }
+                while (result.IsCompleted == false);
             }
             catch (Exception ex)
             {
@@ -153,6 +221,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
             }
             finally
             {
+                EndInvoke(result);
+
                 if (repeat % 5000 == 0 && TimerBox.Show("Run the Program Again and Set it Manually.", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 5157).Equals(DialogResult.OK))
                 {
                     Application.ExitThread();
@@ -161,7 +231,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 if (repeat % 1000 == 0)
                     ran = new Random();
             }
-            return 0;
+            return estimate;
         }
         private void StartBackTesting(IStrategySetting set)
         {
@@ -261,7 +331,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 if (button.ForeColor.Equals(Color.Ivory) && CheckCurrent)
                 {
-                    IAsyncResult result = BeginInvoke(new Action(() =>
+                    result = BeginInvoke(new Action(() =>
                     {
                         set = GetNumericValue(Enum.GetValues(typeof(IFindbyName.Numeric)));
                         checkBox.Text = "Loading. . .";
@@ -277,6 +347,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
                         Application.DoEvents();
                     }
                     while (result.IsCompleted == false);
+
+                    EndInvoke(result);
 
                     return;
                 }
@@ -335,19 +407,21 @@ namespace ShareInvest.BackTesting.SettingsScreen
             timer.Stop();
             checkBox.Text = "Loading. . .";
             Application.DoEvents();
-            BeginInvoke(new Action(() =>
+            result = BeginInvoke(new Action(() =>
             {
                 options = new Options();
             }));
             if (TimerBox.Show("Start Back Testing.\n\nClick 'No' to Do this Manually.\n\nIf Not Selected,\nIt will Automatically Proceed after 20 Seconds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 25617).Equals((DialogResult)7))
             {
                 checkBox.Text = "Manual";
+                EndInvoke(result);
 
                 return;
             }
             int setting, repeat = 0;
             ran = new Random();
             checkBox.Font = new Font(checkBox.Font.Name, 8.25F, FontStyle.Regular);
+            EndInvoke(result);
 
             do
             {
@@ -434,7 +508,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private Progress pro;
         private IStrategySetting set;
         private IOptions options;
-        private readonly int count;
+        private IAsyncResult result;
         private readonly IAsset asset;
+        private readonly int count;
     }
 }

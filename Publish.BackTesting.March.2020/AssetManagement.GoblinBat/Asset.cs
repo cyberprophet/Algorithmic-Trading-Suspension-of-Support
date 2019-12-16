@@ -74,10 +74,10 @@ namespace ShareInvest.AssetManagement
             Temp = GetStrategyUsed();
             Account = Temp[0];
             Assets = long.Parse(Temp[1]);
-            ShortDayPeriod = int.Parse(Temp[2]);
-            ShortTickPeriod = int.Parse(Temp[3]);
-            LongDayPeriod = int.Parse(Temp[4]);
-            LongTickPeriod = int.Parse(Temp[5]);
+            ShortDayPeriod = int.Parse(Temp[3]);
+            ShortTickPeriod = int.Parse(Temp[2]);
+            LongDayPeriod = int.Parse(Temp[5]);
+            LongTickPeriod = int.Parse(Temp[4]);
             Reaction = int.Parse(Temp[6]);
             Hedge = int.Parse(Temp[7]);
             Base = int.Parse(Temp[8]);
