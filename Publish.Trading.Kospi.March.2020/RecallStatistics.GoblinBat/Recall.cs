@@ -47,6 +47,8 @@ namespace ShareInvest.RecallStatistics
                     while (sr.EndOfStream == false)
                         list.Add(sr.ReadLine());
 
+                yield return list.Count - 2;
+
                 foreach (IMakeUp val in mp)
                     yield return MakeUp(list, val);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.Analysize;
@@ -23,7 +24,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             InitializeComponent();
             SuspendLayout();
             Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
-            ChooseStrategy(TimerBox.Show("The Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new Yield(), new SelectStatisticalData());
+            ChooseStrategy(TimerBox.Show("The Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new Yield(new Assets().ReadCSV().Split(',')), new SelectStatisticalData());
             Dispose();
             Environment.Exit(0);
         }
@@ -62,6 +63,13 @@ namespace ShareInvest.Kospi200HedgeVersion
             splitContainerStrategy.Panel1.BackColor = Color.FromArgb(121, 133, 130);
             splitContainerStrategy.Panel2.BackColor = Color.FromArgb(121, 133, 130);
             splitContainerGuide.Panel1.BackColor = Color.FromArgb(121, 133, 130);
+            Dictionary<string, int> param = new Dictionary<string, int>(1024);
+
+            foreach (string[] temp in yield)
+                for (int i = 0; i < temp.Length; i++)
+                    param[string.Concat(i, ';', temp[i])] = i;
+
+            data.StartProgress(param);
             SetControlsChangeFont(result, Controls, new Font("Consolas", Font.Size, FontStyle.Regular));
             ResumeLayout();
             ShowDialog();
@@ -75,6 +83,9 @@ namespace ShareInvest.Kospi200HedgeVersion
 
                     if (control.Font.Name.Equals("Brush Script Std") && (name.Equals("CheckBox") || name.Equals("Label") || name.Equals("Button") || name.Equals("TabControl")))
                         control.Font = control.Text.Contains(" by Day") ? font : new Font("Consolas", Font.Size + 1.25F, FontStyle.Bold);
+
+                    if (control.Text.Contains("%"))
+                        control.Font = new Font("Consolas", Font.Size - 1.25F, FontStyle.Regular);
 
                     if (control.Controls.Count > 0)
                         SetControlsChangeFont(DialogResult.OK, control.Controls, font);
