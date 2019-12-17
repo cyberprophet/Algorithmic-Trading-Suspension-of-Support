@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ShareInvest.RecallStatistics;
+using ShareInvest.Interface;
 
 namespace ShareInvest.StatisticalData
 {
@@ -15,6 +17,8 @@ namespace ShareInvest.StatisticalData
         public SelectStatisticalData()
         {
             InitializeComponent();
+
+           
         }
     }
 }

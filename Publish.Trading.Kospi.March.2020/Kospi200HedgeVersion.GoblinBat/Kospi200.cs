@@ -23,7 +23,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             InitializeComponent();
             SuspendLayout();
             Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
-            ChooseStrategy(TimerBox.Show("The Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new SelectStatisticalData(), new Yield());
+            ChooseStrategy(TimerBox.Show("The Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new Yield(), new SelectStatisticalData());
             Dispose();
             Environment.Exit(0);
         }
@@ -48,7 +48,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             ResumeLayout();
             ShowDialog();
         }
-        private void ChooseStrategy(DialogResult result, GuideGoblinBat guide, SelectStatisticalData data, Yield yield)
+        private void ChooseStrategy(DialogResult result, GuideGoblinBat guide, Yield yield, SelectStatisticalData data)
         {
             splitContainerStrategy.Panel1.Controls.Add(yield);
             splitContainerStrategy.Panel2.Controls.Add(data);

@@ -7,7 +7,7 @@ namespace ShareInvest.Const
     {
         public MakeUpFor3Months()
         {
-            FindByName = "for3months";
+            FindByName = "for3Months";
             Turn = 61;
             DescendingSort = new Dictionary<string, long>(256);
         }
