@@ -127,6 +127,7 @@ namespace ShareInvest.OpenAPI
         {
             Code[Squence++] = string.Concat(code, ";", param[72], ";", param[63], ";", param[45]);
             SendConfirm?.Invoke(this, new Identify(string.Concat(param[72], "\nis Receiving Data for Trading.")));
+            RemainingDate = param[63];
 
             if (code.Contains("101") && param[63].Equals(DateTime.Now.ToString("yyyyMMdd")))
                 Remaining = true;
@@ -330,6 +331,13 @@ namespace ShareInvest.OpenAPI
                     {
                         DeadLine = true;
                         Delay.delay = 4150;
+
+                        if (RemainingDate.Equals(DateTime.Now.ToString("yyyyMMdd")))
+                        {
+                            Squence = 0;
+                            axAPI.SetRealRemove("ALL", axAPI.GetFutureCodeByIndex(1));
+                            RemainingDay(axAPI.GetFutureCodeByIndex(0));
+                        }
                         Request(Code[0].Substring(0, 8));
                     }
                     break;
@@ -363,6 +371,10 @@ namespace ShareInvest.OpenAPI
             }
         }
         private string Account
+        {
+            get; set;
+        }
+        private string RemainingDate
         {
             get; set;
         }

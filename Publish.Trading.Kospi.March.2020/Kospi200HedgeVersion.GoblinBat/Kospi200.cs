@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.Analysize;
+using ShareInvest.Conservation;
 using ShareInvest.Const;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
@@ -9,6 +10,7 @@ using ShareInvest.FindByName;
 using ShareInvest.Management;
 using ShareInvest.OpenAPI;
 using ShareInvest.SecondaryForms;
+using ShareInvest.StatisticalData;
 using ShareInvest.TimerMessageBox;
 using ShareInvest.VolumeControl;
 
@@ -21,29 +23,11 @@ namespace ShareInvest.Kospi200HedgeVersion
             InitializeComponent();
             SuspendLayout();
             Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
-            ChooseStrategy(TimerBox.Show("The Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new ChooseAnalysis(), new SelectStrategies());
+            ChooseStrategy(TimerBox.Show("The Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new SelectStatisticalData(), new Yield());
             Dispose();
             Environment.Exit(0);
         }
-        private void SetControlsChangeFont(DialogResult result, Control.ControlCollection controls, Font font)
-        {
-            if (result.Equals(DialogResult.OK))
-                foreach (Control control in controls)
-                {
-                    string name = control.GetType().Name;
-
-                    if (control.Font.Name.Equals("Brush Script Std") && (name.Equals("CheckBox") || name.Equals("Label") || name.Equals("Button") || name.Equals("TabControl")))
-                    {
-                        control.Font = control.Text.Contains("%") ? font : new Font("Consolas", font.Size + 3.15F, FontStyle.Bold);
-
-                        if (name.Equals("Label") && control.Text.Contains("%"))
-                            control.Padding = new Padding(0, 0, 0, 3);
-                    }
-                    if (control.Controls.Count > 0)
-                        SetControlsChangeFont(DialogResult.OK, control.Controls, font);
-                }
-        }
-        private void ChooseStrategy(DialogResult result, GuideGoblinBat guide, ChooseAnalysis analysis, SelectStrategies strategy)
+        protected void ChooseStrategy(DialogResult result, GuideGoblinBat guide, ChooseAnalysis analysis, SelectStrategies strategy)
         {
             analysis.SendClose += strategy.OnReceiveClose;
             strategy.OnReceiveClose(analysis.Key.Split('^'));
@@ -63,6 +47,38 @@ namespace ShareInvest.Kospi200HedgeVersion
             SetControlsChangeFont(result, Controls, new Font("Consolas", Font.Size, FontStyle.Regular));
             ResumeLayout();
             ShowDialog();
+        }
+        private void ChooseStrategy(DialogResult result, GuideGoblinBat guide, SelectStatisticalData data, Yield yield)
+        {
+            splitContainerStrategy.Panel1.Controls.Add(yield);
+            splitContainerStrategy.Panel2.Controls.Add(data);
+            splitContainerGuide.Panel1.Controls.Add(guide);
+            yield.Dock = DockStyle.Fill;
+            data.Dock = DockStyle.Fill;
+            guide.Dock = DockStyle.Fill;
+            font = result;
+            Size = new Size(1265, 350);
+            splitContainerStrategy.SplitterDistance = 127;
+            splitContainerStrategy.Panel1.BackColor = Color.FromArgb(121, 133, 130);
+            splitContainerStrategy.Panel2.BackColor = Color.FromArgb(121, 133, 130);
+            splitContainerGuide.Panel1.BackColor = Color.FromArgb(121, 133, 130);
+            SetControlsChangeFont(result, Controls, new Font("Consolas", Font.Size, FontStyle.Regular));
+            ResumeLayout();
+            ShowDialog();
+        }
+        private void SetControlsChangeFont(DialogResult result, Control.ControlCollection controls, Font font)
+        {
+            if (result.Equals(DialogResult.OK))
+                foreach (Control control in controls)
+                {
+                    string name = control.GetType().Name;
+
+                    if (control.Font.Name.Equals("Brush Script Std") && (name.Equals("CheckBox") || name.Equals("Label") || name.Equals("Button") || name.Equals("TabControl")))
+                        control.Font = control.Text.Contains(" by Day") ? font : new Font("Consolas", Font.Size + 1.25F, FontStyle.Bold);
+
+                    if (control.Controls.Count > 0)
+                        SetControlsChangeFont(DialogResult.OK, control.Controls, font);
+                }
         }
         private void StartTrading(Balance bal, ConfirmOrder order, AccountSelection account, ConnectKHOpenAPI api)
         {
@@ -259,7 +275,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             get; set;
         } =
         {
-            { 1680, 920 },
+            { 1265, 350 },
             { 750, 370 },
             { 594, 315 },
             { 405, 450 }
