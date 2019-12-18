@@ -4,6 +4,30 @@ namespace ShareInvest.Const
 {
     public class Specify : IStatistics
     {
+        public int Base
+        {
+            get; set;
+        }
+        public int Sigma
+        {
+            get; set;
+        }
+        public int Percent
+        {
+            get; set;
+        }
+        public int Max
+        {
+            get; set;
+        }
+        public int Quantity
+        {
+            get; set;
+        }
+        public int Time
+        {
+            get; set;
+        }
         public int ShortDayPeriod
         {
             get; set;

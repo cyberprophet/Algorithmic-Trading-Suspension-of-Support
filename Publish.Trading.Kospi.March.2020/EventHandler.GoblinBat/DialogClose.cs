@@ -59,5 +59,44 @@ namespace ShareInvest.EventHandler
             Reaction = (int)reaction;
             Hedge = (int)hedge;
         }
+        public DialogClose(int[] strategy)
+        {
+            ShortTick = strategy[0];
+            ShortDay = strategy[1];
+            LongTick = strategy[2];
+            LongDay = strategy[3];
+            Reaction = strategy[4];
+            Hedge = strategy[5];
+            Base = strategy[6];
+            Sigma = strategy[7];
+            Percent = strategy[8];
+            Max = strategy[9];
+            Quantity = strategy[10];
+            Time = strategy[11];
+        }
+        public int Sigma
+        {
+            get; private set;
+        }
+        public int Percent
+        {
+            get; private set;
+        }
+        public int Max
+        {
+            get; private set;
+        }
+        public int Time
+        {
+            get; private set;
+        }
+        public int Quantity
+        {
+            get; private set;
+        }
+        public int Base
+        {
+            get; private set;
+        }
     }
 }

@@ -2,6 +2,30 @@
 {
     public interface IStatistics
     {
+        int Base
+        {
+            get;
+        }
+        int Sigma
+        {
+            get;
+        }
+        int Percent
+        {
+            get;
+        }
+        int Max
+        {
+            get;
+        }
+        int Quantity
+        {
+            get;
+        }
+        int Time
+        {
+            get;
+        }
         int ShortDayPeriod
         {
             get;

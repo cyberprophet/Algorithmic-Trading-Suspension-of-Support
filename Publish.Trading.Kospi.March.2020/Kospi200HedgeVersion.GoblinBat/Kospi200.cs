@@ -24,7 +24,8 @@ namespace ShareInvest.Kospi200HedgeVersion
             InitializeComponent();
             SuspendLayout();
             Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
-            ChooseStrategy(TimerBox.Show("The Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new Yield(new Assets().ReadCSV().Split(',')), new SelectStatisticalData());
+            ChooseStrategy(TimerBox.Show("After Setting the Font,\nIt takes about 15 Seconds\nto Analyze the Back Testing Statistics.\n\n\nThe Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new Yield(new Assets().ReadCSV().Split(',')), new SelectStatisticalData());
+            ShowDialog();
             Dispose();
             Environment.Exit(0);
         }
@@ -58,11 +59,14 @@ namespace ShareInvest.Kospi200HedgeVersion
             data.Dock = DockStyle.Fill;
             guide.Dock = DockStyle.Fill;
             font = result;
-            Size = new Size(1265, 350);
+            Size = new Size(1241, 491);
             splitContainerStrategy.SplitterDistance = 127;
             splitContainerStrategy.Panel1.BackColor = Color.FromArgb(121, 133, 130);
             splitContainerStrategy.Panel2.BackColor = Color.FromArgb(121, 133, 130);
             splitContainerGuide.Panel1.BackColor = Color.FromArgb(121, 133, 130);
+            yield.SendHermes += data.OnReceiveHermes;
+            data.SendStrategy += yield.OnReceiveStrategy;
+            data.SendClose += OnReceiveClose;
             Dictionary<string, int> param = new Dictionary<string, int>(1024);
 
             foreach (string[] temp in yield)
@@ -70,9 +74,12 @@ namespace ShareInvest.Kospi200HedgeVersion
                     param[string.Concat(i, ';', temp[i])] = i;
 
             data.StartProgress(param);
-            SetControlsChangeFont(result, Controls, new Font("Consolas", Font.Size, FontStyle.Regular));
+            SetControlsChangeFont(result, Controls, new Font("Consolas", Font.Size + 0.75F, FontStyle.Regular));
             ResumeLayout();
-            ShowDialog();
+            Show();
+            CenterToScreen();
+            data.GetStrategy(yield.SetStrategy(TimerBox.Show("Click 'No' to Edit the Automatically generated Strategy.\n\nIf No Selection is made for 20 Seconds,\nTrading Starts with an Automatically Generated Strategy.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 21753)));
+            SetVisibleCore(false);
         }
         private void SetControlsChangeFont(DialogResult result, Control.ControlCollection controls, Font font)
         {
@@ -85,7 +92,7 @@ namespace ShareInvest.Kospi200HedgeVersion
                         control.Font = control.Text.Contains(" by Day") ? font : new Font("Consolas", Font.Size + 1.25F, FontStyle.Bold);
 
                     if (control.Text.Contains("%"))
-                        control.Font = new Font("Consolas", Font.Size - 1.25F, FontStyle.Regular);
+                        control.Font = new Font("Consolas", Font.Size + 0.75F, FontStyle.Regular);
 
                     if (control.Controls.Count > 0)
                         SetControlsChangeFont(DialogResult.OK, control.Controls, font);
@@ -127,7 +134,13 @@ namespace ShareInvest.Kospi200HedgeVersion
                     ShortTickPeriod = e.ShortTick,
                     LongDayPeriod = e.LongDay,
                     LongTickPeriod = e.LongTick,
-                    HedgeType = e.Hedge
+                    HedgeType = e.Hedge,
+                    Base = e.Base,
+                    Sigma = e.Sigma,
+                    Percent = e.Percent,
+                    Max = e.Max,
+                    Quantity = e.Quantity,
+                    Time = e.Time
                 });
             }));
             do
@@ -217,6 +230,8 @@ namespace ShareInvest.Kospi200HedgeVersion
         }
         private void TabControlSelectedIndexChanged(object sender, EventArgs e)
         {
+            Hide();
+            SuspendLayout();
             Size = new Size(FormSizes[tabControl.SelectedIndex, 0], FormSizes[tabControl.SelectedIndex, 1]);
             splitContainerBalance.AutoScaleMode = AutoScaleMode.Font;
             CenterToScreen();
@@ -236,6 +251,8 @@ namespace ShareInvest.Kospi200HedgeVersion
                     webBrowser.Navigate(@"https://youtu.be/jl_OLK3Alog");
                     Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
                 }));
+            ResumeLayout();
+            Show();
         }
         private void ServerCheckedChanged(object sender, EventArgs e)
         {
@@ -286,7 +303,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             get; set;
         } =
         {
-            { 1265, 350 },
+            { 1241, 491 },
             { 750, 370 },
             { 594, 315 },
             { 405, 450 }
