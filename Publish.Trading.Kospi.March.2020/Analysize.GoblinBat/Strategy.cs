@@ -30,7 +30,8 @@ namespace ShareInvest.Analysize
             Send -= Analysis;
             api = ConnectAPI.Get();
             api.SendDatum += Analysis;
-            SendLiquidate += Balance.Get().OnReceiveLiquidate;
+            balance = Balance.Get();
+            SendLiquidate += balance.OnReceiveLiquidate;
         }
         public bool SetAccount(IAccount account)
         {
@@ -56,73 +57,78 @@ namespace ShareInvest.Analysize
         {
             int quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
 
-            if (api != null && Math.Abs(api.Quantity + quantity) < Max(e.Price) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction))
+            if (api != null && account != null)
             {
-                if (api.Remaining && Math.Abs(api.Quantity) > 0)
-                {
-                    api.OnReceiveBalance = api.RollOver(quantity);
+                balance.OnRealTimeCurrentPriceReflect(e.Price, api.Quantity, st);
 
-                    return;
-                }
-                IStrategy strategy = new PurchaseInformation
+                if (Math.Abs(api.Quantity + quantity) < Max(e.Price) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction))
                 {
-                    Code = api.Code[0].Substring(0, 8),
-                    SlbyTP = dic[quantity],
-                    OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
-                    Price = string.Empty,
-                    Qty = Math.Abs(quantity)
-                };
-                api.OnReceiveOrder(strategy);
-                api.OnReceiveBalance = false;
-                double temp = 0;
-                string code = string.Empty;
-                new Task(() => new LogMessage().Record("Order", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price))).Start();
-
-                if (api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0)
-                {
-                    SendLiquidate?.Invoke(this, new Liquidate(strategy));
-
-                    return;
-                }
-                if (st.HedgeType > 0)
-                {
-                    foreach (KeyValuePair<string, double> kv in api.OptionsCalling)
-                        if (e.Price * st.MarginRate * rate[st.HedgeType] - kv.Value > 0 && temp < kv.Value && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
-                        {
-                            temp = kv.Value;
-                            code = new FindbyOptions().Code(kv.Key);
-                        }
-                    api.OnReceiveOrder(new PurchaseInformation
+                    if (api.Remaining && Math.Abs(api.Quantity) > 0)
                     {
-                        Code = code,
-                        SlbyTP = "2",
+                        api.OnReceiveBalance = api.RollOver(quantity);
+
+                        return;
+                    }
+                    IStrategy strategy = new PurchaseInformation
+                    {
+                        Code = api.Code[0].Substring(0, 8),
+                        SlbyTP = dic[quantity],
                         OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
                         Price = string.Empty,
                         Qty = Math.Abs(quantity)
-                    });
-                    new Task(() => new LogMessage().Record("Options", string.Concat(DateTime.Now.ToLongTimeString(), "*", code, "*", temp, "*Buy"))).Start();
-                }
-                return;
-            }
-            if (api != null && Math.Abs(api.Quantity) > Max(e.Price) && api.OnReceiveBalance)
-            {
-                IStrategy strategy = new PurchaseInformation
-                {
-                    Code = api.Code[0].Substring(0, 8),
-                    SlbyTP = api.Quantity > 0 ? "1" : "2",
-                    OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
-                    Price = string.Empty,
-                    Qty = 1
-                };
-                api.OnReceiveOrder(strategy);
-                api.OnReceiveBalance = false;
-                SendLiquidate?.Invoke(this, new Liquidate(strategy));
-                new Task(() => new LogMessage().Record("Liquidate", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price))).Start();
+                    };
+                    api.OnReceiveOrder(strategy);
+                    api.OnReceiveBalance = false;
+                    double temp = 0;
+                    string code = string.Empty;
+                    new Task(() => new LogMessage().Record("Order", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price))).Start();
 
-                return;
+                    if (api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0)
+                    {
+                        SendLiquidate?.Invoke(this, new Liquidate(strategy));
+
+                        return;
+                    }
+                    if (st.HedgeType > 0)
+                    {
+                        foreach (KeyValuePair<string, double> kv in api.OptionsCalling)
+                            if (e.Price * st.MarginRate * rate[st.HedgeType] - kv.Value > 0 && temp < kv.Value && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")))
+                            {
+                                temp = kv.Value;
+                                code = new FindbyOptions().Code(kv.Key);
+                            }
+                        api.OnReceiveOrder(new PurchaseInformation
+                        {
+                            Code = code,
+                            SlbyTP = "2",
+                            OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
+                            Price = string.Empty,
+                            Qty = Math.Abs(quantity)
+                        });
+                        new Task(() => new LogMessage().Record("Options", string.Concat(DateTime.Now.ToLongTimeString(), "*", code, "*", temp, "*Buy"))).Start();
+                    }
+                    return;
+                }
+                if (Math.Abs(api.Quantity) > Max(e.Price) && api.OnReceiveBalance)
+                {
+                    IStrategy strategy = new PurchaseInformation
+                    {
+                        Code = api.Code[0].Substring(0, 8),
+                        SlbyTP = api.Quantity > 0 ? "1" : "2",
+                        OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
+                        Price = string.Empty,
+                        Qty = 1
+                    };
+                    api.OnReceiveOrder(strategy);
+                    api.OnReceiveBalance = false;
+                    SendLiquidate?.Invoke(this, new Liquidate(strategy));
+                    new Task(() => new LogMessage().Record("Liquidate", string.Concat(DateTime.Now.ToLongTimeString(), "*", e.Time, "*", e.Price))).Start();
+
+                    return;
+                }
+                if (api.Remaining && api.OnReceiveBalance && Math.Abs(api.Quantity) > 0 && int.Parse(e.Time) > 151949)
+                    api.OnReceiveBalance = api.RollOver(api.Quantity);
             }
-            if (api != null && api.Remaining && api.OnReceiveBalance && Math.Abs(api.Quantity) > 0 && int.Parse(e.Time) > 151949)
-                api.OnReceiveBalance = api.RollOver(api.Quantity);
         }
         private int Analysis(double price)
         {
@@ -205,6 +211,7 @@ namespace ShareInvest.Analysize
         private readonly IStatistics st;
         private readonly EMA ema;
         private readonly ConnectAPI api;
+        private readonly Balance balance;
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
         private readonly List<double> shortTick;

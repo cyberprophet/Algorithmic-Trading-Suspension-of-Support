@@ -88,7 +88,8 @@ namespace ShareInvest.RecallStatistics
             new MakeUpWeekly(),
             new MakeUpBiweekly(),
             new MakeUpMonthly(),
-            new MakeUpFor3Months()
+            new MakeUpFor3Months(),
+            new MakeUpFor6Months()
         };
     }
 }

@@ -9,51 +9,11 @@ namespace ShareInvest.Basic
 {
     public class BasicMaterial
     {
-        public int ShortDayPeriod
-        {
-            get; private set;
-        }
-        public int LongDayPeriod
-        {
-            get; private set;
-        }
-        public int ShortTickPeriod
-        {
-            get; private set;
-        }
-        public int LongTickPeriod
-        {
-            get; private set;
-        }
-        public int Reaction
-        {
-            get; private set;
-        }
-        public int HedgeType
-        {
-            get; private set;
-        }
-        public string AccNo
-        {
-            get; private set;
-        }
-        public long BasicAssets
-        {
-            get; private set;
-        }
         public BasicMaterial(IAccount account, IStatistics statistics)
         {
-            new Task(() => Save(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\BasicMaterial\Trading\"))).Start();
-            AccNo = account.AccNo;
-            BasicAssets = account.BasicAssets;
-            ShortDayPeriod = statistics.ShortDayPeriod;
-            ShortTickPeriod = statistics.ShortTickPeriod;
-            LongDayPeriod = statistics.LongDayPeriod;
-            LongTickPeriod = statistics.LongTickPeriod;
-            Reaction = statistics.Reaction;
-            HedgeType = statistics.HedgeType;
+            new Task(() => Save(Path.Combine(Application.StartupPath, @"..\BasicMaterial\Trading\"), string.Concat(account.AccNo, ',', account.BasicAssets, ',', statistics.ShortTickPeriod, ',', statistics.ShortDayPeriod, ',', statistics.LongTickPeriod, ',', statistics.LongDayPeriod, ',', statistics.Reaction, ',', statistics.HedgeType, ',', statistics.Base, ',', statistics.Sigma, ',', statistics.Percent, ',', statistics.Max, ',', statistics.Quantity, ',', statistics.Time))).Start();
         }
-        private void Save(string path)
+        private void Save(string path, string save)
         {
             try
             {
@@ -63,7 +23,7 @@ namespace ShareInvest.Basic
                     info.Create();
 
                 using StreamWriter sw = new StreamWriter(string.Concat(path, DateTime.Now.Ticks, ".csv"));
-                sw.WriteLine(string.Concat(AccNo, ',', BasicAssets, ',', ShortDayPeriod, ',', ShortTickPeriod, ',', LongDayPeriod, ',', LongTickPeriod, ',', Reaction, ',', HedgeType));
+                sw.WriteLine(save);
             }
             catch (Exception ex)
             {

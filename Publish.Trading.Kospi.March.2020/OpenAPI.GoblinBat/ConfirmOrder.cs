@@ -38,9 +38,12 @@ namespace ShareInvest.OpenAPI
 
                 return;
             }
-            checkBox.Text = e.Confirm != null ? string.Concat(DateTime.Now.ToString("H시 m분 s초\n"), e.Confirm) : string.Concat(e.Remaining, ".");
+            BeginInvoke(new Action(() =>
+            {
+                checkBox.Text = e.Confirm != null ? string.Concat(DateTime.Now.ToString("H시 m분 s초\n"), e.Confirm) : string.Concat(e.Remaining, ".");
+                new LogMessage().Record("Kiwoom", checkBox.Text);
+            }));
             SendTab?.Invoke(this, new Mining(2));
-            BeginInvoke(new Action(() => new LogMessage().Record("Kiwoom", checkBox.Text)));
         }
         private void CheckBox_CheckedChanged(object sender, EventArgs e)
         {

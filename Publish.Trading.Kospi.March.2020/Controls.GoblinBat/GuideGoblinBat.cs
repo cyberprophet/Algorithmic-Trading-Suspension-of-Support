@@ -13,8 +13,9 @@ namespace ShareInvest.Controls
 
             for (int i = 0; i < 5; i++)
             {
-                string.Concat("connect", i).FindByName<Button>(this).Click += ButtonClick;
-                string.Concat("connect", i).FindByName<Button>(this).Text = name[i];
+                var temp = string.Concat("connect", i).FindByName<Button>(this);
+                temp.Click += ButtonClick;
+                temp.Text = name[i];
             }
         }
         private void ButtonClick(object sender, EventArgs e)

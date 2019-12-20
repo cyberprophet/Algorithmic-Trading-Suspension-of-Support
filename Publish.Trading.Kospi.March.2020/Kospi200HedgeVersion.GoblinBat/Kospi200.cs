@@ -23,6 +23,8 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             InitializeComponent();
             SuspendLayout();
+            ran = new Random();
+            webBrowser.Navigate(url[ran.Next(0, url.Length)]);
             Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
             ChooseStrategy(TimerBox.Show("After Setting the Font,\nIt takes about 15 Seconds\nto Analyze the Back Testing Statistics.\n\n\nThe Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new Yield(new Assets().ReadCSV().Split(',')), new SelectStatisticalData());
             ShowDialog();
@@ -39,7 +41,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             analysis.Dock = DockStyle.Fill;
             strategy.Dock = DockStyle.Fill;
             guide.Dock = DockStyle.Fill;
-            font = result;
+            Choice = result;
             Size = new Size(1650, 920);
             splitContainerStrategy.SplitterDistance = 287;
             splitContainerStrategy.BackColor = Color.FromArgb(121, 133, 130);
@@ -58,7 +60,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             yield.Dock = DockStyle.Fill;
             data.Dock = DockStyle.Fill;
             guide.Dock = DockStyle.Fill;
-            font = result;
+            Choice = result;
             Size = new Size(1241, 491);
             splitContainerStrategy.SplitterDistance = 127;
             splitContainerStrategy.Panel1.BackColor = Color.FromArgb(121, 133, 130);
@@ -115,7 +117,7 @@ namespace ShareInvest.Kospi200HedgeVersion
             order.SendTab += OnReceiveTabControl;
             bal.SendReSize += OnReceiveSize;
 
-            if (font.Equals(DialogResult.OK))
+            if (Choice.Equals(DialogResult.OK))
                 foreach (Control control in order.Controls.Find("checkBox", true))
                     control.Font = new Font("Consolas", control.Font.Size + 0.25F, FontStyle.Bold);
 
@@ -125,9 +127,9 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             SuspendLayout();
             StartTrading(Balance.Get(), ConfirmOrder.Get(), new AccountSelection(), new ConnectKHOpenAPI());
-            result = BeginInvoke(new Action(() =>
+            Result = BeginInvoke(new Action(() =>
             {
-                strategy = new Strategy(new Specify
+                Strategy = new Strategy(new Specify
                 {
                     Reaction = e.Reaction,
                     ShortDayPeriod = e.ShortDay,
@@ -147,65 +149,76 @@ namespace ShareInvest.Kospi200HedgeVersion
             {
                 Application.DoEvents();
             }
-            while (result.IsCompleted == false);
+            while (Result.IsCompleted == false);
         }
         private void OnReceiveAccount(object sender, Account e)
         {
             account.Text = e.AccNo;
             id.Text = e.ID;
-            ConnectAPI api = ConnectAPI.Get();
-            api.SendDeposit += OnReceiveDeposit;
-            api.LookUpTheDeposit(e.AccNo, true);
+            Api = ConnectAPI.Get();
+            Api.SendDeposit += OnReceiveDeposit;
+            Api.LookUpTheDeposit(e.AccNo, true);
         }
         private void OnReceiveDeposit(object sender, Deposit e)
         {
-            for (int i = 0; i < e.ArrayDeposit.Length; i++)
-                if (e.ArrayDeposit[i].Length > 0)
-                    string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.ArrayDeposit[i]).ToString("N0");
-
-            splitContainerAccount.Panel1.BackColor = Color.FromArgb(121, 133, 130);
-            splitContainerAccount.Panel2.BackColor = Color.FromArgb(121, 133, 130);
-            splitContainerAccount.SplitterWidth = 2;
-            long trading = long.Parse(e.ArrayDeposit[20]), deposit = long.Parse(e.ArrayDeposit[18]);
-
-            if (Account == false)
+            BeginInvoke(new Action(() =>
             {
-                bool checkCurrentAsset = deposit < trading && deposit < Deposit ? true : false;
-                strategy.SetDeposit(new InQuiry { AccNo = account.Text, BasicAssets = checkCurrentAsset ? deposit : Deposit });
-                balance18.ForeColor = Color.GhostWhite;
+                for (int i = 0; i < e.ArrayDeposit.Length; i++)
+                    if (e.ArrayDeposit[i].Length > 0)
+                        string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.ArrayDeposit[i]).ToString("N0");
 
-                if (checkCurrentAsset)
+                splitContainerAccount.Panel1.BackColor = Color.FromArgb(121, 133, 130);
+                splitContainerAccount.Panel2.BackColor = Color.FromArgb(121, 133, 130);
+                splitContainerAccount.SplitterWidth = 2;
+                long trading = long.Parse(e.ArrayDeposit[20]), deposit = long.Parse(e.ArrayDeposit[18]);
+
+                if (Account == false)
                 {
-                    balance18.ForeColor = Color.DeepSkyBlue;
-                    TimerBox.Show("The Current Asset is below the Set Value.\n\nAt least 10% more Assets are Required than 'Back-Testing' for Safe Trading.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning, 3715);
-                }
-                return;
-            }
-            if (Account)
-            {
-                string[] assets = new Assets().ReadCSV().Split(',');
-                long temp = 0, backtesting = long.Parse(assets[1]);
-                DialogResult result = TimerBox.Show("Are You using Automatic Login??\n\nThe Automatic Login Compares the Asset setup\namount with the Current Asset during the Back Testing\nand sets a Small amount as a Deposit.\n\nIf You aren't using It,\nClick 'Cancel'.\n\nAfter 10 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 9617);
+                    bool checkCurrentAsset = deposit < trading && deposit < Deposit ? true : false;
+                    Strategy.SetDeposit(new InQuiry
+                    {
+                        AccNo = account.Text,
+                        BasicAssets = checkCurrentAsset ? deposit : Deposit
+                    });
+                    balance18.ForeColor = Color.GhostWhite;
 
-                switch (result)
+                    if (checkCurrentAsset)
+                    {
+                        balance18.ForeColor = Color.DeepSkyBlue;
+                        TimerBox.Show("The Current Asset is below the Set Value.\n\nAt least 10% more Assets are Required than 'Back-Testing' for Safe Trading.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning, 3715);
+                    }
+                    return;
+                }
+                if (Account)
                 {
-                    case DialogResult.OK:
-                        temp = backtesting >= trading ? trading : backtesting;
-                        break;
+                    string[] assets = new Assets().ReadCSV().Split(',');
+                    long temp = 0, backtesting = long.Parse(assets[1]);
+                    DialogResult result = TimerBox.Show("Are You using Automatic Login??\n\nThe Automatic Login Compares the Asset setup\namount with the Current Asset during the Back Testing\nand sets a Small amount as a Deposit.\n\nIf You aren't using It,\nClick 'Cancel'.\n\nAfter 10 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 9617);
 
-                    case DialogResult.Cancel:
+                    switch (result)
+                    {
+                        case DialogResult.OK:
+                            temp = backtesting >= trading ? trading : backtesting;
+                            break;
 
-                        if (TimerBox.Show(string.Concat("The set amount at the Time of the Test is ￦", backtesting.ToString("N0"), "\nand the Current Assets are ￦", trading.ToString("N0"), ".\n\nClick 'Yes' to set it to ￦", backtesting.ToString("N0"), ".\n\nIf You don't Choose,\nYou'll Set it as Current Asset."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 9712).Equals(DialogResult.No))
-                            temp = trading;
+                        case DialogResult.Cancel:
 
-                        else
-                            temp = backtesting;
+                            if (TimerBox.Show(string.Concat("The set amount at the Time of the Test is ￦", backtesting.ToString("N0"), "\nand the Current Assets are ￦", trading.ToString("N0"), ".\n\nClick 'Yes' to set it to ￦", backtesting.ToString("N0"), ".\n\nIf You don't Choose,\nYou'll Set it as Current Asset."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 9712).Equals(DialogResult.No))
+                                temp = trading;
 
-                        break;
+                            else
+                                temp = backtesting;
+
+                            break;
+                    }
+                    Deposit = temp;
+                    Account = Strategy.SetAccount(new InQuiry
+                    {
+                        AccNo = account.Text,
+                        BasicAssets = temp
+                    });
                 }
-                Deposit = temp;
-                Account = strategy.SetAccount(new InQuiry { AccNo = account.Text, BasicAssets = temp });
-            }
+            }));
         }
         private void OnReceiveSize(object sender, GridReSize e)
         {
@@ -248,7 +261,7 @@ namespace ShareInvest.Kospi200HedgeVersion
                 BeginInvoke(new Action(() =>
                 {
                     Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_DOWN);
-                    webBrowser.Navigate(@"https://youtu.be/jl_OLK3Alog");
+                    webBrowser.Navigate(url[ran.Next(0, url.Length)]);
                     Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
                 }));
             ResumeLayout();
@@ -273,11 +286,28 @@ namespace ShareInvest.Kospi200HedgeVersion
         }
         private void TimerTick(object sender, EventArgs e)
         {
-            ConnectAPI api = ConnectAPI.Get();
-            api.LookUpTheDeposit(account.Text, api.OnReceiveBalance);
-
-            if (DateTime.Now.Hour > 14 && DateTime.Now.Minute > 44)
+            if (DateTime.Now.Hour > 14 && DateTime.Now.Minute > 34)
+            {
                 timer.Stop();
+                timer.Dispose();
+            }
+            Api.LookUpTheDeposit(account.Text, Api.OnReceiveBalance);
+        }
+        private ConnectAPI Api
+        {
+            get; set;
+        }
+        private Strategy Strategy
+        {
+            get; set;
+        }
+        private DialogResult Choice
+        {
+            get; set;
+        }
+        private IAsyncResult Result
+        {
+            get; set;
         }
         private long Deposit
         {
@@ -308,12 +338,45 @@ namespace ShareInvest.Kospi200HedgeVersion
             { 594, 315 },
             { 405, 450 }
         };
+        private readonly string[] url =
+        {
+            @"https://youtu.be/jl_OLK3Alog",
+            @"https://youtu.be/CIfSIsozG_E",
+            @"https://youtu.be/_XyXMsovMIk",
+            @"https://youtu.be/P88V1_bKAPA",
+            @"https://youtu.be/HhkZEPW1d3I",
+            @"https://youtu.be/vUGCwvs2GK0",
+            @"https://youtu.be/WdVopzNUlKc",
+            @"https://youtu.be/44kqS6JnkaI",
+            @"https://youtu.be/aXZUK1cNLSc",
+            @"https://youtu.be/d1MQsMr4pxQ",
+            @"https://youtu.be/LPfkAH5VCgI",
+            @"https://youtu.be/yrK3aT4yka4",
+            @"https://youtu.be/YvUf7nluBvE",
+            @"https://youtu.be/WH2OiiMjZr4",
+            @"https://youtu.be/4ESEkbpwgtc",
+            @"https://youtu.be/Qx0a6s9ZqB4",
+            @"https://youtu.be/4OZWLQqr9x0",
+            @"https://youtu.be/OxWWSXvryfI",
+            @"https://youtu.be/UrtVFKBCKEU",
+            @"https://youtu.be/Tpi-AcSJp74",
+            @"https://youtu.be/gkjm0QIA5E4",
+            @"https://youtu.be/FX9T4ZZM6G0",
+            @"https://youtu.be/f-Vy4dFaxZI",
+            @"https://youtu.be/dYKbzKSg0v0",
+            @"https://youtu.be/QMubsEbyN00",
+            @"https://youtu.be/6gPAH5b0Els",
+            @"https://youtu.be/hYajGyJQeVk",
+            @"https://youtu.be/9hK0IiqkETA",
+            @"https://youtu.be/-8VLZdJE38Q",
+            @"https://youtu.be/fXaJ3Ziumas",
+            @"https://youtu.be/HpB4OdQrWSs",
+            @"https://youtu.be/_JPhsfHO3B0"
+        };
+        private readonly Random ran;
         private const int APPCOMMAND_VOLUME_MUTE = 0x80000;
         private const int APPCOMMAND_VOLUME_UP = 0xA0000;
         private const int APPCOMMAND_VOLUME_DOWN = 0x90000;
         private const int WM_APPCOMMAND = 0x319;
-        private Strategy strategy;
-        private DialogResult font;
-        private IAsyncResult result;
     }
 }

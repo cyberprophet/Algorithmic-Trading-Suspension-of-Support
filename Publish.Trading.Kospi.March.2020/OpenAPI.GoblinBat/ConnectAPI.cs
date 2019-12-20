@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
+using ShareInvest.ThrowAway;
 using ShareInvest.TimerMessageBox;
 
 namespace ShareInvest.OpenAPI
@@ -339,6 +341,7 @@ namespace ShareInvest.OpenAPI
                             RemainingDay(axAPI.GetFutureCodeByIndex(0));
                         }
                         Request(Code[0].Substring(0, 8));
+                        new TheOld().ForsakeOld(Path.Combine(Application.StartupPath, @"..\Log\"));
                     }
                     break;
             }

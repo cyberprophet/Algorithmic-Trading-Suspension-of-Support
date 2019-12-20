@@ -22,8 +22,8 @@ namespace ShareInvest.StatisticalData
                 foreach (var name in temp)
                     strategy[(int)name] = (int)name.ToString().FindByName<NumericUpDown>(this).Value;
 
-                start.Text = "Trading.";
                 start.ForeColor = Color.Maroon;
+                start.Text = GetCurrentStatus(button.ForeColor);
                 SendClose?.Invoke(this, new DialogClose(strategy));
             }
         }
@@ -79,7 +79,7 @@ namespace ShareInvest.StatisticalData
                 }
                 cb.Text = "Reset";
                 cb.ForeColor = Color.Gold;
-                button.Text = "Start Trading";
+                button.Text = GetCurrentStatus(button.ForeColor);
                 SendStrategy?.Invoke(temp.Length, new Hermes(sb));
 
                 return;
@@ -88,12 +88,19 @@ namespace ShareInvest.StatisticalData
                 name.FindByName<NumericUpDown>(this).Value = 0;
 
             checkBox.Text = "Load";
-            button.Text = "0.6.11.20";
+            button.Text = GetCurrentStatus(button.ForeColor);
             checkBox.ForeColor = Color.Snow;
+        }
+        private string GetCurrentStatus(Color state)
+        {
+            if (Color.Maroon.Equals(state))
+                return "Trading.";
+
+            return checkBox.Text.Equals("Load") ? "0.6.11.20" : "Start Trading";
         }
         private bool PerformClick(CheckState check)
         {
-            if (DialogResult.Cancel.Equals(TimerBox.Show("Find Most Confident Strategy...\n\nClick the\n\n'Cancel'\n\nButton to Manually Create a Strategy.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, 7195)))
+            if (DialogResult.Cancel.Equals(TimerBox.Show("Find Most Confident Strategy. . .\n\nClick the\n\n'Cancel'\n\nButton to Manually Create a Strategy.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, 7195)))
                 return false;
 
             checkBox.CheckState = check;

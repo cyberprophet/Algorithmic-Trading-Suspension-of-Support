@@ -19,24 +19,30 @@ namespace ShareInvest.Conservation
         {
             if (sender is Button name)
             {
-                string temp = name.Name.Replace("button", "rate");
-                var convert = Transmogrify(temp);
-                name.Text = name.Text.Contains('%') ? convert.ToString("C0") : string.Concat("C", (convert / Assets).ToString("P2"), " D", (convert / Turn[temp] / Assets).ToString("P3"));
-                name.ForeColor = convert > 0 ? Color.Maroon : Color.Navy;
+                BeginInvoke(new Action(() =>
+                {
+                    string temp = name.Name.Replace("button", "rate");
+                    var convert = Transmogrify(temp);
+                    name.Text = name.Text.Contains('%') ? convert.ToString("C0") : string.Concat("C", (convert / Assets).ToString("P0"), "  D", (convert / Turn[temp] / Assets).ToString("P3"));
+                    name.ForeColor = convert > 0 ? Color.Maroon : Color.Navy;
 
-                if (name.ForeColor.Equals(Color.Navy))
-                    name.Text = name.Text.Replace("-", string.Empty);
+                    if (name.ForeColor.Equals(Color.Navy))
+                        name.Text = name.Text.Replace("-", string.Empty);
+                }));
             }
         }
         private void ComboBoxSelectedValue(object sender, EventArgs e)
         {
             if (sender is ComboBox cb)
             {
-                long revenue = Transmogrify(cb.Name);
-                var name = cb.Name.Replace("rate", "button").FindByName<Button>(this);
-                bool check = revenue > 0 ? true : false;
-                name.Text = check ? revenue.ToString("C0") : Math.Abs(revenue).ToString("C0");
-                name.ForeColor = check ? Color.Maroon : Color.Navy;
+                BeginInvoke(new Action(() =>
+                {
+                    long revenue = Transmogrify(cb.Name);
+                    var name = cb.Name.Replace("rate", "button").FindByName<Button>(this);
+                    bool check = revenue > 0 ? true : false;
+                    name.Text = check ? revenue.ToString("C0") : Math.Abs(revenue).ToString("C0");
+                    name.ForeColor = check ? Color.Maroon : Color.Navy;
+                }));
                 SendHermes?.Invoke(this, new Hermes(cb.SelectedItem.ToString().Split('.')));
             }
         }
@@ -53,6 +59,10 @@ namespace ShareInvest.Conservation
             return 0;
         }
         private double Assets
+        {
+            get; set;
+        }
+        private string Temp
         {
             get; set;
         }
@@ -113,7 +123,7 @@ namespace ShareInvest.Conservation
                 if (!make.FindByName.Equals("cumulative"))
                     Turn[name] = make.Turn - 1;
 
-                trust.Font = new Font(Font.Name, Font.Size - 4.25F, FontStyle.Regular);
+                trust.Font = new Font(trust.Font.Name, trust.Font.Size - 3.25F, FontStyle.Regular);
                 trust.Text = string.Concat(check.ToString("N0"), " / ", make.DescendingSort.Count.ToString("N0"), "\n", (check / (double)make.DescendingSort.Count).ToString("P2"));
                 trust.Cursor = Cursors.Default;
                 title.Cursor = Cursors.Default;
@@ -143,27 +153,28 @@ namespace ShareInvest.Conservation
         }
         public void OnReceiveStrategy(object sender, Hermes e)
         {
-            bool hermes = Sort["rateCumulative"].ContainsKey(e.Strategy), check;
-
-            if (hermes)
+            if (Sort["rateCumulative"].ContainsKey(e.Strategy))
             {
                 string temp = e.Strategy.Replace('^', '.');
-                check = rateCumulative.Items.Contains(temp);
 
                 foreach (string name in Enum.GetNames(typeof(IRecall.ComboBoxYield)))
                 {
                     var article = name.FindByName<ComboBox>(this);
 
-                    if (check == false)
+                    if (temp.Equals(Temp))
+                        name.Replace("rate", "button").FindByName<Button>(this).PerformClick();
+
+                    else if (article.Items.Contains(temp) == false)
                         article.Items.Add(temp);
 
-                    article.SelectedItem = temp;
+                    BeginInvoke(new Action(() => article.SelectedItem = temp));
                 }
+                Temp = temp;
             }
             else
             {
                 TimerBox.Show("Statistics don't Exist.\n\nPlease Try Again.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information, 3519);
-                SendHermes?.Invoke(sender, new Hermes(hermes));
+                SendHermes?.Invoke(sender, new Hermes(false));
             }
         }
         public DialogResult SetStrategy(DialogResult result)
