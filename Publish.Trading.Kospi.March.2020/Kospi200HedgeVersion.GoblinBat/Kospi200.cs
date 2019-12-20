@@ -153,6 +153,9 @@ namespace ShareInvest.Kospi200HedgeVersion
         }
         private void OnReceiveAccount(object sender, Account e)
         {
+            if (e.Server.Equals("1"))
+                FormSizes[2, 0] = 594;
+
             account.Text = e.AccNo;
             id.Text = e.ID;
             Api = ConnectAPI.Get();
@@ -335,7 +338,7 @@ namespace ShareInvest.Kospi200HedgeVersion
         {
             { 1241, 491 },
             { 750, 370 },
-            { 594, 315 },
+            { 602, 315 },
             { 405, 450 }
         };
         private readonly string[] url =

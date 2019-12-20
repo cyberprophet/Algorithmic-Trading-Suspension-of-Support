@@ -63,8 +63,10 @@ namespace ShareInvest.OpenAPI
             request.RequestTrData(new Task(() =>
             {
                 if (ConfirmOrder.Get().CheckCurrent() && !order.Code.Equals(string.Empty))
+                {
                     ErrorCode = axAPI.SendOrderFO(string.Concat(order.Code, ScreenNo), ScreenNo, Account, order.Code, 1, order.SlbyTP, order.OrdTp, order.Qty, order.Price, "");
-
+                    api.OnReceiveBalance = false;
+                }
                 if (ErrorCode != 0)
                     new Error(ErrorCode);
             }));

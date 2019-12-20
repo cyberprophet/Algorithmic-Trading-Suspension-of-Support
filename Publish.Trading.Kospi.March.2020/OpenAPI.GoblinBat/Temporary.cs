@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
 using ShareInvest.Log.Message;
@@ -19,7 +20,7 @@ namespace ShareInvest.OpenAPI
         {
             if (e.SPrevNext != null)
             {
-                Save(e.Code, GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1));
+                new Task(() => Save(e.Code, GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1))).Start();
 
                 return;
             }
@@ -33,7 +34,7 @@ namespace ShareInvest.OpenAPI
         }
         private void Save(string code, string append)
         {
-            string path = code.Substring(0, 3).Equals("101") ? string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Chart\") : string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Chart\", append, @"\");
+            string path = code.Substring(0, 3).Equals("101") ? Path.Combine(Application.StartupPath, @"..\Chart\") : Path.Combine(Application.StartupPath, @"..\Chart\", append, @"\");
 
             try
             {

@@ -16,12 +16,14 @@ namespace ShareInvest.ThrowAway
 
                 foreach (string log in Directory.GetDirectories(path))
                 {
-                    if (date < uint.Parse(log))
+                    string[] recent = log.Split('\\');
+
+                    if (date < uint.Parse(recent[recent.Length - 1]))
                         continue;
 
                     new Task(() =>
                     {
-                        DirectoryInfo di = new DirectoryInfo(Path.Combine(path, log));
+                        DirectoryInfo di = new DirectoryInfo(log);
                         di.Delete(true);
                     }).Start();
                 }

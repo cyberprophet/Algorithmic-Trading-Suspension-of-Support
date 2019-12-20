@@ -31,10 +31,11 @@ namespace ShareInvest.EventHandler
             Name = name;
             Server = server;
         }
-        public Account(string account, string id)
+        public Account(string account, string id, string server)
         {
             AccNo = account;
             ID = string.Concat(id.Substring(0, 1).ToUpper(), id.Substring(1));
+            Server = server;
         }
     }
 }

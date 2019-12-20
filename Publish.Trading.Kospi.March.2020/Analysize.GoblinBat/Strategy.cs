@@ -11,6 +11,7 @@ using ShareInvest.Interface;
 using ShareInvest.Log.Message;
 using ShareInvest.OpenAPI;
 using ShareInvest.RetrieveInformation;
+using ShareInvest.Secondary;
 using ShareInvest.SecondaryIndicators;
 
 namespace ShareInvest.Analysize
@@ -20,8 +21,21 @@ namespace ShareInvest.Analysize
         public Strategy(IStatistics st)
         {
             ema = new EMA();
-            shortDay = new List<double>(512);
-            longDay = new List<double>(512);
+            bands = st.Base > 1 && st.Sigma > 0 && st.Percent > 0 && st.Max > 0 ? true : false;
+            days = st.ShortDayPeriod > 1 && st.LongDayPeriod > 2 ? true : false;
+            count = st.Quantity + 1;
+            Headway = st.Time;
+
+            if (bands)
+            {
+                over = new BollingerBands(st.Sigma * 0.1, st.Base, st.Percent * 1e-2, st.Max * 1e-3);
+                baseTick = new List<double>(2097152);
+            }
+            if (days)
+            {
+                shortDay = new List<double>(512);
+                longDay = new List<double>(512);
+            }
             shortTick = new List<double>(2097152);
             longTick = new List<double>(2097152);
             Send += Analysis;
@@ -35,33 +49,28 @@ namespace ShareInvest.Analysize
         }
         public bool SetAccount(IAccount account)
         {
-            this.account = account;
+            Account = account;
             new BasicMaterial(account, st);
 
             return false;
         }
         public void SetDeposit(IAccount account)
         {
-            if (this.account.BasicAssets > account.BasicAssets)
+            if (Account.BasicAssets > account.BasicAssets)
                 new BasicMaterial(account, st);
 
-            this.account = account;
-        }
-        private double Max(double price)
-        {
-            double futures = price * st.TransactionMultiplier * st.MarginRate;
-
-            return account.BasicAssets / (futures + futures * rate[st.HedgeType]);
+            Account = account;
         }
         private void Analysis(object sender, Datum e)
         {
-            int quantity = Order(Analysis(e.Price), Analysis(e.Time, e.Price));
+            int i, quantity = days ? Order(Analysis(e.Price), Analysis(e.Time, e.Price)) : Order(Analysis(e.Price));
+            double futures = e.Price * st.TransactionMultiplier * st.MarginRate, max = bands ? over.GetJudgingOverHeating(Account == null ? 0 : Account.BasicAssets / count / (futures + futures * rate[st.HedgeType]), e.Price, baseTick[baseTick.Count - 1]) : (Account == null ? 0 : Account.BasicAssets / count / (futures + futures * rate[st.HedgeType]));
 
-            if (api != null && account != null)
+            if (api != null && Account != null)
             {
                 balance.OnRealTimeCurrentPriceReflect(e.Price, api.Quantity, st);
 
-                if (Math.Abs(api.Quantity + quantity) < Max(e.Price) && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction))
+                if (Math.Abs(api.Quantity + quantity) < max && Math.Abs(e.Volume) < Math.Abs(e.Volume + quantity) && api.OnReceiveBalance && (e.Volume > st.Reaction || e.Volume < -st.Reaction) && Interval())
                 {
                     if (api.Remaining && Math.Abs(api.Quantity) > 0)
                     {
@@ -77,7 +86,9 @@ namespace ShareInvest.Analysize
                         Price = string.Empty,
                         Qty = Math.Abs(quantity)
                     };
-                    api.OnReceiveOrder(strategy);
+                    for (i = 0; i < count; i++)
+                        api.OnReceiveOrder(strategy);
+
                     api.OnReceiveBalance = false;
                     double temp = 0;
                     string code = string.Empty;
@@ -85,7 +96,8 @@ namespace ShareInvest.Analysize
 
                     if (api.Quantity > 0 && quantity < 0 || api.Quantity < 0 && quantity > 0)
                     {
-                        SendLiquidate?.Invoke(this, new Liquidate(strategy));
+                        for (i = 0; i < count; i++)
+                            SendLiquidate?.Invoke(this, new Liquidate(strategy));
 
                         return;
                     }
@@ -97,19 +109,20 @@ namespace ShareInvest.Analysize
                                 temp = kv.Value;
                                 code = new FindbyOptions().Code(kv.Key);
                             }
-                        api.OnReceiveOrder(new PurchaseInformation
-                        {
-                            Code = code,
-                            SlbyTP = "2",
-                            OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
-                            Price = string.Empty,
-                            Qty = Math.Abs(quantity)
-                        });
+                        for (i = 0; i < count; i++)
+                            api.OnReceiveOrder(new PurchaseInformation
+                            {
+                                Code = code,
+                                SlbyTP = "2",
+                                OrdTp = ((int)IStrategy.OrderType.시장가).ToString(),
+                                Price = string.Empty,
+                                Qty = Math.Abs(quantity)
+                            });
                         new Task(() => new LogMessage().Record("Options", string.Concat(DateTime.Now.ToLongTimeString(), "*", code, "*", temp, "*Buy"))).Start();
                     }
                     return;
                 }
-                if (Math.Abs(api.Quantity) > Max(e.Price) && api.OnReceiveBalance)
+                if (Math.Abs(api.Quantity) > max && api.OnReceiveBalance)
                 {
                     IStrategy strategy = new PurchaseInformation
                     {
@@ -154,9 +167,22 @@ namespace ShareInvest.Analysize
 
             return sc > 1 && lc > 1 ? shortDay[sc] - longDay[lc] - (shortDay[sc - 1] - longDay[lc - 1]) > 0 ? 1 : -1 : 0;
         }
+        private bool Interval()
+        {
+            if (Headway-- > 0)
+                return false;
+
+            Headway = st.Time;
+
+            return true;
+        }
         private int Order(int tick, int day)
         {
             return tick > 0 && day > 0 ? 1 : tick < 0 && day < 0 ? -1 : 0;
+        }
+        private int Order(int tick)
+        {
+            return tick > 0 ? 1 : tick < 0 ? -1 : 0;
         }
         private bool ConfirmDate(string date)
         {
@@ -188,7 +214,15 @@ namespace ShareInvest.Analysize
                 Environment.Exit(0);
             }
         }
+        private int Headway
+        {
+            get; set;
+        }
         private string Register
+        {
+            get; set;
+        }
+        private IAccount Account
         {
             get; set;
         }
@@ -207,11 +241,15 @@ namespace ShareInvest.Analysize
             {5, 0.205 }
         };
         private const string initiation = "090000";
-        private IAccount account;
+        private readonly int count;
+        private readonly bool bands;
+        private readonly bool days;
         private readonly IStatistics st;
         private readonly EMA ema;
-        private readonly ConnectAPI api;
         private readonly Balance balance;
+        private readonly ConnectAPI api;
+        private readonly BollingerBands over;
+        private readonly List<double> baseTick;
         private readonly List<double> shortDay;
         private readonly List<double> longDay;
         private readonly List<double> shortTick;
