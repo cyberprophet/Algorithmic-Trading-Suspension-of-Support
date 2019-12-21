@@ -187,28 +187,28 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 set = new StrategySetting
                 {
-                    ShortTick = auto.SetVariableAutomatic(IAsset.Variable.ShortTick, asset.ShortTickPeriod, ran.Next(1, 3)),
-                    LongTick = auto.SetVariableAutomatic(IAsset.Variable.LongTick, asset.LongTickPeriod, ran.Next(1, 3)),
-                    ShortDay = auto.SetVariableAutomatic(IAsset.Variable.ShortDay, asset.ShortDayPeriod, ran.Next(1, 3)),
-                    LongDay = auto.SetVariableAutomatic(IAsset.Variable.LongDay, asset.LongDayPeriod, ran.Next(1, 3)),
-                    Reaction = auto.SetVariableAutomatic(IAsset.Variable.Reaction, asset.Reaction, ran.Next(1, 3)),
+                    ShortTick = auto.SetVariableAutomatic(IAsset.Variable.ShortTick, asset.ShortTickPeriod, ran.Next(1, 5)),
+                    LongTick = auto.SetVariableAutomatic(IAsset.Variable.LongTick, asset.LongTickPeriod, ran.Next(1, 5)),
+                    ShortDay = auto.SetVariableAutomatic(IAsset.Variable.ShortDay, asset.ShortDayPeriod, ran.Next(1, 4)),
+                    LongDay = auto.SetVariableAutomatic(IAsset.Variable.LongDay, asset.LongDayPeriod, ran.Next(1, 4)),
+                    Reaction = auto.SetVariableAutomatic(IAsset.Variable.Reaction, asset.Reaction, ran.Next(1, 5)),
                     Hedge = auto.SetVariableAutomatic(IAsset.Variable.Hedge, asset.Hedge, ran.Next(0, 2)),
                     Base = auto.SetVariableAutomatic(IAsset.Variable.Base, asset.Base, ran.Next(0, 2)),
                     Sigma = auto.SetVariableAutomatic(IAsset.Variable.Sigma, asset.Sigma, ran.Next(0, 2)),
                     Percent = auto.SetVariableAutomatic(IAsset.Variable.Percent, asset.Percent, ran.Next(0, 2)),
                     Max = auto.SetVariableAutomatic(IAsset.Variable.Max, asset.Max, ran.Next(0, 2)),
                     Quantity = auto.SetVariableAutomatic(IAsset.Variable.Quantity, asset.Quantity, ran.Next(0, 2)),
-                    Time = auto.SetVariableAutomatic(IAsset.Variable.Time, asset.Time, ran.Next(0, 2)),
+                    Time = auto.SetVariableAutomatic(IAsset.Variable.Time, asset.Time, ran.Next(0, 3)),
                     Capital = asset.Assets
                 };
                 Estimate = set.EstimatedTime(new List<string>(64), CalculateTheRemainingTime() * count);
 
-                if (repeat % 1500 == 0 && TimerBox.Show("Run the Program Again and Set it Manually.", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 5157).Equals(DialogResult.OK))
+                if (repeat % 2500 == 0 && TimerBox.Show("Run the Program Again and Set it Manually.", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 5157).Equals(DialogResult.OK))
                 {
                     Application.ExitThread();
                     Application.Exit();
                 }
-                else if (repeat % 300 == 0 && TimerBox.Show("Do You Want to Use the Existing Settings?", "Question", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 7519).Equals(DialogResult.OK))
+                else if (repeat % 500 == 0 && TimerBox.Show("Do You Want to Use the Existing Settings?", "Question", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 7519).Equals(DialogResult.OK))
                 {
                     checkBox.Checked = true;
                     button.ForeColor = Color.Gold;

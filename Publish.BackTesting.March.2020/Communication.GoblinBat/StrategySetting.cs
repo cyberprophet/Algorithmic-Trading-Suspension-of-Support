@@ -63,16 +63,27 @@ namespace ShareInvest.Communication
             int baseTick, sigma, percent, max, sd, ld;
 
             foreach (int h in Hedge)
+            {
                 foreach (int t in Time)
+                {
                     foreach (int m in Max)
+                    {
                         foreach (int p in Percent)
+                        {
                             foreach (int s in Sigma)
+                            {
                                 foreach (int b in Base)
+                                {
                                     foreach (int r in Reaction)
+                                    {
                                         foreach (int q in Quantity)
+                                        {
                                             foreach (int shortTick in ShortTick)
+                                            {
                                                 foreach (int longTick in LongTick)
+                                                {
                                                     foreach (int shortDay in ShortDay)
+                                                    {
                                                         foreach (int longDay in LongDay)
                                                         {
                                                             if (shortTick >= longTick || shortDay > 0 && longDay > 0 && shortDay >= longDay)
@@ -108,6 +119,39 @@ namespace ShareInvest.Communication
                                                             if (list.Count > count * 2)
                                                                 break;
                                                         }
+                                                        if (list.Count > count * 2)
+                                                            break;
+                                                    }
+                                                    if (list.Count > count * 2)
+                                                        break;
+                                                }
+                                                if (list.Count > count * 2)
+                                                    break;
+                                            }
+                                            if (list.Count > count * 2)
+                                                break;
+                                        }
+                                        if (list.Count > count * 2)
+                                            break;
+                                    }
+                                    if (list.Count > count * 2)
+                                        break;
+                                }
+                                if (list.Count > count * 2)
+                                    break;
+                            }
+                            if (list.Count > count * 2)
+                                break;
+                        }
+                        if (list.Count > count * 2)
+                            break;
+                    }
+                    if (list.Count > count * 2)
+                        break;
+                }
+                if (list.Count > count * 2)
+                    break;
+            }
             return list.Distinct().ToList();
         }
     }

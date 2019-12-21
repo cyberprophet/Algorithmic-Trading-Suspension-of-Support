@@ -8,6 +8,10 @@ namespace ShareInvest.Communication
         {
             get; set;
         }
+        public int Max
+        {
+            get; set;
+        }
         public int Hedge
         {
             get; set;
@@ -51,11 +55,7 @@ namespace ShareInvest.Communication
         public long BasicAssets
         {
             get; set;
-        }
-        public double Max
-        {
-            get; set;
-        }
+        }        
         public double Sigma
         {
             get; set;

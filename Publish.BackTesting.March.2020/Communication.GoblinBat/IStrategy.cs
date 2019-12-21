@@ -48,6 +48,10 @@ namespace ShareInvest.Communication
         {
             get;
         }
+        int Max
+        {
+            get;
+        }
         long BasicAssets
         {
             get;
@@ -63,11 +67,7 @@ namespace ShareInvest.Communication
         double ErrorRate
         {
             get;
-        }
-        double Max
-        {
-            get;
-        }
+        }        
         double Sigma
         {
             get;
