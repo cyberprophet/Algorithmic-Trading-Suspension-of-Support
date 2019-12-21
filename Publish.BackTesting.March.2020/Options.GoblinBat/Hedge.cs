@@ -31,7 +31,7 @@ namespace ShareInvest.Options
             if (strategy.Repository.ContainsKey(date))
             {
                 foreach (KeyValuePair<string, Dictionary<string, double>> kv in strategy.Repository[date])
-                    if (kv.Value.TryGetValue(time.Substring(0, 11), out double close) && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")) && temp < close && price * strategy.MarginRate * rate[strategy.Hedge] - close > 0)
+                    if (kv.Value.TryGetValue(time, out double close) && (quantity > 0 ? kv.Key.Contains("301") : kv.Key.Contains("201")) && temp < close && price * strategy.MarginRate * rate[strategy.Hedge] - close > 0)
                     {
                         temp = close;
                         code = FindbyCode(kv.Key);
@@ -63,7 +63,7 @@ namespace ShareInvest.Options
 
                         if (strategy.Repository[date].TryGetValue(code, out Dictionary<string, double> revenue))
                         {
-                            temp = FindRevenue(revenue, time, 11);
+                            temp = FindRevenue(revenue, time, 12);
                             OptionsRevenue -= (long)(strategy.TransactionMultiplier * temp) - (temp < 0.42 ? (long)(0.0014 * strategy.TransactionMultiplier * temp) + 13 : (long)(0.0015 * strategy.TransactionMultiplier * temp));
                         }
                     }

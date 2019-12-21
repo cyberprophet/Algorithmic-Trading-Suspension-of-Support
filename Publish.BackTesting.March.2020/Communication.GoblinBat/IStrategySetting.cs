@@ -1,4 +1,6 @@
-﻿namespace ShareInvest.Communication
+﻿using System.Collections.Generic;
+
+namespace ShareInvest.Communication
 {
     public interface IStrategySetting
     {
@@ -54,6 +56,6 @@
         {
             get; set;
         }
-        int EstimatedTime();
+        List<string> EstimatedTime(List<string> list, int count);
     }
 }

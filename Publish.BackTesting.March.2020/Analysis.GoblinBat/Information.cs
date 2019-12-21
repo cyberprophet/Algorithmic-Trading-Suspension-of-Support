@@ -41,7 +41,7 @@ namespace ShareInvest.BackTesting.Analysis
                 if (di.Exists == false)
                     di.Create();
 
-                using (StreamWriter sw = new StreamWriter(string.Concat(st.PathLog, st.Strategy, ".csv")))
+                using (StreamWriter sw = new StreamWriter(string.Concat(st.PathLog, @"\", st.Strategy, ".csv")))
                 {
                     foreach (string val in list)
                         if (val.Length > 0)

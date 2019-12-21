@@ -25,7 +25,7 @@ namespace ShareInvest.BackTesting
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new BackTesting(new Expectancy().EstimatedTime(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\"))));
+                Application.Run(new BackTesting(new Expectancy().EstimatedTime(Path.Combine(Application.StartupPath, @"..\Log\"))));
 
                 return;
             }

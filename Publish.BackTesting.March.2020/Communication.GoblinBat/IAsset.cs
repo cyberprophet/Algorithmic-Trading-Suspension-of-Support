@@ -2,6 +2,21 @@
 {
     public interface IAsset
     {
+        enum Variable
+        {
+            ShortTick = 0,
+            ShortDay = 1,
+            LongTick = 2,
+            LongDay = 3,
+            Reaction = 4,
+            Hedge = 5,
+            Base = 6,
+            Sigma = 7,
+            Percent = 8,
+            Max = 9,
+            Quantity = 10,
+            Time = 11
+        }
         string Account
         {
             get;

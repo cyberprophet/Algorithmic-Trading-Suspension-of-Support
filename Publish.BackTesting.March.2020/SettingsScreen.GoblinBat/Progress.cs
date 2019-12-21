@@ -27,17 +27,18 @@ namespace ShareInvest.BackTesting.SettingsScreen
         }
         public void Retry()
         {
+            timer.Stop();
+            Swap = true;
             ProgressBarValue = 0;
-            timer.Interval = 15;
+            timer.Interval = 315;
             timer.Start();
         }
         private void TimerTick(object sender, EventArgs e)
         {
-            if (Maximum > 0 && Swap == false)
+            if (Swap)
             {
-                Swap = true;
+                Swap = false;
                 progressBar.Maximum = Maximum;
-                ProgressBarValue = 0;
             }
             progressBar.Value = ProgressBarValue;
             Application.DoEvents();

@@ -46,7 +46,7 @@ namespace ShareInvest.EstimatedTime
                 new LogMessage().Record("Exception", ex.ToString());
                 MessageBox.Show(string.Concat(ex.ToString(), "\n\nThe First Connection is on by Default.\n\nEstimated Time is not Accurate."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
-            return 155;
+            return 75;
         }
     }
 }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ShareInvest.AutoSetting;
 using ShareInvest.BackTesting.Analysis;
 using ShareInvest.Communication;
 using ShareInvest.Information;
@@ -26,26 +27,20 @@ namespace ShareInvest.BackTesting.SettingsScreen
             InitializeComponent();
             BackColor = Color.FromArgb(121, 133, 130);
             numericCapital.Value = asset.Assets;
+            Estimate = new List<string>(32);
         }
         public void SetProgress(Progress pro)
         {
             this.pro = pro;
             SuspendLayout();
-            result = BeginInvoke(new Action(() =>
+            BeginInvoke(new Action(() =>
             {
                 ran = new Random();
                 SetLabelUsed();
                 SetNumeric(new RecallSettings().GetSettingValue());
             }));
             timer.Start();
-
-            do
-            {
-                Application.DoEvents();
-            }
-            while (result.IsCompleted == false);
-
-            EndInvoke(result);
+            Application.DoEvents();
             ResumeLayout();
         }
         private void SetLabelUsed()
@@ -67,7 +62,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private void CheckBoxClick(object sender, EventArgs e)
         {
             CheckBox cb = (CheckBox)sender;
-            bool day = cb.Name.Equals("checkBoxShortDay") || cb.Name.Equals("checkBoxLongDay") ? true : false, check = cb.Name.Equals("checkBoxBase") || cb.Name.Equals("checkBoxSigma") || cb.Name.Equals("checkBoxPercent") || cb.Name.Equals("checkBoxMax") ? true : false;
+            bool day = cb.Name.Equals("checkBoxShortDay") || cb.Name.Equals("checkBoxLongDay"), check = cb.Name.Equals("checkBoxBase") || cb.Name.Equals("checkBoxSigma") || cb.Name.Equals("checkBoxPercent") || cb.Name.Equals("checkBoxMax");
             int index = (int)Enum.Parse(typeof(IFindbyName.CheckBoxUsed), cb.Name);
             NumericUpDown down = Enum.GetName(typeof(IFindbyName.Numeric), 3 * index).FindByName<NumericUpDown>(this);
             NumericUpDown up = Enum.GetName(typeof(IFindbyName.Numeric), 3 * index + 2).FindByName<NumericUpDown>(this);
@@ -126,36 +121,36 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     IFindbyName.Numeric.numericPSD => 15,
                     IFindbyName.Numeric.numericISD => 10,
                     IFindbyName.Numeric.numericDSD => 50,
-                    IFindbyName.Numeric.numericPLT => 500,
-                    IFindbyName.Numeric.numericILT => 300,
+                    IFindbyName.Numeric.numericPLT => 1500,
+                    IFindbyName.Numeric.numericILT => 1500,
                     IFindbyName.Numeric.numericDLT => 3000,
-                    IFindbyName.Numeric.numericPLD => 50,
-                    IFindbyName.Numeric.numericILD => 50,
-                    IFindbyName.Numeric.numericDLD => 250,
-                    IFindbyName.Numeric.numericPR => 50,
-                    IFindbyName.Numeric.numericIR => 10,
-                    IFindbyName.Numeric.numericDR => 150,
+                    IFindbyName.Numeric.numericPLD => 500,
+                    IFindbyName.Numeric.numericILD => 500,
+                    IFindbyName.Numeric.numericDLD => 5000,
+                    IFindbyName.Numeric.numericPR => 100,
+                    IFindbyName.Numeric.numericIR => 100,
+                    IFindbyName.Numeric.numericDR => 200,
                     IFindbyName.Numeric.numericPH => 5,
                     IFindbyName.Numeric.numericIH => 5,
                     IFindbyName.Numeric.numericDH => 5,
                     IFindbyName.Numeric.numericPB => 1000,
                     IFindbyName.Numeric.numericIB => 2500,
                     IFindbyName.Numeric.numericDB => 5000,
-                    IFindbyName.Numeric.numericPS => 30,
-                    IFindbyName.Numeric.numericIS => 50,
-                    IFindbyName.Numeric.numericDS => 100,
+                    IFindbyName.Numeric.numericPS => 20,
+                    IFindbyName.Numeric.numericIS => 30,
+                    IFindbyName.Numeric.numericDS => 50,
                     IFindbyName.Numeric.numericPP => 100,
-                    IFindbyName.Numeric.numericIP => 20,
-                    IFindbyName.Numeric.numericDP => 200,
+                    IFindbyName.Numeric.numericIP => 200,
+                    IFindbyName.Numeric.numericDP => 300,
                     IFindbyName.Numeric.numericPM => 100,
-                    IFindbyName.Numeric.numericIM => 500,
-                    IFindbyName.Numeric.numericDM => 1000,
-                    IFindbyName.Numeric.numericPQ => 10,
-                    IFindbyName.Numeric.numericIQ => 30,
-                    IFindbyName.Numeric.numericDQ => 50,
-                    IFindbyName.Numeric.numericPT => 10,
-                    IFindbyName.Numeric.numericIT => 30,
-                    IFindbyName.Numeric.numericDT => 50,
+                    IFindbyName.Numeric.numericIM => 100,
+                    IFindbyName.Numeric.numericDM => 200,
+                    IFindbyName.Numeric.numericPQ => 50,
+                    IFindbyName.Numeric.numericIQ => 50,
+                    IFindbyName.Numeric.numericDQ => 100,
+                    IFindbyName.Numeric.numericPT => 50,
+                    IFindbyName.Numeric.numericIT => 50,
+                    IFindbyName.Numeric.numericDT => 100,
                     _ => throw new Exception()
                 };
                 temp.Value = int.Parse(param[(int)name]);
@@ -186,38 +181,41 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 Capital = (long)numericCapital.Value
             };
         }
-        private int SetOptimize(IAsset asset, int repeat)
+        private int SetOptimize(IAsset asset, AutomaticallySetting auto, int repeat)
         {
-            int estimate = 0;
-            result = null;
-
             try
             {
-                result = BeginInvoke(new Action(() =>
+                set = new StrategySetting
                 {
-                    set = new StrategySetting
-                    {
-                        ShortTick = SetValue(ran.Next((int)(asset.ShortTickPeriod * 0.75), asset.ShortTickPeriod), ran.Next(5, 21), ran.Next(asset.ShortTickPeriod, (int)(asset.ShortTickPeriod * 1.25))),
-                        LongTick = SetValue(ran.Next((int)(asset.LongTickPeriod * 0.75), asset.LongTickPeriod), ran.Next(15, 51), ran.Next(asset.LongTickPeriod, (int)(asset.LongTickPeriod * 1.25))),
-                        ShortDay = SetValue(0, ran.Next(1, 4), ran.Next(asset.ShortDayPeriod, (int)(asset.ShortDayPeriod * 1.25))),
-                        LongDay = SetValue(ran.Next((int)(asset.LongDayPeriod * 0.75), asset.LongDayPeriod), ran.Next(5, 11), ran.Next(asset.LongDayPeriod, (int)(asset.LongDayPeriod * 1.25))),
-                        Reaction = SetValue(ran.Next((int)(asset.Reaction * 0.75), asset.Reaction), ran.Next(1, 6), ran.Next(asset.Reaction, (int)(asset.Reaction * 1.25))),
-                        Hedge = SetValue(0, ran.Next(1, 4), ran.Next(0, 6)),
-                        Base = SetValue(ran.Next((int)(asset.Base * 0.75), asset.Base), ran.Next(15, 51), ran.Next(asset.Base, (int)(asset.Base * 1.25))),
-                        Sigma = SetValue(ran.Next((int)(asset.Sigma * 0.75), asset.Sigma), ran.Next(1, 4), ran.Next(asset.Sigma, (int)(asset.Sigma * 1.25))),
-                        Percent = SetValue(ran.Next((int)(asset.Percent * 0.75), asset.Percent), ran.Next(1, 6), ran.Next(asset.Percent, (int)(asset.Percent * 1.1))),
-                        Max = SetValue(0, ran.Next(1, 11), ran.Next(asset.Max, (int)(asset.Max * 1.1))),
-                        Quantity = SetValue(0, ran.Next(1, 6), ran.Next(1, 11)),
-                        Time = SetValue(0, ran.Next(1, 6), ran.Next(1, 11)),
-                        Capital = asset.Assets
-                    };
-                    estimate = set.EstimatedTime();
-                }));
-                do
+                    ShortTick = auto.SetVariableAutomatic(IAsset.Variable.ShortTick, asset.ShortTickPeriod, ran.Next(1, 3)),
+                    LongTick = auto.SetVariableAutomatic(IAsset.Variable.LongTick, asset.LongTickPeriod, ran.Next(1, 3)),
+                    ShortDay = auto.SetVariableAutomatic(IAsset.Variable.ShortDay, asset.ShortDayPeriod, ran.Next(1, 3)),
+                    LongDay = auto.SetVariableAutomatic(IAsset.Variable.LongDay, asset.LongDayPeriod, ran.Next(1, 3)),
+                    Reaction = auto.SetVariableAutomatic(IAsset.Variable.Reaction, asset.Reaction, ran.Next(1, 3)),
+                    Hedge = auto.SetVariableAutomatic(IAsset.Variable.Hedge, asset.Hedge, ran.Next(0, 2)),
+                    Base = auto.SetVariableAutomatic(IAsset.Variable.Base, asset.Base, ran.Next(0, 2)),
+                    Sigma = auto.SetVariableAutomatic(IAsset.Variable.Sigma, asset.Sigma, ran.Next(0, 2)),
+                    Percent = auto.SetVariableAutomatic(IAsset.Variable.Percent, asset.Percent, ran.Next(0, 2)),
+                    Max = auto.SetVariableAutomatic(IAsset.Variable.Max, asset.Max, ran.Next(0, 2)),
+                    Quantity = auto.SetVariableAutomatic(IAsset.Variable.Quantity, asset.Quantity, ran.Next(0, 2)),
+                    Time = auto.SetVariableAutomatic(IAsset.Variable.Time, asset.Time, ran.Next(0, 2)),
+                    Capital = asset.Assets
+                };
+                Estimate = set.EstimatedTime(new List<string>(64), CalculateTheRemainingTime() * count);
+
+                if (repeat % 1500 == 0 && TimerBox.Show("Run the Program Again and Set it Manually.", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 5157).Equals(DialogResult.OK))
                 {
-                    Application.DoEvents();
+                    Application.ExitThread();
+                    Application.Exit();
                 }
-                while (result.IsCompleted == false);
+                else if (repeat % 300 == 0 && TimerBox.Show("Do You Want to Use the Existing Settings?", "Question", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 7519).Equals(DialogResult.OK))
+                {
+                    checkBox.Checked = true;
+                    button.ForeColor = Color.Gold;
+                    button.PerformClick();
+
+                    return int.MinValue;
+                }
             }
             catch (Exception ex)
             {
@@ -229,64 +227,44 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     Application.Exit();
                 }
             }
-            finally
-            {
-                EndInvoke(result);
-
-                if (repeat % 5000 == 0 && TimerBox.Show("Run the Program Again and Set it Manually.", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 5157).Equals(DialogResult.OK))
-                {
-                    Application.ExitThread();
-                    Application.Exit();
-                }
-                if (repeat % 1000 == 0)
-                    ran = new Random();
-            }
-            return estimate;
+            return Estimate.Count;
         }
         private void StartBackTesting(IStrategySetting set)
         {
-            Max = set.EstimatedTime();
-            button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(Max, count).ToString("N0"), " Minutes.");
+            button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(Estimate.Count, count).ToString("N0"), " Minutes.");
             button.ForeColor = Color.Maroon;
             checkBox.ForeColor = Color.DarkRed;
             checkBox.Text = "BackTesting";
             new Transmit(asset.Account, set.Capital);
-            string path = string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"), @"\");
+            string path = Path.Combine(Application.StartupPath, @"..\Log\", DateTime.Now.Hour > 23 || DateTime.Now.Hour < 9 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd"));
             InterLink = false;
             List<Specify> list = new List<Specify>(131072);
 
-            foreach (int time in set.Time)
-                foreach (int quantity in set.Quantity)
-                    foreach (int max in set.Max)
-                        foreach (int percent in set.Percent)
-                            foreach (int sigma in set.Sigma)
-                                foreach (int baseBand in set.Base)
-                                    foreach (int hedge in set.Hedge)
-                                        foreach (int reaction in set.Reaction)
-                                            foreach (int sTick in set.ShortTick)
-                                                foreach (int sDay in set.ShortDay)
-                                                    foreach (int lTick in set.LongTick)
-                                                        foreach (int lDay in set.LongDay)
-                                                            if (sTick < lTick && sDay < lDay)
-                                                                list.Add(new Specify
-                                                                {
-                                                                    Time = time,
-                                                                    Quantity = quantity,
-                                                                    Max = max,
-                                                                    Percent = percent,
-                                                                    Sigma = sigma,
-                                                                    Base = baseBand,
-                                                                    Repository = options.Repository,
-                                                                    ShortTickPeriod = sTick,
-                                                                    ShortDayPeriod = sDay,
-                                                                    LongTickPeriod = lTick,
-                                                                    LongDayPeriod = lDay,
-                                                                    Reaction = reaction,
-                                                                    Hedge = hedge,
-                                                                    BasicAssets = set.Capital,
-                                                                    PathLog = path,
-                                                                    Strategy = string.Concat(sTick.ToString(), '^', sDay.ToString(), '^', lTick.ToString(), '^', lDay.ToString(), '^', reaction.ToString(), '^', hedge.ToString(), '^', baseBand.ToString(), '^', sigma.ToString(), '^', percent.ToString(), '^', max.ToString(), '^', quantity.ToString(), '^', time.ToString())
-                                                                });
+            foreach (string str in Estimate)
+            {
+                string[] temp = str.Split('^');
+                list.Add(new Specify
+                {
+                    ShortTickPeriod = int.Parse(temp[0]),
+                    ShortDayPeriod = int.Parse(temp[1]),
+                    LongTickPeriod = int.Parse(temp[2]),
+                    LongDayPeriod = int.Parse(temp[3]),
+                    Reaction = int.Parse(temp[4]),
+                    Hedge = int.Parse(temp[5]),
+                    Base = int.Parse(temp[6]),
+                    Sigma = int.Parse(temp[7]),
+                    Percent = int.Parse(temp[8]),
+                    Max = int.Parse(temp[9]),
+                    Quantity = int.Parse(temp[10]),
+                    Time = int.Parse(temp[11]),
+                    Repository = options.Repository,
+                    BasicAssets = set.Capital,
+                    PathLog = path,
+                    Strategy = str
+                });
+            }
+            EstimateCount = Estimate.Count;
+            Estimate = null;
             GC.Collect();
             Count = Process.GetCurrentProcess().Threads.Count;
             new Task(() =>
@@ -301,25 +279,29 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     new Analysize(remaining, analysis);
                     pro.ProgressBarValue++;
                 }));
-                list.Clear();
-                button.ForeColor = Color.Ivory;
+                list = null;
+                button.ForeColor = Color.Yellow;
                 SetMarketTick(GC.GetTotalMemory(true));
             }).Start();
         }
         private void SetMarketTick(long wait)
         {
             InterLink = true;
-            GC.Collect();
-
-            for (long i = 0; i < wait; i++)
-                if (Count > Process.GetCurrentProcess().Threads.Count)
-                    break;
-
             pro.Maximum = SetMaximum();
             pro.Retry();
+
+            for (long i = 0; i < wait; i++)
+            {
+                if (wait * 0.75 < i && Count > Process.GetCurrentProcess().Threads.Count)
+                    break;
+
+                if (pro.ProgressBarValue > pro.Maximum)
+                    continue;
+
+                pro.ProgressBarValue = (int)i / 1000;
+            }
             GC.Collect();
-            new BulkProcessing(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Statistics\", DateTime.Now.Ticks, ".csv"));
-            GC.Collect();
+            new BulkProcessing(string.Concat(Path.Combine(Application.StartupPath, @"..\Statistics\"), DateTime.Now.Ticks, ".csv"));
 
             if (TimerBox.Show(string.Concat("Do You Want to Continue with Trading??\n\nIf You don't Want to Proceed,\nPress 'No'.\n\nAfter ", pro.Maximum / 60000, " Minutes the Program is Terminated."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, (uint)pro.Maximum).Equals((DialogResult)6))
                 Process.Start("shutdown.exe", "-r");
@@ -341,42 +323,33 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 if (button.ForeColor.Equals(Color.Ivory) && CheckCurrent)
                 {
-                    result = BeginInvoke(new Action(() =>
-                    {
-                        set = GetNumericValue(Enum.GetValues(typeof(IFindbyName.Numeric)));
-                        checkBox.Text = "Loading. . .";
-                        Application.DoEvents();
-                        button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(set.EstimatedTime(), count).ToString("N0"), " Minutes.");
-                        checkBox.Text = "Reset";
-                        checkBox.ForeColor = Color.Yellow;
-                        buttonSave.ForeColor = Color.Khaki;
-                        button.ForeColor = Color.Gold;
-                    }));
-                    do
-                    {
-                        Application.DoEvents();
-                    }
-                    while (result.IsCompleted == false);
-
-                    EndInvoke(result);
+                    set = GetNumericValue(Enum.GetValues(typeof(IFindbyName.Numeric)));
+                    checkBox.Text = "Loading. . .";
+                    Application.DoEvents();
+                    Estimate = set.EstimatedTime(new List<string>(32), CalculateTheRemainingTime() * count);
+                    button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(Estimate.Count, count).ToString("N0"), " Minutes.");
+                    checkBox.Text = "Reset";
+                    checkBox.ForeColor = Color.Yellow;
+                    buttonSave.ForeColor = Color.Khaki;
+                    button.ForeColor = Color.Gold;
 
                     return;
                 }
-                button.Text = string.Concat("Click to Recommend ", DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 870 : 870, " Minutes and Save Existing Data.");
+                button.Text = string.Concat("Click to Recommend ", CalculateTheRemainingTime().ToString("N0"), " Minutes and Save Existing Data.");
                 button.ForeColor = Color.Ivory;
                 checkBox.ForeColor = Color.Ivory;
                 checkBox.Text = "Process";
             }
             else if (CheckCurrent == false)
             {
-                if (Max == 0)
+                if (EstimateCount < 1)
                 {
                     checkBox.Text = "Set It Again";
                     checkBox.ForeColor = Color.Crimson;
 
                     return;
                 }
-                checkBox.Text = string.Concat(pro.ProgressBarValue.ToString("N0"), " / ", Max.ToString("N0"));
+                checkBox.Text = string.Concat(pro.ProgressBarValue.ToString("N0"), " / ", EstimateCount.ToString("N0"));
                 checkBox.Font = new Font(checkBox.Font.Name, checkBox.Font.Name.Equals("Consolas") ? 8.25F : 10.25F, FontStyle.Regular);
 
                 if (TimerBox.Show(string.Concat("Currently\n", GC.GetTotalMemory(false).ToString("N0"), "bytes of Memory\nare in Use.\n\nDo You want to Clean Up the Accumulated Memory?"), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 1325).Equals(DialogResult.OK))
@@ -397,7 +370,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                 SetMarketTick(0);
 
             else if (button.ForeColor.Equals(Color.Maroon))
-                button.Text = string.Concat(((Max - pro.ProgressBarValue) / count).ToString("N0"), " Minutes left to Complete.");
+                button.Text = string.Concat(((EstimateCount - pro.ProgressBarValue) / count).ToString("N0"), " Minutes left to Complete.");
         }
         private int[] SetValue(int sp, int interval, int destination)
         {
@@ -417,44 +390,72 @@ namespace ShareInvest.BackTesting.SettingsScreen
             timer.Stop();
             checkBox.Text = "Loading. . .";
             Application.DoEvents();
-            result = BeginInvoke(new Action(() =>
+            BeginInvoke(new Action(() =>
             {
                 options = new Options();
             }));
             if (TimerBox.Show("Start Back Testing.\n\nClick 'No' to Do this Manually.\n\nIf Not Selected,\nIt will Automatically Proceed after 20 Seconds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 25617).Equals((DialogResult)7))
             {
                 checkBox.Text = "Manual";
-                EndInvoke(result);
 
                 return;
             }
             int setting, repeat = 0;
             ran = new Random();
             checkBox.Font = new Font(checkBox.Font.Name, 8.25F, FontStyle.Regular);
-            EndInvoke(result);
+            AutomaticallySetting auto = new AutomaticallySetting();
 
             do
             {
-                setting = SetOptimize(asset, ++repeat);
+                setting = SetOptimize(asset, auto, ++repeat);
                 checkBox.Text = string.Concat("No.", repeat.ToString("N0"), " Co.", (setting / count).ToString("N0"));
                 Application.DoEvents();
             }
-            while (setting < count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 915 : 915) || setting > count * (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ? 2880 + 965 : 965));
+            while (CalculateTheRemainingTime(setting));
 
             checkBox.Font = new Font(checkBox.Font.Name, checkBox.Font.Name.Equals("Consolas") ? 13.25F : 15.75F, FontStyle.Regular);
+            checkBox.Text = "BackTesting";
             GC.Collect();
-            StartBackTesting(set);
+
+            if (setting > int.MinValue)
+                StartBackTesting(set);
+
             timer.Dispose();
         }
-        private void TimerStorageTick(object sender, EventArgs e)
+        private bool CalculateTheRemainingTime(int setting)
         {
-            if (InterLink && pro.Maximum - 20 > pro.ProgressBarValue)
-                pro.ProgressBarValue += 15;
+            if (setting == int.MinValue)
+                return false;
 
-            else if (InterLink && pro.Maximum > pro.ProgressBarValue)
-                pro.ProgressBarValue++;
+            int i = 1;
 
-            Application.DoEvents();
+            switch (DateTime.Now.DayOfWeek)
+            {
+                case DayOfWeek.Friday:
+                    i = 3;
+                    break;
+
+                case DayOfWeek.Saturday:
+                    i = 2;
+                    break;
+            };
+            return setting / count > (new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(i).Day, 8, 45, 59) - DateTime.Now).TotalMinutes || setting / count < (new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(i).Day, 7, 31, 59) - DateTime.Now).TotalMinutes;
+        }
+        private int CalculateTheRemainingTime()
+        {
+            int i = 1;
+
+            switch (DateTime.Now.DayOfWeek)
+            {
+                case DayOfWeek.Friday:
+                    i = 3;
+                    break;
+
+                case DayOfWeek.Saturday:
+                    i = 2;
+                    break;
+            };
+            return (int)(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(i).Day, 8, 45, 59) - DateTime.Now).TotalMinutes;
         }
         private void ButtonSaveClick(object sender, EventArgs e)
         {
@@ -476,7 +477,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
 
             try
             {
-                foreach (string val in Directory.GetDirectories(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\")))
+                foreach (string val in Directory.GetDirectories(Path.Combine(Application.StartupPath, @"..\Log\")))
                 {
                     temp = val.Split('\\');
                     int recent = int.Parse(temp[temp.Length - 1]);
@@ -484,16 +485,13 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     if (recent > date)
                         date = recent;
                 }
-                timerStorage.Interval = 15;
-                timerStorage.Start();
             }
             catch (Exception ex)
             {
                 new LogMessage().Record("Exception", ex.ToString());
                 MessageBox.Show(string.Concat(ex.ToString(), "\n\nQuit the Program."), "Exception", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                Environment.Exit(0);
             }
-            return Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\"), @"\Log\", date), "*.csv", SearchOption.TopDirectoryOnly).Length;
+            return Directory.GetFiles(string.Concat(Path.Combine(Application.StartupPath, @"..\Log\"), date), "*.csv", SearchOption.TopDirectoryOnly).Length;
         }
         private bool CheckCurrent
         {
@@ -506,11 +504,15 @@ namespace ShareInvest.BackTesting.SettingsScreen
         {
             get; set;
         }
-        private int Max
+        private int Count
         {
             get; set;
         }
-        private int Count
+        private int EstimateCount
+        {
+            get; set;
+        }
+        private List<string> Estimate
         {
             get; set;
         }
@@ -518,7 +520,6 @@ namespace ShareInvest.BackTesting.SettingsScreen
         private Progress pro;
         private IStrategySetting set;
         private IOptions options;
-        private IAsyncResult result;
         private readonly IAsset asset;
         private readonly int count;
     }
