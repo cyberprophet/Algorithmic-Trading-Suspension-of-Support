@@ -4,10 +4,10 @@ namespace ShareInvest.Secondary
 {
     public class BollingerBands
     {
-        public BollingerBands(double sigma, int period, double percent, double max)
+        public BollingerBands(double sigma, int period, int percent, int variable)
         {
-            this.max = max;
-            this.percent = new double[2] { 1 - percent, percent };
+            this.variable = variable * 0.01D;
+            this.percent = percent;
             this.sigma = sigma;
             this.period = period;
             standard = new double[period];
@@ -23,19 +23,24 @@ namespace ShareInvest.Secondary
             }
             if (Fill)
             {
-                double temp, standard = StandardDeviation(ema), upper = ema + standard, bottom = ema - standard, width = (upper - bottom) / ema, per = (price - bottom) / (upper - bottom);
+                double standard = StandardDeviation(ema), upper = ema + standard, bottom = ema - standard, width = (upper - bottom) / ema, per = (price - bottom) / (upper - bottom);
 
-                if ((per - percent[1] > 0 || per - percent[0] < 0) && width > Before)
-                    repeat = repeat > 0 ? repeat-- : 0;
+                if (per < 0)
+                    per = -per + 1;
 
-                else if (per - percent[1] < 0 && per - percent[0] > 0 && width < Before)
-                    repeat++;
+                if (Before < width && per > 1)
+                {
+                    Repeat += percent * per * width;
+                    Before = width;
+
+                    return over;
+                }
+                if (per > 0.45 - variable && per < 0.55 + variable)
+                    Repeat = 0;
 
                 Before = width;
-                temp = max * repeat;
-                repeat = over > temp ? repeat : 0;
 
-                return repeat > 0 ? over - temp : 0;
+                return over > Repeat ? over - Repeat : 0;
             }
             return 0;
         }
@@ -63,11 +68,14 @@ namespace ShareInvest.Secondary
         {
             get; set;
         }
-        private uint repeat;
+        private double Repeat
+        {
+            get; set;
+        }
         private readonly int period;
-        private readonly double max;
+        private readonly int percent;
+        private readonly double variable;
         private readonly double sigma;
-        private readonly double[] percent;
         private readonly double[] standard;
     }
 }

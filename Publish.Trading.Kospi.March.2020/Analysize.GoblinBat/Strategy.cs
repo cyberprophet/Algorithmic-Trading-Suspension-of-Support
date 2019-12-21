@@ -28,7 +28,7 @@ namespace ShareInvest.Analysize
 
             if (bands)
             {
-                over = new BollingerBands(st.Sigma * 0.1, st.Base, st.Percent * 1e-2, st.Max * 1e-3);
+                over = new BollingerBands(st.Sigma * 0.1, st.Base, st.Percent, st.Max);
                 baseTick = new List<double>(2097152);
             }
             if (days)

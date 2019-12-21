@@ -138,6 +138,12 @@ namespace ShareInvest.OpenAPI
         }
         private void Request(string code)
         {
+            if (axAPI.GetFutureCodeByIndex(1).Equals(code))
+            {
+                SendConfirm?.Invoke(this, new Identify("The latest Data Collection is Complete."));
+
+                return;
+            }
             if (code.Substring(0, 3).Equals("101") && code.Length < 9)
             {
                 request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = code, RQName = string.Concat(code, Retention(code)), PrevNext = 0 })));
@@ -148,8 +154,18 @@ namespace ShareInvest.OpenAPI
                 if (kv.Value.Substring(0, 8).Equals(code.Substring(0, 8)))
                 {
                     if (Code.Last().Key.Equals(kv.Key))
+                    {
+                        if (Remaining)
+                        {
+                            code = axAPI.GetFutureCodeByIndex(1);
+                            request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = code, RQName = string.Concat(code, Retention(code)), PrevNext = 0 })));
+
+                            return;
+                        }
                         SendConfirm?.Invoke(this, new Identify("The latest Data Collection is Complete."));
 
+                        return;
+                    }
                     request.RequestTrData(new Task(() => InputValueRqData(new Opt50066 { Value = Code[kv.Key + 1].Substring(0, 8), RQName = string.Concat(Code[kv.Key + 1].Substring(0, 8), Retention(Code[kv.Key + 1].Substring(0, 8))).Substring(0, 20), PrevNext = 0 })));
                     SendConfirm?.Invoke(this, new Identify("Continues to look up " + Code[kv.Key + 1].Substring(0, 8) + "\nChart for the " + kv.Key + " Time."));
                 }
@@ -341,6 +357,7 @@ namespace ShareInvest.OpenAPI
                             Squence = 0;
                             axAPI.SetRealRemove("ALL", axAPI.GetFutureCodeByIndex(1));
                             RemainingDay(axAPI.GetFutureCodeByIndex(0));
+                            TimerBox.Show("Futures Options Expiration Date.\n\nThe Data can be Mixed.", "Caution", MessageBoxButtons.OK, MessageBoxIcon.Exclamation, 7651);
                         }
                         Request(Code[0].Substring(0, 8));
                         new TheOld().ForsakeOld(Path.Combine(Application.StartupPath, @"..\Log\"));
