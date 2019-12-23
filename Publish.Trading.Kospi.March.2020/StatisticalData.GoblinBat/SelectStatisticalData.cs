@@ -111,6 +111,7 @@ namespace ShareInvest.StatisticalData
         public SelectStatisticalData()
         {
             InitializeComponent();
+            Application.DoEvents();
             SuspendLayout();
 
             foreach (string name in Enum.GetNames(typeof(IRecall.ComboBoxRecall)))
@@ -139,6 +140,7 @@ namespace ShareInvest.StatisticalData
                 ((IRecall.ComboBoxRecall)kv.Value).ToString().FindByName<ComboBox>(this).Items.Add(int.Parse(temp[1]).ToString("N0"));
             }
             ResumeLayout();
+            Application.DoEvents();
         }
         public void OnReceiveHermes(object sender, Hermes e)
         {

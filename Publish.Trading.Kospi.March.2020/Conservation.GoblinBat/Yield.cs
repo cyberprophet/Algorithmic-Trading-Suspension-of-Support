@@ -150,6 +150,7 @@ namespace ShareInvest.Conservation
                     button.Text = button.Text.Replace("-", string.Empty);
             }
             ResumeLayout();
+            Application.DoEvents();
         }
         public void OnReceiveStrategy(object sender, Hermes e)
         {
@@ -190,7 +191,7 @@ namespace ShareInvest.Conservation
                 {
                     max = int.Parse(temp.Text.Split('\n')[1].Replace(".", string.Empty).Replace("%", string.Empty));
 
-                    if (max > min && !IRecall.TrustYield.trustRecent.ToString().Equals(name))
+                    if (max >= min && !IRecall.TrustYield.trustRecent.ToString().Equals(name))
                     {
                         min = max;
                         find = name;
@@ -200,7 +201,11 @@ namespace ShareInvest.Conservation
             if (min > 0)
             {
                 find.Replace("trust", "label").FindByName<Label>(this).ForeColor = Color.Khaki;
-                find.Replace("trust", "rate").FindByName<ComboBox>(this).SelectedIndex = 0;
+                find = find.Replace("trust", "rate");
+                find.FindByName<ComboBox>(this).SelectedIndex = 1;
+                Application.DoEvents();
+                find.FindByName<ComboBox>(this).SelectedIndex = 0;
+                Application.DoEvents();
 
                 return result;
             }
@@ -214,6 +219,7 @@ namespace ShareInvest.Conservation
             Sort = new Dictionary<string, Dictionary<string, long>>(1024);
             Turn = new Dictionary<string, int>();
             Assets = long.Parse(assets[1]);
+            Application.DoEvents();
             SuspendLayout();
         }
         public Dictionary<string, int> Turn

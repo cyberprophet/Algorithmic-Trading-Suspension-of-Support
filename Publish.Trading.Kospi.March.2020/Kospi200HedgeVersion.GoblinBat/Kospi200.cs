@@ -27,6 +27,8 @@ namespace ShareInvest.Kospi200HedgeVersion
             webBrowser.Navigate(url[ran.Next(0, url.Length)]);
             Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
             ChooseStrategy(TimerBox.Show("After Setting the Font,\nIt takes about 15 Seconds\nto Analyze the Back Testing Statistics.\n\n\nThe Default Font is\n\n'Brush Script Std'.\n\n\nClick 'Yes' to Change to\n\n'Consolas'.", "Option", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 15325), new GuideGoblinBat(), new Yield(new Assets().ReadCSV().Split(',')), new SelectStatisticalData());
+            Application.DoEvents();
+            SetVisibleCore(false);
             ShowDialog();
             Dispose();
             Environment.Exit(0);
@@ -80,8 +82,8 @@ namespace ShareInvest.Kospi200HedgeVersion
             ResumeLayout();
             Show();
             CenterToScreen();
+            Application.DoEvents();
             data.GetStrategy(yield.SetStrategy(TimerBox.Show("Click 'No' to Edit the Automatically generated Strategy.\n\nIf No Selection is made for 20 Seconds,\nTrading Starts with an Automatically Generated Strategy.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 21753)));
-            SetVisibleCore(false);
         }
         private void SetControlsChangeFont(DialogResult result, Control.ControlCollection controls, Font font)
         {
@@ -122,34 +124,27 @@ namespace ShareInvest.Kospi200HedgeVersion
                     control.Font = new Font("Consolas", control.Font.Size + 0.25F, FontStyle.Bold);
 
             ResumeLayout();
+            Application.DoEvents();
         }
         private void OnReceiveClose(object sender, DialogClose e)
         {
             SuspendLayout();
             StartTrading(Balance.Get(), ConfirmOrder.Get(), new AccountSelection(), new ConnectKHOpenAPI());
-            Result = BeginInvoke(new Action(() =>
+            BeginInvoke(new Action(() => Strategy = new Strategy(new Specify
             {
-                Strategy = new Strategy(new Specify
-                {
-                    Reaction = e.Reaction,
-                    ShortDayPeriod = e.ShortDay,
-                    ShortTickPeriod = e.ShortTick,
-                    LongDayPeriod = e.LongDay,
-                    LongTickPeriod = e.LongTick,
-                    HedgeType = e.Hedge,
-                    Base = e.Base,
-                    Sigma = e.Sigma,
-                    Percent = e.Percent,
-                    Max = e.Max,
-                    Quantity = e.Quantity,
-                    Time = e.Time
-                });
-            }));
-            do
-            {
-                Application.DoEvents();
-            }
-            while (Result.IsCompleted == false);
+                Reaction = e.Reaction,
+                ShortDayPeriod = e.ShortDay,
+                ShortTickPeriod = e.ShortTick,
+                LongDayPeriod = e.LongDay,
+                LongTickPeriod = e.LongTick,
+                HedgeType = e.Hedge,
+                Base = e.Base,
+                Sigma = e.Sigma,
+                Percent = e.Percent,
+                Max = e.Max,
+                Quantity = e.Quantity,
+                Time = e.Time
+            })));
         }
         private void OnReceiveAccount(object sender, Account e)
         {
@@ -169,6 +164,11 @@ namespace ShareInvest.Kospi200HedgeVersion
                 for (int i = 0; i < e.ArrayDeposit.Length; i++)
                     if (e.ArrayDeposit[i].Length > 0)
                         string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.ArrayDeposit[i]).ToString("N0");
+                do
+                {
+                    Application.DoEvents();
+                }
+                while (Strategy == null);
 
                 splitContainerAccount.Panel1.BackColor = Color.FromArgb(121, 133, 130);
                 splitContainerAccount.Panel2.BackColor = Color.FromArgb(121, 133, 130);
@@ -267,6 +267,7 @@ namespace ShareInvest.Kospi200HedgeVersion
                     webBrowser.Navigate(url[ran.Next(0, url.Length)]);
                     Volume.SendMessageW(Handle, WM_APPCOMMAND, Handle, (IntPtr)APPCOMMAND_VOLUME_MUTE);
                 }));
+            Application.DoEvents();
             ResumeLayout();
             Show();
         }
@@ -305,10 +306,6 @@ namespace ShareInvest.Kospi200HedgeVersion
             get; set;
         }
         private DialogResult Choice
-        {
-            get; set;
-        }
-        private IAsyncResult Result
         {
             get; set;
         }

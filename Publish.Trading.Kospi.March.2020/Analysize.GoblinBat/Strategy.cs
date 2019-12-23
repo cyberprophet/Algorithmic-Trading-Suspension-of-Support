@@ -64,7 +64,7 @@ namespace ShareInvest.Analysize
         private void Analysis(object sender, Datum e)
         {
             int i, quantity = days ? Order(Analysis(e.Price), Analysis(e.Time, e.Price)) : Order(Analysis(e.Price));
-            double futures = e.Price * st.TransactionMultiplier * st.MarginRate, max = bands ? over.GetJudgingOverHeating(Account == null ? 0 : Account.BasicAssets / count / (futures + futures * rate[st.HedgeType]), e.Price, baseTick[baseTick.Count - 1]) : (Account == null ? 0 : Account.BasicAssets / count / (futures + futures * rate[st.HedgeType]));
+            double futures = Account == null ? 0 : e.Price * st.TransactionMultiplier * st.MarginRate, max = bands ? over.GetJudgingOverHeating(Account == null ? 0 : Account.BasicAssets / count / (futures + futures * rate[st.HedgeType]), e.Price, baseTick[baseTick.Count - 1]) : (Account == null ? 0 : Account.BasicAssets / count / (futures + futures * rate[st.HedgeType]));
 
             if (api != null && Account != null)
             {
@@ -148,7 +148,12 @@ namespace ShareInvest.Analysize
             int sc = shortTick.Count, lc = longTick.Count;
             shortTick.Add(sc > 0 ? ema.Make(st.ShortTickPeriod, sc, price, shortTick[sc - 1]) : ema.Make(price));
             longTick.Add(lc > 0 ? ema.Make(st.LongTickPeriod, lc, price, longTick[lc - 1]) : ema.Make(price));
-
+            
+            if (bands)
+            {
+                int bc = baseTick.Count;
+                baseTick.Add(bc > 0 ? ema.Make(st.Base, bc, price, baseTick[bc - 1]) : ema.Make(price));
+            }
             return (sc < 2 || lc < 2) ? 0 : shortTick[sc] - longTick[lc] - (shortTick[sc - 1] - longTick[lc - 1]) > 0 ? 1 : -1;
         }
         private int Analysis(string time, double price)
@@ -200,7 +205,7 @@ namespace ShareInvest.Analysize
                 foreach (string rd in new Fetch())
                 {
                     string[] arr = rd.Split(',');
-
+                    
                     if (arr[1].Contains("-"))
                         arr[1] = arr[1].Substring(1);
 

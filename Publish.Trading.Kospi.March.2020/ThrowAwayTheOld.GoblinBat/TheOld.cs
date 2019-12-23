@@ -12,7 +12,7 @@ namespace ShareInvest.ThrowAway
         {
             try
             {
-                uint date = uint.Parse(DateTime.Now.AddDays(-10).ToString("yyMMdd"));
+                uint date = uint.Parse(DateTime.Now.AddDays(-90).ToString("yyMMdd"));
 
                 foreach (string log in Directory.GetDirectories(path))
                 {

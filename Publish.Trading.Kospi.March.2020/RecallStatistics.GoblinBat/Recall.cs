@@ -17,6 +17,7 @@ namespace ShareInvest.RecallStatistics
             long recent = 0, count;
             string[] temp;
             string path = Path.Combine(Application.StartupPath, @"..\Statistics\");
+            Application.DoEvents();
 
             try
             {

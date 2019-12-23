@@ -34,7 +34,7 @@ namespace ShareInvest.OpenAPI
         }
         private void Save(string code, string append)
         {
-            string path = code.Substring(0, 3).Equals("101") ? Path.Combine(Application.StartupPath, @"..\Chart\") : Path.Combine(Application.StartupPath, @"..\Chart\", append, @"\");
+            string path = code.Substring(0, 3).Equals("101") ? Path.Combine(Application.StartupPath, @"..\Chart\") : string.Concat(Path.Combine(Application.StartupPath, @"..\Chart\"), append, @"\");
 
             try
             {
