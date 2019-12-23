@@ -32,16 +32,16 @@ namespace ShareInvest.BackTesting.SettingsScreen
         public void SetProgress(Progress pro)
         {
             this.pro = pro;
-            SuspendLayout();
             BeginInvoke(new Action(() =>
             {
+                SuspendLayout();
                 ran = new Random();
                 SetLabelUsed();
                 SetNumeric(new RecallSettings().GetSettingValue());
+                ResumeLayout();
             }));
             timer.Start();
             Application.DoEvents();
-            ResumeLayout();
         }
         private void SetLabelUsed()
         {
@@ -187,18 +187,18 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 set = new StrategySetting
                 {
-                    ShortTick = auto.SetVariableAutomatic(IAsset.Variable.ShortTick, asset.ShortTickPeriod, ran.Next(1, 5)),
-                    LongTick = auto.SetVariableAutomatic(IAsset.Variable.LongTick, asset.LongTickPeriod, ran.Next(1, 5)),
-                    ShortDay = auto.SetVariableAutomatic(IAsset.Variable.ShortDay, asset.ShortDayPeriod, ran.Next(1, 4)),
-                    LongDay = auto.SetVariableAutomatic(IAsset.Variable.LongDay, asset.LongDayPeriod, ran.Next(1, 4)),
-                    Reaction = auto.SetVariableAutomatic(IAsset.Variable.Reaction, asset.Reaction, ran.Next(1, 5)),
-                    Hedge = auto.SetVariableAutomatic(IAsset.Variable.Hedge, asset.Hedge, ran.Next(0, 2)),
+                    ShortTick = auto.SetVariableAutomatic(IAsset.Variable.ShortTick, asset.ShortTickPeriod, ran.Next(1, 10)),
+                    LongTick = auto.SetVariableAutomatic(IAsset.Variable.LongTick, asset.LongTickPeriod, ran.Next(1, 10)),
+                    ShortDay = auto.SetVariableAutomatic(IAsset.Variable.ShortDay, asset.ShortDayPeriod, ran.Next(1, 8)),
+                    LongDay = auto.SetVariableAutomatic(IAsset.Variable.LongDay, asset.LongDayPeriod, ran.Next(1, 8)),
+                    Reaction = auto.SetVariableAutomatic(IAsset.Variable.Reaction, asset.Reaction, ran.Next(1, 10)),
+                    Hedge = auto.SetVariableAutomatic(IAsset.Variable.Hedge, asset.Hedge, ran.Next(0, 6)),
                     Base = auto.SetVariableAutomatic(IAsset.Variable.Base, asset.Base, ran.Next(0, 2)),
                     Sigma = auto.SetVariableAutomatic(IAsset.Variable.Sigma, asset.Sigma, ran.Next(0, 2)),
                     Percent = auto.SetVariableAutomatic(IAsset.Variable.Percent, asset.Percent, ran.Next(0, 2)),
-                    Max = auto.SetVariableAutomatic(IAsset.Variable.Max, asset.Max, ran.Next(0, 2)),
+                    Max = auto.SetVariableAutomatic(IAsset.Variable.Max, asset.Max, ran.Next(0, 4)),
                     Quantity = auto.SetVariableAutomatic(IAsset.Variable.Quantity, asset.Quantity, ran.Next(0, 2)),
-                    Time = auto.SetVariableAutomatic(IAsset.Variable.Time, asset.Time, ran.Next(0, 3)),
+                    Time = auto.SetVariableAutomatic(IAsset.Variable.Time, asset.Time, ran.Next(0, 6)),
                     Capital = asset.Assets
                 };
                 Estimate = set.EstimatedTime(new List<string>(64), CalculateTheRemainingTime() * count);
@@ -390,10 +390,8 @@ namespace ShareInvest.BackTesting.SettingsScreen
             timer.Stop();
             checkBox.Text = "Loading. . .";
             Application.DoEvents();
-            BeginInvoke(new Action(() =>
-            {
-                options = new Options();
-            }));
+            BeginInvoke(new Action(() => options = new Options()));
+
             if (TimerBox.Show("Start Back Testing.\n\nClick 'No' to Do this Manually.\n\nIf Not Selected,\nIt will Automatically Proceed after 20 Seconds.", "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 25617).Equals((DialogResult)7))
             {
                 checkBox.Text = "Manual";

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Log.Message;
@@ -12,34 +13,30 @@ namespace ShareInvest.EstimatedTime
         {
             try
             {
-                string[] temp;
+                string[] temp, directory = Directory.GetDirectories(path);
                 int date = 0;
+                int[] total = new int[directory.Length];
                 DateTime max = new DateTime(1, 1, 1, 1, 1, 1), min = new DateTime(9999, 9, 9, 9, 9, 9);
 
-                foreach (string val in Directory.GetDirectories(path))
+                foreach (string val in directory)
                 {
-                    temp = val.Split('\\');
-                    int recent = int.Parse(temp[temp.Length - 1]);
+                    temp = Directory.GetFiles(val, "*.csv", SearchOption.TopDirectoryOnly);
+                    Parallel.ForEach(temp, new ParallelOptions
+                    {
+                        MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 1.5)
+                    }, (str) =>
+                    {
+                        DateTime dt = new FileInfo(str).CreationTime;
 
-                    if (recent > date)
-                        date = recent;
+                        if (DateTime.Compare(max, dt) < 0)
+                            max = dt;
+
+                        if (DateTime.Compare(dt, min) < 0)
+                            min = dt;
+                    });
+                    total[date++] = (int)(temp.Length / max.Subtract(min).TotalMinutes);
                 }
-                temp = Directory.GetFiles(string.Concat(path, date), "*.csv", SearchOption.TopDirectoryOnly);
-
-                Parallel.ForEach(temp, new ParallelOptions
-                {
-                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 1.5)
-                }, (str) =>
-                {
-                    DateTime dt = new FileInfo(str).CreationTime;
-
-                    if (DateTime.Compare(max, dt) < 0)
-                        max = dt;
-
-                    if (DateTime.Compare(dt, min) < 0)
-                        min = dt;
-                });
-                return (int)(temp.Length / max.Subtract(min).TotalMinutes);
+                return total.Sum() / total.Length;
             }
             catch (Exception ex)
             {

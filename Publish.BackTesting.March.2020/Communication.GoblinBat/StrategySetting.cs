@@ -62,21 +62,21 @@ namespace ShareInvest.Communication
         {
             int baseTick, sigma, percent, max, sd, ld;
 
-            foreach (int h in Hedge)
+            foreach (int q in Quantity)
             {
-                foreach (int t in Time)
+                foreach (int p in Percent)
                 {
-                    foreach (int m in Max)
+                    foreach (int s in Sigma)
                     {
-                        foreach (int p in Percent)
+                        foreach (int m in Max)
                         {
-                            foreach (int s in Sigma)
+                            foreach (int b in Base)
                             {
-                                foreach (int b in Base)
+                                foreach (int h in Hedge)
                                 {
-                                    foreach (int r in Reaction)
+                                    foreach (int t in Time)
                                     {
-                                        foreach (int q in Quantity)
+                                        foreach (int r in Reaction)
                                         {
                                             foreach (int shortTick in ShortTick)
                                             {

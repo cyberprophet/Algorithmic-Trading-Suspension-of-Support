@@ -37,8 +37,8 @@ namespace ShareInvest.AutoSetting
 
             switch (asset)
             {
-                case IAsset.Variable.ShortTick when start < 35:
-                    start = 35;
+                case IAsset.Variable.ShortTick when start < 15:
+                    start = 15;
 
                     break;
 
