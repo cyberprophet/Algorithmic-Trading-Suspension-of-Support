@@ -58,7 +58,7 @@ namespace ShareInvest.Communication
         {
             get; set;
         }
-        public List<string> EstimatedTime(List<string> list, int count)
+        public List<string> EstimatedTime(List<string> list, int count, bool select)
         {
             int baseTick, sigma, percent, max, sd, ld;
 
@@ -116,40 +116,40 @@ namespace ShareInvest.Communication
                                                             Application.DoEvents();
                                                             list.Add(string.Concat(shortTick, '^', sd, '^', longTick, '^', ld, '^', r, '^', h, '^', baseTick, '^', sigma, '^', percent, '^', max, '^', q, '^', t));
 
-                                                            if (list.Count > count * 2)
+                                                            if (list.Count > count * (select ? 2 : 5))
                                                                 break;
                                                         }
-                                                        if (list.Count > count * 2)
+                                                        if (list.Count > count * (select ? 2 : 5))
                                                             break;
                                                     }
-                                                    if (list.Count > count * 2)
+                                                    if (list.Count > count * (select ? 2 : 5))
                                                         break;
                                                 }
-                                                if (list.Count > count * 2)
+                                                if (list.Count > count * (select ? 2 : 5))
                                                     break;
                                             }
-                                            if (list.Count > count * 2)
+                                            if (list.Count > count * (select ? 2 : 5))
                                                 break;
                                         }
-                                        if (list.Count > count * 2)
+                                        if (list.Count > count * (select ? 2 : 5))
                                             break;
                                     }
-                                    if (list.Count > count * 2)
+                                    if (list.Count > count * (select ? 2 : 5))
                                         break;
                                 }
-                                if (list.Count > count * 2)
+                                if (list.Count > count * (select ? 2 : 5))
                                     break;
                             }
-                            if (list.Count > count * 2)
+                            if (list.Count > count * (select ? 2 : 5))
                                 break;
                         }
-                        if (list.Count > count * 2)
+                        if (list.Count > count * (select ? 2 : 5))
                             break;
                     }
-                    if (list.Count > count * 2)
+                    if (list.Count > count * (select ? 2 : 5))
                         break;
                 }
-                if (list.Count > count * 2)
+                if (list.Count > count * (select ? 2 : 5))
                     break;
             }
             return list.Distinct().ToList();

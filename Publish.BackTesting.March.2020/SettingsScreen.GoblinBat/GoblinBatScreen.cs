@@ -187,21 +187,21 @@ namespace ShareInvest.BackTesting.SettingsScreen
             {
                 set = new StrategySetting
                 {
-                    ShortTick = auto.SetVariableAutomatic(IAsset.Variable.ShortTick, asset.ShortTickPeriod, ran.Next(1, 10)),
-                    LongTick = auto.SetVariableAutomatic(IAsset.Variable.LongTick, asset.LongTickPeriod, ran.Next(1, 10)),
-                    ShortDay = auto.SetVariableAutomatic(IAsset.Variable.ShortDay, asset.ShortDayPeriod, ran.Next(1, 8)),
-                    LongDay = auto.SetVariableAutomatic(IAsset.Variable.LongDay, asset.LongDayPeriod, ran.Next(1, 8)),
-                    Reaction = auto.SetVariableAutomatic(IAsset.Variable.Reaction, asset.Reaction, ran.Next(1, 10)),
+                    ShortTick = auto.SetVariableAutomatic(IAsset.Variable.ShortTick, asset.ShortTickPeriod, ran.Next(1, 21)),
+                    LongTick = auto.SetVariableAutomatic(IAsset.Variable.LongTick, asset.LongTickPeriod, ran.Next(1, 16)),
+                    ShortDay = auto.SetVariableAutomatic(IAsset.Variable.ShortDay, asset.ShortDayPeriod, ran.Next(1, 11)),
+                    LongDay = auto.SetVariableAutomatic(IAsset.Variable.LongDay, asset.LongDayPeriod, ran.Next(1, 11)),
+                    Reaction = auto.SetVariableAutomatic(IAsset.Variable.Reaction, asset.Reaction, ran.Next(1, 51)),
                     Hedge = auto.SetVariableAutomatic(IAsset.Variable.Hedge, asset.Hedge, ran.Next(0, 6)),
-                    Base = auto.SetVariableAutomatic(IAsset.Variable.Base, asset.Base, ran.Next(0, 2)),
+                    Base = auto.SetVariableAutomatic(IAsset.Variable.Base, asset.Base, ran.Next(0, 3)),
                     Sigma = auto.SetVariableAutomatic(IAsset.Variable.Sigma, asset.Sigma, ran.Next(0, 2)),
                     Percent = auto.SetVariableAutomatic(IAsset.Variable.Percent, asset.Percent, ran.Next(0, 2)),
-                    Max = auto.SetVariableAutomatic(IAsset.Variable.Max, asset.Max, ran.Next(0, 4)),
+                    Max = auto.SetVariableAutomatic(IAsset.Variable.Max, asset.Max, ran.Next(0, 2)),
                     Quantity = auto.SetVariableAutomatic(IAsset.Variable.Quantity, asset.Quantity, ran.Next(0, 2)),
                     Time = auto.SetVariableAutomatic(IAsset.Variable.Time, asset.Time, ran.Next(0, 6)),
                     Capital = asset.Assets
                 };
-                Estimate = set.EstimatedTime(new List<string>(64), CalculateTheRemainingTime() * count);
+                Estimate = set.EstimatedTime(new List<string>(64), CalculateTheRemainingTime() * count, true);
 
                 if (repeat % 2500 == 0 && TimerBox.Show("Run the Program Again and Set it Manually.", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 5157).Equals(DialogResult.OK))
                 {
@@ -326,7 +326,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     set = GetNumericValue(Enum.GetValues(typeof(IFindbyName.Numeric)));
                     checkBox.Text = "Loading. . .";
                     Application.DoEvents();
-                    Estimate = set.EstimatedTime(new List<string>(32), CalculateTheRemainingTime() * count);
+                    Estimate = set.EstimatedTime(new List<string>(32), CalculateTheRemainingTime() * count, false);
                     button.Text = string.Concat("Estimated Back Testing Time is ", pro.Rate(Estimate.Count, count).ToString("N0"), " Minutes.");
                     checkBox.Text = "Reset";
                     checkBox.ForeColor = Color.Yellow;
@@ -437,7 +437,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     i = 2;
                     break;
             };
-            return setting / count > (new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(i).Day, 8, 45, 59) - DateTime.Now).TotalMinutes || setting / count < (new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(i).Day, 7, 31, 59) - DateTime.Now).TotalMinutes;
+            return setting / count > (new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 8, 45, 59).AddDays(i) - DateTime.Now).TotalMinutes || setting / count < (new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(i).Day, 7, 31, 59) - DateTime.Now).TotalMinutes;
         }
         private int CalculateTheRemainingTime()
         {
@@ -453,7 +453,7 @@ namespace ShareInvest.BackTesting.SettingsScreen
                     i = 2;
                     break;
             };
-            return (int)(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.AddDays(i).Day, 8, 45, 59) - DateTime.Now).TotalMinutes;
+            return (int)(new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 8, 45, 59).AddDays(i) - DateTime.Now).TotalMinutes;
         }
         private void ButtonSaveClick(object sender, EventArgs e)
         {

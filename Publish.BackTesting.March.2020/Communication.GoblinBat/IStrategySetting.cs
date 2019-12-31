@@ -56,6 +56,6 @@ namespace ShareInvest.Communication
         {
             get; set;
         }
-        List<string> EstimatedTime(List<string> list, int count);
+        List<string> EstimatedTime(List<string> list, int count, bool select);
     }
 }

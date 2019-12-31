@@ -13,17 +13,18 @@ namespace ShareInvest.AutoSetting
             {
                 case IAsset.Variable.ShortTick:
                 case IAsset.Variable.Percent:
+                case IAsset.Variable.LongDay:
                     interval = 5;
 
                     break;
 
                 case IAsset.Variable.LongTick:
-                    interval = 10;
+                    interval = 25;
 
                     break;
 
                 case IAsset.Variable.Base:
-                    interval = 250;
+                    interval = 125;
 
                     break;
 
@@ -51,8 +52,8 @@ namespace ShareInvest.AutoSetting
                     start = used - repeat * interval * 2;
                     destination = used + repeat * interval * 2;
 
-                    if (start < 25)
-                        start = 25;
+                    if (start < 9)
+                        start = 9;
 
                     if (destination > 105)
                         destination = 105;

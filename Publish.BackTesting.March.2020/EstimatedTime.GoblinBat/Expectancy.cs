@@ -16,17 +16,17 @@ namespace ShareInvest.EstimatedTime
                 string[] temp, directory = Directory.GetDirectories(path);
                 int date = 0;
                 int[] total = new int[directory.Length];
-                DateTime max = new DateTime(1, 1, 1, 1, 1, 1), min = new DateTime(9999, 9, 9, 9, 9, 9);
 
                 foreach (string val in directory)
                 {
+                    DateTime max = new DateTime(1, 1, 1, 1, 1, 1), min = new DateTime(9999, 9, 9, 9, 9, 9);
                     temp = Directory.GetFiles(val, "*.csv", SearchOption.TopDirectoryOnly);
                     Parallel.ForEach(temp, new ParallelOptions
                     {
                         MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 1.5)
                     }, (str) =>
                     {
-                        DateTime dt = new FileInfo(str).CreationTime;
+                        DateTime dt = new FileInfo(str).LastWriteTime;
 
                         if (DateTime.Compare(max, dt) < 0)
                             max = dt;
