@@ -1,6 +1,4 @@
-using System;
-
-namespace Net.GoblinBat.June._2020.Models
+namespace ShareInvest.Net.Models
 {
     public class ErrorViewModel
     {
@@ -8,7 +6,6 @@ namespace Net.GoblinBat.June._2020.Models
         {
             get; set;
         }
-
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     }
 }
