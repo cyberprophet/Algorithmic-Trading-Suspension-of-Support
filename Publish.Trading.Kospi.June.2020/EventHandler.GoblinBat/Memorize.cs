@@ -25,13 +25,14 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public Memorize(StringBuilder sb)
+        public Memorize(StringBuilder sb, string code)
         {
             string[] arr = sb.ToString().Split(';');
 
             Date = arr[2].Substring(2);
             Price = arr[0];
             Volume = arr[1];
+            Code = code;
         }
         public Memorize(string sPrevNext, string code)
         {

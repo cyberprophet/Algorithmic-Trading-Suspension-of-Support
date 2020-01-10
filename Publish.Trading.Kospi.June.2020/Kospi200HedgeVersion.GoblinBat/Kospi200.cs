@@ -187,35 +187,32 @@ namespace ShareInvest.Kospi200HedgeVersion
                     }
                     return;
                 }
-                if (Account)
+                string[] assets = new Assets().ReadCSV().Split(',');
+                long temp = 0, backtesting = long.Parse(assets[1]);
+                DialogResult result = TimerBox.Show("Are You using Automatic Login??\n\nThe Automatic Login Compares the Asset setup\namount with the Current Asset during the Back Testing\nand sets a Small amount as a Deposit.\n\nIf You aren't using It,\nClick 'Cancel'.\n\nAfter 5 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 4795);
+
+                switch (result)
                 {
-                    string[] assets = new Assets().ReadCSV().Split(',');
-                    long temp = 0, backtesting = long.Parse(assets[1]);
-                    DialogResult result = TimerBox.Show("Are You using Automatic Login??\n\nThe Automatic Login Compares the Asset setup\namount with the Current Asset during the Back Testing\nand sets a Small amount as a Deposit.\n\nIf You aren't using It,\nClick 'Cancel'.\n\nAfter 5 Seconds,\nIt's Regarded as an Automatic Mode and Proceeds.", "Notice", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 4795);
+                    case DialogResult.OK:
+                        temp = backtesting >= trading ? trading : backtesting;
+                        break;
 
-                    switch (result)
-                    {
-                        case DialogResult.OK:
-                            temp = backtesting >= trading ? trading : backtesting;
-                            break;
+                    case DialogResult.Cancel:
 
-                        case DialogResult.Cancel:
+                        if (TimerBox.Show(string.Concat("The set amount at the Time of the Test is ￦", backtesting.ToString("N0"), "\nand the Current Assets are ￦", trading.ToString("N0"), ".\n\nClick 'Yes' to set it to ￦", backtesting.ToString("N0"), ".\n\nIf You don't Choose,\nYou'll Set it as Current Asset."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 9712).Equals(DialogResult.No))
+                            temp = trading;
 
-                            if (TimerBox.Show(string.Concat("The set amount at the Time of the Test is ￦", backtesting.ToString("N0"), "\nand the Current Assets are ￦", trading.ToString("N0"), ".\n\nClick 'Yes' to set it to ￦", backtesting.ToString("N0"), ".\n\nIf You don't Choose,\nYou'll Set it as Current Asset."), "Notice", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 9712).Equals(DialogResult.No))
-                                temp = trading;
+                        else
+                            temp = backtesting;
 
-                            else
-                                temp = backtesting;
-
-                            break;
-                    }
-                    Deposit = temp;
-                    Account = Strategy.SetAccount(new InQuiry
-                    {
-                        AccNo = account.Text,
-                        BasicAssets = temp
-                    });
+                        break;
                 }
+                Deposit = temp;
+                Account = Strategy.SetAccount(new InQuiry
+                {
+                    AccNo = account.Text,
+                    BasicAssets = temp
+                });
             }));
         }
         private void OnReceiveSize(object sender, GridReSize e)

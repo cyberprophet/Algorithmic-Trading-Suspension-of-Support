@@ -47,9 +47,10 @@ namespace ShareInvest.OpenAPI
         }
         private void CheckBox_CheckedChanged(object sender, EventArgs e)
         {
+            api.OnReceiveBalance = true;
+
             if (CheckCurrent())
             {
-                api.OnReceiveBalance = true;
                 checkBox.ForeColor = Color.Ivory;
 
                 return;

@@ -37,6 +37,7 @@ namespace ShareInvest.OpenAPI
                 Sql = new SqlConnection(connect);
                 Sql.OpenAsync();
                 ErrorCode = axAPI.CommConnect();
+                new TemporaryStorage(Sql);
 
                 if (ErrorCode != 0)
                     new Error(ErrorCode);
@@ -137,6 +138,7 @@ namespace ShareInvest.OpenAPI
         }
         private string FixUp(string[] param, string code)
         {
+            SetInsertCode(Sql, code, param[72], param[63]);
             Code[Squence++] = string.Concat(code, ";", param[72], ";", param[63], ";", param[45]);
             SendConfirm?.Invoke(this, new Identify(string.Concat(param[72], "\nis Receiving Data for Trading.")));
             RemainingDate = param[63];
@@ -156,7 +158,7 @@ namespace ShareInvest.OpenAPI
             }
             if (code.Substring(0, 3).Equals("101") && code.Length < 9)
             {
-                request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = code, RQName = string.Concat(code, Retention(code)), PrevNext = 0 })));
+                request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = code, RQName = string.Concat(code, Retention(Sql, code)), PrevNext = 0 })));
 
                 return;
             }
@@ -168,7 +170,7 @@ namespace ShareInvest.OpenAPI
                         if (Remaining)
                         {
                             code = axAPI.GetFutureCodeByIndex(1);
-                            request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = code, RQName = string.Concat(code, Retention(code)), PrevNext = 0 })));
+                            request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = code, RQName = string.Concat(code, Retention(Sql, code)), PrevNext = 0 })));
 
                             return;
                         }
@@ -176,7 +178,7 @@ namespace ShareInvest.OpenAPI
 
                         return;
                     }
-                    request.RequestTrData(new Task(() => InputValueRqData(new Opt50066 { Value = Code[kv.Key + 1].Substring(0, 8), RQName = string.Concat(Code[kv.Key + 1].Substring(0, 8), Retention(Code[kv.Key + 1].Substring(0, 8))).Substring(0, 20), PrevNext = 0 })));
+                    request.RequestTrData(new Task(() => InputValueRqData(new Opt50066 { Value = Code[kv.Key + 1].Substring(0, 8), RQName = string.Concat(Code[kv.Key + 1].Substring(0, 8), Retention(Sql, Code[kv.Key + 1].Substring(0, 8))).Substring(0, 20), PrevNext = 0 })));
                     SendConfirm?.Invoke(this, new Identify("Continues to look up " + Code[kv.Key + 1].Substring(0, 8) + "\nChart for the " + kv.Key + " Time."));
                 }
         }
@@ -262,7 +264,7 @@ namespace ShareInvest.OpenAPI
                         }
                         if (!it.Equals(sb.ToString()))
                         {
-                            SendMemorize?.Invoke(this, new Memorize(sb));
+                            SendMemorize?.Invoke(this, new Memorize(sb, e.sRQName.Substring(0, 8)));
 
                             continue;
                         }
@@ -281,8 +283,6 @@ namespace ShareInvest.OpenAPI
 
                         return;
                     }
-                    if (e.sPrevNext.Equals("0"))
-                        SendMemorize?.Invoke(this, new Memorize(e.sPrevNext, e.sRQName.Substring(0, 8)));
                 }
                 Request(e.sRQName);
                 return;
