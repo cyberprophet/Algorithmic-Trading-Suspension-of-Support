@@ -13,5 +13,17 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
+        public DbSet<Futures> Futures
+        {
+            get; set;
+        }
+        public DbSet<Options> Options
+        {
+            get; set;
+        }
+        public DbSet<Stocks> Stocks
+        {
+            get; set;
+        }
     }
 }

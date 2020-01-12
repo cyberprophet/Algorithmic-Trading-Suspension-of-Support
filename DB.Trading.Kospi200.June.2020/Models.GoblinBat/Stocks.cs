@@ -2,20 +2,25 @@
 
 namespace ShareInvest.Models
 {
-    public class Codes
+    public class Stocks
     {
-        [Key, MaxLength(8)]
+        [Key, MaxLength(6)]
         public string Code
         {
             get; set;
         }
-        [Required, MaxLength(14)]
-        public string Name
+        [Key]
+        public ulong Date
         {
             get; set;
         }
-        [Required, MaxLength(8)]
-        public string Info
+        [Required]
+        public uint Price
+        {
+            get; set;
+        }
+        [Required]
+        public int Volume
         {
             get; set;
         }

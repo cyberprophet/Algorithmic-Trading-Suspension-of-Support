@@ -24,7 +24,10 @@ namespace ShareInvest.OpenAPI
         {
             if (API != null)
             {
-                API.CommConnect();
+                ErrorCode = API.CommConnect();
+
+                if (ErrorCode != 0)
+                    new Error(ErrorCode);
 
                 return;
             }
@@ -64,11 +67,17 @@ namespace ShareInvest.OpenAPI
                 case 0:
                     FixUp(Sb.ToString().Split(';'), e.sRQName);
                     break;
+
+                case 1:
+                    foreach (string info in Sb.ToString().Split('*'))
+                        FixUp(info.Split(';'));
+
+                    break;
             }
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
-            int i;
+            int i, l;
             string exclusion, date = GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
             List<string> code = new List<string>
             {
@@ -84,9 +93,41 @@ namespace ShareInvest.OpenAPI
 
                     code.Add(exclusion);
                 }
-            code.RemoveAt(1);
+            code[1] = API.GetFutureCodeByIndex(24);
+            string[] temp, market = API.GetCodeListByMarket("").Split(';');
+            l = market.Length;
 
             foreach (string output in code)
+                RemainingDay(output);
+
+            foreach (string sMarket in new CodeListByMarket())
+            {
+                temp = API.GetCodeListByMarket(sMarket).Split(';');
+
+                for (i = 0; i < l; i++)
+                    if (Array.Exists(temp, o => o.Equals(market[i])))
+                        market[i] = string.Empty;
+            }
+            for (i = 0; i < l; i++)
+            {
+                string tempCode = market[i];
+
+                if (API.GetMasterStockState(tempCode).Contains("거래정지"))
+                {
+                    market[i] = string.Empty;
+
+                    continue;
+                }
+                if (tempCode.Length > 0)
+                {
+                    foreach (string ex in new CodeListByExclude())
+                        if (API.GetMasterCodeName(tempCode).EndsWith(ex) && !Array.Exists(exclude, o => o.Equals(tempCode)))
+                            market[i] = string.Empty;
+
+                    continue;
+                }
+            }
+            foreach (string output in SetCodeStorage(market))
                 RemainingDay(output);
         }
         private void FixUp(string[] param, string code)
@@ -98,7 +139,20 @@ namespace ShareInvest.OpenAPI
         }
         private void RemainingDay(string code)
         {
-            request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = code, RQName = code })));
+            if (code.Length < 9 && code.Length > 6)
+            {
+                request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = code, RQName = code })));
+
+                return;
+            }
+            request.RequestTrData(new Task(() =>
+            {
+                ITR tr = new OPTKWFID { Value = code };
+                ErrorCode = API.CommKwRqData(tr.Value, 0, 100, tr.PrevNext, tr.RQName, tr.ScreenNo);
+
+                if (ErrorCode < 0)
+                    new Error(ErrorCode);
+            }));
         }
         private void InputValueRqData(ITR param)
         {
