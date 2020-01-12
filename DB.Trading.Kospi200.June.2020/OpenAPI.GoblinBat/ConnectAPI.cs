@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using AxKHOpenAPILib;
 using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
 using ShareInvest.Interface;
+using ShareInvest.Message;
 
 namespace ShareInvest.OpenAPI
 {
@@ -79,7 +84,7 @@ namespace ShareInvest.OpenAPI
         {
             int i, l;
             string exclusion, date = GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
-            List<string> code = new List<string>
+            Code = new List<string>
             {
                 API.GetFutureCodeByIndex(e.nErrCode)
             };
@@ -88,16 +93,16 @@ namespace ShareInvest.OpenAPI
                 {
                     exclusion = API.GetOptionCode(om.Insert(3, "."), i, date);
 
-                    if (code.Exists(o => o.Equals(exclusion)))
+                    if (Code.Exists(o => o.Equals(exclusion)))
                         continue;
 
-                    code.Add(exclusion);
+                    Code.Add(exclusion);
                 }
-            code[1] = API.GetFutureCodeByIndex(24);
+            Code[1] = API.GetFutureCodeByIndex(24);
             string[] temp, market = API.GetCodeListByMarket("").Split(';');
             l = market.Length;
 
-            foreach (string output in code)
+            foreach (string output in Code)
                 RemainingDay(output);
 
             foreach (string sMarket in new CodeListByMarket())
@@ -129,6 +134,37 @@ namespace ShareInvest.OpenAPI
             }
             foreach (string output in SetCodeStorage(market))
                 RemainingDay(output);
+
+            if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
+                return;
+
+            else if (TimerBox.Show("Waiting to Receive. . .", "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)Code.Count * 875).Equals(DialogResult.OK))
+            {
+                Code.Clear();
+                Code = RequestCodeList(Code);
+                Delay.delay = 3615;
+                Request(GetRandomCode(new Random().Next(0, Code.Count)));
+            }
+        }
+        private string GetRandomCode(int index)
+        {
+            if (Code.Contains(Code[index]))
+            {
+                var temp = Code[index];
+                Code.RemoveAt(index);
+
+                return temp;
+            }
+            return GetRandomCode(new Random(index).Next(0, Code.Count));
+        }
+        private void Request(string code)
+        {
+            int param = code.Length > 6 ? (code.Contains("101") ? 0 : 0) : 0;
+            ITR tr = (ITR)catalog[param];
+            tr.Value = code;
+            tr.RQName = string.Concat(code, Retention(param, code));
+            tr.PrevNext = 0;
+            request.RequestTrData(new Task(() => InputValueRqData(tr)));
         }
         private void FixUp(string[] param, string code)
         {
@@ -183,6 +219,10 @@ namespace ShareInvest.OpenAPI
         {
             request = Delay.GetInstance(605);
             request.Run();
+        }
+        private List<string> Code
+        {
+            get; set;
         }
         private StringBuilder Sb
         {

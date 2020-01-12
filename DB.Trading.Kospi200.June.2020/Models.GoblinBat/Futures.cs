@@ -1,16 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
     public class Futures
     {
-        [Key, MaxLength(8)]
+        [Key, Column(Order = 1), MaxLength(8)]
         public string Code
         {
             get; set;
         }
-        [Key]
-        public ulong Date
+        [Key, Column(Order = 2)]
+        public long Date
         {
             get; set;
         }
@@ -21,6 +22,11 @@ namespace ShareInvest.Models
         }
         [Required]
         public int Volume
+        {
+            get; set;
+        }
+        [ForeignKey("Code")]
+        public virtual Codes Codes
         {
             get; set;
         }

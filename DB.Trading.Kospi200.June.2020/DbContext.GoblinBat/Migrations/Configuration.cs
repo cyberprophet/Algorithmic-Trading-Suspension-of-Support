@@ -5,7 +5,7 @@
     using System.Data.Entity.Migrations;
     using System.Linq;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<GoblinBatDbContext>
+    internal sealed class Configuration : DbMigrationsConfiguration<ShareInvest.GoblinBatContext.GoblinBatDbContext>
     {
         public Configuration()
         {
@@ -13,7 +13,7 @@
             ContextKey = "ShareInvest.GoblinBatContext.GoblinBatDbContext";
         }
 
-        protected override void Seed(GoblinBatDbContext context)
+        protected override void Seed(ShareInvest.GoblinBatContext.GoblinBatDbContext context)
         {
             //  This method will be called after migrating to the latest version.
 

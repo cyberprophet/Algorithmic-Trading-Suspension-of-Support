@@ -29,15 +29,64 @@ namespace ShareInvest.OpenAPI
                     if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
                         return;
 
-                    db.Codes.AddOrUpdate(new Codes
+                    try
                     {
-                        Code = code,
-                        Name = name,
-                        Info = info
-                    });
-                    db.SaveChanges();
+                        db.Codes.AddOrUpdate(new Codes
+                        {
+                            Code = code,
+                            Name = name,
+                            Info = info
+                        });
+                        db.SaveChanges();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.ToString() + "\n" + code);
+                    }
                 }
             }).Start();
+        }
+        protected string Retention(int param, string code)
+        {
+            long max = 0;
+            using (var db = new GoblinBatDbContext())
+            {
+                try
+                {
+                    switch (param)
+                    {
+                        case 0:
+                            max = db.Futures.Where(o => o.Code.Equals(code)).Max(o => o.Date);
+                            break;
+
+                        case 1:
+                            max = db.Options.Where(o => o.Code.Equals(code)).Max(o => o.Date);
+                            break;
+
+                        case 2:
+                            max = db.Stocks.Where(o => o.Code.Equals(code)).Max(o => o.Date);
+                            break;
+                    };
+                }
+                catch (Exception ex)
+                {
+                    max = ex.Message.Length;
+                    Console.WriteLine(ex.ToString() + "\n" + code);
+                }
+            }
+            return max.ToString().Length == 14 ? max.ToString().Substring(0, 12) : "DoesNotExist";
+        }
+        protected List<string> RequestCodeList(List<string> list)
+        {
+            using (var db = new GoblinBatDbContext())
+            {
+                Parallel.ForEach(db.Codes.ToList(), (temp) =>
+                {
+                    if (temp.Code.Length < 7 || DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
+                        list.Add(temp.Code);
+                });
+            }
+            return list;
         }
         protected void FixUp(string[] info)
         {
