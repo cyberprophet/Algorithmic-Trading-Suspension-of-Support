@@ -11,6 +11,7 @@ namespace ShareInvest.DataBase
             api = ConnectAPI.GetInstance();
             api.SetAPI(axAPI);
             api.StartProgress();
+            new Temporary();
             WindowState = FormWindowState.Minimized;
         }
         private void GoblinBatResize(object sender, System.EventArgs e)

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using AxKHOpenAPILib;
 using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
+using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 using ShareInvest.Message;
 
@@ -56,6 +54,66 @@ namespace ShareInvest.OpenAPI
             if (e.sTrCode.Contains("KOA"))
                 return;
 
+            if (Array.FindIndex(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))) < 3)
+            {
+                var temp = API.GetCommDataEx(e.sTrCode, e.sRQName);
+
+                if (temp != null)
+                {
+                    string[,] ts = new string[((object[,])temp).GetUpperBound(0) + 1, ((object[,])temp).GetUpperBound(1) + 1];
+                    int x, y, lx = ((object[,])temp).GetUpperBound(0), ly = ((object[,])temp).GetUpperBound(1);
+
+                    for (x = 0; x <= lx; x++)
+                    {
+                        Sb = new StringBuilder(64);
+
+                        for (y = 0; y <= ly; y++)
+                        {
+                            ts[x, y] = (string)((object[,])temp)[x, y];
+
+                            if (ts[x, y].Length > 13 && e.sRQName.Split(';')[1].Equals(ts[x, y].Substring(2)))
+                            {
+                                Sb = new StringBuilder(exists);
+                                e.sPrevNext = "0";
+
+                                break;
+                            }
+                            Sb.Append(ts[x, y]).Append(';');
+                        }
+                        if (!exists.Equals(Sb.ToString()))
+                        {
+                            SendMemorize?.Invoke(this, new Memorize(Sb));
+
+                            continue;
+                        }
+                        if (exists.Equals(Sb.ToString()))
+                            break;
+                    }
+                    if (e.sRQName.Split(';')[0].Length == 6 && e.sPrevNext.Equals("2"))
+                    {
+                        request.RequestTrData(new Task(() => InputValueRqData(new Opt10079 { Value = e.sRQName.Substring(0, 8), RQName = e.sRQName, PrevNext = 2 })));
+
+                        return;
+                    }
+                    if (e.sRQName.Substring(0, 3).Equals("101") && e.sPrevNext.Equals("2"))
+                    {
+                        request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = e.sRQName.Substring(0, 8), RQName = e.sRQName, PrevNext = 2 })));
+
+                        return;
+                    }
+                    if (e.sPrevNext.Equals("2"))
+                    {
+                        request.RequestTrData(new Task(() => InputValueRqData(new Opt50066 { Value = e.sRQName.Substring(0, 8), RQName = e.sRQName, PrevNext = 2 })));
+
+                        return;
+                    }
+                    if (e.sPrevNext.Equals("0"))
+                        SendMemorize?.Invoke(this, new Memorize(e.sPrevNext, e.sRQName.Split(';')[0]));
+                }
+                Request(GetRandomCode(new Random().Next(0, Code.Count)));
+
+                return;
+            }
             Sb = new StringBuilder(512);
             int i, cnt = API.GetRepeatCnt(e.sTrCode, e.sRQName);
 
@@ -69,11 +127,11 @@ namespace ShareInvest.OpenAPI
             }
             switch (Array.FindIndex(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))))
             {
-                case 0:
+                case 3:
                     FixUp(Sb.ToString().Split(';'), e.sRQName);
                     break;
 
-                case 1:
+                case 4:
                     foreach (string info in Sb.ToString().Split('*'))
                         FixUp(info.Split(';'));
 
@@ -151,7 +209,7 @@ namespace ShareInvest.OpenAPI
             if (Code.Contains(Code[index]))
             {
                 var temp = Code[index];
-                Code.RemoveAt(index);
+                Code.Remove(temp);
 
                 return temp;
             }
@@ -159,12 +217,19 @@ namespace ShareInvest.OpenAPI
         }
         private void Request(string code)
         {
-            int param = code.Length > 6 ? (code.Contains("101") ? 0 : 0) : 0;
-            ITR tr = (ITR)catalog[param];
-            tr.Value = code;
-            tr.RQName = string.Concat(code, Retention(param, code));
-            tr.PrevNext = 0;
-            request.RequestTrData(new Task(() => InputValueRqData(tr)));
+            Console.WriteLine(code);
+            if (code != null)
+            {
+                int param = code.Length > 6 ? (code.Contains("101") ? 0 : 1) : 2;
+                ITR tr = (ITR)catalog[param];
+                tr.Value = code;
+                tr.RQName = string.Concat(code, ";", Retention(param, code));
+                tr.PrevNext = 0;
+                request.RequestTrData(new Task(() => InputValueRqData(tr)));
+
+                return;
+            }
+            Request(GetRandomCode(new Random().Next(0, Code.Count)));
         }
         private void FixUp(string[] param, string code)
         {
@@ -234,5 +299,6 @@ namespace ShareInvest.OpenAPI
         }
         private static ConnectAPI api;
         private readonly Delay request;
+        public event EventHandler<Memorize> SendMemorize;
     }
 }
