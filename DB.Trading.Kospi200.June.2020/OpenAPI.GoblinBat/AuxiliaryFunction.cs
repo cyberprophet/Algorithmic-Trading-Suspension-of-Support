@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,28 @@ namespace ShareInvest.OpenAPI
 
             return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString("yyyyMM") : DateTime.Now.ToString("yyyyMM");
         }
+        protected void SetStorage(string code, string[] param, string day)
+        {
+            IList model = new List<Days>(32);
+
+            /*
+            model.Add(new Days
+                {
+                    Code = code,
+                    Date = int.Parse(temp[0]),
+                    Price = double.Parse(temp[1])
+                });
+
+            else if (code.Contains("101") && code.Length > 6)
+                    db.BulkInsert((List<Days>)model, o =>
+                    {
+                        o.InsertIfNotExists = true;
+                        o.BatchSize = 10000;
+                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                        o.AutoMapOutputDirection = false;
+                    });
+                */
+        }
         protected void SetStorage(string code, string[] param)
         {
             if (param.Length < 3)
@@ -32,6 +55,7 @@ namespace ShareInvest.OpenAPI
                     db.Configuration.AutoDetectChangesEnabled = false;
                     string date = string.Empty;
                     int i, count = 0;
+
                     IList model = new List<Stocks>(32);
 
                     if (code.Contains("101") && code.Length > 6)
@@ -58,7 +82,7 @@ namespace ShareInvest.OpenAPI
                                 model.Add(new Stocks
                                 {
                                     Code = code,
-                                    Date = long.Parse(string.Concat(temp[0], count.ToString("D2"))),
+                                    Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
                                     Price = int.Parse(temp[1]),
                                     Volume = int.Parse(temp[2])
                                 });
@@ -66,36 +90,50 @@ namespace ShareInvest.OpenAPI
 
                             case 8:
                                 if (code.Contains("101"))
-                                {
                                     model.Add(new Futures
                                     {
                                         Code = code,
-                                        Date = long.Parse(string.Concat(temp[0], count.ToString("D2"))),
+                                        Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
                                         Price = double.Parse(temp[1]),
                                         Volume = int.Parse(temp[2])
                                     });
-                                    continue;
-                                }
-                                model.Add(new Options
-                                {
-                                    Code = code,
-                                    Date = long.Parse(string.Concat(temp[0], count.ToString("D2"))),
-                                    Price = double.Parse(temp[1]),
-                                    Volume = int.Parse(temp[2])
-                                });
+                                else
+                                    model.Add(new Options
+                                    {
+                                        Code = code,
+                                        Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
+                                        Price = double.Parse(temp[1]),
+                                        Volume = int.Parse(temp[2])
+                                    });
                                 break;
                         }
                     }
+                    db.Configuration.AutoDetectChangesEnabled = true;
+
                     if (code.Length == 6)
-                        db.Stocks.AddRange((List<Stocks>)model);
-
+                        db.BulkInsert((List<Stocks>)model, o =>
+                        {
+                            o.InsertIfNotExists = true;
+                            o.BatchSize = 10000;
+                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                            o.AutoMapOutputDirection = false;
+                        });
                     else if (code.Contains("101") && code.Length > 6)
-                        db.Futures.AddRange((List<Futures>)model);
-
+                        db.BulkInsert((List<Futures>)model, o =>
+                        {
+                            o.InsertIfNotExists = true;
+                            o.BatchSize = 10000;
+                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                            o.AutoMapOutputDirection = false;
+                        });
                     else
-                        db.Options.AddRange((List<Options>)model);
-
-                    db.SaveChanges();
+                        db.BulkInsert((List<Options>)model, o =>
+                        {
+                            o.InsertIfNotExists = true;
+                            o.BatchSize = 10000;
+                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                            o.AutoMapOutputDirection = false;
+                        });
                 }
             }).Start();
         }

@@ -38,5 +38,13 @@ namespace ShareInvest.EventHandler
             SPrevNext = sPrevNext;
             Code = code;
         }
+        public Memorize(string[] arr)
+        {
+            Date = arr[0];
+            Price = arr[1];
+
+            if (arr.Length > 2)
+                Volume = arr[2];
+        }
     }
 }

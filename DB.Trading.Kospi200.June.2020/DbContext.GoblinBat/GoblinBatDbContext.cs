@@ -9,6 +9,10 @@ namespace ShareInvest.GoblinBatContext
         {
 
         }
+        public override int SaveChanges()
+        {
+            return this.BatchSaveChanges();
+        }
         public DbSet<Codes> Codes
         {
             get; set;
@@ -22,6 +26,10 @@ namespace ShareInvest.GoblinBatContext
             get; set;
         }
         public DbSet<Stocks> Stocks
+        {
+            get; set;
+        }
+        public DbSet<Days> Days
         {
             get; set;
         }

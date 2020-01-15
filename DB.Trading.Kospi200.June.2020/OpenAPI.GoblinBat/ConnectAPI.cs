@@ -25,6 +25,28 @@ namespace ShareInvest.OpenAPI
         }
         public void StartProgress()
         {
+            /// <summary>
+            /// Export the CSV file to Database.
+            /// </summary>
+            /*
+            if (transfer != null)
+            {
+                new Temporary();
+
+                foreach (string temp in new Transfer(transfer))
+                {
+                    if (!temp.Contains(","))
+                    {
+                        string code = temp.Equals("Tick") || temp.Equals("Day") ? "101Q3000" : temp;
+                        SendMemorize?.Invoke(this, new Memorize(temp.Equals("Day") ? "day" : temp, code));
+
+                        continue;
+                    }
+                    SendMemorize?.Invoke(this, new Memorize(temp.Split(',')));
+                }
+                return;
+            }
+            */
             if (API != null)
             {
                 ErrorCode = API.CommConnect();
@@ -200,7 +222,7 @@ namespace ShareInvest.OpenAPI
             {
                 Code.Clear();
                 Code = RequestCodeList(Code);
-                Delay.delay = 3615;
+                Delay.delay = 4135;
                 Request(GetRandomCode(new Random().Next(0, Code.Count)));
             }
         }
@@ -217,7 +239,6 @@ namespace ShareInvest.OpenAPI
         }
         private void Request(string code)
         {
-            Console.WriteLine(code);
             if (code != null)
             {
                 int param = code.Length > 6 ? (code.Contains("101") ? 0 : 1) : 2;
