@@ -52,7 +52,7 @@ namespace ShareInvest.OpenAPI
                 ErrorCode = API.CommConnect();
 
                 if (ErrorCode != 0)
-                    new Error(ErrorCode);
+                    new ExceptionMessage(new Error().GetErrorMessage(ErrorCode));
 
                 return;
             }
@@ -65,11 +65,52 @@ namespace ShareInvest.OpenAPI
 
             return api;
         }
+        private void SetStorage(int index, string[] param)
+        {
+            switch (index)
+            {
+                case 0:
+                    futures.Add(new TemporaryStorage
+                    {
+                        Code = param[0],
+                        Date = param[1],
+                        Price = param[2],
+                        Volume = param[3]
+                    });
+                    break;
+
+                case 1:
+                    break;
+
+                case 2:
+                    break;
+
+                case 3:
+                    break;
+
+                case 4:
+                    break;
+
+                case 5:
+                    break;
+
+                case 6:
+                    break;
+            }
+        }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
+            new ExceptionMessage(e.sMsg.Substring(8));
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
+            Sb = new StringBuilder(512);
+            int index = Array.FindIndex(Enum.GetNames(typeof(RealType.EnumType)), o => o.Equals(e.sRealType));
+
+            foreach (int fid in real.type[index])
+                Sb.Append(API.GetCommRealData(e.sRealKey, fid)).Append(';');
+
+            SetStorage(index, Sb.ToString().Split(';'));
         }
         private void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
@@ -117,7 +158,7 @@ namespace ShareInvest.OpenAPI
 
                         return;
                     }
-                    if (e.sRQName.Substring(0, 3).Equals("101") && e.sPrevNext.Equals("2"))
+                    if (e.sRQName.Substring(5, 3).Equals("000") && e.sPrevNext.Equals("2"))
                     {
                         request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = e.sRQName.Substring(0, 8), RQName = e.sRQName, PrevNext = 2 })));
 
@@ -273,7 +314,7 @@ namespace ShareInvest.OpenAPI
                 ErrorCode = API.CommKwRqData(tr.Value, 0, 100, tr.PrevNext, tr.RQName, tr.ScreenNo);
 
                 if (ErrorCode < 0)
-                    new Error(ErrorCode);
+                    new ExceptionMessage(new Error().GetErrorMessage(ErrorCode));
             }));
         }
         private void InputValueRqData(ITR param)
@@ -287,7 +328,7 @@ namespace ShareInvest.OpenAPI
             ErrorCode = API.CommRqData(param.RQName, param.TrCode, param.PrevNext, param.ScreenNo);
 
             if (ErrorCode < 0)
-                new Error(ErrorCode);
+                new ExceptionMessage(new Error().GetErrorMessage(ErrorCode));
         }
         private int ErrorCode
         {
@@ -303,6 +344,10 @@ namespace ShareInvest.OpenAPI
         }
         private ConnectAPI()
         {
+            real = new RealType();
+            futures = new List<TemporaryStorage>(128);
+            options = new List<TemporaryStorage>(128);
+            stocks = new List<TemporaryStorage>(128);
             request = Delay.GetInstance(605);
             request.Run();
         }
@@ -319,7 +364,11 @@ namespace ShareInvest.OpenAPI
             get; set;
         }
         private static ConnectAPI api;
+        private readonly List<TemporaryStorage> futures;
+        private readonly List<TemporaryStorage> options;
+        private readonly List<TemporaryStorage> stocks;
         private readonly Delay request;
+        private readonly RealType real;
         public event EventHandler<Memorize> SendMemorize;
     }
 }

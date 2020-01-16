@@ -3,10 +3,10 @@
 namespace ShareInvest.Catalog
 {
     public class Error
-    {        
-        public Error(int error)
+    {
+        public string GetErrorMessage(int error)
         {
-            var temp = this.error[error];
+            return this.error[error];
         }
         private readonly Dictionary<int, string> error = new Dictionary<int, string>()
         {

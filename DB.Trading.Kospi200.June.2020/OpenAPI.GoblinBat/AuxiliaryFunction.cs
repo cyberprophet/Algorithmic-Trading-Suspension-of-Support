@@ -42,7 +42,7 @@ namespace ShareInvest.OpenAPI
                         o.AutoMapOutputDirection = false;
                     });
                 */
-        }
+        }        
         protected void SetStorage(string code, string[] param)
         {
             if (param.Length < 3)
@@ -50,35 +50,36 @@ namespace ShareInvest.OpenAPI
 
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext())
+                try
                 {
-                    db.Configuration.AutoDetectChangesEnabled = false;
-                    string date = string.Empty;
-                    int i, count = 0;
-
-                    IList model = new List<Stocks>(32);
-
-                    if (code.Contains("101") && code.Length > 6)
-                        model = new List<Futures>(32);
-
-                    else if (code.Length > 6)
-                        model = new List<Options>(32);
-
-                    for (i = param.Length - 2; i > -1; i--)
+                    using (var db = new GoblinBatDbContext())
                     {
-                        var temp = param[i].Split(',');
+                        db.Configuration.AutoDetectChangesEnabled = false;
+                        string date = string.Empty;
+                        int i, count = 0;
+                        bool stocks = code.Length == 6, futures = code.Length > 6 && code.Substring(5, 3).Equals("000"), options = code.Length > 6 && !code.Substring(5, 3).Equals("000");
 
-                        if (temp[0].Equals(date))
-                            count++;
+                        IList model = new List<Stocks>(32);
 
-                        else
+                        if (futures)
+                            model = new List<Futures>(32);
+
+                        else if (options)
+                            model = new List<Options>(32);
+
+                        for (i = param.Length - 2; i > -1; i--)
                         {
-                            date = temp[0];
-                            count = 0;
-                        }
-                        switch (code.Length)
-                        {
-                            case 6:
+                            var temp = param[i].Split(',');
+
+                            if (temp[0].Equals(date))
+                                count++;
+
+                            else
+                            {
+                                date = temp[0];
+                                count = 0;
+                            }
+                            if (stocks)
                                 model.Add(new Stocks
                                 {
                                     Code = code,
@@ -86,54 +87,54 @@ namespace ShareInvest.OpenAPI
                                     Price = int.Parse(temp[1]),
                                     Volume = int.Parse(temp[2])
                                 });
-                                break;
-
-                            case 8:
-                                if (code.Contains("101"))
-                                    model.Add(new Futures
-                                    {
-                                        Code = code,
-                                        Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
-                                        Price = double.Parse(temp[1]),
-                                        Volume = int.Parse(temp[2])
-                                    });
-                                else
-                                    model.Add(new Options
-                                    {
-                                        Code = code,
-                                        Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
-                                        Price = double.Parse(temp[1]),
-                                        Volume = int.Parse(temp[2])
-                                    });
-                                break;
+                            else if (options)
+                                model.Add(new Options
+                                {
+                                    Code = code,
+                                    Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
+                                    Price = double.Parse(temp[1]),
+                                    Volume = int.Parse(temp[2])
+                                });
+                            else if (futures)
+                                model.Add(new Futures
+                                {
+                                    Code = code,
+                                    Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
+                                    Price = double.Parse(temp[1]),
+                                    Volume = int.Parse(temp[2])
+                                });
                         }
-                    }
-                    db.Configuration.AutoDetectChangesEnabled = true;
+                        db.Configuration.AutoDetectChangesEnabled = true;
 
-                    if (code.Length == 6)
-                        db.BulkInsert((List<Stocks>)model, o =>
-                        {
-                            o.InsertIfNotExists = true;
-                            o.BatchSize = 10000;
-                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                            o.AutoMapOutputDirection = false;
-                        });
-                    else if (code.Contains("101") && code.Length > 6)
-                        db.BulkInsert((List<Futures>)model, o =>
-                        {
-                            o.InsertIfNotExists = true;
-                            o.BatchSize = 10000;
-                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                            o.AutoMapOutputDirection = false;
-                        });
-                    else
-                        db.BulkInsert((List<Options>)model, o =>
-                        {
-                            o.InsertIfNotExists = true;
-                            o.BatchSize = 10000;
-                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                            o.AutoMapOutputDirection = false;
-                        });
+                        if (stocks)
+                            db.BulkInsert((List<Stocks>)model, o =>
+                            {
+                                o.InsertIfNotExists = true;
+                                o.BatchSize = 10000;
+                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                                o.AutoMapOutputDirection = false;
+                            });
+                        else if (options)
+                            db.BulkInsert((List<Options>)model, o =>
+                            {
+                                o.InsertIfNotExists = true;
+                                o.BatchSize = 10000;
+                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                                o.AutoMapOutputDirection = false;
+                            });
+                        else if (futures)
+                            db.BulkInsert((List<Futures>)model, o =>
+                            {
+                                o.InsertIfNotExists = true;
+                                o.BatchSize = 10000;
+                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                                o.AutoMapOutputDirection = false;
+                            });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.ToString());
                 }
             }).Start();
         }
@@ -177,23 +178,22 @@ namespace ShareInvest.OpenAPI
                             max = db.Stocks.Where(o => o.Code.Equals(code)).Max(o => o.Date);
                             break;
                     };
+                    return max > 0 ? max.ToString().Substring(0, 12) : "DoesNotExist";
                 }
                 catch (Exception ex)
                 {
-                    max = ex.Message.Length;
+                    new ExceptionMessage(ex.ToString());
                 }
             }
-            return max.ToString().Length == 14 ? max.ToString().Substring(0, 12) : "DoesNotExist";
+            return max > 0 ? max.ToString().Substring(0, 12) : "DoesNotExist";
         }
         protected List<string> RequestCodeList(List<string> list)
         {
             using (var db = new GoblinBatDbContext())
             {
-                Parallel.ForEach(db.Codes.ToList(), (temp) =>
-                {
+                foreach (var temp in db.Codes.ToList())
                     if (temp.Code.Length < 7 || (temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0))
                         list.Add(temp.Code);
-                });
             }
             return list;
         }
