@@ -42,7 +42,7 @@ namespace ShareInvest.OpenAPI
                         o.AutoMapOutputDirection = false;
                     });
                 */
-        }        
+        }
         protected void SetStorage(string code, string[] param)
         {
             if (param.Length < 3)
@@ -182,17 +182,17 @@ namespace ShareInvest.OpenAPI
                 }
                 catch (Exception ex)
                 {
-                    new ExceptionMessage(ex.ToString());
+                    new ExceptionMessage(ex.ToString(), code);
                 }
             }
             return max > 0 ? max.ToString().Substring(0, 12) : "DoesNotExist";
         }
-        protected List<string> RequestCodeList(List<string> list)
+        protected List<string> RequestCodeList(List<string> list, string[] market)
         {
             using (var db = new GoblinBatDbContext())
             {
                 foreach (var temp in db.Codes.ToList())
-                    if (temp.Code.Length < 7 || (temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0))
+                    if (temp.Code.Length < 7 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
                         list.Add(temp.Code);
             }
             return list;

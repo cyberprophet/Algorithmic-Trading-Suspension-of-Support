@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 using ShareInvest.Message;
+using ShareInvest.Models;
 
 namespace ShareInvest.OpenAPI
 {
@@ -23,12 +25,8 @@ namespace ShareInvest.OpenAPI
             axAPI.OnReceiveRealData += OnReceiveRealData;
             axAPI.OnReceiveMsg += OnReceiveMsg;
         }
-        public void StartProgress()
+        public void StartProgress(string transfer)
         {
-            /// <summary>
-            /// Export the CSV file to Database.
-            /// </summary>
-            /*
             if (transfer != null)
             {
                 new Temporary();
@@ -46,14 +44,19 @@ namespace ShareInvest.OpenAPI
                 }
                 return;
             }
-            */
+        }
+        public void StartProgress()
+        {
             if (API != null)
             {
                 ErrorCode = API.CommConnect();
 
                 if (ErrorCode != 0)
+                {
                     new ExceptionMessage(new Error().GetErrorMessage(ErrorCode));
 
+                    Console.WriteLine(ErrorCode);
+                }
                 return;
             }
             Environment.Exit(0);
@@ -65,52 +68,118 @@ namespace ShareInvest.OpenAPI
 
             return api;
         }
-        private void SetStorage(int index, string[] param)
+        private void SetStorage(int index, string[] param, string code)
         {
-            switch (index)
+            new Task(() =>
             {
-                case 0:
-                    futures.Add(new TemporaryStorage
-                    {
-                        Code = param[0],
-                        Date = param[1],
-                        Price = param[2],
-                        Volume = param[3]
-                    });
-                    break;
+                switch (index)
+                {
+                    case 0:
+                        futures.Add(new Futures
+                        {
+                            Code = code,
+                            Date = long.Parse(string.Concat(Date, param[0], futures.FindAll(o => o.Code.Equals(code) && o.Date.ToString().Substring(6, 6).Equals(param[0])).Count.ToString("D3"))),
+                            Price = double.Parse(param[1].Contains("-") ? param[1].Substring(1) : param[1]),
+                            Volume = int.Parse(param[6])
+                        });
+                        break;
 
-                case 1:
-                    break;
+                    case 1:
+                        break;
 
-                case 2:
-                    break;
+                    case 2:
+                        options.Add(new Options
+                        {
+                            Code = code,
+                            Date = long.Parse(string.Concat(Date, param[0], options.FindAll(o => o.Code.Equals(code) && o.Date.ToString().Substring(6, 6).Equals(param[0])).Count.ToString("D3"))),
+                            Price = double.Parse(param[1].Contains("-") ? param[1].Substring(1) : param[1]),
+                            Volume = int.Parse(param[6])
+                        });
+                        break;
 
-                case 3:
-                    break;
+                    case 3:
+                        break;
 
-                case 4:
-                    break;
+                    case 4:
+                        stocks.Add(new Stocks
+                        {
+                            Code = code,
+                            Date = long.Parse(string.Concat(Date, param[0], stocks.FindAll(o => o.Code.Equals(code) && o.Date.ToString().Substring(6, 6).Equals(param[0])).Count.ToString("D3"))),
+                            Price = int.Parse(param[1].Contains("-") ? param[1].Substring(1) : param[1]),
+                            Volume = int.Parse(param[6])
+                        });
+                        break;
 
-                case 5:
-                    break;
+                    case 5:
+                        break;
 
-                case 6:
-                    break;
-            }
+                    case 6:
+                        if (param[0].Equals("e") && DeadLine == false)
+                        {
+                            DeadLine = true;
+                            Delay.delay = 3705;
+                            Request(GetRandomCode(API.GetFutureCodeByIndex(0)));
+                        }
+                        break;
+
+                    case 7:
+                        break;
+
+                    case 8:
+                        break;
+
+                    case 9:
+                        break;
+
+                    case 10:
+                        break;
+
+                    case 11:
+                        break;
+
+                    case 12:
+                        break;
+
+                    case 13:
+                        break;
+
+                    case 14:
+                        break;
+
+                    case 15:
+                        break;
+
+                    case 16:
+                        break;
+
+                    case 17:
+                        break;
+                }
+            }).Start();
         }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
-            new ExceptionMessage(e.sMsg.Substring(8));
+            new ExceptionMessage(e.sMsg);
+
+            if (e.sMsg.Equals("서비스 TR을 확인바랍니다.(0006)"))
+                Request(GetRandomCode(new Random().Next(0, Code.Count)));
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
             Sb = new StringBuilder(512);
             int index = Array.FindIndex(Enum.GetNames(typeof(RealType.EnumType)), o => o.Equals(e.sRealType));
 
+            if (index < 0)
+            {
+                if (!e.sRealType.Equals("ECN주식호가잔량") && !e.sRealType.Equals("ECN주식체결"))
+                    Console.WriteLine(e.sRealType);
+
+                return;
+            }
             foreach (int fid in real.type[index])
                 Sb.Append(API.GetCommRealData(e.sRealKey, fid)).Append(';');
 
-            SetStorage(index, Sb.ToString().Split(';'));
+            SetStorage(index, Sb.ToString().Split(';'), e.sRealKey);
         }
         private void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
@@ -256,16 +325,23 @@ namespace ShareInvest.OpenAPI
             foreach (string output in SetCodeStorage(market))
                 RemainingDay(output);
 
+            Code.Clear();
+            Code = RequestCodeList(Code, market);
+
             if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
                 return;
 
             else if (TimerBox.Show("Waiting to Receive. . .", "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)Code.Count * 875).Equals(DialogResult.OK))
             {
-                Code.Clear();
-                Code = RequestCodeList(Code);
                 Delay.delay = 4135;
-                Request(GetRandomCode(new Random().Next(0, Code.Count)));
+                Request(GetRandomCode(API.GetFutureCodeByIndex(e.nErrCode)));
             }
+        }
+        private string GetRandomCode(string code)
+        {
+            Code.Remove(code);
+
+            return code;
         }
         private string GetRandomCode(int index)
         {
@@ -328,7 +404,12 @@ namespace ShareInvest.OpenAPI
             ErrorCode = API.CommRqData(param.RQName, param.TrCode, param.PrevNext, param.ScreenNo);
 
             if (ErrorCode < 0)
+            {
                 new ExceptionMessage(new Error().GetErrorMessage(ErrorCode));
+
+                if (ErrorCode == -200)
+                    Process.Start("shutdown.exe", "-r");
+            }
         }
         private int ErrorCode
         {
@@ -342,12 +423,17 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
+        private string Date
+        {
+            get; set;
+        }
         private ConnectAPI()
         {
             real = new RealType();
-            futures = new List<TemporaryStorage>(128);
-            options = new List<TemporaryStorage>(128);
-            stocks = new List<TemporaryStorage>(128);
+            futures = new List<Futures>(2048);
+            options = new List<Options>(2048);
+            stocks = new List<Stocks>(2048);
+            Date = DateTime.Now.ToString("yyMMdd");
             request = Delay.GetInstance(605);
             request.Run();
         }
@@ -364,9 +450,9 @@ namespace ShareInvest.OpenAPI
             get; set;
         }
         private static ConnectAPI api;
-        private readonly List<TemporaryStorage> futures;
-        private readonly List<TemporaryStorage> options;
-        private readonly List<TemporaryStorage> stocks;
+        private readonly List<Futures> futures;
+        private readonly List<Options> options;
+        private readonly List<Stocks> stocks;
         private readonly Delay request;
         private readonly RealType real;
         public event EventHandler<Memorize> SendMemorize;

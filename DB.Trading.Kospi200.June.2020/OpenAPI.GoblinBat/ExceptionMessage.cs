@@ -11,6 +11,11 @@ namespace ShareInvest.OpenAPI
         {
             new Task(() => Record(message)).Start();
         }
+        public ExceptionMessage(string message, string code)
+        {
+            this.code = code;
+            new Task(() => Record(message)).Start();
+        }
         private void Record(string message)
         {
             try
@@ -23,6 +28,9 @@ namespace ShareInvest.OpenAPI
 
                 using (StreamWriter sw = new StreamWriter(string.Concat(path, DateTime.Now.ToString("yyMMdd"), ".txt"), true))
                 {
+                    if (code != null)
+                        sw.WriteLine(code);
+
                     sw.WriteLine(DateTime.Now.ToShortTimeString());
                     sw.WriteLine(message);
                 }
@@ -32,5 +40,6 @@ namespace ShareInvest.OpenAPI
                 Record(ex.ToString());
             }
         }
+        private readonly string code;
     }
 }
