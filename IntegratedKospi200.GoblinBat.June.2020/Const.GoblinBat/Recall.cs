@@ -2,55 +2,43 @@
 using System.Collections.Generic;
 using System.Linq;
 using ShareInvest.GoblinBatContext;
+using ShareInvest.Interface;
+using ShareInvest.Models;
 
 namespace ShareInvest.Const
 {
     public class Recall : IEnumerable
     {
-        public Recall(string code)
+        public Recall(string code, long assets)
         {
             this.code = code;
+            this.assets = assets;
         }
         public IEnumerator GetEnumerator()
         {
             using (var db = new GoblinBatDbContext())
             {
-                var list = db.Logs.ToList().FindAll(o => o.Code.Equals(code));
-                var date = list.ConvertAll(o => o.Date);
+                var list = db.Logs.ToList().FindAll(o => o.Code.Equals(code) && o.Assets.Equals(assets));
+                var date = list.ConvertAll(o => o.Date).Distinct().ToArray();
+                var max = date.Max();
 
-                yield return date.Distinct().ToList().Count;
+                yield return date.Length;
 
-                foreach (var val in mp)
-                    yield return MakeUp(list, val);
+                foreach (var makeUp in mp)
+                    yield return MakeUp(list, makeUp, max, date.Length - 1);
 
-                yield return string.Concat(date.Min(), "^", date.Max());
+                yield return string.Concat(date.Min(), "^", max);
             }
         }
-        private IMakeUp MakeUp(List<string> list, IMakeUp ip)
+        private IMakeUp MakeUp(List<Logs> list, IMakeUp ip, int recent, int length)
         {
-            string[] transitory, temp = list[0].Split(',');
-            Count = ip.Turn;
-            long[] count = new long[temp.Length - 1];
-            int i;
+            if (ip.FindByName.Equals("cumulative"))
+                ip.Turn = length;
 
-            do
-            {
-                transitory = list[list.Count - Count].Split(',');
-                Count--;
-
-                for (i = 0; i < count.Length; i++)
-                    count[i] += long.Parse(transitory[i + 1]);
-            }
-            while (Count > 1);
-
-            for (i = 0; i < count.Length; i++)
-                ip.DescendingSort[temp[i + 1]] = count[i];
+            foreach (var makeUp in list.FindAll(o => o.Date.Equals(recent)))
+                ip.DescendingSort[makeUp.Strategy] = makeUp.Cumulative + makeUp.Unrealized - list.FindAll(o => o.Strategy.Equals(makeUp.Strategy)).OrderByDescending(o => o.Date).ElementAt(ip.Turn).Cumulative;
 
             return ip;
-        }
-        private int Count
-        {
-            get; set;
         }
         private readonly IMakeUp[] mp =
         {
@@ -147,6 +135,7 @@ namespace ShareInvest.Const
             comboBoxQuantity = 10,
             comboBoxTime = 11
         }
+        private readonly long assets;
         private readonly string code;
     }
 }

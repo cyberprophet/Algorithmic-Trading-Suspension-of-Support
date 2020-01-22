@@ -11,11 +11,16 @@ namespace ShareInvest.Models
             get; set;
         }
         [Key, Column(Order = 2)]
+        public long Assets
+        {
+            get; set;
+        }
+        [Key, Column(Order = 3)]
         public string Strategy
         {
             get; set;
         }
-        [Required]
+        [Key, Column(Order = 4)]
         public int Date
         {
             get; set;

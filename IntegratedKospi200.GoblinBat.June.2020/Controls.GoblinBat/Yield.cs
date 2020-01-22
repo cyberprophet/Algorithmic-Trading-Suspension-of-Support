@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using ShareInvest.Const;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
+using ShareInvest.Interface;
 using ShareInvest.Message;
 
 namespace ShareInvest.Controls
@@ -22,7 +23,7 @@ namespace ShareInvest.Controls
                 {
                     string temp = name.Name.Replace("button", "rate");
                     var convert = Transmogrify(temp);
-                    name.Text = name.Text.Contains('%') ? convert.ToString("C0") : string.Concat("C", (convert / Assets).ToString("P0"), "  D", (convert / Turn[temp] / Assets).ToString("P3"));
+                    name.Text = name.Text.Contains('%') ? convert.ToString("C0") : string.Concat("C", (convert / assets).ToString("P0"), "  D", (convert / Turn[temp] / assets).ToString("P3"));
                     name.ForeColor = convert > 0 ? Color.Maroon : Color.Navy;
 
                     if (name.ForeColor.Equals(Color.Navy))
@@ -53,13 +54,9 @@ namespace ShareInvest.Controls
             }
             catch (Exception ex)
             {
-                TimerBox.Show(string.Concat(ex.ToString(), "\n\nStatistics don't Exist.\n\nPlease Try Again."), "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information, 3519);
+                TimerBox.Show(string.Concat(ex.ToString(), "\n\n", new Message().Exists), "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information, 3519);
             }
             return 0;
-        }
-        private double Assets
-        {
-            get; set;
         }
         private string Temp
         {
@@ -67,7 +64,7 @@ namespace ShareInvest.Controls
         }
         public IEnumerator GetEnumerator()
         {
-            foreach (var temp in new Recall("Code"))
+            foreach (var temp in new Recall(code, (long)assets))
             {
                 if (temp.GetType().Equals(typeof(string)))
                 {
@@ -173,7 +170,7 @@ namespace ShareInvest.Controls
             }
             else
             {
-                TimerBox.Show("Statistics don't Exist.\n\nPlease Try Again.", "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information, 3519);
+                TimerBox.Show(new Message().Exists, "Notice", MessageBoxButtons.OK, MessageBoxIcon.Information, 3519);
                 SendHermes?.Invoke(sender, new Hermes(false));
             }
         }
@@ -208,16 +205,17 @@ namespace ShareInvest.Controls
 
                 return result;
             }
-            TimerBox.Show("The Statistics are Very Unreliable.\n\nThus there is No Strategy to Recommend.\n\nPlan Strategy or Stop Trading.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning, 3572);
+            TimerBox.Show(new Message().Unreliable, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning, 3572);
 
             return DialogResult.Abort;
         }
-        public Yield(string[] assets)
+        public Yield()
         {
             InitializeComponent();
             Sort = new Dictionary<string, Dictionary<string, long>>(1024);
             Turn = new Dictionary<string, int>();
-            Assets = long.Parse(assets[1]);
+            assets = 35000000;
+            code = "";
             Application.DoEvents();
             SuspendLayout();
         }
@@ -230,5 +228,7 @@ namespace ShareInvest.Controls
             get; private set;
         }
         public event EventHandler<Hermes> SendHermes;
+        private readonly double assets;
+        private readonly string code;
     }
 }
