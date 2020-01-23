@@ -199,7 +199,7 @@ namespace ShareInvest.OpenAPI
             using (var db = new GoblinBatDbContext())
             {
                 foreach (var temp in db.Codes.ToList())
-                    if (temp.Code.Length < 7 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
+                    if (temp.Code.Length == 6 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
                         list.Add(temp.Code);
             }
             return list;
@@ -209,7 +209,7 @@ namespace ShareInvest.OpenAPI
             using (var db = new GoblinBatDbContext())
             {
                 foreach (var temp in db.Codes.ToList())
-                    if (temp.Code.Length < 7 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(temp.Code)).Min(o => o.Date).ToString().Substring(0, 6))))
+                    if (temp.Code.Length == 6 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(temp.Code)).Min(o => o.Date).ToString().Substring(0, 6))))
                         list.Add(temp.Code);
             }
             return list;
