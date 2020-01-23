@@ -1,5 +1,5 @@
 ﻿using System.Collections;
-using ShareInvest.Storage;
+using ShareInvest.Catalog;
 
 namespace ShareInvest.OpenAPI
 {
@@ -24,7 +24,8 @@ namespace ShareInvest.OpenAPI
             주식종목정보 = 14,
             주식시세 = 15,
             주식시간외호가 = 16,
-            파생실시간상하한 = 17
+            파생실시간상하한 = 17,
+            시간외종목정보 = 18
         }
         internal readonly IEnumerable[] type =
         {
@@ -46,12 +47,12 @@ namespace ShareInvest.OpenAPI
             new 주식시세(),
             new 주식시간외호가(),
             new 파생실시간상하한(),
+            new 시간외종목정보(),
             new ELW_이론가(),
             new ELW_지표(),
             new ETF_NAV(),
             new 선물옵션합계(),
             new 순간체결량(),
-            new 시간외종목정보(),
             new 업종등락(),
             new 업종지수(),
             new 임의연장정보(),

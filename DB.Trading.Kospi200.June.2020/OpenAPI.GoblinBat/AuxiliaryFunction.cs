@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ShareInvest.Catalog;
 using ShareInvest.GoblinBatContext;
+using ShareInvest.Message;
 using ShareInvest.Models;
 
 namespace ShareInvest.OpenAPI
@@ -20,28 +21,6 @@ namespace ShareInvest.OpenAPI
             int check = dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 3 : 2;
 
             return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString("yyyyMM") : DateTime.Now.ToString("yyyyMM");
-        }
-        protected void SetStorage(string code, string[] param, string day)
-        {
-            IList model = new List<Days>(32);
-
-            /*
-            model.Add(new Days
-                {
-                    Code = code,
-                    Date = int.Parse(temp[0]),
-                    Price = double.Parse(temp[1])
-                });
-
-            else if (code.Contains("101") && code.Length > 6)
-                    db.BulkInsert((List<Days>)model, o =>
-                    {
-                        o.InsertIfNotExists = true;
-                        o.BatchSize = 10000;
-                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                        o.AutoMapOutputDirection = false;
-                    });
-                */
         }
         protected void SetStorage(string code, string[] param)
         {
@@ -57,9 +36,9 @@ namespace ShareInvest.OpenAPI
                         db.Configuration.AutoDetectChangesEnabled = false;
                         string date = string.Empty;
                         int i, count = 0;
-                        bool stocks = code.Length == 6, futures = code.Length > 6 && code.Substring(5, 3).Equals("000"), options = code.Length > 6 && !code.Substring(5, 3).Equals("000");
+                        bool days = param[0].Split(',')[0].Length == 8, stocks = code.Length == 6, futures = code.Length > 6 && code.Substring(5, 3).Equals("000"), options = code.Length > 6 && !code.Substring(5, 3).Equals("000");
 
-                        IList model = new List<Stocks>(32);
+                        IList model;
 
                         if (futures)
                             model = new List<Futures>(32);
@@ -67,11 +46,27 @@ namespace ShareInvest.OpenAPI
                         else if (options)
                             model = new List<Options>(32);
 
+                        else if (days)
+                            model = new List<Days>(32);
+
+                        else
+                            model = new List<Stocks>(32);
+
                         for (i = param.Length - 2; i > -1; i--)
                         {
                             var temp = param[i].Split(',');
 
-                            if (temp[0].Equals(date))
+                            if (temp[0].Length == 8)
+                            {
+                                model.Add(new Days
+                                {
+                                    Code = code,
+                                    Date = int.Parse(temp[0]),
+                                    Price = double.Parse(temp[1])
+                                });
+                                continue;
+                            }
+                            else if (temp[0].Equals(date))
                                 count++;
 
                             else
@@ -106,7 +101,15 @@ namespace ShareInvest.OpenAPI
                         }
                         db.Configuration.AutoDetectChangesEnabled = true;
 
-                        if (stocks)
+                        if (days)
+                            db.BulkInsert((List<Days>)model, o =>
+                            {
+                                o.InsertIfNotExists = true;
+                                o.BatchSize = 10000;
+                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                                o.AutoMapOutputDirection = false;
+                            });
+                        else if (stocks)
                             db.BulkInsert((List<Stocks>)model, o =>
                             {
                                 o.InsertIfNotExists = true;
@@ -177,15 +180,19 @@ namespace ShareInvest.OpenAPI
                         case 2:
                             max = db.Stocks.Where(o => o.Code.Equals(code)).Max(o => o.Date);
                             break;
+
+                        case 5:
+                            max = db.Days.Where(o => o.Code.Equals(code)).Max(o => o.Date);
+                            break;
                     };
-                    return max > 0 ? max.ToString().Substring(0, 12) : "DoesNotExist";
+                    return max > 0 ? (max.ToString().Length > 12 ? max.ToString().Substring(0, 12) : max.ToString()) : "DoesNotExist";
                 }
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.ToString(), code);
                 }
             }
-            return max > 0 ? max.ToString().Substring(0, 12) : "DoesNotExist";
+            return "DoesNotExist";
         }
         protected List<string> RequestCodeList(List<string> list, string[] market)
         {
@@ -197,6 +204,16 @@ namespace ShareInvest.OpenAPI
             }
             return list;
         }
+        protected List<string> RequestCodeList(List<string> list)
+        {
+            using (var db = new GoblinBatDbContext())
+            {
+                foreach (var temp in db.Codes.ToList())
+                    if (temp.Code.Length < 7 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(temp.Code)).Min(o => o.Date).ToString().Substring(0, 6))))
+                        list.Add(temp.Code);
+            }
+            return list;
+        }
         protected void FixUp(string[] info)
         {
             if (info[0].Length > 0)
@@ -204,40 +221,39 @@ namespace ShareInvest.OpenAPI
         }
         protected List<string> SetCodeStorage(string[] arr)
         {
-            int i, l = arr.Length;
+            int i = 0;
             StringBuilder sb = new StringBuilder(1024);
             List<string> inven = new List<string>(16);
+            CodeStorage = arr;
 
-            for (i = 0; i < l; i++)
-            {
-                if (arr[i].Length > 0)
+            foreach (string code in arr)
+                if (code.Length > 0)
                 {
-                    if (i % 100 < 99 && i != l - 2)
+                    if (i++ % 100 == 99)
                     {
-                        sb.Append(arr[i]).Append(";");
-
-                        continue;
-                    }
-                    if (i % 100 == 99 || i == l - 2)
-                    {
-                        sb.Append(arr[i]);
-                        inven.Add(sb.ToString().Trim());
+                        inven.Add(sb.Append(code).ToString());
                         sb = new StringBuilder(1024);
 
                         continue;
                     }
+                    sb.Append(code).Append(";");
                 }
-            }
+            inven.Add(sb.Remove(sb.Length - 1, 1).ToString());
+
             return inven;
+        }
+        protected string[] CodeStorage
+        {
+            get; private set;
         }
         protected readonly IEnumerable[] catalog =
         {
             new Opt50028(),
             new Opt50066(),
             new Opt10079(),
+            new Opt10081(),
             new Opt50001(),
             new OPTKWFID(),
-            new Opt10081()
         };
         protected readonly string[] exclude =
         {

@@ -28,10 +28,11 @@ namespace ShareInvest.EventHandler
         public Memorize(StringBuilder sb)
         {
             string[] arr = sb.ToString().Split(';');
+            bool days = arr[0].Equals(string.Empty) && arr[4].Length == 8;
 
-            Date = arr[2].Substring(2);
-            Price = arr[0];
-            Volume = arr[1];
+            Date = days ? arr[4] : arr[2].Substring(2);
+            Price = days ? arr[1] : arr[0];
+            Volume = days ? arr[2] : arr[1];
         }
         public Memorize(string sPrevNext, string code)
         {
@@ -45,6 +46,10 @@ namespace ShareInvest.EventHandler
 
             if (arr.Length > 2)
                 Volume = arr[2];
+        }
+        public Memorize(string clear)
+        {
+            SPrevNext = clear;
         }
     }
 }

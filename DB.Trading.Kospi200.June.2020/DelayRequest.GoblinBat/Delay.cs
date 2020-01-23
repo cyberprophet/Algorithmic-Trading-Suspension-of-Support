@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using ShareInvest.Message;
 
 namespace ShareInvest.DelayRequest
 {
@@ -39,9 +40,9 @@ namespace ShareInvest.DelayRequest
                         }
                         Thread.Sleep(100);
                     }
-                    catch (Exception exception)
+                    catch (Exception ex)
                     {
-                        Console.WriteLine(exception.Message);
+                        new ExceptionMessage(ex.ToString());
                     }
                 }
             });

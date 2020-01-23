@@ -1,4 +1,6 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
+using ShareInvest.EventHandler;
 using ShareInvest.OpenAPI;
 
 namespace ShareInvest.DataBase
@@ -13,8 +15,13 @@ namespace ShareInvest.DataBase
             api.StartProgress();
             new Temporary();
             WindowState = FormWindowState.Minimized;
+            api.SendCount += OnReceiveNotifyIcon;
         }
-        private void GoblinBatResize(object sender, System.EventArgs e)
+        private void OnReceiveNotifyIcon(object sender, NotifyIconText e)
+        {
+            notifyIcon.Text = e.Count;
+        }
+        private void GoblinBatResize(object sender, EventArgs e)
         {
             if (WindowState.Equals(FormWindowState.Minimized))
             {
