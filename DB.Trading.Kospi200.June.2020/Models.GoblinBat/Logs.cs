@@ -5,7 +5,7 @@ namespace ShareInvest.Models
 {
     public class Logs
     {
-        [Key, Column(Order = 1), MaxLength(8)]
+        [Key, Column(Order = 1), MinLength(6), MaxLength(8)]
         public string Code
         {
             get; set;
@@ -35,7 +35,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Column(Order = 7)]
+        [Column(Order = 7), Range(100101, 991230)]
         public int Date
         {
             get; set;

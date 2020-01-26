@@ -4,7 +4,7 @@ namespace ShareInvest.Models
 {
     public class Codes
     {
-        [Key, MaxLength(8)]
+        [Key, MaxLength(8), MinLength(6)]
         public string Code
         {
             get; set;

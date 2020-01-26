@@ -1,4 +1,5 @@
-﻿using System.Data.Entity;
+﻿using System;
+using System.Data.Entity;
 using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
@@ -8,6 +9,10 @@ namespace ShareInvest.GoblinBatContext
         public GoblinBatDbContext() : base(new Secret().ConnectionString)
         {
 
+        }
+        public GoblinBatDbContext(int secondary) : base(new Secret().ConnectionDenney)
+        {
+            Console.Write(secondary);
         }
         public override int SaveChanges()
         {

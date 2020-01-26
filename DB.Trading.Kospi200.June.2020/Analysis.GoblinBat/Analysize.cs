@@ -46,6 +46,13 @@ namespace ShareInvest.Analysis
             {
                 if (db.Logs.Any(o => o.Code.Equals(strategy.Code) && o.Strategy.Equals(strategy.Strategy) && o.Assets.Equals(strategy.Assets) && o.Time.Equals(strategy.Time) && o.Short.Equals(strategy.Short) && o.Long.Equals(strategy.Long) && o.Date.Equals(DateTime.Now.ToString("yyMMdd"))))
                     StartBackTesting(SetStrategy(new Random()));
+
+                else if (strategy.Code.Length == 8)
+                {
+                    var daily = db.Days.Where(o => o.Code.Contains(strategy.Code.Substring(0, 3)) && o.Code.Contains(strategy.Code.Substring(5, 3))).OrderBy(o => o.Date).ToList();
+                    var tick = db.Futures.Where(o => o.Code.Contains(strategy.Code.Substring(0, 3)) && o.Code.Contains(strategy.Code.Substring(5, 3))).OrderBy(o => o.Date).ToList();
+
+                }
             }
         }
         public Analysize()

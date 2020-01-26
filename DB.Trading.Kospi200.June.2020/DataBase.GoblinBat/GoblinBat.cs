@@ -21,7 +21,7 @@ namespace ShareInvest.DataBase
         {
             notifyIcon.Text = e.Count;
 
-            if (e.Count.Equals("0"))
+            if (notifyIcon.Text.Equals("0"))
                 notifyIcon.Text = "GoblinBat";
         }
         private void GoblinBatResize(object sender, EventArgs e)

@@ -5,12 +5,12 @@ namespace ShareInvest.Models
 {
     public class Stocks
     {
-        [Key, Column(Order = 1), MaxLength(6)]
+        [Key, Column(Order = 1), StringLength(6)]
         public string Code
         {
             get; set;
         }
-        [Key, Column(Order = 2)]
+        [Key, Column(Order = 2), Range(190101090000000, 990101090000000)]
         public long Date
         {
             get; set;

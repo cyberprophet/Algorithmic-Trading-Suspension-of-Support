@@ -13,11 +13,14 @@ namespace ShareInvest.DataBase
         {
             int remaining;
 
-            if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
+            if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) && DateTime.Now.Hour > 3 && DateTime.Now.Hour < 5)
                 remaining = 30;
 
-            else
+            else if (DateTime.Now.Hour > 3 && DateTime.Now.Hour < 5)
                 remaining = 5;
+
+            else
+                remaining = 1;
 
             do
             {
