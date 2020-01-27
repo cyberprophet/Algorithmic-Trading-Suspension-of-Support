@@ -108,8 +108,15 @@ namespace ShareInvest.OpenAPI
                     else if (param[0].Equals("3") && DeadLine == false)
                     {
                         DeadLine = true;
-                        Delay.delay = 3705;
+                        Delay.delay = 205;
                         new Task(() => Code = RequestCodeList(new List<string>(32))).Start();
+                    }
+                    else if (param[0].Equals("0") && DateTime.Now.Hour < 9)
+                    {
+                        new ExceptionMessage(param[1], param[2]);
+                        Process.Start("shutdown.exe", "-r");
+                        Application.ExitThread();
+                        Application.Exit();
                     }
                     break;
             };
@@ -265,18 +272,19 @@ namespace ShareInvest.OpenAPI
             foreach (string output in SetCodeStorage(market))
                 RemainingDay(output);
 
-            if (DateTime.Now.Hour > 8 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false && TimerBox.Show("Waiting to Receive. . .", "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)market.Length * 15).Equals(DialogResult.OK))
+            if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && TimerBox.Show("Waiting to Receive. . .", "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)market.Length * 15).Equals(DialogResult.OK) && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
             {
                 DeadLine = true;
                 Code = RequestCodeList(new List<string>(32));
                 Request(GetRandomCode(new Random(e.nErrCode).Next(0, Code.Count)));
+                Delay.delay = 205;
             }
             else if (TimerBox.Show("Waiting to Receive. . .", "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)market.Length * 15).Equals(DialogResult.OK))
             {
                 Code = RequestCodeList(new List<string>(32), market);
-                Request(API.GetFutureCodeByIndex(ErrorCode));
+                Request(GetRandomCode(new Random(e.nErrCode).Next(0, Code.Count)));
+                Delay.delay = 4135;
             }
-            Delay.delay = 4135;
         }
         private string GetRandomCode(int index)
         {
