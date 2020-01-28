@@ -51,14 +51,13 @@ namespace ShareInvest.OpenAPI
                 ErrorCode = API.CommConnect();
 
                 if (ErrorCode != 0)
-                {
                     new ExceptionMessage(new Error().GetErrorMessage(ErrorCode));
 
-                    Console.WriteLine(ErrorCode);
-                }
                 return;
             }
-            Environment.Exit(0);
+            Process.Start("shutdown.exe", "-r");
+            Application.ExitThread();
+            Application.Exit();
         }
         public static ConnectAPI GetInstance()
         {
@@ -104,12 +103,19 @@ namespace ShareInvest.OpenAPI
                         DeadLine = false;
                         Delay.delay = 3705;
                         Code = RequestCodeList(new List<string>(32), CodeStorage);
+                        SendMemorize?.Invoke(this, new Memorize("Clear"));
+                        Request(GetRandomCode(new Random().Next(0, Code.Count)));
                     }
                     else if (param[0].Equals("3") && DeadLine == false)
                     {
                         DeadLine = true;
                         Delay.delay = 205;
-                        new Task(() => Code = RequestCodeList(new List<string>(32))).Start();
+                        new Task(() =>
+                        {
+                            Code = RequestCodeList(new List<string>(32));
+                            SendMemorize?.Invoke(this, new Memorize("Clear"));
+                            Request(GetRandomCode(new Random().Next(0, Code.Count)));
+                        }).Start();
                     }
                     else if (param[0].Equals("0") && DateTime.Now.Hour < 9)
                     {
@@ -221,10 +227,21 @@ namespace ShareInvest.OpenAPI
         {
             int i, l;
             string exclusion, date = GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
-            Code = new List<string>
+
+            try
             {
-                API.GetFutureCodeByIndex(e.nErrCode)
-            };
+                Code = new List<string>
+                {
+                    API.GetFutureCodeByIndex(e.nErrCode)
+                };
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.ToString());
+                Process.Start("shutdown.exe", "-r");
+                Application.ExitThread();
+                Application.Exit();
+            }
             for (i = 2; i < 4; i++)
                 foreach (var om in API.GetActPriceList().Split(';'))
                 {

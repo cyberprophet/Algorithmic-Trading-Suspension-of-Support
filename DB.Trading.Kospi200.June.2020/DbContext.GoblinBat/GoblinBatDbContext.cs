@@ -10,7 +10,23 @@ namespace ShareInvest.GoblinBatContext
         {
 
         }
-        public GoblinBatDbContext(int secondary) : base(new Secret().ConnectionDenney)
+        public GoblinBatDbContext(float secondary) : base(new Secret().ConnectionDenney)
+        {
+            Console.Write(secondary);
+        }
+        public GoblinBatDbContext(int secondary) : base(new Secret().ConnectionShare)
+        {
+            Console.Write(secondary);
+        }
+        public GoblinBatDbContext(bool secondary) : base(new Secret().ConnectionDenneyString)
+        {
+            Console.Write(secondary);
+        }
+        public GoblinBatDbContext(string secondary) : base(new Secret().ConnectionExternalDenney)
+        {
+            Console.Write(secondary);
+        }
+        public GoblinBatDbContext(char secondary) : base(new Secret().ConnectionExternalShareInvest)
         {
             Console.Write(secondary);
         }

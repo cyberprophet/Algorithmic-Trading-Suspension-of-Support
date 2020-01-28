@@ -96,7 +96,7 @@ namespace ShareInvest.OpenAPI
                                 Volume = int.Parse(temp[2])
                             });
                     }
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext("S"))
                     {
                         db.Configuration.AutoDetectChangesEnabled = true;
 
@@ -134,7 +134,7 @@ namespace ShareInvest.OpenAPI
                             });
                         db.Configuration.AutoDetectChangesEnabled = false;
                     }
-                    using (var db = new GoblinBatDbContext(0))
+                    using (var db = new GoblinBatDbContext('S'))
                     {
                         db.Configuration.AutoDetectChangesEnabled = true;
 
@@ -183,7 +183,7 @@ namespace ShareInvest.OpenAPI
         {
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext("S"))
                 {
                     if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any() == false)
                     {
@@ -196,7 +196,7 @@ namespace ShareInvest.OpenAPI
                         db.SaveChanges();
                     }
                 }
-                using (var db = new GoblinBatDbContext(0))
+                using (var db = new GoblinBatDbContext('S'))
                 {
                     if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any() == false)
                     {
@@ -214,7 +214,7 @@ namespace ShareInvest.OpenAPI
         protected string Retention(int param, string code)
         {
             long max = 0;
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext("S"))
             {
                 try
                 {
@@ -247,7 +247,7 @@ namespace ShareInvest.OpenAPI
         }
         protected List<string> RequestCodeList(List<string> list, string[] market)
         {
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext("S"))
             {
                 foreach (var temp in db.Codes.ToList())
                     if (temp.Code.Length == 6 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
@@ -257,7 +257,7 @@ namespace ShareInvest.OpenAPI
         }
         protected List<string> RequestCodeList(List<string> list)
         {
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext("S"))
             {
                 foreach (var temp in db.Codes.ToList())
                     if (temp.Code.Length == 6 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(temp.Code)).Min(o => o.Date).ToString().Substring(0, 6))))

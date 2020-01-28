@@ -42,7 +42,7 @@ namespace ShareInvest.Analysis
         }
         private void StartBackTesting(StrategyComposition strategy)
         {
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext("S"))
             {
                 if (db.Logs.Any(o => o.Code.Equals(strategy.Code) && o.Strategy.Equals(strategy.Strategy) && o.Assets.Equals(strategy.Assets) && o.Time.Equals(strategy.Time) && o.Short.Equals(strategy.Short) && o.Long.Equals(strategy.Long) && o.Date.Equals(DateTime.Now.ToString("yyMMdd"))))
                     StartBackTesting(SetStrategy(new Random()));
