@@ -41,6 +41,7 @@ namespace ShareInvest.BackTesting
                 if (GetRecentAnalysis(param) == false)
                     new Analysize(param);
             }));
+            new BackTesting();
         }
         private int[] Time
         {

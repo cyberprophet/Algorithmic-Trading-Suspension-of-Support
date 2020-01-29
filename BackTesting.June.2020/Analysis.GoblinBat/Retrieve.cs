@@ -1,5 +1,6 @@
-﻿using System.Collections;
+﻿using System.Collections.Generic;
 using ShareInvest.CallUpDataBase;
+using ShareInvest.Strategy;
 
 namespace ShareInvest.Analysis
 {
@@ -9,7 +10,7 @@ namespace ShareInvest.Analysis
         {
             Chart = GetChart(code);
         }
-        public IList Chart
+        public Queue<Chart> Chart
         {
             get;
         }
