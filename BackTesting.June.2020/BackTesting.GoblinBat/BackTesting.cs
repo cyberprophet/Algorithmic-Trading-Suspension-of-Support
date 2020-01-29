@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using ShareInvest.Analysis;
 using ShareInvest.CallUpDataBase;
 using ShareInvest.Strategy;
 
@@ -13,7 +15,7 @@ namespace ShareInvest.BackTesting
         }
         internal BackTesting(long assets)
         {
-            Code = GetRecentFuturesCode(GetRegister());
+            Retrieve.GetInstance(Code = GetRecentFuturesCode(GetRegister()));
             var list = new List<Specify>();
             int i, j;
 
@@ -30,6 +32,15 @@ namespace ShareInvest.BackTesting
                                 Short = time < 0 ? i * 15 : i,
                                 Long = time < 0 ? j * 10 : j
                             });
+            Parallel.ForEach(list, new ParallelOptions
+            {
+                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 1.2)
+            },
+            new Action<Specify>(param =>
+            {
+                if (GetRecentAnalysis(param) == false)
+                    new Analysize(param);
+            }));
         }
         private int[] Time
         {
