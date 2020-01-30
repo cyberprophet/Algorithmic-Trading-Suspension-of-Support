@@ -42,7 +42,7 @@ namespace ShareInvest.DelayRequest
                     }
                     catch (Exception ex)
                     {
-                        new ExceptionMessage(ex.ToString());
+                        new ExceptionMessage(ex.StackTrace);
                     }
                 }
             });

@@ -117,9 +117,8 @@ namespace ShareInvest.OpenAPI
                             Request(GetRandomCode(new Random().Next(0, Code.Count)));
                         }).Start();
                     }
-                    else if (param[0].Equals("0") && DateTime.Now.Hour < 9)
+                    else if (param[0].Equals("0") && param[2].Equals("002000"))
                     {
-                        new ExceptionMessage(param[1], param[2]);
                         Process.Start("shutdown.exe", "-r");
                         Application.ExitThread();
                         Application.Exit();
@@ -169,26 +168,42 @@ namespace ShareInvest.OpenAPI
                     }
                     if (DeadLine && (e.sRQName.Split(';')[1].Length == 8 || e.sRQName.Split(';')[1].Equals("DoesNotExist")) && e.sPrevNext.Equals("2"))
                     {
-                        request.RequestTrData(new Task(() => InputValueRqData(new Opt10081 { Value = e.sRQName.Split(';')[0], RQName = e.sRQName, PrevNext = 2 })));
-
+                        request.RequestTrData(new Task(() => InputValueRqData(new Opt10081
+                        {
+                            Value = e.sRQName.Split(';')[0],
+                            RQName = e.sRQName,
+                            PrevNext = 2
+                        })));
                         return;
                     }
                     if (DeadLine == false && e.sRQName.Split(';')[0].Length == 6 && e.sPrevNext.Equals("2"))
                     {
-                        request.RequestTrData(new Task(() => InputValueRqData(new Opt10079 { Value = e.sRQName.Split(';')[0], RQName = e.sRQName, PrevNext = 2 })));
-
+                        request.RequestTrData(new Task(() => InputValueRqData(new Opt10079
+                        {
+                            Value = e.sRQName.Split(';')[0],
+                            RQName = e.sRQName,
+                            PrevNext = 2
+                        })));
                         return;
                     }
                     if (DeadLine == false && e.sRQName.Substring(5, 3).Equals("000") && e.sPrevNext.Equals("2"))
                     {
-                        request.RequestTrData(new Task(() => InputValueRqData(new Opt50028 { Value = e.sRQName.Substring(0, 8), RQName = e.sRQName, PrevNext = 2 })));
-
+                        request.RequestTrData(new Task(() => InputValueRqData(new Opt50028
+                        {
+                            Value = e.sRQName.Substring(0, 8),
+                            RQName = e.sRQName,
+                            PrevNext = 2
+                        })));
                         return;
                     }
                     if (DeadLine == false && e.sRQName.Split(';')[0].Length == 8 && e.sPrevNext.Equals("2"))
                     {
-                        request.RequestTrData(new Task(() => InputValueRqData(new Opt50066 { Value = e.sRQName.Substring(0, 8), RQName = e.sRQName, PrevNext = 2 })));
-
+                        request.RequestTrData(new Task(() => InputValueRqData(new Opt50066
+                        {
+                            Value = e.sRQName.Substring(0, 8),
+                            RQName = e.sRQName,
+                            PrevNext = 2
+                        })));
                         return;
                     }
                     if (e.sPrevNext.Equals("0"))
@@ -237,7 +252,7 @@ namespace ShareInvest.OpenAPI
             }
             catch (Exception ex)
             {
-                new ExceptionMessage(ex.ToString());
+                new ExceptionMessage(ex.StackTrace);
                 Process.Start("shutdown.exe", "-r");
                 Application.ExitThread();
                 Application.Exit();
@@ -294,7 +309,7 @@ namespace ShareInvest.OpenAPI
                 DeadLine = true;
                 Code = RequestCodeList(new List<string>(32));
                 Request(GetRandomCode(new Random(e.nErrCode).Next(0, Code.Count)));
-                Delay.delay = 205;
+                Delay.delay = 3705;
             }
             else if (TimerBox.Show("Waiting to Receive. . .", "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)market.Length * 15).Equals(DialogResult.OK))
             {
@@ -305,7 +320,10 @@ namespace ShareInvest.OpenAPI
         }
         private string GetRandomCode(int index)
         {
-            if (Code[index] != null)
+            if (Code.Count < 1)
+                return string.Empty;
+
+            else if (Code[index] != null)
             {
                 var temp = Code[index];
                 Code.Remove(temp);
@@ -352,13 +370,19 @@ namespace ShareInvest.OpenAPI
         {
             if (code.Length < 9 && code.Length > 6)
             {
-                request.RequestTrData(new Task(() => InputValueRqData(new Opt50001 { Value = code, RQName = code })));
-
+                request.RequestTrData(new Task(() => InputValueRqData(new Opt50001
+                {
+                    Value = code,
+                    RQName = code
+                })));
                 return;
             }
             request.RequestTrData(new Task(() =>
             {
-                ITR tr = new OPTKWFID { Value = code };
+                ITR tr = new OPTKWFID
+                {
+                    Value = code
+                };
                 ErrorCode = API.CommKwRqData(tr.Value, 0, 100, tr.PrevNext, tr.RQName, tr.ScreenNo);
 
                 if (ErrorCode < 0)

@@ -34,7 +34,6 @@ namespace ShareInvest.OpenAPI
                     string date = string.Empty;
                     int i, count = 0;
                     bool days = param[0].Split(',')[0].Length == 8, stocks = code.Length == 6, futures = code.Length > 6 && code.Substring(5, 3).Equals("000"), options = code.Length > 6 && !code.Substring(5, 3).Equals("000");
-
                     IList model;
 
                     if (futures)
@@ -96,7 +95,7 @@ namespace ShareInvest.OpenAPI
                                 Volume = int.Parse(temp[2])
                             });
                     }
-                    using (var db = new GoblinBatDbContext("S"))
+                    using (var db = new GoblinBatDbContext())
                     {
                         db.Configuration.AutoDetectChangesEnabled = true;
 
@@ -134,7 +133,7 @@ namespace ShareInvest.OpenAPI
                             });
                         db.Configuration.AutoDetectChangesEnabled = false;
                     }
-                    using (var db = new GoblinBatDbContext('S'))
+                    using (var db = new GoblinBatDbContext(3.14F))
                     {
                         db.Configuration.AutoDetectChangesEnabled = true;
 
@@ -175,7 +174,7 @@ namespace ShareInvest.OpenAPI
                 }
                 catch (Exception ex)
                 {
-                    new ExceptionMessage(ex.ToString());
+                    new ExceptionMessage(ex.StackTrace);
                 }
             }).Start();
         }
@@ -183,7 +182,7 @@ namespace ShareInvest.OpenAPI
         {
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext("S"))
+                using (var db = new GoblinBatDbContext())
                 {
                     if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any() == false)
                     {
@@ -196,7 +195,7 @@ namespace ShareInvest.OpenAPI
                         db.SaveChanges();
                     }
                 }
-                using (var db = new GoblinBatDbContext('S'))
+                using (var db = new GoblinBatDbContext(3.14F))
                 {
                     if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any() == false)
                     {
@@ -214,7 +213,7 @@ namespace ShareInvest.OpenAPI
         protected string Retention(int param, string code)
         {
             long max = 0;
-            using (var db = new GoblinBatDbContext("S"))
+            using (var db = new GoblinBatDbContext())
             {
                 try
                 {
@@ -238,18 +237,26 @@ namespace ShareInvest.OpenAPI
                     };
                     return max > 0 ? (max.ToString().Length > 12 ? max.ToString().Substring(0, 12) : max.ToString()) : "DoesNotExist";
                 }
+                catch (InvalidOperationException ex)
+                {
+                    new ExceptionMessage(ex.TargetSite.Name, code);
+                }
                 catch (Exception ex)
                 {
-                    new ExceptionMessage(ex.ToString(), code);
+                    new ExceptionMessage(ex.StackTrace, code);
                 }
             }
             return "DoesNotExist";
         }
         protected List<string> RequestCodeList(List<string> list, string[] market)
         {
-            using (var db = new GoblinBatDbContext("S"))
+            using (var db = new GoblinBatDbContext())
             {
-                foreach (var temp in db.Codes.ToList())
+                foreach (var temp in db.Codes.Select(o => new
+                {
+                    o.Code,
+                    o.Info
+                }))
                     if (temp.Code.Length == 6 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
                         list.Add(temp.Code);
             }
@@ -257,11 +264,68 @@ namespace ShareInvest.OpenAPI
         }
         protected List<string> RequestCodeList(List<string> list)
         {
-            using (var db = new GoblinBatDbContext("S"))
+            string code = string.Empty;
+
+            try
             {
-                foreach (var temp in db.Codes.ToList())
-                    if (temp.Code.Length == 6 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(temp.Code)).Min(o => o.Date).ToString().Substring(0, 6))))
-                        list.Add(temp.Code);
+                using (var db = new GoblinBatDbContext())
+                {
+                    foreach (var temp in db.Codes.Select(o => new
+                    {
+                        o.Code
+                    }))
+                    {
+                        code = temp.Code;
+
+                        if (db.Codes.Any(o => o.Code.Length < 6))
+                            db.Codes.BulkDelete(db.Codes.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
+
+                        if (db.Days.Any(o => o.Code.Equals(temp.Code) && o.Date < 10000000))
+                        {
+                            db.Days.BulkDelete(db.Days.Where(o => o.Date < 10000000), o => o.BatchSize = 100);
+
+                            if (db.Days.Any(o => o.Code.Length < 6))
+                                db.Days.BulkDelete(db.Days.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
+                        }
+                        if (temp.Code.Length == 6 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(code)).Min(o => o.Date).ToString().Substring(0, 6))))
+                        {
+                            list.Add(temp.Code);
+
+                            if (db.Stocks.Any(o => o.Code.Length < 6))
+                                db.Stocks.BulkDelete(db.Stocks.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
+                        }
+                        else if (temp.Code.Length == 8 && temp.Code.Substring(5, 3).Equals("000") && db.Futures.Any(o => o.Date < 100000000000000))
+                        {
+                            db.Futures.BulkDelete(db.Futures.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
+
+                            if (db.Futures.Any(o => o.Code.Length < 8))
+                                db.Futures.BulkDelete(db.Futures.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
+                        }
+                        else if (temp.Code.Length == 8 && temp.Code.Substring(5, 3).Equals("000") == false && db.Options.Any(o => o.Date < 100000000000000))
+                        {
+                            db.Options.BulkDelete(db.Options.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
+
+                            if (db.Options.Any(o => o.Code.Length < 8))
+                                db.Options.BulkDelete(db.Options.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
+                        }
+                    }
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
+            catch (Exception ex)
+            {
+                using (var db = new GoblinBatDbContext())
+                {
+                    var stocks = db.Stocks.Where(o => o.Code.Equals(code));
+
+                    if (stocks.Any(o => o.Date < 100000000000000))
+                        db.Stocks.BulkDelete(stocks.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
+                }
+                new ExceptionMessage(ex.StackTrace, code);
+                RequestCodeList(new List<string>());
             }
             return list;
         }

@@ -37,7 +37,7 @@ namespace ShareInvest.Message
             }
             catch (Exception ex)
             {
-                Record(ex.ToString());
+                Record(ex.StackTrace);
             }
         }
         private readonly string code;
