@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using ShareInvest.GoblinBatControls;
 
 namespace ShareInvest.EventHandler
@@ -20,6 +21,10 @@ namespace ShareInvest.EventHandler
         public NotifyIconText(StatisticalAnalysis analysis)
         {
             NotifyIcon = analysis;
+        }
+        public NotifyIconText(string account, string id, string name, string server)
+        {
+            NotifyIcon = new StringBuilder(account).Append(id).Append(';').Append(name).Append(';').Append(server);
         }
     }
 }

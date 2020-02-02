@@ -49,9 +49,26 @@ namespace ShareInvest.Strategy
             Short.Push(popShort);
             Long.Push(popLong);
 
-            if (Math.Abs(api.Quantity + quantity) < max)
+            if (Math.Abs(api.Quantity + quantity) < max && api.RequestQueueCount == 0)
             {
+                var difference = max - Math.Abs(api.Quantity);
+                var classification = quantity == 1 ? "2" : "1";
+                var name = string.Concat(specify.Code, classification);
 
+                for (i = 0; i < (difference > 5 ? 5 : difference); i++)
+                    api.OnReceiveOrder(new PurchaseInformation
+                    {
+                        RQName = string.Concat(name, i),
+                        ScreenNo = string.Concat(classification, i, "00"),
+                        AccNo = "",
+                        Code = specify.Code,
+                        OrdKind = 1,
+                        SlbyTP = classification,
+                        OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                        Qty = 1,
+                        Price = api.FuturesQuotes[name][i],
+                        OrgOrdNo = string.Empty
+                    });
             }
         }
         private bool GetCheckOnTimeByAPI(string time)

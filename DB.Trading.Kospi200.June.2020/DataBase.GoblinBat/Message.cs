@@ -10,6 +10,10 @@
         {
             this.remaining = remaining;
         }
+        internal Message(string name)
+        {
+            this.name = name;
+        }
         internal string RemainingTime
         {
             get
@@ -24,6 +28,14 @@
                 return "데이터 손실 및 수익에 영향을 줄 수 있습니다.\n\n정말 종료하시겠습니까?";
             }
         }
+        internal string Identify
+        {
+            get
+            {
+                return string.Concat(name, " 님은 등록되지 않은 사용자입니다.\n\n프로그램을 종료합니다.");
+            }
+        }
+        private readonly string name;
         private readonly int remaining;
     }
 }

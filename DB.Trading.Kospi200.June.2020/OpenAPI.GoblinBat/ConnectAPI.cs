@@ -9,9 +9,10 @@ using AxKHOpenAPILib;
 using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
-using ShareInvest.Interface;
-using ShareInvest.Message;
 using ShareInvest.GoblinBatControls;
+using ShareInvest.Interface;
+using ShareInvest.Interface.Struct;
+using ShareInvest.Message;
 
 namespace ShareInvest.OpenAPI
 {
@@ -20,6 +21,27 @@ namespace ShareInvest.OpenAPI
         public int Quantity
         {
             get; private set;
+        }
+        public int RequestQueueCount
+        {
+            get
+            {
+                return request.QueueCount;
+            }
+        }
+        public Dictionary<string, string[]> FuturesQuotes
+        {
+            get; private set;
+        }
+        public void OnReceiveOrder(PurchaseInformation o)
+        {
+            request.RequestTrData(new Task(() =>
+            {
+                ErrorCode = API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo);
+
+                if (ErrorCode != 0)
+                    new ExceptionMessage(new Error().GetErrorMessage(ErrorCode));
+            }));
         }
         public void SetAPI(AxKHOpenAPI axAPI)
         {
@@ -105,8 +127,33 @@ namespace ShareInvest.OpenAPI
                 case 1:
                     new Task(() =>
                     {
-                        if (e.sRealKey.Substring(0, 3).Equals("101"))
-                            SendDatum?.Invoke(this, new Datum(Sb.ToString().Split(';')));
+                        if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
+                            SendDatum?.Invoke(this, new Datum(param));
+                    }).Start();
+                    break;
+
+                case 2:
+                    new Task(() =>
+                    {
+                        if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
+                        {
+                            FuturesQuotes[string.Concat(e.sRealKey, 1)] = new string[]
+                            {
+                                param[3],
+                                param[11],
+                                param[19],
+                                param[27],
+                                param[35]
+                            };
+                            FuturesQuotes[string.Concat(e.sRealKey, 2)] = new string[]
+                            {
+                                param[7],
+                                param[15],
+                                param[23],
+                                param[31],
+                                param[39]
+                            };
+                        }
                     }).Start();
                     break;
 
@@ -326,6 +373,8 @@ namespace ShareInvest.OpenAPI
                 else
                 {
                     onlyOnce = true;
+                    FuturesQuotes = new Dictionary<string, string[]>();
+                    SendCount?.Invoke(this, new NotifyIconText(API.GetLoginInfo("ACCLIST"), API.GetLoginInfo("USER_ID"), API.GetLoginInfo("USER_NAME"), API.GetLoginInfo("GetServerGubun")));
                     SendCount?.Invoke(this, new NotifyIconText(StatisticalAnalysis.GetInstance(market)));
                     SendCount?.Invoke(this, new NotifyIconText(Code[0]));
                 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using ShareInvest.GoblinBatContext;
 using ShareInvest.Models;
@@ -17,28 +18,19 @@ namespace ShareInvest.GoblinBatControls
 
             return Statistical;
         }
-        private void StatisticalAnalysisResize(object sender, EventArgs e)
+        public Dictionary<string, string> CodeCatalog
         {
-            BeginInvoke(new Action(() =>
-            {
-                SuspendLayout();
-                codeGrid.AutoResizeColumns();
-                codeGrid.AutoResizeRows();
-                ResumeLayout();
-            }));
+            get; private set;
         }
         private StatisticalAnalysis()
         {
             InitializeComponent();
+            CodeCatalog = new Dictionary<string, string>(16);
 
             foreach (Codes codes in new CallUpStatisticalAnalysis())
                 if (codes.Code.Length == 6 && Array.Exists(Markets, o => o.Equals(codes.Code)) || codes.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(codes.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
-                    codeGrid.Rows.Add(new string[]
-                    {
-                        codes.Code,
-                        codes.Name,
-                        codes.Code.Length == 6 ? int.Parse(codes.Info).ToString("N0") : DateTime.ParseExact(codes.Info, "yyyyMMdd", null).ToString("yy-MM-dd")
-                    });
+                    CodeCatalog[codes.Name] = codes.Code;
+
             Markets = null;
         }
         private static StatisticalAnalysis Statistical

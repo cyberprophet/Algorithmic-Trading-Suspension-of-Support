@@ -5,6 +5,7 @@ using ShareInvest.OpenAPI;
 using ShareInvest.GoblinBatControls;
 using ShareInvest.Strategy;
 using ShareInvest.Interface.Struct;
+using ShareInvest.Message;
 
 namespace ShareInvest.GoblinBatForms
 {
@@ -56,6 +57,23 @@ namespace ShareInvest.GoblinBatForms
 
                 case "Int32":
                     notifyIcon.Text = e.NotifyIcon.ToString().Equals("0") ? "GoblinBat" : e.NotifyIcon.ToString();
+                    break;
+
+                case "StringBuilder":
+                    var check = e.NotifyIcon.ToString().Split(';');
+
+                    if (check[check.Length - 1].Equals("1") ? false : new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
+                    {
+                        TimerBox.Show(new Message(check[check.Length - 2]).Identify, "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750);
+                        Dispose();
+                        Environment.Exit(0);
+
+                        return;
+                    }
+                    for (int i = 0; i < check.Length - 3; i++)
+                    {
+                        var temp = check[i];
+                    }
                     break;
 
                 case "String":
