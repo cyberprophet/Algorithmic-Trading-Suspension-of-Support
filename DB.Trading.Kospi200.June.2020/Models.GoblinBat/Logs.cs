@@ -35,7 +35,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Column(Order = 7), Range(100101, 991230)]
+        [Key, Column(Order = 7), Range(100101, 991230)]
         public int Date
         {
             get; set;

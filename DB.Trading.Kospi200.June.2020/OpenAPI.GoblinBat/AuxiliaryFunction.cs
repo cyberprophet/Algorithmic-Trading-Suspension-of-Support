@@ -133,44 +133,6 @@ namespace ShareInvest.OpenAPI
                             });
                         db.Configuration.AutoDetectChangesEnabled = false;
                     }
-                    using (var db = new GoblinBatDbContext(3.14F))
-                    {
-                        db.Configuration.AutoDetectChangesEnabled = true;
-
-                        if (days)
-                            db.BulkInsert((List<Days>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        else if (stocks)
-                            db.BulkInsert((List<Stocks>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        else if (options)
-                            db.BulkInsert((List<Options>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        else if (futures)
-                            db.BulkInsert((List<Futures>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        db.Configuration.AutoDetectChangesEnabled = false;
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -184,29 +146,16 @@ namespace ShareInvest.OpenAPI
             {
                 using (var db = new GoblinBatDbContext())
                 {
-                    if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any() == false)
+                    if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
+                        return;
+
+                    db.Codes.AddOrUpdate(new Codes
                     {
-                        db.Codes.AddOrUpdate(new Codes
-                        {
-                            Code = code,
-                            Name = name,
-                            Info = info
-                        });
-                        db.SaveChanges();
-                    }
-                }
-                using (var db = new GoblinBatDbContext(3.14F))
-                {
-                    if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any() == false)
-                    {
-                        db.Codes.AddOrUpdate(new Codes
-                        {
-                            Code = code,
-                            Name = name,
-                            Info = info
-                        });
-                        db.SaveChanges();
-                    }
+                        Code = code,
+                        Name = name,
+                        Info = info
+                    });
+                    db.SaveChanges();
                 }
             }).Start();
         }

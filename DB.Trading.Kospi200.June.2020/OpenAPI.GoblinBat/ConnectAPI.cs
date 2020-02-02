@@ -11,11 +11,16 @@ using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 using ShareInvest.Message;
+using ShareInvest.GoblinBatControls;
 
 namespace ShareInvest.OpenAPI
 {
     public class ConnectAPI : AuxiliaryFunction
     {
+        public int Quantity
+        {
+            get; private set;
+        }
         public void SetAPI(AxKHOpenAPI axAPI)
         {
             API = axAPI;
@@ -70,12 +75,12 @@ namespace ShareInvest.OpenAPI
         {
             new ExceptionMessage(e.sMsg);
 
-            if (e.sMsg.Equals("서비스 TR을 확인바랍니다.(0006)"))
+            if (e.sMsg.Equals(new Message().TR))
             {
                 SendMemorize?.Invoke(this, new Memorize("Clear"));
                 Request(GetRandomCode(new Random().Next(0, Code.Count)));
             }
-            else if (e.sMsg.Equals("전문 처리 실패(-22)"))
+            else if (e.sMsg.Equals(new Message().Failure))
             {
                 Process.Start("shutdown.exe", "-r");
                 Application.ExitThread();
@@ -97,7 +102,15 @@ namespace ShareInvest.OpenAPI
 
             switch (index)
             {
-                case 6:
+                case 1:
+                    new Task(() =>
+                    {
+                        if (e.sRealKey.Substring(0, 3).Equals("101"))
+                            SendDatum?.Invoke(this, new Datum(Sb.ToString().Split(';')));
+                    }).Start();
+                    break;
+
+                case 9:
                     if (param[0].Equals("e") && DeadLine)
                     {
                         DeadLine = false;
@@ -241,6 +254,7 @@ namespace ShareInvest.OpenAPI
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
             int i, l;
+            bool onlyOnce = false;
             string exclusion, date = GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
 
             try
@@ -304,14 +318,31 @@ namespace ShareInvest.OpenAPI
             foreach (string output in SetCodeStorage(market))
                 RemainingDay(output);
 
-            if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && TimerBox.Show("Waiting to Receive. . .", "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)market.Length * 15).Equals(DialogResult.OK) && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
+            do
+            {
+                if (onlyOnce && TimerBox.Show(new Message().OnReceiveData, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)market.Length).Equals(DialogResult.OK))
+                    onlyOnce = true;
+
+                else
+                {
+                    onlyOnce = true;
+                    SendCount?.Invoke(this, new NotifyIconText(StatisticalAnalysis.GetInstance(market)));
+                    SendCount?.Invoke(this, new NotifyIconText(Code[0]));
+                }
+            }
+            while (request.QueueCount > 0);
+
+            if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
             {
                 DeadLine = true;
                 Code = RequestCodeList(new List<string>(32));
                 Request(GetRandomCode(new Random(e.nErrCode).Next(0, Code.Count)));
                 Delay.delay = 3705;
+
+                if (TimerBox.Show(new Message().SetPassword, "Information", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, (uint)market.Length).Equals(DialogResult.OK))
+                    API.KOA_Functions("ShowAccountWindow", "");
             }
-            else if (TimerBox.Show("Waiting to Receive. . .", "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)market.Length * 15).Equals(DialogResult.OK))
+            else
             {
                 Code = RequestCodeList(new List<string>(32), market);
                 Request(GetRandomCode(new Random(e.nErrCode).Next(0, Code.Count)));
@@ -341,9 +372,11 @@ namespace ShareInvest.OpenAPI
                 tr.Value = code;
                 tr.RQName = string.Concat(code, ";", Retention(param, code));
                 tr.PrevNext = 0;
-                request.RequestTrData(new Task(() => InputValueRqData(tr)));
-                SendCount?.Invoke(this, new NotifyIconText(Code.Count));
-
+                request.RequestTrData(new Task(() =>
+                {
+                    InputValueRqData(tr);
+                    SendCount?.Invoke(this, new NotifyIconText(Code.Count));
+                }));
                 return;
             }
             else if (Code.Count < 50)
@@ -436,6 +469,7 @@ namespace ShareInvest.OpenAPI
         private static ConnectAPI api;
         private readonly Delay request;
         private readonly RealType real;
+        public event EventHandler<Datum> SendDatum;
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<NotifyIconText> SendCount;
     }

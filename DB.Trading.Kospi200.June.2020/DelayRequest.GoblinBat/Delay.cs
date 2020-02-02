@@ -25,6 +25,13 @@ namespace ShareInvest.DelayRequest
         {
             requestTaskQueue.Enqueue(task);
         }
+        public int QueueCount
+        {
+            get
+            {
+                return requestTaskQueue.Count;
+            }
+        }
         private Delay()
         {
             taskWorker = new Thread(delegate ()

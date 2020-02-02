@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity.Migrations;
 using System.Linq;
+using System.Threading.Tasks;
 using ShareInvest.Interface.Struct;
+using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
 {
@@ -22,6 +25,16 @@ namespace ShareInvest.GoblinBatContext
                 return db.Logs.Any();
             }
         }
+        protected bool GetRemainingDate(string code, long date)
+        {
+            if (code.Length == 8 && date.ToString().Substring(6).Equals("151959000"))
+                using (var db = new GoblinBatDbContext())
+                {
+                    if (db.Codes.FirstOrDefault(o => o.Code.Equals(code)).Info.Substring(2).Equals(date.ToString().Substring(0, 6)))
+                        return true;
+                }
+            return false;
+        }
         protected Queue<Chart> GetChart(string code)
         {
             Queue<Chart> chart = new Queue<Chart>();
@@ -41,6 +54,7 @@ namespace ShareInvest.GoblinBatContext
                         o.Code,
                         o.Info
                     }).OrderBy(o => o.Info).ToList();
+
                     foreach (var temp in db.Days.Where(o => o.Code.Equals(code)).Select(o => new
                     {
                         o.Date,
@@ -86,6 +100,37 @@ namespace ShareInvest.GoblinBatContext
                     return db.Codes.FirstOrDefault(code => code.Info.Equals(db.Codes.Where(o => o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
                 }
             return string.Empty;
+        }
+        protected void SetStorage(Logs log)
+        {
+            new Task(() =>
+            {
+                using (var db = new GoblinBatDbContext())
+                {
+                    var check = db.Logs.Find(new object[]
+                    {
+                        log.Code,
+                        log.Strategy,
+                        log.Assets,
+                        log.Time,
+                        log.Short,
+                        log.Long,
+                        log.Date
+                    });
+                    if (check != null && db.Logs.Where(o => o.Cumulative.Equals(log.Cumulative) && check.Cumulative.Equals(log.Cumulative) && o.Revenue.Equals(log.Revenue) && check.Revenue.Equals(log.Revenue) && check.Unrealized.Equals(log.Unrealized) && o.Unrealized.Equals(log.Unrealized)).Any())
+                        return;
+
+                    db.Logs.AddOrUpdate(log);
+                    db.SaveChanges();
+                }
+            }).Start();
+        }
+        protected void DeleteLogs()
+        {
+            using (var db = new GoblinBatDbContext())
+            {
+                db.Logs.BulkDelete(db.Logs.Where(o => o.Code.Equals("101Q3000")));
+            }
         }
     }
 }

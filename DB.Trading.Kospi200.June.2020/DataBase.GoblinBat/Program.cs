@@ -1,12 +1,12 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using ShareInvest.Message;
 using ShareInvest.Strategy;
 
-namespace ShareInvest.DataBase
+namespace ShareInvest.GoblinBatForms
 {
     static class Program
     {
@@ -26,8 +26,7 @@ namespace ShareInvest.DataBase
 
             do
             {
-                Thread.Sleep(60000);
-                remaining--;
+                TimerBox.Show(new Message(remaining--).RemainingTime, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U);
             }
             while (remaining > 0);
 
@@ -36,15 +35,12 @@ namespace ShareInvest.DataBase
                 string path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", bat = "GoblinBat";
                 var registry = Registry.CurrentUser.OpenSubKey(path);
 
-                if (registry.GetValue(bat) != null)
+                if (registry.GetValue(bat) == null)
                 {
                     registry.Close();
                     registry = Registry.CurrentUser.OpenSubKey(path, true);
-                    registry.DeleteValue(bat);
+                    registry.SetValue(bat, Array.Find(Directory.GetFiles(Application.StartupPath, "*.exe", SearchOption.AllDirectories), o => o.Contains(string.Concat(bat, ".exe"))));
                 }
-                registry.Close();
-                registry = Registry.CurrentUser.OpenSubKey(path, true);
-                registry.SetValue(bat, Array.Find(Directory.GetFiles(Application.StartupPath, "*.exe", SearchOption.AllDirectories), o => o.Contains(string.Concat(bat, ".exe"))));
                 new BackTesting(35000000L);
             }).Start();
             Application.EnableVisualStyles();

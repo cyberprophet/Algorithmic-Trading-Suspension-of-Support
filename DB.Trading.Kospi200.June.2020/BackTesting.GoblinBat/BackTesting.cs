@@ -33,7 +33,7 @@ namespace ShareInvest.Strategy
                             });
             Parallel.ForEach(list, new ParallelOptions
             {
-                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.7)
+                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.65)
             },
             new Action<Specify>(param =>
             {

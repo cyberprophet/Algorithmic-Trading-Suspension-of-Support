@@ -22,8 +22,20 @@ namespace ShareInvest.Message
             {
                 string path = Path.Combine(Application.StartupPath, @"Message\");
                 DirectoryInfo di = new DirectoryInfo(path);
+                var date = int.Parse(DateTime.Now.AddDays(-30).ToString("yyMMdd"));
 
-                if (di.Exists == false)
+                if (di.Exists)
+                    foreach (var file in Directory.GetFiles(path))
+                    {
+                        string[] recent = file.Split('\\');
+                        recent = recent[recent.Length - 1].Split('.');
+
+                        if (date < int.Parse(recent[recent.Length - 2]))
+                            continue;
+
+                        new FileInfo(file).Delete();
+                    }
+                else
                     di.Create();
 
                 using (StreamWriter sw = new StreamWriter(string.Concat(path, DateTime.Now.ToString("yyMMdd"), ".txt"), true))
