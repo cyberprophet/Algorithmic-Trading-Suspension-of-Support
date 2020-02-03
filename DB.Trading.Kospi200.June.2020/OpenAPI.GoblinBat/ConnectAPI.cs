@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -29,12 +30,15 @@ namespace ShareInvest.OpenAPI
                 return request.QueueCount;
             }
         }
-        public Dictionary<string, string[]> FuturesQuotes
+        public Dictionary<double, string> OrderNumber
         {
             get; private set;
         }
         public void OnReceiveOrder(PurchaseInformation o)
         {
+            if (o.Price.Equals("0"))
+                return;
+
             request.RequestTrData(new Task(() =>
             {
                 ErrorCode = API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo);
@@ -50,6 +54,7 @@ namespace ShareInvest.OpenAPI
             axAPI.OnReceiveTrData += OnReceiveTrData;
             axAPI.OnReceiveRealData += OnReceiveRealData;
             axAPI.OnReceiveMsg += OnReceiveMsg;
+            axAPI.OnReceiveChejanData += OnReceiveChejanData;
         }
         public void StartProgress(string transfer)
         {
@@ -86,6 +91,16 @@ namespace ShareInvest.OpenAPI
             Application.ExitThread();
             Application.Exit();
         }
+        public void StartProgress(int delay)
+        {
+            if (Delay.delay == 3605)
+                return;
+
+            Delay.delay = delay;
+            Code = RequestCodeList(new List<string>(32));
+            SendMemorize?.Invoke(this, new Memorize("Clear"));
+            Request(GetRandomCode(new Random().Next(0, Code.Count)));
+        }
         public static ConnectAPI GetInstance()
         {
             if (api == null)
@@ -95,19 +110,55 @@ namespace ShareInvest.OpenAPI
         }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
-            new ExceptionMessage(e.sMsg);
+            if (Array.Exists(new Message().Basic, o => o.Equals(e.sMsg.Substring(9))))
+                return;
 
             if (e.sMsg.Equals(new Message().TR))
             {
                 SendMemorize?.Invoke(this, new Memorize("Clear"));
                 Request(GetRandomCode(new Random().Next(0, Code.Count)));
+
+                return;
             }
-            else if (e.sMsg.Equals(new Message().Failure))
+            if (e.sMsg.Equals(new Message().Failure))
             {
                 Process.Start("shutdown.exe", "-r");
                 Application.ExitThread();
                 Application.Exit();
+
+                return;
             }
+            new ExceptionMessage(e.sMsg);
+        }
+        private void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
+        {
+            Sb = new StringBuilder(256);
+            var index = int.Parse(e.sGubun);
+
+            foreach (int fid in real.type[index])
+                Sb.Append(API.GetChejanData(fid)).Append(';');
+
+            var param = Sb.ToString().Split(';');
+
+            switch (index)
+            {
+                case 0:
+                    if (param[5].Equals("체결") && OrderNumber.ContainsValue(param[1]))
+                        OrderNumber.Remove(OrderNumber.First(o => o.Value.Equals(param[1])).Key);
+
+                    break;
+
+                case 1:
+                    break;
+
+                case 4:
+                    if (param[1].Substring(0, 3).Equals("101"))
+                    {
+                        Quantity = param[9].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
+
+                    }
+                    break;
+            };
         }
         private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
@@ -136,24 +187,43 @@ namespace ShareInvest.OpenAPI
                     new Task(() =>
                     {
                         if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
-                        {
-                            FuturesQuotes[string.Concat(e.sRealKey, 1)] = new string[]
+                            SendQuotes?.Invoke(this, new Quotes(new string[]
                             {
-                                param[3],
-                                param[11],
-                                param[19],
+                                param[35],
                                 param[27],
-                                param[35]
-                            };
-                            FuturesQuotes[string.Concat(e.sRealKey, 2)] = new string[]
-                            {
+                                param[19],
+                                param[11],
+                                param[3],
                                 param[7],
                                 param[15],
                                 param[23],
                                 param[31],
                                 param[39]
-                            };
-                        }
+                            }, new string[]
+                            {
+                                param[36],
+                                param[28],
+                                param[20],
+                                param[12],
+                                param[4],
+                                param[8],
+                                param[16],
+                                param[24],
+                                param[32],
+                                param[40]
+                            }, new string[]
+                            {
+                                param[38],
+                                param[30],
+                                param[22],
+                                param[14],
+                                param[6],
+                                param[10],
+                                param[18],
+                                param[26],
+                                param[34],
+                                param[42]
+                            }, param[0]));
                     }).Start();
                     break;
 
@@ -170,12 +240,6 @@ namespace ShareInvest.OpenAPI
                     {
                         DeadLine = true;
                         Delay.delay = 205;
-                        new Task(() =>
-                        {
-                            Code = RequestCodeList(new List<string>(32));
-                            SendMemorize?.Invoke(this, new Memorize("Clear"));
-                            Request(GetRandomCode(new Random().Next(0, Code.Count)));
-                        }).Start();
                     }
                     else if (param[0].Equals("0") && param[2].Equals("002000"))
                     {
@@ -188,9 +252,6 @@ namespace ShareInvest.OpenAPI
         }
         private void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
-            if (e.sTrCode.Contains("KOA"))
-                return;
-
             if (Array.FindIndex(catalog, o => o.ToString().Contains(e.sTrCode.Substring(1))) < 4)
             {
                 var temp = API.GetCommDataEx(e.sTrCode, e.sRQName);
@@ -296,6 +357,12 @@ namespace ShareInvest.OpenAPI
                         FixUp(info.Split(';'));
 
                     break;
+
+                case 6:
+                    if (Sb.Length > 1)
+                        OrderNumber[double.Parse(e.sRQName)] = Sb.ToString().Split(';')[0];
+
+                    break;
             }
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
@@ -367,14 +434,14 @@ namespace ShareInvest.OpenAPI
 
             do
             {
-                if (onlyOnce && TimerBox.Show(new Message().OnReceiveData, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)market.Length).Equals(DialogResult.OK))
-                    onlyOnce = true;
+                if (onlyOnce && TimerBox.Show(new Message().OnReceiveData, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)(request.QueueCount / 9 * market.Length)).Equals(DialogResult.OK))
+                    break;
 
                 else
                 {
                     onlyOnce = true;
-                    FuturesQuotes = new Dictionary<string, string[]>();
                     SendCount?.Invoke(this, new NotifyIconText(API.GetLoginInfo("ACCLIST"), API.GetLoginInfo("USER_ID"), API.GetLoginInfo("USER_NAME"), API.GetLoginInfo("GetServerGubun")));
+                    OrderNumber = new Dictionary<double, string>();
                     SendCount?.Invoke(this, new NotifyIconText(StatisticalAnalysis.GetInstance(market)));
                     SendCount?.Invoke(this, new NotifyIconText(Code[0]));
                 }
@@ -383,13 +450,11 @@ namespace ShareInvest.OpenAPI
 
             if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
             {
-                DeadLine = true;
-                Code = RequestCodeList(new List<string>(32));
-                Request(GetRandomCode(new Random(e.nErrCode).Next(0, Code.Count)));
-                Delay.delay = 3705;
-
                 if (TimerBox.Show(new Message().SetPassword, "Information", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, (uint)market.Length).Equals(DialogResult.OK))
                     API.KOA_Functions("ShowAccountWindow", "");
+
+                DeadLine = true;
+                Delay.delay = 205;
             }
             else
             {
@@ -521,5 +586,6 @@ namespace ShareInvest.OpenAPI
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<NotifyIconText> SendCount;
+        public event EventHandler<Quotes> SendQuotes;
     }
 }

@@ -2,6 +2,10 @@
 {
     public struct Specify
     {
+        public string[] Account
+        {
+            get; set;
+        }
         public string Code
         {
             get; set;

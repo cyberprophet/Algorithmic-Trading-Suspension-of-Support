@@ -6,7 +6,7 @@
         {
             get
             {
-                return "비밀번호 설정을 하시겠습니까?\n\n자동로그인 기능을 설정하시면 편리합니다.";
+                return "비밀번호 설정을 하시겠습니까?\n\n자동로그인 기능을 사용하시면 편리합니다.";
             }
         }
         internal string OnReceiveData
@@ -28,6 +28,17 @@
             get
             {
                 return "전문 처리 실패(-22)";
+            }
+        }
+        internal string[] Basic
+        {
+            get
+            {
+                return new string[]
+                {
+                    "모의투자 선물옵션 신규주문 완료",
+
+                };
             }
         }
     }

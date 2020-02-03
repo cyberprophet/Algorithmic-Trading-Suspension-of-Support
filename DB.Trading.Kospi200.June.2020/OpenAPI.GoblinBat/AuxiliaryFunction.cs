@@ -136,7 +136,7 @@ namespace ShareInvest.OpenAPI
                 }
                 catch (Exception ex)
                 {
-                    new ExceptionMessage(ex.StackTrace);
+                    new ExceptionMessage(ex.StackTrace, code);
                 }
             }).Start();
         }
@@ -318,6 +318,7 @@ namespace ShareInvest.OpenAPI
             new Opt10081(),
             new Opt50001(),
             new OPTKWFID(),
+            new KOA_CREATE_FO_ORD()
         };
         protected readonly string[] exclude =
         {

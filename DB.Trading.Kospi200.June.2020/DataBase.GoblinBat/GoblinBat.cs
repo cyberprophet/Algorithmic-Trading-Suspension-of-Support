@@ -18,6 +18,7 @@ namespace ShareInvest.GoblinBatForms
             api.SetAPI(axAPI);
             api.StartProgress();
             new Temporary();
+            CenterToScreen();
             WindowState = FormWindowState.Minimized;
             api.SendCount += OnReceiveNotifyIcon;
             strip.ItemClicked += OnItemClick;
@@ -56,11 +57,19 @@ namespace ShareInvest.GoblinBatForms
                     break;
 
                 case "Int32":
-                    notifyIcon.Text = e.NotifyIcon.ToString().Equals("0") ? "GoblinBat" : e.NotifyIcon.ToString();
+                    if ((int)e.NotifyIcon == 0)
+                    {
+                        notifyIcon.Text = "GoblinBat";
+                        api.StartProgress(3605);
+
+                        return;
+                    }
+                    notifyIcon.Text = e.NotifyIcon.ToString();
                     break;
 
                 case "StringBuilder":
                     var check = e.NotifyIcon.ToString().Split(';');
+                    Account = new string[check.Length - 3];
 
                     if (check[check.Length - 1].Equals("1") ? false : new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
                     {
@@ -72,13 +81,14 @@ namespace ShareInvest.GoblinBatForms
                     }
                     for (int i = 0; i < check.Length - 3; i++)
                     {
-                        var temp = check[i];
+                        Account[i] = check[i];
                     }
                     break;
 
                 case "String":
                     new Trading(new Specify
                     {
+                        Account = Account,
                         Assets = 35000000,
                         Code = e.NotifyIcon.ToString(),
                         Time = 30,
@@ -112,6 +122,10 @@ namespace ShareInvest.GoblinBatForms
                     return;
                 }
             }));
+        }
+        private string[] Account
+        {
+            get; set;
         }
         private StatisticalAnalysis Statistical
         {
