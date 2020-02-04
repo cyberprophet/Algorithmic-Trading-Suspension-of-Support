@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using ShareInvest.Message;
@@ -50,6 +51,8 @@ namespace ShareInvest.DelayRequest
                     catch (Exception ex)
                     {
                         new ExceptionMessage(ex.StackTrace);
+                        Process.Start("shutdown.exe", "-r");
+                        Environment.Exit(0);
                     }
                 }
             });

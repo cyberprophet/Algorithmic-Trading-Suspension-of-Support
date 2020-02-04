@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ShareInvest.Interface.Struct;
 using ShareInvest.OpenAPI;
 
@@ -25,78 +22,126 @@ namespace ShareInvest.Strategy
         }
         private void OnReceiveQuotes(object sender, EventHandler.Quotes e)
         {
-            if (api.RequestQueueCount == 0 && (CancelOrder == false && api.OrderNumber.Count > 0 || Difference > 1))
-                for (int i = 0; i < (CancelOrder ? (api.OrderNumber.Count > 0 ? 1 : (Difference < e.Price.Length / 2 ? Difference : e.Price.Length / 2)) : api.OrderNumber.Count); i++)
-                {
-                    var price = GetOrderPrice(i, e.Price);
-                    api.OnReceiveOrder(new PurchaseInformation
-                    {
-                        RQName = price,
-                        ScreenNo = string.Concat(Classification, "00", i),
-                        AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
-                        Code = specify.Code,
-                        OrdKind = CancelOrder ? (api.OrderNumber.Count == 0 ? 1 : 2) : 3,
-                        SlbyTP = CancelOrder ? Classification : (Classification.Equals("1") ? "2" : "1"),
-                        OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
-                        Qty = 1,
-                        Price = CancelOrder ? price : string.Empty,
-                        OrgOrdNo = api.OrderNumber.Count == 0 ? string.Empty : api.OrderNumber[GetOrderIndex(i)]
-                    });
-                }
-        }
-        private string GetOrderPrice(int index, double[] price)
-        {
-            if (api.OrderNumber.Count > 0)
+            if (api.OnReceiveBalance && api.RequestQueueCount == 0)
             {
-                if (Classification.Equals("2"))
+                api.OnReceiveBalance = false;
+
+                if (CancelOrder)
                 {
-                    if (price[4] <= api.OrderNumber.Max(o => o.Key))
-                    {
-                        Pursue = false;
+                    if (e.OrderNumber.Count > 0 && Difference > 1)
+                        SendCorrectionOrder(e.Price);
 
-                        return (api.OrderNumber.Min(o => o.Key) - Const.ErrorRate).ToString();
-                    }
-                    if (price[5] > api.OrderNumber.Max(o => o.Key))
-                    {
-                        Pursue = true;
+                    else if (e.OrderNumber.Count == 0 && Difference > 1)
+                        SendNewOrder(e.Price, Difference >= e.Price.Length / 2 ? e.Price.Length / 2 : (int)Difference);
 
-                        return price[5].ToString();
-                    }
+                    else
+                        api.OnReceiveBalance = true;
                 }
-                if (price[5] >= api.OrderNumber.Min(o => o.Key))
-                {
-                    Pursue = false;
+                else if (e.OrderNumber.Count > 0)
+                    SendClearingOrder(e.OrderNumber.Count);
 
-                    return (api.OrderNumber.Max(o => o.Key) + Const.ErrorRate).ToString();
+                else
+                    api.OnReceiveBalance = true;
+            }
+        }
+        private void SendCorrectionOrder(double[] param)
+        {
+            string price, number;
+
+            if (Classification.Equals("2"))
+            {
+                if (param[4] <= api.OrderNumber.Max(o => o.Key))
+                {
+                    price = (api.OrderNumber.Min(o => o.Key) - Const.ErrorRate).ToString();
+                    number = api.OrderNumber[api.OrderNumber.Max(o => o.Key)];
                 }
-                if (price[4] < api.OrderNumber.Min(o => o.Key))
+                else if (param[5] > api.OrderNumber.Max(o => o.Key))
                 {
-                    Pursue = true;
+                    price = param[5].ToString();
+                    number = api.OrderNumber[api.OrderNumber.Min(o => o.Key)];
+                }
+                else
+                {
+                    api.OnReceiveBalance = true;
 
-                    return price[4].ToString();
+                    return;
                 }
             }
-            if (api.OrderNumber.Count == 0)
-                return price[Classification.Equals("2") ? index + 5 : 4 - index].ToString();
+            else if (Classification.Equals("1"))
+            {
+                if (param[5] >= api.OrderNumber.Min(o => o.Key))
+                {
+                    price = (api.OrderNumber.Max(o => o.Key) + Const.ErrorRate).ToString();
+                    number = api.OrderNumber[api.OrderNumber.Min(o => o.Key)];
+                }
+                else if (param[4] < api.OrderNumber.Min(o => o.Key))
+                {
+                    price = param[4].ToString();
+                    number = api.OrderNumber[api.OrderNumber.Max(o => o.Key)];
+                }
+                else
+                {
+                    api.OnReceiveBalance = true;
 
-            return "0";
+                    return;
+                }
+            }
+            else
+            {
+                api.OnReceiveBalance = true;
+
+                return;
+            }
+            api.OnReceiveOrder(new PurchaseInformation
+            {
+                RQName = price,
+                ScreenNo = string.Concat(Classification, new Random().Next(1000).ToString("D3")),
+                AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
+                Code = specify.Code,
+                OrdKind = 2,
+                SlbyTP = Classification,
+                OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                Qty = 1,
+                Price = price,
+                OrgOrdNo = number
+            });
         }
-        private double GetOrderIndex(int index)
+        private void SendClearingOrder(int length)
         {
-            if (CancelOrder && (Classification.Equals("1") && Pursue || Classification.Equals("2") && Pursue == false))
-                return api.OrderNumber.Max(o => o.Key);
-
-            if (CancelOrder && (Classification.Equals("1") && Pursue == false || Classification.Equals("2") && Pursue))
-                return api.OrderNumber.Min(o => o.Key);
-
-            if (Classification.Equals("1"))
-                return api.OrderNumber.Min(o => o.Key) + index * Const.ErrorRate;
-
-            return api.OrderNumber.Max(o => o.Key) - index * Const.ErrorRate;
+            for (int i = 0; i < length; i++)
+                api.OnReceiveOrder(new PurchaseInformation
+                {
+                    RQName = string.Empty,
+                    ScreenNo = string.Concat(Classification, "00", i),
+                    AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
+                    Code = specify.Code,
+                    OrdKind = 3,
+                    SlbyTP = Classification.Equals("1") ? "2" : "1",
+                    OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                    Qty = 1,
+                    Price = string.Empty,
+                    OrgOrdNo = api.OrderNumber[Classification.Equals("1") ? api.OrderNumber.Min(o => o.Key) + i * Const.ErrorRate : api.OrderNumber.Max(o => o.Key) - i * Const.ErrorRate]
+                });
         }
-        private bool Pursue
+        private void SendNewOrder(double[] param, int length)
         {
-            get; set;
+            for (int i = 0; i < length; i++)
+            {
+                var price = param[Classification.Equals("2") ? i + 5 : 4 - i].ToString();
+                api.OnReceiveOrder(new PurchaseInformation
+                {
+                    RQName = price,
+                    ScreenNo = string.Concat(Classification, "00", i),
+                    AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
+                    Code = specify.Code,
+                    OrdKind = 1,
+                    SlbyTP = Classification,
+                    OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                    Qty = 1,
+                    Price = price,
+                    OrgOrdNo = string.Empty
+                });
+            }
         }
         private bool CancelOrder
         {

@@ -13,14 +13,14 @@ namespace ShareInvest.GoblinBatContext
         protected bool GetRecentAnalysis(Specify s)
         {
             var date = DateTime.Now.Hour < 5 && DateTime.Now.Hour >= 0 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd");
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext('1'))
             {
                 return db.Logs.Any(o => o.Date.ToString().Equals(date) && o.Code.Equals(s.Code) && o.Assets.Equals(s.Assets) && o.Strategy.Equals(s.Strategy) && o.Time.Equals(s.Time) && o.Short.Equals(s.Short) && o.Long.Equals(s.Long));
             }
         }
         protected bool GetRegister()
         {
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext('1'))
             {
                 return db.Logs.Any();
             }
@@ -28,7 +28,7 @@ namespace ShareInvest.GoblinBatContext
         protected bool GetRemainingDate(string code, long date)
         {
             if (code.Length == 8 && date.ToString().Substring(6).Equals("151959000"))
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext('1'))
                 {
                     if (db.Codes.FirstOrDefault(o => o.Code.Equals(code)).Info.Substring(2).Equals(date.ToString().Substring(0, 6)))
                         return true;
@@ -38,7 +38,7 @@ namespace ShareInvest.GoblinBatContext
         protected Queue<Chart> GetChart(string code)
         {
             Queue<Chart> chart = new Queue<Chart>();
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext('1'))
             {
                 if (code.Length > 6 && code.Substring(5, 3).Equals("000"))
                 {
@@ -95,7 +95,7 @@ namespace ShareInvest.GoblinBatContext
         protected string GetRecentFuturesCode(bool register)
         {
             if (register == false)
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext('1'))
                 {
                     return db.Codes.FirstOrDefault(code => code.Info.Equals(db.Codes.Where(o => o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
                 }
@@ -105,7 +105,7 @@ namespace ShareInvest.GoblinBatContext
         {
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext('1'))
                 {
                     var check = db.Logs.Find(new object[]
                     {
@@ -127,7 +127,7 @@ namespace ShareInvest.GoblinBatContext
         }
         protected void DeleteLogs()
         {
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext('1'))
             {
                 db.Logs.BulkDelete(db.Logs.Where(o => o.Code.Equals("101Q3000")));
             }

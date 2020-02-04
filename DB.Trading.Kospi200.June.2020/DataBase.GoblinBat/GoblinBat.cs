@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
-using ShareInvest.EventHandler;
-using ShareInvest.OpenAPI;
 using ShareInvest.GoblinBatControls;
-using ShareInvest.Strategy;
 using ShareInvest.Interface.Struct;
 using ShareInvest.Message;
+using ShareInvest.NotifyIcon;
+using ShareInvest.OpenAPI;
+using ShareInvest.Strategy;
 
 namespace ShareInvest.GoblinBatForms
 {
@@ -19,9 +20,10 @@ namespace ShareInvest.GoblinBatForms
             api.StartProgress();
             new Temporary();
             CenterToScreen();
-            WindowState = FormWindowState.Minimized;
+            BackColor = Color.FromArgb(121, 133, 130);
             api.SendCount += OnReceiveNotifyIcon;
             strip.ItemClicked += OnItemClick;
+            WindowState = FormWindowState.Minimized;
         }
         private void OnItemClick(object sender, ToolStripItemClickedEventArgs e)
         {
@@ -29,15 +31,16 @@ namespace ShareInvest.GoblinBatForms
             {
                 switch (e.ClickedItem.Name)
                 {
+                    case "quotes":
+                        Quotes.Show();
+                        break;
+
                     case "exit":
                         Close();
                         return;
 
                     case "strategy":
-                        if (panel.Controls.Contains(Statistical) == false)
-                            panel.Controls.Add(Statistical);
-
-                        Statistical.Dock = DockStyle.Fill;
+                        Statistical.Show();
                         break;
                 };
                 SuspendLayout();
@@ -45,7 +48,9 @@ namespace ShareInvest.GoblinBatForms
                 ShowIcon = true;
                 notifyIcon.Visible = false;
                 WindowState = FormWindowState.Normal;
-                ResumeLayout();
+                Application.DoEvents();
+                ResumeLayout(true);
+                PerformLayout();
             }));
         }
         private void OnReceiveNotifyIcon(object sender, NotifyIconText e)
@@ -54,7 +59,16 @@ namespace ShareInvest.GoblinBatForms
             {
                 case "StatisticalAnalysis":
                     Statistical = (StatisticalAnalysis)e.NotifyIcon;
-                    break;
+                    panel.Controls.Add(Statistical);
+                    Statistical.Dock = DockStyle.Fill;
+                    return;
+
+                case "QuotesControl":
+                    Quotes = (QuotesControl)e.NotifyIcon;
+                    panel.Controls.Add(Quotes);
+                    Quotes.Dock = DockStyle.Fill;
+                    api.SendQuotes += Quotes.OnReceiveQuotes;
+                    return;
 
                 case "Int32":
                     if ((int)e.NotifyIcon == 0)
@@ -65,7 +79,7 @@ namespace ShareInvest.GoblinBatForms
                         return;
                     }
                     notifyIcon.Text = e.NotifyIcon.ToString();
-                    break;
+                    return;
 
                 case "StringBuilder":
                     var check = e.NotifyIcon.ToString().Split(';');
@@ -83,10 +97,10 @@ namespace ShareInvest.GoblinBatForms
                     {
                         Account[i] = check[i];
                     }
-                    break;
+                    return;
 
                 case "String":
-                    new Trading(new Specify
+                    var specify = new Specify
                     {
                         Account = Account,
                         Assets = 35000000,
@@ -94,8 +108,9 @@ namespace ShareInvest.GoblinBatForms
                         Time = 30,
                         Short = 4,
                         Long = 60
-                    });
-                    break;
+                    };
+                    new Trading(api, specify, new Strategy.Quotes(specify, api));
+                    return;
             };
         }
         private void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
@@ -124,6 +139,10 @@ namespace ShareInvest.GoblinBatForms
             }));
         }
         private string[] Account
+        {
+            get; set;
+        }
+        private QuotesControl Quotes
         {
             get; set;
         }

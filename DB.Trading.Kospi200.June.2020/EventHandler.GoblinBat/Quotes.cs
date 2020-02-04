@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ShareInvest.EventHandler
 {
@@ -20,8 +21,16 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public Quotes(string[] price, string[] quantity, string[] number, string time)
+        public Dictionary<double, string> OrderNumber
         {
+            get; private set;
+        }
+        public Quotes(string[] price, string[] quantity, string[] number, string time, Dictionary<double, string> order)
+        {
+            Price = new double[price.Length];
+            Quantity = new int[quantity.Length];
+            Number = new int[number.Length];
+
             for (int i = 0; i < 10; i++)
             {
                 Price[i] = double.Parse(price[i].Substring(1));
@@ -29,6 +38,7 @@ namespace ShareInvest.EventHandler
                 Number[i] = int.Parse(number[i]);
             }
             Time = time;
+            OrderNumber = order;
         }
     }
 }

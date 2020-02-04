@@ -8,7 +8,7 @@ namespace ShareInvest.Strategy
 {
     public class Trading
     {
-        public Trading(Specify specify)
+        public Trading(ConnectAPI api, Specify specify, Quotes quotes)
         {
             this.specify = specify;
             Short = new Stack<double>(512);
@@ -19,8 +19,8 @@ namespace ShareInvest.Strategy
                 SendDatum?.Invoke(this, new Datum(chart));
 
             SendDatum -= Analysize;
-            api = ConnectAPI.GetInstance();
-            quotes = new Quotes(specify, api);
+            this.api = api;
+            this.quotes = quotes;
             api.SendDatum += Analysize;
         }
         private void Analysize(object sender, Datum e)

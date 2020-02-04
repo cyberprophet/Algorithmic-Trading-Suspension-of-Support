@@ -2,7 +2,7 @@
 
 namespace ShareInvest.Catalog
 {
-    public class KOA_CREATE_FO_ORD : IEnumerable
+    public class KOA_NORMAL_FO_MOD : IEnumerable
     {
         public IEnumerator GetEnumerator()
         {

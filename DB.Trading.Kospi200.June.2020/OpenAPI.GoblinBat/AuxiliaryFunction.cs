@@ -95,7 +95,7 @@ namespace ShareInvest.OpenAPI
                                 Volume = int.Parse(temp[2])
                             });
                     }
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext('1'))
                     {
                         db.Configuration.AutoDetectChangesEnabled = true;
 
@@ -144,7 +144,7 @@ namespace ShareInvest.OpenAPI
         {
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext('1'))
                 {
                     if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
                         return;
@@ -162,25 +162,25 @@ namespace ShareInvest.OpenAPI
         protected string Retention(int param, string code)
         {
             long max = 0;
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext('1'))
             {
                 try
                 {
                     switch (param)
                     {
-                        case 0:
+                        case 1:
                             max = db.Futures.Where(o => o.Code.Equals(code)).Max(o => o.Date);
                             break;
 
-                        case 1:
+                        case 2:
                             max = db.Options.Where(o => o.Code.Equals(code)).Max(o => o.Date);
                             break;
 
-                        case 2:
+                        case 3:
                             max = db.Stocks.Where(o => o.Code.Equals(code)).Max(o => o.Date);
                             break;
 
-                        case 3:
+                        case 4:
                             max = db.Days.Where(o => o.Code.Equals(code)).Max(o => o.Date);
                             break;
                     };
@@ -188,7 +188,8 @@ namespace ShareInvest.OpenAPI
                 }
                 catch (InvalidOperationException ex)
                 {
-                    new ExceptionMessage(ex.TargetSite.Name, code);
+                    if (ex.TargetSite.Name.Equals("GetValue") == false)
+                        new ExceptionMessage(ex.TargetSite.Name, code);
                 }
                 catch (Exception ex)
                 {
@@ -199,7 +200,7 @@ namespace ShareInvest.OpenAPI
         }
         protected List<string> RequestCodeList(List<string> list, string[] market)
         {
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext('1'))
             {
                 foreach (var temp in db.Codes.Select(o => new
                 {
@@ -217,7 +218,7 @@ namespace ShareInvest.OpenAPI
 
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext('1'))
                 {
                     foreach (var temp in db.Codes.Select(o => new
                     {
@@ -266,7 +267,7 @@ namespace ShareInvest.OpenAPI
             }
             catch (Exception ex)
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext('1'))
                 {
                     var stocks = db.Stocks.Where(o => o.Code.Equals(code));
 
@@ -312,13 +313,15 @@ namespace ShareInvest.OpenAPI
         }
         protected readonly IEnumerable[] catalog =
         {
+            new Unspecified(),
             new Opt50028(),
             new Opt50066(),
             new Opt10079(),
             new Opt10081(),
             new Opt50001(),
             new OPTKWFID(),
-            new KOA_CREATE_FO_ORD()
+            new KOA_CREATE_FO_ORD(),
+            new KOA_NORMAL_FO_MOD()
         };
         protected readonly string[] exclude =
         {

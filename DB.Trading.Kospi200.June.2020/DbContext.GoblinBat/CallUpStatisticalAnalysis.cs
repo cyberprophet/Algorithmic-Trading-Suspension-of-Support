@@ -6,7 +6,7 @@ namespace ShareInvest.GoblinBatContext
     {
         public IEnumerator GetEnumerator()
         {
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext('1'))
             {
                 foreach (var code in db.Codes)
                     yield return code;
