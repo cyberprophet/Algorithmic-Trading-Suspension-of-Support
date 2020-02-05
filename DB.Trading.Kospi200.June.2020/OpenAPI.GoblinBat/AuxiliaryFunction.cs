@@ -95,7 +95,7 @@ namespace ShareInvest.OpenAPI
                                 Volume = int.Parse(temp[2])
                             });
                     }
-                    using (var db = new GoblinBatDbContext('1'))
+                    using (var db = new GoblinBatDbContext())
                     {
                         db.Configuration.AutoDetectChangesEnabled = true;
 
@@ -144,7 +144,7 @@ namespace ShareInvest.OpenAPI
         {
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext('1'))
+                using (var db = new GoblinBatDbContext())
                 {
                     if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
                         return;
@@ -159,10 +159,17 @@ namespace ShareInvest.OpenAPI
                 }
             }).Start();
         }
-        protected string Retention(int param, string code)
+        protected string GetStrategy()
+        {
+            using (var db = new GoblinBatDbContext())
+            {
+                return db.Codes.FirstOrDefault(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
+            }
+        }
+        protected string GetRetention(int param, string code)
         {
             long max = 0;
-            using (var db = new GoblinBatDbContext('1'))
+            using (var db = new GoblinBatDbContext())
             {
                 try
                 {
@@ -200,7 +207,7 @@ namespace ShareInvest.OpenAPI
         }
         protected List<string> RequestCodeList(List<string> list, string[] market)
         {
-            using (var db = new GoblinBatDbContext('1'))
+            using (var db = new GoblinBatDbContext())
             {
                 foreach (var temp in db.Codes.Select(o => new
                 {
@@ -218,7 +225,7 @@ namespace ShareInvest.OpenAPI
 
             try
             {
-                using (var db = new GoblinBatDbContext('1'))
+                using (var db = new GoblinBatDbContext())
                 {
                     foreach (var temp in db.Codes.Select(o => new
                     {
@@ -267,7 +274,7 @@ namespace ShareInvest.OpenAPI
             }
             catch (Exception ex)
             {
-                using (var db = new GoblinBatDbContext('1'))
+                using (var db = new GoblinBatDbContext())
                 {
                     var stocks = db.Stocks.Where(o => o.Code.Equals(code));
 
@@ -321,7 +328,8 @@ namespace ShareInvest.OpenAPI
             new Opt50001(),
             new OPTKWFID(),
             new KOA_CREATE_FO_ORD(),
-            new KOA_NORMAL_FO_MOD()
+            new KOA_NORMAL_FO_MOD(),
+            new KOA_NORMAL_FO_CANCEL()
         };
         protected readonly string[] exclude =
         {

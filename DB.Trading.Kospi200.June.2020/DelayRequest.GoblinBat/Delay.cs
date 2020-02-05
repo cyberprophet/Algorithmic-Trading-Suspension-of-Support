@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using ShareInvest.Message;
@@ -18,6 +17,13 @@ namespace ShareInvest.DelayRequest
 
             return request;
         }
+        public int QueueCount
+        {
+            get
+            {
+                return requestTaskQueue.Count;
+            }
+        }
         public void Run()
         {
             taskWorker.Start();
@@ -25,13 +31,6 @@ namespace ShareInvest.DelayRequest
         public void RequestTrData(Task task)
         {
             requestTaskQueue.Enqueue(task);
-        }
-        public int QueueCount
-        {
-            get
-            {
-                return requestTaskQueue.Count;
-            }
         }
         private Delay()
         {
@@ -46,18 +45,21 @@ namespace ShareInvest.DelayRequest
                             requestTaskQueue.Dequeue().RunSynchronously();
                             Thread.Sleep(delay);
                         }
-                        Thread.Sleep(100);
+                        Thread.Sleep(5);
                     }
                     catch (Exception ex)
                     {
                         new ExceptionMessage(ex.StackTrace);
-                        Process.Start("shutdown.exe", "-r");
-                        Environment.Exit(0);
+
+                        if (taskWorker.IsAlive)
+                            continue;
+
+                        request = new Delay();
                     }
                 }
             });
         }
-        public static int delay = 210;
+        public static int delay = 205;
         private static Delay request;
         private readonly Thread taskWorker;
         private readonly Queue<Task> requestTaskQueue = new Queue<Task>();

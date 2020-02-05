@@ -19,11 +19,8 @@ namespace ShareInvest.GoblinBatForms
             api.SetAPI(axAPI);
             api.StartProgress();
             new Temporary();
-            CenterToScreen();
-            BackColor = Color.FromArgb(121, 133, 130);
             api.SendCount += OnReceiveNotifyIcon;
-            strip.ItemClicked += OnItemClick;
-            WindowState = FormWindowState.Minimized;
+            Size = new Size(249, 35);
         }
         private void OnItemClick(object sender, ToolStripItemClickedEventArgs e)
         {
@@ -32,6 +29,9 @@ namespace ShareInvest.GoblinBatForms
                 switch (e.ClickedItem.Name)
                 {
                     case "quotes":
+                        api.SendQuotes += Quotes.OnReceiveQuotes;
+                        Size = new Size(312, 450);
+                        CenterToScreen();
                         Quotes.Show();
                         break;
 
@@ -44,6 +44,7 @@ namespace ShareInvest.GoblinBatForms
                         break;
                 };
                 SuspendLayout();
+                OnClickMinimized = e.ClickedItem.Name;
                 Visible = true;
                 ShowIcon = true;
                 notifyIcon.Visible = false;
@@ -66,15 +67,16 @@ namespace ShareInvest.GoblinBatForms
                 case "QuotesControl":
                     Quotes = (QuotesControl)e.NotifyIcon;
                     panel.Controls.Add(Quotes);
-                    Quotes.Dock = DockStyle.Fill;
                     api.SendQuotes += Quotes.OnReceiveQuotes;
+                    Quotes.Dock = DockStyle.Fill;
                     return;
 
                 case "Int32":
                     if ((int)e.NotifyIcon == 0)
                     {
-                        notifyIcon.Text = "GoblinBat";
+                        notifyIcon.Text = "CheckDataBase";
                         api.StartProgress(3605);
+                        notifyIcon.Text = "GoblinBat";
 
                         return;
                     }
@@ -82,35 +84,39 @@ namespace ShareInvest.GoblinBatForms
                     return;
 
                 case "StringBuilder":
+                    strip.ItemClicked += OnItemClick;
+                    CenterToScreen();
+                    BackColor = Color.FromArgb(121, 133, 130);
+                    Opacity = 81.35;
+                    WindowState = FormWindowState.Minimized;
                     var check = e.NotifyIcon.ToString().Split(';');
-                    Account = new string[check.Length - 3];
+                    var account = new string[check.Length - 3];
 
                     if (check[check.Length - 1].Equals("1") ? false : new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
                     {
                         TimerBox.Show(new Message(check[check.Length - 2]).Identify, "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750);
                         Dispose();
-                        Environment.Exit(0);
 
                         return;
                     }
                     for (int i = 0; i < check.Length - 3; i++)
-                    {
-                        Account[i] = check[i];
-                    }
-                    return;
+                        account[i] = check[i];
 
-                case "String":
                     var specify = new Specify
                     {
-                        Account = Account,
+                        Account = account,
                         Assets = 35000000,
-                        Code = e.NotifyIcon.ToString(),
+                        Code = api.Strategy,
                         Time = 30,
                         Short = 4,
                         Long = 60
                     };
-                    new Trading(api, specify, new Strategy.Quotes(specify, api));
+                    new Trading(api, specify, new Quotes(specify, api));
                     return;
+
+                case "String":
+                    notifyIcon.Text = e.NotifyIcon.ToString();
+                    break;
             };
         }
         private void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
@@ -122,7 +128,6 @@ namespace ShareInvest.GoblinBatForms
                 return;
             }
             Dispose();
-            Environment.Exit(0);
         }
         private void GoblinBatResize(object sender, EventArgs e)
         {
@@ -134,11 +139,17 @@ namespace ShareInvest.GoblinBatForms
                     ShowIcon = false;
                     notifyIcon.Visible = true;
 
+                    switch (OnClickMinimized)
+                    {
+                        case "quotes":
+                            api.SendQuotes -= Quotes.OnReceiveQuotes;
+                            break;
+                    };
                     return;
                 }
             }));
         }
-        private string[] Account
+        private string OnClickMinimized
         {
             get; set;
         }

@@ -14,6 +14,13 @@
         {
             this.name = name;
         }
+        internal string StartProgress
+        {
+            get
+            {
+                return "프로그램이 곧 시작합니다.\n\n트레이딩을 위한 데이터를 불러오는데\n\n약 2분 정도 소요됩니다.\n\n'확인'\n\n버튼을 누르지 말고 기다리세요.";
+            }
+        }
         internal string RemainingTime
         {
             get

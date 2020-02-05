@@ -43,6 +43,7 @@ namespace ShareInvest.GoblinBatForms
                 }
                 new BackTesting(35000000L);
             }).Start();
+            TimerBox.Show(new Message().StartProgress, "GoblinBat", MessageBoxButtons.OK, MessageBoxIcon.Information, 3765U);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new GoblinBat());
