@@ -12,13 +12,13 @@ namespace ShareInvest.GoblinBatControls
         {
             get; private set;
         }
-        public StatisticalAnalysis(string[] markets)
+        public StatisticalAnalysis()
         {
             InitializeComponent();
             CodeCatalog = new Dictionary<string, string>(16);
 
             foreach (Codes codes in new CallUpStatisticalAnalysis())
-                if (codes.Code.Length == 6 && Array.Exists(markets, o => o.Equals(codes.Code)) || codes.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(codes.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
+                if (codes.Code.Length == 6 || codes.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(codes.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
                     CodeCatalog[codes.Name] = codes.Code;
         }
     }

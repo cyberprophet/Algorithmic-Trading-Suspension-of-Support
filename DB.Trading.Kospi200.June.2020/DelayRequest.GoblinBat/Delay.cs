@@ -50,11 +50,6 @@ namespace ShareInvest.DelayRequest
                     catch (Exception ex)
                     {
                         new ExceptionMessage(ex.StackTrace);
-
-                        if (taskWorker.IsAlive)
-                            continue;
-
-                        request = new Delay();
                     }
                 }
             });

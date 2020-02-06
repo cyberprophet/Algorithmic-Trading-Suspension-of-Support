@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text;
-using ShareInvest.GoblinBatControls;
 
 namespace ShareInvest.EventHandler
 {
@@ -10,6 +9,14 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
+        public NotifyIconText(byte start)
+        {
+            NotifyIcon = start;
+        }
+        public NotifyIconText(char end)
+        {
+            NotifyIcon = end;
+        }
         public NotifyIconText(int count)
         {
             NotifyIcon = count;
@@ -17,10 +24,6 @@ namespace ShareInvest.EventHandler
         public NotifyIconText(string code)
         {
             NotifyIcon = code;
-        }
-        public NotifyIconText(StatisticalAnalysis analysis)
-        {
-            NotifyIcon = analysis;
         }
         public NotifyIconText(string account, string id, string name, string server)
         {

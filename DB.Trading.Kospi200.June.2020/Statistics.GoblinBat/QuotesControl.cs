@@ -30,18 +30,22 @@ namespace ShareInvest.GoblinBatControls
                     if (temp.Text.Equals(param) == false)
                         temp.Text = param;
 
-                    if (e.OrderNumber.TryGetValue(e.Price[i], out string value))
+                    if (e.OrderNumber.TryGetValue(e.Price[i], out string[] value))
                     {
-                        if (temporary.Text.Equals(value))
+                        if (temporary.Text.Equals(value[1]))
                             continue;
 
-                        temporary.Text = value;
+                        temporary.Text = value[1];
                     }
                     else
                         temporary.Text = string.Empty;
                 }
                 Application.DoEvents();
             }));
+        }
+        public void OnReceiveOrderMsg(string message)
+        {
+            this.message.Text = message;
         }
     }
 }

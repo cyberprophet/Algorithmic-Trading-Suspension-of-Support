@@ -161,10 +161,18 @@ namespace ShareInvest.OpenAPI
         }
         protected string GetStrategy()
         {
-            using (var db = new GoblinBatDbContext())
+            try
             {
-                return db.Codes.FirstOrDefault(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
+                using (var db = new GoblinBatDbContext())
+                {
+                    return db.Codes.FirstOrDefault(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
+                }
             }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return string.Empty;
         }
         protected string GetRetention(int param, string code)
         {
@@ -329,7 +337,9 @@ namespace ShareInvest.OpenAPI
             new OPTKWFID(),
             new KOA_CREATE_FO_ORD(),
             new KOA_NORMAL_FO_MOD(),
-            new KOA_NORMAL_FO_CANCEL()
+            new KOA_NORMAL_FO_CANCEL(),
+            new OPW20010(),
+            new OPW20007()
         };
         protected readonly string[] exclude =
         {
