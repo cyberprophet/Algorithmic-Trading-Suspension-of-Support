@@ -2,13 +2,16 @@
 {
     public class ScreenNumber
     {
-        protected string GetScreenNumber()
+        internal protected string GetScreenNumber()
         {
-            if (number > 9500 || number < 9400)
-                number = 9500;
+            if (Number > 9500 || Number < 9400)
+                Number = 9500;
 
-            return number--.ToString();
+            return Number--.ToString();
         }
-        private static int number;
+        private int Number
+        {
+            get; set;
+        }
     }
 }

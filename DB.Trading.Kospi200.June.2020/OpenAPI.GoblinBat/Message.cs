@@ -1,4 +1,6 @@
-﻿namespace ShareInvest.OpenAPI
+﻿using System.Text;
+
+namespace ShareInvest.OpenAPI
 {
     internal partial class Message
     {
@@ -37,10 +39,14 @@
                 return lookUp;
             }
         }
-        internal string[] Basic
+        internal StringBuilder Exists
         {
-            get;
-        } = new string[]
+            get
+            {
+                return new StringBuilder(exists);
+            }
+        }
+        internal readonly string[] basic =
         {
             "모의투자 선물옵션 신규주문 완료",
             "모의투자 정상처리 되었습니다",
@@ -48,6 +54,14 @@
             "모의투자 주문가능 금액을 확인하세요",
             "모의투자 정정가격이 원주문가격과 같습니다"
         };
+        internal readonly string[] exclude =
+        {
+            "115960",
+            "006800",
+            "001880",
+            "072770"
+        };
+        private const string exists = "Information that already Exists";
         private const string lookUp = "모의투자 조회가 완료되었습니다";
         private const string failure = "전문 처리 실패(-22)";
         private const string tr = "서비스 TR을 확인바랍니다.(0006)";

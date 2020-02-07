@@ -20,52 +20,54 @@ namespace ShareInvest.GoblinBatForms
             api.StartProgress();
             new Temporary();
             api.SendCount += OnReceiveNotifyIcon;
-            Size = new Size(249, 35);
+            Size = new Size(243, 35);
+            CenterToScreen();
+        }
+        private void OnReceiveItem(string item)
+        {
+            switch (item)
+            {
+                case "quotes":
+                    api.SendQuotes += Quotes.OnReceiveQuotes;
+                    Size = new Size(314, 435);
+                    Quotes.Show();
+                    break;
+
+                case "exit":
+                    Close();
+                    return;
+
+                case "strategy":
+                    Statistical.Show();
+                    break;
+
+                case "account":
+                    api.SendDeposit += Account.OnReceiveDeposit;
+                    api.LookUpTheDeposit(Acc);
+                    Size = new Size(750, 370);
+                    Account.Show();
+                    break;
+
+                case "balance":
+                    api.SendBalance += Balance.OnReceiveBalance;
+                    Balance.SendReSize += OnReceiveSize;
+                    api.LookUpTheBalance(Acc);
+                    Balance.Show();
+                    break;
+            };
         }
         private void OnItemClick(object sender, ToolStripItemClickedEventArgs e)
         {
-            BeginInvoke(new Action(() =>
-            {
-                switch (e.ClickedItem.Name)
-                {
-                    case "quotes":
-                        api.SendQuotes += Quotes.OnReceiveQuotes;
-                        Size = new Size(314, 435);
-                        Quotes.Show();
-                        break;
-
-                    case "exit":
-                        Close();
-                        return;
-
-                    case "strategy":
-                        Statistical.Show();
-                        break;
-
-                    case "account":
-                        api.SendDeposit += Account.OnReceiveDeposit;
-                        api.LookUpTheDeposit(Acc);
-                        Size = new Size(750, 370);
-                        Account.Show();
-                        break;
-
-                    case "balance":
-                        api.SendBalance += Balance.OnReceiveBalance;
-                        Balance.SendReSize += OnReceiveSize;
-                        api.LookUpTheBalance(Acc);
-                        Balance.Show();
-                        break;
-                };
-                CenterToScreen();
-                SuspendLayout();
-                OnClickMinimized = e.ClickedItem.Name;
-                Visible = true;
-                ShowIcon = true;
-                notifyIcon.Visible = false;
-                WindowState = FormWindowState.Normal;
-                ResumeLayout(true);
-                PerformLayout();
-            }));
+            SuspendLayout();
+            BeginInvoke(new Action(() => OnReceiveItem(e.ClickedItem.Name)));
+            OnClickMinimized = e.ClickedItem.Name;
+            Visible = true;
+            ShowIcon = true;
+            notifyIcon.Visible = false;
+            WindowState = FormWindowState.Normal;
+            CenterToScreen();
+            Application.DoEvents();
+            ResumeLayout();
         }
         private void OnReceiveSize(object sender, GridResize e)
         {
@@ -81,7 +83,7 @@ namespace ShareInvest.GoblinBatForms
                     {
                         notifyIcon.Text = "CheckDataBase";
                         api.StartProgress(3605);
-                        notifyIcon.Text = "GoblinBat";
+                        notifyIcon.Text = new Message().GoblinBat;
 
                         return;
                     }
@@ -112,7 +114,7 @@ namespace ShareInvest.GoblinBatForms
 
                     if (Server ? false : new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
                     {
-                        TimerBox.Show(new Message(check[check.Length - 2]).Identify, "Caution", MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750);
+                        TimerBox.Show(new Message(check[check.Length - 2]).Identify, new Message().GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750);
                         Dispose();
 
                         return;
@@ -138,7 +140,6 @@ namespace ShareInvest.GoblinBatForms
                     return;
 
                 case "Byte":
-                    CenterToScreen();
                     BackColor = Color.FromArgb(121, 133, 130);
                     Opacity = 0.8135;
                     OnClickMinimized = "quotes";
@@ -152,7 +153,7 @@ namespace ShareInvest.GoblinBatForms
         }
         private void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
-            if (MessageBox.Show(new Message().Exit, "Caution", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
+            if (MessageBox.Show(new Message().Exit, new Message().GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
             {
                 e.Cancel = true;
 

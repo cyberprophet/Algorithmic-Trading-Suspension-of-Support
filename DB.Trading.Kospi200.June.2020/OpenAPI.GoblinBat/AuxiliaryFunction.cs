@@ -341,13 +341,5 @@ namespace ShareInvest.OpenAPI
             new OPW20010(),
             new OPW20007()
         };
-        protected readonly string[] exclude =
-        {
-            "115960",
-            "006800",
-            "001880",
-            "072770"
-        };
-        protected const string exists = "Information that already Exists";
     }
 }

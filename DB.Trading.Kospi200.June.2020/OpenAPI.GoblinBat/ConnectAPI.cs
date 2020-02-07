@@ -22,7 +22,7 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
-        public Dictionary<double, string[]> OrderNumber
+        public Dictionary<double, string> OrderNumber
         {
             get; private set;
         }
@@ -39,10 +39,13 @@ namespace ShareInvest.OpenAPI
         }
         public void OnReceiveOrder(PurchaseInformation o)
         {
-            ErrorCode = API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo);
+            request.RequestTrData(new Task(() =>
+            {
+                ErrorCode = API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo);
 
-            if (ErrorCode < 0)
-                new ExceptionMessage(error.GetErrorMessage(ErrorCode));
+                if (ErrorCode < 0)
+                    new ExceptionMessage(error.GetErrorMessage(ErrorCode));
+            }));
         }
         public void SetAPI(AxKHOpenAPI axAPI)
         {
@@ -133,21 +136,21 @@ namespace ShareInvest.OpenAPI
         }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
-            if (Array.Exists(message.Basic, o => o.Equals(e.sMsg.Substring(9))))
+            if (Array.Exists(message.basic, o => o.Equals(e.sMsg.Substring(9))))
             {
-                new Task(() =>
-                {
-                    var temp = e.sMsg.Substring(9);
+                var temp = e.sMsg.Substring(9);
 
-                    if (e.sMsg.Contains("모의투자"))
-                        temp.Replace("모의투자 ", string.Empty);
+                if (temp.Equals(message.basic[2]))
+                    OnReceiveBalance--;
 
-                    if (e.sMsg.Last().Equals('다') || e.sMsg.Last().Equals('요'))
-                        temp = string.Concat(temp, ".");
+                if (e.sMsg.Contains("모의투자"))
+                    temp.Replace("모의투자 ", string.Empty);
 
-                    Console.WriteLine(OnReceiveBalance + "\t" + temp);
-                    SendCount?.Invoke(this, new NotifyIconText(temp));
-                }).Start();
+                if (e.sMsg.Last().Equals('다') || e.sMsg.Last().Equals('요'))
+                    temp = string.Concat(temp, ".");
+
+                Console.WriteLine(OnReceiveBalance + "\t" + temp + "\t" + OrderNumber.Count);
+                new Task(() => SendCount?.Invoke(this, new NotifyIconText(temp))).Start();
 
                 return;
             }
@@ -184,8 +187,10 @@ namespace ShareInvest.OpenAPI
             {
                 case 0:
                     if (param[5].Equals("체결"))
-                        OrderNumber.Remove(double.Parse(param[8]));
-
+                    {
+                        OnReceiveBalance++;
+                        OrderNumber.Remove(OrderNumber.First(o => o.Value.Equals(param[1])).Key);
+                    }
                     return;
 
                 case 1:
@@ -193,8 +198,10 @@ namespace ShareInvest.OpenAPI
 
                 case 4:
                     if (param[1].Equals(API.GetFutureCodeByIndex(0)))
+                    {
                         Quantity = param[9].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
-
+                        OnReceiveBalance--;
+                    }
                     return;
             };
         }
@@ -214,63 +221,56 @@ namespace ShareInvest.OpenAPI
             switch (index)
             {
                 case 1:
-                    new Task(() =>
-                    {
-                        if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
-                            SendDatum?.Invoke(this, new Datum(param));
-                    }).Start();
+                    if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
+                        new Task(() => SendDatum?.Invoke(this, new Datum(param))).Start();
+
                     return;
 
                 case 2:
-                    new Task(() =>
-                    {
-                        if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
-                            SendQuotes?.Invoke(this, new Quotes(new string[]
-                            {
-                                param[35],
-                                param[27],
-                                param[19],
-                                param[11],
-                                param[3],
-                                param[7],
-                                param[15],
-                                param[23],
-                                param[31],
-                                param[39]
-                            }, new string[]
-                            {
-                                param[36],
-                                param[28],
-                                param[20],
-                                param[12],
-                                param[4],
-                                param[8],
-                                param[16],
-                                param[24],
-                                param[32],
-                                param[40]
-                            }, new string[]
-                            {
-                                param[38],
-                                param[30],
-                                param[22],
-                                param[14],
-                                param[6],
-                                param[10],
-                                param[18],
-                                param[26],
-                                param[34],
-                                param[42]
-                            }, param[0], OrderNumber));
-                    }).Start();
+                    if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
+                        new Task(() => SendQuotes?.Invoke(this, new Quotes(new string[]
+                        {
+                            param[35],
+                            param[27],
+                            param[19],
+                            param[11],
+                            param[3],
+                            param[7],
+                            param[15],
+                            param[23],
+                            param[31],
+                            param[39]
+                        }, new string[]
+                        {
+                            param[36],
+                            param[28],
+                            param[20],
+                            param[12],
+                            param[4],
+                            param[8],
+                            param[16],
+                            param[24],
+                            param[32],
+                            param[40]
+                        }, new string[]
+                        {
+                            param[38],
+                            param[30],
+                            param[22],
+                            param[14],
+                            param[6],
+                            param[10],
+                            param[18],
+                            param[26],
+                            param[34],
+                            param[42]
+                        }, param[0], OrderNumber))).Start();
                     return;
 
                 case 8:
-                    new Task(() =>
-                    {
-                        if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
-                            SendCurrent?.Invoke(this, new Current(Quantity, Sb.ToString().Split(';')));
-                    }).Start();
+                    if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
+                        new Task(() => SendCurrent?.Invoke(this, new Current(Quantity, Sb.ToString().Split(';')))).Start();
+
                     return;
 
                 case 9:
@@ -325,20 +325,20 @@ namespace ShareInvest.OpenAPI
 
                             if (ts[x, y].Length > 13 && e.sRQName.Split(';')[1].Equals(ts[x, y].Substring(2)))
                             {
-                                Sb = new StringBuilder(exists);
+                                Sb = message.Exists;
                                 e.sPrevNext = "0";
 
                                 break;
                             }
                             Sb.Append(ts[x, y]).Append(';');
                         }
-                        if (!exists.Equals(Sb.ToString()))
+                        if (!message.Exists.Equals(Sb))
                         {
                             SendMemorize?.Invoke(this, new Memorize(Sb));
 
                             continue;
                         }
-                        if (exists.Equals(Sb.ToString()))
+                        if (message.Exists.Equals(Sb))
                             break;
                     }
                     if (DeadLine && (e.sRQName.Split(';')[1].Length == 8 || e.sRQName.Split(';')[1].Equals("DoesNotExist")) && e.sPrevNext.Equals("2"))
@@ -415,11 +415,7 @@ namespace ShareInvest.OpenAPI
                 case 7:
                     if (Sb.Length > 1)
                     {
-                        OrderNumber[double.Parse(e.sRQName)] = new string[]
-                        {
-                            e.sRQName,
-                            Sb.ToString().Split(';')[0]
-                        };
+                        OrderNumber[double.Parse(e.sRQName)] = Sb.ToString().Split(';')[0];
                         OnReceiveBalance--;
                     }
                     break;
@@ -428,27 +424,17 @@ namespace ShareInvest.OpenAPI
                     if (Sb.Length > 1)
                     {
                         var temp = e.sRQName.Split(';');
-                        var price = double.Parse(temp[0]);
-
-                        if (OrderNumber.TryGetValue(price, out string[] correction))
-                        {
-                            OrderNumber[double.Parse(temp[1])] = correction;
-                            OrderNumber.Remove(price);
-                            OnReceiveBalance--;
-                        }
+                        OrderNumber[double.Parse(temp[1])] = Sb.ToString().Split(';')[0];
+                        OrderNumber.Remove(double.Parse(temp[0]));
+                        OnReceiveBalance--;
                     }
                     break;
 
                 case 9:
                     if (Sb.Length > 1)
                     {
-                        var price = double.Parse(e.sRQName.Split(';')[0]);
-
-                        if (OrderNumber.ContainsKey(price))
-                        {
-                            OrderNumber.Remove(price);
-                            OnReceiveBalance--;
-                        }
+                        OrderNumber.Remove(double.Parse(e.sRQName));
+                        OnReceiveBalance--;
                     }
                     break;
 
@@ -518,7 +504,7 @@ namespace ShareInvest.OpenAPI
                 if (tempCode.Length > 0)
                 {
                     foreach (string ex in new CodeListByExclude())
-                        if (API.GetMasterCodeName(tempCode).EndsWith(ex) && !Array.Exists(exclude, o => o.Equals(tempCode)))
+                        if (API.GetMasterCodeName(tempCode).EndsWith(ex) && !Array.Exists(message.exclude, o => o.Equals(tempCode)))
                             market[i] = string.Empty;
 
                     continue;
@@ -532,7 +518,7 @@ namespace ShareInvest.OpenAPI
                 if (onlyOnce == false)
                 {
                     onlyOnce = true;
-                    OrderNumber = new Dictionary<double, string[]>();
+                    OrderNumber = new Dictionary<double, string>();
                     SendCount?.Invoke(this, new NotifyIconText(API.GetLoginInfo("ACCLIST"), API.GetLoginInfo("USER_ID"), API.GetLoginInfo("USER_NAME"), API.GetLoginInfo("GetServerGubun")));
                 }
                 else if (onlyOnce && TimerBox.Show(message.OnReceiveData, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)(request.QueueCount + market.Length)).Equals(DialogResult.OK))
@@ -650,7 +636,8 @@ namespace ShareInvest.OpenAPI
                 request.RequestTrData(new Task(() => InputValueRqData(new Opt50001
                 {
                     Value = code,
-                    RQName = code
+                    RQName = code,
+                    PrevNext = 0
                 })));
                 return;
             }
@@ -658,7 +645,8 @@ namespace ShareInvest.OpenAPI
             {
                 ITR tr = new OPTKWFID
                 {
-                    Value = code
+                    Value = code,
+                    PrevNext = 0
                 };
                 ErrorCode = API.CommKwRqData(tr.Value, 0, 100, tr.PrevNext, tr.RQName, tr.ScreenNo);
 

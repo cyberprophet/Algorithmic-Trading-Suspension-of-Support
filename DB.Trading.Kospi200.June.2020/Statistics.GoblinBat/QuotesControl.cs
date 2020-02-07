@@ -22,7 +22,6 @@ namespace ShareInvest.GoblinBatControls
 
                 for (int i = 0; i < e.Price.Length; i++)
                 {
-
                     var temp = string.Concat("quotes", i).FindByName<Label>(this);
                     var param = e.Price[i].ToString("N2");
                     var temporary = string.Concat("order", i).FindByName<Label>(this);
@@ -30,12 +29,14 @@ namespace ShareInvest.GoblinBatControls
                     if (temp.Text.Equals(param) == false)
                         temp.Text = param;
 
-                    if (e.OrderNumber.TryGetValue(e.Price[i], out string[] value))
+                    if (e.OrderNumber.TryGetValue(e.Price[i], out string value))
                     {
-                        if (temporary.Text.Equals(value[1]))
+                        var number = int.Parse(value).ToString();
+
+                        if (temporary.Text.Equals(number))
                             continue;
 
-                        temporary.Text = value[1];
+                        temporary.Text = number;
                     }
                     else
                         temporary.Text = string.Empty;

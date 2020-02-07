@@ -33,8 +33,11 @@ namespace ShareInvest.Catalog
         };
         public string ID
         {
-            get;
-        } = "종목코드;기준일자;수정주가구분";
+            get
+            {
+                return id;
+            }
+        }
         public string Value
         {
             get
@@ -48,17 +51,18 @@ namespace ShareInvest.Catalog
         }
         public string RQName
         {
-            get;
-            set;
+            get; set;
         }
         public string TrCode
         {
-            get;
-        } = "opt10081";
+            get
+            {
+                return code;
+            }
+        }
         public int PrevNext
         {
-            get;
-            set;
+            get; set;
         }
         public string ScreenNo
         {
@@ -71,5 +75,7 @@ namespace ShareInvest.Catalog
         {
             get; set;
         }
+        private const string code = "opt10081";
+        private const string id = "종목코드;기준일자;수정주가구분";
     }
 }

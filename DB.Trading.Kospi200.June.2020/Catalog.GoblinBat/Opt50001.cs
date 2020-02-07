@@ -14,8 +14,11 @@ namespace ShareInvest.Catalog
         }
         public string ID
         {
-            get; private set;
-        } = "종목코드";
+            get
+            {
+                return id;
+            }
+        }
         public string Value
         {
             get; set;
@@ -23,15 +26,18 @@ namespace ShareInvest.Catalog
         public string RQName
         {
             get; set;
-        } = "선옵현재가요청";
+        }
         public string TrCode
         {
-            get; private set;
-        } = "opt50001";
+            get
+            {
+                return code;
+            }
+        }
         public int PrevNext
         {
             get; set;
-        } = 0;
+        }
         public string ScreenNo
         {
             get
@@ -133,5 +139,7 @@ namespace ShareInvest.Catalog
             "예상체결가전일종가대비등락율",
             "이자율"
         };
+        private const string code = "opt50001";
+        private const string id = "종목코드";
     }
 }

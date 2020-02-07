@@ -15,16 +15,26 @@ namespace ShareInvest.Catalog
         }
         public string RQName
         {
-            get; set;
-        } = "관심종목정보요청";
+            get
+            {
+                return name;
+            }
+            set
+            {
+
+            }
+        }
         public string TrCode
         {
-            get;
-        } = "OPTFOFID";
+            get
+            {
+                return code;
+            }
+        }
         public int PrevNext
         {
             get; set;
-        } = 0;
+        }
         public string ScreenNo
         {
             get
@@ -105,5 +115,7 @@ namespace ShareInvest.Catalog
             "베가",
             "로"
         };
+        private const string name = "관심종목정보요청";
+        private const string code = "OPTFOFID";
     }
 }

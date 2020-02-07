@@ -14,8 +14,11 @@ namespace ShareInvest.Catalog
         }
         public string ID
         {
-            get; private set;
-        } = "종목코드;시간단위";
+            get
+            {
+                return id;
+            }
+        }
         public string Value
         {
             get
@@ -33,8 +36,11 @@ namespace ShareInvest.Catalog
         }
         public string TrCode
         {
-            get; private set;
-        } = "opt50028";
+            get
+            {
+                return code;
+            }
+        }
         public int PrevNext
         {
             get; set;
@@ -60,5 +66,7 @@ namespace ShareInvest.Catalog
         {
             get; set;
         }
+        private const string code = "opt50028";
+        private const string id = "종목코드;시간단위";
     }
 }
