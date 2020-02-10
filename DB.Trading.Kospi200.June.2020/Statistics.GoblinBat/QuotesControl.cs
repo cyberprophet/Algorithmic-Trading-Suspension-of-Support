@@ -11,6 +11,15 @@ namespace ShareInvest.GoblinBatControls
         {
             InitializeComponent();
         }
+        public void OnReceiveState(object sender, State e)
+        {
+            BeginInvoke(new Action(() =>
+            {
+                stateReceive.Text = e.OnReceive;
+                stateCount.Text = e.OrderCount;
+                stateQuantity.Text = e.Quantity;
+            }));
+        }
         public void OnReceiveQuotes(object sender, Quotes e)
         {
             BeginInvoke(new Action(() =>

@@ -28,14 +28,22 @@ namespace ShareInvest.Strategy
             {
                 if (CancelOrder)
                 {
-                    if (e.OrderNumber.Count > 1)
+                    if (e.OrderNumber.Count > 0)
+                    {
+                        api.OnReceiveBalance++;
                         SendCorrectionOrder(e.Price, e.Quantity);
-
-                    else if (e.OrderNumber.Count < 2 && Difference > 1)
-                        SendNewOrder(e.Price, Difference >= e.Price.Length / 2 ? e.Price.Length / 2 : (int)Difference);
+                    }
+                    else if (e.OrderNumber.Count < 1 && Difference > 1)
+                    {
+                        api.OnReceiveBalance++;
+                        SendNewOrder(e.Price, Difference);
+                    }
                 }
                 else if (e.OrderNumber.Count > 0)
+                {
+                    api.OnReceiveBalance++;
                     SendClearingOrder(Classification.Equals("2") ? e.OrderNumber.OrderBy(o => o.Key) : e.OrderNumber.OrderByDescending(o => o.Key));
+                }
             }
         }
         private void SendCorrectionOrder(double[] param, int[] amount)
@@ -45,47 +53,57 @@ namespace ShareInvest.Strategy
 
             if (Classification.Equals("1"))
             {
-                if (amount[4] < amount[5] && api.OrderNumber.TryGetValue(param[4], out string buy))
+                if (amount[4] < amount[5] && api.OrderNumber.TryGetValue(param[3], out string buy))
                 {
                     price = api.OrderNumber.Max(o => o.Key) + Const.ErrorRate;
                     number = buy;
                 }
-                else if (amount[4] > amount[5] && api.OrderNumber.ContainsKey(param[4]) == false)
+                else if (amount[4] > amount[5] && api.OrderNumber.ContainsKey(param[3]) == false)
                 {
                     price = api.OrderNumber.Min(o => o.Key) - Const.ErrorRate;
                     number = api.OrderNumber[api.OrderNumber.Max(o => o.Key)];
                 }
                 else
+                {
+                    api.OnReceiveBalance--;
+
                     return;
+                }
             }
             else if (Classification.Equals("2"))
             {
-                if (amount[4] > amount[5] && api.OrderNumber.TryGetValue(param[5], out string sell))
+                if (amount[4] > amount[5] && api.OrderNumber.TryGetValue(param[6], out string sell))
                 {
                     price = api.OrderNumber.Min(o => o.Key) - Const.ErrorRate;
                     number = sell;
                 }
-                else if (amount[4] < amount[5] && api.OrderNumber.ContainsKey(param[5]) == false)
+                else if (amount[4] < amount[5] && api.OrderNumber.ContainsKey(param[6]) == false)
                 {
                     price = api.OrderNumber.Max(o => o.Key) + Const.ErrorRate;
                     number = api.OrderNumber[api.OrderNumber.Min(o => o.Key)];
                 }
                 else
+                {
+                    api.OnReceiveBalance--;
+
                     return;
+                }
             }
             else
-                return;
+            {
+                api.OnReceiveBalance--;
 
+                return;
+            }
             if (api.OnReceiveBalance < 1 && api.OrderNumber.Count > 0)
             {
-                api.OnReceiveBalance++;
-                var before = api.OrderNumber.FirstOrDefault(o => o.Value.Equals(number)).Key;
+                var before = api.OrderNumber.First(o => o.Value.Equals(number)).Key;
 
                 if (price != before)
                     api.OnReceiveOrder(new PurchaseInformation
                     {
                         RQName = string.Concat(before, ";", price),
-                        ScreenNo = string.Concat(Classification, specify.Code.Substring(0, 3)),
+                        ScreenNo = string.Concat(Classification, number.Substring(number.Length - 3)),
                         AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
                         Code = specify.Code,
                         OrdKind = 2,
@@ -96,18 +114,22 @@ namespace ShareInvest.Strategy
                         OrgOrdNo = number
                     });
                 else
+                {
                     api.OnReceiveBalance--;
+
+                    return;
+                }
             }
+            else
+                api.OnReceiveBalance--;
         }
         private void SendClearingOrder(IOrderedEnumerable<KeyValuePair<double, string>> param)
         {
             foreach (KeyValuePair<double, string> kv in param)
-            {
-                api.OnReceiveBalance++;
                 api.OnReceiveOrder(new PurchaseInformation
                 {
                     RQName = kv.Key.ToString(),
-                    ScreenNo = string.Concat(Classification, specify.Code.Substring(0, 3)),
+                    ScreenNo = string.Concat(Classification, kv.Value.Substring(kv.Value.Length - 3)),
                     AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
                     Code = specify.Code,
                     OrdKind = 3,
@@ -117,14 +139,12 @@ namespace ShareInvest.Strategy
                     Price = string.Empty,
                     OrgOrdNo = kv.Value
                 });
-            }
         }
-        private void SendNewOrder(double[] param, int length)
+        private void SendNewOrder(double[] param, double length)
         {
-            for (int i = 1; i < length; i++)
+            for (int i = 1; i < (length > 3 ? 4 : (length < 2 ? 2 : 3)); i++)
             {
-                api.OnReceiveBalance++;
-                var price = param[Classification.Equals("2") ? i + 5 : 4 - i].ToString();
+                var price = param[Classification.Equals("2") ? 9 - i : i].ToString();
                 api.OnReceiveOrder(new PurchaseInformation
                 {
                     RQName = price,

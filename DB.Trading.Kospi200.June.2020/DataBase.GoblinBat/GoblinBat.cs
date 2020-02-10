@@ -20,7 +20,7 @@ namespace ShareInvest.GoblinBatForms
             api.StartProgress();
             new Temporary();
             api.SendCount += OnReceiveNotifyIcon;
-            Size = new Size(243, 35);
+            Size = new Size(238, 35);
             CenterToScreen();
         }
         private void OnReceiveItem(string item)
@@ -29,32 +29,37 @@ namespace ShareInvest.GoblinBatForms
             {
                 case "quotes":
                     api.SendQuotes += Quotes.OnReceiveQuotes;
-                    Size = new Size(314, 435);
+                    api.SendState += Quotes.OnReceiveState;
+                    Size = new Size(323, 493);
                     Quotes.Show();
                     break;
 
                 case "exit":
+                    Size = new Size(241, 0);
                     Close();
                     return;
 
                 case "strategy":
+                    Size = new Size(775, 375);
                     Statistical.Show();
                     break;
 
                 case "account":
                     api.SendDeposit += Account.OnReceiveDeposit;
                     api.LookUpTheDeposit(Acc);
-                    Size = new Size(750, 370);
+                    Size = new Size(749, 372);
                     Account.Show();
                     break;
 
                 case "balance":
+                    Size = new Size(249, 0);
                     api.SendBalance += Balance.OnReceiveBalance;
                     Balance.SendReSize += OnReceiveSize;
                     api.LookUpTheBalance(Acc);
                     Balance.Show();
                     break;
             };
+            CenterToScreen();
         }
         private void OnItemClick(object sender, ToolStripItemClickedEventArgs e)
         {
@@ -65,13 +70,12 @@ namespace ShareInvest.GoblinBatForms
             ShowIcon = true;
             notifyIcon.Visible = false;
             WindowState = FormWindowState.Normal;
-            CenterToScreen();
             Application.DoEvents();
             ResumeLayout();
         }
         private void OnReceiveSize(object sender, GridResize e)
         {
-            Size = new Size(Server ? 594 : 602, e.ReSize + (e.Count - 7) * 21);
+            Size = new Size(Server ? 591 : 599, e.ReSize + e.Count + 33);
             api.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
         }
         private void OnReceiveNotifyIcon(object sender, NotifyIconText e)
@@ -101,9 +105,11 @@ namespace ShareInvest.GoblinBatForms
                         Account = new AccountControl();
                         panel.Controls.Add(Account);
                         Account.Dock = DockStyle.Fill;
+                        api.SendDeposit += Account.OnReceiveDeposit;
                         Balance = new BalanceControl();
                         panel.Controls.Add(Balance);
                         Balance.Dock = DockStyle.Fill;
+                        api.SendBalance += Balance.OnReceiveBalance;
                         Statistical = new StatisticalAnalysis();
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
@@ -132,7 +138,6 @@ namespace ShareInvest.GoblinBatForms
                         Long = 60
                     };
                     new Trading(api, specify, new Strategy.Quotes(specify, api));
-
                     return;
 
                 case "String":
@@ -140,6 +145,12 @@ namespace ShareInvest.GoblinBatForms
                     return;
 
                 case "Byte":
+                    Account.Show();
+                    api.SendDeposit -= Account.OnReceiveDeposit;
+                    Account.Hide();
+                    Balance.Show();
+                    api.SendBalance -= Balance.OnReceiveBalance;
+                    Balance.Hide();
                     BackColor = Color.FromArgb(121, 133, 130);
                     Opacity = 0.8135;
                     OnClickMinimized = "quotes";
@@ -156,6 +167,7 @@ namespace ShareInvest.GoblinBatForms
             if (MessageBox.Show(new Message().Exit, new Message().GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
             {
                 e.Cancel = true;
+                WindowState = FormWindowState.Minimized;
 
                 return;
             }
@@ -167,14 +179,11 @@ namespace ShareInvest.GoblinBatForms
             {
                 if (WindowState.Equals(FormWindowState.Minimized))
                 {
-                    Visible = false;
-                    ShowIcon = false;
-                    notifyIcon.Visible = true;
-
                     switch (OnClickMinimized)
                     {
                         case "quotes":
                             api.SendQuotes -= Quotes.OnReceiveQuotes;
+                            api.SendState -= Quotes.OnReceiveState;
                             Quotes.Hide();
                             break;
 
@@ -194,7 +203,9 @@ namespace ShareInvest.GoblinBatForms
                             Statistical.Hide();
                             break;
                     };
-                    return;
+                    Visible = false;
+                    ShowIcon = false;
+                    notifyIcon.Visible = true;
                 }
             }));
         }

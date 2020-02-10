@@ -130,19 +130,13 @@ namespace ShareInvest.GoblinBatControls
                         }
                     }
                 }
-                if (balGrid.Rows.Count > 0)
-                {
-                    balGrid.Show();
-                    balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-                    balGrid.Cursor = Cursors.Hand;
-                    balGrid.AutoResizeRows();
-                    balGrid.AutoResizeColumns();
-                    balGrid.ResumeLayout();
-                    SendReSize?.Invoke(this, new GridResize(balGrid.Rows.GetRowsHeight(DataGridViewElementStates.None), balGrid.Rows.Count));
-
-                    return;
-                }
-                balGrid.Hide();
+                balGrid.Show();
+                balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+                balGrid.Cursor = Cursors.Hand;
+                balGrid.AutoResizeRows();
+                balGrid.AutoResizeColumns();
+                SendReSize?.Invoke(this, new GridResize(balGrid.Rows.GetRowsHeight(DataGridViewElementStates.None), balGrid.Rows.Count));
+                balGrid.ResumeLayout();
             }));
         }
         public event EventHandler<GridResize> SendReSize;
