@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 
 namespace ShareInvest.EventHandler
@@ -17,9 +18,15 @@ namespace ShareInvest.EventHandler
         {
             NotifyIcon = end;
         }
-        public NotifyIconText(int count)
+        public NotifyIconText(int count, string code)
         {
-            NotifyIcon = count;
+            NotifyIcon = new Dictionary<int, string>()
+            {
+                {
+                    count,
+                    code
+                }
+            };
         }
         public NotifyIconText(string code)
         {

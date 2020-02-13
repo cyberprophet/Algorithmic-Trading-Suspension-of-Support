@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatControls;
@@ -36,6 +38,7 @@ namespace ShareInvest.GoblinBatForms
 
                 case "exit":
                     Size = new Size(241, 0);
+                    CenterToScreen();
                     Close();
                     return;
 
@@ -82,8 +85,10 @@ namespace ShareInvest.GoblinBatForms
         {
             switch (e.NotifyIcon.GetType().Name)
             {
-                case "Int32":
-                    if ((int)e.NotifyIcon == 0)
+                case "Dictionary`2":
+                    var temp = (Dictionary<int, string>)e.NotifyIcon;
+
+                    if (temp.ContainsKey(0))
                     {
                         notifyIcon.Text = "CheckDataBase";
                         api.StartProgress(3605);
@@ -91,7 +96,8 @@ namespace ShareInvest.GoblinBatForms
 
                         return;
                     }
-                    notifyIcon.Text = e.NotifyIcon.ToString();
+                    var first = temp.First();
+                    notifyIcon.Text = string.Concat(first.Key, '_', first.Value);
                     return;
 
                 case "StringBuilder":
@@ -133,11 +139,23 @@ namespace ShareInvest.GoblinBatForms
                         Account = Acc,
                         Assets = 35000000,
                         Code = api.Strategy,
+                        Strategy = "TF",
                         Time = 30,
                         Short = 4,
                         Long = 60
                     };
                     new Trading(api, specify, new Strategy.Quotes(specify, api));
+                    var liquidate = new Specify
+                    {
+                        Account = Acc,
+                        Assets = 35000000,
+                        Code = api.Strategy,
+                        Strategy = "WU",
+                        Time = 5,
+                        Short = 4,
+                        Long = 60
+                    };
+                    new Trading(api, liquidate, new Strategy.Quotes(liquidate, api));
                     return;
 
                 case "String":

@@ -4,7 +4,7 @@ namespace ShareInvest.EventHandler
 {
     public class State : EventArgs
     {
-        public string OnReceive
+        public bool OnReceive
         {
             get; private set;
         }
@@ -16,9 +16,9 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public State(int receive, int count, int quantity)
+        public State(bool receive, int count, int quantity)
         {
-            OnReceive = receive.ToString();
+            OnReceive = receive;
             OrderCount = count.ToString();
             Quantity = quantity.ToString();
         }

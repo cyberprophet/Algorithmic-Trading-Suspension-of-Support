@@ -95,7 +95,7 @@ namespace ShareInvest.OpenAPI
                                 Volume = int.Parse(temp[2])
                             });
                     }
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext('1'))
                     {
                         db.Configuration.AutoDetectChangesEnabled = true;
 
@@ -144,40 +144,47 @@ namespace ShareInvest.OpenAPI
         {
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext('1'))
                 {
-                    if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
-                        return;
-
-                    db.Codes.AddOrUpdate(new Codes
+                    try
                     {
-                        Code = code,
-                        Name = name,
-                        Info = info
-                    });
-                    db.SaveChanges();
+                        if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
+                            return;
+
+                        db.Codes.AddOrUpdate(new Codes
+                        {
+                            Code = code,
+                            Name = name,
+                            Info = info
+                        });
+                        db.SaveChanges();
+                    }
+                    catch (Exception ex)
+                    {
+                        new ExceptionMessage(ex.StackTrace, code);
+                    }
                 }
             }).Start();
         }
         protected string GetStrategy()
         {
-            try
+            using (var db = new GoblinBatDbContext('1'))
             {
-                using (var db = new GoblinBatDbContext())
+                try
                 {
-                    return db.Codes.FirstOrDefault(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
+                    return db.Codes.First(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
                 }
             }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace);
-            }
-            return string.Empty;
+            return GetStrategy();
         }
         protected string GetRetention(int param, string code)
         {
             long max = 0;
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext('1'))
             {
                 try
                 {
@@ -215,17 +222,26 @@ namespace ShareInvest.OpenAPI
         }
         protected List<string> RequestCodeList(List<string> list, string[] market)
         {
-            using (var db = new GoblinBatDbContext())
+            using (var db = new GoblinBatDbContext('1'))
             {
-                foreach (var temp in db.Codes.Select(o => new
+                try
                 {
-                    o.Code,
-                    o.Info
-                }))
-                    if (temp.Code.Length == 6 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
-                        list.Add(temp.Code);
+                    foreach (var temp in db.Codes.Select(o => new
+                    {
+                        o.Code,
+                        o.Info
+                    }))
+                        if (temp.Code.Length == 6 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
+                            list.Add(temp.Code);
+
+                    return list;
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
             }
-            return list;
+            return RequestCodeList(list, market);
         }
         protected List<string> RequestCodeList(List<string> list)
         {
@@ -233,7 +249,7 @@ namespace ShareInvest.OpenAPI
 
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext('1'))
                 {
                     foreach (var temp in db.Codes.Select(o => new
                     {
@@ -282,7 +298,7 @@ namespace ShareInvest.OpenAPI
             }
             catch (Exception ex)
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext('1'))
                 {
                     var stocks = db.Stocks.Where(o => o.Code.Equals(code));
 

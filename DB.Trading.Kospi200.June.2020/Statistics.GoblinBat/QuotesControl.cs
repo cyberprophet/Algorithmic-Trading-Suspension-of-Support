@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
@@ -15,9 +17,11 @@ namespace ShareInvest.GoblinBatControls
         {
             BeginInvoke(new Action(() =>
             {
-                stateReceive.Text = e.OnReceive;
+                stateReceive.Text = e.OnReceive ? "주문가능" : string.Empty;
                 stateCount.Text = e.OrderCount;
-                stateQuantity.Text = e.Quantity;
+                var position = e.Quantity.Contains("-");
+                stateQuantity.Text = position ? e.Quantity.Substring(1) : e.Quantity;
+                stateQuantity.ForeColor = position ? Color.DeepSkyBlue : Color.Maroon;
             }));
         }
         public void OnReceiveQuotes(object sender, Quotes e)
@@ -38,9 +42,9 @@ namespace ShareInvest.GoblinBatControls
                     if (temp.Text.Equals(param) == false)
                         temp.Text = param;
 
-                    if (e.OrderNumber.TryGetValue(e.Price[i], out string value))
+                    if (e.OrderNumber.ContainsValue(e.Price[i]))
                     {
-                        var number = int.Parse(value).ToString();
+                        var number = int.Parse(e.OrderNumber.First(o => o.Value == e.Price[i]).Key).ToString();
 
                         if (temporary.Text.Equals(number))
                             continue;

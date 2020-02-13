@@ -21,11 +21,11 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public Dictionary<double, string> OrderNumber
+        public Dictionary<string, double> OrderNumber
         {
             get; private set;
         }
-        public Quotes(string[] price, string[] quantity, string[] number, string time, Dictionary<double, string> order)
+        public Quotes(string[] price, string[] quantity, string[] number, string time, Dictionary<string, double> order)
         {
             Price = new double[price.Length];
             Quantity = new int[quantity.Length];

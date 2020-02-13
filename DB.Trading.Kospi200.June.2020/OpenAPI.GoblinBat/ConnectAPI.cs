@@ -22,11 +22,11 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
-        public Dictionary<double, string> OrderNumber
+        public Dictionary<string, double> OrderNumber
         {
             get; private set;
         }
-        public int OnReceiveBalance
+        public bool OnReceiveBalance
         {
             get; set;
         }
@@ -39,6 +39,7 @@ namespace ShareInvest.OpenAPI
         }
         public void OnReceiveOrder(PurchaseInformation o)
         {
+            OnReceiveBalance = false;
             request.RequestTrData(new Task(() =>
             {
                 ErrorCode = API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo);
@@ -136,6 +137,9 @@ namespace ShareInvest.OpenAPI
             {
                 var temp = e.sMsg.Substring(9);
 
+                if ((temp.Equals(message.basic[0]) || temp.Equals(message.basic[1])) == false)
+                    Console.WriteLine(e.sMsg + "\t" + e.sRQName + "\t" + e.sTrCode + "\t" + e.sScrNo);
+
                 if (e.sMsg.Contains("모의투자"))
                     temp = temp.Replace("모의투자 ", string.Empty);
 
@@ -155,9 +159,11 @@ namespace ShareInvest.OpenAPI
             }
             if (e.sMsg.Equals(message.Failure) || e.sMsg.Substring(9).Equals(message.Restart))
             {
+                Console.WriteLine(e.sMsg);
+                /*
                 Process.Start("shutdown.exe", "-r");
                 Dispose();
-
+                */
                 return;
             }
             if (e.sMsg.Substring(9).Equals(message.LookUp))
@@ -181,16 +187,30 @@ namespace ShareInvest.OpenAPI
                     switch (param[5])
                     {
                         case "체결":
-                            OrderNumber.Remove(OrderNumber.First(o => o.Value.Equals(param[1])).Key);
-                            return;
+                            if (OnReceiveBalance == false)
+                                OnReceiveBalance = request.QueueCount == 0 ? true : false;
+
+                            OrderNumber.Remove(param[1]);
+                            break;
+
+                        case "접수":
+                            if (param[11].Equals("00000"))
+                                OnReceiveBalance = request.QueueCount == 0 ? true : false;
+
+                            break;
 
                         case "확인":
-                            if (param[12].Substring(3).Equals("정정"))
+                            if (param[12].Substring(3).Equals("취소") || param[12].Substring(3).Equals("정정"))
                             {
-                                OrderNumber[double.Parse(param[8])] = param[1];
-                                OnReceiveBalance--;
+                                var check = int.Parse(param[11]).ToString("D7");
+
+                                if (OrderNumber.ContainsKey(check) || OrderNumber.ContainsKey(param[1]))
+                                    Console.WriteLine(check + "\t" + param[1] + "\t" + OrderNumber.Remove(check));
+
+                                else
+                                    OnReceiveBalance = request.QueueCount == 0 ? true : false;
                             }
-                            return;
+                            break;
                     }
                     return;
 
@@ -199,10 +219,9 @@ namespace ShareInvest.OpenAPI
 
                 case 4:
                     if (param[1].Equals(API.GetFutureCodeByIndex(0)))
-                    {
                         Quantity = param[9].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
-                        new Task(() => SendState?.Invoke(this, new State(OnReceiveBalance, OrderNumber.Count, Quantity))).Start();
-                    }
+
+                    new Task(() => SendState?.Invoke(this, new State(OnReceiveBalance, OrderNumber.Count, Quantity))).Start();
                     return;
             };
         }
@@ -278,15 +297,16 @@ namespace ShareInvest.OpenAPI
                     if (param[0].Equals("e") && DeadLine)
                     {
                         DeadLine = false;
-                        OnReceiveBalance++;
+                        OnReceiveBalance = false;
                         Code = RequestCodeList(new List<string>(32), CodeStorage);
                         SendMemorize?.Invoke(this, new Memorize("Clear"));
-                        Delay.delay = 3705;
+                        Delay.delay = 4105;
                         Request(GetRandomCode(new Random().Next(0, Code.Count)));
                     }
                     else if (param[0].Equals("3") && DeadLine == false)
                     {
                         DeadLine = true;
+                        OnReceiveBalance = true;
                         Delay.delay = 205;
                     }
                     else if (param[0].Equals("0") && param[2].Equals("002000"))
@@ -414,21 +434,32 @@ namespace ShareInvest.OpenAPI
                     return;
 
                 case 7:
-                    if (Sb.Length > 1)
-                        OrderNumber[double.Parse(e.sRQName)] = Sb.ToString().Split(';')[0];
-
-                    return;
-
                 case 8:
-                    if (Sb.Length > 1)
-                        OrderNumber.Remove(double.Parse(e.sRQName.Split(';')[0]));
-
-                    return;
-
                 case 9:
-                    if (Sb.Length > 1)
-                        OrderNumber.Remove(double.Parse(e.sRQName));
+                    var check = e.sRQName.Split(';');
 
+                    if (check[check.Length - 1].Equals("New"))
+                    {
+                        if (Sb.Length > 1)
+                            OrderNumber[Sb.ToString().Split(';')[0]] = double.Parse(check[0]);
+
+                        return;
+                    }
+                    else if (check[check.Length - 1].Equals("Clear"))
+                        api.OrderNumber.Remove(check[0]);
+
+                    else
+                    {
+                        api.OrderNumber.Remove(check[1]);
+
+                        if (Sb.Length > 1)
+                            OrderNumber[Sb.ToString().Split(';')[0]] = double.Parse(check[0]);
+                    }
+                    if (OnReceiveBalance == false && Sb.ToString().Equals(";"))
+                    {
+                        OnReceiveBalance = request.QueueCount == 0 ? true : false;
+                        new Task(() => SendState?.Invoke(this, new State(OnReceiveBalance, OrderNumber.Count, Quantity))).Start();
+                    }
                     return;
 
                 case 10:
@@ -520,7 +551,7 @@ namespace ShareInvest.OpenAPI
                 {
                     onlyOnce = false;
                     var account = API.GetLoginInfo("ACCLIST");
-                    OrderNumber = new Dictionary<double, string>();
+                    OrderNumber = new Dictionary<string, double>();
                     SendCount?.Invoke(this, new NotifyIconText(account, API.GetLoginInfo("USER_ID"), API.GetLoginInfo("USER_NAME"), API.GetLoginInfo("GetServerGubun")));
                     LookUpTheDeposit(account.Split(';'));
                     LookUpTheBalance(account.Split(';'));
@@ -531,9 +562,9 @@ namespace ShareInvest.OpenAPI
             }
             if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
             {
-                DeadLine = true;
+                DeadLine = DateTime.Now.Hour < 9 ? false : true;
                 Delay.delay = 205;
-                OnReceiveBalance--;
+                OnReceiveBalance = DateTime.Now.Hour > 8 ? true : false;
             }
             else
             {
@@ -541,7 +572,7 @@ namespace ShareInvest.OpenAPI
                 Request(GetRandomCode(new Random(e.nErrCode).Next(0, Code.Count)));
                 Delay.delay = 4135;
             }
-            SendCount?.Invoke(this, new NotifyIconText((byte)7));
+            SendCount?.Invoke(this, new NotifyIconText(7));
         }
         private string GetRandomCode(int index)
         {
@@ -569,7 +600,7 @@ namespace ShareInvest.OpenAPI
                 request.RequestTrData(new Task(() =>
                 {
                     InputValueRqData(tr);
-                    SendCount?.Invoke(this, new NotifyIconText(Code.Count));
+                    SendCount?.Invoke(this, new NotifyIconText(Code.Count, code));
                 }));
                 return;
             }
