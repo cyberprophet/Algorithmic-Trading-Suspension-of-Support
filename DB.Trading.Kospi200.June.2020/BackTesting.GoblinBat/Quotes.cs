@@ -12,137 +12,268 @@ namespace ShareInvest.Strategy
         {
             this.specify = specify;
             this.api = api;
+            strategy = specify.Strategy.Equals("TF");
             api.OnReceiveBalance = false;
             api.SendQuotes += OnReceiveQuotes;
+            api.WindingClass = string.Empty;
         }
-        internal void SetTrendFollowing(double difference, double classification)
+        internal void SendClearingOrder(double trend)
         {
-            Difference = api.Quantity > 0 && classification < 0 || api.Quantity < 0 && classification > 0 ? difference + 1 : difference;
-            Classification = classification > 0 ? "2" : "1";
+            foreach (KeyValuePair<string, double> kv in trend > 0 ? api.SellOrder.OrderBy(o => o.Value) : api.BuyOrder.OrderByDescending(o => o.Value))
+                if (trend > 0 ? api.SellOrder.Remove(kv.Key) : api.BuyOrder.Remove(kv.Key))
+                {
+                    api.OnReceiveBalance = false;
+                    api.OnReceiveOrder(new PurchaseInformation
+                    {
+                        RQName = string.Concat(kv.Key, ";", kv.Value),
+                        ScreenNo = string.Concat(strategy ? api.Classification : api.WindingClass, kv.Key.Substring(kv.Key.Length - 3)),
+                        AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
+                        Code = specify.Code,
+                        OrdKind = 3,
+                        SlbyTP = string.Empty,
+                        OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                        Qty = 1,
+                        Price = kv.Value.ToString("F2"),
+                        OrgOrdNo = kv.Key
+                    });
+                }
         }
-        private bool GetCancelOrder(double[] price)
+        internal void SetTrendFollowing(double max, double classification)
         {
-            for (int i = Classification.Equals("2") ? 0 : 5; i < (Classification.Equals("2") ? 5 : 10); i++)
-                if (api.OrderNumber.ContainsValue(price[i]))
-                    return true;
+            api.Difference = (api.WindingClass.Equals(string.Empty) ? max : max / 3) - Math.Abs(api.Quantity) - (classification > 0 ? api.BuyOrder.Count : api.SellOrder.Count);
 
-            return false;
+            if (api.Difference > 1)
+                api.Classification = classification > 0 ? "2" : "1";
+
+            else
+                api.Classification = string.Empty;
+        }
+        internal void SetWindingUp(double classification)
+        {
+            api.WindingUp = Math.Abs(api.Quantity) - (classification > 0 ? api.BuyOrder.Count : api.SellOrder.Count);
+
+            if (api.WindingUp > 0 && classification > 0 && api.Quantity < 0 && api.Classification.Equals("2") == false)
+                api.WindingClass = "2";
+
+            else if (api.WindingUp > 0 && classification < 0 && api.Quantity > 0 && api.Classification.Equals("1") == false)
+                api.WindingClass = "1";
+
+            else
+                api.WindingClass = string.Empty;
+        }
+        private void SendRollOverOrder(int over)
+        {
+            if (over < 3 && over > -3)
+            {
+                SendClearingOrder(over);
+                SendClearingOrder(-over);
+            }
+            else
+                SendClearingOrder(over);
+
+            if (api.Quantity != 0)
+                api.OnReceiveOrder(new PurchaseInformation
+                {
+                    RQName = "DoNotRollOver",
+                    ScreenNo = string.Concat(api.Classification, api.WindingClass, api.Quantity.ToString("D2")),
+                    AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
+                    Code = specify.Code,
+                    OrdKind = 1,
+                    SlbyTP = api.Quantity > 0 ? "1" : "2",
+                    OrdTp = ((int)PurchaseInformation.OrderType.시장가).ToString(),
+                    Qty = Math.Abs(api.Quantity) / (over < 3 && over > -3 ? 1 : 2),
+                    Price = string.Empty,
+                    OrgOrdNo = string.Empty
+                });
+        }
+        private void SendCorrectionOrder(double price, string number, string classification)
+        {
+            api.OnReceiveBalance = false;
+            api.OnReceiveOrder(new PurchaseInformation
+            {
+                RQName = price.ToString("F2"),
+                ScreenNo = string.Concat(classification, number.Substring(number.Length - 3)),
+                AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
+                Code = specify.Code,
+                OrdKind = 2,
+                SlbyTP = classification,
+                OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                Qty = 1,
+                Price = Math.Round(price, 2).ToString("F2"),
+                OrgOrdNo = number
+            });
         }
         private void OnReceiveQuotes(object sender, EventHandler.Quotes e)
         {
-            if (api.OnReceiveBalance)
-            {
-                if (GetCancelOrder(e.Price))
-                    SendClearingOrder(Classification.Equals("2") ? api.OrderNumber.OrderBy(o => o.Value) : api.OrderNumber.OrderByDescending(o => o.Value));
+            if (strategy && api.Total.Count > 0)
+                Temp = api.Total.Dequeue().Split(';');
 
-                else if (api.OrderNumber.Count > 0)
+            if (api.OnReceiveBalance && Temp != null)
+            {
+                if (strategy == false && e.Price[4] == Sell && e.Price[5] == Buy)
+                {
+                    Sell = e.Price[4];
+                    Buy = e.Price[5];
+                    int sell = int.Parse(Temp[0]), buy = int.Parse(Temp[1]);
+
+                    if (sell > buy)
+                    {
+                        if (api.SellOrder.Count > 0 && api.SellOrder.ContainsValue(e.Price[4]) == false)
+                        {
+                            var number = api.SellOrder.First(o => o.Value == api.SellOrder.Max(p => p.Value)).Key;
+
+                            if (api.SellOrder.Remove(number))
+                                SendCorrectionOrder(api.SellOrder.Min(o => o.Value) - Const.ErrorRate, number, "1");
+                        }
+                        if (api.BuyOrder.ContainsValue(e.Price[5]))
+                        {
+                            var number = api.BuyOrder.First(o => o.Value == e.Price[5]).Key;
+
+                            if (api.BuyOrder.Remove(number))
+                                SendCorrectionOrder(api.BuyOrder.Min(o => o.Value) - Const.ErrorRate, number, "2");
+                        }
+                        return;
+                    }
+                    if (buy > sell)
+                    {
+                        if (api.BuyOrder.Count > 0 && api.BuyOrder.ContainsValue(e.Price[5]) == false)
+                        {
+                            var number = api.BuyOrder.First(o => o.Value == api.BuyOrder.Min(p => p.Value)).Key;
+
+                            if (api.BuyOrder.Remove(number))
+                                SendCorrectionOrder(api.BuyOrder.Max(o => o.Value) + Const.ErrorRate, number, "2");
+                        }
+                        if (api.SellOrder.ContainsValue(e.Price[4]))
+                        {
+                            var number = api.SellOrder.First(o => o.Value == e.Price[4]).Key;
+
+                            if (api.SellOrder.Remove(number))
+                                SendCorrectionOrder(api.SellOrder.Max(o => o.Value) + Const.ErrorRate, number, "1");
+                        }
+                    }
+                    return;
+                }
+                if (api.SellOrder.Count > 0 && (strategy && api.Classification.Equals("1") || strategy == false && api.WindingClass.Equals("1")) || api.BuyOrder.Count > 0 && (strategy && api.Classification.Equals("2") || strategy == false && api.WindingClass.Equals("2")))
+                {
                     SendCorrectionOrder(e.Price, e.Quantity);
 
-                else if (api.OrderNumber.Count < 1 && Difference > 1)
-                    SendNewOrder(e.Price, Difference);
+                    return;
+                }
+                if (strategy && api.Classification.Equals(string.Empty) == false || strategy == false && api.WindingClass.Equals(string.Empty) == false)
+                {
+                    SendNewOrder(e.Price, strategy ? api.Difference : api.WindingUp);
+
+                    return;
+                }
+            }
+            if (int.Parse(e.Time) > 154359 && strategy && api.Trend.Count > 0)
+            {
+                int over = 0;
+
+                foreach (var kv in api.Trend)
+                    over += kv.Value.Contains("-") ? -1 : 1;
+
+                api.Trend.Clear();
+
+                if (over != 0)
+                    SendRollOverOrder(over);
             }
         }
         private void SendCorrectionOrder(double[] param, int[] amount)
         {
             double price = 0;
             string number = string.Empty;
+            int trend = 0;
 
-            if (Classification.Equals("1"))
+            if (api.SellOrder.Count > 0 && (strategy && api.Classification.Equals("1") || strategy == false && api.WindingClass.Equals("1")))
             {
-                if (amount[4] < amount[5] && (api.OrderNumber.ContainsValue(param[3]) || api.OrderNumber.ContainsValue(param[4])))
+                if (amount[4] < amount[5] && api.SellOrder.ContainsValue(param[4]))
                 {
-                    price = api.OrderNumber.Max(o => o.Value) + Const.ErrorRate;
-                    number = api.OrderNumber.First(o => o.Value == api.OrderNumber.Min(p => p.Value)).Key;
+                    price = api.SellOrder.Max(o => o.Value) + Const.ErrorRate;
+                    number = api.SellOrder.First(o => o.Value == api.SellOrder.Min(p => p.Value)).Key;
                 }
-                else if (amount[4] > amount[5] && (api.OrderNumber.ContainsValue(param[3]) == false || api.OrderNumber.ContainsValue(param[4]) == false))
+                else if (amount[4] > amount[5] && api.SellOrder.ContainsValue(param[4]) == false)
                 {
-                    price = api.OrderNumber.Min(o => o.Value) - Const.ErrorRate;
-                    number = api.OrderNumber.First(o => o.Value == api.OrderNumber.Max(p => p.Value)).Key;
-
-                    if (price <= param[5])
-                        return;
+                    price = api.SellOrder.Min(o => o.Value) - Const.ErrorRate;
+                    number = api.SellOrder.First(o => o.Value == api.SellOrder.Max(p => p.Value)).Key;
                 }
+                trend = price > 0 && price >= param[4] ? -1 : 0;
             }
-            else if (Classification.Equals("2"))
+            else if (api.BuyOrder.Count > 0 && (strategy && api.Classification.Equals("2") || strategy == false && api.WindingClass.Equals("2")))
             {
-                if (amount[4] > amount[5] && (api.OrderNumber.ContainsValue(param[5]) || api.OrderNumber.ContainsValue(param[6])))
+                if (amount[4] > amount[5] && api.BuyOrder.ContainsValue(param[5]))
                 {
-                    price = api.OrderNumber.Min(o => o.Value) - Const.ErrorRate;
-                    number = api.OrderNumber.First(o => o.Value == api.OrderNumber.Max(p => p.Value)).Key;
+                    price = api.BuyOrder.Min(o => o.Value) - Const.ErrorRate;
+                    number = api.BuyOrder.First(o => o.Value == api.BuyOrder.Max(p => p.Value)).Key;
                 }
-                else if (amount[4] < amount[5] && (api.OrderNumber.ContainsValue(param[5]) == false || api.OrderNumber.ContainsValue(param[6]) == false))
+                else if (amount[4] < amount[5] && api.BuyOrder.ContainsValue(param[5]) == false)
                 {
-                    price = api.OrderNumber.Max(o => o.Value) + Const.ErrorRate;
-                    number = api.OrderNumber.First(o => o.Value == api.OrderNumber.Min(p => p.Value)).Key;
-
-                    if (price >= param[4])
-                        return;
+                    price = api.BuyOrder.Max(o => o.Value) + Const.ErrorRate;
+                    number = api.BuyOrder.First(o => o.Value == api.BuyOrder.Min(p => p.Value)).Key;
                 }
+                trend = price > 0 && price <= param[5] ? 1 : 0;
             }
-            if (api.OrderNumber.Count > 0 && price > 0 && number.Equals(string.Empty) == false && api.OrderNumber.ContainsValue(price) == false)
+            if (trend != 0 && (trend < 0 ? api.SellOrder.Remove(number) : api.BuyOrder.Remove(number)))
+            {
+                api.OnReceiveBalance = false;
                 api.OnReceiveOrder(new PurchaseInformation
                 {
-                    RQName = string.Concat(price, ';', number),
-                    ScreenNo = string.Concat(Classification, number.Substring(number.Length - 3)),
+                    RQName = price.ToString("F2"),
+                    ScreenNo = string.Concat(strategy ? api.Classification : api.WindingClass, number.Substring(number.Length - 3)),
                     AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
                     Code = specify.Code,
                     OrdKind = 2,
-                    SlbyTP = string.Empty,
+                    SlbyTP = trend > 0 ? "2" : "1",
                     OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
                     Qty = 1,
-                    Price = price.ToString(),
+                    Price = Math.Round(price, 2).ToString("F2"),
                     OrgOrdNo = number
                 });
-        }
-        private void SendClearingOrder(IOrderedEnumerable<KeyValuePair<string, double>> param)
-        {
-            foreach (KeyValuePair<string, double> kv in param)
-                api.OnReceiveOrder(new PurchaseInformation
-                {
-                    RQName = string.Concat(kv.Key, ";Clear"),
-                    ScreenNo = string.Concat(Classification, kv.Key.Substring(kv.Key.Length - 3)),
-                    AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
-                    Code = specify.Code,
-                    OrdKind = 3,
-                    SlbyTP = string.Empty,
-                    OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
-                    Qty = 1,
-                    Price = string.Empty,
-                    OrgOrdNo = kv.Key
-                });
+            }
         }
         private void SendNewOrder(double[] param, double length)
         {
+            api.OnReceiveBalance = false;
+            var check = strategy ? api.Classification : api.WindingClass;
+
             for (int i = 1; i < (length > 3 ? 4 : (length < 2 ? 2 : 3)); i++)
             {
-                var price = param[Classification.Equals("2") ? 9 - i : i];
+                var price = param[check.Equals("2") ? 9 - i : i];
 
-                if (api.OrderNumber.ContainsValue(price))
+                if (strategy && api.Classification.Equals("2") ? api.BuyOrder.ContainsValue(price) : api.SellOrder.ContainsValue(price))
+                    continue;
+
+                else if (strategy == false && api.WindingClass.Equals("2") ? api.BuyOrder.ContainsValue(price) : api.SellOrder.ContainsValue(price))
                     continue;
 
                 api.OnReceiveOrder(new PurchaseInformation
                 {
-                    RQName = string.Concat(price, ";New"),
-                    ScreenNo = string.Concat(Classification, "00", i),
+                    RQName = price.ToString("F2"),
+                    ScreenNo = string.Concat(strategy ? api.Classification : api.WindingClass, "00", i),
                     AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
                     Code = specify.Code,
                     OrdKind = 1,
-                    SlbyTP = Classification,
+                    SlbyTP = strategy ? api.Classification : api.WindingClass,
                     OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
                     Qty = 1,
-                    Price = price.ToString(),
+                    Price = Math.Round(price, 2).ToString("F2"),
                     OrgOrdNo = string.Empty
                 });
             }
         }
-        private double Difference
+        private double Sell
         {
             get; set;
         }
-        private string Classification
+        private double Buy
         {
             get; set;
         }
+        private string[] Temp
+        {
+            get; set;
+        }
+        private readonly bool strategy;
         private readonly Specify specify;
         private readonly ConnectAPI api;
     }

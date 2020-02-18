@@ -53,6 +53,13 @@ namespace ShareInvest.OpenAPI
                 return restart;
             }
         }
+        internal string Collection
+        {
+            get
+            {
+                return collection;
+            }
+        }
         internal StringBuilder Exists
         {
             get
@@ -77,6 +84,7 @@ namespace ShareInvest.OpenAPI
             "001880",
             "072770"
         };
+        private const string collection = "백테스팅에 필요한 자료를 수집합니다.";
         private const string restart = "모의투자 서비스 지연입니다. 잠시후 재시도 바랍니다..";
         private const string exists = "Information that already Exists";
         private const string lookUp = "모의투자 조회가 완료되었습니다";

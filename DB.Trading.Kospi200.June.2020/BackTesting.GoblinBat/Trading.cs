@@ -21,6 +21,21 @@ namespace ShareInvest.Strategy
             SendDatum -= Analysize;
             this.api = api;
             this.quotes = quotes;
+            Check = string.Empty;
+            api.SendDatum += Analysize;
+        }
+        public Trading(ConnectAPI api, Specify specify)
+        {
+            this.specify = specify;
+            Short = new Stack<double>(512);
+            Long = new Stack<double>(512);
+            SendDatum += Analysize;
+
+            foreach (Chart chart in Retrieve.GetInstance(specify.Code).Chart)
+                SendDatum?.Invoke(this, new Datum(chart));
+
+            SendDatum -= Analysize;
+            this.api = api;
             api.SendDatum += Analysize;
         }
         private void Analysize(object sender, Datum e)
@@ -45,15 +60,43 @@ namespace ShareInvest.Strategy
             Short.Push(EMA.Make(specify.Short, Short.Count, e.Price, Short.Peek()));
             Long.Push(EMA.Make(specify.Long, Long.Count, e.Price, Long.Peek()));
             double popShort = Short.Pop(), popLong = Long.Pop();
-            quotes.SetTrendFollowing(specify.Assets / (specify.Code.Length == 8 ? e.Price * Const.TransactionMultiplier * Const.MarginRate : e.Price) - Math.Abs(api.Quantity) - api.OrderNumber.Count, popShort - popLong - (Short.Peek() - Long.Peek()));
+            var trend = popShort - popLong - (Short.Peek() - Long.Peek());
             Short.Push(popShort);
             Long.Push(popLong);
+            api.Trend[specify.Strategy] = string.Concat(trend.ToString("F2"), " (", specify.Time == 1440 ? "Day" : Check, ")");
+
+            if (quotes != null)
+            {
+                switch (specify.Strategy)
+                {
+                    case "TF":
+                        quotes.SetTrendFollowing(specify.Assets / (specify.Code.Length == 8 ? e.Price * Const.TransactionMultiplier * Const.MarginRate : e.Price), trend);
+                        break;
+
+                    case "WU":
+                        quotes.SetWindingUp(trend);
+                        break;
+                }
+                if (GetTrend(trend.ToString()))
+                    quotes.SendClearingOrder(trend);
+            }
+        }
+        private bool GetTrend(string trend)
+        {
+            int check = trend.Contains("-") ? -1 : 1;
+
+            if (check == Trend)
+                return false;
+
+            Trend = check;
+
+            return true;
         }
         private bool GetCheckOnTimeByAPI(string time)
         {
             if (specify.Time > 0 && specify.Time < 1440)
             {
-                if (time.Substring(2, 2).Equals(Check) || Check == null || time.Equals("154500"))
+                if (time.Substring(2, 2).Equals(Check) || Check.Equals(string.Empty))
                 {
                     Check = (new TimeSpan(int.Parse(time.Substring(0, 2)), int.Parse(time.Substring(2, 2)), int.Parse(time.Substring(4, 2))) + TimeSpan.FromMinutes(specify.Time)).Minutes.ToString("D2");
 
@@ -61,10 +104,10 @@ namespace ShareInvest.Strategy
                 }
                 return true;
             }
-            else if (OnTime == false && specify.Time == 1440 && time.Equals("090000"))
-                return OnTime = true;
+            else if (OnTime && specify.Time == 1440 && time.Equals("090000"))
+                return OnTime = false;
 
-            return false;
+            return true;
         }
         private bool GetCheckOnTime(long time)
         {
@@ -80,13 +123,17 @@ namespace ShareInvest.Strategy
         {
             var onTime = time.Substring(6, 6);
 
-            if (onTime.Substring(2, 2).Equals(Check) || Check == null || onTime.Equals("154500"))
+            if (onTime.Substring(2, 2).Equals(Check) || Check == null || onTime.Equals("154500") || onTime.Equals("090000"))
             {
                 Check = (new TimeSpan(int.Parse(onTime.Substring(0, 2)), int.Parse(onTime.Substring(2, 2)), int.Parse(onTime.Substring(4, 2))) + TimeSpan.FromMinutes(specify.Time)).Minutes.ToString("D2");
 
                 return false;
             }
             return true;
+        }
+        private int Trend
+        {
+            get; set;
         }
         private bool OnTime
         {

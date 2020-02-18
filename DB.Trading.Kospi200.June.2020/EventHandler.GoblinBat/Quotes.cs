@@ -21,11 +21,15 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public Dictionary<string, double> OrderNumber
+        public Dictionary<string, double> SellOrder
         {
             get; private set;
         }
-        public Quotes(string[] price, string[] quantity, string[] number, string time, Dictionary<string, double> order)
+        public Dictionary<string, double> BuyOrder
+        {
+            get; private set;
+        }
+        public Quotes(string[] price, string[] quantity, string[] number, string time, Dictionary<string, double> sell, Dictionary<string, double> buy)
         {
             Price = new double[price.Length];
             Quantity = new int[quantity.Length];
@@ -38,7 +42,8 @@ namespace ShareInvest.EventHandler
                 Number[i] = int.Parse(number[i]);
             }
             Time = time;
-            OrderNumber = order;
+            SellOrder = sell;
+            BuyOrder = buy;
         }
     }
 }

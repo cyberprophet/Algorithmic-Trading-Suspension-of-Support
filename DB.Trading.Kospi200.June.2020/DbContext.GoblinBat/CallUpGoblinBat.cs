@@ -14,7 +14,7 @@ namespace ShareInvest.GoblinBatContext
         protected bool GetRecentAnalysis(Specify s)
         {
             var date = DateTime.Now.Hour < 5 && DateTime.Now.Hour >= 0 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd");
-            using (var db = new GoblinBatDbContext('1'))
+            using (var db = new GoblinBatDbContext())
             {
                 try
                 {
@@ -29,7 +29,7 @@ namespace ShareInvest.GoblinBatContext
         }
         protected bool GetRegister()
         {
-            using (var db = new GoblinBatDbContext('1'))
+            using (var db = new GoblinBatDbContext())
             {
                 try
                 {
@@ -45,7 +45,7 @@ namespace ShareInvest.GoblinBatContext
         protected bool GetRemainingDate(string code, long date)
         {
             if (code.Length == 8 && date.ToString().Substring(6).Equals("151959000"))
-                using (var db = new GoblinBatDbContext('1'))
+                using (var db = new GoblinBatDbContext())
                 {
                     try
                     {
@@ -65,7 +65,7 @@ namespace ShareInvest.GoblinBatContext
         protected Queue<Chart> GetChart(string code)
         {
             Queue<Chart> chart = new Queue<Chart>();
-            using (var db = new GoblinBatDbContext('1'))
+            using (var db = new GoblinBatDbContext())
             {
                 try
                 {
@@ -130,7 +130,7 @@ namespace ShareInvest.GoblinBatContext
         protected string GetRecentFuturesCode(bool register)
         {
             if (register == false)
-                using (var db = new GoblinBatDbContext('1'))
+                using (var db = new GoblinBatDbContext())
                 {
                     try
                     {
@@ -149,7 +149,7 @@ namespace ShareInvest.GoblinBatContext
         {
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext('1'))
+                using (var db = new GoblinBatDbContext())
                 {
                     try
                     {
@@ -178,7 +178,7 @@ namespace ShareInvest.GoblinBatContext
         }
         protected void DeleteLogs()
         {
-            using (var db = new GoblinBatDbContext('1'))
+            using (var db = new GoblinBatDbContext())
             {
                 try
                 {

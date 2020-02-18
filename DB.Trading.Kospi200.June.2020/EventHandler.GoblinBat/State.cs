@@ -8,7 +8,7 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public string OrderCount
+        public string SellOrderCount
         {
             get; private set;
         }
@@ -16,11 +16,16 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public State(bool receive, int count, int quantity)
+        public string BuyOrderCount
+        {
+            get; private set;
+        }
+        public State(bool receive, int sell, int quantity, int buy)
         {
             OnReceive = receive;
-            OrderCount = count.ToString();
+            SellOrderCount = sell.ToString();
             Quantity = quantity.ToString();
+            BuyOrderCount = buy.ToString();
         }
     }
 }

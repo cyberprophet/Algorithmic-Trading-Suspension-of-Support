@@ -32,6 +32,7 @@ namespace ShareInvest.GoblinBatForms
                 case "quotes":
                     api.SendQuotes += Quotes.OnReceiveQuotes;
                     api.SendState += Quotes.OnReceiveState;
+                    api.SendTrend += Quotes.OnReceiveTrend;
                     Size = new Size(323, 493);
                     Quotes.Show();
                     break;
@@ -119,43 +120,55 @@ namespace ShareInvest.GoblinBatForms
                         Statistical = new StatisticalAnalysis();
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
+                        var check = e.NotifyIcon.ToString().Split(';');
+                        Acc = new string[check.Length - 3];
+                        Server = check[check.Length - 1].Equals("1");
+
+                        if (Server ? false : new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
+                        {
+                            TimerBox.Show(new Message(check[check.Length - 2]).Identify, new Message().GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750);
+                            Dispose();
+
+                            return;
+                        }
+                        for (int i = 0; i < check.Length - 3; i++)
+                            Acc[i] = check[i];
+
+                        var specify = new Specify
+                        {
+                            Account = Acc,
+                            Assets = 35000000,
+                            Code = api.Strategy,
+                            Strategy = "TF",
+                            Time = 30,
+                            Short = 4,
+                            Long = 60
+                        };
+                        new Trading(api, specify, new Strategy.Quotes(specify, api));
+                        var liquidate = new Specify
+                        {
+                            Account = Acc,
+                            Assets = 35000000,
+                            Code = api.Strategy,
+                            Strategy = "WU",
+                            Time = 5,
+                            Short = 4,
+                            Long = 60
+                        };
+                        new Trading(api, liquidate, new Strategy.Quotes(liquidate, api));
+                        new Trading(api, new Specify
+                        {
+                            Account = Acc,
+                            Assets = 35000000,
+                            Code = api.Strategy,
+                            Strategy = "DL",
+                            Time = 1440,
+                            Short = 4,
+                            Long = 60
+                        });
+                        api.SendState += Quotes.OnReceiveState;
+                        api.SendTrend += Quotes.OnReceiveTrend;
                     }));
-                    var check = e.NotifyIcon.ToString().Split(';');
-                    Acc = new string[check.Length - 3];
-                    Server = check[check.Length - 1].Equals("1");
-
-                    if (Server ? false : new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
-                    {
-                        TimerBox.Show(new Message(check[check.Length - 2]).Identify, new Message().GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750);
-                        Dispose();
-
-                        return;
-                    }
-                    for (int i = 0; i < check.Length - 3; i++)
-                        Acc[i] = check[i];
-
-                    var specify = new Specify
-                    {
-                        Account = Acc,
-                        Assets = 35000000,
-                        Code = api.Strategy,
-                        Strategy = "TF",
-                        Time = 30,
-                        Short = 4,
-                        Long = 60
-                    };
-                    new Trading(api, specify, new Strategy.Quotes(specify, api));
-                    var liquidate = new Specify
-                    {
-                        Account = Acc,
-                        Assets = 35000000,
-                        Code = api.Strategy,
-                        Strategy = "WU",
-                        Time = 5,
-                        Short = 4,
-                        Long = 60
-                    };
-                    new Trading(api, liquidate, new Strategy.Quotes(liquidate, api));
                     return;
 
                 case "String":
@@ -202,6 +215,7 @@ namespace ShareInvest.GoblinBatForms
                         case "quotes":
                             api.SendQuotes -= Quotes.OnReceiveQuotes;
                             api.SendState -= Quotes.OnReceiveState;
+                            api.SendTrend -= Quotes.OnReceiveTrend;
                             Quotes.Hide();
                             break;
 
