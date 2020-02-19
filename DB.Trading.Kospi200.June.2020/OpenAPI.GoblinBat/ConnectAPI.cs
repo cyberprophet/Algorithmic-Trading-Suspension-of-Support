@@ -189,11 +189,9 @@ namespace ShareInvest.OpenAPI
             }
             if (e.sMsg.Equals(message.Failure) || e.sMsg.Substring(9).Equals(message.Restart))
             {
-                Console.WriteLine(e.sMsg);
-                /*
                 Process.Start("shutdown.exe", "-r");
                 Dispose();
-                */
+
                 return;
             }
             if (e.sMsg.Substring(9).Equals(message.LookUp))
@@ -330,13 +328,7 @@ namespace ShareInvest.OpenAPI
                     {
                         DeadLine = false;
                         OnReceiveBalance = false;
-                        Delay.delay = 615;
-                        var storage = GetInformation();
-
-                        while (request.QueueCount > 0)
-                            TimerBox.Show(message.Collection, message.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)(request.QueueCount + 9132));
-
-                        Code = RequestCodeList(new List<string>(32), storage);
+                        Code = RequestCodeList(new List<string>(32), Markets);
                         SendMemorize?.Invoke(this, new Memorize("Clear"));
                         Delay.delay = 4215;
                         Request(GetRandomCode(new Random().Next(0, Code.Count)));
@@ -521,8 +513,8 @@ namespace ShareInvest.OpenAPI
                 Dispose();
             }
             bool onlyOnce = true, check = DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false;
-            var market = GetInformation();
             var account = API.GetLoginInfo("ACCLIST");
+            Markets = GetInformation();
 
             do
             {
@@ -537,8 +529,8 @@ namespace ShareInvest.OpenAPI
                     LookUpTheDeposit(account.Split(';'));
                     LookUpTheBalance(account.Split(';'));
                 }
-                if (TimerBox.Show(message.OnReceiveData, message.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)(request.QueueCount + market.Length)).Equals(DialogResult.OK))
-                    if (TimerBox.Show(message.SetPassword, message.GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, (uint)(request.QueueCount + market.Length)).Equals(DialogResult.OK))
+                if (TimerBox.Show(message.OnReceiveData, message.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)(request.QueueCount + Markets.Length)).Equals(DialogResult.OK))
+                    if (TimerBox.Show(message.SetPassword, message.GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, (uint)(request.QueueCount + Markets.Length)).Equals(DialogResult.OK))
                         API.KOA_Functions("ShowAccountWindow", "");
             }
             while (request.QueueCount > 0);
@@ -551,7 +543,7 @@ namespace ShareInvest.OpenAPI
             }
             else
             {
-                Code = RequestCodeList(new List<string>(32), market);
+                Code = RequestCodeList(new List<string>(32), Markets);
                 Request(GetRandomCode(new Random(e.nErrCode).Next(0, Code.Count)));
                 Delay.delay = 4135;
             }
@@ -759,6 +751,10 @@ namespace ShareInvest.OpenAPI
             get; set;
         }
         private bool DeadLine
+        {
+            get; set;
+        }
+        private string[] Markets
         {
             get; set;
         }

@@ -41,12 +41,24 @@ namespace ShareInvest.GoblinBatControls
                     label.ForeColor = trend ? Color.Navy : Color.Maroon;
                     stack.Push(label.ForeColor);
                 }
+                var temp = Color.Ivory;
+                string message = "RollOver";
+                int count = 0;
+
                 while (stack.Count > 0)
                 {
                     var color = stack.Pop();
-                    stateRollOver.Text = stateRollOver.ForeColor.Equals(color) ? "RollOver" : string.Empty;
-                    stateRollOver.ForeColor = color;
+
+                    if (color.Equals(temp))
+                    {
+                        count++;
+
+                        continue;
+                    }
+                    temp = color;
                 }
+                stateRollOver.Text = count > 1 ? message : string.Empty;
+                stateRollOver.ForeColor = temp;
             }));
         }
         public void OnReceiveQuotes(object sender, Quotes e)
