@@ -21,7 +21,7 @@ namespace ShareInvest.GoblinBatControls
         {
             BeginInvoke(new Action(() =>
             {
-                stateReceive.Text = e.OnReceive ? "주문가능" : string.Empty;
+                stateReceive.Text = e.OnReceive ? "주문가능" : e.ScreenNumber;
                 stateSell.Text = e.SellOrderCount;
                 stateBuy.Text = e.BuyOrderCount;
                 var position = e.Quantity.Contains("-");

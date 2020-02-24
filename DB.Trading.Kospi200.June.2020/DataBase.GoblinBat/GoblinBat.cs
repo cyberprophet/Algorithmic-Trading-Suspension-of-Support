@@ -186,6 +186,8 @@ namespace ShareInvest.GoblinBatForms
                     Opacity = 0.8135;
                     OnClickMinimized = "quotes";
                     WindowState = FormWindowState.Minimized;
+                    api.SendState -= Quotes.OnReceiveState;
+                    api.SendTrend -= Quotes.OnReceiveTrend;
                     return;
 
                 case "Char":

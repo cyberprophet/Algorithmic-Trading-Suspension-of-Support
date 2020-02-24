@@ -20,12 +20,17 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public State(bool receive, int sell, int quantity, int buy)
+        public string ScreenNumber
+        {
+            get; private set;
+        }
+        public State(bool receive, int sell, int quantity, int buy, uint number)
         {
             OnReceive = receive;
             SellOrderCount = sell.ToString();
             Quantity = quantity.ToString();
             BuyOrderCount = buy.ToString();
+            ScreenNumber = number.ToString();
         }
     }
 }

@@ -46,13 +46,6 @@ namespace ShareInvest.OpenAPI
                 return goblin;
             }
         }
-        internal string Restart
-        {
-            get
-            {
-                return restart;
-            }
-        }
         internal string Collection
         {
             get
@@ -75,7 +68,8 @@ namespace ShareInvest.OpenAPI
             "모의투자 주문가능 금액을 확인하세요",
             "모의투자 정정가격이 원주문가격과 같습니다",
             "모의투자 원주문번호가 존재하지 않습니다",
-            "모의투자 주문처리가 안되었습니다(2)"
+            "모의투자 주문처리가 안되었습니다(2)",
+            "모의투자 서비스 지연입니다. 잠시후 재시도 바랍니다.."
         };
         internal readonly string[] exclude =
         {
@@ -85,7 +79,6 @@ namespace ShareInvest.OpenAPI
             "072770"
         };
         private const string collection = "백테스팅에 필요한 자료를 수집합니다.";
-        private const string restart = "모의투자 서비스 지연입니다. 잠시후 재시도 바랍니다..";
         private const string exists = "Information that already Exists";
         private const string lookUp = "모의투자 조회가 완료되었습니다";
         private const string failure = "전문 처리 실패(-22)";

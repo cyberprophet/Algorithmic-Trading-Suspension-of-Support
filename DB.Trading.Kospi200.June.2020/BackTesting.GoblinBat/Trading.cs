@@ -36,6 +36,7 @@ namespace ShareInvest.Strategy
 
             SendDatum -= Analysize;
             this.api = api;
+            OnTime = true;
             api.SendDatum += Analysize;
         }
         private void Analysize(object sender, Datum e)

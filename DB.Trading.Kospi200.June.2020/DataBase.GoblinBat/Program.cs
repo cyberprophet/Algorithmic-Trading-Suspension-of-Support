@@ -1,10 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using ShareInvest.Message;
-using ShareInvest.Strategy;
 
 namespace ShareInvest.GoblinBatForms
 {
@@ -34,7 +32,6 @@ namespace ShareInvest.GoblinBatForms
             while (remaining > 0)
                 TimerBox.Show(new Message(remaining--).RemainingTime, new Message().GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U);
 
-            new Task(() => new BackTesting(35000000L)).Start();
             TimerBox.Show(new Message().StartProgress, new Message().GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 3765U);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

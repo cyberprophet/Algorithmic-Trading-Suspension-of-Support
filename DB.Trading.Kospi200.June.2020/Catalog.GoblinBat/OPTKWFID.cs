@@ -39,7 +39,7 @@ namespace ShareInvest.Catalog
         {
             get
             {
-                return GetScreenNumber();
+                return GetScreenNumber(1);
             }
         }
         public IEnumerator GetEnumerator()

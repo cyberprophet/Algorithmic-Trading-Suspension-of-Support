@@ -22,6 +22,10 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
+        public uint ScreenNumber
+        {
+            get; set;
+        }
         public bool OnReceiveBalance
         {
             get; set;
@@ -64,6 +68,16 @@ namespace ShareInvest.OpenAPI
         public Dictionary<string, double> SellOrder
         {
             get; private set;
+        }
+        public void SetScreenNumber(uint start, uint finish)
+        {
+            if (start < 5000)
+                for (uint i = start; i < finish; i++)
+                    API.DisconnectRealData(i.ToString("D4"));
+
+            else
+                for (uint i = finish; i > start; i--)
+                    API.DisconnectRealData(i.ToString("D4"));
         }
         public void OnReceiveOrder(PurchaseInformation o)
         {
@@ -164,7 +178,10 @@ namespace ShareInvest.OpenAPI
             {
                 var temp = e.sMsg.Substring(9);
 
-                if (temp.Equals(message.basic[2]) && OnReceiveBalance == false)
+                if (temp.Equals(message.basic[4]) || temp.Equals(message.basic[5]))
+                    Console.WriteLine(e.sRQName + "\t" + e.sScrNo);
+
+                if ((temp.Equals(message.basic[2]) || temp.Equals(message.basic[6])) && OnReceiveBalance == false)
                     OnReceiveBalance = request.QueueCount == 0 ? true : false;
 
                 if (e.sMsg.Contains("모의투자"))
@@ -173,11 +190,9 @@ namespace ShareInvest.OpenAPI
                 if (e.sMsg.Last().Equals('다') || e.sMsg.Last().Equals('요'))
                     temp = string.Concat(temp, ".");
 
-                new Task(() =>
-                {
-                    SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count));
-                    SendCount?.Invoke(this, new NotifyIconText(temp));
-                }).Start();
+                SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
+                SendCount?.Invoke(this, new NotifyIconText(temp));
+
                 return;
             }
             if (e.sMsg.Equals(message.TR))
@@ -187,7 +202,7 @@ namespace ShareInvest.OpenAPI
 
                 return;
             }
-            if (e.sMsg.Equals(message.Failure) || e.sMsg.Substring(9).Equals(message.Restart))
+            if (e.sMsg.Equals(message.Failure))
             {
                 Process.Start("shutdown.exe", "-r");
                 Dispose();
@@ -234,7 +249,7 @@ namespace ShareInvest.OpenAPI
 
                                 break;
                         }
-                        new Task(() => SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count))).Start();
+                        SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     }
                     return;
 
@@ -245,7 +260,7 @@ namespace ShareInvest.OpenAPI
                     if (param[1].Equals(API.GetFutureCodeByIndex(0)))
                     {
                         Quantity = param[9].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
-                        new Task(() => SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count))).Start();
+                        SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     }
                     return;
             };
@@ -329,6 +344,8 @@ namespace ShareInvest.OpenAPI
                         DeadLine = false;
                         OnReceiveBalance = false;
                         Code = RequestCodeList(new List<string>(32), Markets);
+                        SetScreenNumber(9000, 9030);
+                        SetScreenNumber(1000, 9000);
                         SendMemorize?.Invoke(this, new Memorize("Clear"));
                         Delay.delay = 4215;
                         Request(GetRandomCode(new Random().Next(0, Code.Count)));
@@ -435,6 +452,7 @@ namespace ShareInvest.OpenAPI
                     if (e.sPrevNext.Equals("0"))
                         SendMemorize?.Invoke(this, new Memorize(e.sPrevNext, e.sRQName.Split(';')[0]));
                 }
+                SetScreenNumber(9000, 9030);
                 SendMemorize?.Invoke(this, new Memorize("Clear"));
                 Request(GetRandomCode(new Random().Next(0, Code.Count)));
 
@@ -468,32 +486,35 @@ namespace ShareInvest.OpenAPI
                     if (Sb.Length > 1 && e.sRQName.Equals("DoNotRollOver") == false)
                     {
                         if (e.sScrNo.Substring(0, 1).Equals("1"))
-                            SellOrder[Sb.ToString().Split(';')[0]] = double.Parse(e.sRQName);
+                            SellOrder[Sb.ToString().Split(';')[0]] = double.Parse(e.sRQName.Split(';')[0]);
 
                         else if (e.sScrNo.Substring(0, 1).Equals("2"))
-                            BuyOrder[Sb.ToString().Split(';')[0]] = double.Parse(e.sRQName);
+                            BuyOrder[Sb.ToString().Split(';')[0]] = double.Parse(e.sRQName.Split(';')[0]);
                     }
-                    new Task(() => SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count))).Start();
+                    SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     return;
 
                 case 9:
-                    new Task(() => SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count))).Start();
+                    SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     return;
 
                 case 10:
-                    new Task(() => SendDeposit?.Invoke(this, new Deposit(Sb.ToString().Split(';')))).Start();
+                    SendDeposit?.Invoke(this, new Deposit(Sb.ToString().Split(';')));
                     break;
 
                 case 11:
-                    var temporary = Sb.ToString().Split('*');
-                    new Task(() => SendBalance?.Invoke(this, new Balance(temporary))).Start();
+                    new Task(() =>
+                    {
+                        var temporary = Sb.ToString().Split('*');
 
-                    for (i = 0; i < temporary.Length; i++)
-                        if (temporary[i].Length > 0 && temporary[i].Substring(0, 8).Equals(API.GetFutureCodeByIndex(0)))
-                        {
-                            var quantity = temporary[i].Split(';');
-                            Quantity = quantity[2].Equals("1") ? -int.Parse(quantity[3]) : int.Parse(quantity[3]);
-                        }
+                        for (i = 0; i < temporary.Length; i++)
+                            if (temporary[i].Length > 0 && temporary[i].Substring(0, 8).Equals(API.GetFutureCodeByIndex(0)))
+                            {
+                                var quantity = temporary[i].Split(';');
+                                Quantity = quantity[2].Equals("1") ? -int.Parse(quantity[3]) : int.Parse(quantity[3]);
+                            }
+                        SendBalance?.Invoke(this, new Balance(temporary));
+                    }).Start();
                     break;
             }
         }
@@ -537,9 +558,11 @@ namespace ShareInvest.OpenAPI
 
             if (check)
             {
+                SetScreenNumber(8900, 9030);
                 DeadLine = DateTime.Now.Hour < 9 ? false : true;
-                Delay.delay = 205;
                 OnReceiveBalance = DateTime.Now.Hour > 8 ? true : false;
+                RemainingDay(API.GetFutureCodeByIndex(0));
+                Delay.delay = 205;
             }
             else
             {
