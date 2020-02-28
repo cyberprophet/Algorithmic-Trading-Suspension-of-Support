@@ -71,13 +71,8 @@ namespace ShareInvest.OpenAPI
         }
         public void SetScreenNumber(uint start, uint finish)
         {
-            if (start < 5000)
-                for (uint i = start; i < finish; i++)
-                    API.DisconnectRealData(i.ToString("D4"));
-
-            else
-                for (uint i = finish; i > start; i--)
-                    API.DisconnectRealData(i.ToString("D4"));
+            for (uint i = start; i < finish; i++)
+                API.DisconnectRealData(i.ToString("D4"));
         }
         public void OnReceiveOrder(PurchaseInformation o)
         {
@@ -178,10 +173,7 @@ namespace ShareInvest.OpenAPI
             {
                 var temp = e.sMsg.Substring(9);
 
-                if (temp.Equals(message.basic[4]) || temp.Equals(message.basic[5]))
-                    Console.WriteLine(e.sRQName + "\t" + e.sScrNo);
-
-                if ((temp.Equals(message.basic[2]) || temp.Equals(message.basic[6])) && OnReceiveBalance == false)
+                if ((temp.Equals(message.basic[2]) || temp.Equals(message.basic[6]) || temp.Equals(message.basic[8])) && OnReceiveBalance == false)
                     OnReceiveBalance = request.QueueCount == 0 ? true : false;
 
                 if (e.sMsg.Contains("모의투자"))
@@ -227,13 +219,13 @@ namespace ShareInvest.OpenAPI
             switch (index)
             {
                 case 0:
-                    if (param[3].Equals(API.GetFutureCodeByIndex(0)))
+                    if (param[3].Equals(Trading))
                     {
                         switch (param[5])
                         {
                             case "체결":
                                 if (param[14].Equals("1") ? SellOrder.Remove(param[1]) : BuyOrder.Remove(param[1]))
-                                    OnReceiveBalance = request.QueueCount == 0 ? true : false;
+                                    OnReceiveBalance = false;
 
                                 break;
 
@@ -257,9 +249,10 @@ namespace ShareInvest.OpenAPI
                     return;
 
                 case 4:
-                    if (param[1].Equals(API.GetFutureCodeByIndex(0)))
+                    if (param[1].Equals(Trading))
                     {
                         Quantity = param[9].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
+                        OnReceiveBalance = request.QueueCount == 0 ? true : false;
                         SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     }
                     return;
@@ -281,7 +274,7 @@ namespace ShareInvest.OpenAPI
             switch (index)
             {
                 case 1:
-                    if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
+                    if (e.sRealKey.Equals(Trading))
                     {
                         SendDatum?.Invoke(this, new Datum(param));
                         SendTrend?.Invoke(this, new Trends(Trend));
@@ -289,7 +282,7 @@ namespace ShareInvest.OpenAPI
                     return;
 
                 case 2:
-                    if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
+                    if (e.sRealKey.Equals(Trading))
                     {
                         Total.Enqueue(string.Concat(param[44], ";", param[47]));
                         SendQuotes?.Invoke(this, new Quotes(new string[]
@@ -333,7 +326,7 @@ namespace ShareInvest.OpenAPI
                     return;
 
                 case 8:
-                    if (e.sRealKey.Equals(API.GetFutureCodeByIndex(0)))
+                    if (e.sRealKey.Equals(Trading))
                         SendCurrent?.Invoke(this, new Current(Quantity, Sb.ToString().Split(';')));
 
                     return;
@@ -343,17 +336,16 @@ namespace ShareInvest.OpenAPI
                     {
                         DeadLine = false;
                         OnReceiveBalance = false;
+                        SetScreenNumber(9000, 9031);
+                        new Task(() => SetScreenNumber(1000, 9000)).Start();
                         Code = RequestCodeList(new List<string>(32), Markets);
-                        SetScreenNumber(9000, 9030);
-                        SetScreenNumber(1000, 9000);
                         SendMemorize?.Invoke(this, new Memorize("Clear"));
-                        Delay.delay = 4215;
+                        Delay.delay = 4315;
                         Request(GetRandomCode(new Random().Next(0, Code.Count)));
                     }
                     else if (param[0].Equals("3") && DeadLine == false)
                     {
-                        DeadLine = true;
-                        OnReceiveBalance = true;
+                        DeadLine = true;                        
                         Delay.delay = 205;
                     }
                     else if (param[0].Equals("0") && param[2].Equals("002000"))
@@ -452,7 +444,7 @@ namespace ShareInvest.OpenAPI
                     if (e.sPrevNext.Equals("0"))
                         SendMemorize?.Invoke(this, new Memorize(e.sPrevNext, e.sRQName.Split(';')[0]));
                 }
-                SetScreenNumber(9000, 9030);
+                SetScreenNumber(9000, 9031);
                 SendMemorize?.Invoke(this, new Memorize("Clear"));
                 Request(GetRandomCode(new Random().Next(0, Code.Count)));
 
@@ -558,10 +550,10 @@ namespace ShareInvest.OpenAPI
 
             if (check)
             {
-                SetScreenNumber(8900, 9030);
+                SetScreenNumber(8900, 9031);
+                RemainingDay(API.GetFutureCodeByIndex(0));
                 DeadLine = DateTime.Now.Hour < 9 ? false : true;
                 OnReceiveBalance = DateTime.Now.Hour > 8 ? true : false;
-                RemainingDay(API.GetFutureCodeByIndex(0));
                 Delay.delay = 205;
             }
             else
@@ -724,6 +716,9 @@ namespace ShareInvest.OpenAPI
                     RQName = code,
                     PrevNext = 0
                 })));
+                if (code.Equals(API.GetFutureCodeByIndex(0)))
+                    Trading = code;
+
                 return;
             }
             request.RequestTrData(new Task(() =>
@@ -774,6 +769,10 @@ namespace ShareInvest.OpenAPI
             get; set;
         }
         private bool DeadLine
+        {
+            get; set;
+        }
+        private string Trading
         {
             get; set;
         }

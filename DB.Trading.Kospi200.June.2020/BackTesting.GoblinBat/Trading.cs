@@ -8,14 +8,14 @@ namespace ShareInvest.Strategy
 {
     public class Trading
     {
-        public Trading(ConnectAPI api, Specify specify, Quotes quotes)
+        public Trading(ConnectAPI api, Specify specify, Quotes quotes, Queue<Chart> charts)
         {
             this.specify = specify;
             Short = new Stack<double>(512);
             Long = new Stack<double>(512);
             SendDatum += Analysize;
 
-            foreach (Chart chart in Retrieve.GetInstance(specify.Code).Chart)
+            foreach (Chart chart in charts)
                 SendDatum?.Invoke(this, new Datum(chart));
 
             SendDatum -= Analysize;
@@ -24,14 +24,14 @@ namespace ShareInvest.Strategy
             Check = string.Empty;
             api.SendDatum += Analysize;
         }
-        public Trading(ConnectAPI api, Specify specify)
+        public Trading(ConnectAPI api, Specify specify, Queue<Chart> charts)
         {
             this.specify = specify;
             Short = new Stack<double>(512);
             Long = new Stack<double>(512);
             SendDatum += Analysize;
 
-            foreach (Chart chart in Retrieve.GetInstance(specify.Code).Chart)
+            foreach (Chart chart in charts)
                 SendDatum?.Invoke(this, new Datum(chart));
 
             SendDatum -= Analysize;
@@ -81,6 +81,48 @@ namespace ShareInvest.Strategy
                 if (GetTrend(trend.ToString()))
                     quotes.SendClearingOrder(trend);
             }
+            else if (specify.Reaction > 0)
+            {
+                Volume += e.Volume;
+
+                if (api.OnReceiveBalance && GetJudgeTheReaction(trend, e.Price) && GetJudgeTheReaction(Volume, trend))
+                {
+                    api.OnReceiveBalance = false;
+                    api.OnReceiveOrder(new PurchaseInformation
+                    {
+                        RQName = string.Concat(e.Price, ';'),
+                        ScreenNo = string.Concat(trend > 0 ? "2" : "1", new Random().Next(0, 99).ToString("D3")),
+                        AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
+                        Code = specify.Code,
+                        OrdKind = 1,
+                        SlbyTP = trend > 0 ? "2" : "1",
+                        OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                        Qty = 1,
+                        Price = (e.Price + (trend > 0 ? -Const.ErrorRate : Const.ErrorRate)).ToString("F2"),
+                        OrgOrdNo = string.Empty
+                    });
+                    Volume = 0;
+                }
+            }
+        }
+        private bool GetJudgeTheReaction(double trend, double price)
+        {
+            var max = specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate);
+
+            if (trend > 0)
+                return max - api.Quantity - api.BuyOrder.Count > 1;
+
+            else if (trend < 0)
+                return max + api.Quantity - api.SellOrder.Count > 1;
+
+            return false;
+        }
+        private bool GetJudgeTheReaction(int volume, double trend)
+        {
+            if (trend < 0 && specify.Reaction < volume || trend > 0 && -specify.Reaction > volume)
+                return true;
+
+            return false;
         }
         private bool GetTrend(string trend)
         {
@@ -106,8 +148,11 @@ namespace ShareInvest.Strategy
                 return true;
             }
             else if (OnTime && specify.Time == 1440 && time.Equals("090000"))
-                return OnTime = false;
+            {
+                api.OnReceiveBalance = true;
 
+                return OnTime = false;
+            }
             return true;
         }
         private bool GetCheckOnTime(long time)
@@ -133,6 +178,10 @@ namespace ShareInvest.Strategy
             return true;
         }
         private int Trend
+        {
+            get; set;
+        }
+        private int Volume
         {
             get; set;
         }

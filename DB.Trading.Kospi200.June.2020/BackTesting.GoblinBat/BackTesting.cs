@@ -14,7 +14,6 @@ namespace ShareInvest.Strategy
         }
         public BackTesting(long assets)
         {
-            Retrieve.GetInstance(Code = GetRecentFuturesCode(GetRegister()));
             var list = new List<Specify>();
             int i, j;
 

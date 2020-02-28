@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatControls;
@@ -120,6 +121,7 @@ namespace ShareInvest.GoblinBatForms
                         Statistical = new StatisticalAnalysis();
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
+                        var chart = Retrieve.GetInstance(api.Strategy).Chart;
                         var check = e.NotifyIcon.ToString().Split(';');
                         Acc = new string[check.Length - 3];
                         Server = check[check.Length - 1].Equals("1");
@@ -134,40 +136,48 @@ namespace ShareInvest.GoblinBatForms
                         for (int i = 0; i < check.Length - 3; i++)
                             Acc[i] = check[i];
 
-                        var specify = new Specify
+                        new Task(() =>
+                        {
+                            var specify = new Specify
+                            {
+                                Account = Acc,
+                                Assets = 17500000,
+                                Code = api.Strategy,
+                                Strategy = "TF",
+                                Time = 30,
+                                Short = 4,
+                                Long = 60
+                            };
+                            new Trading(api, specify, new Strategy.Quotes(specify, api), chart);
+                        }).Start();
+                        new Task(() =>
+                        {
+                            var liquidate = new Specify
+                            {
+                                Account = Acc,
+                                Assets = 17500000,
+                                Code = api.Strategy,
+                                Strategy = "WU",
+                                Time = 15,
+                                Short = 4,
+                                Long = 60
+                            };
+                            new Trading(api, liquidate, new Strategy.Quotes(liquidate, api), chart);
+                        }).Start();
+                        new Task(() => new Trading(api, new Specify
                         {
                             Account = Acc,
-                            Assets = 35000000,
-                            Code = api.Strategy,
-                            Strategy = "TF",
-                            Time = 30,
-                            Short = 4,
-                            Long = 60
-                        };
-                        new Trading(api, specify, new Strategy.Quotes(specify, api));
-                        var liquidate = new Specify
-                        {
-                            Account = Acc,
-                            Assets = 35000000,
-                            Code = api.Strategy,
-                            Strategy = "WU",
-                            Time = 5,
-                            Short = 4,
-                            Long = 60
-                        };
-                        new Trading(api, liquidate, new Strategy.Quotes(liquidate, api));
-                        new Trading(api, new Specify
-                        {
-                            Account = Acc,
-                            Assets = 35000000,
+                            Assets = 17500000,
                             Code = api.Strategy,
                             Strategy = "DL",
                             Time = 1440,
                             Short = 4,
-                            Long = 60
-                        });
+                            Long = 60,
+                            Reaction = 149
+                        }, chart)).Start();
                         api.SendState += Quotes.OnReceiveState;
                         api.SendTrend += Quotes.OnReceiveTrend;
+                        Retrieve.Dispose();
                     }));
                     return;
 

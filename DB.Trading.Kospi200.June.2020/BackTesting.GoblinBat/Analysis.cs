@@ -13,9 +13,6 @@ namespace ShareInvest.Strategy
             Short = new Stack<double>(512);
             Long = new Stack<double>(512);
             info = new Information();
-
-            foreach (Chart chart in Retrieve.GetInstance(specify.Code).Chart)
-                Analysize(chart);
         }
         private void Analysize(Chart ch)
         {

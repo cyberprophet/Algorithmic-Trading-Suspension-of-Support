@@ -106,9 +106,9 @@ namespace ShareInvest.Strategy
                 if (api.SellOrder.Count > 0 && api.SellOrder.ContainsValue(priceSell) == false)
                 {
                     var number = api.SellOrder.First(o => o.Value == api.SellOrder.Max(p => p.Value)).Key;
-                    var price = api.SellOrder.Min(o => o.Value) - Const.ErrorRate;
+                    var price = api.SellOrder[number] - Const.ErrorRate;
 
-                    if (api.SellOrder.Remove(number))
+                    if (api.SellOrder.Count > 1 && price > priceBuy && api.SellOrder.Remove(number))
                         SendCorrectionOrder(price, number, "1");
                 }
                 if (api.BuyOrder.ContainsValue(priceBuy))
@@ -125,9 +125,9 @@ namespace ShareInvest.Strategy
                 if (api.BuyOrder.Count > 0 && api.BuyOrder.ContainsValue(priceBuy) == false)
                 {
                     var number = api.BuyOrder.First(o => o.Value == api.BuyOrder.Min(p => p.Value)).Key;
-                    var price = api.BuyOrder.Max(o => o.Value) + Const.ErrorRate;
+                    var price = api.BuyOrder[number] + Const.ErrorRate;
 
-                    if (api.BuyOrder.Remove(number))
+                    if (api.BuyOrder.Count > 1 && price < priceSell && api.BuyOrder.Remove(number))
                         SendCorrectionOrder(price, number, "2");
                 }
                 if (api.SellOrder.ContainsValue(priceSell))
@@ -140,30 +140,27 @@ namespace ShareInvest.Strategy
                 }
             }
         }
-        private void SendNewOrder(double[] param, double length, string classification)
+        private void SendNewOrder(double[] param, string classification)
         {
-            for (int i = 0; i < (length > 4 ? 4 : length); i++)
+            var price = param[classification.Equals("2") ? 9 : 0];
+
+            if (classification.Equals("2") ? api.BuyOrder.ContainsValue(price) : api.SellOrder.ContainsValue(price))
+                return;
+
+            api.OnReceiveBalance = false;
+            api.OnReceiveOrder(new PurchaseInformation
             {
-                var price = param[classification.Equals("2") ? 9 - i : i];
-
-                if (classification.Equals("2") ? api.BuyOrder.ContainsValue(price) : api.SellOrder.ContainsValue(price))
-                    continue;
-
-                api.OnReceiveBalance = false;
-                api.OnReceiveOrder(new PurchaseInformation
-                {
-                    RQName = string.Concat(price, ';'),
-                    ScreenNo = string.Concat(classification, GetScreenNumber().ToString("D3")),
-                    AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
-                    Code = specify.Code,
-                    OrdKind = 1,
-                    SlbyTP = classification,
-                    OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
-                    Qty = 1,
-                    Price = price.ToString("F2"),
-                    OrgOrdNo = string.Empty
-                });
-            }
+                RQName = string.Concat(price, ';'),
+                ScreenNo = string.Concat(classification, GetScreenNumber().ToString("D3")),
+                AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
+                Code = specify.Code,
+                OrdKind = 1,
+                SlbyTP = classification,
+                OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                Qty = 1,
+                Price = price.ToString("F2"),
+                OrgOrdNo = string.Empty
+            });
         }
         private void OnReceiveQuotes(object sender, EventHandler.Quotes e)
         {
@@ -174,23 +171,23 @@ namespace ShareInvest.Strategy
             {
                 bool accumulate = e.Price[4] == Sell && e.Price[5] == Buy;
 
+                if (api.OnReceiveBalance && api.WindingClass.Equals(string.Empty) == false)
+                    SendNewOrder(e.Price, api.WindingClass);
+
+                if (api.OnReceiveBalance && api.Classification.Equals(string.Empty) == false)
+                    SendNewOrder(e.Price, api.Classification);
+
                 if (api.OnReceiveBalance && accumulate)
                 {
                     if (e.Price[4] == Sell && e.Price[5] == Buy)
                         OnDetermineTheTrend(AccumulateSell += int.Parse(Temp[0]), AccumulateBuy += int.Parse(Temp[1]), e.Price[4], e.Price[5]);
 
-                    else if (Sell > e.Price[4])
+                    else if (Sell > e.Price[4] || Buy > e.Price[5])
                         OnDetermineTheTrend(1, 0, e.Price[4], e.Price[5]);
 
-                    else if (Sell < e.Price[4])
+                    else if (Sell < e.Price[4] || Buy < e.Price[5])
                         OnDetermineTheTrend(0, 1, e.Price[4], e.Price[5]);
                 }
-                if (api.OnReceiveBalance && api.WindingClass.Equals(string.Empty) == false)
-                    SendNewOrder(e.Price, api.WindingUp, api.WindingClass);
-
-                if (api.OnReceiveBalance && api.Classification.Equals(string.Empty) == false)
-                    SendNewOrder(e.Price, api.Difference, api.Classification);
-
                 if (accumulate == false)
                 {
                     AccumulateSell = 0;
@@ -199,7 +196,7 @@ namespace ShareInvest.Strategy
                     Buy = e.Price[5];
                 }
             }
-            if (int.Parse(e.Time) > 154453 && strategy && api.Trend.Count > 0)
+            if (int.Parse(e.Time) > 154259 && strategy && api.Trend.Count > 0)
             {
                 int over = 0;
 
@@ -220,10 +217,10 @@ namespace ShareInvest.Strategy
             if (Accumulate == 0)
                 api.ScreenNumber++;
 
-            if (api.ScreenNumber == 75)
+            if (api.ScreenNumber == 99)
             {
-                new Task(() => api.SetScreenNumber(1000, 1076)).Start();
-                new Task(() => api.SetScreenNumber(2000, 2076)).Start();
+                new Task(() => api.SetScreenNumber(1000, 1100)).Start();
+                new Task(() => api.SetScreenNumber(2000, 2100)).Start();
                 api.ScreenNumber = 0;
             }
             return api.ScreenNumber;

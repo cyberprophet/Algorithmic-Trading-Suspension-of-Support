@@ -30,5 +30,9 @@
         {
             get; set;
         }
+        public int Reaction
+        {
+            get; set;
+        }
     }
 }
