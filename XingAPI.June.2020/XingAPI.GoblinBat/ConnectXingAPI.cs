@@ -1,16 +1,62 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
+using System.Threading.Tasks;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
+using ShareInvest.Message;
 using ShareInvest.Struct;
 using XA_DATASETLib;
-using System.Threading.Tasks;
-using System.Text;
 
 namespace ShareInvest.XingAPI
 {
     public class ConnectXingAPI : Catalog
     {
+        public int Volume
+        {
+            get; set;
+        }
+        public int Quantity
+        {
+            get; private set;
+        }
+        public bool OnReceiveBalance
+        {
+            get; set;
+        }
+        public double WindingUp
+        {
+            get; set;
+        }
+        public double Difference
+        {
+            get; set;
+        }
+        public string WindingClass
+        {
+            get; set;
+        }
+        public string Classification
+        {
+            get; set;
+        }
+        public Queue<string> Total
+        {
+            get; set;
+        }
+        public Dictionary<string, string> Trend
+        {
+            get; set;
+        }
+        public Dictionary<string, double> BuyOrder
+        {
+            get; private set;
+        }
+        public Dictionary<string, double> SellOrder
+        {
+            get; private set;
+        }
         public void StartProgress(string path, string[] accounts)
         {
             if (Query != null && Real != null && Query.LoadFromResFile(string.Concat(path, "t9943.res")))
@@ -20,11 +66,8 @@ namespace ShareInvest.XingAPI
 
                 Account = accounts[0];
                 Delay.delay = 1000 / Query.GetTRCountPerSec("t9943");
-                request.RequestTrData(new Task(() =>
-                {
-                    if (Query.Request(false) < 0)
-                        Console.WriteLine("request");
-                }));
+                request.RequestTrData(new Task(() => SendErrorMessage(Query.Request(false))));
+
                 return;
             }
             Process.Start("shutdown.exe", "-r");
@@ -77,6 +120,11 @@ namespace ShareInvest.XingAPI
                         }
                     return;
             }
+        }
+        private void SendErrorMessage(int error)
+        {
+            if (error < 0)
+                new ExceptionMessage(Query.GetErrorMessage(error));
         }
         private void Dispose()
         {

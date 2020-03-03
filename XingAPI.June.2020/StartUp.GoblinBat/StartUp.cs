@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface.Struct;
+using ShareInvest.Statistic;
+using ShareInvest.Strategy;
 using ShareInvest.XingAPI;
 using ShareInvest.XingControls;
 using XA_DATASETLib;
@@ -72,6 +76,50 @@ namespace ShareInvest.GoblinBat
                         Statistical = new StatisticalControl();
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
+                        var code = e.NotifyIcon.ToString().Split(';');
+                        var chart = Retrieve.GetInstance(code[code.Length - 1]).Chart;
+                        new Task(() =>
+                        {
+                            var specify = new Specify
+                            {
+                                Account = secret.Accounts,
+                                Assets = 17500000,
+                                Code = code[code.Length - 1],
+                                Strategy = "TF",
+                                Time = 30,
+                                Short = 4,
+                                Long = 60
+                            };
+                            new Trading(API, specify, new Statistic.Quotes(specify, API), chart);
+                        }).Start();
+                        new Task(() =>
+                        {
+                            var liquidate = new Specify
+                            {
+                                Account = secret.Accounts,
+                                Assets = 17500000,
+                                Code = code[code.Length - 1],
+                                Strategy = "WU",
+                                Time = 15,
+                                Short = 4,
+                                Long = 60
+                            };
+                            new Trading(API, liquidate, new Statistic.Quotes(liquidate, API), chart);
+                        }).Start();
+                        new Task(() => new Trading(API, new Specify
+                        {
+                            Account = secret.Accounts,
+                            Assets = 17500000,
+                            Code = code[code.Length - 1],
+                            Strategy = "DL",
+                            Time = 1440,
+                            Short = 4,
+                            Long = 60,
+                            Reaction = 531
+                        }, chart)).Start();
+                        API.SendState += Quotes.OnReceiveState;
+                        API.SendTrend += Quotes.OnReceiveTrend;
+                        Retrieve.Dispose();
                     }));
                     return;
 
