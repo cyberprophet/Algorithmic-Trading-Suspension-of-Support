@@ -44,6 +44,9 @@ namespace ShareInvest.GoblinBatControls
                 var temp = Color.Ivory;
                 string message = "RollOver";
                 int count = 0;
+                var check = e.Volume.Contains("-");
+                stateVolume.Text = check ? e.Volume.Substring(1) : e.Volume;
+                stateVolume.ForeColor = check ? Color.DeepSkyBlue : Color.Maroon;
 
                 while (stack.Count > 0)
                 {

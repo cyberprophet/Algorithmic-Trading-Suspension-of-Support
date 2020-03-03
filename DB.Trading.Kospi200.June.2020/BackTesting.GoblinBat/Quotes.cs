@@ -43,7 +43,7 @@ namespace ShareInvest.Strategy
         {
             api.Difference = max - Math.Abs(api.Quantity) - (classification > 0 ? api.BuyOrder.Count : api.SellOrder.Count);
 
-            if (api.Difference > 2)
+            if (api.Difference > 1)
                 api.Classification = classification > 0 ? "2" : "1";
 
             else
@@ -108,7 +108,7 @@ namespace ShareInvest.Strategy
                     var number = api.SellOrder.First(o => o.Value == api.SellOrder.Max(p => p.Value)).Key;
                     var price = api.SellOrder[number] - Const.ErrorRate;
 
-                    if (api.SellOrder.Count > 1 && price > priceBuy && api.SellOrder.Remove(number))
+                    if (price > priceBuy && api.SellOrder.Remove(number))
                         SendCorrectionOrder(price, number, "1");
                 }
                 if (api.BuyOrder.ContainsValue(priceBuy))
@@ -127,7 +127,7 @@ namespace ShareInvest.Strategy
                     var number = api.BuyOrder.First(o => o.Value == api.BuyOrder.Min(p => p.Value)).Key;
                     var price = api.BuyOrder[number] + Const.ErrorRate;
 
-                    if (api.BuyOrder.Count > 1 && price < priceSell && api.BuyOrder.Remove(number))
+                    if (price < priceSell && api.BuyOrder.Remove(number))
                         SendCorrectionOrder(price, number, "2");
                 }
                 if (api.SellOrder.ContainsValue(priceSell))
@@ -144,7 +144,7 @@ namespace ShareInvest.Strategy
         {
             var price = param[classification.Equals("2") ? 9 : 0];
 
-            if (classification.Equals("2") ? api.BuyOrder.ContainsValue(price) : api.SellOrder.ContainsValue(price))
+            if ((classification.Equals("2") ? api.Quantity + api.BuyOrder.Count : api.SellOrder.Count - api.Quantity) > specify.Assets / ((classification.Equals("2") ? param[5] : param[4]) * Const.TransactionMultiplier * Const.MarginRate) || (classification.Equals("2") ? api.BuyOrder.ContainsValue(price) : api.SellOrder.ContainsValue(price)))
                 return;
 
             api.OnReceiveBalance = false;
@@ -196,7 +196,7 @@ namespace ShareInvest.Strategy
                     Buy = e.Price[5];
                 }
             }
-            if (int.Parse(e.Time) > 154259 && strategy && api.Trend.Count > 0)
+            if (int.Parse(e.Time) > 154259 && int.Parse(e.Time) < 154359 && strategy && api.Trend.Count > 0)
             {
                 int over = 0;
 

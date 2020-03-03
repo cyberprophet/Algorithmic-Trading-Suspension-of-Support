@@ -83,14 +83,15 @@ namespace ShareInvest.Strategy
             }
             else if (specify.Reaction > 0)
             {
-                Volume += e.Volume;
+                api.Volume += e.Volume;
 
-                if (api.OnReceiveBalance && GetJudgeTheReaction(trend, e.Price) && GetJudgeTheReaction(Volume, trend))
+                if (api.OnReceiveBalance && GetJudgeTheReaction(trend, e.Price) && GetJudgeTheReaction(api.Volume, trend))
                 {
                     api.OnReceiveBalance = false;
+                    var price = e.Price + (trend > 0 ? -Const.ErrorRate : Const.ErrorRate);
                     api.OnReceiveOrder(new PurchaseInformation
                     {
-                        RQName = string.Concat(e.Price, ';'),
+                        RQName = string.Concat(price, ';'),
                         ScreenNo = string.Concat(trend > 0 ? "2" : "1", new Random().Next(0, 99).ToString("D3")),
                         AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
                         Code = specify.Code,
@@ -98,10 +99,10 @@ namespace ShareInvest.Strategy
                         SlbyTP = trend > 0 ? "2" : "1",
                         OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
                         Qty = 1,
-                        Price = (e.Price + (trend > 0 ? -Const.ErrorRate : Const.ErrorRate)).ToString("F2"),
+                        Price = price.ToString("F2"),
                         OrgOrdNo = string.Empty
                     });
-                    Volume = 0;
+                    api.Volume = 0;
                 }
             }
         }
@@ -178,10 +179,6 @@ namespace ShareInvest.Strategy
             return true;
         }
         private int Trend
-        {
-            get; set;
-        }
-        private int Volume
         {
             get; set;
         }

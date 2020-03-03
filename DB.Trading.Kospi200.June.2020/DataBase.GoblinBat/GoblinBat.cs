@@ -173,7 +173,7 @@ namespace ShareInvest.GoblinBatForms
                             Time = 1440,
                             Short = 4,
                             Long = 60,
-                            Reaction = 149
+                            Reaction = 531
                         }, chart)).Start();
                         api.SendState += Quotes.OnReceiveState;
                         api.SendTrend += Quotes.OnReceiveTrend;

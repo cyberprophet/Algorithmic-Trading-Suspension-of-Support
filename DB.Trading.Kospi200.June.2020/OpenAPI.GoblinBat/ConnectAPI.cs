@@ -18,6 +18,10 @@ namespace ShareInvest.OpenAPI
 {
     public class ConnectAPI : AuxiliaryFunction
     {
+        public int Volume
+        {
+            get; set;
+        }
         public int Quantity
         {
             get; private set;
@@ -277,7 +281,7 @@ namespace ShareInvest.OpenAPI
                     if (e.sRealKey.Equals(Trading))
                     {
                         SendDatum?.Invoke(this, new Datum(param));
-                        SendTrend?.Invoke(this, new Trends(Trend));
+                        SendTrend?.Invoke(this, new Trends(Trend, Volume));
                     }
                     return;
 
@@ -345,7 +349,7 @@ namespace ShareInvest.OpenAPI
                     }
                     else if (param[0].Equals("3") && DeadLine == false)
                     {
-                        DeadLine = true;                        
+                        DeadLine = true;
                         Delay.delay = 205;
                     }
                     else if (param[0].Equals("0") && param[2].Equals("002000"))
