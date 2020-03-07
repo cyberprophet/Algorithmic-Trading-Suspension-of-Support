@@ -39,7 +39,7 @@ namespace ShareInvest.GoblinBat
 
                 for (int i = 0; i < secret.Accounts.Length; i++)
                     secret.Accounts[i] = session.GetAccountList(i);
-
+                                
                 API = ConnectXingAPI.GetInstance();
                 API.SetAPI(new XAQueryClass());
                 API.SetAPI(new XARealClass());
@@ -198,7 +198,7 @@ namespace ShareInvest.GoblinBat
             Size = new Size(599, e.ReSize + e.Count + 33);
             API.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
         }
-        private void StartUp_Resize(object sender, EventArgs e)
+        private void StartUpResize(object sender, EventArgs e)
         {
             BeginInvoke(new Action(() =>
             {
