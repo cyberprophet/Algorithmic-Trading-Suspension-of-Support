@@ -49,7 +49,7 @@ namespace ShareInvest.Struct
                 {
                     Name = name,
                     Field = temp[2],
-                    Occurs = int.Parse(temp[6]),
+                    Occurs = int.Parse(temp[7]),
                     Property = Attribute.코스피200지수선물.ToString()
                 });
             }
