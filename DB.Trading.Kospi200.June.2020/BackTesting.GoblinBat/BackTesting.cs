@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ShareInvest.Catalog;
 using ShareInvest.GoblinBatContext;
-using ShareInvest.Interface.Struct;
 
 namespace ShareInvest.Strategy
 {

@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.Entity.Migrations;
-using System.Data.SqlClient;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using ShareInvest.Catalog;
 using ShareInvest.GoblinBatContext;
-using ShareInvest.Message;
-using ShareInvest.Models;
 
 namespace ShareInvest.OpenAPI
 {
-    public class AuxiliaryFunction
+    public class AuxiliaryFunction : CallUp
     {
         protected string GetDistinctDate(int usWeekNumber)
         {
@@ -21,294 +15,6 @@ namespace ShareInvest.OpenAPI
             int check = dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 3 : 2;
 
             return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString("yyyyMM") : DateTime.Now.ToString("yyyyMM");
-        }
-        protected void SetStorage(string code, string[] param)
-        {
-            if (param.Length < 3)
-                return;
-
-            new Task(() =>
-            {
-                try
-                {
-                    string date = string.Empty;
-                    int i, count = 0;
-                    bool days = param[0].Split(',')[0].Length == 8, stocks = code.Length == 6, futures = code.Length > 6 && code.Substring(5, 3).Equals("000"), options = code.Length > 6 && !code.Substring(5, 3).Equals("000");
-                    IList model;
-
-                    if (futures)
-                        model = new List<Futures>(32);
-
-                    else if (options)
-                        model = new List<Options>(32);
-
-                    else if (days)
-                        model = new List<Days>(32);
-
-                    else
-                        model = new List<Stocks>(32);
-
-                    for (i = param.Length - 2; i > -1; i--)
-                    {
-                        var temp = param[i].Split(',');
-
-                        if (temp[0].Length == 8)
-                        {
-                            model.Add(new Days
-                            {
-                                Code = code,
-                                Date = int.Parse(temp[0]),
-                                Price = double.Parse(temp[1])
-                            });
-                            continue;
-                        }
-                        else if (temp[0].Equals(date))
-                            count++;
-
-                        else
-                        {
-                            date = temp[0];
-                            count = 0;
-                        }
-                        if (stocks)
-                            model.Add(new Stocks
-                            {
-                                Code = code,
-                                Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
-                                Price = int.Parse(temp[1]),
-                                Volume = int.Parse(temp[2])
-                            });
-                        else if (options)
-                            model.Add(new Options
-                            {
-                                Code = code,
-                                Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
-                                Price = double.Parse(temp[1]),
-                                Volume = int.Parse(temp[2])
-                            });
-                        else if (futures)
-                            model.Add(new Futures
-                            {
-                                Code = code,
-                                Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
-                                Price = double.Parse(temp[1]),
-                                Volume = int.Parse(temp[2])
-                            });
-                    }
-                    using (var db = new GoblinBatDbContext())
-                    {
-                        db.Configuration.AutoDetectChangesEnabled = true;
-
-                        if (days)
-                            db.BulkInsert((List<Days>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        else if (stocks)
-                            db.BulkInsert((List<Stocks>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        else if (options)
-                            db.BulkInsert((List<Options>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        else if (futures)
-                            db.BulkInsert((List<Futures>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        db.Configuration.AutoDetectChangesEnabled = false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace, code);
-                }
-            }).Start();
-        }
-        protected void SetInsertCode(string code, string name, string info)
-        {
-            new Task(() =>
-            {
-                using (var db = new GoblinBatDbContext())
-                {
-                    try
-                    {
-                        if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
-                            return;
-
-                        db.Codes.AddOrUpdate(new Codes
-                        {
-                            Code = code,
-                            Name = name,
-                            Info = info
-                        });
-                        db.SaveChanges();
-                    }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace, code);
-                    }
-                }
-            }).Start();
-        }
-        protected string GetStrategy()
-        {
-            using (var db = new GoblinBatDbContext())
-            {
-                try
-                {
-                    return db.Codes.First(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace);
-                }
-            }
-            return GetStrategy();
-        }
-        protected string GetRetention(int param, string code)
-        {
-            long max = 0;
-            using (var db = new GoblinBatDbContext())
-            {
-                try
-                {
-                    switch (param)
-                    {
-                        case 1:
-                            max = db.Futures.Where(o => o.Code.Equals(code)).Max(o => o.Date);
-                            break;
-
-                        case 2:
-                            max = db.Options.Where(o => o.Code.Equals(code)).Max(o => o.Date);
-                            break;
-
-                        case 3:
-                            max = db.Stocks.Where(o => o.Code.Equals(code)).Max(o => o.Date);
-                            break;
-
-                        case 4:
-                            max = db.Days.Where(o => o.Code.Equals(code)).Max(o => o.Date);
-                            break;
-                    };
-                    return max > 0 ? (max.ToString().Length > 12 ? max.ToString().Substring(0, 12) : max.ToString()) : "DoesNotExist";
-                }
-                catch (InvalidOperationException ex)
-                {
-                    if (ex.TargetSite.Name.Equals("GetValue") == false)
-                        new ExceptionMessage(ex.TargetSite.Name, code);
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace, code);
-                }
-            }
-            return "DoesNotExist";
-        }
-        protected List<string> RequestCodeList(List<string> list, string[] market)
-        {
-            using (var db = new GoblinBatDbContext())
-            {
-                try
-                {
-                    foreach (var temp in db.Codes.Select(o => new
-                    {
-                        o.Code,
-                        o.Info
-                    }))
-                        if (temp.Code.Length == 6 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
-                            list.Add(temp.Code);
-
-                    return list;
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace);
-                }
-            }
-            return RequestCodeList(list, market);
-        }
-        protected List<string> RequestCodeList(List<string> list)
-        {
-            string code = string.Empty;
-
-            try
-            {
-                using (var db = new GoblinBatDbContext())
-                {
-                    foreach (var temp in db.Codes.Select(o => new
-                    {
-                        o.Code
-                    }))
-                    {
-                        code = temp.Code;
-
-                        if (db.Codes.Any(o => o.Code.Length < 6))
-                            db.Codes.BulkDelete(db.Codes.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
-
-                        if (db.Days.Any(o => o.Code.Equals(temp.Code) && o.Date < 10000000))
-                        {
-                            db.Days.BulkDelete(db.Days.Where(o => o.Date < 10000000), o => o.BatchSize = 100);
-
-                            if (db.Days.Any(o => o.Code.Length < 6))
-                                db.Days.BulkDelete(db.Days.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
-                        }
-                        if (temp.Code.Length == 6 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(code)).Min(o => o.Date).ToString().Substring(0, 6))))
-                        {
-                            list.Add(temp.Code);
-
-                            if (db.Stocks.Any(o => o.Code.Length < 6))
-                                db.Stocks.BulkDelete(db.Stocks.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
-                        }
-                        else if (temp.Code.Length == 8 && temp.Code.Substring(5, 3).Equals("000") && db.Futures.Any(o => o.Date < 100000000000000))
-                        {
-                            db.Futures.BulkDelete(db.Futures.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
-
-                            if (db.Futures.Any(o => o.Code.Length < 8))
-                                db.Futures.BulkDelete(db.Futures.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
-                        }
-                        else if (temp.Code.Length == 8 && temp.Code.Substring(5, 3).Equals("000") == false && db.Options.Any(o => o.Date < 100000000000000))
-                        {
-                            db.Options.BulkDelete(db.Options.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
-
-                            if (db.Options.Any(o => o.Code.Length < 8))
-                                db.Options.BulkDelete(db.Options.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
-                        }
-                    }
-                }
-            }
-            catch (InvalidOperationException ex)
-            {
-                new ExceptionMessage(ex.StackTrace, code);
-            }
-            catch (Exception ex)
-            {
-                using (var db = new GoblinBatDbContext())
-                {
-                    var stocks = db.Stocks.Where(o => o.Code.Equals(code));
-
-                    if (stocks.Any(o => o.Date < 100000000000000))
-                        db.Stocks.BulkDelete(stocks.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
-                }
-                new ExceptionMessage(ex.StackTrace, code);
-                RequestCodeList(new List<string>());
-            }
-            return list;
         }
         protected void FixUp(string[] info)
         {
@@ -337,7 +43,129 @@ namespace ShareInvest.OpenAPI
 
             return inven;
         }
-        protected readonly IEnumerable[] catalog =
+        protected string SetPassword
+        {
+            get
+            {
+                return password;
+            }
+        }
+        protected string OnReceiveData
+        {
+            get
+            {
+                return data;
+            }
+        }
+        protected string TR
+        {
+            get
+            {
+                return tr;
+            }
+        }
+        protected string Failure
+        {
+            get
+            {
+                return failure;
+            }
+        }
+        protected string LookUp
+        {
+            get
+            {
+                return lookUp;
+            }
+        }
+        protected string GoblinBat
+        {
+            get
+            {
+                return goblin;
+            }
+        }
+        protected string Collection
+        {
+            get
+            {
+                return collection;
+            }
+        }
+        protected string Response
+        {
+            get
+            {
+                return response;
+            }
+        }
+        protected StringBuilder Exists
+        {
+            get
+            {
+                return new StringBuilder(exists);
+            }
+        }
+        protected enum RealType
+        {
+            주문체결 = 0,
+            선물시세 = 1,
+            선물호가잔량 = 2,
+            선물이론가 = 3,
+            파생잔고 = 4,
+            옵션시세 = 5,
+            옵션호가잔량 = 6,
+            옵션이론가 = 7,
+            선물옵션우선호가 = 8,
+            장시작시간 = 9,
+            주식체결 = 10,
+            주식호가잔량 = 11,
+            주식예상체결 = 12,
+            주식우선호가 = 13,
+            주식당일거래원 = 14,
+            종목프로그램매매 = 15,
+            주식종목정보 = 16,
+            주식시세 = 17,
+            주식시간외호가 = 18,
+            파생실시간상하한 = 19,
+            시간외종목정보 = 20
+        }
+        protected readonly IEnumerable[] catalogReal =
+        {
+            new 주문체결(),
+            new 선물시세(),
+            new 선물호가잔량(),
+            new 선물이론가(),
+            new 파생잔고(),
+            new 옵션시세(),
+            new 옵션호가잔량(),
+            new 옵션이론가(),
+            new 선물옵션우선호가(),
+            new 장시작시간(),
+            new 주식체결(),
+            new 주식호가잔량(),
+            new 주식예상체결(),
+            new 주식우선호가(),
+            new 주식당일거래원(),
+            new 종목프로그램매매(),
+            new 주식종목정보(),
+            new 주식시세(),
+            new 주식시간외호가(),
+            new 파생실시간상하한(),
+            new 시간외종목정보(),
+            new ELW_이론가(),
+            new ELW_지표(),
+            new ETF_NAV(),
+            new 선물옵션합계(),
+            new 순간체결량(),
+            new 업종등락(),
+            new 업종지수(),
+            new 임의연장정보(),
+            new 주식거래원(),
+            new 주식예상체결(),
+            new 투자자별매매()
+        };
+        protected readonly IEnumerable[] catalogTR =
         {
             new Unspecified(),
             new Opt50028(),
@@ -352,5 +180,33 @@ namespace ShareInvest.OpenAPI
             new OPW20010(),
             new OPW20007()
         };
+        protected readonly string[] basic =
+        {
+            "모의투자 선물옵션 신규주문 완료",
+            "모의투자 정상처리 되었습니다",
+            "모의투자 정정/취소할 수량이 없습니다",
+            "모의투자 주문가능 금액을 확인하세요",
+            "모의투자 정정가격이 원주문가격과 같습니다",
+            "모의투자 원주문번호가 존재하지 않습니다",
+            "모의투자 주문처리가 안되었습니다(2)",
+            "모의투자 서비스 지연입니다. 잠시후 재시도 바랍니다..",
+            "모의투자 상하한가 오류"
+        };
+        protected readonly string[] exclude =
+        {
+            "115960",
+            "006800",
+            "001880",
+            "072770"
+        };
+        private const string collection = "백테스팅에 필요한 자료를 수집합니다.";
+        private const string exists = "Information that already Exists";
+        private const string lookUp = "모의투자 조회가 완료되었습니다";
+        private const string failure = "전문 처리 실패(-22)";
+        private const string tr = "서비스 TR을 확인바랍니다.(0006)";
+        private const string data = "트레이딩에 필요한 자료를 수집합니다.\n\n잠시만 기다려주세요.";
+        private const string password = "비밀번호 설정을 하시겠습니까?\n\n자동로그인 기능을 사용하시면 편리합니다.";
+        private const string goblin = "GoblinBat";
+        private const string response = "응답이 지연되고 있습니다";
     }
 }

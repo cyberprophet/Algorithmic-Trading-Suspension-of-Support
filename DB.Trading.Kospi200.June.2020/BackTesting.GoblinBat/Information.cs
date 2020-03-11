@@ -1,6 +1,6 @@
 ﻿using System;
 using ShareInvest.GoblinBatContext;
-using ShareInvest.Interface.Struct;
+using ShareInvest.Catalog;
 using ShareInvest.Models;
 
 namespace ShareInvest.Strategy

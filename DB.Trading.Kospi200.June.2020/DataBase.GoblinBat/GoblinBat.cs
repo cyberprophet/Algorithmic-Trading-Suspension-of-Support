@@ -4,36 +4,48 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatControls;
-using ShareInvest.Interface.Struct;
 using ShareInvest.Message;
-using ShareInvest.OpenAPI;
 using ShareInvest.Strategy;
 
-namespace ShareInvest.GoblinBatForms
+namespace ShareInvest
 {
-    public partial class GoblinBat : Form
+    internal partial class GoblinBat : Form
     {
-        public GoblinBat()
+        internal GoblinBat(char initial, Secret secret)
         {
+            this.secret = secret;
             InitializeComponent();
-            api = ConnectAPI.GetInstance();
-            api.SetAPI(axAPI);
-            api.StartProgress();
-            new Temporary();
-            api.SendCount += OnReceiveNotifyIcon;
-            Size = new Size(238, 35);
-            CenterToScreen();
+            open = OpenAPI.ConnectAPI.GetInstance();
+            open.SetAPI(axAPI);
+            open.SendCount += OnReceiveNotifyIcon;
+
+            switch (initial)
+            {
+                case 'T':
+                    open.StartProgress();
+                    Size = new Size(238, 35);
+                    CenterToScreen();
+                    break;
+
+                case 'C':
+                    open.StartProgress(new OpenAPI.Temporary(open, new Queue<string>(1024)));
+                    Size = new Size(5, 5);
+                    Opacity = 0;
+                    xing = XingAPI.ConnectAPI.GetInstance();
+                    break;
+            }
         }
         private void OnReceiveItem(string item)
         {
             switch (item)
             {
                 case "quotes":
-                    api.SendQuotes += Quotes.OnReceiveQuotes;
-                    api.SendState += Quotes.OnReceiveState;
-                    api.SendTrend += Quotes.OnReceiveTrend;
+                    open.SendQuotes += Quotes.OnReceiveQuotes;
+                    open.SendState += Quotes.OnReceiveState;
+                    open.SendTrend += Quotes.OnReceiveTrend;
                     Size = new Size(323, 493);
                     Quotes.Show();
                     break;
@@ -50,17 +62,17 @@ namespace ShareInvest.GoblinBatForms
                     break;
 
                 case "account":
-                    api.SendDeposit += Account.OnReceiveDeposit;
-                    api.LookUpTheDeposit(Acc);
+                    open.SendDeposit += Account.OnReceiveDeposit;
+                    open.LookUpTheDeposit(Acc);
                     Size = new Size(749, 372);
                     Account.Show();
                     break;
 
                 case "balance":
                     Size = new Size(249, 0);
-                    api.SendBalance += Balance.OnReceiveBalance;
+                    open.SendBalance += Balance.OnReceiveBalance;
                     Balance.SendReSize += OnReceiveSize;
-                    api.LookUpTheBalance(Acc);
+                    open.LookUpTheBalance(Acc);
                     Balance.Show();
                     break;
             };
@@ -81,7 +93,7 @@ namespace ShareInvest.GoblinBatForms
         private void OnReceiveSize(object sender, GridResize e)
         {
             Size = new Size(Server ? 591 : 599, e.ReSize + e.Count + 33);
-            api.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
+            open.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
         }
         private void OnReceiveNotifyIcon(object sender, NotifyIconText e)
         {
@@ -93,8 +105,8 @@ namespace ShareInvest.GoblinBatForms
                     if (temp.ContainsKey(0))
                     {
                         notifyIcon.Text = "CheckDataBase";
-                        api.StartProgress(3605);
-                        notifyIcon.Text = new Message().GoblinBat;
+                        open.StartProgress(3605);
+                        notifyIcon.Text = secret.GoblinBat;
 
                         return;
                     }
@@ -108,27 +120,27 @@ namespace ShareInvest.GoblinBatForms
                     {
                         Quotes = new QuotesControl();
                         panel.Controls.Add(Quotes);
-                        api.SendQuotes += Quotes.OnReceiveQuotes;
+                        open.SendQuotes += Quotes.OnReceiveQuotes;
                         Quotes.Dock = DockStyle.Fill;
                         Account = new AccountControl();
                         panel.Controls.Add(Account);
                         Account.Dock = DockStyle.Fill;
-                        api.SendDeposit += Account.OnReceiveDeposit;
+                        open.SendDeposit += Account.OnReceiveDeposit;
                         Balance = new BalanceControl();
                         panel.Controls.Add(Balance);
                         Balance.Dock = DockStyle.Fill;
-                        api.SendBalance += Balance.OnReceiveBalance;
+                        open.SendBalance += Balance.OnReceiveBalance;
                         Statistical = new StatisticalAnalysis();
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
-                        var chart = Retrieve.GetInstance(api.Strategy).Chart;
+                        var chart = Retrieve.GetInstance(open.Strategy).Chart;
                         var check = e.NotifyIcon.ToString().Split(';');
                         Acc = new string[check.Length - 3];
                         Server = check[check.Length - 1].Equals("1");
 
                         if (Server ? false : new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
                         {
-                            TimerBox.Show(new Message(check[check.Length - 2]).Identify, new Message().GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750);
+                            TimerBox.Show(new Secret(check[check.Length - 2]).Identify, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750);
                             Dispose();
 
                             return;
@@ -142,13 +154,13 @@ namespace ShareInvest.GoblinBatForms
                             {
                                 Account = Acc,
                                 Assets = 17500000,
-                                Code = api.Strategy,
+                                Code = open.Strategy,
                                 Strategy = "TF",
                                 Time = 30,
                                 Short = 4,
                                 Long = 60
                             };
-                            new Trading(api, specify, new Strategy.Quotes(specify, api), chart);
+                            new Trading(open, specify, new Quotes(specify, open), chart);
                         }).Start();
                         new Task(() =>
                         {
@@ -156,27 +168,27 @@ namespace ShareInvest.GoblinBatForms
                             {
                                 Account = Acc,
                                 Assets = 17500000,
-                                Code = api.Strategy,
+                                Code = open.Strategy,
                                 Strategy = "WU",
                                 Time = 15,
                                 Short = 4,
                                 Long = 60
                             };
-                            new Trading(api, liquidate, new Strategy.Quotes(liquidate, api), chart);
+                            new Trading(open, liquidate, new Quotes(liquidate, open), chart);
                         }).Start();
-                        new Task(() => new Trading(api, new Specify
+                        new Task(() => new Trading(open, new Specify
                         {
                             Account = Acc,
                             Assets = 17500000,
-                            Code = api.Strategy,
+                            Code = open.Strategy,
                             Strategy = "DL",
                             Time = 1440,
                             Short = 4,
                             Long = 60,
                             Reaction = 531
                         }, chart)).Start();
-                        api.SendState += Quotes.OnReceiveState;
-                        api.SendTrend += Quotes.OnReceiveTrend;
+                        open.SendState += Quotes.OnReceiveState;
+                        open.SendTrend += Quotes.OnReceiveTrend;
                         Retrieve.Dispose();
                     }));
                     return;
@@ -186,18 +198,22 @@ namespace ShareInvest.GoblinBatForms
                     return;
 
                 case "Byte":
-                    Account.Show();
-                    api.SendDeposit -= Account.OnReceiveDeposit;
-                    Account.Hide();
-                    Balance.Show();
-                    api.SendBalance -= Balance.OnReceiveBalance;
-                    Balance.Hide();
-                    BackColor = Color.FromArgb(121, 133, 130);
-                    Opacity = 0.8135;
-                    OnClickMinimized = "quotes";
+                    if (open.Temporary == null)
+                    {
+                        Account.Show();
+                        open.SendDeposit -= Account.OnReceiveDeposit;
+                        Account.Hide();
+                        Balance.Show();
+                        open.SendBalance -= Balance.OnReceiveBalance;
+                        Balance.Hide();
+                        BackColor = Color.FromArgb(121, 133, 130);
+                        Opacity = 0.8135;
+                        OnClickMinimized = "quotes";
+                        open.SendState -= Quotes.OnReceiveState;
+                        open.SendTrend -= Quotes.OnReceiveTrend;
+                    }
                     WindowState = FormWindowState.Minimized;
-                    api.SendState -= Quotes.OnReceiveState;
-                    api.SendTrend -= Quotes.OnReceiveTrend;
+                    notifyIcon.Text = open.Code;
                     return;
 
                 case "Char":
@@ -207,7 +223,7 @@ namespace ShareInvest.GoblinBatForms
         }
         private void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
-            if (MessageBox.Show(new Message().Exit, new Message().GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
+            if (MessageBox.Show(secret.Exit, secret.GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
             {
                 e.Cancel = true;
                 WindowState = FormWindowState.Minimized;
@@ -225,26 +241,29 @@ namespace ShareInvest.GoblinBatForms
                     switch (OnClickMinimized)
                     {
                         case "quotes":
-                            api.SendQuotes -= Quotes.OnReceiveQuotes;
-                            api.SendState -= Quotes.OnReceiveState;
-                            api.SendTrend -= Quotes.OnReceiveTrend;
+                            open.SendQuotes -= Quotes.OnReceiveQuotes;
+                            open.SendState -= Quotes.OnReceiveState;
+                            open.SendTrend -= Quotes.OnReceiveTrend;
                             Quotes.Hide();
                             break;
 
                         case "account":
-                            api.SendDeposit -= Account.OnReceiveDeposit;
+                            open.SendDeposit -= Account.OnReceiveDeposit;
                             Account.Hide();
                             break;
 
                         case "balance":
-                            api.SendCurrent -= Balance.OnRealTimeCurrentPriceReflect;
-                            api.SendBalance -= Balance.OnReceiveBalance;
+                            open.SendCurrent -= Balance.OnRealTimeCurrentPriceReflect;
+                            open.SendBalance -= Balance.OnReceiveBalance;
                             Balance.SendReSize -= OnReceiveSize;
                             Balance.Hide();
                             break;
 
                         case "strategy":
                             Statistical.Hide();
+                            break;
+
+                        default:
                             break;
                     };
                     Visible = false;
@@ -281,6 +300,8 @@ namespace ShareInvest.GoblinBatForms
         {
             get; set;
         }
-        private readonly ConnectAPI api;
+        private readonly XingAPI.ConnectAPI xing;
+        private readonly OpenAPI.ConnectAPI open;
+        private readonly Secret secret;
     }
 }

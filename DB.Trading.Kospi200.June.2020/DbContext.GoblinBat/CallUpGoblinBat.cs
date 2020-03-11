@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Linq;
 using System.Threading.Tasks;
-using ShareInvest.Interface.Struct;
+using ShareInvest.Catalog;
 using ShareInvest.Message;
 using ShareInvest.Models;
 

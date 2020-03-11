@@ -2,7 +2,7 @@
 
 namespace ShareInvest.Catalog
 {
-    public class Unspecified : IEnumerable
+    public struct Unspecified : IEnumerable
     {
         public IEnumerator GetEnumerator()
         {

@@ -8,14 +8,18 @@ namespace ShareInvest.DelayRequest
 {
     public class Delay
     {
-        public static Delay GetInstance(int mSecond)
+        public static Delay GetInstance(int milliseconds)
         {
-            delay = mSecond;
+            Milliseconds = milliseconds;
 
             if (request == null)
                 request = new Delay();
 
             return request;
+        }
+        public static int Milliseconds
+        {
+            get; set;
         }
         public int QueueCount
         {
@@ -43,7 +47,7 @@ namespace ShareInvest.DelayRequest
                         while (requestTaskQueue.Count > 0)
                         {
                             requestTaskQueue.Dequeue().RunSynchronously();
-                            Thread.Sleep(delay);
+                            Thread.Sleep(Milliseconds);
                         }
                         Thread.Sleep(5);
                     }
@@ -54,7 +58,6 @@ namespace ShareInvest.DelayRequest
                 }
             });
         }
-        public static int delay = 205;
         private static Delay request;
         private readonly Thread taskWorker;
         private readonly Queue<Task> requestTaskQueue = new Queue<Task>();

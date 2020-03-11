@@ -1,22 +1,13 @@
-﻿using System;
-using System.Data.Entity;
+﻿using System.Data.Entity;
 using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
 {
     public class GoblinBatDbContext : DbContext
     {
-        public GoblinBatDbContext() : base(new Secret().ConnectionString)
+        public GoblinBatDbContext() : base(new Secret().ConnectionString['C'])
         {
 
-        }
-        public GoblinBatDbContext(int secondary) : base(new Secret().ConnectionMirroring)
-        {
-            Console.Write(secondary);
-        }
-        public GoblinBatDbContext(char secondary) : base(new Secret().ConnectionExternalShareInvest)
-        {
-            Console.Write(secondary);
         }
         public override int SaveChanges()
         {
@@ -43,6 +34,10 @@ namespace ShareInvest.GoblinBatContext
             get; set;
         }
         public DbSet<Logs> Logs
+        {
+            get; set;
+        }
+        public DbSet<Quotes> Quotes
         {
             get; set;
         }

@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
-using ShareInvest.Interface.Struct;
+using ShareInvest.Catalog;
 
 namespace ShareInvest.GoblinBatControls
 {
@@ -17,7 +17,7 @@ namespace ShareInvest.GoblinBatControls
             for (int i = 0; i < columns.Length; i++)
                 balGrid.Columns[i].Name = columns[i];
         }
-        public void OnRealTimeCurrentPriceReflect(object sender, Current e)
+        public void OnRealTimeCurrentPriceReflect(object sender, OpenCurrent e)
         {
             if (e.Quantity != 0 && balGrid.Rows.Count > 0)
                 BeginInvoke(new Action(() =>
@@ -55,7 +55,7 @@ namespace ShareInvest.GoblinBatControls
                     Application.DoEvents();
                 }));
         }
-        public void OnReceiveBalance(object sender, Balance e)
+        public void OnReceiveBalance(object sender, OpenBalance e)
         {
             BeginInvoke(new Action(() =>
             {

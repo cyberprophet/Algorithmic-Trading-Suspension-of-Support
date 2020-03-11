@@ -17,7 +17,7 @@ namespace ShareInvest.GoblinBatControls
             stateBuy.ForeColor = Color.Crimson;
             stack = new Stack<Color>();
         }
-        public void OnReceiveState(object sender, State e)
+        public void OnReceiveState(object sender, OpenState e)
         {
             BeginInvoke(new Action(() =>
             {
@@ -29,7 +29,7 @@ namespace ShareInvest.GoblinBatControls
                 stateQuantity.ForeColor = position ? Color.DeepSkyBlue : Color.Maroon;
             }));
         }
-        public void OnReceiveTrend(object sender, Trends e)
+        public void OnReceiveTrend(object sender, OpenTrends e)
         {
             BeginInvoke(new Action(() =>
             {
@@ -64,7 +64,7 @@ namespace ShareInvest.GoblinBatControls
                 stateRollOver.ForeColor = temp;
             }));
         }
-        public void OnReceiveQuotes(object sender, Quotes e)
+        public void OnReceiveQuotes(object sender, OpenQuotes e)
         {
             BeginInvoke(new Action(() =>
             {

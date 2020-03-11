@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ShareInvest.EventHandler;
-using ShareInvest.Interface.Struct;
+using ShareInvest.Catalog;
 using ShareInvest.OpenAPI;
 
 namespace ShareInvest.Strategy
@@ -16,7 +16,7 @@ namespace ShareInvest.Strategy
             SendDatum += Analysize;
 
             foreach (Chart chart in charts)
-                SendDatum?.Invoke(this, new Datum(chart));
+                SendDatum?.Invoke(this, new OpenDatum(chart));
 
             SendDatum -= Analysize;
             this.api = api;
@@ -32,14 +32,14 @@ namespace ShareInvest.Strategy
             SendDatum += Analysize;
 
             foreach (Chart chart in charts)
-                SendDatum?.Invoke(this, new Datum(chart));
+                SendDatum?.Invoke(this, new OpenDatum(chart));
 
             SendDatum -= Analysize;
             this.api = api;
             OnTime = true;
             api.SendDatum += Analysize;
         }
-        private void Analysize(object sender, Datum e)
+        private void Analysize(object sender, OpenDatum e)
         {
             if (api == null)
             {
@@ -76,6 +76,29 @@ namespace ShareInvest.Strategy
 
                     case "WU":
                         quotes.SetWindingUp(trend);
+
+                        if (api.Quantity != 0 && api.OnReceiveBalance && quotes.GetTickRevenue(specify.Strategy))
+                        {
+                            var price = quotes.GetExactPrice();
+
+                            if (api.Quantity > 0 ? price > e.Price : price < e.Price)
+                            {
+                                api.OnReceiveBalance = false;
+                                api.OnReceiveOrder(new PurchaseInformation
+                                {
+                                    RQName = string.Concat(price, ';'),
+                                    ScreenNo = string.Concat(api.Quantity > 0 ? "1" : "2", new Random().Next(1, 76).ToString("D3")),
+                                    AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
+                                    Code = api.Code,
+                                    OrdKind = 1,
+                                    SlbyTP = api.Quantity > 0 ? "1" : "2",
+                                    OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                                    Qty = 1,
+                                    Price = price.ToString("F2"),
+                                    OrgOrdNo = string.Empty
+                                });
+                            }
+                        }
                         break;
                 }
                 if (GetTrend(trend.ToString()))
@@ -85,16 +108,16 @@ namespace ShareInvest.Strategy
             {
                 api.Volume += e.Volume;
 
-                if (api.OnReceiveBalance && GetJudgeTheReaction(trend, e.Price) && GetJudgeTheReaction(api.Volume, trend))
+                if (api.OnReceiveBalance && (trend > 0 ? api.BuyOrder.Count == 0 : api.SellOrder.Count == 0) && GetJudgeTheReaction(trend, e.Price) && GetJudgeTheReaction(api.Volume, trend))
                 {
                     api.OnReceiveBalance = false;
                     var price = e.Price + (trend > 0 ? -Const.ErrorRate : Const.ErrorRate);
                     api.OnReceiveOrder(new PurchaseInformation
                     {
                         RQName = string.Concat(price, ';'),
-                        ScreenNo = string.Concat(trend > 0 ? "2" : "1", new Random().Next(0, 99).ToString("D3")),
+                        ScreenNo = string.Concat(trend > 0 ? "2" : "1", new Random().Next(1, 76).ToString("D3")),
                         AccNo = Array.Find(specify.Account, o => o.Substring(8, 2).Equals("31")),
-                        Code = specify.Code,
+                        Code = api.Code,
                         OrdKind = 1,
                         SlbyTP = trend > 0 ? "2" : "1",
                         OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
@@ -205,6 +228,6 @@ namespace ShareInvest.Strategy
         private readonly Specify specify;
         private readonly Quotes quotes;
         private readonly ConnectAPI api;
-        public event EventHandler<Datum> SendDatum;
+        public event EventHandler<OpenDatum> SendDatum;
     }
 }
