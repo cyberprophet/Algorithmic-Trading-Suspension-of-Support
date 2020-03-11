@@ -42,7 +42,6 @@ namespace ShareInvest.GoblinBat
                                 
                 API = ConnectXingAPI.GetInstance();
                 API.SetAPI(new XAQueryClass());
-                API.SetAPI(new XARealClass());
                 API.StartProgress(secret.Path, secret.Accounts);
                 API.SendCount += OnReceiveNotifyIcon;
             }

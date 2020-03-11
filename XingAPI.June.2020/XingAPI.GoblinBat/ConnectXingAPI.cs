@@ -82,7 +82,7 @@ namespace ShareInvest.XingAPI
         }
         public void StartProgress(string path, string[] accounts)
         {
-            if (Query != null && Real != null && Query.LoadFromResFile(string.Concat(path, "t9943.res")))
+            if (Query != null && Query.LoadFromResFile(string.Concat(path, "t9943.res")))
             {
                 foreach (var block in new T9943().GetInBlock(Query.GetResData()))
                     Query.SetFieldData(block.Name, block.Field, block.Occurs, block.Property);
@@ -103,11 +103,6 @@ namespace ShareInvest.XingAPI
             query.ReceiveData += OnReceiveData;
             query.ReceiveMessage += OnReceiveMessage;
         }
-        public void SetAPI(XARealClass real)
-        {
-            Real = real;
-            real.ReceiveRealData += OnReceiveRealData;
-        }
         public static ConnectXingAPI GetInstance()
         {
             if (api == null)
@@ -115,13 +110,31 @@ namespace ShareInvest.XingAPI
 
             return api;
         }
+        private void SetAPI(KeyValuePair<string, IBlock> kv)
+        {
+            var real = new XARealClass
+            {
+                ResFileName = string.Concat(Path, kv.Key)
+            };
+            real.ReceiveRealData += OnReceiveRealData;
+
+            foreach (var block in kv.Value.GetInBlock(real.GetTrCode()))
+                real.SetFieldData(block.Name, block.Field, block.Property);
+
+            real.AdviseRealData();
+            Real[kv.Key.Split('.')[0]] = real;
+        }
         private void OnReceiveRealData(string szTrCode)
         {
+            Console.WriteLine(szTrCode);
+            int i = 0;
 
+            foreach (var str in Real[szTrCode].GetBlockData("OutBlock").Split(new char[] { ' ', '?' }))
+                Console.WriteLine(++i + "\t" + str);
         }
         private void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
-
+            Console.WriteLine(bIsSystemError + "\t" + nMessageCode + "\t" + szMessage);
         }
         private void OnReceiveData(string szTrCode)
         {
@@ -137,11 +150,12 @@ namespace ShareInvest.XingAPI
                     foreach (var str in Sb.ToString().Split(';'))
                         if (str.Substring(0, 3).Equals("101"))
                         {
-                            new Secret(new StringBuilder(str));
+                            new Secret(str);
                             SendCount?.Invoke(this, new NotifyIconText(Query.GetAccountName(Secret.Account), Query.GetAcctDetailName(Secret.Account), Query.GetAcctNickname(Secret.Account), str));
                             SellOrder = new Dictionary<string, double>();
                             BuyOrder = new Dictionary<string, double>();
                             Trend = new Dictionary<string, string>();
+                            Real = new Dictionary<string, XARealClass>();
                             Total = new Queue<string>();
 
                             if (Query.LoadFromResFile(string.Concat(Path, "t2105.res")))
@@ -152,8 +166,11 @@ namespace ShareInvest.XingAPI
                                 Delay.delay = 1000 / Query.GetTRCountPerSec("t2105");
                                 request.RequestTrData(new Task(() => SendErrorMessage(Query.Request(false))));
                             }
-                            if (TimerBox.Show(Secret.OnReceiveData, Secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 13591).Equals(DialogResult.OK))
+                            if (TimerBox.Show(Secret.OnReceiveData, Secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 13579).Equals(DialogResult.OK))
                             {
+                                foreach (var kv in real)
+                                    SetAPI(kv);
+
                                 LookUpTheBalance();
                                 SendCount?.Invoke(this, new NotifyIconText(7));
                             }
@@ -294,6 +311,10 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
+        private Dictionary<string, XARealClass> Real
+        {
+            get; set;
+        }
         private StringBuilder Sb
         {
             get; set;
@@ -302,10 +323,6 @@ namespace ShareInvest.XingAPI
         {
             request = Delay.GetInstance(501);
             request.Run();
-        }
-        private XARealClass Real
-        {
-            get; set;
         }
         private XAQueryClass Query
         {
