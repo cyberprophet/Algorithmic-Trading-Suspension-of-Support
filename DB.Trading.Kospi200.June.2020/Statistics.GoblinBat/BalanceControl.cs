@@ -55,7 +55,7 @@ namespace ShareInvest.GoblinBatControls
                     Application.DoEvents();
                 }));
         }
-        public void OnReceiveBalance(object sender, OpenBalance e)
+        public void OnReceiveBalance(object sender, Balance e)
         {
             BeginInvoke(new Action(() =>
             {
@@ -91,43 +91,40 @@ namespace ShareInvest.GoblinBatControls
 
                             case 4:
                             case 5:
-                                arr[i++] = (double.Parse(val) / 100).ToString("N2");
+                                arr[i++] = (val.Contains(".") ? double.Parse(val) : (double.Parse(val) / 100)).ToString("N2");
                                 break;
                         }
                     }
                     if (arr[0] != null)
-                    {
                         balGrid.Rows.Add(arr);
+                }
+                foreach (DataGridViewRow row in balGrid.Rows)
+                {
+                    var type = row.Cells[2];
 
-                        foreach (DataGridViewRow row in balGrid.Rows)
-                        {
-                            var type = row.Cells[2];
+                    if (type.Value.Equals("매도"))
+                    {
+                        type.Style.ForeColor = Color.Navy;
+                        type.Style.SelectionForeColor = Color.DeepSkyBlue;
+                    }
+                    else if (type.Value.Equals("매수"))
+                    {
+                        type.Style.ForeColor = Color.Maroon;
+                        type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
+                    }
+                    type = row.Cells[6];
+                    long revenue = long.Parse(type.Value.ToString().Replace(",", string.Empty));
 
-                            if (type.Value.Equals("매도"))
-                            {
-                                type.Style.ForeColor = Color.Navy;
-                                type.Style.SelectionForeColor = Color.DeepSkyBlue;
-                            }
-                            else if (type.Value.Equals("매수"))
-                            {
-                                type.Style.ForeColor = Color.Maroon;
-                                type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
-                            }
-                            type = row.Cells[6];
-                            long revenue = long.Parse(type.Value.ToString().Replace(",", string.Empty));
-
-                            if (revenue > 0)
-                            {
-                                type.Style.ForeColor = Color.Maroon;
-                                type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
-                            }
-                            else if (revenue < 0)
-                            {
-                                type.Value = type.Value.ToString().Replace("-", string.Empty);
-                                type.Style.ForeColor = Color.Navy;
-                                type.Style.SelectionForeColor = Color.DeepSkyBlue;
-                            }
-                        }
+                    if (revenue > 0)
+                    {
+                        type.Style.ForeColor = Color.Maroon;
+                        type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
+                    }
+                    else if (revenue < 0)
+                    {
+                        type.Value = type.Value.ToString().Replace("-", string.Empty);
+                        type.Style.ForeColor = Color.Navy;
+                        type.Style.SelectionForeColor = Color.DeepSkyBlue;
                     }
                 }
                 balGrid.Show();

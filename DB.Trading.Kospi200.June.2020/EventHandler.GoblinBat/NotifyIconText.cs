@@ -14,9 +14,13 @@ namespace ShareInvest.EventHandler
         {
             NotifyIcon = start;
         }
-        public NotifyIconText(char end)
+        public NotifyIconText(int xing)
         {
-            NotifyIcon = end;
+            NotifyIcon = xing;
+        }
+        public NotifyIconText(char initial)
+        {
+            NotifyIcon = initial;
         }
         public NotifyIconText(int count, string code)
         {

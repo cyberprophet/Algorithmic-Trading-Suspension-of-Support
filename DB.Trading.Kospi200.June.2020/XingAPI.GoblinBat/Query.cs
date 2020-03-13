@@ -16,6 +16,7 @@ namespace ShareInvest.XingAPI
         {
             string block = string.Empty;
             var queue = new Queue<InBlock>();
+            var secret = new Secret().GetData(name);
             int i = 0;
 
             foreach (var str in GetResData().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
@@ -33,7 +34,6 @@ namespace ShareInvest.XingAPI
                     continue;
 
                 var temp = str.Split(',');
-                var secret = new Secret().GetData(name);
                 queue.Enqueue(new InBlock
                 {
                     Block = block,

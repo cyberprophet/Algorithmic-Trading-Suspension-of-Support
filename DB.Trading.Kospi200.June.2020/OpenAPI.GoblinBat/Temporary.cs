@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using ShareInvest.EventHandler.OpenAPI;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatContext;
 
@@ -7,27 +8,27 @@ namespace ShareInvest.OpenAPI
 {
     public class Temporary : CallUp
     {
-        public Temporary(ConnectAPI api)
-        {
-            Temp = new StringBuilder(1024);
-            api.SendMemorize += OnReceiveMemorize;
-        }
         public Temporary(ConnectAPI api, Queue<string> quotes)
         {
             this.quotes = quotes;
             api.SendQuotes += OnReceiveMemorize;
             api.SendDatum += OnReceiveMemorize;
         }
-        public void SetStorage(string code)
+        internal Temporary(ConnectAPI api)
+        {
+            Temp = new StringBuilder(1024);
+            api.SendMemorize += OnReceiveMemorize;
+        }
+        internal void SetStorage(string code)
         {
             SetStorage(code, quotes);
         }
-        private void OnReceiveMemorize(object sender, OpenDatum e)
+        private void OnReceiveMemorize(object sender, Datum e)
         {
             if (e.Time != null && e.Price > 0 && e.Volume != 0)
                 quotes.Enqueue(string.Concat(e.Time, ';', e.Price, '^', e.Volume));
         }
-        private void OnReceiveMemorize(object sender, OpenQuotes e)
+        private void OnReceiveMemorize(object sender, Quotes e)
         {
             if (e.Total.Equals(string.Empty) == false && int.TryParse(e.Time.Substring(0, 4), out int time) && time < 1535 && time > 859 && e.Price[4] > 0 && e.Price[5] > 0)
             {

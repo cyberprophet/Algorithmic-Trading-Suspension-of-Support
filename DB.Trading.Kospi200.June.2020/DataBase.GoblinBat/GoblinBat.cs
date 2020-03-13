@@ -16,6 +16,8 @@ namespace ShareInvest
     {
         internal GoblinBat(char initial, Secret secret)
         {
+            Real = new Dictionary<string, IReal>();
+            this.initial = initial;
             this.secret = secret;
             InitializeComponent();
             open = OpenAPI.ConnectAPI.GetInstance();
@@ -24,56 +26,79 @@ namespace ShareInvest
 
             switch (initial)
             {
-                case 'T':
-                    open.StartProgress();
-                    Size = new Size(238, 35);
-                    CenterToScreen();
-                    break;
-
-                case 'C':
+                case xing:
                     open.StartProgress(new OpenAPI.Temporary(open, new Queue<string>(1024)));
                     Size = new Size(5, 5);
                     Opacity = 0;
-                    xing = XingAPI.ConnectAPI.GetInstance();
+                    break;
+
+                default:
+                    open.StartProgress();
+                    Size = new Size(238, 35);
                     break;
             }
+            CenterToScreen();
         }
         private void OnReceiveItem(string item)
         {
             switch (item)
             {
-                case "quotes":
-                    open.SendQuotes += Quotes.OnReceiveQuotes;
-                    open.SendState += Quotes.OnReceiveState;
-                    open.SendTrend += Quotes.OnReceiveTrend;
+                case quo:
+                    if (initial.Equals(xing))
+                    {
+                        ((IEvent<EventHandler.XingAPI.Quotes>)Real[quo]).Send += Quotes.OnReceiveQuotes;
+                    }
+                    else
+                    {
+                        open.SendQuotes += Quotes.OnReceiveQuotes;
+                        open.SendState += Quotes.OnReceiveState;
+                        open.SendTrend += Quotes.OnReceiveTrend;
+                    }
                     Size = new Size(323, 493);
                     Quotes.Show();
                     break;
 
-                case "exit":
+                case ex:
                     Size = new Size(241, 0);
                     CenterToScreen();
                     Close();
                     return;
 
-                case "strategy":
+                case st:
                     Size = new Size(775, 375);
                     Statistical.Show();
                     break;
 
-                case "account":
-                    open.SendDeposit += Account.OnReceiveDeposit;
-                    open.LookUpTheDeposit(Acc);
+                case acc:
+                    if (initial.Equals(xing))
+                    {
+                        var query = Xing.query[0];
+                        ((IEvent<Deposit>)query).Send += Account.OnReceiveDeposit;
+                        query.QueryExcute();
+                    }
+                    else
+                    {
+                        open.SendDeposit += Account.OnReceiveDeposit;
+                        open.LookUpTheDeposit(Acc);
+                    }
                     Size = new Size(749, 372);
                     Account.Show();
                     break;
 
-                case "balance":
+                case bal:
+                    if (initial.Equals(xing))
+                    {
+                        var query = Xing.query[1];
+                        ((IEvent<Balance>)query).Send += Balance.OnReceiveBalance;
+                        query.QueryExcute();
+                    }
+                    else
+                    {
+                        open.SendBalance += Balance.OnReceiveBalance;
+                        open.LookUpTheBalance(Acc);
+                    }
                     Size = new Size(249, 0);
-                    open.SendBalance += Balance.OnReceiveBalance;
                     Balance.SendReSize += OnReceiveSize;
-                    open.LookUpTheBalance(Acc);
-                    Balance.Show();
                     break;
             };
             CenterToScreen();
@@ -92,14 +117,21 @@ namespace ShareInvest
         }
         private void OnReceiveSize(object sender, GridResize e)
         {
-            Size = new Size(Server ? 591 : 599, e.ReSize + e.Count + 33);
-            open.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
+            if (initial.Equals(xing))
+            {
+
+            }
+            else
+                open.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
+
+            Size = new Size(Server ? 591 : (initial.Equals(xing) ? 622 : 599), e.ReSize + e.Count + 33);
+            Balance.Show();
         }
         private void OnReceiveNotifyIcon(object sender, NotifyIconText e)
         {
             switch (e.NotifyIcon.GetType().Name)
             {
-                case "Dictionary`2":
+                case dic:
                     var temp = (Dictionary<int, string>)e.NotifyIcon;
 
                     if (temp.ContainsKey(0))
@@ -114,7 +146,7 @@ namespace ShareInvest
                     notifyIcon.Text = string.Concat(first.Key, '_', first.Value);
                     return;
 
-                case "StringBuilder":
+                case sb:
                     strip.ItemClicked += OnItemClick;
                     BeginInvoke(new Action(() =>
                     {
@@ -193,11 +225,11 @@ namespace ShareInvest
                     }));
                     return;
 
-                case "String":
+                case str:
                     BeginInvoke(new Action(() => Quotes.OnReceiveOrderMsg(e.NotifyIcon.ToString())));
                     return;
 
-                case "Byte":
+                case bt:
                     if (open.Temporary == null)
                     {
                         Account.Show();
@@ -206,20 +238,121 @@ namespace ShareInvest
                         Balance.Show();
                         open.SendBalance -= Balance.OnReceiveBalance;
                         Balance.Hide();
-                        BackColor = Color.FromArgb(121, 133, 130);
-                        Opacity = 0.8135;
-                        OnClickMinimized = "quotes";
                         open.SendState -= Quotes.OnReceiveState;
                         open.SendTrend -= Quotes.OnReceiveTrend;
                     }
-                    WindowState = FormWindowState.Minimized;
-                    notifyIcon.Text = open.Code;
+                    else
+                    {
+                        Xing = XingAPI.ConnectAPI.GetInstance(open.Code);
+                        Xing.Send += OnReceiveNotifyIcon;
+                        BeginInvoke(new Action(() =>
+                        {
+                            notifyIcon.Text = open.Code;
+                            Quotes = new QuotesControl();
+                            panel.Controls.Add(Quotes);
+                            open.SendQuotes += Quotes.OnReceiveQuotes;
+                            Quotes.Dock = DockStyle.Fill;
+                            Quotes.Show();
+                            strip.ItemClicked += OnItemClick;
+                            OnEventConnect();
+                        }));
+                        OnClickMinimized = quo;
+                        WindowState = Xing.SendNotifyIconText(3715);
+                        Opacity = 0.8135;
+                        BackColor = Color.FromArgb(121, 133, 130);
+                    }
                     return;
 
-                case "Char":
-                    Dispose();
+                case int32:
+                    foreach (var ctor in Xing.query)
+                        switch (ctor.GetType().Name)
+                        {
+                            case cfobq10500:
+                            case ccebq10500:
+                                ((IEvent<Deposit>)ctor).Send -= Account.OnReceiveDeposit;
+                                Account.Hide();
+                                break;
+
+                            case t0441:
+                            case cceaq50600:
+                                ((IEvent<Balance>)ctor).Send -= Balance.OnReceiveBalance;
+                                Balance.Hide();
+                                break;
+                        }
+                    return;
+
+                case cha:
+                    switch ((char)e.NotifyIcon)
+                    {
+                        case 'E':
+                            Dispose();
+                            return;
+                    }
                     break;
             };
+        }
+        private void OnEventConnect()
+        {
+            foreach (var ctor in Xing.query)
+            {
+                switch (ctor.GetType().Name)
+                {
+                    case cfobq10500:
+                    case ccebq10500:
+                        BeginInvoke(new Action(() =>
+                        {
+                            Account = new AccountControl();
+                            panel.Controls.Add(Account);
+                            ((IEvent<Deposit>)ctor).Send += Account.OnReceiveDeposit;
+                            Account.Dock = DockStyle.Fill;
+                            Account.Show();
+                        }));
+                        break;
+
+                    case t0441:
+                    case cceaq50600:
+                        BeginInvoke(new Action(() =>
+                        {
+                            Balance = new BalanceControl();
+                            panel.Controls.Add(Balance);
+                            ((IEvent<Balance>)ctor).Send += Balance.OnReceiveBalance;
+                            Balance.Dock = DockStyle.Fill;
+                            Balance.SendReSize += OnReceiveSize;
+                        }));
+                        break;
+                }
+                ctor.QueryExcute();
+            }
+            foreach (var ctor in Xing.real)
+            {
+                switch (ctor.GetType().Name)
+                {
+                    case fc0:
+                    case nc0:
+                        Real[datum] = ctor;
+                        break;
+
+                    case fh0:
+                    case nh0:
+                        open.SendQuotes -= Quotes.OnReceiveQuotes;
+                        Real[quo] = ctor;
+                        ((IEvent<EventHandler.XingAPI.Quotes>)ctor).Send += Quotes.OnReceiveQuotes;
+                        break;
+
+                    case jif:
+                        BeginInvoke(new Action(() =>
+                        {
+                            ((IEvent<NotifyIconText>)ctor).Send += OnReceiveNotifyIcon;
+                            Statistical = new StatisticalAnalysis();
+                            panel.Controls.Add(Statistical);
+                            Statistical.Dock = DockStyle.Fill;
+                        }));
+                        break;
+                }
+                ctor.OnReceiveRealTime(open.Code);
+            }
+            if (DateTime.Now.Hour > 16)
+                Temporary = new XingAPI.Temporary(Real[quo], Real[datum], new Queue<string>());
         }
         private void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
@@ -240,26 +373,45 @@ namespace ShareInvest
                 {
                     switch (OnClickMinimized)
                     {
-                        case "quotes":
-                            open.SendQuotes -= Quotes.OnReceiveQuotes;
-                            open.SendState -= Quotes.OnReceiveState;
-                            open.SendTrend -= Quotes.OnReceiveTrend;
+                        case quo:
+                            if (initial.Equals(xing))
+                            {
+                                ((IEvent<EventHandler.XingAPI.Quotes>)Real[quo]).Send -= Quotes.OnReceiveQuotes;
+                            }
+                            else
+                            {
+                                open.SendQuotes -= Quotes.OnReceiveQuotes;
+                                open.SendState -= Quotes.OnReceiveState;
+                                open.SendTrend -= Quotes.OnReceiveTrend;
+                            }
                             Quotes.Hide();
                             break;
 
-                        case "account":
-                            open.SendDeposit -= Account.OnReceiveDeposit;
+                        case acc:
+                            if (initial.Equals(xing))
+                                ((IEvent<Deposit>)Xing.query[0]).Send -= Account.OnReceiveDeposit;
+
+                            else
+                                open.SendDeposit -= Account.OnReceiveDeposit;
+
                             Account.Hide();
                             break;
 
-                        case "balance":
-                            open.SendCurrent -= Balance.OnRealTimeCurrentPriceReflect;
-                            open.SendBalance -= Balance.OnReceiveBalance;
+                        case bal:
+                            if (initial.Equals(xing))
+                            {
+                                ((IEvent<Balance>)Xing.query[1]).Send -= Balance.OnReceiveBalance;
+                            }
+                            else
+                            {
+                                open.SendCurrent -= Balance.OnRealTimeCurrentPriceReflect;
+                                open.SendBalance -= Balance.OnReceiveBalance;
+                            }
                             Balance.SendReSize -= OnReceiveSize;
                             Balance.Hide();
                             break;
 
-                        case "strategy":
+                        case st:
                             Statistical.Hide();
                             break;
 
@@ -300,8 +452,42 @@ namespace ShareInvest
         {
             get; set;
         }
-        private readonly XingAPI.ConnectAPI xing;
+        private XingAPI.ConnectAPI Xing
+        {
+            get; set;
+        }
+        private XingAPI.Temporary Temporary
+        {
+            get; set;
+        }
+        private Dictionary<string, IReal> Real
+        {
+            get; set;
+        }
+        private readonly char initial;
         private readonly OpenAPI.ConnectAPI open;
         private readonly Secret secret;
+        private const char xing = 'C';
+        private const string cfobq10500 = "CFOBQ10500";
+        private const string ccebq10500 = "CCEBQ10500";
+        private const string cceaq50600 = "CCEAQ50600";
+        private const string t0441 = "T0441";
+        private const string fc0 = "FC0";
+        private const string fh0 = "FH0";
+        private const string nc0 = "NC0";
+        private const string nh0 = "NH0";
+        private const string jif = "JIF";
+        private const string acc = "account";
+        private const string quo = "quotes";
+        private const string datum = "datum";
+        private const string bal = "balance";
+        private const string st = "strategy";
+        private const string ex = "exit";
+        private const string dic = "Dictionary`2";
+        private const string sb = "StringBuilder";
+        private const string str = "String";
+        private const string bt = "Byte";
+        private const string int32 = "Int32";
+        private const string cha = "Char";
     }
 }

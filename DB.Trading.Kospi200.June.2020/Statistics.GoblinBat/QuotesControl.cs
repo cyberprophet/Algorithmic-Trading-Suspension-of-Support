@@ -64,7 +64,28 @@ namespace ShareInvest.GoblinBatControls
                 stateRollOver.ForeColor = temp;
             }));
         }
-        public void OnReceiveQuotes(object sender, OpenQuotes e)
+        public void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
+        {
+            BeginInvoke(new Action(() =>
+            {
+                var time = DateTime.ParseExact(e.Time, "HHmmss", null).ToString("HH : mm : ss");
+
+                if (quotes10.Text.Equals(time) == false)
+                    quotes10.Text = time;
+
+                for (int i = 0; i < e.Price.Length; i++)
+                {
+                    var temp = string.Concat("quotes", i).FindByName<Label>(this);
+                    var param = e.Price[i].ToString("N2");
+                    var temporary = string.Concat("order", i).FindByName<Label>(this);
+
+                    if (temp.Text.Equals(param) == false)
+                        temp.Text = param;
+                }
+                Application.DoEvents();
+            }));
+        }
+        public void OnReceiveQuotes(object sender, EventHandler.OpenAPI.Quotes e)
         {
             BeginInvoke(new Action(() =>
             {
@@ -82,7 +103,7 @@ namespace ShareInvest.GoblinBatControls
                     if (temp.Text.Equals(param) == false)
                         temp.Text = param;
 
-                    if (i < 5 && e.SellOrder.ContainsValue(e.Price[i]))
+                    if (e.SellOrder != null && i < 5 && e.SellOrder.ContainsValue(e.Price[i]))
                     {
                         var number = int.Parse(e.SellOrder.First(o => o.Value == e.Price[i]).Key).ToString();
 
@@ -91,7 +112,7 @@ namespace ShareInvest.GoblinBatControls
 
                         temporary.Text = number;
                     }
-                    else if (i > 4 && e.BuyOrder.ContainsValue(e.Price[i]))
+                    else if (e.BuyOrder != null && i > 4 && e.BuyOrder.ContainsValue(e.Price[i]))
                     {
                         var number = int.Parse(e.BuyOrder.First(o => o.Value == e.Price[i]).Key).ToString();
 

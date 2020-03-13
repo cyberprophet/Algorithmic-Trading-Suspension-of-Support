@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ShareInvest.Catalog;
-using ShareInvest.EventHandler;
 using ShareInvest.OpenAPI;
 
 namespace ShareInvest.Strategy
@@ -187,7 +186,7 @@ namespace ShareInvest.Strategy
                 OrgOrdNo = string.Empty
             });
         }
-        private void OnReceiveQuotes(object sender, OpenQuotes e)
+        private void OnReceiveQuotes(object sender, EventHandler.OpenAPI.Quotes e)
         {
             if (strategy && e.Total.Equals(string.Empty) == false && int.Parse(e.Time) < 154359)
             {

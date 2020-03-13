@@ -52,6 +52,9 @@ namespace ShareInvest.GoblinBatContext
                             if (db.Days.Any(o => o.Code.Length < 6))
                                 db.Days.BulkDelete(db.Days.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
                         }
+                        if (temp.Code.Equals(q3) && db.Quotes.Any(o => o.Code.Equals(q3)))
+                            db.Quotes.BulkDelete(db.Quotes.Where(o => o.Code.Equals(q3)), o => o.BatchSize = 100);
+
                         if (temp.Code.Length == 6 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(code)).Min(o => o.Date).ToString().Substring(0, 6))))
                         {
                             list.Add(temp.Code);
@@ -182,64 +185,6 @@ namespace ShareInvest.GoblinBatContext
                 }
             }).Start();
         }
-        protected void SetStorage(string code, Queue<string> quotes)
-        {
-            new Task(() =>
-            {
-                try
-                {
-                    string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd");
-                    int count = 0;
-                    List<Quotes> model = new List<Quotes>(1024);
-
-                    while (quotes.Count > 0)
-                    {
-                        var temp = quotes.Dequeue().Split(';');
-
-                        if (double.TryParse(temp[1].Split('^')[0], out double price) && price > 105.95)
-                        {
-                            if (temp[0].Equals(onTime))
-                                count++;
-
-                            else
-                            {
-                                onTime = temp[0];
-                                count = 0;
-                            }
-                            model.Add(new Quotes
-                            {
-                                Code = code,
-                                Date = string.Concat(date, onTime, count.ToString("D3")),
-                                Contents = temp[1]
-                            });
-                        }
-                    }
-                    using (var db = new GoblinBatDbContext())
-                    {
-                        if (model.Max(o => o.Date).Equals(db.Quotes.Max(o => o.Date)))
-                        {
-                            if (db.Quotes.Any(o => o.Date.Substring(0, 6).Equals("200311")))
-                                db.BulkDelete(db.Quotes.Where(o => o.Date.Substring(0, 6).Equals("200311")), o => o.BatchSize = 100);
-
-                            return;
-                        }
-                        db.Configuration.AutoDetectChangesEnabled = true;
-                        db.BulkInsert(model, o =>
-                        {
-                            o.InsertIfNotExists = true;
-                            o.BatchSize = 10000;
-                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                            o.AutoMapOutputDirection = false;
-                        });
-                        db.Configuration.AutoDetectChangesEnabled = false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace, code);
-                }
-            }).Start();
-        }
         protected void SetStorage(string code, string[] param)
         {
             if (param.Length < 3)
@@ -358,5 +303,69 @@ namespace ShareInvest.GoblinBatContext
                 }
             }).Start();
         }
+        protected void SetStorage(string code, Queue<string> quotes)
+        {
+            new Task(() =>
+            {
+                string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd");
+                int count = 0;
+                List<Quotes> model = new List<Quotes>(1024);
+
+                while (quotes.Count > 0)
+                {
+                    var temp = quotes.Dequeue().Split(';');
+
+                    if (double.TryParse(temp[1].Split('^')[0], out double price) && price > 105.95)
+                    {
+                        if (temp[0].Equals(onTime))
+                            count++;
+
+                        else
+                        {
+                            onTime = temp[0];
+                            count = 0;
+                        }
+                        model.Add(new Quotes
+                        {
+                            Code = code,
+                            Date = string.Concat(date, onTime, count.ToString("D3")),
+                            Contents = temp[1]
+                        });
+                    }
+                }
+                SetStorage(model);
+            }).Start();
+        }
+        private void SetStorage(List<Quotes> model)
+        {
+            using (var db = new GoblinBatDbContext())
+            {
+                try
+                {
+                    foreach (var list in model)
+                        if (db.Quotes.Where(o => o.Code.Equals(list.Code) && o.Date.Equals(list.Date) && o.Contents.Equals(list.Contents)).Any())
+                            return;
+
+                    db.Configuration.AutoDetectChangesEnabled = true;
+                    db.BulkInsert(model, o =>
+                    {
+                        o.InsertIfNotExists = true;
+                        o.BatchSize = 10000;
+                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                        o.AutoMapOutputDirection = false;
+                    });
+                    db.Configuration.AutoDetectChangesEnabled = false;
+                }
+                catch (Exception ex)
+                {
+                    for (var i = 0; i < GC.GetTotalMemory(true); i++)
+                        Console.WriteLine(ex.TargetSite.Name);
+
+                    new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
+                    new Task(() => SetStorage(model)).Start();
+                }
+            }
+        }
+        private const string q3 = "101Q3000";
     }
 }

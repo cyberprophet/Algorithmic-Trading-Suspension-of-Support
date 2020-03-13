@@ -10,6 +10,7 @@ using AxKHOpenAPILib;
 using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
+using ShareInvest.EventHandler.OpenAPI;
 using ShareInvest.Message;
 
 namespace ShareInvest.OpenAPI
@@ -294,14 +295,14 @@ namespace ShareInvest.OpenAPI
                 case 1:
                     if (e.sRealKey.Equals(Code))
                     {
-                        SendDatum?.Invoke(this, new OpenDatum(param));
+                        SendDatum?.Invoke(this, new Datum(param));
                         SendTrend?.Invoke(this, new OpenTrends(Trend, Volume));
                     }
                     return;
 
                 case 2:
                     if (e.sRealKey.Equals(Code))
-                        SendQuotes?.Invoke(this, new OpenQuotes(new string[]
+                        SendQuotes?.Invoke(this, new Quotes(new string[]
                         {
                             param[35],
                             param[27],
@@ -522,41 +523,31 @@ namespace ShareInvest.OpenAPI
                                 Quantity = quantity[2].Equals("1") ? -int.Parse(quantity[3]) : int.Parse(quantity[3]);
                                 AvgPurchase = (double.Parse(quantity[4]) / 100).ToString("F2");
                             }
-                        SendBalance?.Invoke(this, new OpenBalance(temporary));
+                        SendBalance?.Invoke(this, new Balance(temporary));
                     }).Start();
                     break;
             }
         }
         private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
-            try
+            SendErrorMessage(e.nErrCode);
+            Code = API.GetFutureCodeByIndex(e.nErrCode);
+            RemainingDay(Code);
+            CodeList = new List<string>
             {
-                Code = API.GetFutureCodeByIndex(e.nErrCode);
-                RemainingDay(Code);
-                CodeList = new List<string>
-                {
-                    Code
-                };
-                if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
-                {
-                    if (Temporary == null)
-                        PrepareForTrading(API.GetLoginInfo("ACCLIST"));
+                Code
+            };
+            if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
+            {
+                if (Temporary == null)
+                    PrepareForTrading(API.GetLoginInfo("ACCLIST"));
 
-                    DeadLine = DateTime.Now.Hour < 9 ? false : true;
-                }
-                else
-                {
-                    if (Temporary != null)
-                        OnCollectingData(GetInformation());
-                }
-                SendCount?.Invoke(this, new NotifyIconText(7));
+                DeadLine = DateTime.Now.Hour < 9 ? false : true;
             }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace);
-                Process.Start("shutdown.exe", "-r");
-                Dispose();
-            }
+            else if (Temporary != null)
+                OnCollectingData(GetInformation());
+
+            SendCount?.Invoke(this, new NotifyIconText((byte)7));
         }
         private void PrepareForTrading(string account)
         {
@@ -695,7 +686,7 @@ namespace ShareInvest.OpenAPI
         private void FixUp(string[] param, string code)
         {
             if (code.Equals(API.GetFutureCodeByIndex(0)))
-                SendQuotes?.Invoke(this, new OpenQuotes(new string[]
+                SendQuotes?.Invoke(this, new Quotes(new string[]
                 {
                     param[0],
                     param[1],
@@ -774,6 +765,9 @@ namespace ShareInvest.OpenAPI
 
                 switch (error)
                 {
+                    case -100:
+                    case -101:
+                    case -102:
                     case -200:
                         Process.Start("shutdown.exe", "-r");
                         Dispose();
@@ -817,12 +811,12 @@ namespace ShareInvest.OpenAPI
         }
         private readonly Error error;
         private readonly Delay request;
-        public event EventHandler<OpenDatum> SendDatum;
+        public event EventHandler<Datum> SendDatum;
         public event EventHandler<OpenMemorize> SendMemorize;
         public event EventHandler<NotifyIconText> SendCount;
-        public event EventHandler<OpenQuotes> SendQuotes;
+        public event EventHandler<Quotes> SendQuotes;
         public event EventHandler<Deposit> SendDeposit;
-        public event EventHandler<OpenBalance> SendBalance;
+        public event EventHandler<Balance> SendBalance;
         public event EventHandler<OpenCurrent> SendCurrent;
         public event EventHandler<OpenState> SendState;
         public event EventHandler<OpenTrends> SendTrend;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using ShareInvest.EventHandler;
 using ShareInvest.Catalog;
+using ShareInvest.EventHandler.OpenAPI;
 using ShareInvest.OpenAPI;
 
 namespace ShareInvest.Strategy
@@ -16,7 +16,7 @@ namespace ShareInvest.Strategy
             SendDatum += Analysize;
 
             foreach (Chart chart in charts)
-                SendDatum?.Invoke(this, new OpenDatum(chart));
+                SendDatum?.Invoke(this, new Datum(chart));
 
             SendDatum -= Analysize;
             this.api = api;
@@ -32,14 +32,14 @@ namespace ShareInvest.Strategy
             SendDatum += Analysize;
 
             foreach (Chart chart in charts)
-                SendDatum?.Invoke(this, new OpenDatum(chart));
+                SendDatum?.Invoke(this, new Datum(chart));
 
             SendDatum -= Analysize;
             this.api = api;
             OnTime = true;
             api.SendDatum += Analysize;
         }
-        private void Analysize(object sender, OpenDatum e)
+        private void Analysize(object sender, Datum e)
         {
             if (api == null)
             {
@@ -228,6 +228,6 @@ namespace ShareInvest.Strategy
         private readonly Specify specify;
         private readonly Quotes quotes;
         private readonly ConnectAPI api;
-        public event EventHandler<OpenDatum> SendDatum;
+        public event EventHandler<Datum> SendDatum;
     }
 }
