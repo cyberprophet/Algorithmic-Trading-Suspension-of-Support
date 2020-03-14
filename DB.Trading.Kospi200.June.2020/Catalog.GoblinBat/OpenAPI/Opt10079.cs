@@ -2,7 +2,7 @@
 
 namespace ShareInvest.Catalog
 {
-    public class Opt10079 : ScreenNumber, ITR, IEnumerable
+    public class Opt10079 : ScreenNumber, ITRs, IEnumerable
     {
         public IEnumerator GetEnumerator()
         {

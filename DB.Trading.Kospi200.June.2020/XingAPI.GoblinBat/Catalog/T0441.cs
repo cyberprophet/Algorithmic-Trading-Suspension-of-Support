@@ -1,59 +1,47 @@
 ﻿using System;
+using System.Text;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class T0441 : Query, IQuery, IEvent<Balance>
+    internal class T0441 : Query, IQuerys, IEvents<Balance>, IMessage<NotifyIconText>
     {
         internal T0441() : base()
         {
             Console.WriteLine(GetType().Name);
         }
+        protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+        {
+            base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+            SendMessage?.Invoke(this, new NotifyIconText(szMessage));
+        }
         protected override void OnReceiveData(string szTrCode)
         {
             var enumerable = GetOutBlocks();
-            var temp = new string[enumerable.Count];
+            var temp = new StringBuilder[enumerable.Count];
+            string str = string.Empty;
 
             while (enumerable.Count > 0)
             {
                 var param = enumerable.Dequeue();
 
                 for (int i = 0; i < GetBlockCount(param.Block); i++)
-                    temp[temp.Length - enumerable.Count - 1] = GetFieldData(param.Block, param.Field, i);
+                    if (enumerable.Count < 13)
+                    {
+                        if (temp[i] == null)
+                            temp[i] = new StringBuilder();
+
+                        temp[i] = temp[i].Append(GetFieldData(param.Block, param.Field, i)).Append(';');
+                    }
             }
-            Send.Invoke(this, new Balance(new string[]
-            {
-                temp[8],
-                temp[9],
-                temp[10],
-                temp[17],
-                temp[18],
-                string.Empty,
-                temp[19],
-                temp[20],
-                string.Empty,
-                temp[21],
-                temp[22],
-                string.Empty,
-                temp[26],
-                temp[23],
-                temp[24],
-                temp[14],
-                temp[16],
-                temp[16],
-                temp[11],
-                temp[12],
-                temp[27],
-                string.Empty,
-                temp[13],
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty,
-                string.Empty
-            }));
+            foreach (var sb in temp)
+                if (sb != null)
+                {
+                    var param = sb.ToString().Split(';');
+                    str += string.Concat(param[0], ';', ConnectAPI.GetInstance(string.Empty).CodeList[param[0]], ';', param[1], ';', param[2], ';', param[4], ';', param[9], ';', param[11], '*');
+                }
+            Send.Invoke(this, new Balance(str.Split('*')));
         }
         public void QueryExcute()
         {
@@ -66,5 +54,6 @@ namespace ShareInvest.XingAPI.Catalog
             }
         }
         public event EventHandler<Balance> Send;
+        public event EventHandler<NotifyIconText> SendMessage;
     }
 }

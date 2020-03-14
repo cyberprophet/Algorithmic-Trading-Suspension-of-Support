@@ -2,7 +2,7 @@
 
 namespace ShareInvest.Catalog
 {
-    public class OPTKWFID : ScreenNumber, ITR, IEnumerable
+    public class OPTKWFID : ScreenNumber, ITRs, IEnumerable
     {
         public string ID
         {

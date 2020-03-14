@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.Catalog
 {
-    public interface IReal
+    public interface IReals
     {
         void OnReceiveRealTime(string code);
     }

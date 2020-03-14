@@ -7,13 +7,13 @@ namespace ShareInvest.XingAPI
 {
     public partial class Temporary : CallUp
     {
-        public Temporary(IReal quotes, IReal datum, Queue<string> queue)
+        public Temporary(IReals quotes, IReals datum, Queue<string> queue)
         {
             this.queue = queue;
-            ((IEvent<Quotes>)quotes).Send += OnReceiveMemorize;
-            ((IEvent<Datum>)datum).Send += OnReceiveMemorize;
+            ((IEvents<Quotes>)quotes).Send += OnReceiveMemorize;
+            ((IEvents<Datum>)datum).Send += OnReceiveMemorize;
         }
-        internal void SetStorage(string code)
+        public void SetStorage(string code)
         {
             SetStorage(code, queue);
         }

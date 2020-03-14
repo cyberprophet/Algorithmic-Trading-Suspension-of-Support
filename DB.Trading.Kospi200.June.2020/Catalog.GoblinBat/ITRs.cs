@@ -1,6 +1,6 @@
-﻿namespace ShareInvest.Interface
+﻿namespace ShareInvest.Catalog
 {
-    public interface ITR
+    public interface ITRs
     {
         string ID
         {

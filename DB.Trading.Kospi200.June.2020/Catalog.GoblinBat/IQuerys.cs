@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.Catalog
 {
-    public interface IQuery
+    public interface IQuerys
     {
         void QueryExcute();
     }

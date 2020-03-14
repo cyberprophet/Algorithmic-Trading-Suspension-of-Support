@@ -34,7 +34,7 @@ namespace ShareInvest.EventHandler
         }
         public NotifyIconText(string code)
         {
-            NotifyIcon = code;
+            NotifyIcon = code.Trim();
         }
         public NotifyIconText(string account, string id, string name, string server)
         {

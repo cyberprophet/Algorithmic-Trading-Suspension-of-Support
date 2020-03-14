@@ -5,11 +5,16 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class CCEAQ50600 : Query, IQuery, IEvent<Balance>
+    internal class CCEAQ50600 : Query, IQuerys, IEvents<Balance>, IMessage<NotifyIconText>
     {
         internal CCEAQ50600() : base()
         {
             Console.WriteLine(GetType().Name);
+        }
+        protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+        {
+            base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+            SendMessage?.Invoke(this, new NotifyIconText(szMessage));
         }
         protected override void OnReceiveData(string szTrCode)
         {
@@ -34,7 +39,7 @@ namespace ShareInvest.XingAPI.Catalog
                 if (sb != null)
                 {
                     var param = sb.ToString().Split(';');
-                    str += string.Concat(param[0], ';', param[1], ';', param[2], ';', param[4], ';', param[5], ';', param[6], ';', param[8], '*');
+                    str += string.Concat(param[0], ';', ConnectAPI.GetInstance(string.Empty).CodeList[param[0]], ';', param[2], ';', param[4], ';', param[5], ';', param[6], ';', param[8], '*');
                 }
             Send.Invoke(this, new Balance(str.Split('*')));
         }
@@ -49,5 +54,6 @@ namespace ShareInvest.XingAPI.Catalog
             }
         }
         public event EventHandler<Balance> Send;
+        public event EventHandler<NotifyIconText> SendMessage;
     }
 }

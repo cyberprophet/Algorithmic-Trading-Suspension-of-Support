@@ -655,7 +655,7 @@ namespace ShareInvest.OpenAPI
             if (code != null && code.Equals(string.Empty) == false)
             {
                 int param = DeadLine ? 4 : (code.Length > 6 ? (code.Substring(5, 3).Equals("000") ? 1 : 2) : 3);
-                ITR tr = (ITR)catalogTR[param];
+                ITRs tr = (ITRs)catalogTR[param];
                 tr.Value = code;
                 tr.RQName = string.Concat(code, ";", GetRetention(param, code));
                 tr.PrevNext = 0;
@@ -739,7 +739,7 @@ namespace ShareInvest.OpenAPI
             }
             request.RequestTrData(new Task(() =>
             {
-                ITR tr = new OPTKWFID
+                ITRs tr = new OPTKWFID
                 {
                     Value = code,
                     PrevNext = 0
@@ -747,7 +747,7 @@ namespace ShareInvest.OpenAPI
                 SendErrorMessage(API.CommKwRqData(tr.Value, 0, 100, tr.PrevNext, tr.RQName, tr.ScreenNo));
             }));
         }
-        private void InputValueRqData(ITR param)
+        private void InputValueRqData(ITRs param)
         {
             string[] count = param.ID.Split(';'), value = param.Value.Split(';');
             int i, l = count.Length;
@@ -785,7 +785,7 @@ namespace ShareInvest.OpenAPI
         }
         private void Dispose()
         {
-            SendCount?.Invoke(this, new NotifyIconText('E'));
+            SendCount?.Invoke(this, new NotifyIconText((char)69));
         }
         private bool DeadLine
         {

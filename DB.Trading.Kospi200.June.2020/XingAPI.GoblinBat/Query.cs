@@ -77,15 +77,28 @@ namespace ShareInvest.XingAPI
         protected void SendErrorMessage(int error)
         {
             if (error < 0)
-                new ExceptionMessage(GetErrorMessage(error));
+            {
+                var param = GetErrorMessage(error);
+                new ExceptionMessage(param);
+
+                if (Array.Exists(new Secret().ErrorMessage, o => o.Equals(param)))
+                    ConnectAPI.GetInstance(string.Empty).Dispose();
+            }
         }
         protected virtual void OnReceiveData(string szTrCode)
         {
             Console.WriteLine(szTrCode);
         }
-        private void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+        protected virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
-            Console.WriteLine(bIsSystemError + "\t" + nMessageCode + "\t" + szMessage);
+            if (bIsSystemError)
+            {
+                new ExceptionMessage(szMessage, nMessageCode);
+
+                return;
+            }
+            if (int.TryParse(nMessageCode, out int code) && code > 999)
+                new ExceptionMessage(szMessage, nMessageCode);
         }
         private const string record = "레코드명:";
         private const string separator = "No,한글명,필드명,영문명,";

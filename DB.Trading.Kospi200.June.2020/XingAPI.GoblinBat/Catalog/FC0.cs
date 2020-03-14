@@ -4,7 +4,7 @@ using ShareInvest.EventHandler.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class FC0 : Real, IReal, IEvent<Datum>
+    internal class FC0 : Real, IReals, IEvents<Datum>
     {
         internal FC0() : base()
         {

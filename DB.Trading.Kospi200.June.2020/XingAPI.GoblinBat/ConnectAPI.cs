@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
@@ -8,7 +10,7 @@ using XA_SESSIONLib;
 
 namespace ShareInvest.XingAPI
 {
-    public class ConnectAPI : XASessionClass
+    public class ConnectAPI : XASessionClass, IEvents<NotifyIconText>
     {
         public static ConnectAPI GetInstance(string code)
         {
@@ -16,8 +18,10 @@ namespace ShareInvest.XingAPI
                 XingAPI = new ConnectAPI();
 
             if (code.Equals(string.Empty) == false)
+            {
                 Code = code;
-
+                new T9943().QueryExcute();
+            }
             return XingAPI;
         }
         public static string Code
@@ -28,31 +32,40 @@ namespace ShareInvest.XingAPI
         {
             get; private set;
         }
-        public readonly IReal[] real = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IReal[]
+        public readonly IReals[] real = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IReals[]
         {
             new FH0(),
             new FC0(),
             new JIF()
-        } : new IReal[]
+        } : new IReals[]
         {
             new NH0(),
             new NC0(),
             new JIF()
         };
-        public readonly IQuery[] query = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IQuery[]
+        public readonly IQuerys[] query = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IQuerys[]
         {
             new CFOBQ10500(),
-            new T0441()
-        } : new IQuery[]
+            new T0441(),
+        } : new IQuerys[]
         {
             new CCEBQ10500(),
             new CCEAQ50600()
         };
+        public void Dispose()
+        {
+            Process.Start("shutdown.exe", "-r");
+            Send?.Invoke(this, new NotifyIconText((char)69));
+        }
         public FormWindowState SendNotifyIconText(int number)
         {
             Send?.Invoke(this, new NotifyIconText((int)TimerBox.Show(secret.Connection, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)number)));
 
             return FormWindowState.Minimized;
+        }
+        public Dictionary<string, string> CodeList
+        {
+            get; internal set;
         }
         private void OnEventConnect(string szCode, string szMsg)
         {
@@ -64,15 +77,11 @@ namespace ShareInvest.XingAPI
                     Accounts[i] = GetAccountList(i);
             }
         }
-        private void Dispose()
-        {
-
-        }
         private ConnectAPI()
         {
-            secret = new Secret();
+            secret = new Secret();            
 
-            if (ConnectServer(secret.Server[1], secret.Port) && Login(secret.InfoToConnect[0], secret.InfoToConnect[1], secret.InfoToConnect[2], 0, true))
+            if (ConnectServer(secret.Server[1], secret.Port) && Login(secret.InfoToConnect[0], secret.InfoToConnect[1], secret.InfoToConnect[2], 0, true) && IsLoadAPI())
             {
                 _IXASessionEvents_Event_Login += OnEventConnect;
                 Disconnect += Dispose;

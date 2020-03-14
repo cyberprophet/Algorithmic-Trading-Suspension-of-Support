@@ -4,11 +4,16 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class CCEBQ10500 : Query, IQuery, IEvent<Deposit>
+    internal class CCEBQ10500 : Query, IQuerys, IEvents<Deposit>, IMessage<NotifyIconText>
     {
         internal CCEBQ10500() : base()
         {
             Console.WriteLine(GetType().Name);
+        }
+        protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+        {
+            base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+            SendMessage?.Invoke(this, new NotifyIconText(szMessage));
         }
         protected override void OnReceiveData(string szTrCode)
         {
@@ -66,5 +71,6 @@ namespace ShareInvest.XingAPI.Catalog
             }
         }
         public event EventHandler<Deposit> Send;
+        public event EventHandler<NotifyIconText> SendMessage;
     }
 }

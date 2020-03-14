@@ -16,7 +16,7 @@ namespace ShareInvest
     {
         internal GoblinBat(char initial, Secret secret)
         {
-            Real = new Dictionary<string, IReal>();
+            Real = new Dictionary<string, IReals>();
             this.initial = initial;
             this.secret = secret;
             InitializeComponent();
@@ -27,6 +27,12 @@ namespace ShareInvest
             switch (initial)
             {
                 case xing:
+                    Quotes = new QuotesControl();
+                    panel.Controls.Add(Quotes);
+                    open.SendQuotes += Quotes.OnReceiveQuotes;
+                    Quotes.Dock = DockStyle.Fill;
+                    Quotes.Show();
+                    strip.ItemClicked += OnItemClick;
                     open.StartProgress(new OpenAPI.Temporary(open, new Queue<string>(1024)));
                     Size = new Size(5, 5);
                     Opacity = 0;
@@ -46,7 +52,7 @@ namespace ShareInvest
                 case quo:
                     if (initial.Equals(xing))
                     {
-                        ((IEvent<EventHandler.XingAPI.Quotes>)Real[quo]).Send += Quotes.OnReceiveQuotes;
+                        ((IEvents<EventHandler.XingAPI.Quotes>)Real[quo]).Send += Quotes.OnReceiveQuotes;
                     }
                     else
                     {
@@ -73,7 +79,8 @@ namespace ShareInvest
                     if (initial.Equals(xing))
                     {
                         var query = Xing.query[0];
-                        ((IEvent<Deposit>)query).Send += Account.OnReceiveDeposit;
+                        ((IEvents<Deposit>)query).Send += Account.OnReceiveDeposit;
+                        ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
                         query.QueryExcute();
                     }
                     else
@@ -89,7 +96,8 @@ namespace ShareInvest
                     if (initial.Equals(xing))
                     {
                         var query = Xing.query[1];
-                        ((IEvent<Balance>)query).Send += Balance.OnReceiveBalance;
+                        ((IEvents<Balance>)query).Send += Balance.OnReceiveBalance;
+                        ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
                         query.QueryExcute();
                     }
                     else
@@ -124,7 +132,7 @@ namespace ShareInvest
             else
                 open.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
 
-            Size = new Size(Server ? 591 : (initial.Equals(xing) ? 622 : 599), e.ReSize + e.Count + 33);
+            Size = new Size(Server ? 591 : (initial.Equals(xing) ? 604 : 599), e.ReSize + e.Count + 32);
             Balance.Show();
         }
         private void OnReceiveNotifyIcon(object sender, NotifyIconText e)
@@ -248,12 +256,6 @@ namespace ShareInvest
                         BeginInvoke(new Action(() =>
                         {
                             notifyIcon.Text = open.Code;
-                            Quotes = new QuotesControl();
-                            panel.Controls.Add(Quotes);
-                            open.SendQuotes += Quotes.OnReceiveQuotes;
-                            Quotes.Dock = DockStyle.Fill;
-                            Quotes.Show();
-                            strip.ItemClicked += OnItemClick;
                             OnEventConnect();
                         }));
                         OnClickMinimized = quo;
@@ -269,13 +271,15 @@ namespace ShareInvest
                         {
                             case cfobq10500:
                             case ccebq10500:
-                                ((IEvent<Deposit>)ctor).Send -= Account.OnReceiveDeposit;
+                                ((IEvents<Deposit>)ctor).Send -= Account.OnReceiveDeposit;
+                                ((IMessage<NotifyIconText>)ctor).SendMessage -= OnReceiveNotifyIcon;
                                 Account.Hide();
                                 break;
 
                             case t0441:
                             case cceaq50600:
-                                ((IEvent<Balance>)ctor).Send -= Balance.OnReceiveBalance;
+                                ((IEvents<Balance>)ctor).Send -= Balance.OnReceiveBalance;
+                                ((IMessage<NotifyIconText>)ctor).SendMessage -= OnReceiveNotifyIcon;
                                 Balance.Hide();
                                 break;
                         }
@@ -284,9 +288,16 @@ namespace ShareInvest
                 case cha:
                     switch ((char)e.NotifyIcon)
                     {
-                        case 'E':
+                        case (char)69:
                             Dispose();
                             return;
+
+                        case (char)41:
+                        case (char)61:
+                            if (Temporary != null)
+                                Temporary.SetStorage(open.Code);
+
+                            break;
                     }
                     break;
             };
@@ -303,7 +314,8 @@ namespace ShareInvest
                         {
                             Account = new AccountControl();
                             panel.Controls.Add(Account);
-                            ((IEvent<Deposit>)ctor).Send += Account.OnReceiveDeposit;
+                            ((IEvents<Deposit>)ctor).Send += Account.OnReceiveDeposit;
+                            ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                             Account.Dock = DockStyle.Fill;
                             Account.Show();
                         }));
@@ -315,7 +327,8 @@ namespace ShareInvest
                         {
                             Balance = new BalanceControl();
                             panel.Controls.Add(Balance);
-                            ((IEvent<Balance>)ctor).Send += Balance.OnReceiveBalance;
+                            ((IEvents<Balance>)ctor).Send += Balance.OnReceiveBalance;
+                            ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                             Balance.Dock = DockStyle.Fill;
                             Balance.SendReSize += OnReceiveSize;
                         }));
@@ -336,13 +349,13 @@ namespace ShareInvest
                     case nh0:
                         open.SendQuotes -= Quotes.OnReceiveQuotes;
                         Real[quo] = ctor;
-                        ((IEvent<EventHandler.XingAPI.Quotes>)ctor).Send += Quotes.OnReceiveQuotes;
+                        ((IEvents<EventHandler.XingAPI.Quotes>)ctor).Send += Quotes.OnReceiveQuotes;
                         break;
 
                     case jif:
                         BeginInvoke(new Action(() =>
                         {
-                            ((IEvent<NotifyIconText>)ctor).Send += OnReceiveNotifyIcon;
+                            ((IEvents<NotifyIconText>)ctor).Send += OnReceiveNotifyIcon;
                             Statistical = new StatisticalAnalysis();
                             panel.Controls.Add(Statistical);
                             Statistical.Dock = DockStyle.Fill;
@@ -376,7 +389,7 @@ namespace ShareInvest
                         case quo:
                             if (initial.Equals(xing))
                             {
-                                ((IEvent<EventHandler.XingAPI.Quotes>)Real[quo]).Send -= Quotes.OnReceiveQuotes;
+                                ((IEvents<EventHandler.XingAPI.Quotes>)Real[quo]).Send -= Quotes.OnReceiveQuotes;
                             }
                             else
                             {
@@ -389,8 +402,11 @@ namespace ShareInvest
 
                         case acc:
                             if (initial.Equals(xing))
-                                ((IEvent<Deposit>)Xing.query[0]).Send -= Account.OnReceiveDeposit;
-
+                            {
+                                var query = Xing.query[0];
+                                ((IEvents<Deposit>)query).Send -= Account.OnReceiveDeposit;
+                                ((IMessage<NotifyIconText>)query).SendMessage -= OnReceiveNotifyIcon;
+                            }
                             else
                                 open.SendDeposit -= Account.OnReceiveDeposit;
 
@@ -400,7 +416,9 @@ namespace ShareInvest
                         case bal:
                             if (initial.Equals(xing))
                             {
-                                ((IEvent<Balance>)Xing.query[1]).Send -= Balance.OnReceiveBalance;
+                                var query = Xing.query[1];
+                                ((IEvents<Balance>)query).Send -= Balance.OnReceiveBalance;
+                                ((IMessage<NotifyIconText>)query).SendMessage -= OnReceiveNotifyIcon;
                             }
                             else
                             {
@@ -460,7 +478,7 @@ namespace ShareInvest
         {
             get; set;
         }
-        private Dictionary<string, IReal> Real
+        private Dictionary<string, IReals> Real
         {
             get; set;
         }

@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace ShareInvest.Catalog
 {
-    public class Opt10081 : ScreenNumber, ITR, IEnumerable
+    public class Opt10081 : ScreenNumber, ITRs, IEnumerable
     {
         public IEnumerator GetEnumerator()
         {
