@@ -19,6 +19,11 @@ namespace ShareInvest.OpenAPI
             Temp = new StringBuilder(1024);
             api.SendMemorize += OnReceiveMemorize;
         }
+        internal void SetConnection(ConnectAPI api)
+        {
+            api.SendQuotes -= OnReceiveMemorize;
+            api.SendDatum -= OnReceiveMemorize;
+        }
         internal void SetStorage(string code)
         {
             SetStorage(code, quotes);

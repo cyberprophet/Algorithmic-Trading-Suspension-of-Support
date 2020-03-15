@@ -5,7 +5,7 @@ namespace ShareInvest.GoblinBatContext
 {
     public class GoblinBatDbContext : DbContext
     {
-        public GoblinBatDbContext() : base(new Secret().ConnectionString['C'])
+        public GoblinBatDbContext() : base(new Secret().ConnectionString[(char)67])
         {
 
         }

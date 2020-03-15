@@ -351,6 +351,7 @@ namespace ShareInvest.OpenAPI
                     if (param[0].Equals("e") && DeadLine)
                     {
                         DeadLine = false;
+                        CME = true;
 
                         if (Temporary != null)
                         {
@@ -547,7 +548,7 @@ namespace ShareInvest.OpenAPI
             else if (Temporary != null)
                 OnCollectingData(GetInformation());
 
-            SendCount?.Invoke(this, new NotifyIconText((byte)7));
+            SendCount?.Invoke(this, new NotifyIconText((byte)0));
         }
         private void PrepareForTrading(string account)
         {
@@ -576,7 +577,9 @@ namespace ShareInvest.OpenAPI
             new Task(() => SetScreenNumber(1000, 9000)).Start();
             SetPasswordWhileCollectingData(markets.Length);
             CodeList = RequestCodeList(new List<string>(32), markets);
-            Temporary = new Temporary(OpenAPI);
+            Temporary.SetConnection(OpenAPI);
+            Temporary = null;
+            new Temporary(OpenAPI);
             SendMemorize?.Invoke(this, new OpenMemorize("Clear"));
             Delay.Milliseconds = 4315;
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
@@ -768,6 +771,7 @@ namespace ShareInvest.OpenAPI
                     case -100:
                     case -101:
                     case -102:
+                    case -106:
                     case -200:
                         Process.Start("shutdown.exe", "-r");
                         Dispose();
@@ -782,10 +786,19 @@ namespace ShareInvest.OpenAPI
                         return;
                 }
             }
+            else if (CME && DateTime.Now.Hour == 5 && DateTime.Now.Minute > 50)
+            {
+                CME = false;
+                SendCount?.Invoke(this, new NotifyIconText((byte)DateTime.Now.DayOfWeek));
+            }
         }
         private void Dispose()
         {
             SendCount?.Invoke(this, new NotifyIconText((char)69));
+        }
+        private bool CME
+        {
+            get; set;
         }
         private bool DeadLine
         {

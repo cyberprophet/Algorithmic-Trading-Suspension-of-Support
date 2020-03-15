@@ -26,7 +26,7 @@ namespace ShareInvest.XingAPI.Catalog
 
                 for (int i = 0; i < GetBlockCount(param.Block); i++)
                     temp[temp.Length - enumerable.Count - 1] = GetFieldData(param.Block, param.Field, i);
-            }
+            }            
             Send.Invoke(this, new Deposit(new string[]
             {
                 temp[8],
@@ -41,17 +41,17 @@ namespace ShareInvest.XingAPI.Catalog
                 temp[21],
                 temp[22],
                 string.Empty,
-                temp[26],
-                temp[23],
-                temp[24],
-                temp[14],
-                temp[16],
-                temp[16],
-                temp[11],
-                temp[12],
-                temp[27],
                 string.Empty,
-                temp[13],
+                string.Empty,
+                string.Empty,
+                temp[14],
+                temp[15],
+                temp[16],
+                (long.Parse(temp[8]) + long.Parse(temp[13])).ToString(),
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                string.Empty,
                 string.Empty,
                 string.Empty,
                 string.Empty,

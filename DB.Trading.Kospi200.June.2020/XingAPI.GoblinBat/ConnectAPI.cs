@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.Message;
+using ShareInvest.Verify;
 using ShareInvest.XingAPI.Catalog;
 using XA_SESSIONLib;
 
@@ -31,6 +32,13 @@ namespace ShareInvest.XingAPI
         public string[] Accounts
         {
             get; private set;
+        }
+        public string DetailName
+        {
+            get
+            {
+                return GetAcctDetailName(Accounts.Length == 1 ? Accounts[0] : Array.Find(Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
+            }
         }
         public readonly IReals[] real = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IReals[]
         {
@@ -79,15 +87,24 @@ namespace ShareInvest.XingAPI
         }
         private ConnectAPI()
         {
-            secret = new Secret();            
+            secret = new Secret();
+            var str = KeyDecoder.GetWindowsProductKeyFromRegistry();
 
-            if (ConnectServer(secret.Server[1], secret.Port) && Login(secret.InfoToConnect[0], secret.InfoToConnect[1], secret.InfoToConnect[2], 0, true) && IsLoadAPI())
+            if (str.Length > 0 && secret.InfoToConnect.TryGetValue(str, out string[] connect) && secret.Server.TryGetValue(str, out string server) && ConnectServer(server, secret.Port) && Login(connect[0], connect[1], connect[2], 0, true) && IsLoadAPI())
             {
                 _IXASessionEvents_Event_Login += OnEventConnect;
                 Disconnect += Dispose;
+
+                while (Accounts == null)
+                    TimerBox.Show(secret.Connection, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 3159);
             }
-            while (Accounts == null)
-                TimerBox.Show(secret.Connection, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 3159);
+            else
+            {
+                if (TimerBox.Show(secret.Identity, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)Math.Pow(str.Length, str.Length)).Equals(DialogResult.OK))
+                    Environment.Exit(0);
+
+                new ExceptionMessage(str);
+            }
         }
         private static ConnectAPI XingAPI
         {
