@@ -4,7 +4,7 @@ using ShareInvest.Catalog;
 using ShareInvest.EventHandler.OpenAPI;
 using ShareInvest.OpenAPI;
 
-namespace ShareInvest.Strategy
+namespace ShareInvest.Strategy.OpenAPI
 {
     public class Trading
     {

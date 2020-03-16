@@ -19,8 +19,8 @@ namespace ShareInvest.Verify
             if (registryKeyValue != null)
             {
                 var digitalProductId = (byte[])registryKeyValue;
-                localKey.Close();
                 var isWin8OrUp = Environment.OSVersion.Version.Major == 6 && Environment.OSVersion.Version.Minor >= 2 || Environment.OSVersion.Version.Major > 6;
+                localKey.Close();
 
                 return GetWindowsProductKeyFromDigitalProductId(digitalProductId, isWin8OrUp ? DigitalProductIdVersion.Windows8AndUp : DigitalProductIdVersion.UpToWindows7);
             }
@@ -32,14 +32,10 @@ namespace ShareInvest.Verify
         }
         private static string DecodeProductKey(byte[] digitalProductId)
         {
-            const int keyStartIndex = 52;
-            const int keyEndIndex = keyStartIndex + 15;
             var digits = new[]
             {
                 'B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'M', 'P', 'Q', 'R', 'T', 'V', 'W', 'X', 'Y', '2', '3', '4', '6', '7', '8', '9'
             };
-            const int decodeLength = 29;
-            const int decodeStringLength = 15;
             var decodedChars = new char[decodeLength];
             var hexPid = new ArrayList();
 
@@ -69,11 +65,9 @@ namespace ShareInvest.Verify
         public static string DecodeProductKeyWin8AndUp(byte[] digitalProductId)
         {
             var key = string.Empty;
-            const int keyOffset = 52;
             var isWin8 = (byte)((digitalProductId[66] / 6) & 1);
-            digitalProductId[66] = (byte)((digitalProductId[66] & 0xf7) | (isWin8 & 2) * 4);
-            const string digits = "BCDFGHJKMPQRTVWXY2346789";
             var last = 0;
+            digitalProductId[66] = (byte)((digitalProductId[66] & 0xf7) | (isWin8 & 2) * 4);
 
             for (var i = 24; i >= 0; i--)
             {
@@ -98,5 +92,11 @@ namespace ShareInvest.Verify
 
             return key;
         }
+        private const int decodeLength = 29;
+        private const int decodeStringLength = 15;
+        private const int keyOffset = 52;
+        private const int keyStartIndex = 52;
+        private const int keyEndIndex = keyStartIndex + 15;
+        private const string digits = "BCDFGHJKMPQRTVWXY2346789";
     }
 }

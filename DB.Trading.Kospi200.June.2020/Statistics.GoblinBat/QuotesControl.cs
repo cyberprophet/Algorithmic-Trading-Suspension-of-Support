@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
 
@@ -29,7 +30,7 @@ namespace ShareInvest.GoblinBatControls
                 stateQuantity.ForeColor = position ? Color.DeepSkyBlue : Color.Maroon;
             }));
         }
-        public void OnReceiveTrend(object sender, OpenTrends e)
+        public void OnReceiveTrend(object sender, Trends e)
         {
             BeginInvoke(new Action(() =>
             {

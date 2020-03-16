@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ShareInvest.EventHandler
 {
-    public class OpenTrends : EventArgs
+    public class Trends : EventArgs
     {
         public string Volume
         {
@@ -13,7 +13,7 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public OpenTrends(Dictionary<string, string> trend, int volume)
+        public Trends(Dictionary<string, string> trend, int volume)
         {
             Trend = trend;
             Volume = volume.ToString("N0");

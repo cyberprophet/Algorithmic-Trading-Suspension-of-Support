@@ -296,7 +296,7 @@ namespace ShareInvest.OpenAPI
                     if (e.sRealKey.Equals(Code))
                     {
                         SendDatum?.Invoke(this, new Datum(param));
-                        SendTrend?.Invoke(this, new OpenTrends(Trend, Volume));
+                        SendTrend?.Invoke(this, new Trends(Trend, Volume));
                     }
                     return;
 
@@ -343,7 +343,7 @@ namespace ShareInvest.OpenAPI
 
                 case 8:
                     if (e.sRealKey.Equals(Code))
-                        SendCurrent?.Invoke(this, new OpenCurrent(Quantity, sb.ToString().Split(';')));
+                        SendCurrent?.Invoke(this, new Current(Quantity, sb.ToString().Split(';')));
 
                     return;
 
@@ -830,8 +830,8 @@ namespace ShareInvest.OpenAPI
         public event EventHandler<Quotes> SendQuotes;
         public event EventHandler<Deposit> SendDeposit;
         public event EventHandler<Balance> SendBalance;
-        public event EventHandler<OpenCurrent> SendCurrent;
+        public event EventHandler<Current> SendCurrent;
         public event EventHandler<OpenState> SendState;
-        public event EventHandler<OpenTrends> SendTrend;
+        public event EventHandler<Trends> SendTrend;
     }
 }

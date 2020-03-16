@@ -41,5 +41,9 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
+        public DbSet<Commentary> Commentaries
+        {
+            get; set;
+        }
     }
 }

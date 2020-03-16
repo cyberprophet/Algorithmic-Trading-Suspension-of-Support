@@ -39,7 +39,7 @@ namespace ShareInvest.XingAPI.Catalog
                 if (sb != null)
                 {
                     var param = sb.ToString().Split(';');
-                    str += string.Concat(param[0], ';', ConnectAPI.GetInstance(string.Empty).CodeList[param[0]], ';', param[2], ';', param[4], ';', param[5], ';', param[6], ';', param[8], '*');
+                    str += string.Concat(param[0], ';', API.CodeList[param[0]], ';', param[2], ';', param[4], ';', param[5], ';', param[6], ';', param[8], '*');
                 }
             Send.Invoke(this, new Balance(str.Split('*')));
         }

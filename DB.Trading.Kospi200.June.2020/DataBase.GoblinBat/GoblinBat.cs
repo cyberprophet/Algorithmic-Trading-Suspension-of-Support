@@ -8,7 +8,6 @@ using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatControls;
 using ShareInvest.Message;
-using ShareInvest.Strategy;
 
 namespace ShareInvest
 {
@@ -54,6 +53,7 @@ namespace ShareInvest
                     {
                         Text = XingAPI.ConnectAPI.Code;
                         ((IEvents<EventHandler.XingAPI.Quotes>)Real[quo]).Send += Quotes.OnReceiveQuotes;
+                        ((ITrends<Trends>)Real[datum]).SendTrend += Quotes.OnReceiveTrend;
                     }
                     else
                     {
@@ -138,7 +138,7 @@ namespace ShareInvest
             else
                 open.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
 
-            Size = new Size(Server ? 591 : (initial.Equals(xing) ? 604 : 599), e.ReSize + e.Count + 32);
+            Size = new Size(Server ? 591 : (initial.Equals(xing) ? 604 : 599), e.ReSize + 34);
             Balance.Show();
         }
         private void OnReceiveNotifyIcon(object sender, NotifyIconText e)
@@ -206,7 +206,7 @@ namespace ShareInvest
                                 Short = 4,
                                 Long = 60
                             };
-                            new Trading(open, specify, new Quotes(specify, open), chart);
+                            new Strategy.OpenAPI.Trading(open, specify, new Strategy.OpenAPI.Quotes(specify, open), chart);
                         }).Start();
                         new Task(() =>
                         {
@@ -220,9 +220,9 @@ namespace ShareInvest
                                 Short = 4,
                                 Long = 60
                             };
-                            new Trading(open, liquidate, new Quotes(liquidate, open), chart);
+                            new Strategy.OpenAPI.Trading(open, liquidate, new Strategy.OpenAPI.Quotes(liquidate, open), chart);
                         }).Start();
-                        new Task(() => new Trading(open, new Specify
+                        new Task(() => new Strategy.OpenAPI.Trading(open, new Specify
                         {
                             Account = Acc,
                             Assets = 17500000,
@@ -249,12 +249,13 @@ namespace ShareInvest
                         if (DateTime.Now.Hour > 16 && (byte)e.NotifyIcon > 0 && (byte)e.NotifyIcon < 6)
                         {
                             Xing.DisconnectServer();
-                            Xing = null;
+                            Xing.Dispose((byte)e.NotifyIcon);
                         }
                         Xing = XingAPI.ConnectAPI.GetInstance(open.Code);
                         Xing.Send += OnReceiveNotifyIcon;
                         BeginInvoke(new Action(() =>
                         {
+                            new Strategy.Retrieve().SetInitialzeTheCode(open.Code);
                             notifyIcon.Text = string.Concat("Trading Code_", open.Code);
                             OnEventConnect();
                         }));
@@ -354,6 +355,7 @@ namespace ShareInvest
                     case fc0:
                     case nc0:
                         Real[datum] = ctor;
+                        ((ITrends<Trends>)ctor).SendTrend += Quotes.OnReceiveTrend;
                         break;
 
                     case fh0:
@@ -374,6 +376,40 @@ namespace ShareInvest
                         break;
                 }
                 ctor.OnReceiveRealTime(open.Code);
+            }
+            var strategy = new Catalog.Strategy
+            {
+                Assets = 17500000,
+                Code = open.Code,
+                Contents = new Dictionary<string, string>()
+                {
+                    {
+                        "DL",
+                        "1440;4;60;531"
+                    },
+                    {
+                        "WU",
+                        "15;4;60;0"
+                    },
+                    {
+                        "TF",
+                        "30;4;60;0"
+                    }
+                }
+            };
+            foreach (var kv in strategy.Contents)
+            {
+                var temp = kv.Value.Split(';');
+                new Task(() => new Strategy.XingAPI.Quotes((IEvents<EventHandler.XingAPI.Quotes>)Real[quo], (IEvents<EventHandler.XingAPI.Datum>)Real[datum], new Specify
+                {
+                    Assets = strategy.Assets,
+                    Code = strategy.Code,
+                    Strategy = kv.Key,
+                    Time = int.Parse(temp[0]),
+                    Short = int.Parse(temp[1]),
+                    Long = int.Parse(temp[2]),
+                    Reaction = int.Parse(temp[3])
+                })).Start();
             }
             if (DateTime.Now.Hour > 16)
                 Temporary = new XingAPI.Temporary(Real[quo], Real[datum], new Queue<string>());
@@ -401,6 +437,7 @@ namespace ShareInvest
                             if (initial.Equals(xing))
                             {
                                 ((IEvents<EventHandler.XingAPI.Quotes>)Real[quo]).Send -= Quotes.OnReceiveQuotes;
+                                ((ITrends<Trends>)Real[datum]).SendTrend -= Quotes.OnReceiveTrend;
                             }
                             else
                             {

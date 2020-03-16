@@ -27,10 +27,10 @@ namespace ShareInvest.XingAPI.Catalog
                 switch (enumerable.Count)
                 {
                     case 0:
-                        ConnectAPI.GetInstance(string.Empty).CodeList = new Dictionary<string, string>();
+                        API.CodeList = new Dictionary<string, string>();
 
                         for (int i = 0; i < code.Length; i++)
-                            ConnectAPI.GetInstance(string.Empty).CodeList[code[i]] = string.Concat(kospi200, name[i]);
+                            API.CodeList[code[i]] = string.Concat(kospi200, name[i]);
 
                         return;
 

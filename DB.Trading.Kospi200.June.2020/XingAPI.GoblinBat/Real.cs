@@ -86,6 +86,13 @@ namespace ShareInvest.XingAPI
             dangochk = 'H',
             alloc_gubun = 'G'
         }
+        protected ConnectAPI API
+        {
+            get
+            {
+                return ConnectAPI.GetInstance();
+            }
+        }
         private const string field = "futcode";
         private const string inBlock = "InBlock";
         private const string outBlock = "OutBlock";

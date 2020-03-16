@@ -10,4 +10,8 @@ namespace ShareInvest.Catalog
     {
         event EventHandler<T> SendMessage;
     }
+    public interface ITrends<T>
+    {
+        event EventHandler<T> SendTrend;
+    }
 }

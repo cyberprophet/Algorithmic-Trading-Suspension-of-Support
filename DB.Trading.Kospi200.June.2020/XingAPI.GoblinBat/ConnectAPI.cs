@@ -16,14 +16,24 @@ namespace ShareInvest.XingAPI
         public static ConnectAPI GetInstance(string code)
         {
             if (XingAPI == null)
-                XingAPI = new ConnectAPI();
-
-            if (code.Equals(string.Empty) == false)
             {
+                XingAPI = new ConnectAPI();
                 Code = code;
                 new T9943().QueryExcute();
             }
             return XingAPI;
+        }
+        public static ConnectAPI GetInstance()
+        {
+            return XingAPI;
+        }
+        public int Volume
+        {
+            get; set;
+        }
+        public bool OnReceiveBalance
+        {
+            get; set;
         }
         public static string Code
         {
@@ -65,11 +75,20 @@ namespace ShareInvest.XingAPI
             Process.Start("shutdown.exe", "-r");
             Send?.Invoke(this, new NotifyIconText((char)69));
         }
+        public void Dispose(byte reset)
+        {
+            if (DateTime.Now.Hour > 16 && reset > 0 && reset < 6)
+                XingAPI = null;
+        }
         public FormWindowState SendNotifyIconText(int number)
         {
             Send?.Invoke(this, new NotifyIconText((int)TimerBox.Show(secret.Connection, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)number)));
 
             return FormWindowState.Minimized;
+        }
+        public Dictionary<string, string> Trend
+        {
+            get; set;
         }
         public Dictionary<string, string> CodeList
         {
@@ -83,6 +102,8 @@ namespace ShareInvest.XingAPI
 
                 for (int i = 0; i < Accounts.Length; i++)
                     Accounts[i] = GetAccountList(i);
+
+                secret.GetAccount(Accounts);
             }
         }
         private ConnectAPI()
@@ -105,6 +126,7 @@ namespace ShareInvest.XingAPI
 
                 new ExceptionMessage(str);
             }
+            Trend = new Dictionary<string, string>();
         }
         private static ConnectAPI XingAPI
         {

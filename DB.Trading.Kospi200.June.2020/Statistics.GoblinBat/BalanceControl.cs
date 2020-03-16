@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ShareInvest.EventHandler;
 using ShareInvest.Catalog;
+using ShareInvest.EventHandler.OpenAPI;
 
 namespace ShareInvest.GoblinBatControls
 {
@@ -17,7 +18,7 @@ namespace ShareInvest.GoblinBatControls
             for (int i = 0; i < columns.Length; i++)
                 balGrid.Columns[i].Name = columns[i];
         }
-        public void OnRealTimeCurrentPriceReflect(object sender, OpenCurrent e)
+        public void OnRealTimeCurrentPriceReflect(object sender, Current e)
         {
             if (e.Quantity != 0 && balGrid.Rows.Count > 0)
                 BeginInvoke(new Action(() =>

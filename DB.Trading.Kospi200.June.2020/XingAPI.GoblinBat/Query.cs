@@ -82,7 +82,7 @@ namespace ShareInvest.XingAPI
                 new ExceptionMessage(param);
 
                 if (Array.Exists(new Secret().ErrorMessage, o => o.Equals(param)))
-                    ConnectAPI.GetInstance(string.Empty).Dispose();
+                    API.Dispose();
             }
         }
         protected virtual void OnReceiveData(string szTrCode)
@@ -99,6 +99,13 @@ namespace ShareInvest.XingAPI
             }
             if (int.TryParse(nMessageCode, out int code) && code > 999)
                 new ExceptionMessage(szMessage, nMessageCode);
+        }
+        protected ConnectAPI API
+        {
+            get
+            {
+                return ConnectAPI.GetInstance();
+            }
         }
         private const string record = "레코드명:";
         private const string separator = "No,한글명,필드명,영문명,";

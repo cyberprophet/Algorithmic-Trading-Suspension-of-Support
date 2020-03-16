@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace ShareInvest.EventHandler
+namespace ShareInvest.EventHandler.OpenAPI
 {
-    public class OpenCurrent : EventArgs
+    public class Current : EventArgs
     {
         public int Quantity
         {
@@ -12,7 +12,7 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public OpenCurrent(int quantity, string[] param)
+        public Current(int quantity, string[] param)
         {
             Quantity = quantity;
             Price = double.Parse(param[0].Contains("-") ? param[0].Substring(1) : param[0]);

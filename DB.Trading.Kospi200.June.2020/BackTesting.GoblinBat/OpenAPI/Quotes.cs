@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using ShareInvest.Catalog;
 using ShareInvest.OpenAPI;
 
-namespace ShareInvest.Strategy
+namespace ShareInvest.Strategy.OpenAPI
 {
     public class Quotes
     {

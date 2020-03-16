@@ -1,10 +1,11 @@
 ﻿using System;
 using ShareInvest.Catalog;
+using ShareInvest.EventHandler;
 using ShareInvest.EventHandler.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class FC0 : Real, IReals, IEvents<Datum>
+    internal class FC0 : Real, IReals, IEvents<Datum>, ITrends<Trends>
     {
         internal FC0() : base()
         {
@@ -18,6 +19,7 @@ namespace ShareInvest.XingAPI.Catalog
                 temp[i] = GetFieldData(OutBlock, array[i]);
 
             Send?.Invoke(this, new Datum(temp[0], temp[4], string.Concat(temp[8], temp[9])));
+            SendTrend?.Invoke(this, new Trends(API.Trend, API.Volume));
         }
         public void OnReceiveRealTime(string code)
         {
@@ -29,5 +31,6 @@ namespace ShareInvest.XingAPI.Catalog
             }
         }
         public event EventHandler<Datum> Send;
+        public event EventHandler<Trends> SendTrend;
     }
 }
