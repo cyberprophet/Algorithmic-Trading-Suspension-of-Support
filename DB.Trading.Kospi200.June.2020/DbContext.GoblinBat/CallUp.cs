@@ -14,18 +14,18 @@ namespace ShareInvest.GoblinBatContext
     {
         protected string GetStrategy()
         {
-            using (var db = new GoblinBatDbContext())
+            try
             {
-                try
+                using (var db = new GoblinBatDbContext())
                 {
                     return db.Codes.First(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
                 }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace);
-                }
             }
-            return GetStrategy();
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return string.Empty;
         }
         protected List<string> RequestCodeList(List<string> list)
         {
@@ -93,15 +93,14 @@ namespace ShareInvest.GoblinBatContext
                         db.Stocks.BulkDelete(stocks.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
                 }
                 new ExceptionMessage(ex.StackTrace, code);
-                RequestCodeList(new List<string>());
             }
             return list;
         }
         protected List<string> RequestCodeList(List<string> list, string[] market)
         {
-            using (var db = new GoblinBatDbContext())
+            try
             {
-                try
+                using (var db = new GoblinBatDbContext())
                 {
                     foreach (var temp in db.Codes.Select(o => new
                     {
@@ -110,22 +109,21 @@ namespace ShareInvest.GoblinBatContext
                     }))
                         if (temp.Code.Length == 6 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
                             list.Add(temp.Code);
-
-                    return list;
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace);
                 }
             }
-            return RequestCodeList(list, market);
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return list;
         }
         protected string GetRetention(int param, string code)
         {
             long max = 0;
-            using (var db = new GoblinBatDbContext())
+
+            try
             {
-                try
+                using (var db = new GoblinBatDbContext())
                 {
                     switch (param)
                     {
@@ -145,27 +143,26 @@ namespace ShareInvest.GoblinBatContext
                             max = db.Days.Where(o => o.Code.Equals(code)).Max(o => o.Date);
                             break;
                     };
-                    return max > 0 ? (max.ToString().Length > 12 ? max.ToString().Substring(0, 12) : max.ToString()) : "DoesNotExist";
-                }
-                catch (InvalidOperationException ex)
-                {
-                    if (ex.TargetSite.Name.Equals("GetValue") == false)
-                        new ExceptionMessage(ex.TargetSite.Name, code);
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace, code);
                 }
             }
-            return "DoesNotExist";
+            catch (InvalidOperationException ex)
+            {
+                if (ex.TargetSite.Name.Equals("GetValue") == false)
+                    new ExceptionMessage(ex.TargetSite.Name, code);
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
+            return max > 0 ? (max.ToString().Length > 12 ? max.ToString().Substring(0, 12) : max.ToString()) : "DoesNotExist";
         }
         protected void SetInsertCode(string code, string name, string info)
         {
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext())
+                try
                 {
-                    try
+                    using (var db = new GoblinBatDbContext())
                     {
                         if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
                             return;
@@ -178,10 +175,10 @@ namespace ShareInvest.GoblinBatContext
                         });
                         db.SaveChanges();
                     }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace, code);
-                    }
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace, code);
                 }
             }).Start();
         }
@@ -305,42 +302,39 @@ namespace ShareInvest.GoblinBatContext
         }
         protected void SetStorage(string code, Queue<string> quotes)
         {
-            new Task(() =>
+            string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd");
+            int count = 0;
+            List<Quotes> model = new List<Quotes>(1024);
+
+            while (quotes.Count > 0)
             {
-                string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd");
-                int count = 0;
-                List<Quotes> model = new List<Quotes>(1024);
+                var temp = quotes.Dequeue().Split(';');
 
-                while (quotes.Count > 0)
+                if (double.TryParse(temp[1].Split('^')[0], out double price) && price > 105.95)
                 {
-                    var temp = quotes.Dequeue().Split(';');
+                    if (temp[0].Equals(onTime))
+                        count++;
 
-                    if (double.TryParse(temp[1].Split('^')[0], out double price) && price > 105.95)
+                    else
                     {
-                        if (temp[0].Equals(onTime))
-                            count++;
-
-                        else
-                        {
-                            onTime = temp[0];
-                            count = 0;
-                        }
-                        model.Add(new Quotes
-                        {
-                            Code = code,
-                            Date = string.Concat(date, onTime, count.ToString("D3")),
-                            Contents = temp[1]
-                        });
+                        onTime = temp[0];
+                        count = 0;
                     }
+                    model.Add(new Quotes
+                    {
+                        Code = code,
+                        Date = string.Concat(date, onTime, count.ToString("D3")),
+                        Contents = temp[1]
+                    });
                 }
-                SetStorage(model);
-            }).Start();
+            }
+            SetStorage(model);
         }
         private void SetStorage(List<Quotes> model)
         {
-            using (var db = new GoblinBatDbContext())
+            try
             {
-                try
+                using (var db = new GoblinBatDbContext())
                 {
                     foreach (var list in model)
                         if (db.Quotes.Where(o => o.Code.Equals(list.Code) && o.Date.Equals(list.Date) && o.Contents.Equals(list.Contents)).Any())
@@ -356,14 +350,10 @@ namespace ShareInvest.GoblinBatContext
                     });
                     db.Configuration.AutoDetectChangesEnabled = false;
                 }
-                catch (Exception ex)
-                {
-                    for (var i = 0; i < GC.GetTotalMemory(true); i++)
-                        Console.WriteLine(ex.TargetSite.Name);
-
-                    new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
-                    new Task(() => SetStorage(model)).Start();
-                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
             }
         }
         private const string q3 = "101Q3000";

@@ -17,10 +17,16 @@ namespace ShareInvest.Strategy
         }
         public void SetInitializeTheChart()
         {
-            Chart.Clear();
-            Quotes.Clear();
-            Chart = null;
-            Quotes = null;
+            if (Chart != null)
+            {
+                Chart.Clear();
+                Chart = null;
+            }
+            if (Quotes != null)
+            {
+                Quotes.Clear();
+                Quotes = null;
+            }
         }
         internal protected static Queue<Chart> Chart
         {

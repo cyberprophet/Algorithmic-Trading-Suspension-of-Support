@@ -3,7 +3,7 @@ using System.Text;
 
 namespace ShareInvest.EventHandler
 {
-    public class OpenMemorize : EventArgs
+    public class Memorize : EventArgs
     {
         public string Date
         {
@@ -25,7 +25,7 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public OpenMemorize(StringBuilder sb)
+        public Memorize(StringBuilder sb)
         {
             string[] arr = sb.ToString().Split(';');
             bool days = arr[0].Equals(string.Empty) && arr[4].Length == 8;
@@ -34,12 +34,12 @@ namespace ShareInvest.EventHandler
             Price = days ? arr[1] : arr[0];
             Volume = days ? arr[2] : arr[1];
         }
-        public OpenMemorize(string sPrevNext, string code)
+        public Memorize(string sPrevNext, string code)
         {
             SPrevNext = sPrevNext;
             Code = code;
         }
-        public OpenMemorize(string[] arr)
+        public Memorize(string[] arr)
         {
             Date = arr[0];
             Price = arr[1];
@@ -47,7 +47,7 @@ namespace ShareInvest.EventHandler
             if (arr.Length > 2)
                 Volume = arr[2];
         }
-        public OpenMemorize(string clear)
+        public Memorize(string clear)
         {
             SPrevNext = clear;
         }

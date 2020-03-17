@@ -41,7 +41,7 @@ namespace ShareInvest.OpenAPI
                 quotes.Enqueue(string.Concat(e.Time, ';', e.Price[4], '^', e.Quantity[4], '^', total[0], '*', e.Price[5], '^', e.Quantity[5], '^', total[1]));
             }
         }
-        private void OnReceiveMemorize(object sender, OpenMemorize e)
+        private void OnReceiveMemorize(object sender, Memorize e)
         {
             if (e.SPrevNext != null)
             {

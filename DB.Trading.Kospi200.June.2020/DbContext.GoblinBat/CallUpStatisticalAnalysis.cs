@@ -14,9 +14,9 @@ namespace ShareInvest.GoblinBatContext
 
             if (code.Length > 6 && code.Substring(5, 3).Equals("000"))
             {
-                using (var db = new GoblinBatDbContext())
+                try
                 {
-                    try
+                    using (var db = new GoblinBatDbContext())
                     {
                         var tick = db.Quotes.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
                         {
@@ -58,15 +58,14 @@ namespace ShareInvest.GoblinBatContext
                             }
                             chart.Enqueue(quotes);
                         }
-                        return chart;
-                    }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace, code);
                     }
                 }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace, code);
+                }
             }
-            return null;
+            return chart;
         }
     }
 }

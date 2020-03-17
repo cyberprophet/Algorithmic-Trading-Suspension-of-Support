@@ -48,13 +48,6 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        public string Strategy
-        {
-            get
-            {
-                return GetStrategy();
-            }
-        }
         public string AvgPurchase
         {
             get; private set;
@@ -138,11 +131,11 @@ namespace ShareInvest.OpenAPI
                     if (!temp.Contains(","))
                     {
                         string code = temp.Equals("Tick") || temp.Equals("Day") ? "101Q3000" : temp;
-                        SendMemorize?.Invoke(this, new OpenMemorize(temp.Equals("Day") ? "day" : temp, code));
+                        SendMemorize?.Invoke(this, new Memorize(temp.Equals("Day") ? "day" : temp, code));
 
                         continue;
                     }
-                    SendMemorize?.Invoke(this, new OpenMemorize(temp.Split(',')));
+                    SendMemorize?.Invoke(this, new Memorize(temp.Split(',')));
                 }
                 return;
             }
@@ -153,7 +146,6 @@ namespace ShareInvest.OpenAPI
             {
                 SendErrorMessage(API.CommConnect());
                 Temporary = temporary;
-                API.OnReceiveChejanData -= OnReceiveChejanData;
 
                 return;
             }
@@ -179,7 +171,7 @@ namespace ShareInvest.OpenAPI
             DeadLine = true;
             Delay.Milliseconds = delay;
             CodeList = RequestCodeList(new List<string>(32));
-            SendMemorize?.Invoke(this, new OpenMemorize("Clear"));
+            SendMemorize?.Invoke(this, new Memorize("Clear"));
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
         private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
@@ -204,7 +196,7 @@ namespace ShareInvest.OpenAPI
             }
             if (e.sMsg.Equals(TR))
             {
-                SendMemorize?.Invoke(this, new OpenMemorize("Clear"));
+                SendMemorize?.Invoke(this, new Memorize("Clear"));
                 Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
 
                 return;
@@ -412,7 +404,7 @@ namespace ShareInvest.OpenAPI
                         }
                         if (Exists.Equals(sb) == false)
                         {
-                            SendMemorize?.Invoke(this, new OpenMemorize(sb));
+                            SendMemorize?.Invoke(this, new Memorize(sb));
 
                             continue;
                         }
@@ -460,10 +452,10 @@ namespace ShareInvest.OpenAPI
                         return;
                     }
                     if (e.sPrevNext.Equals("0"))
-                        SendMemorize?.Invoke(this, new OpenMemorize(e.sPrevNext, e.sRQName.Split(';')[0]));
+                        SendMemorize?.Invoke(this, new Memorize(e.sPrevNext, e.sRQName.Split(';')[0]));
                 }
                 SetScreenNumber(9000, 9031);
-                SendMemorize?.Invoke(this, new OpenMemorize("Clear"));
+                SendMemorize?.Invoke(this, new Memorize("Clear"));
                 Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
 
                 return;
@@ -573,14 +565,12 @@ namespace ShareInvest.OpenAPI
         }
         private void OnCollectingData(string[] markets)
         {
-            SetScreenNumber(9000, 9031);
-            new Task(() => SetScreenNumber(1000, 9000)).Start();
+            Temporary.SetConnection(OpenAPI);
+            SetScreenNumber(1000, 9031);
             SetPasswordWhileCollectingData(markets.Length);
             CodeList = RequestCodeList(new List<string>(32), markets);
-            Temporary.SetConnection(OpenAPI);
-            Temporary = null;
             new Temporary(OpenAPI);
-            SendMemorize?.Invoke(this, new OpenMemorize("Clear"));
+            SendMemorize?.Invoke(this, new Memorize("Clear"));
             Delay.Milliseconds = 4315;
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
@@ -670,19 +660,17 @@ namespace ShareInvest.OpenAPI
                 return;
             }
             else if (CodeList.Count < 50)
-            {
                 foreach (var str in CodeList)
                     if (str == null || str.Equals(string.Empty))
                         CodeList.Remove(str);
 
-                if (CodeList.Count < 1)
-                {
-                    SendCount?.Invoke(this, new NotifyIconText(CodeList.Count, code));
-                    CodeList = null;
-                    GC.Collect();
+            if (CodeList.Count == 0)
+            {
+                SendCount?.Invoke(this, new NotifyIconText(CodeList.Count, code));
+                CodeList = null;
+                GC.Collect();
 
-                    return;
-                }
+                return;
             }
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
@@ -771,22 +759,30 @@ namespace ShareInvest.OpenAPI
                     case -100:
                     case -101:
                     case -102:
-                    case -106:
                     case -200:
                         Process.Start("shutdown.exe", "-r");
                         Dispose();
                         return;
 
+                    case -106:
+                        SendCount?.Invoke(this, new NotifyIconText(error));
+                        break;
+
                     case -300:
-                        SendMemorize?.Invoke(this, new OpenMemorize("Clear"));
+                        SendMemorize?.Invoke(this, new Memorize("Clear"));
                         Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
                         return;
 
                     default:
                         return;
                 }
+                if (API != null)
+                    API = null;
+
+                if (OpenAPI != null)
+                    OpenAPI = null;
             }
-            else if (CME && DateTime.Now.Hour == 5 && DateTime.Now.Minute > 50)
+            else if (CME && DateTime.Now.Hour == 5 && DateTime.Now.Minute > 30)
             {
                 CME = false;
                 SendCount?.Invoke(this, new NotifyIconText((byte)DateTime.Now.DayOfWeek));
@@ -825,7 +821,7 @@ namespace ShareInvest.OpenAPI
         private readonly Error error;
         private readonly Delay request;
         public event EventHandler<Datum> SendDatum;
-        public event EventHandler<OpenMemorize> SendMemorize;
+        public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<NotifyIconText> SendCount;
         public event EventHandler<Quotes> SendQuotes;
         public event EventHandler<Deposit> SendDeposit;

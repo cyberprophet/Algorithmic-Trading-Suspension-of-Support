@@ -1,6 +1,7 @@
 ﻿using System;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
+using ShareInvest.Message;
 
 namespace ShareInvest.XingAPI.Catalog
 {
@@ -13,6 +14,7 @@ namespace ShareInvest.XingAPI.Catalog
         protected override void OnReceiveRealData(string szTrCode)
         {
             if (int.TryParse(GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jangubun)), out int field) && (field == 5 || field == 7) && int.TryParse(GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jstatus)), out int choice))
+            {
                 switch (choice)
                 {
                     case 41:
@@ -20,6 +22,8 @@ namespace ShareInvest.XingAPI.Catalog
                         Send?.Invoke(this, new NotifyIconText((char)choice));
                         break;
                 }
+                new ExceptionMessage(choice.ToString(), field.ToString());
+            }
         }
         public void OnReceiveRealTime(string code)
         {

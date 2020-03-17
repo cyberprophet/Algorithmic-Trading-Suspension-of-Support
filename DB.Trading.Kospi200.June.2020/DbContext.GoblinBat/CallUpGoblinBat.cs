@@ -14,53 +14,51 @@ namespace ShareInvest.GoblinBatContext
         protected bool GetRecentAnalysis(Specify s)
         {
             var date = DateTime.Now.Hour < 5 && DateTime.Now.Hour >= 0 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd");
-            using (var db = new GoblinBatDbContext())
+
+            try
             {
-                try
+                using (var db = new GoblinBatDbContext())
                 {
                     return db.Logs.Any(o => o.Date.ToString().Equals(date) && o.Code.Equals(s.Code) && o.Assets.Equals(s.Assets) && o.Strategy.Equals(s.Strategy) && o.Date.Equals(s.Time));
                 }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace, s.Code);
-                }
-                return GetRecentAnalysis(s);
             }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, s.Code);
+            }
+            return false;
         }
         protected bool GetRegister()
         {
-            using (var db = new GoblinBatDbContext())
+            try
             {
-                try
+                using (var db = new GoblinBatDbContext())
                 {
                     return db.Logs.Any();
                 }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace);
-                }
-                return GetRegister();
             }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return false;
         }
         protected bool GetRemainingDate(string code, long date)
         {
-            if (code.Length == 8 && date.ToString().Substring(6).Equals("151959000"))
-                using (var db = new GoblinBatDbContext())
-                {
-                    try
+            try
+            {
+                if (code.Length == 8 && date.ToString().Substring(6).Equals("151959000"))
+                    using (var db = new GoblinBatDbContext())
                     {
                         if (db.Codes.FirstOrDefault(o => o.Code.Equals(code)).Info.Substring(2).Equals(date.ToString().Substring(0, 6)))
                             return true;
-
-                        else
-                            return false;
                     }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace, code);
-                    }
-                }
-            return GetRemainingDate(code, date);
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
+            return false;
         }
         protected Queue<Chart> GetChart(string code)
         {
@@ -68,9 +66,9 @@ namespace ShareInvest.GoblinBatContext
 
             if (code.Length > 6 && code.Substring(5, 3).Equals("000"))
             {
-                using (var db = new GoblinBatDbContext())
+                try
                 {
-                    try
+                    using (var db = new GoblinBatDbContext())
                     {
                         var tick = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
                         {
@@ -117,45 +115,40 @@ namespace ShareInvest.GoblinBatContext
                                 Volume = temp.Volume
                             });
                         }
-                        return chart;
-                    }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace, code);
                     }
                 }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace, code);
+                }
             }
-            else
-            {
-
-            }
-            return null;
+            return chart;
         }
         protected string GetRecentFuturesCode(bool register)
         {
             if (register == false)
-                using (var db = new GoblinBatDbContext())
+            {
+                try
                 {
-                    try
+                    using (var db = new GoblinBatDbContext())
                     {
                         return db.Codes.First(code => code.Info.Equals(db.Codes.Where(o => o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
                     }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace);
-
-                        return GetRecentFuturesCode(register);
-                    }
                 }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            }
             return string.Empty;
         }
         protected void SetStorage(Logs log)
         {
             new Task(() =>
             {
-                using (var db = new GoblinBatDbContext())
+                try
                 {
-                    try
+                    using (var db = new GoblinBatDbContext())
                     {
                         var check = db.Logs.Find(new object[]
                         {
@@ -170,25 +163,25 @@ namespace ShareInvest.GoblinBatContext
                         db.Logs.AddOrUpdate(log);
                         db.SaveChanges();
                     }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace);
-                    }
-                }
-            }).Start();
-        }
-        protected void DeleteLogs()
-        {
-            using (var db = new GoblinBatDbContext())
-            {
-                try
-                {
-                    db.Logs.BulkDelete(db.Logs.Where(o => o.Code.Equals("101Q3000")));
                 }
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
+            }).Start();
+        }
+        protected void DeleteLogs()
+        {
+            try
+            {
+                using (var db = new GoblinBatDbContext())
+                {
+                    db.Logs.BulkDelete(db.Logs.Where(o => o.Code.Equals("101Q3000")));
+                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
             }
         }
     }
