@@ -3,8 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using ShareInvest.Message;
 using ShareInvest.Models;
 
@@ -12,11 +14,15 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUp
     {
+        protected CallUp(char initial)
+        {
+            this.initial = initial;
+        }
         protected string GetStrategy()
         {
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext(initial))
                 {
                     return db.Codes.First(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
                 }
@@ -33,7 +39,7 @@ namespace ShareInvest.GoblinBatContext
 
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext(initial))
                 {
                     foreach (var temp in db.Codes.Select(o => new
                     {
@@ -85,7 +91,7 @@ namespace ShareInvest.GoblinBatContext
             }
             catch (Exception ex)
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext(initial))
                 {
                     var stocks = db.Stocks.Where(o => o.Code.Equals(code));
 
@@ -100,7 +106,7 @@ namespace ShareInvest.GoblinBatContext
         {
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext(initial))
                 {
                     foreach (var temp in db.Codes.Select(o => new
                     {
@@ -123,7 +129,7 @@ namespace ShareInvest.GoblinBatContext
 
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext(initial))
                 {
                     switch (param)
                     {
@@ -162,7 +168,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 try
                 {
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext(initial))
                     {
                         if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
                             return;
@@ -255,7 +261,7 @@ namespace ShareInvest.GoblinBatContext
                                 Volume = int.Parse(temp[2])
                             });
                     }
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext(initial))
                     {
                         db.Configuration.AutoDetectChangesEnabled = true;
 
@@ -304,13 +310,15 @@ namespace ShareInvest.GoblinBatContext
         {
             string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd");
             int count = 0;
-            List<Quotes> model = new List<Quotes>(1024);
+            var external = initial.Equals((char)67);
+            List<Quotes> model = new List<Quotes>();
+            Queue<string> record = new Queue<string>();
 
             while (quotes.Count > 0)
             {
                 var temp = quotes.Dequeue().Split(';');
 
-                if (double.TryParse(temp[1].Split('^')[0], out double price) && price > 105.95)
+                if (double.TryParse(temp[1].Split(',')[0], out double price) && price > 105.95)
                 {
                     if (temp[0].Equals(onTime))
                         count++;
@@ -320,31 +328,45 @@ namespace ShareInvest.GoblinBatContext
                         onTime = temp[0];
                         count = 0;
                     }
-                    model.Add(new Quotes
+                    switch (external)
                     {
-                        Code = code,
-                        Date = string.Concat(date, onTime, count.ToString("D3")),
-                        Contents = temp[1]
-                    });
+                        case true:
+                            model.Add(new Quotes
+                            {
+                                Code = code,
+                                Date = string.Concat(date, onTime, count.ToString("D3")),
+                                Contents = temp[1]
+                            });
+                            break;
+
+                        case false:
+                            record.Enqueue(string.Concat(date, onTime, count.ToString("D3"), ",", temp[1]));
+                            break;
+                    }
                 }
             }
-            SetStorage(model);
+            switch (external)
+            {
+                case true:
+                    SetStorage(model);
+                    return;
+
+                case false:
+                    SetRecord(code, record);
+                    return;
+            }
         }
         private void SetStorage(List<Quotes> model)
         {
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext(initial))
                 {
-                    foreach (var list in model)
-                        if (db.Quotes.Where(o => o.Code.Equals(list.Code) && o.Date.Equals(list.Date) && o.Contents.Equals(list.Contents)).Any())
-                            return;
-
                     db.Configuration.AutoDetectChangesEnabled = true;
                     db.BulkInsert(model, o =>
                     {
                         o.InsertIfNotExists = true;
-                        o.BatchSize = 10000;
+                        o.BatchSize = 30000;
                         o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                         o.AutoMapOutputDirection = false;
                     });
@@ -356,6 +378,32 @@ namespace ShareInvest.GoblinBatContext
                 new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
             }
         }
+        private void SetRecord(string code, Queue<string> model)
+        {
+            var path = Path.Combine(Application.StartupPath, code);
+
+            try
+            {
+                var directory = new DirectoryInfo(path);
+
+                if (directory.Exists == false)
+                    directory.Create();
+
+                using (var sw = new StreamWriter(string.Concat(path, piece, DateTime.Now.ToString(date), extension), true))
+                {
+                    while (model.Count > 0)
+                        sw.WriteLine(model.Dequeue());
+                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
+            }
+        }
+        private const string extension = ".csv";
+        private const string date = "yyMMdd";
+        private const string piece = @"\";
+        private readonly char initial;
         private const string q3 = "101Q3000";
     }
 }

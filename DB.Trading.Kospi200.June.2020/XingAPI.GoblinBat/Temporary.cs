@@ -7,7 +7,7 @@ namespace ShareInvest.XingAPI
 {
     public partial class Temporary : CallUp
     {
-        public Temporary(IReals quotes, IReals datum, Queue<string> queue)
+        public Temporary(IReals quotes, IReals datum, Queue<string> queue, char initial) : base(initial)
         {
             this.queue = queue;
             ((IEvents<Quotes>)quotes).Send += OnReceiveMemorize;
@@ -20,14 +20,14 @@ namespace ShareInvest.XingAPI
         private void OnReceiveMemorize(object sender, Datum e)
         {
             if (e.Time != null && e.Price > 0 && e.Volume != 0)
-                queue.Enqueue(string.Concat(e.Time, ';', e.Price, '^', e.Volume));
+                queue.Enqueue(string.Concat(e.Time, ';', e.Price, ',', e.Volume));
         }
         private void OnReceiveMemorize(object sender, Quotes e)
         {
             int sell = e.Sell - Sell, buy = e.Buy - Buy;
 
             if (e.Price[4] > 0 && e.Price[5] > 0)
-                queue.Enqueue(string.Concat(e.Time, ';', e.Price[4], '^', e.Quantity[4], '^', sell, '*', e.Price[5], '^', e.Quantity[5], '^', buy));
+                queue.Enqueue(string.Concat(e.Time, ';', e.Price[4], ',', e.Quantity[4], ',', sell, ',', e.Price[5], ',', e.Quantity[5], ',', buy));
 
             Sell = e.Sell;
             Buy = e.Buy;

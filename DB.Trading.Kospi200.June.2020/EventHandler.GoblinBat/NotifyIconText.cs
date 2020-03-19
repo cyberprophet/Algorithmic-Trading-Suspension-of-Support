@@ -40,5 +40,9 @@ namespace ShareInvest.EventHandler
         {
             NotifyIcon = new StringBuilder(account).Append(id).Append(';').Append(name).Append(';').Append(server);
         }
+        public NotifyIconText(bool cme)
+        {
+            NotifyIcon = cme;
+        }
     }
 }

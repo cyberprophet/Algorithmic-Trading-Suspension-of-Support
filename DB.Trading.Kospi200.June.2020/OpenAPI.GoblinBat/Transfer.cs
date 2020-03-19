@@ -6,7 +6,7 @@ namespace ShareInvest.OpenAPI
 {
     public class Transfer : AuxiliaryFunction, IEnumerable
     {
-        public Transfer(string path)
+        public Transfer(string path, char initial) : base(initial)
         {
             this.path = path;
         }

@@ -17,10 +17,10 @@ namespace ShareInvest.OpenAPI
 {
     public class ConnectAPI : AuxiliaryFunction
     {
-        public static ConnectAPI GetInstance()
+        public static ConnectAPI GetInstance(char initial)
         {
             if (OpenAPI == null)
-                OpenAPI = new ConnectAPI();
+                OpenAPI = new ConnectAPI(initial);
 
             return OpenAPI;
         }
@@ -80,6 +80,14 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
+        public void Dispose(bool reset)
+        {
+            if (reset)
+            {
+                API = null;
+                OpenAPI = null;
+            }
+        }
         public void SetScreenNumber(uint start, uint finish)
         {
             for (uint i = start; i < finish; i++)
@@ -120,13 +128,11 @@ namespace ShareInvest.OpenAPI
                 });
             }));
         }
-        public void StartProgress(string transfer)
+        public void StartProgress(string transfer, char initial)
         {
             if (transfer != null)
             {
-                new Temporary(OpenAPI);
-
-                foreach (string temp in new Transfer(transfer))
+                foreach (string temp in new Transfer(transfer, initial))
                 {
                     if (!temp.Contains(","))
                     {
@@ -347,8 +353,11 @@ namespace ShareInvest.OpenAPI
 
                         if (Temporary != null)
                         {
-                            Temporary.SetStorage(Code);
+                            var task = new Task(() => Temporary.SetStorage(Code));
+                            task.Start();
                             OnCollectingData(GetInformation());
+                            task.Wait();
+                            SendCount?.Invoke(this, new NotifyIconText(CME));
                         }
                         else
                             OnReceiveBalance = false;
@@ -357,11 +366,6 @@ namespace ShareInvest.OpenAPI
                     {
                         DeadLine = true;
                         Delay.Milliseconds = 205;
-                    }
-                    else if (param[0].Equals("0") && param[2].Equals("002000"))
-                    {
-                        Process.Start("shutdown.exe", "-r");
-                        Dispose();
                     }
                     break;
             };
@@ -540,7 +544,7 @@ namespace ShareInvest.OpenAPI
             else if (Temporary != null)
                 OnCollectingData(GetInformation());
 
-            SendCount?.Invoke(this, new NotifyIconText((byte)0));
+            SendCount?.Invoke(this, new NotifyIconText((byte)e.nErrCode));
         }
         private void PrepareForTrading(string account)
         {
@@ -566,10 +570,10 @@ namespace ShareInvest.OpenAPI
         private void OnCollectingData(string[] markets)
         {
             Temporary.SetConnection(OpenAPI);
-            SetScreenNumber(1000, 9031);
+            SetScreenNumber(8900, 9050);
+            new Task(() => SetScreenNumber(1000, 8900)).Start();
             SetPasswordWhileCollectingData(markets.Length);
             CodeList = RequestCodeList(new List<string>(32), markets);
-            new Temporary(OpenAPI);
             SendMemorize?.Invoke(this, new Memorize("Clear"));
             Delay.Milliseconds = 4315;
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
@@ -790,7 +794,8 @@ namespace ShareInvest.OpenAPI
         }
         private void Dispose()
         {
-            SendCount?.Invoke(this, new NotifyIconText((char)69));
+            new Task(() => SendCount?.Invoke(this, new NotifyIconText((char)69))).Start();
+            Dispose(true);
         }
         private bool CME
         {
@@ -804,7 +809,7 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        private ConnectAPI()
+        private ConnectAPI(char initial) : base(initial)
         {
             error = new Error();
             request = Delay.GetInstance(205);

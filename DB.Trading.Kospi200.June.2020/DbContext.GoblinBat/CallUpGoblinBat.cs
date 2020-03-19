@@ -11,13 +11,17 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
+        protected CallUpGoblinBat(char initial)
+        {
+            this.initial = initial;
+        }
         protected bool GetRecentAnalysis(Specify s)
         {
             var date = DateTime.Now.Hour < 5 && DateTime.Now.Hour >= 0 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd");
 
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext(initial))
                 {
                     return db.Logs.Any(o => o.Date.ToString().Equals(date) && o.Code.Equals(s.Code) && o.Assets.Equals(s.Assets) && o.Strategy.Equals(s.Strategy) && o.Date.Equals(s.Time));
                 }
@@ -32,7 +36,7 @@ namespace ShareInvest.GoblinBatContext
         {
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext(initial))
                 {
                     return db.Logs.Any();
                 }
@@ -48,7 +52,7 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 if (code.Length == 8 && date.ToString().Substring(6).Equals("151959000"))
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext(initial))
                     {
                         if (db.Codes.FirstOrDefault(o => o.Code.Equals(code)).Info.Substring(2).Equals(date.ToString().Substring(0, 6)))
                             return true;
@@ -68,7 +72,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 try
                 {
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext(initial))
                     {
                         var tick = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
                         {
@@ -130,7 +134,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 try
                 {
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext(initial))
                     {
                         return db.Codes.First(code => code.Info.Equals(db.Codes.Where(o => o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
                     }
@@ -148,7 +152,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 try
                 {
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext(initial))
                     {
                         var check = db.Logs.Find(new object[]
                         {
@@ -174,7 +178,7 @@ namespace ShareInvest.GoblinBatContext
         {
             try
             {
-                using (var db = new GoblinBatDbContext())
+                using (var db = new GoblinBatDbContext(initial))
                 {
                     db.Logs.BulkDelete(db.Logs.Where(o => o.Code.Equals("101Q3000")));
                 }
@@ -183,6 +187,6 @@ namespace ShareInvest.GoblinBatContext
             {
                 new ExceptionMessage(ex.StackTrace);
             }
-        }
+        }private readonly char initial;
     }
 }

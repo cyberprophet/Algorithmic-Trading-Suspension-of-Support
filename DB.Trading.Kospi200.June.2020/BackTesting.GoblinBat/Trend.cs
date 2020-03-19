@@ -4,7 +4,7 @@ using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy
 {
-    public class Trend : Retrieve
+    public class Trend
     {
         public Trend(Specify specify)
         {
@@ -12,7 +12,7 @@ namespace ShareInvest.Strategy
             Short = new Stack<double>(512);
             Long = new Stack<double>(512);
 
-            foreach (Chart chart in Chart)
+            foreach (Chart chart in Retrieve.Chart)
                 Analysize(chart);
         }
         protected Stack<double> Short

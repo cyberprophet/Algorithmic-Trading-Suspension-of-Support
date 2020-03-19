@@ -75,9 +75,9 @@ namespace ShareInvest.XingAPI
             Process.Start("shutdown.exe", "-r");
             Send?.Invoke(this, new NotifyIconText((char)69));
         }
-        public void Dispose(byte reset)
+        public void Dispose(bool reset)
         {
-            if (DateTime.Now.Hour > 16 && reset > 0 && reset < 6)
+            if (reset)
                 XingAPI = null;
         }
         public FormWindowState SendNotifyIconText(int number)

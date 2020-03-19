@@ -7,12 +7,12 @@ namespace ShareInvest.Strategy
 {
     public class Analysis : CallUpGoblinBat
     {
-        public Analysis(Specify specify)
+        public Analysis(Specify specify, char initial) : base(initial)
         {
             this.specify = specify;
             Short = new Stack<double>(512);
             Long = new Stack<double>(512);
-            info = new Information();
+            info = new Information(initial);
         }
         private void Analysize(Chart ch)
         {

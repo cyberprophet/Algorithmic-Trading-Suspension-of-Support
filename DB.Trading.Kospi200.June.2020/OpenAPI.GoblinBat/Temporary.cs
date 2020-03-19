@@ -8,13 +8,14 @@ namespace ShareInvest.OpenAPI
 {
     public class Temporary : CallUp
     {
-        public Temporary(ConnectAPI api, Queue<string> quotes)
+        public Temporary(ConnectAPI api, Queue<string> quotes, char initial) : base(initial)
         {
+            this.initial = initial;
             this.quotes = quotes;
             api.SendQuotes += OnReceiveMemorize;
             api.SendDatum += OnReceiveMemorize;
         }
-        internal Temporary(ConnectAPI api)
+        private Temporary(ConnectAPI api, char initial) : base(initial)
         {
             Temp = new StringBuilder(1024);
             api.SendMemorize += OnReceiveMemorize;
@@ -23,6 +24,7 @@ namespace ShareInvest.OpenAPI
         {
             api.SendQuotes -= OnReceiveMemorize;
             api.SendDatum -= OnReceiveMemorize;
+            new Temporary(api, initial);
         }
         internal void SetStorage(string code)
         {
@@ -31,14 +33,14 @@ namespace ShareInvest.OpenAPI
         private void OnReceiveMemorize(object sender, Datum e)
         {
             if (e.Time != null && e.Price > 0 && e.Volume != 0)
-                quotes.Enqueue(string.Concat(e.Time, ';', e.Price, '^', e.Volume));
+                quotes.Enqueue(string.Concat(e.Time, ';', e.Price, ',', e.Volume));
         }
         private void OnReceiveMemorize(object sender, Quotes e)
         {
             if (e.Total.Equals(string.Empty) == false && int.TryParse(e.Time.Substring(0, 4), out int time) && time < 1535 && time > 859 && e.Price[4] > 0 && e.Price[5] > 0)
             {
                 var total = e.Total.Split(';');
-                quotes.Enqueue(string.Concat(e.Time, ';', e.Price[4], '^', e.Quantity[4], '^', total[0], '*', e.Price[5], '^', e.Quantity[5], '^', total[1]));
+                quotes.Enqueue(string.Concat(e.Time, ';', e.Price[4], ',', e.Quantity[4], ',', total[0], ',', e.Price[5], ',', e.Quantity[5], ',', total[1]));
             }
         }
         private void OnReceiveMemorize(object sender, Memorize e)
@@ -59,5 +61,6 @@ namespace ShareInvest.OpenAPI
             get; set;
         }
         private readonly Queue<string> quotes;
+        private readonly char initial;
     }
 }

@@ -9,7 +9,7 @@ namespace ShareInvest.Strategy.XingAPI
     {
         public Trading(IEvents<Datum> xing, Specify specify) : base(specify)
         {
-            foreach (Catalog.XingAPI.Quotes quotes in Quotes)
+            foreach (Catalog.XingAPI.Quotes quotes in Retrieve.Quotes)
                 if (quotes.Price != null)
                     Analysize(new Chart
                     {

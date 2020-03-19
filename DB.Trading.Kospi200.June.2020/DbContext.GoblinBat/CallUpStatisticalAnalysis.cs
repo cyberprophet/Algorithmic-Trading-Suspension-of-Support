@@ -8,6 +8,10 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
     {
+        protected CallUpStatisticalAnalysis(char initial) : base(initial)
+        {
+            this.initial = initial;
+        }
         protected Queue<Quotes> GetQuotes(string code)
         {
             var chart = new Queue<Quotes>();
@@ -16,7 +20,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 try
                 {
-                    using (var db = new GoblinBatDbContext())
+                    using (var db = new GoblinBatDbContext(initial))
                     {
                         var tick = db.Quotes.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
                         {
@@ -67,5 +71,6 @@ namespace ShareInvest.GoblinBatContext
             }
             return chart;
         }
+        private readonly char initial;
     }
 }

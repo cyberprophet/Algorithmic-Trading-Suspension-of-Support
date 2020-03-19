@@ -7,6 +7,10 @@ namespace ShareInvest.Strategy
 {
     internal partial class Information : CallUpGoblinBat
     {
+        internal Information(char initial) : base(initial)
+        {
+
+        }
         internal void Operate(Chart ch, int quantity)
         {
             if (quantity != 0)

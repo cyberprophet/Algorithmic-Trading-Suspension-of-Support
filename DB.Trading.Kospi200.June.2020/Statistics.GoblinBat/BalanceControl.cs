@@ -14,7 +14,7 @@ namespace ShareInvest.GoblinBatControls
             InitializeComponent();
             balGrid.ColumnCount = 7;
             balGrid.BackgroundColor = Color.FromArgb(121, 133, 130);
-
+            
             for (int i = 0; i < columns.Length; i++)
                 balGrid.Columns[i].Name = columns[i];
         }

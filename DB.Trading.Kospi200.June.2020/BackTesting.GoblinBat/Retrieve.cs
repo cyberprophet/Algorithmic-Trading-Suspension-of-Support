@@ -7,6 +7,10 @@ namespace ShareInvest.Strategy
 {
     public partial class Retrieve : CallUpStatisticalAnalysis
     {
+        public Retrieve(char initial) : base(initial)
+        {
+
+        }
         public void SetInitialzeTheCode(string code)
         {
             if (Chart == null && Quotes == null)

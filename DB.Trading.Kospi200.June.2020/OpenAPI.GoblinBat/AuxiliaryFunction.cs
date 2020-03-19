@@ -9,6 +9,10 @@ namespace ShareInvest.OpenAPI
 {
     public class AuxiliaryFunction : CallUp
     {
+        protected AuxiliaryFunction(char initial) : base(initial)
+        {
+
+        }
         protected string GetDistinctDate(int usWeekNumber)
         {
             DayOfWeek dt = DateTime.Now.AddDays(1 - DateTime.Now.Day).DayOfWeek;
