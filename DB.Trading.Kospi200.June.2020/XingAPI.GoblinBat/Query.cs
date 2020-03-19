@@ -12,6 +12,39 @@ namespace ShareInvest.XingAPI
             ReceiveData += OnReceiveData;
             ReceiveMessage += OnReceiveMessage;
         }
+        protected Queue<InBlock> GetInBlocks(string[] order)
+        {
+            string block = string.Empty;
+            var queue = new Queue<InBlock>();
+            int i = 0;
+
+            foreach (var str in GetResData().Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (str.Contains(record) && str.Contains("InBlock"))
+                {
+                    block = str.Replace("*", string.Empty).Replace(record, string.Empty).Trim();
+
+                    continue;
+                }
+                else if (str.Contains(record) && str.Contains("OutBlock"))
+                    break;
+
+                else if (str.Contains(separator))
+                    continue;
+
+                var temp = str.Split(',');
+                queue.Enqueue(new InBlock
+                {
+                    Block = block,
+                    Field = temp[2],
+                    Occurs = 0,
+                    Data = order[i++]
+                });
+                if (order.Length == i)
+                    break;
+            }
+            return queue;
+        }
         protected Queue<InBlock> GetInBlocks(string name)
         {
             string block = string.Empty;

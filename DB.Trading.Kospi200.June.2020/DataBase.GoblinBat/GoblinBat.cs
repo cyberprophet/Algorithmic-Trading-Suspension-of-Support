@@ -297,7 +297,7 @@ namespace ShareInvest
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
                         while ((DateTime.Now.Minute == 49 && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17)) == false)
-                            if (TimerBox.Show("", "", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.OK))
+                            if (TimerBox.Show(secret.GetStrategy(string.Empty), secret.GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.OK))
                                 if (Statistical == null)
                                 {
                                     Quotes.Hide();
