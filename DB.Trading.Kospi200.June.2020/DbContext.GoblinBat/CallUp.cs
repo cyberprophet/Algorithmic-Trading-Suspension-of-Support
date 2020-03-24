@@ -5,6 +5,7 @@ using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Message;
@@ -306,19 +307,19 @@ namespace ShareInvest.GoblinBatContext
                 }
             }).Start();
         }
-        protected void SetStorage(string code, Queue<string> quotes)
+        protected void SetStorage(string code, StringBuilder sb)
         {
-            string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd");
+            string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd"), yesterday = DateTime.Now.AddDays(-1).ToString("yyMMdd");
             int count = 0;
             var external = initial.Equals((char)67);
             List<Quotes> model = new List<Quotes>();
             Queue<string> record = new Queue<string>();
 
-            while (quotes.Count > 0)
+            foreach (var str in sb.ToString().Split('*'))
             {
-                var temp = quotes.Dequeue().Split(';');
+                var temp = str.Split(';');
 
-                if (double.TryParse(temp[1].Split(',')[0], out double price) && price > 105.95)
+                if (temp[0].Length == 6 && double.TryParse(temp[1].Split(',')[0], out double price) && price > 105.95)
                 {
                     if (temp[0].Equals(onTime))
                         count++;
@@ -334,13 +335,13 @@ namespace ShareInvest.GoblinBatContext
                             model.Add(new Quotes
                             {
                                 Code = code,
-                                Date = string.Concat(date, onTime, count.ToString("D3")),
+                                Date = string.Concat(onTime.Substring(0, 1).Equals("0") ? date : yesterday, onTime, count.ToString("D3")),
                                 Contents = temp[1]
                             });
                             break;
 
                         case false:
-                            record.Enqueue(string.Concat(date, onTime, count.ToString("D3"), ",", temp[1]));
+                            record.Enqueue(string.Concat(onTime.Substring(0, 1).Equals("0") ? date : yesterday, onTime, count.ToString("D3"), ",", temp[1]));
                             break;
                     }
                 }

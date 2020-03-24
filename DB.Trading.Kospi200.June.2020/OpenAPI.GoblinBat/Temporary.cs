@@ -1,17 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Text;
-using ShareInvest.EventHandler.OpenAPI;
+﻿using System.Text;
 using ShareInvest.EventHandler;
+using ShareInvest.EventHandler.OpenAPI;
 using ShareInvest.GoblinBatContext;
 
 namespace ShareInvest.OpenAPI
 {
     public class Temporary : CallUp
     {
-        public Temporary(ConnectAPI api, Queue<string> quotes, char initial) : base(initial)
+        public Temporary(ConnectAPI api, StringBuilder sb, char initial) : base(initial)
         {
             this.initial = initial;
-            this.quotes = quotes;
+            Temp = sb;
             api.SendQuotes += OnReceiveMemorize;
             api.SendDatum += OnReceiveMemorize;
         }
@@ -28,19 +27,19 @@ namespace ShareInvest.OpenAPI
         }
         internal void SetStorage(string code)
         {
-            SetStorage(code, quotes);
+            SetStorage(code, Temp);
         }
         private void OnReceiveMemorize(object sender, Datum e)
         {
             if (e.Time != null && e.Price > 0 && e.Volume != 0)
-                quotes.Enqueue(string.Concat(e.Time, ';', e.Price, ',', e.Volume));
+                Temp.Append(e.Time).Append(';').Append(e.Price).Append(',').Append(e.Volume).Append('*');
         }
         private void OnReceiveMemorize(object sender, Quotes e)
         {
             if (e.Total.Equals(string.Empty) == false && int.TryParse(e.Time.Substring(0, 4), out int time) && time < 1535 && time > 859 && e.Price[4] > 0 && e.Price[5] > 0)
             {
                 var total = e.Total.Split(';');
-                quotes.Enqueue(string.Concat(e.Time, ';', e.Price[4], ',', e.Quantity[4], ',', total[0], ',', e.Price[5], ',', e.Quantity[5], ',', total[1]));
+                Temp.Append(e.Time).Append(';').Append(e.Price[4]).Append(',').Append(e.Quantity[4]).Append(',').Append(total[0]).Append(',').Append(e.Price[5]).Append(',').Append(e.Quantity[5]).Append(',').Append(total[1]).Append('*');
             }
         }
         private void OnReceiveMemorize(object sender, Memorize e)
@@ -60,7 +59,6 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        private readonly Queue<string> quotes;
         private readonly char initial;
     }
 }

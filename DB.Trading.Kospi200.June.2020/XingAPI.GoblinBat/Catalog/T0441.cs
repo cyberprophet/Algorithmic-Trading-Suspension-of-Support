@@ -40,7 +40,16 @@ namespace ShareInvest.XingAPI.Catalog
                 {
                     var param = sb.ToString().Split(';');
                     str += string.Concat(param[0], ';', API.CodeList[param[0]], ';', param[6], ';', param[2], ';', param[4], ';', param[9], ';', param[11], '*');
+
+                    if (param[0].Length == 8 && param[0].Substring(0, 3).Equals("101"))
+                    {
+                        API.Quantity = param[6].Equals("1") ? -int.Parse(param[2]) : int.Parse(param[2]);
+                        API.AvgPurchase = param[4];
+                    }
                 }
+                else if (API.Quantity == 0)
+                    API.AvgPurchase = "000.00";
+
             Send.Invoke(this, new Balance(str.Split('*')));
         }
         public void QueryExcute()

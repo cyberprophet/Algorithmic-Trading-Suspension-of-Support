@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ShareInvest.EventHandler.XingAPI
 {
     public class Quotes : EventArgs
     {
-        public Quotes(double[] price, int[] quantity, string[] temp)
+        public Quotes(double[] price, int[] quantity, string[] temp, Dictionary<string, double> so, Dictionary<string, double> bo)
         {
+            SellOrder = so;
+            BuyOrder = bo;
             Price = price;
             Quantity = quantity;
             Time = temp[5];
@@ -17,8 +20,10 @@ namespace ShareInvest.EventHandler.XingAPI
             if (int.TryParse(temp[1], out int buy))
                 Buy = buy;
         }
-        public Quotes(double[] price, string[] temp)
+        public Quotes(double[] price, string[] temp, Dictionary<string, double> so, Dictionary<string, double> bo)
         {
+            SellOrder = so;
+            BuyOrder = bo;
             Price = price;
             Time = temp[5];
             Code = temp[4];
@@ -28,6 +33,14 @@ namespace ShareInvest.EventHandler.XingAPI
 
             if (int.TryParse(temp[1], out int buy))
                 Buy = buy;
+        }
+        public Dictionary<string, double> SellOrder
+        {
+            get; private set;
+        }
+        public Dictionary<string, double> BuyOrder
+        {
+            get; private set;
         }
         public double[] Price
         {

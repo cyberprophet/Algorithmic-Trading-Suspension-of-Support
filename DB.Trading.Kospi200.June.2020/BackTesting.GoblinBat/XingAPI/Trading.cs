@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using ShareInvest.Catalog;
+using ShareInvest.Catalog.XingAPI;
 using ShareInvest.EventHandler.XingAPI;
 using ShareInvest.XingAPI;
 
@@ -7,7 +10,7 @@ namespace ShareInvest.Strategy.XingAPI
 {
     public class Trading : Trend
     {
-        public Trading(IEvents<Datum> xing, Specify specify) : base(specify)
+        public Trading(Specify specify) : base(specify)
         {
             foreach (Catalog.XingAPI.Quotes quotes in Retrieve.Quotes)
                 if (quotes.Price != null)
@@ -23,7 +26,7 @@ namespace ShareInvest.Strategy.XingAPI
             else
                 Check = string.Empty;
 
-            xing.Send += Analysize;
+            ((IEvents<Datum>)API.reals[1]).Send += Analysize;
         }
         protected ConnectAPI API
         {
@@ -31,6 +34,78 @@ namespace ShareInvest.Strategy.XingAPI
             {
                 return ConnectAPI.GetInstance();
             }
+        }
+        protected bool GetTickRevenue(string number)
+        {
+            if (API.Quantity > 0 && API.SellOrder.TryGetValue(number, out double sell) && sell == GetExactPrice())
+                return false;
+
+            else if (API.Quantity < 0 && API.BuyOrder.TryGetValue(number, out double buy) && buy == GetExactPrice())
+                return false;
+
+            return specify.Strategy.Equals(number) && API.Quantity != 0 && (API.Quantity > 0 ? API.SellOrder.Count > 0 : API.BuyOrder.Count > 0) ? false : true;
+        }
+        protected void SendNewOrder(string classification, double price)
+        {
+            API.OnReceiveBalance = false;
+            API.orders[0].QueryExcute(new Order
+            {
+                FnoIsuNo = ConnectAPI.Code,
+                BnsTpCode = classification,
+                FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.지정가).ToString("D2"),
+                OrdPrc = price.ToString("F2"),
+                OrdQty = "1"
+            });
+        }
+        protected void SendClearingOrder(double trend)
+        {
+            foreach (KeyValuePair<string, double> kv in trend > 0 ? API.SellOrder.OrderBy(o => o.Value) : API.BuyOrder.OrderByDescending(o => o.Value))
+                if (trend > 0 ? API.SellOrder.Remove(kv.Key) : API.BuyOrder.Remove(kv.Key))
+                {
+                    API.OnReceiveBalance = false;
+                    API.orders[2].QueryExcute(new Order
+                    {
+                        FnoIsuNo = ConnectAPI.Code,
+                        OrgOrdNo = kv.Key
+                    });
+                }
+        }
+        private void SetTrendFollowing(double max, double classification)
+        {
+            API.Difference = max - Math.Abs(API.Quantity) - (classification > 0 ? API.BuyOrder.Count : API.SellOrder.Count);
+
+            if (API.Difference > 1)
+                API.Classification = classification > 0 ? "2" : "1";
+
+            else
+                API.Classification = string.Empty;
+        }
+        private void SetWindingUp(double classification)
+        {
+            API.WindingUp = Math.Abs(API.Quantity) - (classification > 0 ? API.BuyOrder.Count : API.SellOrder.Count);
+
+            if (API.WindingUp > 0 && classification > 0 && API.Quantity < 0 && API.Classification.Equals("2") == false)
+                API.WindingClass = "2";
+
+            else if (API.WindingUp > 0 && classification < 0 && API.Quantity > 0 && API.Classification.Equals("1") == false)
+                API.WindingClass = "1";
+
+            else
+                API.WindingClass = string.Empty;
+        }
+        private double GetExactPrice()
+        {
+            int tail = int.Parse(API.AvgPurchase.Substring(5, 1));
+            string definite = tail < 5 && tail > 0 ? string.Empty : API.AvgPurchase.Substring(5);
+
+            if (int.TryParse(definite, out int rest))
+            {
+                definite = rest == 0 || rest == 5 ? API.AvgPurchase.Substring(0, 5) : string.Concat(API.AvgPurchase.Substring(0, 5), "5");
+
+                return API.Quantity > 0 ? double.Parse(definite) + Const.ErrorRate : double.Parse(definite) - Const.ErrorRate;
+            }
+            else
+                return API.Quantity > 0 ? double.Parse(API.AvgPurchase.Substring(0, 5)) + Const.ErrorRate : double.Parse(API.AvgPurchase.Substring(0, 5)) - Const.ErrorRate;
         }
         private void Analysize(object sender, Datum e)
         {
@@ -46,6 +121,39 @@ namespace ShareInvest.Strategy.XingAPI
             Short.Push(popShort);
             Long.Push(popLong);
             API.Trend[specify.Strategy] = string.Concat(trend.ToString("F2"), " (", specify.Time == 1440 ? "Day" : Check, ")");
+
+            switch (specify.Strategy)
+            {
+                case "TF":
+                    SetTrendFollowing(specify.Assets / (specify.Code.Length == 8 ? e.Price * Const.TransactionMultiplier * Const.MarginRate : e.Price), trend);
+                    break;
+
+                case "WU":
+                    SetWindingUp(trend);
+
+                    if (API.Quantity != 0 && API.OnReceiveBalance && GetTickRevenue(specify.Strategy))
+                    {
+                        var price = GetExactPrice();
+
+                        if (API.Quantity > 0 ? price > e.Price : price < e.Price)
+                            SendNewOrder(API.Quantity > 0 ? "1" : "2", price);
+                    }
+                    break;
+            }
+            if (GetTrend(trend.ToString()))
+                SendClearingOrder(trend);
+
+            if (specify.Reaction > 0)
+            {
+                API.Volume += e.Volume;
+
+                if (API.OnReceiveBalance && (trend > 0 ? API.BuyOrder.Count == 0 : API.SellOrder.Count == 0) && GetJudgeTheReaction(trend, e.Price) && GetJudgeTheReaction(API.Volume, trend))
+                {
+                    var price = e.Price + (trend > 0 ? -Const.ErrorRate : Const.ErrorRate);
+                    SendNewOrder(trend > 0 ? "2" : "1", price);
+                    API.Volume = 0;
+                }
+            }
         }
         private bool GetCheckOnTimeByAPI(string time)
         {
@@ -66,6 +174,40 @@ namespace ShareInvest.Strategy.XingAPI
                 return OnTime = false;
             }
             return true;
+        }
+        private bool GetTrend(string trend)
+        {
+            int check = trend.Contains("-") ? -1 : 1;
+
+            if (check == Trend)
+                return false;
+
+            Trend = check;
+
+            return true;
+        }
+        private bool GetJudgeTheReaction(double trend, double price)
+        {
+            var max = specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate);
+
+            if (trend > 0)
+                return max - API.Quantity - API.BuyOrder.Count > 1;
+
+            else if (trend < 0)
+                return max + API.Quantity - API.SellOrder.Count > 1;
+
+            return false;
+        }
+        private bool GetJudgeTheReaction(int volume, double trend)
+        {
+            if (trend < 0 && specify.Reaction < volume || trend > 0 && -specify.Reaction > volume)
+                return true;
+
+            return false;
+        }
+        private int Trend
+        {
+            get; set;
         }
         private EMA EMA
         {

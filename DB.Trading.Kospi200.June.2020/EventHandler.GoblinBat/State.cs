@@ -2,7 +2,7 @@
 
 namespace ShareInvest.EventHandler
 {
-    public class OpenState : EventArgs
+    public class State : EventArgs
     {
         public bool OnReceive
         {
@@ -24,13 +24,21 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public OpenState(bool receive, int sell, int quantity, int buy, uint number)
+        public State(bool receive, int sell, int quantity, int buy, uint number)
         {
             OnReceive = receive;
             SellOrderCount = sell.ToString();
             Quantity = quantity.ToString();
             BuyOrderCount = buy.ToString();
             ScreenNumber = number.ToString();
+        }
+        public State(bool receive, int sell, int quantity, int buy, string avg)
+        {
+            OnReceive = receive;
+            SellOrderCount = sell.ToString();
+            Quantity = quantity.ToString();
+            BuyOrderCount = buy.ToString();
+            ScreenNumber = avg.ToString();
         }
     }
 }

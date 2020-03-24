@@ -43,7 +43,7 @@ namespace ShareInvest.XingAPI.Catalog
                 if (str.Equals(string.Empty) == false && index < 6)
                     time[index++] = str;
             }
-            Send?.Invoke(this, new Quotes(price, time));
+            Send?.Invoke(this, new Quotes(price, time, API.SellOrder, API.BuyOrder));
         }
         public void OnReceiveRealTime(string code)
         {

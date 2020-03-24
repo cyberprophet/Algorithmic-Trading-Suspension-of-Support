@@ -17,7 +17,7 @@ namespace ShareInvest.GoblinBatControls
             stateBuy.ForeColor = Color.Crimson;
             stack = new Stack<Color>();
         }
-        public void OnReceiveState(object sender, OpenState e)
+        public void OnReceiveState(object sender, State e)
         {
             BeginInvoke(new Action(() =>
             {
@@ -81,6 +81,27 @@ namespace ShareInvest.GoblinBatControls
 
                     if (temp.Text.Equals(param) == false)
                         temp.Text = param;
+
+                    if (e.SellOrder != null && i < 5 && e.SellOrder.ContainsValue(e.Price[i]))
+                    {
+                        var number = int.Parse(e.SellOrder.First(o => o.Value == e.Price[i]).Key).ToString();
+
+                        if (temporary.Text.Equals(number))
+                            continue;
+
+                        temporary.Text = number;
+                    }
+                    else if (e.BuyOrder != null && i > 4 && e.BuyOrder.ContainsValue(e.Price[i]))
+                    {
+                        var number = int.Parse(e.BuyOrder.First(o => o.Value == e.Price[i]).Key).ToString();
+
+                        if (temporary.Text.Equals(number))
+                            continue;
+
+                        temporary.Text = number;
+                    }
+                    else
+                        temporary.Text = string.Empty;
                 }
                 Application.DoEvents();
             }));

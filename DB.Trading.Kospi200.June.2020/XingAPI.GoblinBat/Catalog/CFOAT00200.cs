@@ -5,7 +5,7 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class CFOAT00200 : Query, IOrders, IMessage<NotifyIconText>
+    internal class CFOAT00200 : Query, IOrders, IMessage<NotifyIconText>, IStates<State>
     {
         internal CFOAT00200() : base()
         {
@@ -28,8 +28,7 @@ namespace ShareInvest.XingAPI.Catalog
                 for (int i = 0; i < GetBlockCount(param.Block); i++)
                     temp[temp.Length - enumerable.Count - 1] = GetFieldData(param.Block, param.Field, i);
             }
-            for (int i = 0; i < temp.Length; i++)
-                Console.WriteLine(i + "\t" + temp[i]);
+            SendState?.Invoke(this, new State(API.OnReceiveBalance, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase));
         }
         public void QueryExcute(Order order)
         {
@@ -45,5 +44,6 @@ namespace ShareInvest.XingAPI.Catalog
             }
         }
         public event EventHandler<NotifyIconText> SendMessage;
+        public event EventHandler<State> SendState;
     }
 }

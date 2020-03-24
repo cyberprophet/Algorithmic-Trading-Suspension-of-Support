@@ -27,21 +27,61 @@ namespace ShareInvest.XingAPI
         {
             return XingAPI;
         }
+        public static string Code
+        {
+            get; private set;
+        }
+        public Dictionary<string, double> BuyOrder
+        {
+            get; private set;
+        }
+        public Dictionary<string, double> SellOrder
+        {
+            get; private set;
+        }
+        public Dictionary<string, string> Trend
+        {
+            get; set;
+        }
+        public Dictionary<string, string> CodeList
+        {
+            get; internal set;
+        }
         public int Volume
         {
             get; set;
+        }
+        public int Quantity
+        {
+            get; internal set;
         }
         public bool OnReceiveBalance
         {
             get; set;
         }
-        public static string Code
+        public double WindingUp
         {
-            get; private set;
+            get; set;
+        }
+        public double Difference
+        {
+            get; set;
         }
         public string[] Accounts
         {
             get; private set;
+        }
+        public string AvgPurchase
+        {
+            get; internal set;
+        }
+        public string WindingClass
+        {
+            get; set;
+        }
+        public string Classification
+        {
+            get; set;
         }
         public string DetailName
         {
@@ -50,26 +90,6 @@ namespace ShareInvest.XingAPI
                 return GetAcctDetailName(Accounts.Length == 1 ? Accounts[0] : Array.Find(Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
             }
         }
-        public readonly IReals[] real = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IReals[]
-        {
-            new FH0(),
-            new FC0(),
-            new JIF()
-        } : new IReals[]
-        {
-            new NH0(),
-            new NC0(),
-            new JIF()
-        };
-        public readonly IQuerys[] query = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IQuerys[]
-        {
-            new CFOBQ10500(),
-            new T0441(),
-        } : new IQuerys[]
-        {
-            new CCEBQ10500(),
-            new CCEAQ50600()
-        };
         public void Dispose()
         {
             Process.Start("shutdown.exe", "-r");
@@ -86,14 +106,43 @@ namespace ShareInvest.XingAPI
 
             return FormWindowState.Minimized;
         }
-        public Dictionary<string, string> Trend
+        public readonly IReals[] reals = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IReals[]
         {
-            get; set;
-        }
-        public Dictionary<string, string> CodeList
+            new FH0(),
+            new FC0(),
+            new JIF(),
+            new O01(),
+            new C01(),
+            new H01()
+        } : new IReals[]
         {
-            get; internal set;
-        }
+            new NH0(),
+            new NC0(),
+            new JIF(),
+            new CM0(),
+            new CM1(),
+            new CM2()
+        };
+        public readonly IQuerys[] querys = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IQuerys[]
+        {
+            new CFOBQ10500(),
+            new T0441()
+        } : new IQuerys[]
+        {
+            new CCEBQ10500(),
+            new CCEAQ50600()
+        };
+        public readonly IOrders[] orders = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IOrders[]
+        {
+            new CFOAT00100(),
+            new CFOAT00200(),
+            new CFOAT00300()
+        } : new IOrders[]
+        {
+            new CCEAT00100(),
+            new CCEAT00200(),
+            new CCEAT00300()
+        };
         private void OnEventConnect(string szCode, string szMsg)
         {
             if (secret.Code.Equals(szCode) && IsConnected() && secret.Success.Equals(szMsg))
@@ -125,6 +174,8 @@ namespace ShareInvest.XingAPI
                 Environment.Exit(0);
             }
             Trend = new Dictionary<string, string>();
+            SellOrder = new Dictionary<string, double>();
+            BuyOrder = new Dictionary<string, double>();
         }
         private static ConnectAPI XingAPI
         {

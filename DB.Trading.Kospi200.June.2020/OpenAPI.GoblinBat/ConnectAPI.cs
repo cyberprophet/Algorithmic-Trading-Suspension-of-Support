@@ -195,7 +195,7 @@ namespace ShareInvest.OpenAPI
                 if (e.sMsg.Last().Equals('다') || e.sMsg.Last().Equals('요'))
                     temp = string.Concat(temp, ".");
 
-                SendState?.Invoke(this, new OpenState(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
+                SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                 SendCount?.Invoke(this, new NotifyIconText(temp));
 
                 return;
@@ -257,7 +257,7 @@ namespace ShareInvest.OpenAPI
 
                                 break;
                         }
-                        SendState?.Invoke(this, new OpenState(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
+                        SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     }
                     return;
 
@@ -270,7 +270,7 @@ namespace ShareInvest.OpenAPI
                         Quantity = param[9].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
                         AvgPurchase = param[5];
                         OnReceiveBalance = request.QueueCount == 0 ? true : false;
-                        SendState?.Invoke(this, new OpenState(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
+                        SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     }
                     return;
             };
@@ -497,11 +497,11 @@ namespace ShareInvest.OpenAPI
                         else if (e.sScrNo.Substring(0, 1).Equals("2"))
                             BuyOrder[str.ToString().Split(';')[0]] = double.Parse(e.sRQName.Split(';')[0]);
                     }
-                    SendState?.Invoke(this, new OpenState(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
+                    SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     return;
 
                 case 9:
-                    SendState?.Invoke(this, new OpenState(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
+                    SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     return;
 
                 case 10:
@@ -832,7 +832,7 @@ namespace ShareInvest.OpenAPI
         public event EventHandler<Deposit> SendDeposit;
         public event EventHandler<Balance> SendBalance;
         public event EventHandler<Current> SendCurrent;
-        public event EventHandler<OpenState> SendState;
+        public event EventHandler<State> SendState;
         public event EventHandler<Trends> SendTrend;
     }
 }
