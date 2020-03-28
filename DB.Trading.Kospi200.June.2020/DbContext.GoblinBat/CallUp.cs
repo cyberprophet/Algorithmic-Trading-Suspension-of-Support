@@ -15,32 +15,17 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUp
     {
-        protected CallUp(char initial)
+        protected CallUp(string key)
         {
-            this.initial = initial;
-        }
-        protected string GetStrategy()
-        {
-            try
-            {
-                using (var db = new GoblinBatDbContext(initial))
-                {
-                    return db.Codes.First(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
-                }
-            }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace);
-            }
-            return string.Empty;
-        }
+            this.key = key;
+        }       
         protected List<string> RequestCodeList(List<string> list)
         {
             string code = string.Empty;
 
             try
             {
-                using (var db = new GoblinBatDbContext(initial))
+                using (var db = new GoblinBatDbContext(key))
                 {
                     foreach (var temp in db.Codes.Select(o => new
                     {
@@ -92,7 +77,7 @@ namespace ShareInvest.GoblinBatContext
             }
             catch (Exception ex)
             {
-                using (var db = new GoblinBatDbContext(initial))
+                using (var db = new GoblinBatDbContext(key))
                 {
                     var stocks = db.Stocks.Where(o => o.Code.Equals(code));
 
@@ -107,7 +92,7 @@ namespace ShareInvest.GoblinBatContext
         {
             try
             {
-                using (var db = new GoblinBatDbContext(initial))
+                using (var db = new GoblinBatDbContext(key))
                 {
                     foreach (var temp in db.Codes.Select(o => new
                     {
@@ -130,7 +115,7 @@ namespace ShareInvest.GoblinBatContext
 
             try
             {
-                using (var db = new GoblinBatDbContext(initial))
+                using (var db = new GoblinBatDbContext(key))
                 {
                     switch (param)
                     {
@@ -169,7 +154,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 try
                 {
-                    using (var db = new GoblinBatDbContext(initial))
+                    using (var db = new GoblinBatDbContext(key))
                     {
                         if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
                             return;
@@ -262,7 +247,7 @@ namespace ShareInvest.GoblinBatContext
                                 Volume = int.Parse(temp[2])
                             });
                     }
-                    using (var db = new GoblinBatDbContext(initial))
+                    using (var db = new GoblinBatDbContext(key))
                     {
                         db.Configuration.AutoDetectChangesEnabled = true;
 
@@ -311,48 +296,62 @@ namespace ShareInvest.GoblinBatContext
         {
             string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd"), yesterday = DateTime.Now.AddDays(-1).ToString("yyMMdd");
             int count = 0;
-            var external = initial.Equals((char)67);
-            List<Quotes> model = new List<Quotes>();
-            Queue<string> record = new Queue<string>();
+            var external = new Secret().GetTrustedConnection(key);
+            var dic = new Dictionary<string, string>();
+            var model = new List<Quotes>();
+            var record = new Queue<string>();
 
             foreach (var str in sb.ToString().Split('*'))
-            {
-                var temp = str.Split(';');
-
-                if (temp[0].Length == 6 && double.TryParse(temp[1].Split(',')[0], out double price) && price > 105.95)
+                if (str.Length > 0)
                 {
-                    if (temp[0].Equals(onTime))
-                        count++;
+                    var temp = str.Split(';');
 
-                    else
+                    if (temp[0].Length == 6 && double.TryParse(temp[1].Split(',')[0], out double price) && price > 105.95)
                     {
-                        onTime = temp[0];
-                        count = 0;
-                    }
-                    switch (external)
-                    {
-                        case true:
-                            model.Add(new Quotes
+                        if (temp[0].Equals(onTime))
+                            count++;
+
+                        else
+                        {
+                            onTime = temp[0];
+                            count = 0;
+                        }
+                        if (uint.TryParse(onTime, out uint today))
+                        {
+                            var time = string.Concat(today > 175959 ? yesterday : date, onTime, count.ToString("D3"));
+
+                            if (dic.ContainsKey(time) && ulong.TryParse(time, out ulong relate))
                             {
-                                Code = code,
-                                Date = string.Concat(onTime.Substring(0, 1).Equals("0") ? date : yesterday, onTime, count.ToString("D3")),
-                                Contents = temp[1]
-                            });
-                            break;
+                                foreach (var kv in dic.OrderBy(o => o.Key))
+                                    if (time.Substring(0, 12).Equals(kv.Key.Substring(0, 12)))
+                                        relate += 1;
 
-                        case false:
-                            record.Enqueue(string.Concat(onTime.Substring(0, 1).Equals("0") ? date : yesterday, onTime, count.ToString("D3"), ",", temp[1]));
-                            break;
+                                dic[relate.ToString()] = temp[1];
+                                count = 0;
+
+                                continue;
+                            }
+                            dic[time] = temp[1];
+                        }
                     }
                 }
-            }
             switch (external)
             {
                 case true:
+                    foreach (var kv in dic)
+                        model.Add(new Quotes
+                        {
+                            Code = code,
+                            Date = kv.Key,
+                            Contents = kv.Value
+                        });
                     SetStorage(model);
                     return;
 
                 case false:
+                    foreach (var kv in dic.OrderBy(o => o.Key))
+                        record.Enqueue(string.Concat(kv.Key, ",", kv.Value));
+
                     SetRecord(code, record);
                     return;
             }
@@ -361,7 +360,7 @@ namespace ShareInvest.GoblinBatContext
         {
             try
             {
-                using (var db = new GoblinBatDbContext(initial))
+                using (var db = new GoblinBatDbContext(key))
                 {
                     db.Configuration.AutoDetectChangesEnabled = true;
                     db.BulkInsert(model, o =>
@@ -390,21 +389,23 @@ namespace ShareInvest.GoblinBatContext
                 if (directory.Exists == false)
                     directory.Create();
 
-                using (var sw = new StreamWriter(string.Concat(path, piece, DateTime.Now.ToString(date), extension), true))
-                {
+                using (var sw = new StreamWriter(Path.Combine(path, string.Concat(DateTime.Now.ToString(date), extension)), true))
                     while (model.Count > 0)
-                        sw.WriteLine(model.Dequeue());
-                }
+                    {
+                        var str = model.Dequeue();
+
+                        if (str.Length > 0)
+                            sw.WriteLine(str);
+                    }
             }
             catch (Exception ex)
             {
                 new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
             }
         }
+        private readonly string key;
         private const string extension = ".csv";
         private const string date = "yyMMdd";
-        private const string piece = @"\";
-        private readonly char initial;
         private const string q3 = "101Q3000";
     }
 }

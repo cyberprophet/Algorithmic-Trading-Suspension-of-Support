@@ -7,14 +7,14 @@ namespace ShareInvest.OpenAPI
 {
     public class Temporary : CallUp
     {
-        public Temporary(ConnectAPI api, StringBuilder sb, char initial) : base(initial)
+        public Temporary(ConnectAPI api, StringBuilder sb, string key) : base(key)
         {
-            this.initial = initial;
+            this.key = key;
             Temp = sb;
             api.SendQuotes += OnReceiveMemorize;
             api.SendDatum += OnReceiveMemorize;
         }
-        private Temporary(ConnectAPI api, char initial) : base(initial)
+        private Temporary(ConnectAPI api, string key) : base(key)
         {
             Temp = new StringBuilder(1024);
             api.SendMemorize += OnReceiveMemorize;
@@ -23,7 +23,7 @@ namespace ShareInvest.OpenAPI
         {
             api.SendQuotes -= OnReceiveMemorize;
             api.SendDatum -= OnReceiveMemorize;
-            new Temporary(api, initial);
+            new Temporary(api, key);
         }
         internal void SetStorage(string code)
         {
@@ -36,7 +36,7 @@ namespace ShareInvest.OpenAPI
         }
         private void OnReceiveMemorize(object sender, Quotes e)
         {
-            if (e.Total.Equals(string.Empty) == false && int.TryParse(e.Time.Substring(0, 4), out int time) && time < 1535 && time > 859 && e.Price[4] > 0 && e.Price[5] > 0)
+            if (e.Total.Equals(string.Empty) == false && int.TryParse(e.Time.Substring(0, 4), out int time) && (time == 1545 || time < 1535) && time > 859 && e.Price[4] > 0 && e.Price[5] > 0)
             {
                 var total = e.Total.Split(';');
                 Temp.Append(e.Time).Append(';').Append(e.Price[4]).Append(',').Append(e.Quantity[4]).Append(',').Append(total[0]).Append(',').Append(e.Price[5]).Append(',').Append(e.Quantity[5]).Append(',').Append(total[1]).Append('*');
@@ -59,6 +59,6 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        private readonly char initial;
+        private readonly string key;
     }
 }

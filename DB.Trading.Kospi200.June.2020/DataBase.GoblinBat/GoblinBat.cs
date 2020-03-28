@@ -10,6 +10,7 @@ using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatControls;
 using ShareInvest.Message;
+using ShareInvest.Verify;
 
 namespace ShareInvest
 {
@@ -21,14 +22,13 @@ namespace ShareInvest
             this.secret = secret;
             InitializeComponent();
             Opacity = 0;
-            Open = OpenAPI.ConnectAPI.GetInstance(initial);
+            Open = OpenAPI.ConnectAPI.GetInstance(KeyDecoder.GetWindowsProductKeyFromRegistry());
             Open.SetAPI(axAPI);
             Open.SendCount += OnReceiveNotifyIcon;
 
             switch (initial)
             {
                 case collecting:
-                case backTesting:
                 case trading:
                     if (Quotes == null)
                     {
@@ -39,7 +39,7 @@ namespace ShareInvest
                         strip.ItemClicked += OnItemClick;
                     }
                     Open.SendQuotes += Quotes.OnReceiveQuotes;
-                    Open.StartProgress(new OpenAPI.Temporary(Open, new StringBuilder(1024), initial));
+                    Open.StartProgress(new OpenAPI.Temporary(Open, new StringBuilder(1024), KeyDecoder.GetWindowsProductKeyFromRegistry()));
                     Size = new Size(5, 5);
                     break;
 
@@ -52,19 +52,19 @@ namespace ShareInvest
         }
         private void OnReceiveItem(string item)
         {
-            var connect = Array.Exists(XingConnect, o => o.Equals(initial));
-
             switch (item)
             {
                 case quo:
-                    switch (connect)
+                    switch (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
                         case true:
                             if (Xing != null)
                             {
                                 foreach (var ctor in Xing.orders)
                                 {
-                                    ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
+                                    if (initial.Equals(trading))
+                                        ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
+
                                     ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                                 }
                                 for (int i = 0; i < Xing.reals.Length; i++)
@@ -75,7 +75,9 @@ namespace ShareInvest
                                             continue;
 
                                         case 1:
-                                            ((ITrends<Trends>)Xing.reals[i]).SendTrend += Quotes.OnReceiveTrend;
+                                            if (initial.Equals(trading))
+                                                ((ITrends<Trends>)Xing.reals[i]).SendTrend += Quotes.OnReceiveTrend;
+
                                             continue;
 
                                         case 2:
@@ -83,7 +85,9 @@ namespace ShareInvest
                                             continue;
 
                                         default:
-                                            ((IStates<State>)Xing.reals[i]).SendState += Quotes.OnReceiveState;
+                                            if (initial.Equals(trading))
+                                                ((IStates<State>)Xing.reals[i]).SendState += Quotes.OnReceiveState;
+
                                             continue;
                                     }
                                 Xing.OnReceiveBalance = true;
@@ -107,7 +111,7 @@ namespace ShareInvest
                     return;
 
                 case st:
-                    if (Xing != null && connect)
+                    if (Xing != null && Array.Exists(XingConnect, o => o.Equals(initial)))
                         Text = Xing.GetAccountName(Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
 
                     Size = new Size(775, 375);
@@ -115,7 +119,7 @@ namespace ShareInvest
                     break;
 
                 case acc:
-                    switch (connect)
+                    switch (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
                         case true:
                             if (Xing != null)
@@ -138,7 +142,7 @@ namespace ShareInvest
                     break;
 
                 case bal:
-                    switch (connect)
+                    switch (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
                         case true:
                             if (Xing != null)
@@ -191,11 +195,7 @@ namespace ShareInvest
             Size = new Size(Server ? 591 : (connect ? 604 : 599), e.ReSize + 34);
             Balance.Show();
 
-            if (connect)
-            {
-
-            }
-            else
+            if (connect == false)
                 Open.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
         }
         private void OnReceiveNotifyIcon(object sender, NotifyIconText e)
@@ -205,7 +205,7 @@ namespace ShareInvest
                 case dic:
                     var temp = (Dictionary<int, string>)e.NotifyIcon;
 
-                    if (temp.ContainsKey(0))
+                    if (temp.TryGetValue(0, out string code))
                     {
                         notifyIcon.Text = checkDataBase;
                         Open.StartProgress(3605);
@@ -248,7 +248,7 @@ namespace ShareInvest
                             panel.Controls.Add(Statistical);
                             Statistical.Dock = DockStyle.Fill;
                         }
-                        var chart = Retrieve.GetInstance(initial, Open.Code).Chart;
+                        var chart = Retrieve.GetInstance(KeyDecoder.GetWindowsProductKeyFromRegistry(), Open.Code).Chart;
                         var check = e.NotifyIcon.ToString().Split((char)59);
                         Acc = new string[check.Length - 3];
                         Server = check[check.Length - 1].Equals(secret.Mock);
@@ -312,35 +312,21 @@ namespace ShareInvest
                     BeginInvoke(new Action(() => Quotes.OnReceiveOrderMsg(e.NotifyIcon.ToString())));
                     return;
 
-                case boolean:
-                    WindowState = FormWindowState.Minimized;
-                    WorkOnTheDeadLine(e.NotifyIcon);
-                    break;
-
                 case bt:
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
-                    {
-                        while ((DateTime.Now.Minute == 49 && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17)) == false)
-                            if (TimerBox.Show(secret.GetStrategy(string.Empty), secret.GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.OK))
-                                break;
-
                         BeginInvoke(new Action(() =>
                         {
+                            if (initial.Equals(trading))
+                            {
+                               
+                            }
                             Xing = XingAPI.ConnectAPI.GetInstance(Open.Code);
                             Xing.Send += OnReceiveNotifyIcon;
-                            Task = new Task(() =>
-                            {
-                                var retrieve = new Strategy.Retrieve(initial);
-                                retrieve.SetInitializeTheChart();
-                                retrieve.SetInitialzeTheCode(Open.Code);
-                            });
-                            Task.Start();
                             notifyIcon.Text = string.Concat("Trading Code_", Open.Code);
                             OnEventConnect();
                             OnClickMinimized = quo;
                             Application.DoEvents();
                         }));
-                    }
                     else
                     {
                         Account.Show();
@@ -357,8 +343,11 @@ namespace ShareInvest
                 case int32:
                     if ((int)e.NotifyIcon < 0)
                     {
-                        WindowState = FormWindowState.Minimized;
-                        WorkOnTheDeadLine(e.NotifyIcon);
+                        if (Temporary != null)
+                            Temporary.SetStorage(Open.Code);
+
+                        Process.Start("shutdown.exe", "-r");
+                        Dispose();
                     }
                     else
                     {
@@ -392,29 +381,20 @@ namespace ShareInvest
 
                         case (char)41:
                             if (Temporary != null)
-                                new Task(() => Temporary.SetStorage(Open.Code)).Start();
-
+                            {
+                                Temporary.SetStorage(Open.Code);
+                                Temporary = null;
+                            }
                             break;
 
                         default:
                             return;
                     }
                     break;
+
+                case boolean:
+                    break;
             };
-        }
-        private void WorkOnTheDeadLine(object param)
-        {
-            if (param.GetType().Name.Equals(int32))
-            {
-                Open.Dispose(true);
-                Open = null;
-                axAPI.Dispose();
-            }
-            timer.Interval = 10000;
-            timer.Start();
-            Xing.DisconnectServer();
-            Xing.Dispose(true);
-            Xing = null;
         }
         private void OnEventConnect()
         {
@@ -462,13 +442,17 @@ namespace ShareInvest
                 {
                     case fc0:
                     case nc0:
-                        ((ITrends<Trends>)ctor).SendTrend += Quotes.OnReceiveTrend;
+                        if (initial.Equals(trading))
+                            ((ITrends<Trends>)ctor).SendTrend += Quotes.OnReceiveTrend;
+
+                        ctor.OnReceiveRealTime(Open.Code);
                         break;
 
                     case fh0:
                     case nh0:
                         Open.SendQuotes -= Quotes.OnReceiveQuotes;
                         ((IEvents<EventHandler.XingAPI.Quotes>)ctor).Send += Quotes.OnReceiveQuotes;
+                        ctor.OnReceiveRealTime(Open.Code);
                         break;
 
                     case jif:
@@ -482,58 +466,66 @@ namespace ShareInvest
                                 panel.Controls.Add(Statistical);
                                 Statistical.Dock = DockStyle.Fill;
                             }
+                            ctor.OnReceiveRealTime(Open.Code);
                         }));
                         break;
 
                     default:
-                        ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
+                        if (initial.Equals(trading))
+                        {
+                            ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
+                            ctor.OnReceiveRealTime(Open.Code);
+                        }
                         break;
                 }
-                ctor.OnReceiveRealTime(Open.Code);
             }
-            foreach (var ctor in Xing.orders)
+            if (initial.Equals(trading))
             {
-                ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
-                ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
-            }
-            Task.Wait();
-            WindowState = Xing.SendNotifyIconText(notifyIcon.Text.Length * Open.Code.Length);
-            var strategy = new Catalog.Strategy
-            {
-                Assets = 17500000,
-                Code = Open.Code,
-                Contents = new Dictionary<string, string>()
+                foreach (var ctor in Xing.orders)
                 {
-                    {
-                        "DL",
-                        "1440;4;60;531"
-                    },
-                    {
-                        "WU",
-                        "15;4;60;0"
-                    },
-                    {
-                        "TF",
-                        "30;4;60;0"
-                    }
+                    ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
+                    ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
                 }
-            };
-            foreach (var kv in strategy.Contents)
-            {
-                var temp = kv.Value.Split(';');
-                new Task(() => new Strategy.XingAPI.Quotes(new Specify
+                Task.Wait();
+                var strategy = new Catalog.Strategy
                 {
-                    Assets = strategy.Assets,
-                    Code = strategy.Code,
-                    Strategy = kv.Key,
-                    Time = int.Parse(temp[0]),
-                    Short = int.Parse(temp[1]),
-                    Long = int.Parse(temp[2]),
-                    Reaction = int.Parse(temp[3])
-                })).Start();
+                    Assets = 17500000,
+                    Code = Open.Code,
+                    Contents = new Dictionary<string, string>()
+                    {
+                        {
+                            "DL",
+                            "1440;4;60;531"
+                        },
+                        {
+                            "WU",
+                            "15;4;60;0"
+                        },
+                        {
+                            "TF",
+                            "30;4;60;0"
+                        }
+                    }
+                };
+                foreach (var kv in strategy.Contents)
+                {
+                    var temp = kv.Value.Split(';');
+                    new Task(() => new Strategy.XingAPI.Quotes(new Specify
+                    {
+                        Assets = strategy.Assets,
+                        Code = strategy.Code,
+                        Strategy = kv.Key,
+                        Time = int.Parse(temp[0]),
+                        Short = int.Parse(temp[1]),
+                        Long = int.Parse(temp[2]),
+                        Reaction = int.Parse(temp[3])
+                    })).Start();
+                }
             }
-            if (DateTime.Now.Hour > 16)
-                Temporary = new XingAPI.Temporary(Xing.reals[0], Xing.reals[1], new StringBuilder(1024), initial);
+            WindowState = Xing.SendNotifyIconText((int)Math.Pow(Open.Code.Length, 4));
+
+            if (DateTime.Now.Hour > 16 && initial.Equals(collecting))
+                Temporary = new XingAPI.Temporary(Xing.reals[0], Xing.reals[1], new StringBuilder(1024), KeyDecoder.GetWindowsProductKeyFromRegistry());
         }
         private void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
@@ -552,24 +544,23 @@ namespace ShareInvest
             {
                 if (WindowState.Equals(FormWindowState.Minimized))
                 {
-                    var connect = Array.Exists(XingConnect, o => o.Equals(initial));
-
                     switch (OnClickMinimized)
                     {
                         case quo:
-                            if (connect)
+                            if (Array.Exists(XingConnect, o => o.Equals(initial)))
                             {
-                                foreach (var ctor in Xing.orders)
-                                {
-                                    ((IStates<State>)ctor).SendState -= Quotes.OnReceiveState;
-                                    ((IMessage<NotifyIconText>)ctor).SendMessage -= OnReceiveNotifyIcon;
-                                }
+                                if (initial.Equals(trading))
+                                    foreach (var ctor in Xing.orders)
+                                    {
+                                        ((IStates<State>)ctor).SendState -= Quotes.OnReceiveState;
+                                        ((IMessage<NotifyIconText>)ctor).SendMessage -= OnReceiveNotifyIcon;
+                                    }
                                 for (int i = 0; i < Xing.reals.Length; i++)
                                 {
                                     if (i == 2)
                                         continue;
 
-                                    if (i > 2)
+                                    if (i > 2 && initial.Equals(trading))
                                     {
                                         ((IStates<State>)Xing.reals[i]).SendState -= Quotes.OnReceiveState;
 
@@ -581,7 +572,7 @@ namespace ShareInvest
 
                                         continue;
                                     }
-                                    if (i == 1)
+                                    if (i == 1 && initial.Equals(trading))
                                     {
                                         ((ITrends<Trends>)Xing.reals[i]).SendTrend -= Quotes.OnReceiveTrend;
 
@@ -599,7 +590,7 @@ namespace ShareInvest
                             break;
 
                         case acc:
-                            if (connect)
+                            if (Array.Exists(XingConnect, o => o.Equals(initial)))
                             {
                                 var query = Xing.querys[0];
                                 ((IEvents<Deposit>)query).Send -= Account.OnReceiveDeposit;
@@ -612,7 +603,7 @@ namespace ShareInvest
                             break;
 
                         case bal:
-                            if (connect)
+                            if (Array.Exists(XingConnect, o => o.Equals(initial)))
                             {
                                 var query = Xing.querys[1];
                                 ((IEvents<Balance>)query).Send -= Balance.OnReceiveBalance;
@@ -642,18 +633,6 @@ namespace ShareInvest
                 }
             }));
         }
-        private void TimerTick(object sender, EventArgs e)
-        {
-            if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
-                timer.Stop();
-
-            else if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute == 35)
-            {
-                timer.Stop();
-                Process.Start("shutdown.exe", "-r");
-                Dispose();
-            }
-        }
         private char[] XingConnect
         {
             get
@@ -661,7 +640,6 @@ namespace ShareInvest
                 return new char[]
                 {
                     collecting,
-                    backTesting,
                     trading
                 };
             }
@@ -712,9 +690,8 @@ namespace ShareInvest
         }
         private readonly char initial;
         private readonly Secret secret;
-        private const char trading = (char)84;
-        private const char backTesting = (char)66;
-        private const char collecting = (char)67;
+        private const char trading = (char)Port.Trading;
+        private const char collecting = (char)Port.Collecting;
         private const string cfobq10500 = "CFOBQ10500";
         private const string ccebq10500 = "CCEBQ10500";
         private const string cceaq50600 = "CCEAQ50600";

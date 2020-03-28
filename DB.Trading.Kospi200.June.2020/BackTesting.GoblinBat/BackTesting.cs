@@ -8,11 +8,11 @@ namespace ShareInvest.Strategy
 {
     public class BackTesting : CallUpGoblinBat
     {
-        public BackTesting(char initial) : base(initial)
+        public BackTesting(string key) : base(key)
         {
 
         }
-        public BackTesting(long assets, char initial) : base(initial)
+        public BackTesting(long assets, string key) : base(key)
         {
             var list = new List<Specify>();
             int i, j;
@@ -37,9 +37,9 @@ namespace ShareInvest.Strategy
             new Action<Specify>(param =>
             {
                 if (GetRecentAnalysis(param) == false)
-                    new Analysis(param, initial);
+                    new Analysis(param, key);
             }));
-            new BackTesting(initial);
+            new BackTesting(key);
         }
         private int[] Time
         {

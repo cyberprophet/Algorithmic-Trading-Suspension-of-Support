@@ -7,7 +7,7 @@ namespace ShareInvest.Strategy
 {
     internal partial class Information : CallUpGoblinBat
     {
-        internal Information(char initial) : base(initial)
+        internal Information(string key) : base(key)
         {
 
         }

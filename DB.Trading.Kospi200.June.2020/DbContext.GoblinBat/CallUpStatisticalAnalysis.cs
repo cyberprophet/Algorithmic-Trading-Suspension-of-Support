@@ -8,9 +8,9 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
     {
-        protected CallUpStatisticalAnalysis(char initial) : base(initial)
+        protected CallUpStatisticalAnalysis(string key) : base(key)
         {
-            this.initial = initial;
+            this.key = key;
         }
         protected Queue<Quotes> GetQuotes(string code)
         {
@@ -20,7 +20,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 try
                 {
-                    using (var db = new GoblinBatDbContext(initial))
+                    using (var db = new GoblinBatDbContext(key))
                     {
                         var tick = db.Quotes.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
                         {
@@ -71,6 +71,21 @@ namespace ShareInvest.GoblinBatContext
             }
             return chart;
         }
-        private readonly char initial;
+        protected string GetStrategy()
+        {
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                {
+                    return db.Codes.First(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
+                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return string.Empty;
+        }
+        private readonly string key;
     }
 }

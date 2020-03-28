@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.XingAPI;
 using ShareInvest.GoblinBatContext;
@@ -9,7 +7,7 @@ namespace ShareInvest.XingAPI
 {
     public partial class Temporary : CallUp
     {
-        public Temporary(IReals quotes, IReals datum, StringBuilder sb, char initial) : base(initial)
+        public Temporary(IReals quotes, IReals datum, StringBuilder sb, string key) : base(key)
         {
             this.sb = sb;
             ((IEvents<Quotes>)quotes).Send += OnReceiveMemorize;

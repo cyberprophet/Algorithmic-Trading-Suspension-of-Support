@@ -5,7 +5,7 @@ namespace ShareInvest.GoblinBatContext
 {
     public class GoblinBatDbContext : DbContext
     {
-        public GoblinBatDbContext(char initial) : base(new Secret().ConnectionString[initial])
+        public GoblinBatDbContext(string key) : base(new Secret().GetPort(key))
         {
 
         }

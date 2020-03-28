@@ -6,7 +6,7 @@ namespace ShareInvest
 {
     internal partial class Retrieve : CallUpGoblinBat
     {
-        private Retrieve(char initial, string code) : base(initial)
+        private Retrieve(string key, string code) : base(key)
         {
             Chart = GetChart(code);
         }
@@ -18,17 +18,17 @@ namespace ShareInvest
         {
             retrieve = null;
         }
-        internal static Retrieve GetInstance(char initial, string code)
+        internal static Retrieve GetInstance(string key, string code)
         {
             if (retrieve == null)
             {
                 Code = code;
-                retrieve = new Retrieve(initial, code);
+                retrieve = new Retrieve(key, code);
             }
             else if (Code.Equals(code) == false)
             {
                 Code = code;
-                retrieve = new Retrieve(initial, code);
+                retrieve = new Retrieve(key, code);
             }
             return retrieve;
         }

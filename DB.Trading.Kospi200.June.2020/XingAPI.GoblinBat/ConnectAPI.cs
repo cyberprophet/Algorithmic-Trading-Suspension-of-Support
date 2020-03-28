@@ -168,10 +168,11 @@ namespace ShareInvest.XingAPI
                 while (Accounts == null)
                     TimerBox.Show(secret.Connection, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 3159);
             }
-            else if (TimerBox.Show(secret.Identity, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)Math.Pow(str.Length, str.Length)).Equals(DialogResult.OK))
+            else if (MessageBox.Show(secret.Identity, secret.GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Information).Equals(DialogResult.OK))
             {
                 new ExceptionMessage(str);
-                Environment.Exit(0);
+                DisconnectServer();
+                Dispose();
             }
             Trend = new Dictionary<string, string>();
             SellOrder = new Dictionary<string, double>();

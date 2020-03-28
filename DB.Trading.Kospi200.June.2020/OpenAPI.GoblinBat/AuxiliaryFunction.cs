@@ -9,7 +9,7 @@ namespace ShareInvest.OpenAPI
 {
     public class AuxiliaryFunction : CallUp
     {
-        protected AuxiliaryFunction(char initial) : base(initial)
+        protected AuxiliaryFunction(string key) : base(key)
         {
 
         }

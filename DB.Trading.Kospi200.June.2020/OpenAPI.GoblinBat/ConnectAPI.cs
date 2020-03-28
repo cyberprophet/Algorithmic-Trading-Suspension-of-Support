@@ -12,15 +12,16 @@ using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 using ShareInvest.EventHandler.OpenAPI;
 using ShareInvest.Message;
+using ShareInvest.Verify;
 
 namespace ShareInvest.OpenAPI
 {
     public class ConnectAPI : AuxiliaryFunction
     {
-        public static ConnectAPI GetInstance(char initial)
+        public static ConnectAPI GetInstance(string key)
         {
             if (OpenAPI == null)
-                OpenAPI = new ConnectAPI(initial);
+                OpenAPI = new ConnectAPI(key);
 
             return OpenAPI;
         }
@@ -84,8 +85,11 @@ namespace ShareInvest.OpenAPI
         {
             if (reset)
             {
-                API = null;
-                OpenAPI = null;
+                if (API != null)
+                    API = null;
+
+                if (OpenAPI != null)
+                    OpenAPI = null;
             }
         }
         public void SetScreenNumber(uint start, uint finish)
@@ -128,11 +132,11 @@ namespace ShareInvest.OpenAPI
                 });
             }));
         }
-        public void StartProgress(string transfer, char initial)
+        public void StartProgress(string transfer)
         {
             if (transfer != null)
             {
-                foreach (string temp in new Transfer(transfer, initial))
+                foreach (string temp in new Transfer(transfer, KeyDecoder.GetWindowsProductKeyFromRegistry()))
                 {
                     if (!temp.Contains(","))
                     {
@@ -349,15 +353,11 @@ namespace ShareInvest.OpenAPI
                     if (param[0].Equals("e") && DeadLine)
                     {
                         DeadLine = false;
-                        CME = true;
 
                         if (Temporary != null)
                         {
-                            var task = new Task(() => Temporary.SetStorage(Code));
-                            task.Start();
-                            OnCollectingData(GetInformation());
-                            task.Wait();
-                            SendCount?.Invoke(this, new NotifyIconText(CME));
+                            Temporary.SetStorage(Code);
+                            SendCount?.Invoke(this, new NotifyIconText(-106));
                         }
                         else
                             OnReceiveBalance = false;
@@ -534,7 +534,7 @@ namespace ShareInvest.OpenAPI
             {
                 Code
             };
-            if (DateTime.Now.Hour > 7 && DateTime.Now.Hour < 16 && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
+            if (DateTime.Now.Hour > 4 && (DateTime.Now.Hour < 15 || DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45) && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)) == false)
             {
                 if (Temporary == null)
                     PrepareForTrading(API.GetLoginInfo("ACCLIST"));
@@ -786,20 +786,11 @@ namespace ShareInvest.OpenAPI
                 if (OpenAPI != null)
                     OpenAPI = null;
             }
-            else if (CME && DateTime.Now.Hour == 5 && DateTime.Now.Minute > 30)
-            {
-                CME = false;
-                SendCount?.Invoke(this, new NotifyIconText((byte)DateTime.Now.DayOfWeek));
-            }
         }
         private void Dispose()
         {
             new Task(() => SendCount?.Invoke(this, new NotifyIconText((char)69))).Start();
             Dispose(true);
-        }
-        private bool CME
-        {
-            get; set;
         }
         private bool DeadLine
         {
@@ -809,7 +800,7 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        private ConnectAPI(char initial) : base(initial)
+        private ConnectAPI(string key) : base(key)
         {
             error = new Error();
             request = Delay.GetInstance(205);
