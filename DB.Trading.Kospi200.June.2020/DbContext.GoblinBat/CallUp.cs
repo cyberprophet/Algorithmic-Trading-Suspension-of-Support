@@ -18,7 +18,7 @@ namespace ShareInvest.GoblinBatContext
         protected CallUp(string key)
         {
             this.key = key;
-        }       
+        }
         protected List<string> RequestCodeList(List<string> list)
         {
             string code = string.Empty;
@@ -298,7 +298,7 @@ namespace ShareInvest.GoblinBatContext
             int count = 0;
             var external = new Secret().GetTrustedConnection(key);
             var dic = new Dictionary<string, string>();
-            var model = new List<Quotes>();
+            var model = new List<Datum>();
             var record = new Queue<string>();
 
             foreach (var str in sb.ToString().Split('*'))
@@ -339,12 +339,32 @@ namespace ShareInvest.GoblinBatContext
             {
                 case true:
                     foreach (var kv in dic)
-                        model.Add(new Quotes
+                    {
+                        var temp = kv.Value.Split(',');
+
+                        if (temp.Length == 2)
+                        {
+                            model.Add(new Datum
+                            {
+                                Code = code,
+                                Date = kv.Key,
+                                Price = temp[0],
+                                Volume = temp[1]
+                            });
+                            continue;
+                        }
+                        model.Add(new Datum
                         {
                             Code = code,
                             Date = kv.Key,
-                            Contents = kv.Value
+                            SellPrice = temp[0],
+                            SellQuantity = temp[1],
+                            TotalSellAmount = temp[2],
+                            BuyPrice = temp[3],
+                            BuyQuantity = temp[4],
+                            TotalBuyAmount = temp[5]
                         });
+                    }
                     SetStorage(model);
                     return;
 
@@ -352,11 +372,11 @@ namespace ShareInvest.GoblinBatContext
                     foreach (var kv in dic.OrderBy(o => o.Key))
                         record.Enqueue(string.Concat(kv.Key, ",", kv.Value));
 
-                    SetRecord(code, record);
+                    SetStorage(code, record);
                     return;
             }
         }
-        private void SetStorage(List<Quotes> model)
+        private void SetStorage(List<Datum> model)
         {
             try
             {
@@ -366,7 +386,7 @@ namespace ShareInvest.GoblinBatContext
                     db.BulkInsert(model, o =>
                     {
                         o.InsertIfNotExists = true;
-                        o.BatchSize = 30000;
+                        o.BatchSize = 15000;
                         o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                         o.AutoMapOutputDirection = false;
                     });
@@ -378,7 +398,7 @@ namespace ShareInvest.GoblinBatContext
                 new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
             }
         }
-        private void SetRecord(string code, Queue<string> model)
+        private void SetStorage(string code, Queue<string> model)
         {
             var path = Path.Combine(Application.StartupPath, code);
 

@@ -114,7 +114,7 @@ namespace ShareInvest
                     if (Xing != null && Array.Exists(XingConnect, o => o.Equals(initial)))
                         Text = Xing.GetAccountName(Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
 
-                    Size = new Size(775, 375);
+                    Size = new Size(795, 433);
                     Statistical.Show();
                     break;
 
@@ -318,7 +318,7 @@ namespace ShareInvest
                         {
                             if (initial.Equals(trading))
                             {
-                               
+
                             }
                             Xing = XingAPI.ConnectAPI.GetInstance(Open.Code);
                             Xing.Send += OnReceiveNotifyIcon;

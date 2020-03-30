@@ -33,6 +33,10 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
+        public DbSet<Datum> Datums
+        {
+            get; set;
+        }
         public DbSet<Logs> Logs
         {
             get; set;

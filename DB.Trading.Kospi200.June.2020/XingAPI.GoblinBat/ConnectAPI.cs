@@ -106,7 +106,7 @@ namespace ShareInvest.XingAPI
 
             return FormWindowState.Minimized;
         }
-        public readonly IReals[] reals = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IReals[]
+        public readonly IReals[] reals = (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? new IReals[]
         {
             new FH0(),
             new FC0(),
@@ -123,7 +123,7 @@ namespace ShareInvest.XingAPI
             new CM1(),
             new CM2()
         };
-        public readonly IQuerys[] querys = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IQuerys[]
+        public readonly IQuerys[] querys = (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? new IQuerys[]
         {
             new CFOBQ10500(),
             new T0441()
@@ -132,7 +132,7 @@ namespace ShareInvest.XingAPI
             new CCEBQ10500(),
             new CCEAQ50600()
         };
-        public readonly IOrders[] orders = DateTime.Now.Hour < 17 && DateTime.Now.Hour > 5 ? new IOrders[]
+        public readonly IOrders[] orders = (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? new IOrders[]
         {
             new CFOAT00100(),
             new CFOAT00200(),
