@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
@@ -67,6 +68,10 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
+        public double MaxAmount
+        {
+            get; private set;
+        }
         public string[] Accounts
         {
             get; private set;
@@ -99,6 +104,31 @@ namespace ShareInvest.XingAPI
         {
             if (reset)
                 XingAPI = null;
+        }
+        public void Max(double trend, ShareInvest.Catalog.XingAPI.Specify specify, string check)
+        {
+            Judge[specify.Time] = trend;
+            double temp = 0;
+
+            foreach (var kv in Judge)
+                temp += kv.Value;
+
+            Classification = temp == 0 ? string.Empty : temp > 0 ? "2" : "1";
+            Trend[specify.Time.ToString()] = string.Concat(trend.ToString("F2"), " (", specify.Time == 1440 ? "Base" : check, ")");
+        }
+        public double Max(double max)
+        {
+            int num = 5;
+
+            foreach (var kv in Judge)
+            {
+                if (Classification.Equals("1") && kv.Value > 0)
+                    num -= 1;
+
+                else if (Classification.Equals("2") && kv.Value < 0)
+                    num -= 1;
+            }
+            return MaxAmount = max * num * 0.2;
         }
         public FormWindowState SendNotifyIconText(int number)
         {
@@ -155,6 +185,10 @@ namespace ShareInvest.XingAPI
                 secret.GetAccount(Accounts);
             }
         }
+        private Dictionary<uint, double> Judge
+        {
+            get;
+        }
         private ConnectAPI()
         {
             secret = new Secret();
@@ -174,6 +208,7 @@ namespace ShareInvest.XingAPI
                 DisconnectServer();
                 Dispose();
             }
+            Judge = new Dictionary<uint, double>();
             Trend = new Dictionary<string, string>();
             SellOrder = new Dictionary<string, double>();
             BuyOrder = new Dictionary<string, double>();

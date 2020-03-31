@@ -6,29 +6,41 @@
         {
             get
             {
-                return 250000;
+                return transaction;
             }
         }
         public static double MarginRate
         {
             get
             {
-                return 7.65e-2;
+                return margin;
+            }
+        }
+        public static double MarginRate200402
+        {
+            get
+            {
+                return margin200402;
             }
         }
         public static double Commission
         {
             get
             {
-                return 3e-5;
+                return commission;
             }
         }
         public static double ErrorRate
         {
             get
             {
-                return 5e-2;
+                return rate;
             }
         }
+        private const int transaction = 250000;
+        private const double rate = 5e-2;
+        private const double commission = 3e-5;
+        private const double margin200402 = 16.2e-2;
+        private const double margin = 7.65e-2;
     }
 }

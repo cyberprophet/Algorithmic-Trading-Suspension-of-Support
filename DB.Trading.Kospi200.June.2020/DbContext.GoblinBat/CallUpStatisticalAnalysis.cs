@@ -15,54 +15,49 @@ namespace ShareInvest.GoblinBatContext
         protected Queue<Quotes> GetQuotes(string code)
         {
             var chart = new Queue<Quotes>();
+            Quotes quotes;
 
             if (code.Length > 6 && code.Substring(5, 3).Equals("000"))
             {
                 try
                 {
                     using (var db = new GoblinBatDbContext(key))
-                    {
-                        var tick = db.Quotes.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
+                        foreach (var temp in db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
                         {
                             o.Date,
-                            o.Contents
-                        }).OrderBy(o => o.Date);
-
-                        foreach (var temp in tick)
+                            o.Price,
+                            o.Volume,
+                            o.SellPrice,
+                            o.SellQuantity,
+                            o.TotalSellAmount,
+                            o.BuyPrice,
+                            o.BuyQuantity,
+                            o.TotalBuyAmount
+                        }).OrderBy(o => o.Date))
                         {
-                            if (int.TryParse(temp.Date.Substring(0, 6), out int date) && date < 200315)
+                            if (int.TryParse(temp.Date.Substring(0, 8), out int date) && date < 20033118)
                                 continue;
 
-                            var contents = temp.Contents.Split(new char[] { '^', '*' });
-                            Quotes quotes;
-
-                            switch (contents.Length)
-                            {
-                                case 2:
-                                    quotes = new Quotes
-                                    {
-                                        Time = temp.Date,
-                                        Price = contents[0],
-                                        Volume = contents[1]
-                                    };
-                                    break;
-
-                                case 6:
-                                    quotes = new Quotes
-                                    {
-                                        Time = temp.Date,
-                                        SellPrice = contents[0],
-                                        SellQuantity = contents[1],
-                                        SellAmount = contents[2],
-                                        BuyPrice = contents[3],
-                                        BuyQuantity = contents[4],
-                                        BuyAmount = contents[5]
-                                    };
-                                    break;
-                            }
+                            if (temp.Price == null && temp.Volume == null)
+                                quotes = new Quotes
+                                {
+                                    Time = temp.Date,
+                                    SellPrice = temp.SellPrice,
+                                    SellQuantity = temp.SellQuantity,
+                                    SellAmount = temp.TotalSellAmount,
+                                    BuyPrice = temp.BuyPrice,
+                                    BuyQuantity = temp.BuyQuantity,
+                                    BuyAmount = temp.TotalBuyAmount
+                                };
+                            else
+                                quotes = new Quotes
+                                {
+                                    Time = temp.Date,
+                                    Price = temp.Price,
+                                    Volume = temp.Volume
+                                };
                             chart.Enqueue(quotes);
                         }
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -76,9 +71,7 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                {
                     return db.Codes.First(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
-                }
             }
             catch (Exception ex)
             {

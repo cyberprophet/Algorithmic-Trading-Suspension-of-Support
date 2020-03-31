@@ -17,7 +17,7 @@ namespace ShareInvest.XingAPI.Catalog
             for (int i = 0; i < arr.Length - 1; i++)
                 temp[i] = GetFieldData(OutBlock, arr[i]);
 
-            if (double.TryParse(temp[60], out double price))
+            if (temp[8].Equals(Enum.GetName(typeof(TR), TR.CONET801)) && double.TryParse(temp[60], out double price))
             {
                 switch (temp[55])
                 {
@@ -29,7 +29,7 @@ namespace ShareInvest.XingAPI.Catalog
                         API.BuyOrder[temp[45]] = price;
                         break;
                 }
-                SendState?.Invoke(this, new State(API.OnReceiveBalance, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase));
+                SendState?.Invoke(this, new State(API.OnReceiveBalance = true, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase, API.MaxAmount));
             }
         }
         public void OnReceiveRealTime(string code)

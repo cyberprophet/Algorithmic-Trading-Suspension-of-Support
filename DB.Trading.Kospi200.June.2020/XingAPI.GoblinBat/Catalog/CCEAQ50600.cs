@@ -44,7 +44,7 @@ namespace ShareInvest.XingAPI.Catalog
                     if (param[0].Length == 8 && param[0].Substring(0, 3).Equals("101"))
                     {
                         API.Quantity = param[2].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
-                        API.AvgPurchase = param[5];
+                        API.AvgPurchase = param[5].Substring(0, 7);
                     }
                 }
                 else if (API.Quantity == 0)
@@ -59,7 +59,7 @@ namespace ShareInvest.XingAPI.Catalog
                 foreach (var param in GetInBlocks(GetType().Name))
                     SetFieldData(param.Block, param.Field, param.Occurs, param.Data);
 
-                SendErrorMessage(Request(false));
+                SendErrorMessage(GetType().Name, Request(false));
             }
         }
         public event EventHandler<Balance> Send;

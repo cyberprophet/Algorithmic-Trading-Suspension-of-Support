@@ -22,10 +22,14 @@ namespace ShareInvest
             this.secret = secret;
             InitializeComponent();
             Opacity = 0;
-            Open = OpenAPI.ConnectAPI.GetInstance(KeyDecoder.GetWindowsProductKeyFromRegistry());
-            Open.SetAPI(axAPI);
-            Open.SendCount += OnReceiveNotifyIcon;
+            var collect = ((char)Port.Collecting).Equals(initial);
 
+            if (collect)
+            {
+                Open = OpenAPI.ConnectAPI.GetInstance(KeyDecoder.GetWindowsProductKeyFromRegistry());
+                Open.SetAPI(axAPI);
+                Open.SendCount += OnReceiveNotifyIcon;
+            }
             switch (initial)
             {
                 case collecting:
@@ -38,8 +42,84 @@ namespace ShareInvest
                         Quotes.Show();
                         strip.ItemClicked += OnItemClick;
                     }
-                    Open.SendQuotes += Quotes.OnReceiveQuotes;
-                    Open.StartProgress(new OpenAPI.Temporary(Open, new StringBuilder(1024), KeyDecoder.GetWindowsProductKeyFromRegistry()));
+                    if (collect)
+                    {
+                        Open.SendQuotes += Quotes.OnReceiveQuotes;
+                        Open.StartProgress(new OpenAPI.Temporary(Open, new StringBuilder(1024), KeyDecoder.GetWindowsProductKeyFromRegistry()));
+                    }
+                    else
+                        BeginInvoke(new Action(() =>
+                        {
+                            Task = new Task(() =>
+                            {
+                                Specify = new Catalog.XingAPI.Specify[]
+                                {
+                                    new Catalog.XingAPI.Specify
+                                    {
+                                        Assets = 50000000,
+                                        Code = Strategy.Retrieve.Code,
+                                        Reaction = 500,
+                                        Quantity = "1",
+                                        RollOver = 'A',
+                                        Time = 5,
+                                        Short = 4,
+                                        Long = 60
+                                    },
+                                    new Catalog.XingAPI.Specify
+                                    {
+                                        Assets = 50000000,
+                                        Code = Strategy.Retrieve.Code,
+                                        Reaction = 500,
+                                        Quantity = "1",
+                                        RollOver = 'A',
+                                        Time = 15,
+                                        Short = 4,
+                                        Long = 60
+                                    },
+                                    new Catalog.XingAPI.Specify
+                                    {
+                                        Assets = 50000000,
+                                        Code = Strategy.Retrieve.Code,
+                                        Reaction = 500,
+                                        Quantity = "1",
+                                        RollOver = 'A',
+                                        Time = 30,
+                                        Short = 4,
+                                        Long = 60
+                                    },
+                                    new Catalog.XingAPI.Specify
+                                    {
+                                        Assets = 50000000,
+                                        Code = Strategy.Retrieve.Code,
+                                        Reaction = 500,
+                                        Quantity = "1",
+                                        RollOver = 'A',
+                                        Time = 45,
+                                        Short = 4,
+                                        Long = 60
+                                    },
+                                    new Catalog.XingAPI.Specify
+                                    {
+                                        Assets = 50000000,
+                                        Code = Strategy.Retrieve.Code,
+                                        Reaction = 500,
+                                        Quantity = "1",
+                                        RollOver = 'A',
+                                        Time = 1440,
+                                        Short = 4,
+                                        Long = 60
+                                    }
+                                };
+                            });
+                            Task.Start();
+                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
+                            Xing.Send += OnReceiveNotifyIcon;
+                            notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
+                            OnEventConnect();
+                            OnClickMinimized = quo;
+                            Text = gs;
+                            Application.DoEvents();
+                        }));
                     Size = new Size(5, 5);
                     break;
 
@@ -316,13 +396,9 @@ namespace ShareInvest
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                         BeginInvoke(new Action(() =>
                         {
-                            if (initial.Equals(trading))
-                            {
-
-                            }
-                            Xing = XingAPI.ConnectAPI.GetInstance(Open.Code);
+                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                             Xing.Send += OnReceiveNotifyIcon;
-                            notifyIcon.Text = string.Concat("Trading Code_", Open.Code);
+                            notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                             OnEventConnect();
                             OnClickMinimized = quo;
                             Application.DoEvents();
@@ -368,6 +444,7 @@ namespace ShareInvest
                                     Balance.Hide();
                                     break;
                             }
+                        Statistical.Hide();
                         return;
                     }
                     break;
@@ -445,14 +522,16 @@ namespace ShareInvest
                         if (initial.Equals(trading))
                             ((ITrends<Trends>)ctor).SendTrend += Quotes.OnReceiveTrend;
 
-                        ctor.OnReceiveRealTime(Open.Code);
+                        ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                         break;
 
                     case fh0:
                     case nh0:
-                        Open.SendQuotes -= Quotes.OnReceiveQuotes;
+                        if (initial.Equals(collecting))
+                            Open.SendQuotes -= Quotes.OnReceiveQuotes;
+
                         ((IEvents<EventHandler.XingAPI.Quotes>)ctor).Send += Quotes.OnReceiveQuotes;
-                        ctor.OnReceiveRealTime(Open.Code);
+                        ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                         break;
 
                     case jif:
@@ -466,7 +545,7 @@ namespace ShareInvest
                                 panel.Controls.Add(Statistical);
                                 Statistical.Dock = DockStyle.Fill;
                             }
-                            ctor.OnReceiveRealTime(Open.Code);
+                            ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                         }));
                         break;
 
@@ -474,7 +553,7 @@ namespace ShareInvest
                         if (initial.Equals(trading))
                         {
                             ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
-                            ctor.OnReceiveRealTime(Open.Code);
+                            ctor.OnReceiveRealTime(Strategy.Retrieve.Code);
                         }
                         break;
                 }
@@ -487,44 +566,11 @@ namespace ShareInvest
                     ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
                 }
                 Task.Wait();
-                var strategy = new Catalog.Strategy
-                {
-                    Assets = 17500000,
-                    Code = Open.Code,
-                    Contents = new Dictionary<string, string>()
-                    {
-                        {
-                            "DL",
-                            "1440;4;60;531"
-                        },
-                        {
-                            "WU",
-                            "15;4;60;0"
-                        },
-                        {
-                            "TF",
-                            "30;4;60;0"
-                        }
-                    }
-                };
-                foreach (var kv in strategy.Contents)
-                {
-                    var temp = kv.Value.Split(';');
-                    new Task(() => new Strategy.XingAPI.Quotes(new Specify
-                    {
-                        Assets = strategy.Assets,
-                        Code = strategy.Code,
-                        Strategy = kv.Key,
-                        Time = int.Parse(temp[0]),
-                        Short = int.Parse(temp[1]),
-                        Long = int.Parse(temp[2]),
-                        Reaction = int.Parse(temp[3])
-                    })).Start();
-                }
+                Parallel.ForEach(Specify, new Action<Catalog.XingAPI.Specify>((param) => new Strategy.XingAPI.Base(param)));
             }
-            WindowState = Xing.SendNotifyIconText((int)Math.Pow(Open.Code.Length, 4));
+            WindowState = Xing.SendNotifyIconText((int)Math.Pow((initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code).Length, 4));
 
-            if (DateTime.Now.Hour > 16 && initial.Equals(collecting))
+            if ((DateTime.Now.Hour > 16 || DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45) && initial.Equals(collecting))
                 Temporary = new XingAPI.Temporary(Xing.reals[0], Xing.reals[1], new StringBuilder(1024), KeyDecoder.GetWindowsProductKeyFromRegistry());
         }
         private void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
@@ -688,6 +734,10 @@ namespace ShareInvest
         {
             get; set;
         }
+        private Catalog.XingAPI.Specify[] Specify
+        {
+            get; set;
+        }
         private readonly char initial;
         private readonly Secret secret;
         private const char trading = (char)Port.Trading;
@@ -714,5 +764,6 @@ namespace ShareInvest
         private const string cha = "Char";
         private const string boolean = "Boolean";
         private const string checkDataBase = "CheckDataBase";
+        private const string gs = "GodSword";
     }
 }

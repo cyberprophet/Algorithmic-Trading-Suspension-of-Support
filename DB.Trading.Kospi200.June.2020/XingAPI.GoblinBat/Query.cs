@@ -107,12 +107,12 @@ namespace ShareInvest.XingAPI
             }
             return queue;
         }
-        protected void SendErrorMessage(int error)
+        protected void SendErrorMessage(string name, int error)
         {
             if (error < 0)
             {
                 var param = GetErrorMessage(error);
-                new ExceptionMessage(param);
+                new ExceptionMessage(param, name);
 
                 if (Array.Exists(new Secret().ErrorMessage, o => o.Equals(param)))
                     API.Dispose();

@@ -1,6 +1,6 @@
-﻿namespace ShareInvest.Catalog
+﻿namespace ShareInvest.Catalog.XingAPI
 {
-    public struct Strategy
+    public struct Specify
     {
         public ulong Assets
         {
@@ -22,15 +22,15 @@
         {
             get; set;
         }
-        public uint[] Time
+        public uint Time
         {
             get; set;
         }
-        public int[] Short
+        public int Short
         {
             get; set;
         }
-        public int[] Long
+        public int Long
         {
             get; set;
         }

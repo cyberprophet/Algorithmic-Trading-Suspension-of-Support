@@ -8,7 +8,7 @@ namespace ShareInvest.Strategy.XingAPI
 {
     public class Quotes : Trading
     {
-        public Quotes(Specify specify) : base(specify)
+        public Quotes(Catalog.Specify specify) : base(specify)
         {
             strategy = specify.Strategy.Equals("TF");
             API.OnReceiveBalance = false;
@@ -87,7 +87,7 @@ namespace ShareInvest.Strategy.XingAPI
         {
             var price = param[classification.Equals("2") ? 9 : 0];
 
-            if ((classification.Equals("2") ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) > specify.Assets / ((classification.Equals("2") ? param[5] : param[4]) * Const.TransactionMultiplier * Const.MarginRate) || (classification.Equals("2") ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)))
+            if ((classification.Equals("2") ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) > specify.Assets / ((classification.Equals("2") ? param[5] : param[4]) * Const.TransactionMultiplier * Const.MarginRate200402) || (classification.Equals("2") ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)))
                 return;
 
             SendNewOrder(classification, price);

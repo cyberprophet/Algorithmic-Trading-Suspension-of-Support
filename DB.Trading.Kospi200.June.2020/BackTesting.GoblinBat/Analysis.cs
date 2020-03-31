@@ -25,7 +25,7 @@ namespace ShareInvest.Strategy
             Long.Push(Long.Count > 0 ? EMA.Make(specify.Long, Long.Count, ch.Price, Long.Peek()) : EMA.Make(ch.Price));
             double popShort = Short.Pop(), popLong = Long.Pop();
             int i, quantity = Short.Count > 1 && Long.Count > 1 ? popShort - popLong - (Short.Peek() - Long.Peek()) > 0 ? 1 : -1 : 0;
-            var max = specify.Assets / (specify.Code.Length == 8 ? ch.Price * Const.TransactionMultiplier * Const.MarginRate : ch.Price);
+            var max = specify.Assets / (specify.Code.Length == 8 ? ch.Price * Const.TransactionMultiplier * Const.MarginRate200402 : ch.Price);
             Short.Push(popShort);
             Long.Push(popLong);
 

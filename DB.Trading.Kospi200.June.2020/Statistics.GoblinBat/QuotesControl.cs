@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -15,13 +14,12 @@ namespace ShareInvest.GoblinBatControls
             InitializeComponent();
             stateSell.ForeColor = Color.Navy;
             stateBuy.ForeColor = Color.Crimson;
-            stack = new Stack<Color>();
         }
         public void OnReceiveState(object sender, State e)
         {
             BeginInvoke(new Action(() =>
             {
-                stateReceive.Text = e.OnReceive ? "주문가능" : e.ScreenNumber;
+                stateReceive.Text = e.OnReceive ? (e.Max ?? "주문가능") : e.ScreenNumber;
                 stateSell.Text = e.SellOrderCount;
                 stateBuy.Text = e.BuyOrderCount;
                 var position = e.Quantity.Contains("-");
@@ -33,35 +31,18 @@ namespace ShareInvest.GoblinBatControls
         {
             BeginInvoke(new Action(() =>
             {
-                foreach (var kv in e.Trend)
+                var count = 0;
+
+                foreach (var kv in e.Trend.OrderByDescending(o => o.Key))
                 {
-                    var label = string.Concat("state", kv.Key).FindByName<Label>(this);
+                    var label = string.Concat("state", count++).FindByName<Label>(this);
                     var trend = kv.Value.Contains("-");
                     label.Text = trend ? kv.Value.Substring(1) : kv.Value;
                     label.ForeColor = trend ? Color.Navy : Color.Maroon;
-                    stack.Push(label.ForeColor);
                 }
-                var temp = Color.Ivory;
-                string message = "RollOver";
-                int count = 0;
                 var check = e.Volume.Contains("-");
                 stateVolume.Text = check ? e.Volume.Substring(1) : e.Volume;
                 stateVolume.ForeColor = check ? Color.DeepSkyBlue : Color.Maroon;
-
-                while (stack.Count > 0)
-                {
-                    var color = stack.Pop();
-
-                    if (color.Equals(temp))
-                    {
-                        count++;
-
-                        continue;
-                    }
-                    temp = color;
-                }
-                stateRollOver.Text = count > 1 ? message : string.Empty;
-                stateRollOver.ForeColor = temp;
             }));
         }
         public void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
@@ -152,6 +133,5 @@ namespace ShareInvest.GoblinBatControls
         {
             this.message.Text = message;
         }
-        private readonly Stack<Color> stack;
     }
 }

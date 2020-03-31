@@ -28,7 +28,7 @@ namespace ShareInvest.XingAPI.Catalog
                 for (int i = 0; i < GetBlockCount(param.Block); i++)
                     temp[temp.Length - enumerable.Count - 1] = GetFieldData(param.Block, param.Field, i);
             }
-            SendState?.Invoke(this, new State(API.OnReceiveBalance, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase));
+            SendState?.Invoke(this, new State(API.OnReceiveBalance, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase, API.MaxAmount));
         }
         public void QueryExcute(Order order)
         {
@@ -40,7 +40,7 @@ namespace ShareInvest.XingAPI.Catalog
                 foreach (var param in GetInBlocks(secret.GetData(name, order)))
                     SetFieldData(param.Block, param.Field, param.Occurs, param.Data);
 
-                SendErrorMessage(Request(false));
+                SendErrorMessage(name, Request(false));
             }
         }
         public event EventHandler<NotifyIconText> SendMessage;

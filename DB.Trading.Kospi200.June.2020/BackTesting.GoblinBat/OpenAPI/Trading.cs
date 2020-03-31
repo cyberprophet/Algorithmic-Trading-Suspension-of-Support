@@ -71,7 +71,7 @@ namespace ShareInvest.Strategy.OpenAPI
                 switch (specify.Strategy)
                 {
                     case "TF":
-                        quotes.SetTrendFollowing(specify.Assets / (specify.Code.Length == 8 ? e.Price * Const.TransactionMultiplier * Const.MarginRate : e.Price), trend);
+                        quotes.SetTrendFollowing(specify.Assets / (specify.Code.Length == 8 ? e.Price * Const.TransactionMultiplier * Const.MarginRate200402 : e.Price), trend);
                         break;
 
                     case "WU":
@@ -131,7 +131,7 @@ namespace ShareInvest.Strategy.OpenAPI
         }
         private bool GetJudgeTheReaction(double trend, double price)
         {
-            var max = specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate);
+            var max = specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402);
 
             if (trend > 0)
                 return max - api.Quantity - api.BuyOrder.Count > 1;

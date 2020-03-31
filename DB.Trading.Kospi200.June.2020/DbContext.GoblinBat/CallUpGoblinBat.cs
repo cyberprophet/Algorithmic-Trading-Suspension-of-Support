@@ -109,7 +109,7 @@ namespace ShareInvest.GoblinBatContext
                                 if (date < remain)
                                     continue;
 
-                                else if (date > 200315)
+                                else if (date > 200331)
                                     break;
                             }
                             chart.Enqueue(new Chart

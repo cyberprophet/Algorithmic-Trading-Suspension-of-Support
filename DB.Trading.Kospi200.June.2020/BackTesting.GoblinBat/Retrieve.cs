@@ -21,7 +21,8 @@ namespace ShareInvest.Strategy
         }
         public void SetInitialzeTheCode()
         {
-            SetInitialzeTheCode(GetStrategy());
+            Code = GetStrategy();
+            SetInitialzeTheCode(Code);
         }
         public void SetInitializeTheChart()
         {
@@ -35,6 +36,10 @@ namespace ShareInvest.Strategy
                 Quotes.Clear();
                 Quotes = null;
             }
+        }
+        public static string Code
+        {
+            get; set;
         }
         internal protected static Queue<Chart> Chart
         {

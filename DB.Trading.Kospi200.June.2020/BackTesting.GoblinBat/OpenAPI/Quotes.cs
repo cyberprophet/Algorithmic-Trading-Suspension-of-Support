@@ -168,7 +168,7 @@ namespace ShareInvest.Strategy.OpenAPI
         {
             var price = param[classification.Equals("2") ? 9 : 0];
 
-            if ((classification.Equals("2") ? api.Quantity + api.BuyOrder.Count : api.SellOrder.Count - api.Quantity) > specify.Assets / ((classification.Equals("2") ? param[5] : param[4]) * Const.TransactionMultiplier * Const.MarginRate) || (classification.Equals("2") ? api.BuyOrder.ContainsValue(price) : api.SellOrder.ContainsValue(price)))
+            if ((classification.Equals("2") ? api.Quantity + api.BuyOrder.Count : api.SellOrder.Count - api.Quantity) > specify.Assets / ((classification.Equals("2") ? param[5] : param[4]) * Const.TransactionMultiplier * Const.MarginRate200402) || (classification.Equals("2") ? api.BuyOrder.ContainsValue(price) : api.SellOrder.ContainsValue(price)))
                 return;
 
             api.OnReceiveBalance = false;

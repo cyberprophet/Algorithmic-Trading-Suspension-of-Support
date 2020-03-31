@@ -24,6 +24,10 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
+        public string Max
+        {
+            get; private set;
+        }
         public State(bool receive, int sell, int quantity, int buy, uint number)
         {
             OnReceive = receive;
@@ -32,13 +36,14 @@ namespace ShareInvest.EventHandler
             BuyOrderCount = buy.ToString();
             ScreenNumber = number.ToString();
         }
-        public State(bool receive, int sell, int quantity, int buy, string avg)
+        public State(bool receive, int sell, int quantity, int buy, string avg, double max)
         {
             OnReceive = receive;
             SellOrderCount = sell.ToString();
             Quantity = quantity.ToString();
             BuyOrderCount = buy.ToString();
             ScreenNumber = avg.ToString();
+            Max = max.ToString("F2");
         }
     }
 }

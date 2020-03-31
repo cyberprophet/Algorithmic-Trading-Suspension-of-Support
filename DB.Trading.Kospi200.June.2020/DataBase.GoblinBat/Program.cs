@@ -15,8 +15,8 @@ namespace ShareInvest
         [STAThread]
         static void Main()
         {
-            var handle = GetConsoleWindow();
             var secret = new Secret();
+            var handle = GetConsoleWindow();
             ShowWindow(handle, secret.Hide);
             var remaining = new Random(new Random().Next(0, Application.StartupPath.Length)).Next(3, 10);
             var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
@@ -38,10 +38,9 @@ namespace ShareInvest
                     }
                     while (remaining > 0)
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
-                            new Task(() =>
-                            {
-                                new Strategy.Retrieve(str).SetInitialzeTheCode();
-                            }).Start();
+                        {
+                            new Strategy.Retrieve(str).SetInitialzeTheCode();
+                        }
                     while (DateTime.Now.Hour < 18 && DateTime.Now.Hour > 15 || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 9 || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
                     {
                         if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35)

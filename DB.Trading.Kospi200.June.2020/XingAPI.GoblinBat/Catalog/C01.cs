@@ -44,7 +44,7 @@ namespace ShareInvest.XingAPI.Catalog
             if (API.Quantity == 0)
                 API.AvgPurchase = "000.00";
 
-            SendState?.Invoke(this, new State(API.OnReceiveBalance = true, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase));
+            SendState?.Invoke(this, new State(API.OnReceiveBalance = true, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase, API.MaxAmount));
         }
         public void OnReceiveRealTime(string code)
         {

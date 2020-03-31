@@ -9,8 +9,8 @@ using ShareInvest.XingAPI;
 namespace ShareInvest.Strategy.XingAPI
 {
     public class Trading : Trend
-    {
-        public Trading(Specify specify) : base(specify)
+    {       
+        public Trading(Catalog.Specify specify) : base(specify)
         {
             foreach (Catalog.XingAPI.Quotes quotes in Retrieve.Quotes)
                 if (quotes.Price != null)
@@ -27,14 +27,7 @@ namespace ShareInvest.Strategy.XingAPI
                 Check = string.Empty;
 
             ((IEvents<Datum>)API.reals[1]).Send += Analysize;
-        }
-        protected ConnectAPI API
-        {
-            get
-            {
-                return ConnectAPI.GetInstance();
-            }
-        }
+        }       
         protected bool GetTickRevenue(string number)
         {
             if (API.Quantity > 0 && API.SellOrder.TryGetValue(number, out double sell) && sell == GetExactPrice())
@@ -120,12 +113,13 @@ namespace ShareInvest.Strategy.XingAPI
             var trend = popShort - popLong - (Short.Peek() - Long.Peek());
             Short.Push(popShort);
             Long.Push(popLong);
+
             API.Trend[specify.Strategy] = string.Concat(trend.ToString("F2"), " (", specify.Time == 1440 ? "Day" : Check, ")");
 
             switch (specify.Strategy)
             {
                 case "TF":
-                    SetTrendFollowing(specify.Assets / (specify.Code.Length == 8 ? e.Price * Const.TransactionMultiplier * Const.MarginRate : e.Price), trend);
+                    SetTrendFollowing(specify.Assets / (specify.Code.Length == 8 ? e.Price * Const.TransactionMultiplier * Const.MarginRate200402 : e.Price), trend);
                     break;
 
                 case "WU":
@@ -188,7 +182,7 @@ namespace ShareInvest.Strategy.XingAPI
         }
         private bool GetJudgeTheReaction(double trend, double price)
         {
-            var max = specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate);
+            var max = specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402);
 
             if (trend > 0)
                 return max - API.Quantity - API.BuyOrder.Count > 1;

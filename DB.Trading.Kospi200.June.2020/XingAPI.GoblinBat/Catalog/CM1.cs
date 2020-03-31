@@ -18,33 +18,34 @@ namespace ShareInvest.XingAPI.Catalog
             for (int i = 0; i < arr.Length - 1; i++)
                 temp[i] = GetFieldData(OutBlock, arr[i]);
 
-            switch (temp[55].Equals(sell))
-            {
-                case true:
-                    if (API.SellOrder.Remove(temp[45]) && int.TryParse(temp[83], out int sell))
-                    {
-                        if (API.Quantity <= 0 && double.TryParse(temp[82], out double sp))
-                            API.AvgPurchase = ((sp * sell - double.Parse(API.AvgPurchase) * API.Quantity) / (sell - API.Quantity)).ToString("F2");
+            if (uint.TryParse(temp[45], out uint number))
+                switch (temp[55])
+                {
+                    case sell:
+                        if (API.SellOrder.Remove(number.ToString()) && int.TryParse(temp[83], out int sq) && double.TryParse(temp[82], out double sp))
+                        {
+                            if (API.Quantity <= 0)
+                                API.AvgPurchase = ((sp * sq - double.Parse(API.AvgPurchase) * API.Quantity) / (sq - API.Quantity)).ToString("F2");
 
-                        API.Quantity -= sell;
-                    }
-                    break;
+                            API.Quantity -= sq;
+                        }
+                        break;
 
-                case false:
-                    if (API.BuyOrder.Remove(temp[45]) && int.TryParse(temp[83], out int buy))
-                    {
-                        if (API.Quantity >= 0 && double.TryParse(temp[82], out double bp))
-                            API.AvgPurchase = ((double.Parse(API.AvgPurchase) * API.Quantity + bp * buy) / (buy + API.Quantity)).ToString("F2");
+                    case buy:
+                        if (API.BuyOrder.Remove(number.ToString()) && int.TryParse(temp[83], out int bq) && double.TryParse(temp[82], out double bp))
+                        {
+                            if (API.Quantity >= 0)
+                                API.AvgPurchase = ((double.Parse(API.AvgPurchase) * API.Quantity + bp * bq) / (bq + API.Quantity)).ToString("F2");
 
-                        API.Quantity += buy;
-                    }
-                    break;
-            }
+                            API.Quantity += bq;
+                        }
+                        break;
+                }
             if (API.Quantity == 0)
                 API.AvgPurchase = "000.00";
 
             API.OnReceiveBalance = true;
-            SendState?.Invoke(this, new State(API.OnReceiveBalance, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase));
+            SendState?.Invoke(this, new State(API.OnReceiveBalance = true, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase, API.MaxAmount));
         }
         public void OnReceiveRealTime(string code)
         {

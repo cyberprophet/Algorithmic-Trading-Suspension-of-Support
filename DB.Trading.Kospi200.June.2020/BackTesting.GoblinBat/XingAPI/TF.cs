@@ -1,52 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
-using ShareInvest.Catalog;
+using ShareInvest.Catalog.XingAPI;
 using ShareInvest.XingAPI;
 
-namespace ShareInvest.Strategy
+namespace ShareInvest.Strategy.XingAPI
 {
-    public class Trend
-    {      
-        protected Trend(Specify specify)
+    public class TF
+    {
+        internal protected TF(Specify specify)
         {
             this.specify = specify;
             Short = new Stack<double>(512);
             Long = new Stack<double>(512);
 
-            foreach (Chart chart in Retrieve.Chart)
+            foreach (Catalog.Chart chart in Retrieve.Chart)
                 Analysize(chart);
         }
-        protected ConnectAPI API
+        internal protected ConnectAPI API
         {
             get
             {
                 return ConnectAPI.GetInstance();
             }
-        }       
-        protected Stack<double> Short
-        {
-            get; 
         }
-        protected Stack<double> Long
+        internal protected Stack<double> Short
         {
             get;
         }
-        protected bool OnTime
+        internal protected Stack<double> Long
+        {
+            get;
+        }
+        internal protected bool OnTime
         {
             get; set;
         }
-        protected string Check
+        internal protected string Check
         {
             get; set;
         }
-        protected string On
+        internal protected string On
         {
             get
             {
                 return (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? start : cme;
             }
         }
-        protected void Analysize(Chart chart)
+        internal protected void Analysize(Catalog.Chart chart)
         {
             if (GetCheckOnTime(chart.Date))
             {
@@ -56,7 +56,7 @@ namespace ShareInvest.Strategy
             Short.Push(Short.Count > 0 ? EMA.Make(specify.Short, Short.Count, chart.Price, Short.Peek()) : EMA.Make(chart.Price));
             Long.Push(Long.Count > 0 ? EMA.Make(specify.Long, Long.Count, chart.Price, Long.Peek()) : EMA.Make(chart.Price));
         }
-        protected bool GetCheckOnTime(string time)
+        internal protected bool GetCheckOnTime(string time)
         {
             var onTime = time.Substring(6, 6);
 
@@ -67,10 +67,6 @@ namespace ShareInvest.Strategy
                 return false;
             }
             return true;
-        }
-        private void StartProgress()
-        {
-           
         }
         private bool GetCheckOnTime(long time)
         {
@@ -90,6 +86,6 @@ namespace ShareInvest.Strategy
         private const string onTime = "090000000";
         private const string end = "154500";
         private const string start = "090000";
-        protected readonly Specify specify;
+        internal protected readonly Specify specify;
     }
 }

@@ -59,7 +59,7 @@ namespace ShareInvest.XingAPI.Catalog
                 foreach (var param in GetInBlocks(GetType().Name))
                     SetFieldData(param.Block, param.Field, param.Occurs, param.Data);
 
-                SendErrorMessage(Request(false));
+                SendErrorMessage(GetType().Name, Request(false));
             }
         }
         public event EventHandler<Balance> Send;
