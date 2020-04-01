@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
@@ -14,10 +13,11 @@ namespace ShareInvest.XingAPI
 {
     public class ConnectAPI : XASessionClass, IEvents<NotifyIconText>
     {
-        public static ConnectAPI GetInstance(string code)
+        public static ConnectAPI GetInstance(string code, string date)
         {
             if (XingAPI == null)
             {
+                Date = date;
                 XingAPI = new ConnectAPI();
                 Code = code;
                 new T9943().QueryExcute();
@@ -123,16 +123,18 @@ namespace ShareInvest.XingAPI
             foreach (var kv in Judge)
             {
                 if (Classification.Equals("1") && kv.Value > 0)
-                    num -= 1;
+                    num--;
 
                 else if (Classification.Equals("2") && kv.Value < 0)
-                    num -= 1;
+                    num--;
             }
-            return MaxAmount = max * num * 0.2;
+            MaxAmount = max * num * 0.2 * (Classification.Equals("2") ? 1 : -1);
+
+            return max * num * 0.2;
         }
         public FormWindowState SendNotifyIconText(int number)
         {
-            Send?.Invoke(this, new NotifyIconText((int)TimerBox.Show(secret.Connection, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)number)));
+            Send?.Invoke(this, new NotifyIconText((int)TimerBox.Show(secret.Connection, Date, MessageBoxButtons.OK, MessageBoxIcon.Information, (uint)number)));
 
             return FormWindowState.Minimized;
         }
@@ -200,7 +202,7 @@ namespace ShareInvest.XingAPI
                 Disconnect += Dispose;
 
                 while (Accounts == null)
-                    TimerBox.Show(secret.Connection, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 3159);
+                    TimerBox.Show(secret.Connection, Date, MessageBoxButtons.OK, MessageBoxIcon.Information, 3159);
             }
             else if (MessageBox.Show(secret.Identity, secret.GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Information).Equals(DialogResult.OK))
             {
@@ -214,6 +216,10 @@ namespace ShareInvest.XingAPI
             BuyOrder = new Dictionary<string, double>();
         }
         private static ConnectAPI XingAPI
+        {
+            get; set;
+        }
+        private static string Date
         {
             get; set;
         }

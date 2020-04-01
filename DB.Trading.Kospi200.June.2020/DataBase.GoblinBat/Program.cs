@@ -17,13 +17,13 @@ namespace ShareInvest
         {
             var secret = new Secret();
             var handle = GetConsoleWindow();
-            ShowWindow(handle, secret.Hide);
-            var remaining = new Random(new Random().Next(0, Application.StartupPath.Length)).Next(3, 10);
-            var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
             var str = KeyDecoder.GetWindowsProductKeyFromRegistry();
+            ShowWindow(handle, secret.Hide);
 
             if (secret.GetIdentify(str))
             {
+                var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
+                var remaining = new Random(new Random().Next(0, Application.StartupPath.Length * secret.GetIdentify().Length)).Next(5, 16);
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
 
                 if (secret.GetDirectoryInfoExists(path))
@@ -37,7 +37,7 @@ namespace ShareInvest
                         registry.SetValue(secret.GoblinBat, Array.Find(Directory.GetFiles(Application.StartupPath, "*.exe", SearchOption.AllDirectories), o => o.Contains(string.Concat(secret.GoblinBat, ".exe"))));
                     }
                     while (remaining > 0)
-                        if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
+                        if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
                         {
                             new Strategy.Retrieve(str).SetInitialzeTheCode();
                         }
@@ -46,7 +46,7 @@ namespace ShareInvest
                         if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35)
                             break;
 
-                        else if (TimerBox.Show(secret.StartProgress, secret.GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 3765U).Equals(DialogResult.OK))
+                        else if (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 3765U).Equals(DialogResult.OK))
                             break;
 
                         Thread.Sleep(30000);

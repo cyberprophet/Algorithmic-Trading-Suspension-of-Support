@@ -1,6 +1,7 @@
 ﻿using System;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
+using ShareInvest.Message;
 
 namespace ShareInvest.XingAPI.Catalog
 {
@@ -12,12 +13,10 @@ namespace ShareInvest.XingAPI.Catalog
         }
         protected override void OnReceiveRealData(string szTrCode)
         {
-            if (int.TryParse(GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jangubun)), out int field) && (field == 5 || field == 7) && int.TryParse(GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jstatus)), out int choice))
+            if (int.TryParse(GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jangubun)), out int field) && int.TryParse(GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jstatus)), out int choice))
             {
-                if (choice == 21)
-                    API.OnReceiveBalance = true;
-
                 Send?.Invoke(this, new NotifyIconText((char)choice));
+                new ExceptionMessage(choice.ToString(), field.ToString());
             }
         }
         public void OnReceiveRealTime(string code)

@@ -7,7 +7,7 @@ namespace ShareInvest.XingAPI
 {
     internal class Query : XAQueryClass
     {
-        internal protected Query()
+        protected internal Query()
         {
             ReceiveData += OnReceiveData;
             ReceiveMessage += OnReceiveMessage;
@@ -118,10 +118,6 @@ namespace ShareInvest.XingAPI
                     API.Dispose();
             }
         }
-        protected virtual void OnReceiveData(string szTrCode)
-        {
-            Console.WriteLine(szTrCode);
-        }
         protected virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             if (bIsSystemError)
@@ -133,13 +129,8 @@ namespace ShareInvest.XingAPI
             if (int.TryParse(nMessageCode, out int code) && code > 999)
                 new ExceptionMessage(szMessage, nMessageCode);
         }
-        protected ConnectAPI API
-        {
-            get
-            {
-                return ConnectAPI.GetInstance();
-            }
-        }
+        protected virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
+        protected ConnectAPI API => ConnectAPI.GetInstance();
         private const string record = "레코드명:";
         private const string separator = "No,한글명,필드명,영문명,";
     }

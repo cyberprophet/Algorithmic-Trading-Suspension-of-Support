@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Globalization;
+using System.Collections.Generic;
+using System.Linq;
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.GoblinBatContext;
@@ -41,6 +44,17 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
+        public static string Date
+        {
+            get
+            {
+                if (DateTime.TryParseExact(Quotes.Last().Time.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
+                    return string.Concat(date.ToLongDateString(), " ", date.ToShortTimeString());
+
+                else
+                    return string.Empty;
+            }
+        }
         internal protected static Queue<Chart> Chart
         {
             get; private set;
@@ -49,5 +63,6 @@ namespace ShareInvest.Strategy
         {
             get; private set;
         }
+        private const string format = "yyMMddHHmmss";
     }
 }

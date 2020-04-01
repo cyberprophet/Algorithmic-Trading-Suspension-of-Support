@@ -112,7 +112,7 @@ namespace ShareInvest
                                 };
                             });
                             Task.Start();
-                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
+                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, Strategy.Retrieve.Date);
                             Xing.Send += OnReceiveNotifyIcon;
                             notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                             OnEventConnect();
@@ -185,6 +185,7 @@ namespace ShareInvest
                     break;
 
                 case ex:
+                    Text = secret.GetIdentify();
                     Size = new Size(241, 0);
                     CenterToScreen();
                     Close();
@@ -289,7 +290,7 @@ namespace ShareInvest
                     {
                         notifyIcon.Text = checkDataBase;
                         Open.StartProgress(3605);
-                        notifyIcon.Text = secret.GoblinBat;
+                        notifyIcon.Text = secret.GetIdentify();
 
                         return;
                     }
@@ -396,7 +397,7 @@ namespace ShareInvest
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                         BeginInvoke(new Action(() =>
                         {
-                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
+                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, Strategy.Retrieve.Date);
                             Xing.Send += OnReceiveNotifyIcon;
                             notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                             OnEventConnect();
@@ -462,6 +463,11 @@ namespace ShareInvest
                                 Temporary.SetStorage(Open.Code);
                                 Temporary = null;
                             }
+                            Xing.OnReceiveBalance = false;
+                            break;
+
+                        case (char)21:
+                            Xing.OnReceiveBalance = true;
                             break;
 
                         default:
@@ -575,7 +581,7 @@ namespace ShareInvest
         }
         private void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
-            if (MessageBox.Show(secret.Exit, secret.GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
+            if (MessageBox.Show(secret.Exit, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
             {
                 e.Cancel = true;
                 WindowState = FormWindowState.Minimized;

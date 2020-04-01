@@ -19,7 +19,15 @@ namespace ShareInvest.GoblinBatControls
         {
             BeginInvoke(new Action(() =>
             {
-                stateReceive.Text = e.OnReceive ? (e.Max ?? "주문가능") : e.ScreenNumber;
+                if (e.Max != null)
+                {
+                    var classfication = e.Max.Contains("-");
+                    stateReceive.Text = e.OnReceive ? (classfication ? e.Max.Substring(1) : e.Max) : e.ScreenNumber;
+                    stateReceive.ForeColor = e.OnReceive ? (classfication ? Color.Navy : Color.DarkRed) : Color.Ivory;
+                }
+                else
+                    stateReceive.Text = e.OnReceive ? "주문가능" : e.ScreenNumber;
+
                 stateSell.Text = e.SellOrderCount;
                 stateBuy.Text = e.BuyOrderCount;
                 var position = e.Quantity.Contains("-");
