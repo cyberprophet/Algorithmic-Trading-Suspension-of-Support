@@ -17,15 +17,30 @@ namespace ShareInvest.XingAPI.Catalog
             for (int i = 0; i < arr.Length - 1; i++)
                 temp[i] = GetFieldData(OutBlock, arr[i]);
 
-            if (temp[13].Equals(buy) && uint.TryParse(temp[9], out uint number) && double.TryParse(temp[16], out double price))
+            if (temp[13].Equals(buy) && uint.TryParse(temp[9], out uint number) && uint.TryParse(temp[10], out uint org) && double.TryParse(temp[16], out double price))
                 switch (temp[12])
                 {
                     case sell:
-                        API.SellOrder[number.ToString()] = price;
+                        if (API.SellOrder.Remove(org.ToString()))
+                            API.SellOrder[number.ToString()] = price;
+
                         break;
 
                     case buy:
-                        API.BuyOrder[number.ToString()] = price;
+                        if (API.BuyOrder.Remove(org.ToString()))
+                            API.BuyOrder[number.ToString()] = price;
+
+                        break;
+                }
+            else if (temp[13].Equals(cancel) && uint.TryParse(temp[10], out uint ord))
+                switch (temp[12])
+                {
+                    case sell:
+                        API.SellOrder.Remove(ord.ToString());
+                        break;
+
+                    case buy:
+                        API.BuyOrder.Remove(ord.ToString());
                         break;
                 }
             SendState?.Invoke(this, new State(API.OnReceiveBalance = true, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase, API.MaxAmount));

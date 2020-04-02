@@ -126,12 +126,14 @@ namespace ShareInvest.XingAPI
 
                 return;
             }
-            if (int.TryParse(nMessageCode, out int code) && code > 999)
+            if (int.TryParse(nMessageCode, out int code) && code > 999 && (nMessageCode.Equals(cancel) == false || nMessageCode.Equals(correction) == false))
                 new ExceptionMessage(szMessage, nMessageCode);
         }
         protected virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
         protected ConnectAPI API => ConnectAPI.GetInstance();
         private const string record = "레코드명:";
         private const string separator = "No,한글명,필드명,영문명,";
+        private const string cancel = "02661";
+        private const string correction = "02667";
     }
 }

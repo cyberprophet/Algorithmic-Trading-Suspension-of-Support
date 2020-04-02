@@ -23,7 +23,8 @@ namespace ShareInvest
             if (secret.GetIdentify(str))
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
-                var remaining = new Random(new Random().Next(0, Application.StartupPath.Length * secret.GetIdentify().Length)).Next(5, 16);
+                var classfication = secret.GetPort(str).Equals((char)Port.Trading) && DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6;
+                var remaining = new Random(new Random().Next(0, Application.StartupPath.Length * secret.GetIdentify().Length)).Next(classfication ? 35 : 5, classfication ? 51 : 21);
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
 
                 if (secret.GetDirectoryInfoExists(path))
@@ -41,7 +42,7 @@ namespace ShareInvest
                         {
                             new Strategy.Retrieve(str).SetInitialzeTheCode();
                         }
-                    while (DateTime.Now.Hour < 18 && DateTime.Now.Hour > 15 || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 9 || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
+                    while (DateTime.Now.Hour < 18 && (DateTime.Now.Hour > 15 || DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45) || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 9 || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
                     {
                         if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35)
                             break;

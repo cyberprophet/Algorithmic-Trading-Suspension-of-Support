@@ -22,7 +22,7 @@ namespace ShareInvest.XingAPI.Catalog
                 switch (temp[20])
                 {
                     case sell:
-                        if (API.SellOrder.Remove(number.ToString()) && int.TryParse(temp[14], out int sq) && double.TryParse(temp[13], out double sp))
+                        if (int.TryParse(temp[14], out int sq) && double.TryParse(temp[13], out double sp) && API.SellOrder.Remove(number.ToString()))
                         {
                             if (API.Quantity <= 0)
                                 API.AvgPurchase = ((sp * sq - double.Parse(API.AvgPurchase) * API.Quantity) / (sq - API.Quantity)).ToString("F2");
@@ -32,7 +32,7 @@ namespace ShareInvest.XingAPI.Catalog
                         break;
 
                     case buy:
-                        if (API.BuyOrder.Remove(number.ToString()) && int.TryParse(temp[14], out int bq) && double.TryParse(temp[13], out double bp))
+                        if (int.TryParse(temp[14], out int bq) && double.TryParse(temp[13], out double bp) && API.BuyOrder.Remove(number.ToString()))
                         {
                             if (API.Quantity >= 0)
                                 API.AvgPurchase = ((double.Parse(API.AvgPurchase) * API.Quantity + bp * bq) / (bq + API.Quantity)).ToString("F2");

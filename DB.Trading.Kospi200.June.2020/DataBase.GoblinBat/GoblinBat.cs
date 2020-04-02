@@ -454,20 +454,28 @@ namespace ShareInvest
                     switch ((char)e.NotifyIcon)
                     {
                         case (char)69:
+                            new ExceptionMessage(e.NotifyIcon.ToString());
                             Dispose();
                             return;
 
                         case (char)41:
-                            if (Temporary != null)
+                            if (Temporary != null && initial.Equals(collecting))
                             {
                                 Temporary.SetStorage(Open.Code);
                                 Temporary = null;
                             }
-                            Xing.OnReceiveBalance = false;
+                            else if (initial.Equals(trading))
+                            {
+                                Xing.OnReceiveBalance = false;
+                                Process.Start("shutdown.exe", "-r");
+                                Dispose();
+                            }
                             break;
 
                         case (char)21:
-                            Xing.OnReceiveBalance = true;
+                            if (initial.Equals(trading))
+                                Xing.OnReceiveBalance = true;
+
                             break;
 
                         default:

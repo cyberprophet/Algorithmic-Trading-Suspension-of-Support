@@ -18,6 +18,7 @@ namespace ShareInvest.XingAPI
         protected ConnectAPI API => ConnectAPI.GetInstance();
         protected const string sell = "1";
         protected const string buy = "2";
+        protected const string cancel = "3";
         private const string field = "futcode";
         private const string inBlock = "InBlock";
         private const string outBlock = "OutBlock";

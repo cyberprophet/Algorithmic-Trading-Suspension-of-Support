@@ -33,14 +33,22 @@ namespace ShareInvest.XingAPI.Catalog
         public void QueryExcute(Order order)
         {
             var secret = new Secret();
-            var name = GetType().Name;
+            string name = GetType().Name, block = string.Empty;
 
             if (LoadFromResFile(secret.GetResFileName(name)))
             {
                 foreach (var param in GetInBlocks(secret.GetData(name, order)))
+                {
                     SetFieldData(param.Block, param.Field, param.Occurs, param.Data);
 
-                SendErrorMessage(name, Request(false));
+                    if (block.Equals(string.Empty))
+                        block = param.Block;
+                }
+                if (API.SellOrder.ContainsKey(order.OrgOrdNo) || API.BuyOrder.ContainsKey(order.OrgOrdNo))
+                    SendErrorMessage(name, Request(false));
+
+                else
+                    ClearBlockdata(block);
             }
         }
         public event EventHandler<NotifyIconText> SendMessage;
