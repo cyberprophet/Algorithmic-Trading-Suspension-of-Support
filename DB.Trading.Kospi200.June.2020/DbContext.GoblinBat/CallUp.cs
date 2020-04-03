@@ -14,11 +14,7 @@ using ShareInvest.Models;
 namespace ShareInvest.GoblinBatContext
 {
     public class CallUp
-    {
-        protected CallUp(string key)
-        {
-            this.key = key;
-        }
+    {        
         protected List<string> RequestCodeList(List<string> list)
         {
             string code = string.Empty;
@@ -26,7 +22,6 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                {
                     foreach (var temp in db.Codes.Select(o => new
                     {
                         o.Code
@@ -69,7 +64,6 @@ namespace ShareInvest.GoblinBatContext
                                 db.Options.BulkDelete(db.Options.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
                         }
                     }
-                }
             }
             catch (InvalidOperationException ex)
             {
@@ -376,7 +370,7 @@ namespace ShareInvest.GoblinBatContext
                     return;
             }
         }
-        private void SetStorage(List<Datum> model)
+        void SetStorage(List<Datum> model)
         {
             try
             {
@@ -398,7 +392,7 @@ namespace ShareInvest.GoblinBatContext
                 new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
             }
         }
-        private void SetStorage(string code, Queue<string> model)
+        void SetStorage(string code, Queue<string> model)
         {
             var path = Path.Combine(Application.StartupPath, code);
 
@@ -423,9 +417,10 @@ namespace ShareInvest.GoblinBatContext
                 new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
             }
         }
-        private readonly string key;
-        private const string extension = ".csv";
-        private const string date = "yyMMdd";
-        private const string q3 = "101Q3000";
+        protected CallUp(string key) => this.key = key;
+        readonly string key;
+        const string extension = ".csv";
+        const string date = "yyMMdd";
+        const string q3 = "101Q3000";
     }
 }

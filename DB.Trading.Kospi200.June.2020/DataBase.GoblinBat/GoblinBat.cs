@@ -130,7 +130,7 @@ namespace ShareInvest
             }
             CenterToScreen();
         }
-        private void OnReceiveItem(string item)
+        void OnReceiveItem(string item)
         {
             switch (item)
             {
@@ -244,9 +244,9 @@ namespace ShareInvest
                     Size = new Size(249, 0);
                     Balance.SendReSize += OnReceiveSize;
                     break;
-            };
+            }
         }
-        private void OnItemClick(object sender, ToolStripItemClickedEventArgs e)
+        void OnItemClick(object sender, ToolStripItemClickedEventArgs e)
         {
             if (Xing == null && Array.Exists(XingConnect, o => o.Equals(initial)))
                 switch (e.ClickedItem.Name)
@@ -270,7 +270,7 @@ namespace ShareInvest
             ResumeLayout();
             CenterToScreen();
         }
-        private void OnReceiveSize(object sender, GridResize e)
+        void OnReceiveSize(object sender, GridResize e)
         {
             var connect = Array.Exists(XingConnect, o => o.Equals(initial));
             Size = new Size(Server ? 591 : (connect ? 604 : 599), e.ReSize + 34);
@@ -279,7 +279,7 @@ namespace ShareInvest
             if (connect == false)
                 Open.SendCurrent += Balance.OnRealTimeCurrentPriceReflect;
         }
-        private void OnReceiveNotifyIcon(object sender, NotifyIconText e)
+        void OnReceiveNotifyIcon(object sender, NotifyIconText e)
         {
             switch (e.NotifyIcon.GetType().Name)
             {
@@ -480,9 +480,9 @@ namespace ShareInvest
 
                 case boolean:
                     break;
-            };
+            }
         }
-        private void OnEventConnect()
+        void OnEventConnect()
         {
             foreach (var ctor in Xing.querys)
             {
@@ -582,7 +582,7 @@ namespace ShareInvest
             if ((DateTime.Now.Hour > 16 || DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45) && initial.Equals(collecting))
                 Temporary = new XingAPI.Temporary(Xing.reals[0], Xing.reals[1], new StringBuilder(1024), KeyDecoder.GetWindowsProductKeyFromRegistry());
         }
-        private void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
+        void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
             if (MessageBox.Show(secret.Exit, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
             {
@@ -593,7 +593,7 @@ namespace ShareInvest
             }
             Dispose();
         }
-        private void GoblinBatResize(object sender, EventArgs e)
+        void GoblinBatResize(object sender, EventArgs e)
         {
             BeginInvoke(new Action(() =>
             {
@@ -679,7 +679,7 @@ namespace ShareInvest
 
                         default:
                             break;
-                    };
+                    }
                     Opacity = 0.8135;
                     BackColor = Color.FromArgb(121, 133, 130);
                     Visible = false;
@@ -688,85 +688,85 @@ namespace ShareInvest
                 }
             }));
         }
-        private char[] XingConnect => new char[]
+        char[] XingConnect => new char[]
         {
             collecting,
             trading
         };
-        private string[] Acc
+        string[] Acc
         {
             get; set;
         }
-        private string OnClickMinimized
+        string OnClickMinimized
         {
             get; set;
         }
-        private bool Server
+        bool Server
         {
             get; set;
         }
-        private Task Task
+        Task Task
         {
             get; set;
         }
-        private AccountControl Account
+        AccountControl Account
         {
             get; set;
         }
-        private BalanceControl Balance
+        BalanceControl Balance
         {
             get; set;
         }
-        private QuotesControl Quotes
+        QuotesControl Quotes
         {
             get; set;
         }
-        private StatisticalAnalysis Statistical
+        StatisticalAnalysis Statistical
         {
             get; set;
         }
-        private XingAPI.ConnectAPI Xing
+        XingAPI.ConnectAPI Xing
         {
             get; set;
         }
-        private OpenAPI.ConnectAPI Open
+        OpenAPI.ConnectAPI Open
         {
             get; set;
         }
-        private XingAPI.Temporary Temporary
+        XingAPI.Temporary Temporary
         {
             get; set;
         }
-        private Catalog.XingAPI.Specify[] Specify
+        Catalog.XingAPI.Specify[] Specify
         {
             get; set;
         }
-        private readonly char initial;
-        private readonly Secret secret;
-        private const char trading = (char)Port.Trading;
-        private const char collecting = (char)Port.Collecting;
-        private const string cfobq10500 = "CFOBQ10500";
-        private const string ccebq10500 = "CCEBQ10500";
-        private const string cceaq50600 = "CCEAQ50600";
-        private const string t0441 = "T0441";
-        private const string fc0 = "FC0";
-        private const string fh0 = "FH0";
-        private const string nc0 = "NC0";
-        private const string nh0 = "NH0";
-        private const string jif = "JIF";
-        private const string acc = "account";
-        private const string quo = "quotes";
-        private const string bal = "balance";
-        private const string st = "strategy";
-        private const string ex = "exit";
-        private const string dic = "Dictionary`2";
-        private const string sb = "StringBuilder";
-        private const string str = "String";
-        private const string bt = "Byte";
-        private const string int32 = "Int32";
-        private const string cha = "Char";
-        private const string boolean = "Boolean";
-        private const string checkDataBase = "CheckDataBase";
-        private const string gs = "GodSword";
+        readonly char initial;
+        readonly Secret secret;
+        const char trading = (char)Port.Trading;
+        const char collecting = (char)Port.Collecting;
+        const string cfobq10500 = "CFOBQ10500";
+        const string ccebq10500 = "CCEBQ10500";
+        const string cceaq50600 = "CCEAQ50600";
+        const string t0441 = "T0441";
+        const string fc0 = "FC0";
+        const string fh0 = "FH0";
+        const string nc0 = "NC0";
+        const string nh0 = "NH0";
+        const string jif = "JIF";
+        const string acc = "account";
+        const string quo = "quotes";
+        const string bal = "balance";
+        const string st = "strategy";
+        const string ex = "exit";
+        const string dic = "Dictionary`2";
+        const string sb = "StringBuilder";
+        const string str = "String";
+        const string bt = "Byte";
+        const string int32 = "Int32";
+        const string cha = "Char";
+        const string boolean = "Boolean";
+        const string checkDataBase = "CheckDataBase";
+        const string gs = "GodSword";
     }
 }

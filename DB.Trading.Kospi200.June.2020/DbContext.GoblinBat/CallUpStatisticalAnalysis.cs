@@ -8,17 +8,12 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
     {
-        protected CallUpStatisticalAnalysis(string key) : base(key)
-        {
-            this.key = key;
-        }
         protected Queue<Quotes> GetQuotes(string code)
         {
             var chart = new Queue<Quotes>();
             Quotes quotes;
 
             if (code.Length > 6 && code.Substring(5, 3).Equals("000"))
-            {
                 try
                 {
                     using (var db = new GoblinBatDbContext(key))
@@ -63,7 +58,6 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace, code);
                 }
-            }
             return chart;
         }
         protected string GetStrategy()
@@ -79,6 +73,7 @@ namespace ShareInvest.GoblinBatContext
             }
             return string.Empty;
         }
-        private readonly string key;
+        protected CallUpStatisticalAnalysis(string key) : base(key) => this.key = key;
+        readonly string key;
     }
 }

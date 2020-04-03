@@ -11,10 +11,6 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
-        protected CallUpGoblinBat(string key)
-        {
-            this.key = key;
-        }
         protected bool GetRecentAnalysis(Specify s)
         {
             var date = DateTime.Now.Hour < 5 && DateTime.Now.Hour >= 0 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd");
@@ -22,9 +18,7 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                {
                     return db.Logs.Any(o => o.Date.ToString().Equals(date) && o.Code.Equals(s.Code) && o.Assets.Equals(s.Assets) && o.Strategy.Equals(s.Strategy) && o.Date.Equals(s.Time));
-                }
             }
             catch (Exception ex)
             {
@@ -37,9 +31,7 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                {
                     return db.Logs.Any();
-                }
             }
             catch (Exception ex)
             {
@@ -53,10 +45,8 @@ namespace ShareInvest.GoblinBatContext
             {
                 if (code.Length == 8 && date.ToString().Substring(6).Equals("151959000"))
                     using (var db = new GoblinBatDbContext(key))
-                    {
                         if (db.Codes.FirstOrDefault(o => o.Code.Equals(code)).Info.Substring(2).Equals(date.ToString().Substring(0, 6)))
                             return true;
-                    }
             }
             catch (Exception ex)
             {
@@ -69,7 +59,6 @@ namespace ShareInvest.GoblinBatContext
             var chart = new Queue<Chart>();
 
             if (code.Length > 6 && code.Substring(5, 3).Equals("000"))
-            {
                 try
                 {
                     using (var db = new GoblinBatDbContext(key))
@@ -125,25 +114,20 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace, code);
                 }
-            }
             return chart;
         }
         protected string GetRecentFuturesCode(bool register)
         {
             if (register == false)
-            {
                 try
                 {
                     using (var db = new GoblinBatDbContext(key))
-                    {
                         return db.Codes.First(code => code.Info.Equals(db.Codes.Where(o => o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
-                    }
                 }
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
-            }
             return string.Empty;
         }
         protected void SetStorage(Logs log)
@@ -179,15 +163,14 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                {
                     db.Logs.BulkDelete(db.Logs.Where(o => o.Code.Equals("101Q3000")));
-                }
             }
             catch (Exception ex)
             {
                 new ExceptionMessage(ex.StackTrace);
             }
         }
-        private readonly string key;
+        protected CallUpGoblinBat(string key) => this.key = key;
+        readonly string key;
     }
 }
