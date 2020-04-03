@@ -4,9 +4,6 @@ namespace ShareInvest.GoblinBatControls
 {
     public partial class StatisticalAnalysis : UserControl
     {
-        public StatisticalAnalysis()
-        {
-            InitializeComponent();            
-        }
+        public StatisticalAnalysis() => InitializeComponent();
     }
 }

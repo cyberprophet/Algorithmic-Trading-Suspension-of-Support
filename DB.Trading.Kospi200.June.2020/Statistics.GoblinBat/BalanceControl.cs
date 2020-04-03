@@ -14,7 +14,7 @@ namespace ShareInvest.GoblinBatControls
             InitializeComponent();
             balGrid.ColumnCount = 7;
             balGrid.BackgroundColor = Color.FromArgb(121, 133, 130);
-            
+
             for (int i = 0; i < columns.Length; i++)
                 balGrid.Columns[i].Name = columns[i];
         }
@@ -137,7 +137,7 @@ namespace ShareInvest.GoblinBatControls
                 balGrid.ResumeLayout();
             }));
         }
+        readonly string[] columns = { "종목코드", "종목명", "구분", "수량", "매입가", "현재가", "평가손익" };
         public event EventHandler<GridResize> SendReSize;
-        private readonly string[] columns = { "종목코드", "종목명", "구분", "수량", "매입가", "현재가", "평가손익" };
     }
 }

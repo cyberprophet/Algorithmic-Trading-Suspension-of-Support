@@ -137,9 +137,6 @@ namespace ShareInvest.GoblinBatControls
                 Application.DoEvents();
             }));
         }
-        public void OnReceiveOrderMsg(string message)
-        {
-            this.message.Text = message;
-        }
+        public void OnReceiveOrderMsg(string message) => this.message.Text = message;
     }
 }

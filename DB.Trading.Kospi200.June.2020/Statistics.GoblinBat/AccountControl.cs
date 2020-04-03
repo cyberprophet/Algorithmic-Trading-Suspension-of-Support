@@ -7,10 +7,6 @@ namespace ShareInvest.GoblinBatControls
 {
     public partial class AccountControl : UserControl
     {
-        public AccountControl()
-        {
-            InitializeComponent();
-        }
         public void OnReceiveDeposit(object sender, Deposit e)
         {
             BeginInvoke(new Action(() =>
@@ -20,5 +16,6 @@ namespace ShareInvest.GoblinBatControls
                         string.Concat("balance", i).FindByName<Label>(this).Text = long.Parse(e.DetailDeposit[i]).ToString("N0");
             }));
         }
+        public AccountControl() => InitializeComponent();
     }
 }
