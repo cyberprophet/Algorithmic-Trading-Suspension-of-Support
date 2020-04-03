@@ -41,7 +41,7 @@ namespace ShareInvest.GoblinBatControls
             {
                 var count = 0;
 
-                foreach (var kv in e.Trend.OrderByDescending(o => o.Key))
+                foreach (var kv in e.Trend.OrderByDescending(o => o.Key.Length))
                 {
                     var label = string.Concat("state", count++).FindByName<Label>(this);
                     var trend = kv.Value.Contains("-");

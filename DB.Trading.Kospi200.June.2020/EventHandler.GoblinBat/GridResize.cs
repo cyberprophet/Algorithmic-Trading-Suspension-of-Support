@@ -8,9 +8,6 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public GridResize(int size, int count)
-        {
-            ReSize = size + (count > 0 ? 25 : 0);
-        }
+        public GridResize(int size, int count) => ReSize = size + (count > 0 ? 25 : 0);
     }
 }

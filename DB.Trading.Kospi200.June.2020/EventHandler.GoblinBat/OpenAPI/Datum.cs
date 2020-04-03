@@ -21,15 +21,12 @@ namespace ShareInvest.EventHandler.OpenAPI
         {
             get; private set;
         }
-        public Datum(Chart chart)
-        {
-            Chart = chart;
-        }
         public Datum(string[] arr)
         {
             Time = arr[0];
             Volume = int.Parse(arr[6]);
             Price = double.Parse(arr[1].Contains("-") ? arr[1].Substring(1) : arr[1]);
         }
+        public Datum(Chart chart) => Chart = chart;
     }
 }

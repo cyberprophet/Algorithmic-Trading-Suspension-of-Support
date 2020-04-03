@@ -10,39 +10,18 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public NotifyIconText(byte start)
+        public NotifyIconText(int count, string code) => NotifyIcon = new Dictionary<int, string>()
         {
-            NotifyIcon = start;
-        }
-        public NotifyIconText(int xing)
-        {
-            NotifyIcon = xing;
-        }
-        public NotifyIconText(char initial)
-        {
-            NotifyIcon = initial;
-        }
-        public NotifyIconText(int count, string code)
-        {
-            NotifyIcon = new Dictionary<int, string>()
             {
-                {
-                    count,
-                    code
-                }
-            };
-        }
-        public NotifyIconText(string code)
-        {
-            NotifyIcon = code.Trim();
-        }
-        public NotifyIconText(string account, string id, string name, string server)
-        {
-            NotifyIcon = new StringBuilder(account).Append(id).Append(';').Append(name).Append(';').Append(server);
-        }
-        public NotifyIconText(bool boolean)
-        {
-            NotifyIcon = boolean;
-        }
+                count,
+                code
+            }
+        };
+        public NotifyIconText(byte start) => NotifyIcon = start;
+        public NotifyIconText(int xing) => NotifyIcon = xing;
+        public NotifyIconText(char initial) => NotifyIcon = initial;
+        public NotifyIconText(string code) => NotifyIcon = code.Trim();
+        public NotifyIconText(string account, string id, string name, string server) => NotifyIcon = new StringBuilder(account).Append(id).Append(';').Append(name).Append(';').Append(server);
+        public NotifyIconText(bool boolean) => NotifyIcon = boolean;
     }
 }

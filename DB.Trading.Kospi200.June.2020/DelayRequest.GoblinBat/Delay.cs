@@ -21,45 +21,28 @@ namespace ShareInvest.DelayRequest
         {
             get; set;
         }
-        public int QueueCount
+        public int QueueCount => requestTaskQueue.Count;
+        public void Run() => taskWorker.Start();
+        public void RequestTrData(Task task) => requestTaskQueue.Enqueue(task);
+        Delay() => taskWorker = new Thread(delegate ()
         {
-            get
-            {
-                return requestTaskQueue.Count;
-            }
-        }
-        public void Run()
-        {
-            taskWorker.Start();
-        }
-        public void RequestTrData(Task task)
-        {
-            requestTaskQueue.Enqueue(task);
-        }
-        private Delay()
-        {
-            taskWorker = new Thread(delegate ()
-            {
-                while (true)
+            while (true)
+                try
                 {
-                    try
+                    while (requestTaskQueue.Count > 0)
                     {
-                        while (requestTaskQueue.Count > 0)
-                        {
-                            requestTaskQueue.Dequeue().RunSynchronously();
-                            Thread.Sleep(Milliseconds);
-                        }
-                        Thread.Sleep(5);
+                        requestTaskQueue.Dequeue().RunSynchronously();
+                        Thread.Sleep(Milliseconds);
                     }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace);
-                    }
+                    Thread.Sleep(5);
                 }
-            });
-        }
-        private static Delay request;
-        private readonly Thread taskWorker;
-        private readonly Queue<Task> requestTaskQueue = new Queue<Task>();
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+        });
+        static Delay request;
+        readonly Thread taskWorker;
+        readonly Queue<Task> requestTaskQueue = new Queue<Task>();
     }
 }

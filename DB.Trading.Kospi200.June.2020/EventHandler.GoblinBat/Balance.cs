@@ -8,9 +8,6 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public Balance(string[] hold)
-        {
-            Hold = hold;
-        }
+        public Balance(string[] hold) => Hold = hold;
     }
 }

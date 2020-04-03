@@ -47,9 +47,6 @@ namespace ShareInvest.EventHandler
             if (arr.Length > 2)
                 Volume = arr[2];
         }
-        public Memorize(string clear)
-        {
-            SPrevNext = clear;
-        }
+        public Memorize(string clear) => SPrevNext = clear;
     }
 }
