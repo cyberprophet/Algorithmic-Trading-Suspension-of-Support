@@ -6,7 +6,7 @@ using ShareInvest.XingAPI;
 namespace ShareInvest.Strategy
 {
     public class Trend
-    {      
+    {
         protected Trend(Specify specify)
         {
             this.specify = specify;
@@ -16,16 +16,9 @@ namespace ShareInvest.Strategy
             foreach (Chart chart in Retrieve.Chart)
                 Analysize(chart);
         }
-        protected ConnectAPI API
-        {
-            get
-            {
-                return ConnectAPI.GetInstance();
-            }
-        }       
         protected Stack<double> Short
         {
-            get; 
+            get;
         }
         protected Stack<double> Long
         {
@@ -39,13 +32,8 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
-        protected string On
-        {
-            get
-            {
-                return (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? start : cme;
-            }
-        }
+        protected string On => (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? start : cme;
+        protected ConnectAPI API => ConnectAPI.GetInstance();
         protected void Analysize(Chart chart)
         {
             if (GetCheckOnTime(chart.Date))
@@ -68,11 +56,11 @@ namespace ShareInvest.Strategy
             }
             return true;
         }
-        private void StartProgress()
+        void StartProgress()
         {
-           
+
         }
-        private bool GetCheckOnTime(long time)
+        bool GetCheckOnTime(long time)
         {
             if (specify.Time > 0 && specify.Time < 1440)
                 return time.ToString().Length > 8 && GetCheckOnTime(time.ToString());
@@ -82,14 +70,14 @@ namespace ShareInvest.Strategy
 
             return false;
         }
-        private EMA EMA
+        EMA EMA
         {
             get;
         }
-        private const string cme = "180000";
-        private const string onTime = "090000000";
-        private const string end = "154500";
-        private const string start = "090000";
         protected readonly Specify specify;
+        const string cme = "180000";
+        const string onTime = "090000000";
+        const string end = "154500";
+        const string start = "090000";
     }
 }

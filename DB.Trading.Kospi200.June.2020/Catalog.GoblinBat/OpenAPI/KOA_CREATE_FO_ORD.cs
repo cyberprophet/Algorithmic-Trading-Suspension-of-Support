@@ -6,18 +6,11 @@ namespace ShareInvest.Catalog
     {
         public IEnumerator GetEnumerator()
         {
-            foreach (var str in Output)
-                yield return str;
-        }
-        private string[] Output
-        {
-            get
+            foreach (var str in new string[]
             {
-                return new string[]
-                {
-                    "주문번호"
-                };
-            }
+                "주문번호"
+            })
+                yield return str;
         }
     }
 }

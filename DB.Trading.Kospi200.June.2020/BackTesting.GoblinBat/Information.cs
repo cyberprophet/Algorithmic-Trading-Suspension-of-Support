@@ -59,7 +59,7 @@ namespace ShareInvest.Strategy
                     purchase = 0;
             }
         }
-        private double Liquidation
+        double Liquidation
         {
             get
             {
@@ -77,27 +77,27 @@ namespace ShareInvest.Strategy
                     liquidation = 0;
             }
         }
-        private int Commission
+        int Commission
         {
             get; set;
         }
-        private int Amount
+        int Amount
         {
             get; set;
         }
-        private long CumulativeRevenue
+        long CumulativeRevenue
         {
             get; set;
         }
-        private long Revenue
+        long Revenue
         {
             get; set;
         }
-        private long TodayRevenue
+        long TodayRevenue
         {
             get; set;
         }
-        private double purchase;
-        private double liquidation;
+        double purchase;
+        double liquidation;
     }
 }

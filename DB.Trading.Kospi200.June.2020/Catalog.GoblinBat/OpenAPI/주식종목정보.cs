@@ -6,28 +6,8 @@ namespace ShareInvest.Catalog
     {
         public IEnumerator GetEnumerator()
         {
-            foreach (var index in Output)
+            foreach (var index in new int[] { 297, 592, 593, 305, 306, 307, 689, 594, 382, 370, 300 })
                 yield return index;
-        }
-        private int[] Output
-        {
-            get
-            {
-                return new int[]
-                {
-                    297,
-                    592,
-                    593,
-                    305,
-                    306,
-                    307,
-                    689,
-                    594,
-                    382,
-                    370,
-                    300
-                };
-            }
         }
     }
 }

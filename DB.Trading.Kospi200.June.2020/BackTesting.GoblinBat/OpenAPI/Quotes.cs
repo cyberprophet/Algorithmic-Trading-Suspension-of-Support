@@ -32,7 +32,7 @@ namespace ShareInvest.Strategy.OpenAPI
                         Code = api.Code,
                         OrdKind = 3,
                         SlbyTP = string.Empty,
-                        OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                        OrdTp = ((int)OrderType.지정가).ToString(),
                         Qty = 1,
                         Price = kv.Value.ToString("F2"),
                         OrgOrdNo = kv.Key
@@ -86,7 +86,7 @@ namespace ShareInvest.Strategy.OpenAPI
 
             return specify.Strategy.Equals(number) && api.Quantity != 0 && (api.Quantity > 0 ? api.SellOrder.Count > 0 : api.BuyOrder.Count > 0) ? false : true;
         }
-        private void SendRollOverOrder(int over)
+        void SendRollOverOrder(int over)
         {
             SendClearingOrder(over);
             SendClearingOrder(-over);
@@ -100,13 +100,13 @@ namespace ShareInvest.Strategy.OpenAPI
                     Code = api.Code,
                     OrdKind = 1,
                     SlbyTP = api.Quantity > 0 ? "1" : "2",
-                    OrdTp = ((int)PurchaseInformation.OrderType.시장가).ToString(),
+                    OrdTp = ((int)OrderType.시장가).ToString(),
                     Qty = (int)(Math.Abs(api.Quantity) / (over < 3 && over > -3 ? 1 : 1.5)),
                     Price = string.Empty,
                     OrgOrdNo = string.Empty
                 });
         }
-        private void SendCorrectionOrder(double price, string number, string classification)
+        void SendCorrectionOrder(double price, string number, string classification)
         {
             api.OnReceiveBalance = false;
             api.OnReceiveOrder(new PurchaseInformation
@@ -117,13 +117,13 @@ namespace ShareInvest.Strategy.OpenAPI
                 Code = api.Code,
                 OrdKind = 2,
                 SlbyTP = classification,
-                OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                OrdTp = ((int)OrderType.지정가).ToString(),
                 Qty = 1,
                 Price = price.ToString("F2"),
                 OrgOrdNo = number
             });
         }
-        private void OnDetermineTheTrend(int trendSell, int trendBuy, double priceSell, double priceBuy)
+        void OnDetermineTheTrend(int trendSell, int trendBuy, double priceSell, double priceBuy)
         {
             if (trendSell > trendBuy)
             {
@@ -164,7 +164,7 @@ namespace ShareInvest.Strategy.OpenAPI
                 }
             }
         }
-        private void SendNewOrder(double[] param, string classification)
+        void SendNewOrder(double[] param, string classification)
         {
             var price = param[classification.Equals("2") ? 9 : 0];
 
@@ -180,13 +180,13 @@ namespace ShareInvest.Strategy.OpenAPI
                 Code = api.Code,
                 OrdKind = 1,
                 SlbyTP = classification,
-                OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                OrdTp = ((int)OrderType.지정가).ToString(),
                 Qty = 1,
                 Price = price.ToString("F2"),
                 OrgOrdNo = string.Empty
             });
         }
-        private void OnReceiveQuotes(object sender, EventHandler.OpenAPI.Quotes e)
+        void OnReceiveQuotes(object sender, EventHandler.OpenAPI.Quotes e)
         {
             if (strategy && e.Total.Equals(string.Empty) == false && int.Parse(e.Time) < 154359)
             {
@@ -231,7 +231,7 @@ namespace ShareInvest.Strategy.OpenAPI
                 }
             }
         }
-        private uint GetScreenNumber()
+        uint GetScreenNumber()
         {
             if (Accumulate++ > 99)
                 Accumulate = 0;
@@ -247,28 +247,28 @@ namespace ShareInvest.Strategy.OpenAPI
             }
             return api.ScreenNumber;
         }
-        private int AccumulateSell
+        int AccumulateSell
         {
             get; set;
         }
-        private int AccumulateBuy
+        int AccumulateBuy
         {
             get; set;
         }
-        private uint Accumulate
+        uint Accumulate
         {
             get; set;
         }
-        private double Sell
+        double Sell
         {
             get; set;
         }
-        private double Buy
+        double Buy
         {
             get; set;
         }
-        private readonly bool strategy;
-        private readonly Specify specify;
-        private readonly ConnectAPI api;
+        readonly bool strategy;
+        readonly Specify specify;
+        readonly ConnectAPI api;
     }
 }

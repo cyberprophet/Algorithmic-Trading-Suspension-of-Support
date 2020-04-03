@@ -15,7 +15,7 @@ namespace ShareInvest.Strategy.XingAPI
 
             foreach (Catalog.Chart chart in Retrieve.Chart)
                 Analysize(chart);
-        }        
+        }
         protected internal Stack<double> Short
         {
             get;
@@ -55,7 +55,7 @@ namespace ShareInvest.Strategy.XingAPI
             }
             return true;
         }
-        private bool GetCheckOnTime(long time)
+        bool GetCheckOnTime(long time)
         {
             if (specify.Time > 0 && specify.Time < 1440)
                 return time.ToString().Length > 8 && GetCheckOnTime(time.ToString());
@@ -65,12 +65,12 @@ namespace ShareInvest.Strategy.XingAPI
 
             return false;
         }
-        private EMA EMA
+        EMA EMA
         {
             get;
         }
-        private const string onTime = "090000000";
-        private const string end = "154500";
+        const string onTime = "090000000";
+        const string end = "154500";
         protected internal const string start = "090000";
         protected internal readonly Specify specify;
     }

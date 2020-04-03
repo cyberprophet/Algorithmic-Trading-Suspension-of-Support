@@ -9,7 +9,7 @@ using ShareInvest.XingAPI;
 namespace ShareInvest.Strategy.XingAPI
 {
     public class Trading : Trend
-    {       
+    {
         public Trading(Catalog.Specify specify) : base(specify)
         {
             foreach (Catalog.XingAPI.Quotes quotes in Retrieve.Quotes)
@@ -27,7 +27,7 @@ namespace ShareInvest.Strategy.XingAPI
                 Check = string.Empty;
 
             ((IEvents<Datum>)API.reals[1]).Send += Analysize;
-        }       
+        }
         protected bool GetTickRevenue(string number)
         {
             if (API.Quantity > 0 && API.SellOrder.TryGetValue(number, out double sell) && sell == GetExactPrice())
@@ -63,7 +63,7 @@ namespace ShareInvest.Strategy.XingAPI
                     });
                 }
         }
-        private void SetTrendFollowing(double max, double classification)
+        void SetTrendFollowing(double max, double classification)
         {
             API.Difference = max - Math.Abs(API.Quantity) - (classification > 0 ? API.BuyOrder.Count : API.SellOrder.Count);
 
@@ -73,7 +73,7 @@ namespace ShareInvest.Strategy.XingAPI
             else
                 API.Classification = string.Empty;
         }
-        private void SetWindingUp(double classification)
+        void SetWindingUp(double classification)
         {
             API.WindingUp = Math.Abs(API.Quantity) - (classification > 0 ? API.BuyOrder.Count : API.SellOrder.Count);
 
@@ -86,7 +86,7 @@ namespace ShareInvest.Strategy.XingAPI
             else
                 API.WindingClass = string.Empty;
         }
-        private double GetExactPrice()
+        double GetExactPrice()
         {
             int tail = int.Parse(API.AvgPurchase.Substring(5, 1));
             string definite = tail < 5 && tail > 0 ? string.Empty : API.AvgPurchase.Substring(5);
@@ -100,7 +100,7 @@ namespace ShareInvest.Strategy.XingAPI
             else
                 return API.Quantity > 0 ? double.Parse(API.AvgPurchase.Substring(0, 5)) + Const.ErrorRate : double.Parse(API.AvgPurchase.Substring(0, 5)) - Const.ErrorRate;
         }
-        private void Analysize(object sender, Datum e)
+        void Analysize(object sender, Datum e)
         {
             if (GetCheckOnTimeByAPI(e.Time))
             {
@@ -149,7 +149,7 @@ namespace ShareInvest.Strategy.XingAPI
                 }
             }
         }
-        private bool GetCheckOnTimeByAPI(string time)
+        bool GetCheckOnTimeByAPI(string time)
         {
             if (specify.Time > 0 && specify.Time < 1440)
             {
@@ -169,7 +169,7 @@ namespace ShareInvest.Strategy.XingAPI
             }
             return true;
         }
-        private bool GetTrend(string trend)
+        bool GetTrend(string trend)
         {
             int check = trend.Contains("-") ? -1 : 1;
 
@@ -180,7 +180,7 @@ namespace ShareInvest.Strategy.XingAPI
 
             return true;
         }
-        private bool GetJudgeTheReaction(double trend, double price)
+        bool GetJudgeTheReaction(double trend, double price)
         {
             var max = specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402);
 
@@ -192,21 +192,21 @@ namespace ShareInvest.Strategy.XingAPI
 
             return false;
         }
-        private bool GetJudgeTheReaction(int volume, double trend)
+        bool GetJudgeTheReaction(int volume, double trend)
         {
             if (trend < 0 && specify.Reaction < volume || trend > 0 && -specify.Reaction > volume)
                 return true;
 
             return false;
         }
-        private int Trend
+        int Trend
         {
             get; set;
         }
-        private EMA EMA
+        EMA EMA
         {
             get;
         }
-        private const string onTime = "090000";
+        const string onTime = "090000";
     }
 }

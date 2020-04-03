@@ -55,14 +55,14 @@ namespace ShareInvest.Strategy
                     return string.Empty;
             }
         }
-        internal protected static Queue<Chart> Chart
+        protected internal static Queue<Chart> Chart
         {
             get; private set;
         }
-        internal protected static Queue<Quotes> Quotes
+        protected internal static Queue<Quotes> Quotes
         {
             get; private set;
         }
-        private const string format = "yyMMddHHmmss";
+        const string format = "yyMMddHHmmss";
     }
 }

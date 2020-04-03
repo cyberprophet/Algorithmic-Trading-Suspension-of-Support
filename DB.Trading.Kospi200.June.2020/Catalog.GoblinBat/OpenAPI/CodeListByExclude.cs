@@ -6,24 +6,17 @@ namespace ShareInvest.Catalog
     {
         public IEnumerator GetEnumerator()
         {
-            foreach (var str in Exclude)
-                yield return str;
-        }
-        private string[] Exclude
-        {
-            get
+            foreach (var str in new string[]
             {
-                return new string[]
-                {
-                    "우",
-                    "우B",
-                    ")",
-                    "호",
-                    "ETN",
-                    "스팩",
-                    " B"
-                };
-            }
+                "우",
+                "우B",
+                ")",
+                "호",
+                "ETN",
+                "스팩",
+                " B"
+            })
+                yield return str;
         }
     }
 }

@@ -11,13 +11,6 @@ namespace ShareInvest.Catalog
             for (i = 0; i < l; i++)
                 yield return output[i];
         }
-        public string ID
-        {
-            get
-            {
-                return id;
-            }
-        }
         public string Value
         {
             get
@@ -33,39 +26,19 @@ namespace ShareInvest.Catalog
         {
             get; set;
         }
-        public string TrCode
-        {
-            get
-            {
-                return code;
-            }
-        }
         public int PrevNext
         {
             get; set;
         }
-        public string ScreenNo
-        {
-            get
-            {
-                return GetScreenNumber();
-            }
-        }
-        private readonly string[] output =
-        {
-            "현재가",
-            "거래량",
-            "체결시간",
-            "시가",
-            "고가",
-            "저가",
-            "전일종가"
-        };
-        private string Code
+        public string ID => id;
+        public string TrCode => code;
+        public string ScreenNo => GetScreenNumber();
+        string Code
         {
             get; set;
         }
-        private const string code = "opt50066";
-        private const string id = "종목코드;시간단위";
+        readonly string[] output = { "현재가", "거래량", "체결시간", "시가", "고가", "저가", "전일종가" };
+        const string code = "opt50066";
+        const string id = "종목코드;시간단위";
     }
 }

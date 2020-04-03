@@ -16,7 +16,7 @@ namespace ShareInvest.Strategy.XingAPI
             if (specify.Time == 1440)
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
         }
-        private void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
+        void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
         {
             if (int.TryParse(e.Time, out int time) && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(API.Classification) == false)
             {
@@ -181,7 +181,7 @@ namespace ShareInvest.Strategy.XingAPI
                     SendNewOrder(e.Price, max, classification);
             }
         }
-        private string GetExactPrice(string avg)
+        string GetExactPrice(string avg)
         {
             if ((avg.Length < 6 || (avg.Length == 6 && (avg.Substring(5, 1).Equals("0") || avg.Substring(5, 1).Equals("5")))) && double.TryParse(avg, out double price))
                 return (API.Quantity > 0 ? price + Const.ErrorRate : price - Const.ErrorRate).ToString("F2");
@@ -195,7 +195,7 @@ namespace ShareInvest.Strategy.XingAPI
             }
             return avg;
         }
-        private double Max(double max, string classification)
+        double Max(double max, string classification)
         {
             int num = 5;
 
@@ -209,7 +209,7 @@ namespace ShareInvest.Strategy.XingAPI
             }
             return max * num * 0.2;
         }
-        private void SendClearingOrder(string number)
+        void SendClearingOrder(string number)
         {
             API.OnReceiveBalance = false;
             new Task(() => API.orders[2].QueryExcute(new Order
@@ -219,7 +219,7 @@ namespace ShareInvest.Strategy.XingAPI
                 OrdQty = specify.Quantity
             })).Start();
         }
-        private void SendCorrectionOrder(string price, string number)
+        void SendCorrectionOrder(string price, string number)
         {
             API.OnReceiveBalance = false;
             new Task(() => API.orders[1].QueryExcute(new Order
@@ -231,7 +231,7 @@ namespace ShareInvest.Strategy.XingAPI
                 OrdQty = specify.Quantity
             })).Start();
         }
-        private void SendNewOrder(string price, string classification)
+        void SendNewOrder(string price, string classification)
         {
             API.OnReceiveBalance = false;
             new Task(() => API.orders[0].QueryExcute(new Order
@@ -243,7 +243,7 @@ namespace ShareInvest.Strategy.XingAPI
                 OrdQty = specify.Quantity
             })).Start();
         }
-        private void SendNewOrder(double[] param, double max, string classification)
+        void SendNewOrder(double[] param, double max, string classification)
         {
             var price = param[classification.Equals(buy) ? 5 : 4];
 
@@ -260,12 +260,12 @@ namespace ShareInvest.Strategy.XingAPI
                 })).Start();
             }
         }
-        private string Price
+        string Price
         {
             get; set;
         }
-        private const string buy = "2";
-        private const string sell = "1";
-        private const string avg = "000.00";
+        const string buy = "2";
+        const string sell = "1";
+        const string avg = "000.00";
     }
 }

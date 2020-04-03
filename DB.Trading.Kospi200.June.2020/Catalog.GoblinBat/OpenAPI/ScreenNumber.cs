@@ -2,25 +2,25 @@
 {
     public class ScreenNumber
     {
-        internal protected string GetScreenNumber()
+        protected internal string GetScreenNumber()
         {
             if (Number < 9000)
                 Number = 9030;
 
             return Number--.ToString();
         }
-        internal protected string GetScreenNumber(uint count)
+        protected internal string GetScreenNumber(uint count)
         {
             if (Count < count)
                 Count = 8999;
 
             return Count--.ToString();
         }
-        private static uint Number
+        static uint Number
         {
             get; set;
         }
-        private static uint Count
+        static uint Count
         {
             get; set;
         }

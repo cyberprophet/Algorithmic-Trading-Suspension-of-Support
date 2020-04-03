@@ -15,7 +15,7 @@ namespace ShareInvest.Strategy.XingAPI
             API.WindingClass = string.Empty;
             ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
         }
-        private void SendRollOverOrder(int over)
+        void SendRollOverOrder(int over)
         {
             SendClearingOrder(over);
             SendClearingOrder(-over);
@@ -30,7 +30,7 @@ namespace ShareInvest.Strategy.XingAPI
                     OrdQty = ((int)(Math.Abs(API.Quantity) / (over < 3 && over > -3 ? 1 : 1.5))).ToString()
                 });
         }
-        private void SendCorrectionOrder(double price, string number)
+        void SendCorrectionOrder(double price, string number)
         {
             API.OnReceiveBalance = false;
             API.orders[1].QueryExcute(new Order
@@ -42,7 +42,7 @@ namespace ShareInvest.Strategy.XingAPI
                 OrdQty = "1"
             });
         }
-        private void OnDetermineTheTrend(int trendSell, int trendBuy, double priceSell, double priceBuy)
+        void OnDetermineTheTrend(int trendSell, int trendBuy, double priceSell, double priceBuy)
         {
             if (trendSell > trendBuy)
             {
@@ -83,7 +83,7 @@ namespace ShareInvest.Strategy.XingAPI
                 }
             }
         }
-        private void SendNewOrder(double[] param, string classification)
+        void SendNewOrder(double[] param, string classification)
         {
             var price = param[classification.Equals("2") ? 9 : 0];
 
@@ -92,7 +92,7 @@ namespace ShareInvest.Strategy.XingAPI
 
             SendNewOrder(classification, price);
         }
-        private void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
+        void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
         {
             if (strategy && int.TryParse(e.Time, out int time) && (time > 153459 && time < 180000) == false)
             {
@@ -136,22 +136,22 @@ namespace ShareInvest.Strategy.XingAPI
                     SendRollOverOrder(over);
             }
         }
-        private int AccumulateSell
+        int AccumulateSell
         {
             get; set;
         }
-        private int AccumulateBuy
+        int AccumulateBuy
         {
             get; set;
         }
-        private double Sell
+        double Sell
         {
             get; set;
         }
-        private double Buy
+        double Buy
         {
             get; set;
         }
-        private readonly bool strategy;
+        readonly bool strategy;
     }
 }

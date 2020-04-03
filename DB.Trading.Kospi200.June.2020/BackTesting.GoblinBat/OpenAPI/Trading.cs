@@ -39,7 +39,7 @@ namespace ShareInvest.Strategy.OpenAPI
             OnTime = true;
             api.SendDatum += Analysize;
         }
-        private void Analysize(object sender, Datum e)
+        void Analysize(object sender, Datum e)
         {
             if (api == null)
             {
@@ -92,7 +92,7 @@ namespace ShareInvest.Strategy.OpenAPI
                                     Code = api.Code,
                                     OrdKind = 1,
                                     SlbyTP = api.Quantity > 0 ? "1" : "2",
-                                    OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                                    OrdTp = ((int)OrderType.지정가).ToString(),
                                     Qty = 1,
                                     Price = price.ToString("F2"),
                                     OrgOrdNo = string.Empty
@@ -120,7 +120,7 @@ namespace ShareInvest.Strategy.OpenAPI
                         Code = api.Code,
                         OrdKind = 1,
                         SlbyTP = trend > 0 ? "2" : "1",
-                        OrdTp = ((int)PurchaseInformation.OrderType.지정가).ToString(),
+                        OrdTp = ((int)OrderType.지정가).ToString(),
                         Qty = 1,
                         Price = price.ToString("F2"),
                         OrgOrdNo = string.Empty
@@ -129,7 +129,7 @@ namespace ShareInvest.Strategy.OpenAPI
                 }
             }
         }
-        private bool GetJudgeTheReaction(double trend, double price)
+        bool GetJudgeTheReaction(double trend, double price)
         {
             var max = specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402);
 
@@ -141,14 +141,14 @@ namespace ShareInvest.Strategy.OpenAPI
 
             return false;
         }
-        private bool GetJudgeTheReaction(int volume, double trend)
+        bool GetJudgeTheReaction(int volume, double trend)
         {
             if (trend < 0 && specify.Reaction < volume || trend > 0 && -specify.Reaction > volume)
                 return true;
 
             return false;
         }
-        private bool GetTrend(string trend)
+        bool GetTrend(string trend)
         {
             int check = trend.Contains("-") ? -1 : 1;
 
@@ -159,7 +159,7 @@ namespace ShareInvest.Strategy.OpenAPI
 
             return true;
         }
-        private bool GetCheckOnTimeByAPI(string time)
+        bool GetCheckOnTimeByAPI(string time)
         {
             if (specify.Time > 0 && specify.Time < 1440)
             {
@@ -179,7 +179,7 @@ namespace ShareInvest.Strategy.OpenAPI
             }
             return true;
         }
-        private bool GetCheckOnTime(long time)
+        bool GetCheckOnTime(long time)
         {
             if (specify.Time > 0 && specify.Time < 1440)
                 return time.ToString().Length > 8 && GetCheckOnTime(time.ToString());
@@ -189,7 +189,7 @@ namespace ShareInvest.Strategy.OpenAPI
 
             return false;
         }
-        private bool GetCheckOnTime(string time)
+        bool GetCheckOnTime(string time)
         {
             var onTime = time.Substring(6, 6);
 
@@ -201,33 +201,33 @@ namespace ShareInvest.Strategy.OpenAPI
             }
             return true;
         }
-        private int Trend
+        int Trend
         {
             get; set;
         }
-        private bool OnTime
+        bool OnTime
         {
             get; set;
         }
-        private string Check
+        string Check
         {
             get; set;
         }
-        private EMA EMA
+        EMA EMA
         {
             get;
         }
-        private Stack<double> Short
+        Stack<double> Short
         {
             get;
         }
-        private Stack<double> Long
+        Stack<double> Long
         {
             get;
         }
-        private readonly Specify specify;
-        private readonly Quotes quotes;
-        private readonly ConnectAPI api;
+        readonly Specify specify;
+        readonly Quotes quotes;
+        readonly ConnectAPI api;
         public event EventHandler<Datum> SendDatum;
     }
 }

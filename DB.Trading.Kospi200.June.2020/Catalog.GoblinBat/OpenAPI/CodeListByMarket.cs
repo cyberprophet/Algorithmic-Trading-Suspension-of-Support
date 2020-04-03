@@ -6,25 +6,18 @@ namespace ShareInvest.Catalog
     {
         public IEnumerator GetEnumerator()
         {
-            foreach (var str in Market)
-                yield return str;
-        }
-        private string[] Market
-        {
-            get
+            foreach (var str in new string[]
             {
-                return new string[]
-                {
-                    "3",
-                    "8",
-                    "50",
-                    "4",
-                    "5",
-                    "6",
-                    "9",
-                    "30"
-                };
-            }
+                "3",
+                "8",
+                "50",
+                "4",
+                "5",
+                "6",
+                "9",
+                "30"
+            })
+                yield return str;
         }
     }
 }

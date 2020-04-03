@@ -41,23 +41,11 @@ namespace ShareInvest.Strategy
             }));
             new BackTesting(key);
         }
-        private int[] Time
-        {
-            get
-            {
-                return new int[] { -1, 1, 3, 5, 10, 15, 30, 45, 60, 1440 };
-            }
-        }
-        private string[] Strategy
-        {
-            get
-            {
-                return new string[] { "TF" };
-            }
-        }
-        private string Code
+        string Code
         {
             get; set;
         }
+        string[] Strategy => new string[] { "TF" };
+        int[] Time => new int[] { -1, 1, 3, 5, 10, 15, 30, 45, 60, 1440 };
     }
 }

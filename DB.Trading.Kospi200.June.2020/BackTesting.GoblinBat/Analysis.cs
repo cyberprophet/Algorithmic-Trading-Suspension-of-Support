@@ -14,7 +14,7 @@ namespace ShareInvest.Strategy
             Long = new Stack<double>(512);
             info = new Information(key);
         }
-        private void Analysize(Chart ch)
+        void Analysize(Chart ch)
         {
             if (GetCheckOnTime(ch.Date))
             {
@@ -48,7 +48,7 @@ namespace ShareInvest.Strategy
             else if (ch.Date > 99999999 && Math.Abs(info.Quantity) > max)
                 info.Operate(ch, info.Quantity > 0 ? -1 : 1);
         }
-        private bool GetCheckOnTime(long time)
+        bool GetCheckOnTime(long time)
         {
             if (specify.Time > 0 && specify.Time < 1440)
                 return time.ToString().Length > 8 && GetCheckOnTime(time.ToString());
@@ -58,7 +58,7 @@ namespace ShareInvest.Strategy
 
             return false;
         }
-        private bool GetCheckOnTime(string time)
+        bool GetCheckOnTime(string time)
         {
             var onTime = time.Substring(6, 6);
 
@@ -70,23 +70,23 @@ namespace ShareInvest.Strategy
             }
             return true;
         }
-        private string Check
+        string Check
         {
             get; set;
         }
-        private EMA EMA
+        EMA EMA
         {
             get;
         }
-        private Stack<double> Short
+        Stack<double> Short
         {
             get;
         }
-        private Stack<double> Long
+        Stack<double> Long
         {
             get;
         }
-        private readonly Specify specify;
-        private readonly Information info;
+        readonly Specify specify;
+        readonly Information info;
     }
 }

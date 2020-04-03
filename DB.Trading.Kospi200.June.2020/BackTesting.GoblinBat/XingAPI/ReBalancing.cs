@@ -24,7 +24,7 @@ namespace ShareInvest.Strategy.XingAPI
 
             ((Catalog.IEvents<Datum>)API.reals[1]).Send += Analysize;
         }
-        private void Analysize(object sender, Datum e)
+        void Analysize(object sender, Datum e)
         {
             if (GetCheckOnTimeByAPI(e.Time))
             {
@@ -38,7 +38,7 @@ namespace ShareInvest.Strategy.XingAPI
             Short.Push(popShort);
             Long.Push(popLong);
         }
-        private bool GetCheckOnTimeByAPI(string time)
+        bool GetCheckOnTimeByAPI(string time)
         {
             if (specify.Time > 0 && specify.Time < 1440)
             {
@@ -58,7 +58,7 @@ namespace ShareInvest.Strategy.XingAPI
             }
             return true;
         }
-        private EMA EMA
+        EMA EMA
         {
             get;
         }
