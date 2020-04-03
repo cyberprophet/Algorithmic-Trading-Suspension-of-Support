@@ -97,10 +97,6 @@ namespace ShareInvest.OpenAPI
             for (uint i = start; i < finish; i++)
                 API.DisconnectRealData(i.ToString("D4"));
         }
-        public void OnReceiveOrder(PurchaseInformation o)
-        {
-            request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo))));
-        }
         public void SetAPI(AxKHOpenAPI axAPI)
         {
             API = axAPI;
@@ -110,32 +106,25 @@ namespace ShareInvest.OpenAPI
             axAPI.OnReceiveMsg += OnReceiveMsg;
             axAPI.OnReceiveChejanData += OnReceiveChejanData;
         }
-        public void LookUpTheDeposit(string[] account)
+        public void LookUpTheDeposit(string[] account) => request.RequestTrData(new Task(() =>
         {
-            request.RequestTrData(new Task(() =>
+            InputValueRqData(new OPW20010
             {
-                InputValueRqData(new OPW20010
-                {
-                    Value = string.Concat(Array.Find(account, o => o.Substring(8, 2).Equals("31")), ";;00"),
-                    PrevNext = 0
-                });
-            }));
-        }
-        public void LookUpTheBalance(string[] account)
+                Value = string.Concat(Array.Find(account, o => o.Substring(8, 2).Equals("31")), ";;00"),
+                PrevNext = 0
+            });
+        }));
+        public void LookUpTheBalance(string[] account) => request.RequestTrData(new Task(() =>
         {
-            request.RequestTrData(new Task(() =>
+            InputValueRqData(new OPW20007
             {
-                InputValueRqData(new OPW20007
-                {
-                    Value = string.Concat(Array.Find(account, o => o.Substring(8, 2).Equals("31")), ";;00"),
-                    PrevNext = 0
-                });
-            }));
-        }
+                Value = string.Concat(Array.Find(account, o => o.Substring(8, 2).Equals("31")), ";;00"),
+                PrevNext = 0
+            });
+        }));
         public void StartProgress(string transfer)
         {
             if (transfer != null)
-            {
                 foreach (string temp in new Transfer(transfer, KeyDecoder.GetWindowsProductKeyFromRegistry()))
                 {
                     if (!temp.Contains(","))
@@ -147,8 +136,6 @@ namespace ShareInvest.OpenAPI
                     }
                     SendMemorize?.Invoke(this, new Memorize(temp.Split(',')));
                 }
-                return;
-            }
         }
         public void StartProgress(Temporary temporary)
         {
@@ -184,7 +171,8 @@ namespace ShareInvest.OpenAPI
             SendMemorize?.Invoke(this, new Memorize("Clear"));
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
-        private void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
+        public void OnReceiveOrder(PurchaseInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo))));
+        void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
             if (Array.Exists(basic, o => o.Equals(e.sMsg.Substring(9))))
             {
@@ -226,7 +214,7 @@ namespace ShareInvest.OpenAPI
 
             new ExceptionMessage(e.sMsg);
         }
-        private void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
+        void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {
             var sb = new StringBuilder(256);
             var index = int.Parse(e.sGubun);
@@ -277,9 +265,9 @@ namespace ShareInvest.OpenAPI
                         SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     }
                     return;
-            };
+            }
         }
-        private void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
+        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
             var sb = new StringBuilder(512);
             int index = Array.FindIndex(Enum.GetNames(typeof(RealType)), o => o.Equals(e.sRealType));
@@ -368,9 +356,9 @@ namespace ShareInvest.OpenAPI
                         Delay.Milliseconds = 205;
                     }
                     break;
-            };
+            }
         }
-        private void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
+        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
             int index = Array.FindIndex(catalogTR, o => o.ToString().Contains(e.sTrCode.Substring(1)));
 
@@ -525,7 +513,7 @@ namespace ShareInvest.OpenAPI
                     break;
             }
         }
-        private void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
+        void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
             SendErrorMessage(e.nErrCode);
             Code = API.GetFutureCodeByIndex(e.nErrCode);
@@ -546,7 +534,7 @@ namespace ShareInvest.OpenAPI
 
             SendCount?.Invoke(this, new NotifyIconText((byte)e.nErrCode));
         }
-        private void PrepareForTrading(string account)
+        void PrepareForTrading(string account)
         {
             SendCount?.Invoke(this, new NotifyIconText(account, API.GetLoginInfo("USER_ID"), API.GetLoginInfo("USER_NAME"), API.GetLoginInfo("GetServerGubun")));
             SellOrder = new Dictionary<string, double>();
@@ -557,7 +545,7 @@ namespace ShareInvest.OpenAPI
             SetPasswordWhileCollectingData(5971);
             OnReceiveBalance = DateTime.Now.Hour > 8 ? true : false;
         }
-        private void SetPasswordWhileCollectingData(int wait)
+        void SetPasswordWhileCollectingData(int wait)
         {
             do
             {
@@ -567,7 +555,7 @@ namespace ShareInvest.OpenAPI
             }
             while (request.QueueCount > 0);
         }
-        private void OnCollectingData(string[] markets)
+        void OnCollectingData(string[] markets)
         {
             Temporary.SetConnection(OpenAPI);
             SetScreenNumber(8900, 9050);
@@ -578,7 +566,7 @@ namespace ShareInvest.OpenAPI
             Delay.Milliseconds = 4315;
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
-        private string[] GetInformation()
+        string[] GetInformation()
         {
             int i, l;
             string exclusion, date = GetDistinctDate(CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1);
@@ -633,7 +621,7 @@ namespace ShareInvest.OpenAPI
 
             return market;
         }
-        private string GetRandomCode(int index)
+        string GetRandomCode(int index)
         {
             if (CodeList.Count < 1)
                 return string.Empty;
@@ -647,7 +635,7 @@ namespace ShareInvest.OpenAPI
             }
             return GetRandomCode(new Random(index).Next(0, CodeList.Count));
         }
-        private void Request(string code)
+        void Request(string code)
         {
             if (code != null && code.Equals(string.Empty) == false)
             {
@@ -678,7 +666,7 @@ namespace ShareInvest.OpenAPI
             }
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
-        private void FixUp(string[] param, string code)
+        void FixUp(string[] param, string code)
         {
             if (code.Equals(API.GetFutureCodeByIndex(0)))
                 SendQuotes?.Invoke(this, new Quotes(new string[]
@@ -720,7 +708,7 @@ namespace ShareInvest.OpenAPI
                 }, param[32], SellOrder, BuyOrder, string.Empty));
             SetInsertCode(code, param[72], param[63]);
         }
-        private void RemainingDay(string code)
+        void RemainingDay(string code)
         {
             if (code.Length < 9 && code.Length > 6)
             {
@@ -742,7 +730,7 @@ namespace ShareInvest.OpenAPI
                 SendErrorMessage(API.CommKwRqData(tr.Value, 0, 100, tr.PrevNext, tr.RQName, tr.ScreenNo));
             }));
         }
-        private void InputValueRqData(ITRs param)
+        void InputValueRqData(ITRs param)
         {
             string[] count = param.ID.Split(';'), value = param.Value.Split(';');
             int i, l = count.Length;
@@ -752,7 +740,7 @@ namespace ShareInvest.OpenAPI
 
             SendErrorMessage(API.CommRqData(param.RQName, param.TrCode, param.PrevNext, param.ScreenNo));
         }
-        private void SendErrorMessage(int error)
+        void SendErrorMessage(int error)
         {
             if (error < 0)
             {
@@ -787,35 +775,35 @@ namespace ShareInvest.OpenAPI
                     OpenAPI = null;
             }
         }
-        private void Dispose()
+        void Dispose()
         {
             new Task(() => SendCount?.Invoke(this, new NotifyIconText((char)69))).Start();
             Dispose(true);
         }
-        private bool DeadLine
+        bool DeadLine
         {
             get; set;
         }
-        private List<string> CodeList
+        List<string> CodeList
         {
             get; set;
         }
-        private ConnectAPI(string key) : base(key)
+        ConnectAPI(string key) : base(key)
         {
             error = new Error();
             request = Delay.GetInstance(205);
             request.Run();
         }
-        private AxKHOpenAPI API
+        AxKHOpenAPI API
         {
             get; set;
         }
-        private static ConnectAPI OpenAPI
+        static ConnectAPI OpenAPI
         {
             get; set;
         }
-        private readonly Error error;
-        private readonly Delay request;
+        readonly Error error;
+        readonly Delay request;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<NotifyIconText> SendCount;

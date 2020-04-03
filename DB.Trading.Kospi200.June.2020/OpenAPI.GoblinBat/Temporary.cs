@@ -14,7 +14,7 @@ namespace ShareInvest.OpenAPI
             api.SendQuotes += OnReceiveMemorize;
             api.SendDatum += OnReceiveMemorize;
         }
-        private Temporary(ConnectAPI api, string key) : base(key)
+        Temporary(ConnectAPI api, string key) : base(key)
         {
             Temp = new StringBuilder(1024);
             api.SendMemorize += OnReceiveMemorize;
@@ -25,16 +25,12 @@ namespace ShareInvest.OpenAPI
             api.SendDatum -= OnReceiveMemorize;
             new Temporary(api, key);
         }
-        internal void SetStorage(string code)
-        {
-            SetStorage(code, Temp);
-        }
-        private void OnReceiveMemorize(object sender, Datum e)
+        void OnReceiveMemorize(object sender, Datum e)
         {
             if (e.Time != null && e.Price > 0 && e.Volume != 0)
                 Temp.Append(e.Time).Append(';').Append(e.Price).Append(',').Append(e.Volume).Append('*');
         }
-        private void OnReceiveMemorize(object sender, Quotes e)
+        void OnReceiveMemorize(object sender, Quotes e)
         {
             if (e.Total.Equals(string.Empty) == false && int.TryParse(e.Time.Substring(0, 4), out int time) && (time == 1545 || time < 1535) && time > 859 && e.Price[4] > 0 && e.Price[5] > 0)
             {
@@ -42,7 +38,7 @@ namespace ShareInvest.OpenAPI
                 Temp.Append(e.Time).Append(';').Append(e.Price[4]).Append(',').Append(e.Quantity[4]).Append(',').Append(total[0]).Append(',').Append(e.Price[5]).Append(',').Append(e.Quantity[5]).Append(',').Append(total[1]).Append('*');
             }
         }
-        private void OnReceiveMemorize(object sender, Memorize e)
+        void OnReceiveMemorize(object sender, Memorize e)
         {
             if (e.SPrevNext != null)
             {
@@ -55,10 +51,11 @@ namespace ShareInvest.OpenAPI
             }
             Temp.Append(string.Concat(e.Date, ",", e.Price, ",", e.Volume)).Append(';');
         }
-        private StringBuilder Temp
+        StringBuilder Temp
         {
             get; set;
         }
-        private readonly string key;
+        internal void SetStorage(string code) => SetStorage(code, Temp);
+        readonly string key;
     }
 }

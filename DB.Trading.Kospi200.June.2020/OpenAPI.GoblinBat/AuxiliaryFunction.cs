@@ -9,10 +9,6 @@ namespace ShareInvest.OpenAPI
 {
     public class AuxiliaryFunction : CallUp
     {
-        protected AuxiliaryFunction(string key) : base(key)
-        {
-
-        }
         protected string GetDistinctDate(int usWeekNumber)
         {
             DayOfWeek dt = DateTime.Now.AddDays(1 - DateTime.Now.Day).DayOfWeek;
@@ -47,94 +43,17 @@ namespace ShareInvest.OpenAPI
 
             return inven;
         }
-        protected string SetPassword
-        {
-            get
-            {
-                return password;
-            }
-        }
-        protected string OnReceiveData
-        {
-            get
-            {
-                return data;
-            }
-        }
-        protected string TR
-        {
-            get
-            {
-                return tr;
-            }
-        }
-        protected string Failure
-        {
-            get
-            {
-                return failure;
-            }
-        }
-        protected string LookUp
-        {
-            get
-            {
-                return lookUp;
-            }
-        }
-        protected string GoblinBat
-        {
-            get
-            {
-                return goblin;
-            }
-        }
-        protected string Collection
-        {
-            get
-            {
-                return collection;
-            }
-        }
-        protected string Response
-        {
-            get
-            {
-                return response;
-            }
-        }
-        protected StringBuilder Exists
-        {
-            get
-            {
-                return new StringBuilder(exists);
-            }
-        }
-        protected enum RealType
-        {
-            주문체결 = 0,
-            선물시세 = 1,
-            선물호가잔량 = 2,
-            선물이론가 = 3,
-            파생잔고 = 4,
-            옵션시세 = 5,
-            옵션호가잔량 = 6,
-            옵션이론가 = 7,
-            선물옵션우선호가 = 8,
-            장시작시간 = 9,
-            주식체결 = 10,
-            주식호가잔량 = 11,
-            주식예상체결 = 12,
-            주식우선호가 = 13,
-            주식당일거래원 = 14,
-            종목프로그램매매 = 15,
-            주식종목정보 = 16,
-            주식시세 = 17,
-            주식시간외호가 = 18,
-            파생실시간상하한 = 19,
-            시간외종목정보 = 20
-        }
-        protected readonly IEnumerable[] catalogReal =
+        protected internal string SetPassword => password;
+        protected internal string OnReceiveData => data;
+        protected internal string TR => tr;
+        protected internal string Failure => failure;
+        protected internal string LookUp => lookUp;
+        protected internal string GoblinBat => goblin;
+        protected internal string Collection => collection;
+        protected internal string Response => response;
+        protected internal StringBuilder Exists => new StringBuilder(exists);
+        protected internal AuxiliaryFunction(string key) : base(key) => Console.WriteLine(key);
+        protected internal readonly IEnumerable[] catalogReal =
         {
             new 주문체결(),
             new 선물시세(),
@@ -169,7 +88,7 @@ namespace ShareInvest.OpenAPI
             new 주식예상체결(),
             new 투자자별매매()
         };
-        protected readonly IEnumerable[] catalogTR =
+        protected internal readonly IEnumerable[] catalogTR =
         {
             new Unspecified(),
             new Opt50028(),
@@ -184,7 +103,7 @@ namespace ShareInvest.OpenAPI
             new OPW20010(),
             new OPW20007()
         };
-        protected readonly string[] basic =
+        protected internal readonly string[] basic =
         {
             "모의투자 선물옵션 신규주문 완료",
             "모의투자 정상처리 되었습니다",
@@ -196,21 +115,45 @@ namespace ShareInvest.OpenAPI
             "모의투자 서비스 지연입니다. 잠시후 재시도 바랍니다..",
             "모의투자 상하한가 오류"
         };
-        protected readonly string[] exclude =
+        protected internal readonly string[] exclude =
         {
             "115960",
             "006800",
             "001880",
             "072770"
         };
-        private const string collection = "백테스팅에 필요한 자료를 수집합니다.";
-        private const string exists = "Information that already Exists";
-        private const string lookUp = "모의투자 조회가 완료되었습니다";
-        private const string failure = "전문 처리 실패(-22)";
-        private const string tr = "서비스 TR을 확인바랍니다.(0006)";
-        private const string data = "트레이딩에 필요한 자료를 수집합니다.\n\n잠시만 기다려주세요.";
-        private const string password = "비밀번호 설정을 하시겠습니까?\n\n자동로그인 기능을 사용하시면 편리합니다.";
-        private const string goblin = "GoblinBat";
-        private const string response = "응답이 지연되고 있습니다";
+        const string collection = "백테스팅에 필요한 자료를 수집합니다.";
+        const string exists = "Information that already Exists";
+        const string lookUp = "모의투자 조회가 완료되었습니다";
+        const string failure = "전문 처리 실패(-22)";
+        const string tr = "서비스 TR을 확인바랍니다.(0006)";
+        const string data = "트레이딩에 필요한 자료를 수집합니다.\n\n잠시만 기다려주세요.";
+        const string password = "비밀번호 설정을 하시겠습니까?\n\n자동로그인 기능을 사용하시면 편리합니다.";
+        const string goblin = "GoblinBat";
+        const string response = "응답이 지연되고 있습니다";
+    }
+    enum RealType
+    {
+        주문체결 = 0,
+        선물시세 = 1,
+        선물호가잔량 = 2,
+        선물이론가 = 3,
+        파생잔고 = 4,
+        옵션시세 = 5,
+        옵션호가잔량 = 6,
+        옵션이론가 = 7,
+        선물옵션우선호가 = 8,
+        장시작시간 = 9,
+        주식체결 = 10,
+        주식호가잔량 = 11,
+        주식예상체결 = 12,
+        주식우선호가 = 13,
+        주식당일거래원 = 14,
+        종목프로그램매매 = 15,
+        주식종목정보 = 16,
+        주식시세 = 17,
+        주식시간외호가 = 18,
+        파생실시간상하한 = 19,
+        시간외종목정보 = 20
     }
 }

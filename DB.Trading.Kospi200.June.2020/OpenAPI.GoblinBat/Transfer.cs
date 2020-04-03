@@ -6,10 +6,6 @@ namespace ShareInvest.OpenAPI
 {
     public class Transfer : AuxiliaryFunction, IEnumerable
     {
-        public Transfer(string path, string key) : base(key)
-        {
-            this.path = path;
-        }
         public IEnumerator GetEnumerator()
         {
             foreach (string file in Directory.GetFiles(path, "*.csv", SearchOption.AllDirectories))
@@ -52,6 +48,7 @@ namespace ShareInvest.OpenAPI
             }
             return date;
         }
-        private readonly string path;
+        internal Transfer(string path, string key) : base(key) => this.path = path;
+        readonly string path;
     }
 }
