@@ -92,7 +92,7 @@ namespace ShareInvest.Message
             public uint message;
             public IntPtr hwnd;
         };
-        private static IntPtr MessageBoxHookProc(int nCode, IntPtr wParam, IntPtr lParam)
+        static IntPtr MessageBoxHookProc(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode < 0)
                 return CallNextHookEx(hHook, nCode, wParam, lParam);
@@ -117,7 +117,7 @@ namespace ShareInvest.Message
             }
             return CallNextHookEx(hook, nCode, wParam, lParam);
         }
-        private static void Setup(string caption, uint uTimeout)
+        static void Setup(string caption, uint uTimeout)
         {
             if (hHook != IntPtr.Zero)
                 throw new NotSupportedException("multiple calls are not supported");
@@ -126,12 +126,11 @@ namespace ShareInvest.Message
             hookCaption = caption ?? "";
             hHook = SetWindowsHookEx(WH_CALLWNDPROCRET, hookProc, IntPtr.Zero, AppDomain.GetCurrentThreadId());
         }
-        private static void MessageBoxTimerProc(IntPtr hWnd, uint uMsg, UIntPtr nIDEvent, uint dwTime)
+        static void MessageBoxTimerProc(IntPtr hWnd, uint uMsg, UIntPtr nIDEvent, uint dwTime)
         {
             if (nIDEvent == (UIntPtr)TimerID)
             {
-                short dw = (short)SendMessage(hWnd, DM_GETDEFID, IntPtr.Zero, IntPtr.Zero);
-
+                var dw = (short)SendMessage(hWnd, DM_GETDEFID, IntPtr.Zero, IntPtr.Zero);
                 EndDialog(hWnd, (IntPtr)dw);
             }
         }
@@ -151,11 +150,11 @@ namespace ShareInvest.Message
         public const int WM_TIMER = 0x0113;
         public const int WM_USER = 0x400;
         public const int DM_GETDEFID = WM_USER + 0;
-        private const int TimerID = 42;
-        private static readonly HookProc hookProc;
-        private static readonly TimerProc hookTimer;
-        private static uint hookTimeout;
-        private static string hookCaption;
-        private static IntPtr hHook;
+        const int TimerID = 42;
+        static readonly HookProc hookProc;
+        static readonly TimerProc hookTimer;
+        static uint hookTimeout;
+        static string hookCaption;
+        static IntPtr hHook;
     }
 }

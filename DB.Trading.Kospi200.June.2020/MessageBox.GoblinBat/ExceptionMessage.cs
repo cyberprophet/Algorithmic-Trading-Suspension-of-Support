@@ -7,21 +7,17 @@ namespace ShareInvest.Message
 {
     public class ExceptionMessage
     {
-        public ExceptionMessage(string message)
-        {
-            new Task(() => Record(message)).Start();
-        }
         public ExceptionMessage(string message, string code)
         {
             this.code = code;
             new Task(() => Record(message)).Start();
         }
-        private void Record(string message)
+        void Record(string message)
         {
             try
             {
-                string path = Path.Combine(Application.StartupPath, @"Message\");
-                DirectoryInfo di = new DirectoryInfo(path);
+                var path = Path.Combine(Application.StartupPath, @"Message\");
+                var di = new DirectoryInfo(path);
                 var date = int.Parse(DateTime.Now.AddDays(-30).ToString("yyMMdd"));
 
                 if (di.Exists)
@@ -38,7 +34,7 @@ namespace ShareInvest.Message
                 else
                     di.Create();
 
-                using (StreamWriter sw = new StreamWriter(string.Concat(path, DateTime.Now.ToString("yyMMdd"), ".txt"), true))
+                using (var sw = new StreamWriter(string.Concat(path, DateTime.Now.ToString("yyMMdd"), ".txt"), true))
                 {
                     if (code != null)
                         sw.WriteLine(code);
@@ -52,6 +48,7 @@ namespace ShareInvest.Message
                 Record(ex.StackTrace);
             }
         }
-        private readonly string code;
+        public ExceptionMessage(string message) => new Task(() => Record(message)).Start();
+        readonly string code;
     }
 }
