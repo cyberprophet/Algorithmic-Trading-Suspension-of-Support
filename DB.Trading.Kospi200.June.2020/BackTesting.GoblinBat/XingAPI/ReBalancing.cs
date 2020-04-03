@@ -6,7 +6,7 @@ namespace ShareInvest.Strategy.XingAPI
 {
     public class ReBalancing : TF
     {
-        internal protected ReBalancing(Specify specify) : base(specify)
+        protected internal ReBalancing(Specify specify) : base(specify)
         {
             foreach (var quotes in Retrieve.Quotes)
                 if (quotes.Price != null && quotes.Volume != null && long.TryParse(quotes.Time, out long time) && double.TryParse(quotes.Price, out double price) && int.TryParse(quotes.Volume, out int volume))
@@ -50,7 +50,7 @@ namespace ShareInvest.Strategy.XingAPI
                 }
                 return true;
             }
-            else if (OnTime && specify.Time == 1440 && time.Equals(On))
+            else if (OnTime && specify.Time == 1440 && time.Equals(start))
             {
                 API.OnReceiveBalance = true;
 

@@ -7,10 +7,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class CCEAT00200 : Query, IOrders, IMessage<NotifyIconText>, IStates<State>
     {
-        internal CCEAT00200() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
         protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
@@ -33,9 +29,9 @@ namespace ShareInvest.XingAPI.Catalog
         public void QueryExcute(Order order)
         {
             var secret = new Secret();
-            var name = GetType().Name;
+            string name = GetType().Name;
 
-            if (LoadFromResFile(secret.GetResFileName(name)))
+            if (LoadFromResFile(secret.GetResFileName(name)) && (API.SellOrder.ContainsKey(order.OrgOrdNo) || API.BuyOrder.ContainsKey(order.OrgOrdNo)))
             {
                 foreach (var param in GetInBlocks(secret.GetData(name, order)))
                     SetFieldData(param.Block, param.Field, param.Occurs, param.Data);
@@ -43,6 +39,7 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(name, Request(false));
             }
         }
+        internal CCEAT00200() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<NotifyIconText> SendMessage;
         public event EventHandler<State> SendState;
     }

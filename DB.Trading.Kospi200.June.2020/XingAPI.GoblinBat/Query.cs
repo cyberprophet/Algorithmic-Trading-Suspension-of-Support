@@ -120,20 +120,28 @@ namespace ShareInvest.XingAPI
         }
         protected virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
+            if (nMessageCode.Equals(impossible))
+            {
+                API.querys[1].QueryExcute();
+                API.OnReceiveBalance = true;
+
+                return;
+            }
             if (bIsSystemError)
             {
                 new ExceptionMessage(szMessage, nMessageCode);
 
                 return;
             }
-            if (int.TryParse(nMessageCode, out int code) && code > 999 && (nMessageCode.Equals(cancel) == false || nMessageCode.Equals(correction) == false))
+            if (int.TryParse(nMessageCode, out int code) && code > 999 && nMessageCode.Equals(cancel) == false && nMessageCode.Equals(correction) == false)
                 new ExceptionMessage(szMessage, nMessageCode);
         }
         protected virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
         protected ConnectAPI API => ConnectAPI.GetInstance();
-        private const string record = "레코드명:";
-        private const string separator = "No,한글명,필드명,영문명,";
-        private const string cancel = "02661";
-        private const string correction = "02667";
+        const string record = "레코드명:";
+        const string separator = "No,한글명,필드명,영문명,";
+        const string cancel = "02661";
+        const string correction = "02667";
+        const string impossible = "03590";
     }
 }

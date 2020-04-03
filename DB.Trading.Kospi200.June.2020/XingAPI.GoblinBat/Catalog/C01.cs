@@ -6,10 +6,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class C01 : Real, IReals, IStates<State>
     {
-        internal C01() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
         protected override void OnReceiveRealData(string szTrCode)
         {
             API.OnReceiveBalance = false;
@@ -42,18 +38,20 @@ namespace ShareInvest.XingAPI.Catalog
                         break;
                 }
             if (API.Quantity == 0)
-                API.AvgPurchase = "000.00";
+                API.AvgPurchase = avg;
 
-            SendState?.Invoke(this, new State(API.OnReceiveBalance = true, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase, API.MaxAmount));
+            API.OnReceiveBalance = true;
+            SendState?.Invoke(this, new State(API.OnReceiveBalance, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase, API.MaxAmount));
         }
         public void OnReceiveRealTime(string code)
         {
             if (LoadFromResFile(new Secret().GetResFileName(GetType().Name)))
                 AdviseRealData();
         }
+        internal C01() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<State> SendState;
     }
-    internal enum C1
+    enum C1
     {
         lineseq = 0,
         accno = 1,

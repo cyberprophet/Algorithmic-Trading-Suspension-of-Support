@@ -13,16 +13,12 @@ namespace ShareInvest.XingAPI
             ((IEvents<Quotes>)quotes).Send += OnReceiveMemorize;
             ((IEvents<Datum>)datum).Send += OnReceiveMemorize;
         }
-        public void SetStorage(string code)
-        {
-            SetStorage(code, sb);
-        }
-        private void OnReceiveMemorize(object sender, Datum e)
+        void OnReceiveMemorize(object sender, Datum e)
         {
             if (e.Time != null && e.Price > 0 && e.Volume != 0)
                 sb.Append(e.Time).Append(';').Append(e.Price).Append(',').Append(e.Volume).Append('*');
         }
-        private void OnReceiveMemorize(object sender, Quotes e)
+        void OnReceiveMemorize(object sender, Quotes e)
         {
             int sell = e.Sell - Sell, buy = e.Buy - Buy;
 
@@ -32,14 +28,15 @@ namespace ShareInvest.XingAPI
             Sell = e.Sell;
             Buy = e.Buy;
         }
-        private int Sell
+        int Sell
         {
             get; set;
         }
-        private int Buy
+        int Buy
         {
             get; set;
         }
-        private readonly StringBuilder sb;
+        public void SetStorage(string code) => SetStorage(code, sb);
+        readonly StringBuilder sb;
     }
 }

@@ -21,9 +21,11 @@ namespace ShareInvest.Strategy.XingAPI
             if (int.TryParse(e.Time, out int time) && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(API.Classification) == false)
             {
                 string classification = API.Classification;
-                var max = specify.Assets / ((classification.Equals("2") ? e.Price[5] : e.Price[4]) * Const.TransactionMultiplier * Const.MarginRate200402);
+                var check = classification.Equals(buy);
+                var max = Max(specify.Assets / ((check ? e.Price[5] : e.Price[4]) * Const.TransactionMultiplier * Const.MarginRate200402), classification);
                 int i, being = (int)max;
                 double[] sp = new double[5], bp = new double[5];
+                API.MaxAmount = max * (classification.Equals(buy) ? 1 : -1);
 
                 for (i = 0; i < 5; i++)
                 {
@@ -35,7 +37,7 @@ namespace ShareInvest.Strategy.XingAPI
                     case sell:
                         if (API.OnReceiveBalance && API.Quantity < 0 && API.AvgPurchase != null && API.AvgPurchase.Equals(avg) == false)
                         {
-                            var price = GetExactPrice();
+                            var price = GetExactPrice(API.AvgPurchase);
 
                             switch (API.BuyOrder.Count)
                             {
@@ -44,6 +46,12 @@ namespace ShareInvest.Strategy.XingAPI
                                     {
                                         SendNewOrder(price, buy);
                                         Price = price;
+
+                                        return;
+                                    }
+                                    else if (API.OnReceiveBalance && max < Math.Abs(API.Quantity))
+                                    {
+                                        SendNewOrder(e.Price, max, buy);
 
                                         return;
                                     }
@@ -56,6 +64,12 @@ namespace ShareInvest.Strategy.XingAPI
                                         if (cbp.ToString("F2").Equals(price) == false && API.OnReceiveBalance)
                                         {
                                             SendCorrectionOrder(price, number);
+
+                                            return;
+                                        }
+                                        else if (Array.Exists(bp, o => o == cbp) == false && API.OnReceiveBalance)
+                                        {
+                                            SendClearingOrder(number);
 
                                             return;
                                         }
@@ -91,15 +105,21 @@ namespace ShareInvest.Strategy.XingAPI
                     case buy:
                         if (API.OnReceiveBalance && API.Quantity > 0 && API.AvgPurchase != null && API.AvgPurchase.Equals(avg) == false)
                         {
-                            var price = GetExactPrice();
+                            var price = GetExactPrice(API.AvgPurchase);
 
                             switch (API.SellOrder.Count)
                             {
                                 case 0:
-                                    if (API.OnReceiveBalance && price.Equals(Price) == false)
+                                    if (API.OnReceiveBalance && (price.Equals(Price) == false))
                                     {
                                         SendNewOrder(price, sell);
                                         Price = price;
+
+                                        return;
+                                    }
+                                    else if (API.OnReceiveBalance && max < API.Quantity)
+                                    {
+                                        SendNewOrder(e.Price, max, sell);
 
                                         return;
                                     }
@@ -112,6 +132,12 @@ namespace ShareInvest.Strategy.XingAPI
                                         if (csp.ToString("F2").Equals(price) == false && API.OnReceiveBalance)
                                         {
                                             SendCorrectionOrder(price, number);
+
+                                            return;
+                                        }
+                                        else if (Array.Exists(sp, o => o == csp) == false && API.OnReceiveBalance)
+                                        {
+                                            SendClearingOrder(number);
 
                                             return;
                                         }
@@ -144,15 +170,8 @@ namespace ShareInvest.Strategy.XingAPI
                             }
                         break;
                 }
-                foreach (var kv in API.SellOrder)
-                    if (Array.Exists(sp, o => o == kv.Value) == false && API.OnReceiveBalance && API.SellOrder.ContainsKey(kv.Key))
-                    {
-                        SendClearingOrder(kv.Key);
-
-                        return;
-                    }
-                foreach (var kv in API.BuyOrder)
-                    if (Array.Exists(bp, o => o == kv.Value) == false && API.OnReceiveBalance && API.BuyOrder.ContainsKey(kv.Key))
+                foreach (var kv in check ? API.BuyOrder : API.SellOrder)
+                    if (Array.Exists(check ? bp : sp, o => o == kv.Value) == false && API.OnReceiveBalance && (check ? API.BuyOrder.ContainsKey(kv.Key) : API.SellOrder.ContainsKey(kv.Key)))
                     {
                         SendClearingOrder(kv.Key);
 
@@ -162,19 +181,33 @@ namespace ShareInvest.Strategy.XingAPI
                     SendNewOrder(e.Price, max, classification);
             }
         }
-        private string GetExactPrice()
+        private string GetExactPrice(string avg)
         {
-            int tail = int.Parse(API.AvgPurchase.Substring(5, 1));
-            string definite = tail < 5 && tail > 0 ? string.Empty : API.AvgPurchase.Substring(5);
+            if ((avg.Length < 6 || (avg.Length == 6 && (avg.Substring(5, 1).Equals("0") || avg.Substring(5, 1).Equals("5")))) && double.TryParse(avg, out double price))
+                return (API.Quantity > 0 ? price + Const.ErrorRate : price - Const.ErrorRate).ToString("F2");
 
-            if (int.TryParse(definite, out int rest))
+            if (int.TryParse(avg.Substring(5, 1), out int rest) && double.TryParse(string.Concat(avg.Substring(0, 5), "5"), out double rp))
             {
-                definite = rest == 0 || rest == 5 ? API.AvgPurchase.Substring(0, 5) : string.Concat(API.AvgPurchase.Substring(0, 5), "5");
+                if (rest > 0 && rest < 5)
+                    return API.Quantity > 0 ? (rp + Const.ErrorRate).ToString("F2") : (rp - Const.ErrorRate * 2).ToString("F2");
 
-                return (API.Quantity > 0 ? double.Parse(definite) + Const.ErrorRate : double.Parse(definite) - Const.ErrorRate).ToString("F2");
+                return API.Quantity > 0 ? (rp + Const.ErrorRate * 2).ToString("F2") : (rp - Const.ErrorRate).ToString("F2");
             }
-            else
-                return (API.Quantity > 0 ? double.Parse(API.AvgPurchase.Substring(0, 5)) + Const.ErrorRate : double.Parse(API.AvgPurchase.Substring(0, 5)) - Const.ErrorRate).ToString("F2");
+            return avg;
+        }
+        private double Max(double max, string classification)
+        {
+            int num = 5;
+
+            foreach (var kv in API.Judge)
+            {
+                if (classification.Equals(sell) && kv.Value > 0)
+                    num--;
+
+                else if (classification.Equals(buy) && kv.Value < 0)
+                    num--;
+            }
+            return max * num * 0.2;
         }
         private void SendClearingOrder(string number)
         {
@@ -212,9 +245,9 @@ namespace ShareInvest.Strategy.XingAPI
         }
         private void SendNewOrder(double[] param, double max, string classification)
         {
-            var price = param[classification.Equals("2") ? 5 : 4];
+            var price = param[classification.Equals(buy) ? 5 : 4];
 
-            if (price > 0 && (classification.Equals("2") ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < API.Max(max) && (classification.Equals("2") ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false)
+            if (price > 0 && (classification.Equals(buy) ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < max && (classification.Equals(buy) ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false)
             {
                 API.OnReceiveBalance = false;
                 new Task(() => API.orders[0].QueryExcute(new Order

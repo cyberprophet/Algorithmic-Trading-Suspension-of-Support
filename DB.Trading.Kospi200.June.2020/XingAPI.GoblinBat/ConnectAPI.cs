@@ -24,14 +24,11 @@ namespace ShareInvest.XingAPI
             }
             return XingAPI;
         }
-        public static ConnectAPI GetInstance()
-        {
-            return XingAPI;
-        }
         public static string Code
         {
             get; private set;
         }
+        public static ConnectAPI GetInstance() => XingAPI;
         public Dictionary<string, double> BuyOrder
         {
             get; private set;
@@ -47,6 +44,10 @@ namespace ShareInvest.XingAPI
         public Dictionary<string, string> CodeList
         {
             get; internal set;
+        }
+        public Dictionary<uint, double> Judge
+        {
+            get;
         }
         public int Volume
         {
@@ -70,7 +71,7 @@ namespace ShareInvest.XingAPI
         }
         public double MaxAmount
         {
-            get; private set;
+            get; set;
         }
         public string[] Accounts
         {
@@ -88,13 +89,7 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
-        public string DetailName
-        {
-            get
-            {
-                return GetAcctDetailName(Accounts.Length == 1 ? Accounts[0] : Array.Find(Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
-            }
-        }
+        public string DetailName => GetAcctDetailName(Accounts.Length == 1 ? Accounts[0] : Array.Find(Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
         public void Dispose()
         {
             Process.Start("shutdown.exe", "-r");
@@ -113,24 +108,8 @@ namespace ShareInvest.XingAPI
             foreach (var kv in Judge)
                 temp += kv.Value;
 
-            Classification = temp == 0 ? string.Empty : temp > 0 ? "2" : "1";
+            Classification = temp == 0 ? string.Empty : temp > 0 ? buy : sell;
             Trend[specify.Time.ToString()] = string.Concat(trend.ToString("F2"), " (", specify.Time == 1440 ? "Base" : check, ")");
-        }
-        public double Max(double max)
-        {
-            int num = 5;
-
-            foreach (var kv in Judge)
-            {
-                if (Classification.Equals("1") && kv.Value > 0)
-                    num--;
-
-                else if (Classification.Equals("2") && kv.Value < 0)
-                    num--;
-            }
-            MaxAmount = max * num * 0.2 * (Classification.Equals("2") ? 1 : -1);
-
-            return max * num * 0.2;
         }
         public FormWindowState SendNotifyIconText(int number)
         {
@@ -175,7 +154,7 @@ namespace ShareInvest.XingAPI
             new CCEAT00200(),
             new CCEAT00300()
         };
-        private void OnEventConnect(string szCode, string szMsg)
+        void OnEventConnect(string szCode, string szMsg)
         {
             if (secret.Code.Equals(szCode) && IsConnected() && secret.Success.Equals(szMsg))
             {
@@ -187,11 +166,7 @@ namespace ShareInvest.XingAPI
                 secret.GetAccount(Accounts);
             }
         }
-        private Dictionary<uint, double> Judge
-        {
-            get;
-        }
-        private ConnectAPI()
+        ConnectAPI()
         {
             secret = new Secret();
             var str = KeyDecoder.GetWindowsProductKeyFromRegistry();
@@ -215,15 +190,17 @@ namespace ShareInvest.XingAPI
             SellOrder = new Dictionary<string, double>();
             BuyOrder = new Dictionary<string, double>();
         }
-        private static ConnectAPI XingAPI
+        static ConnectAPI XingAPI
         {
             get; set;
         }
-        private static string Date
+        static string Date
         {
             get; set;
         }
-        private readonly Secret secret;
+        readonly Secret secret;
+        const string buy = "2";
+        const string sell = "1";
         public event EventHandler<NotifyIconText> Send;
     }
 }

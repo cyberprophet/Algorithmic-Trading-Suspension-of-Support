@@ -7,10 +7,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class CCEAT00100 : Query, IOrders, IMessage<NotifyIconText>, IStates<State>
     {
-        internal CCEAT00100() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
         protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
@@ -43,6 +39,7 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(name, Request(false));
             }
         }
+        internal CCEAT00100() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<NotifyIconText> SendMessage;
         public event EventHandler<State> SendState;
     }

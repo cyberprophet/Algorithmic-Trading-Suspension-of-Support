@@ -7,10 +7,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class T0441 : Query, IQuerys, IEvents<Balance>, IMessage<NotifyIconText>
     {
-        internal T0441() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
         protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
@@ -44,7 +40,7 @@ namespace ShareInvest.XingAPI.Catalog
                     if (param[0].Length == 8 && param[0].Substring(0, 3).Equals("101"))
                     {
                         API.Quantity = param[6].Equals("1") ? -int.Parse(param[2]) : int.Parse(param[2]);
-                        API.AvgPurchase = param[4];
+                        API.AvgPurchase = param[4].Length >= 6 ? param[4].Substring(0, 6) : param[4];
                     }
                 }
                 else if (API.Quantity == 0)
@@ -62,6 +58,7 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(GetType().Name, Request(false));
             }
         }
+        internal T0441() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<Balance> Send;
         public event EventHandler<NotifyIconText> SendMessage;
     }

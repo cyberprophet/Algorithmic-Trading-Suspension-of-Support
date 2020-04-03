@@ -7,10 +7,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class CFOAT00300 : Query, IOrders, IMessage<NotifyIconText>, IStates<State>
     {
-        internal CFOAT00300() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
         protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
@@ -33,24 +29,17 @@ namespace ShareInvest.XingAPI.Catalog
         public void QueryExcute(Order order)
         {
             var secret = new Secret();
-            string name = GetType().Name, block = string.Empty;
+            string name = GetType().Name;
 
-            if (LoadFromResFile(secret.GetResFileName(name)))
+            if (LoadFromResFile(secret.GetResFileName(name)) && (API.SellOrder.ContainsKey(order.OrgOrdNo) || API.BuyOrder.ContainsKey(order.OrgOrdNo)))
             {
                 foreach (var param in GetInBlocks(secret.GetData(name, order)))
-                {
                     SetFieldData(param.Block, param.Field, param.Occurs, param.Data);
 
-                    if (block.Equals(string.Empty))
-                        block = param.Block;
-                }
-                if (API.SellOrder.ContainsKey(order.OrgOrdNo) || API.BuyOrder.ContainsKey(order.OrgOrdNo))
-                    SendErrorMessage(name, Request(false));
-
-                else
-                    ClearBlockdata(block);
+                SendErrorMessage(name, Request(false));
             }
         }
+        internal CFOAT00300() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<NotifyIconText> SendMessage;
         public event EventHandler<State> SendState;
     }

@@ -7,10 +7,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class NC0 : Real, IReals, IEvents<Datum>, ITrends<Trends>
     {
-        internal NC0() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
         protected override void OnReceiveRealData(string szTrCode)
         {
             string[] array = Enum.GetNames(typeof(C)), temp = new string[array.Length];
@@ -18,8 +14,13 @@ namespace ShareInvest.XingAPI.Catalog
             for (int i = 0; i < array.Length; i++)
                 temp[i] = GetFieldData(OutBlock, array[i]);
 
-            Send?.Invoke(this, new Datum(temp[0], temp[4], string.Concat(temp[8], temp[9])));
-            SendTrend?.Invoke(this, new Trends(API.Trend, API.Volume));
+            Send?.Invoke(this, new Datum(temp[0], temp[4]));
+
+            if (int.TryParse(string.Concat(temp[8], temp[9]), out int volume))
+            {
+                API.Volume += volume;
+                SendTrend?.Invoke(this, new Trends(API.Trend, API.Volume));
+            }
         }
         public void OnReceiveRealTime(string code)
         {
@@ -30,6 +31,7 @@ namespace ShareInvest.XingAPI.Catalog
                 AdviseRealData();
             }
         }
+        internal NC0() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<Datum> Send;
         public event EventHandler<Trends> SendTrend;
     }

@@ -14,6 +14,13 @@ namespace ShareInvest.EventHandler.XingAPI
             if (int.TryParse(volume, out int v))
                 Volume = v;
         }
+        public Datum(string time, string price)
+        {
+            Time = time;
+
+            if (double.TryParse(price, out double current))
+                Price = current;
+        }
         public string Time
         {
             get; private set;

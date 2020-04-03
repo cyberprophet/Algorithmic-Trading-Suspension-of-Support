@@ -19,11 +19,12 @@ namespace ShareInvest.XingAPI
         protected const string sell = "1";
         protected const string buy = "2";
         protected const string cancel = "3";
-        private const string field = "futcode";
-        private const string inBlock = "InBlock";
-        private const string outBlock = "OutBlock";
+        protected const string avg = "000.00";
+        const string field = "futcode";
+        const string inBlock = "InBlock";
+        const string outBlock = "OutBlock";
     }
-    internal enum H
+    enum H
     {
         hotime = 12,
         offerho = 1,
@@ -40,7 +41,7 @@ namespace ShareInvest.XingAPI
         dangochk = 'H',
         alloc_gubun = 'G'
     }
-    internal enum C
+    enum C
     {
         chetime = 1,
         sign = 2,
@@ -73,7 +74,7 @@ namespace ShareInvest.XingAPI
         futcode = 29,
         chetime1 = 30
     }
-    internal enum TR
+    enum TR
     {
         SONBT001 = 0,
         SONBT002 = 1,
@@ -82,7 +83,7 @@ namespace ShareInvest.XingAPI
         CONET002 = 4,
         CONET003 = 5
     }
-    internal enum CMO
+    enum CMO
     {
         lineseq = 0,
         accno = 1,

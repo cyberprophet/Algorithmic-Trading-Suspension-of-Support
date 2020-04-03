@@ -56,7 +56,18 @@ namespace ShareInvest
                                 {
                                     new Catalog.XingAPI.Specify
                                     {
-                                        Assets = 50000000,
+                                        Assets = 90000000,
+                                        Code = Strategy.Retrieve.Code,
+                                        Reaction = 500,
+                                        Quantity = "1",
+                                        RollOver = 'A',
+                                        Time = 1,
+                                        Short = 4,
+                                        Long = 60
+                                    },
+                                    new Catalog.XingAPI.Specify
+                                    {
+                                        Assets = 90000000,
                                         Code = Strategy.Retrieve.Code,
                                         Reaction = 500,
                                         Quantity = "1",
@@ -67,7 +78,7 @@ namespace ShareInvest
                                     },
                                     new Catalog.XingAPI.Specify
                                     {
-                                        Assets = 50000000,
+                                        Assets = 90000000,
                                         Code = Strategy.Retrieve.Code,
                                         Reaction = 500,
                                         Quantity = "1",
@@ -78,7 +89,7 @@ namespace ShareInvest
                                     },
                                     new Catalog.XingAPI.Specify
                                     {
-                                        Assets = 50000000,
+                                        Assets = 90000000,
                                         Code = Strategy.Retrieve.Code,
                                         Reaction = 500,
                                         Quantity = "1",
@@ -89,18 +100,7 @@ namespace ShareInvest
                                     },
                                     new Catalog.XingAPI.Specify
                                     {
-                                        Assets = 50000000,
-                                        Code = Strategy.Retrieve.Code,
-                                        Reaction = 500,
-                                        Quantity = "1",
-                                        RollOver = 'A',
-                                        Time = 45,
-                                        Short = 4,
-                                        Long = 60
-                                    },
-                                    new Catalog.XingAPI.Specify
-                                    {
-                                        Assets = 50000000,
+                                        Assets = 90000000,
                                         Code = Strategy.Retrieve.Code,
                                         Reaction = 500,
                                         Quantity = "1",
@@ -420,7 +420,7 @@ namespace ShareInvest
                 case int32:
                     if ((int)e.NotifyIcon < 0)
                     {
-                        if (Temporary != null)
+                        if (Temporary != null && initial.Equals(collecting))
                             Temporary.SetStorage(Open.Code);
 
                         Process.Start("shutdown.exe", "-r");
@@ -459,12 +459,7 @@ namespace ShareInvest
                             return;
 
                         case (char)41:
-                            if (Temporary != null && initial.Equals(collecting))
-                            {
-                                Temporary.SetStorage(Open.Code);
-                                Temporary = null;
-                            }
-                            else if (initial.Equals(trading))
+                            if (initial.Equals(trading))
                             {
                                 Xing.OnReceiveBalance = false;
                                 Process.Start("shutdown.exe", "-r");
@@ -693,17 +688,11 @@ namespace ShareInvest
                 }
             }));
         }
-        private char[] XingConnect
+        private char[] XingConnect => new char[]
         {
-            get
-            {
-                return new char[]
-                {
-                    collecting,
-                    trading
-                };
-            }
-        }
+            collecting,
+            trading
+        };
         private string[] Acc
         {
             get; set;

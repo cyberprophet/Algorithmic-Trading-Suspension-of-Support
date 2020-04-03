@@ -6,10 +6,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class NH0 : Real, IReals, IEvents<Quotes>
     {
-        internal NH0() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
         protected override void OnReceiveRealData(string szTrCode)
         {
             int index = 0;
@@ -58,6 +54,7 @@ namespace ShareInvest.XingAPI.Catalog
                 AdviseRealData();
             }
         }
+        internal NH0() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<Quotes> Send;
     }
 }

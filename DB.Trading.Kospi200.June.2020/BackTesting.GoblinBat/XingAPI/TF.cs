@@ -7,7 +7,7 @@ namespace ShareInvest.Strategy.XingAPI
 {
     public class TF
     {
-        internal protected TF(Specify specify)
+        protected internal TF(Specify specify)
         {
             this.specify = specify;
             Short = new Stack<double>(512);
@@ -15,38 +15,25 @@ namespace ShareInvest.Strategy.XingAPI
 
             foreach (Catalog.Chart chart in Retrieve.Chart)
                 Analysize(chart);
-        }
-        internal protected ConnectAPI API
-        {
-            get
-            {
-                return ConnectAPI.GetInstance();
-            }
-        }
-        internal protected Stack<double> Short
+        }        
+        protected internal Stack<double> Short
         {
             get;
         }
-        internal protected Stack<double> Long
+        protected internal Stack<double> Long
         {
             get;
         }
-        internal protected bool OnTime
+        protected internal bool OnTime
         {
             get; set;
         }
-        internal protected string Check
+        protected internal string Check
         {
             get; set;
         }
-        internal protected string On
-        {
-            get
-            {
-                return (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? start : cme;
-            }
-        }
-        internal protected void Analysize(Catalog.Chart chart)
+        protected internal ConnectAPI API => ConnectAPI.GetInstance();
+        protected internal void Analysize(Catalog.Chart chart)
         {
             if (GetCheckOnTime(chart.Date))
             {
@@ -56,7 +43,7 @@ namespace ShareInvest.Strategy.XingAPI
             Short.Push(Short.Count > 0 ? EMA.Make(specify.Short, Short.Count, chart.Price, Short.Peek()) : EMA.Make(chart.Price));
             Long.Push(Long.Count > 0 ? EMA.Make(specify.Long, Long.Count, chart.Price, Long.Peek()) : EMA.Make(chart.Price));
         }
-        internal protected bool GetCheckOnTime(string time)
+        protected internal bool GetCheckOnTime(string time)
         {
             var onTime = time.Substring(6, 6);
 
@@ -82,10 +69,9 @@ namespace ShareInvest.Strategy.XingAPI
         {
             get;
         }
-        private const string cme = "180000";
         private const string onTime = "090000000";
         private const string end = "154500";
-        private const string start = "090000";
-        internal protected readonly Specify specify;
+        protected internal const string start = "090000";
+        protected internal readonly Specify specify;
     }
 }

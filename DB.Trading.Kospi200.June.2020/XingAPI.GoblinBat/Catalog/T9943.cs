@@ -6,14 +6,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class T9943 : Query, IQuerys
     {
-        internal T9943() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
-        protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
-        {
-            base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
-        }
         protected override void OnReceiveData(string szTrCode)
         {
             var enumerable = GetOutBlocks();
@@ -55,6 +47,7 @@ namespace ShareInvest.XingAPI.Catalog
                     }
             }
         }
+        protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
         public void QueryExcute()
         {
             if (LoadFromResFile(new Secret().GetResFileName(GetType().Name)))
@@ -65,6 +58,7 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(GetType().Name, Request(false));
             }
         }
-        private const string kospi200 = "KOSPI200 ";
+        internal T9943() : base() => Console.WriteLine(GetType().Name);
+        const string kospi200 = "KOSPI200 ";
     }
 }

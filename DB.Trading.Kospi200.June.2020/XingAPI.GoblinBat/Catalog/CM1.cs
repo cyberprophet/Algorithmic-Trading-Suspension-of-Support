@@ -6,10 +6,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class CM1 : Real, IReals, IStates<State>
     {
-        internal CM1() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
         protected override void OnReceiveRealData(string szTrCode)
         {
             API.OnReceiveBalance = false;
@@ -22,7 +18,7 @@ namespace ShareInvest.XingAPI.Catalog
                 switch (temp[55])
                 {
                     case sell:
-                        if (API.SellOrder.Remove(number.ToString()) && int.TryParse(temp[83], out int sq) && double.TryParse(temp[82], out double sp))
+                        if (int.TryParse(temp[83], out int sq) && double.TryParse(temp[82], out double sp) && API.SellOrder.Remove(number.ToString()))
                         {
                             if (API.Quantity <= 0)
                                 API.AvgPurchase = ((sp * sq - double.Parse(API.AvgPurchase) * API.Quantity) / (sq - API.Quantity)).ToString("F2");
@@ -32,7 +28,7 @@ namespace ShareInvest.XingAPI.Catalog
                         break;
 
                     case buy:
-                        if (API.BuyOrder.Remove(number.ToString()) && int.TryParse(temp[83], out int bq) && double.TryParse(temp[82], out double bp))
+                        if (int.TryParse(temp[83], out int bq) && double.TryParse(temp[82], out double bp) && API.BuyOrder.Remove(number.ToString()))
                         {
                             if (API.Quantity >= 0)
                                 API.AvgPurchase = ((double.Parse(API.AvgPurchase) * API.Quantity + bp * bq) / (bq + API.Quantity)).ToString("F2");
@@ -42,16 +38,17 @@ namespace ShareInvest.XingAPI.Catalog
                         break;
                 }
             if (API.Quantity == 0)
-                API.AvgPurchase = "000.00";
+                API.AvgPurchase = avg;
 
             API.OnReceiveBalance = true;
-            SendState?.Invoke(this, new State(API.OnReceiveBalance = true, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase, API.MaxAmount));
+            SendState?.Invoke(this, new State(API.OnReceiveBalance, API.SellOrder.Count, API.Quantity, API.BuyOrder.Count, API.AvgPurchase, API.MaxAmount));
         }
         public void OnReceiveRealTime(string code)
         {
             if (LoadFromResFile(new Secret().GetResFileName(GetType().Name)))
                 AdviseRealData();
         }
+        internal CM1() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<State> SendState;
     }
 }

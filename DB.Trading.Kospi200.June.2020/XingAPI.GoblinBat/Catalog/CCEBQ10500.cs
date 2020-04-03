@@ -6,10 +6,6 @@ namespace ShareInvest.XingAPI.Catalog
 {
     internal class CCEBQ10500 : Query, IQuerys, IEvents<Deposit>, IMessage<NotifyIconText>
     {
-        internal CCEBQ10500() : base()
-        {
-            Console.WriteLine(GetType().Name);
-        }
         protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
@@ -70,6 +66,7 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(GetType().Name, Request(false));
             }
         }
+        internal CCEBQ10500() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<Deposit> Send;
         public event EventHandler<NotifyIconText> SendMessage;
     }
