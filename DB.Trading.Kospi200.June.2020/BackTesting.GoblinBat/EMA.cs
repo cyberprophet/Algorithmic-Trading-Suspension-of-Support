@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.Strategy
 {
-    internal partial struct EMA
+    partial struct EMA
     {
         internal double Make(int period, int count, double price, double before)
         {

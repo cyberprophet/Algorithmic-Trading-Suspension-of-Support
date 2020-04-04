@@ -6,13 +6,13 @@ using ShareInvest.GoblinBatContext;
 
 namespace ShareInvest.Strategy
 {
-    public class BackTesting : CallUpGoblinBat
+    class BackTesting : CallUpGoblinBat
     {
-        public BackTesting(string key) : base(key)
+        BackTesting(string key) : base(key)
         {
 
         }
-        public BackTesting(long assets, string key) : base(key)
+        BackTesting(long assets, string key) : base(key)
         {
             var list = new List<Specify>();
             int i, j;

@@ -28,7 +28,7 @@ namespace ShareInvest.Strategy.XingAPI
 
             ((IEvents<Datum>)API.reals[1]).Send += Analysize;
         }
-        protected bool GetTickRevenue(string number)
+        protected internal bool GetTickRevenue(string number)
         {
             if (API.Quantity > 0 && API.SellOrder.TryGetValue(number, out double sell) && sell == GetExactPrice())
                 return false;
@@ -38,7 +38,7 @@ namespace ShareInvest.Strategy.XingAPI
 
             return specify.Strategy.Equals(number) && API.Quantity != 0 && (API.Quantity > 0 ? API.SellOrder.Count > 0 : API.BuyOrder.Count > 0) ? false : true;
         }
-        protected void SendNewOrder(string classification, double price)
+        protected internal void SendNewOrder(string classification, double price)
         {
             API.OnReceiveBalance = false;
             API.orders[0].QueryExcute(new Order
@@ -50,7 +50,7 @@ namespace ShareInvest.Strategy.XingAPI
                 OrdQty = "1"
             });
         }
-        protected void SendClearingOrder(double trend)
+        protected internal void SendClearingOrder(double trend)
         {
             foreach (KeyValuePair<string, double> kv in trend > 0 ? API.SellOrder.OrderBy(o => o.Value) : API.BuyOrder.OrderByDescending(o => o.Value))
                 if (trend > 0 ? API.SellOrder.Remove(kv.Key) : API.BuyOrder.Remove(kv.Key))

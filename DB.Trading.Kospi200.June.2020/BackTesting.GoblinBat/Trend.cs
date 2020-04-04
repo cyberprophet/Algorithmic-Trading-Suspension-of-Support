@@ -7,7 +7,7 @@ namespace ShareInvest.Strategy
 {
     public class Trend
     {
-        protected Trend(Specify specify)
+        protected internal Trend(Specify specify)
         {
             this.specify = specify;
             Short = new Stack<double>(512);
@@ -16,25 +16,25 @@ namespace ShareInvest.Strategy
             foreach (Chart chart in Retrieve.Chart)
                 Analysize(chart);
         }
-        protected Stack<double> Short
+        protected internal Stack<double> Short
         {
             get;
         }
-        protected Stack<double> Long
+        protected internal Stack<double> Long
         {
             get;
         }
-        protected bool OnTime
+        protected internal bool OnTime
         {
             get; set;
         }
-        protected string Check
+        protected internal string Check
         {
             get; set;
         }
-        protected string On => (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? start : cme;
-        protected ConnectAPI API => ConnectAPI.GetInstance();
-        protected void Analysize(Chart chart)
+        protected internal string On => (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? start : cme;
+        protected internal ConnectAPI API => ConnectAPI.GetInstance();
+        protected internal void Analysize(Chart chart)
         {
             if (GetCheckOnTime(chart.Date))
             {
@@ -44,7 +44,7 @@ namespace ShareInvest.Strategy
             Short.Push(Short.Count > 0 ? EMA.Make(specify.Short, Short.Count, chart.Price, Short.Peek()) : EMA.Make(chart.Price));
             Long.Push(Long.Count > 0 ? EMA.Make(specify.Long, Long.Count, chart.Price, Long.Peek()) : EMA.Make(chart.Price));
         }
-        protected bool GetCheckOnTime(string time)
+        protected internal bool GetCheckOnTime(string time)
         {
             var onTime = time.Substring(6, 6);
 
@@ -74,7 +74,7 @@ namespace ShareInvest.Strategy
         {
             get;
         }
-        protected readonly Specify specify;
+        protected internal readonly Specify specify;
         const string cme = "180000";
         const string onTime = "090000000";
         const string end = "154500";

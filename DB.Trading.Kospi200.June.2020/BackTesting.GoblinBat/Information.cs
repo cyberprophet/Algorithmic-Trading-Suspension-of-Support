@@ -5,7 +5,7 @@ using ShareInvest.Models;
 
 namespace ShareInvest.Strategy
 {
-    internal partial class Information : CallUpGoblinBat
+    partial class Information : CallUpGoblinBat
     {
         internal Information(string key) : base(key)
         {

@@ -5,9 +5,9 @@ using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy
 {
-    public class Analysis : CallUpGoblinBat
+    class Analysis : CallUpGoblinBat
     {
-        public Analysis(Specify specify, string key) : base(key)
+        internal Analysis(Specify specify, string key) : base(key)
         {
             this.specify = specify;
             Short = new Stack<double>(512);
