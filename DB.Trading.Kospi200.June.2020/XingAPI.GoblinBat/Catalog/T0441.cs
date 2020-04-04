@@ -5,14 +5,14 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class T0441 : Query, IQuerys, IEvents<Balance>, IMessage<NotifyIconText>
+    class T0441 : Query, IQuerys, IEvents<Balance>, IMessage<NotifyIconText>
     {
-        protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
             SendMessage?.Invoke(this, new NotifyIconText(szMessage));
         }
-        protected override void OnReceiveData(string szTrCode)
+        protected internal override void OnReceiveData(string szTrCode)
         {
             var enumerable = GetOutBlocks();
             var temp = new StringBuilder[enumerable.Count];

@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.XingAPI
 {
-    internal struct InBlock
+    struct InBlock
     {
         internal int Occurs
         {

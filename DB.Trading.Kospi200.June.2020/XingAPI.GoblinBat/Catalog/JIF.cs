@@ -4,9 +4,9 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class JIF : Real, IReals, IEvents<NotifyIconText>
+    class JIF : Real, IReals, IEvents<NotifyIconText>
     {
-        protected override void OnReceiveRealData(string szTrCode)
+        protected internal override void OnReceiveRealData(string szTrCode)
         {
             if (int.TryParse(GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jangubun)), out int field) && int.TryParse(GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jstatus)), out int choice) && (field == 5 || field == 7) && (choice == 21 || choice == 41))
                 Send?.Invoke(this, new NotifyIconText((char)choice));

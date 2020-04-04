@@ -2,12 +2,12 @@
 
 namespace ShareInvest.GoblinBatContext.Migrations
 {
-    internal sealed class Configuration : DbMigrationsConfiguration<GoblinBatDbContext>
+    sealed class Configuration : DbMigrationsConfiguration<GoblinBatDbContext>
     {
         protected override void Seed(GoblinBatDbContext context)
         {
 
         }
-        public Configuration() => AutomaticMigrationsEnabled = false;
+        Configuration() => AutomaticMigrationsEnabled = false;
     }
 }

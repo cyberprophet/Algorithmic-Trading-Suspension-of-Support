@@ -9,19 +9,19 @@ namespace ShareInvest.OpenAPI
 {
     public class AuxiliaryFunction : CallUp
     {
-        protected string GetDistinctDate(int usWeekNumber)
+        protected internal string GetDistinctDate(int usWeekNumber)
         {
             DayOfWeek dt = DateTime.Now.AddDays(1 - DateTime.Now.Day).DayOfWeek;
             int check = dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 3 : 2;
 
             return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString("yyyyMM") : DateTime.Now.ToString("yyyyMM");
         }
-        protected void FixUp(string[] info)
+        protected internal void FixUp(string[] info)
         {
             if (info[0].Length > 0)
                 SetInsertCode(info[0], info[1], info[35]);
         }
-        protected List<string> SetCodeStorage(string[] arr)
+        protected internal List<string> SetCodeStorage(string[] arr)
         {
             int i = 0;
             StringBuilder sb = new StringBuilder(1024);

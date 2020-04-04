@@ -3,23 +3,23 @@ using XA_DATASETLib;
 
 namespace ShareInvest.XingAPI
 {
-    internal class Real : XARealClass
+    class Real : XARealClass
     {
-        protected InBlock GetInBlock(string code) => new InBlock
+        protected internal InBlock GetInBlock(string code) => new InBlock
         {
             Block = inBlock,
             Field = field,
             Data = code
         };
-        protected virtual void OnReceiveRealData(string szTrCode) => Console.WriteLine(szTrCode);
-        protected string GetInBlock() => inBlock;
-        protected string OutBlock => outBlock;
+        protected internal virtual void OnReceiveRealData(string szTrCode) => Console.WriteLine(szTrCode);
+        protected internal string GetInBlock() => inBlock;
+        protected internal string OutBlock => outBlock;
         protected internal Real() => ReceiveRealData += OnReceiveRealData;
-        protected ConnectAPI API => ConnectAPI.GetInstance();
-        protected const string sell = "1";
-        protected const string buy = "2";
-        protected const string cancel = "3";
-        protected const string avg = "000.00";
+        protected internal ConnectAPI API => ConnectAPI.GetInstance();
+        protected internal const string sell = "1";
+        protected internal const string buy = "2";
+        protected internal const string cancel = "3";
+        protected internal const string avg = "000.00";
         const string field = "futcode";
         const string inBlock = "InBlock";
         const string outBlock = "OutBlock";

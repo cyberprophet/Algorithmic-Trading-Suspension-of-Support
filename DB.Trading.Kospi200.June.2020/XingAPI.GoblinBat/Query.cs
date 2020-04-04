@@ -6,14 +6,14 @@ using XA_DATASETLib;
 
 namespace ShareInvest.XingAPI
 {
-    internal class Query : XAQueryClass
+    class Query : XAQueryClass
     {
         protected internal Query()
         {
             ReceiveData += OnReceiveData;
             ReceiveMessage += OnReceiveMessage;
         }
-        protected Queue<InBlock> GetInBlocks(string[] order)
+        protected internal Queue<InBlock> GetInBlocks(string[] order)
         {
             string block = string.Empty;
             var queue = new Queue<InBlock>();
@@ -46,7 +46,7 @@ namespace ShareInvest.XingAPI
             }
             return queue;
         }
-        protected Queue<InBlock> GetInBlocks(string name)
+        protected internal Queue<InBlock> GetInBlocks(string name)
         {
             string block = string.Empty;
             var queue = new Queue<InBlock>();
@@ -80,7 +80,7 @@ namespace ShareInvest.XingAPI
             }
             return queue;
         }
-        protected Queue<OutBlock> GetOutBlocks()
+        protected internal Queue<OutBlock> GetOutBlocks()
         {
             string block = string.Empty;
             var queue = new Queue<OutBlock>();
@@ -108,7 +108,7 @@ namespace ShareInvest.XingAPI
             }
             return queue;
         }
-        protected void SendErrorMessage(string name, int error)
+        protected internal void SendErrorMessage(string name, int error)
         {
             if (error < 0)
             {
@@ -119,7 +119,7 @@ namespace ShareInvest.XingAPI
                     API.Dispose();
             }
         }
-        protected virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+        protected internal virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             if (nMessageCode.Equals(impossible))
             {
@@ -139,8 +139,8 @@ namespace ShareInvest.XingAPI
             if (int.TryParse(nMessageCode, out int code) && code > 999 && nMessageCode.Equals(cancel) == false && nMessageCode.Equals(correction) == false)
                 new ExceptionMessage(szMessage, nMessageCode);
         }
-        protected virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
-        protected ConnectAPI API => ConnectAPI.GetInstance();
+        protected internal virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
+        protected internal ConnectAPI API => ConnectAPI.GetInstance();
         const string record = "레코드명:";
         const string separator = "No,한글명,필드명,영문명,";
         const string cancel = "02661";

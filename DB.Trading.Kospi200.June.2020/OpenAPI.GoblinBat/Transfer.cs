@@ -24,7 +24,7 @@ namespace ShareInvest.OpenAPI
                     yield return code;
                 }
         }
-        public string GetSecondThursday(string param)
+        string GetSecondThursday(string param)
         {
             string date = string.Empty;
 

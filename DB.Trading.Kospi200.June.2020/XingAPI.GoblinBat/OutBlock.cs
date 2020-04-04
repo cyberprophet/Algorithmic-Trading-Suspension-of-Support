@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.XingAPI
 {
-    internal struct OutBlock
+    struct OutBlock
     {
         internal string Block
         {

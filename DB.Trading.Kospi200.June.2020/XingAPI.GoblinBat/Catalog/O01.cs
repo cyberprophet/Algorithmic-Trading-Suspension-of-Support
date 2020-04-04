@@ -4,9 +4,9 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class O01 : Real, IReals, IStates<State>
+    class O01 : Real, IReals, IStates<State>
     {
-        protected override void OnReceiveRealData(string szTrCode)
+        protected internal override void OnReceiveRealData(string szTrCode)
         {
             string[] arr = Enum.GetNames(typeof(CMO)), temp = new string[arr.Length];
 

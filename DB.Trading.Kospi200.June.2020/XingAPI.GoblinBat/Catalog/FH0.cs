@@ -4,9 +4,9 @@ using ShareInvest.EventHandler.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class FH0 : Real, IReals, IEvents<Quotes>
+    class FH0 : Real, IReals, IEvents<Quotes>
     {
-        protected override void OnReceiveRealData(string szTrCode)
+        protected internal override void OnReceiveRealData(string szTrCode)
         {
             int index = 0;
             string str;

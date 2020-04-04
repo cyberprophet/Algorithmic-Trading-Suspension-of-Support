@@ -50,11 +50,13 @@ namespace ShareInvest.Strategy.XingAPI
                 }
                 return true;
             }
-            else if (OnTime && specify.Time == 1440 && time.Equals(start))
+            else if (OnTime && specify.Time == 1440)
             {
                 API.OnReceiveBalance = true;
+                OnTime = false;
 
-                return OnTime = false;
+                if (time.Equals(start))
+                    return false;
             }
             return true;
         }

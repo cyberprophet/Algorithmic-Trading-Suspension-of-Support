@@ -14,7 +14,7 @@ using ShareInvest.Verify;
 
 namespace ShareInvest
 {
-    internal partial class GoblinBat : Form
+    partial class GoblinBat : Form
     {
         internal GoblinBat(char initial, Secret secret)
         {

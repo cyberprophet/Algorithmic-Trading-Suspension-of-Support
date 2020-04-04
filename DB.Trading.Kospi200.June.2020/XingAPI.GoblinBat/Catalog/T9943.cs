@@ -4,9 +4,9 @@ using ShareInvest.Catalog;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class T9943 : Query, IQuerys
+    class T9943 : Query, IQuerys
     {
-        protected override void OnReceiveData(string szTrCode)
+        protected internal override void OnReceiveData(string szTrCode)
         {
             var enumerable = GetOutBlocks();
             string[] code = null, name = null;
@@ -47,7 +47,7 @@ namespace ShareInvest.XingAPI.Catalog
                     }
             }
         }
-        protected override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
         public void QueryExcute()
         {
             if (LoadFromResFile(new Secret().GetResFileName(GetType().Name)))

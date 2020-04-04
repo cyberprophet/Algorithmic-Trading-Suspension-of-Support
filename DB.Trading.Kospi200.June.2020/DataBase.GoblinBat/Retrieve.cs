@@ -4,7 +4,7 @@ using ShareInvest.Catalog;
 
 namespace ShareInvest
 {
-    internal partial class Retrieve : CallUpGoblinBat
+    sealed partial class Retrieve : CallUpGoblinBat
     {
         internal Queue<Chart> Chart
         {

@@ -5,9 +5,9 @@ using ShareInvest.EventHandler.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    internal class NC0 : Real, IReals, IEvents<Datum>, ITrends<Trends>
+    class NC0 : Real, IReals, IEvents<Datum>, ITrends<Trends>
     {
-        protected override void OnReceiveRealData(string szTrCode)
+        protected internal override void OnReceiveRealData(string szTrCode)
         {
             string[] array = Enum.GetNames(typeof(C)), temp = new string[array.Length];
 
