@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using ShareInvest.Message;
 using XA_DATASETLib;
 
@@ -122,7 +123,9 @@ namespace ShareInvest.XingAPI
         {
             if (nMessageCode.Equals(impossible))
             {
-                API.querys[1].QueryExcute();
+                var api = API.querys[1];
+                Thread.Sleep(1000 / GetTRCountPerSec(api.GetType().Name));
+                api.QueryExcute();
                 API.OnReceiveBalance = true;
 
                 return;

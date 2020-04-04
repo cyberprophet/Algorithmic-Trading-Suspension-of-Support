@@ -31,7 +31,7 @@ namespace ShareInvest
                 {
                     var initial = secret.GetPort(str);
 
-                    if (registry.GetValue(secret.GoblinBat) == null || DateTime.Now.Date.Equals(new DateTime(2020, 4, 3)))
+                    if (registry.GetValue(secret.GoblinBat) == null || DateTime.Now.Date.Equals(new DateTime(2020, 4, 4)))
                     {
                         registry.Close();
                         registry = Registry.CurrentUser.OpenSubKey(new Secret().Path, true);

@@ -135,50 +135,48 @@ namespace ShareInvest
             switch (item)
             {
                 case quo:
-                    switch (Array.Exists(XingConnect, o => o.Equals(initial)))
+                    if (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
-                        case true:
-                            if (Xing != null)
+                        if (Xing != null)
+                        {
+                            foreach (var ctor in Xing.orders)
                             {
-                                foreach (var ctor in Xing.orders)
-                                {
-                                    if (initial.Equals(trading))
-                                        ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
+                                if (initial.Equals(trading))
+                                    ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
 
-                                    ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
-                                }
-                                for (int i = 0; i < Xing.reals.Length; i++)
-                                    switch (i)
-                                    {
-                                        case 0:
-                                            ((IEvents<EventHandler.XingAPI.Quotes>)Xing.reals[i]).Send += Quotes.OnReceiveQuotes;
-                                            continue;
-
-                                        case 1:
-                                            if (initial.Equals(trading))
-                                                ((ITrends<Trends>)Xing.reals[i]).SendTrend += Quotes.OnReceiveTrend;
-
-                                            continue;
-
-                                        case 2:
-                                            Text = XingAPI.ConnectAPI.Code;
-                                            continue;
-
-                                        default:
-                                            if (initial.Equals(trading))
-                                                ((IStates<State>)Xing.reals[i]).SendState += Quotes.OnReceiveState;
-
-                                            continue;
-                                    }
-                                Xing.OnReceiveBalance = true;
+                                ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                             }
-                            break;
+                            for (int i = 0; i < Xing.reals.Length; i++)
+                                switch (i)
+                                {
+                                    case 0:
+                                        ((IEvents<EventHandler.XingAPI.Quotes>)Xing.reals[i]).Send += Quotes.OnReceiveQuotes;
+                                        continue;
 
-                        case false:
-                            Open.SendQuotes += Quotes.OnReceiveQuotes;
-                            Open.SendState += Quotes.OnReceiveState;
-                            Open.SendTrend += Quotes.OnReceiveTrend;
-                            break;
+                                    case 1:
+                                        if (initial.Equals(trading))
+                                            ((ITrends<Trends>)Xing.reals[i]).SendTrend += Quotes.OnReceiveTrend;
+
+                                        continue;
+
+                                    case 2:
+                                        Text = XingAPI.ConnectAPI.Code;
+                                        continue;
+
+                                    default:
+                                        if (initial.Equals(trading))
+                                            ((IStates<State>)Xing.reals[i]).SendState += Quotes.OnReceiveState;
+
+                                        continue;
+                                }
+                            Xing.OnReceiveBalance = true;
+                        }
+                    }
+                    else
+                    {
+                        Open.SendQuotes += Quotes.OnReceiveQuotes;
+                        Open.SendState += Quotes.OnReceiveState;
+                        Open.SendTrend += Quotes.OnReceiveTrend;
                     }
                     Size = new Size(323, 493);
                     Quotes.Show();
@@ -200,46 +198,42 @@ namespace ShareInvest
                     break;
 
                 case acc:
-                    switch (Array.Exists(XingConnect, o => o.Equals(initial)))
+                    if (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
-                        case true:
-                            if (Xing != null)
-                            {
-                                Text = (Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02"))).Insert(5, "-").Insert(3, "-");
-                                var query = Xing.querys[0];
-                                ((IEvents<Deposit>)query).Send += Account.OnReceiveDeposit;
-                                ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
-                                query.QueryExcute();
-                            }
-                            break;
-
-                        case false:
-                            Open.SendDeposit += Account.OnReceiveDeposit;
-                            Open.LookUpTheDeposit(Acc);
-                            break;
+                        if (Xing != null)
+                        {
+                            Text = (Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02"))).Insert(5, "-").Insert(3, "-");
+                            var query = Xing.querys[0];
+                            ((IEvents<Deposit>)query).Send += Account.OnReceiveDeposit;
+                            ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
+                            query.QueryExcute();
+                        }
+                    }
+                    else
+                    {
+                        Open.SendDeposit += Account.OnReceiveDeposit;
+                        Open.LookUpTheDeposit(Acc);
                     }
                     Size = new Size(749, 372);
                     Account.Show();
                     break;
 
                 case bal:
-                    switch (Array.Exists(XingConnect, o => o.Equals(initial)))
+                    if (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
-                        case true:
-                            if (Xing != null)
-                            {
-                                Text = Xing.DetailName;
-                                var query = Xing.querys[1];
-                                ((IEvents<Balance>)query).Send += Balance.OnReceiveBalance;
-                                ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
-                                query.QueryExcute();
-                            }
-                            break;
-
-                        case false:
-                            Open.SendBalance += Balance.OnReceiveBalance;
-                            Open.LookUpTheBalance(Acc);
-                            break;
+                        if (Xing != null)
+                        {
+                            Text = Xing.DetailName;
+                            var query = Xing.querys[1];
+                            ((IEvents<Balance>)query).Send += Balance.OnReceiveBalance;
+                            ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
+                            query.QueryExcute();
+                        }
+                    }
+                    else
+                    {
+                        Open.SendBalance += Balance.OnReceiveBalance;
+                        Open.LookUpTheBalance(Acc);
                     }
                     Size = new Size(249, 0);
                     Balance.SendReSize += OnReceiveSize;
