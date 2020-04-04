@@ -137,40 +137,37 @@ namespace ShareInvest
                 case quo:
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
-                        if (Xing != null)
+                        foreach (var ctor in Xing.orders)
                         {
-                            foreach (var ctor in Xing.orders)
-                            {
-                                if (initial.Equals(trading))
-                                    ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
+                            if (initial.Equals(trading))
+                                ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
 
-                                ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
-                            }
-                            for (int i = 0; i < Xing.reals.Length; i++)
-                                switch (i)
-                                {
-                                    case 0:
-                                        ((IEvents<EventHandler.XingAPI.Quotes>)Xing.reals[i]).Send += Quotes.OnReceiveQuotes;
-                                        continue;
-
-                                    case 1:
-                                        if (initial.Equals(trading))
-                                            ((ITrends<Trends>)Xing.reals[i]).SendTrend += Quotes.OnReceiveTrend;
-
-                                        continue;
-
-                                    case 2:
-                                        Text = XingAPI.ConnectAPI.Code;
-                                        continue;
-
-                                    default:
-                                        if (initial.Equals(trading))
-                                            ((IStates<State>)Xing.reals[i]).SendState += Quotes.OnReceiveState;
-
-                                        continue;
-                                }
-                            Xing.OnReceiveBalance = true;
+                            ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                         }
+                        for (int i = 0; i < Xing.reals.Length; i++)
+                            switch (i)
+                            {
+                                case 0:
+                                    ((IEvents<EventHandler.XingAPI.Quotes>)Xing.reals[i]).Send += Quotes.OnReceiveQuotes;
+                                    continue;
+
+                                case 1:
+                                    if (initial.Equals(trading))
+                                        ((ITrends<Trends>)Xing.reals[i]).SendTrend += Quotes.OnReceiveTrend;
+
+                                    continue;
+
+                                case 2:
+                                    Text = XingAPI.ConnectAPI.Code;
+                                    continue;
+
+                                default:
+                                    if (initial.Equals(trading))
+                                        ((IStates<State>)Xing.reals[i]).SendState += Quotes.OnReceiveState;
+
+                                    continue;
+                            }
+                        Xing.OnReceiveBalance = true;
                     }
                     else
                     {
@@ -200,14 +197,11 @@ namespace ShareInvest
                 case acc:
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
-                        if (Xing != null)
-                        {
-                            Text = (Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02"))).Insert(5, "-").Insert(3, "-");
-                            var query = Xing.querys[0];
-                            ((IEvents<Deposit>)query).Send += Account.OnReceiveDeposit;
-                            ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
-                            query.QueryExcute();
-                        }
+                        Text = (Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02"))).Insert(5, "-").Insert(3, "-");
+                        var query = Xing.querys[0];
+                        ((IEvents<Deposit>)query).Send += Account.OnReceiveDeposit;
+                        ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
+                        query.QueryExcute();
                     }
                     else
                     {
@@ -221,14 +215,11 @@ namespace ShareInvest
                 case bal:
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
-                        if (Xing != null)
-                        {
-                            Text = Xing.DetailName;
-                            var query = Xing.querys[1];
-                            ((IEvents<Balance>)query).Send += Balance.OnReceiveBalance;
-                            ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
-                            query.QueryExcute();
-                        }
+                        Text = Xing.DetailName;
+                        var query = Xing.querys[1];
+                        ((IEvents<Balance>)query).Send += Balance.OnReceiveBalance;
+                        ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
+                        query.QueryExcute();
                     }
                     else
                     {
@@ -517,7 +508,6 @@ namespace ShareInvest
                 ctor.QueryExcute();
             }
             foreach (var ctor in Xing.reals)
-            {
                 switch (ctor.GetType().Name)
                 {
                     case fc0:
@@ -526,7 +516,7 @@ namespace ShareInvest
                             ((ITrends<Trends>)ctor).SendTrend += Quotes.OnReceiveTrend;
 
                         ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
-                        break;
+                        continue;
 
                     case fh0:
                     case nh0:
@@ -535,7 +525,7 @@ namespace ShareInvest
 
                         ((IEvents<EventHandler.XingAPI.Quotes>)ctor).Send += Quotes.OnReceiveQuotes;
                         ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
-                        break;
+                        continue;
 
                     case jif:
                         BeginInvoke(new Action(() =>
@@ -550,7 +540,7 @@ namespace ShareInvest
                             }
                             ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                         }));
-                        break;
+                        continue;
 
                     default:
                         if (initial.Equals(trading))
@@ -558,9 +548,8 @@ namespace ShareInvest
                             ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
                             ctor.OnReceiveRealTime(Strategy.Retrieve.Code);
                         }
-                        break;
+                        continue;
                 }
-            }
             if (initial.Equals(trading))
             {
                 foreach (var ctor in Xing.orders)
