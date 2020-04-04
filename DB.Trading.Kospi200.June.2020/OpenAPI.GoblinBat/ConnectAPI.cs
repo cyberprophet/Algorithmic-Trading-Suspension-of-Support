@@ -583,7 +583,7 @@ namespace ShareInvest.OpenAPI
                     CodeList.Add(exclusion);
                 }
             CodeList[1] = API.GetFutureCodeByIndex(24);
-            string[] temp, market = API.GetCodeListByMarket("").Split(';');
+            string[] temp, market = API.GetCodeListByMarket(string.Empty).Split(';');
             l = market.Length;
 
             foreach (string output in CodeList)
@@ -608,13 +608,9 @@ namespace ShareInvest.OpenAPI
                     continue;
                 }
                 if (tempCode.Length > 0)
-                {
                     foreach (string ex in new CodeListByExclude())
                         if (API.GetMasterCodeName(tempCode).EndsWith(ex) && Array.Exists(exclude, o => o.Equals(tempCode)) == false)
                             market[i] = string.Empty;
-
-                    continue;
-                }
             }
             foreach (string output in SetCodeStorage(market))
                 RemainingDay(output);

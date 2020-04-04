@@ -100,4 +100,9 @@ namespace ShareInvest.Strategy
         double purchase;
         double liquidation;
     }
+    enum Port
+    {
+        Collecting = 67,
+        Trading = 84
+    }
 }

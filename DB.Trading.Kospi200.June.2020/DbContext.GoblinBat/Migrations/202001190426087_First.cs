@@ -2,7 +2,7 @@
 
 namespace ShareInvest.GoblinBatContext.Migrations
 {
-    partial class First : DbMigration
+    public partial class First : DbMigration
     {
         public override void Up()
         {

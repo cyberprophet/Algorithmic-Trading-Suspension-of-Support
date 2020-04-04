@@ -43,7 +43,17 @@ namespace ShareInvest.Strategy.XingAPI
             Short.Push(Short.Count > 0 ? EMA.Make(specify.Short, Short.Count, chart.Price, Short.Peek()) : EMA.Make(chart.Price));
             Long.Push(Long.Count > 0 ? EMA.Make(specify.Long, Long.Count, chart.Price, Long.Peek()) : EMA.Make(chart.Price));
         }
-        protected internal bool GetCheckOnTime(string time)
+        protected internal bool GetCheckOnTime(long time)
+        {
+            if (specify.Time > 0 && specify.Time < 1440)
+                return time.ToString().Length > 8 && GetCheckOnTime(time.ToString());
+
+            else if (specify.Time == 1440)
+                return time.ToString().Length > 8 && time.ToString().Substring(6).Equals(onTime) == false;
+
+            return false;
+        }
+        bool GetCheckOnTime(string time)
         {
             var onTime = time.Substring(6, 6);
 
@@ -55,22 +65,12 @@ namespace ShareInvest.Strategy.XingAPI
             }
             return true;
         }
-        bool GetCheckOnTime(long time)
-        {
-            if (specify.Time > 0 && specify.Time < 1440)
-                return time.ToString().Length > 8 && GetCheckOnTime(time.ToString());
-
-            else if (specify.Time == 1440)
-                return time.ToString().Length > 8 && time.ToString().Substring(6).Equals(onTime) == false;
-
-            return false;
-        }
         EMA EMA
         {
             get;
         }
-        const string onTime = "090000000";
         const string end = "154500";
+        const string onTime = "090000000";
         protected internal const string start = "090000";
         protected internal readonly Specify specify;
     }

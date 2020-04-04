@@ -8,6 +8,6 @@ namespace ShareInvest.GoblinBatContext.Migrations
         {
 
         }
-        Configuration() => AutomaticMigrationsEnabled = false;
+        public Configuration() => AutomaticMigrationsEnabled = false;
     }
 }

@@ -13,7 +13,7 @@ namespace ShareInvest.GoblinBatContext
             var chart = new Queue<Quotes>();
             Quotes quotes;
 
-            if (code.Length > 6 && code.Substring(5, 3).Equals("000"))
+            if (code.Length > 6 && code.Substring(5, 3).Equals(futures))
                 try
                 {
                     using (var db = new GoblinBatDbContext(key))
@@ -30,7 +30,7 @@ namespace ShareInvest.GoblinBatContext
                             o.TotalBuyAmount
                         }).OrderBy(o => o.Date))
                         {
-                            if (int.TryParse(temp.Date.Substring(0, 8), out int date) && date < 20033118)
+                            if (uint.TryParse(temp.Date.Substring(0, 8), out uint date) && date < 20040318)
                                 continue;
 
                             if (temp.Price == null && temp.Volume == null)
@@ -65,7 +65,7 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    return db.Codes.First(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
+                    return db.Codes.First(c => c.Info.Equals(db.Codes.Where(o => o.Code.Length == 8 && o.Code.Substring(0, 3).Equals(kospi200f) && o.Code.Substring(5, 3).Equals(futures)).Max(o => o.Info))).Code;
             }
             catch (Exception ex)
             {

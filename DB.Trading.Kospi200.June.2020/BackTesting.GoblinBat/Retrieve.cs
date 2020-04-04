@@ -22,10 +22,12 @@ namespace ShareInvest.Strategy
                 Quotes = GetQuotes(code);
             }
         }
-        public void SetInitialzeTheCode()
+        public Stack<Catalog.XingAPI.Specify[]> SetInitialzeTheCode()
         {
             Code = GetStrategy();
             SetInitialzeTheCode(Code);
+
+            return new Stack<Catalog.XingAPI.Specify[]>();
         }
         public void SetInitializeTheChart()
         {

@@ -3,45 +3,45 @@ using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
 {
-    sealed class GoblinBatDbContext : DbContext
+    public class GoblinBatDbContext : DbContext
     {
-        internal GoblinBatDbContext(string key) : base(new Secret().GetPort(key))
+        public GoblinBatDbContext(string key) : base(new Secret().GetPort(key))
         {
 
         }
-        internal DbSet<Codes> Codes
+        public DbSet<Codes> Codes
         {
             get; set;
         }
-        internal DbSet<Futures> Futures
+        public DbSet<Futures> Futures
         {
             get; set;
         }
-        internal DbSet<Options> Options
+        public DbSet<Options> Options
         {
             get; set;
         }
-        internal DbSet<Stocks> Stocks
+        public DbSet<Stocks> Stocks
         {
             get; set;
         }
-        internal DbSet<Days> Days
+        public DbSet<Days> Days
         {
             get; set;
         }
-        internal DbSet<Datum> Datums
+        public DbSet<Datum> Datums
         {
             get; set;
         }
-        internal DbSet<Logs> Logs
+        public DbSet<Logs> Logs
         {
             get; set;
         }
-        internal DbSet<Quotes> Quotes
+        public DbSet<Quotes> Quotes
         {
             get; set;
         }
-        internal DbSet<Commentary> Commentaries
+        public DbSet<Commentary> Commentaries
         {
             get; set;
         }

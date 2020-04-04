@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -6,7 +7,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
 using ShareInvest.Message;
+using ShareInvest.Strategy;
 using ShareInvest.Verify;
+using ShareInvest.Catalog.XingAPI;
 
 namespace ShareInvest
 {
@@ -26,12 +29,13 @@ namespace ShareInvest
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6;
                 var remaining = new Random(new Random().Next(0, Application.StartupPath.Length * secret.GetIdentify().Length)).Next(classfication ? 35 : 5, classfication ? 51 : 21);
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
+                Stack<Specify[]> stack = null;
 
                 if (secret.GetDirectoryInfoExists(path))
                 {
                     var initial = secret.GetPort(str);
 
-                    if (registry.GetValue(secret.GoblinBat) == null || DateTime.Now.Date.Equals(new DateTime(2020, 4, 4)))
+                    if (registry.GetValue(secret.GoblinBat) == null || DateTime.Now.Date.Equals(new DateTime(2020, 4, 3)))
                     {
                         registry.Close();
                         registry = Registry.CurrentUser.OpenSubKey(new Secret().Path, true);
@@ -39,9 +43,13 @@ namespace ShareInvest
                     }
                     while (remaining > 0)
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
-                        {
-                            new Strategy.Retrieve(str).SetInitialzeTheCode();
-                        }
+                            new Task(() =>
+                            {
+                                stack = new Strategy.Retrieve(str).SetInitialzeTheCode();
+
+                                while (stack.Count > 0)
+                                    new BackTesting(stack.Pop(), str);
+                            }).Start();
                     while (DateTime.Now.Hour < 18 && (DateTime.Now.Hour > 15 || DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45) || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 9 || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
                     {
                         if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
@@ -50,10 +58,15 @@ namespace ShareInvest
                         else if (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 3765U).Equals(DialogResult.OK))
                             break;
 
-                        Thread.Sleep(30000);
+                        Thread.Sleep(26235);
                     }
                     if (initial.Equals((char)126) == false)
                     {
+                        if (initial.Equals((char)Port.Trading) && stack != null && stack.Count > 0)
+                        {
+                            stack.Clear();
+                            GC.Collect();
+                        }
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
                         Application.Run(new GoblinBat(initial, secret));

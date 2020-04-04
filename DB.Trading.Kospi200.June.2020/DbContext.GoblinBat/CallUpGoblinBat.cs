@@ -13,7 +13,7 @@ namespace ShareInvest.GoblinBatContext
     {
         protected bool GetRecentAnalysis(Specify s)
         {
-            var date = DateTime.Now.Hour < 5 && DateTime.Now.Hour >= 0 ? DateTime.Now.AddDays(-1).ToString("yyMMdd") : DateTime.Now.ToString("yyMMdd");
+            var date = DateTime.Now.Hour < 5 && DateTime.Now.Hour >= 0 ? DateTime.Now.AddDays(-1).ToString(CallUpGoblinBat.date) : DateTime.Now.ToString(CallUpGoblinBat.date);
 
             try
             {
@@ -58,7 +58,7 @@ namespace ShareInvest.GoblinBatContext
         {
             var chart = new Queue<Chart>();
 
-            if (code.Length > 6 && code.Substring(5, 3).Equals("000"))
+            if (code.Length > 6 && code.Substring(5, 3).Equals(futures))
                 try
                 {
                     using (var db = new GoblinBatDbContext(key))
@@ -98,7 +98,7 @@ namespace ShareInvest.GoblinBatContext
                                 if (date < remain)
                                     continue;
 
-                                else if (date > 200331)
+                                else if (date > 200403)
                                     break;
                             }
                             chart.Enqueue(new Chart
@@ -122,7 +122,7 @@ namespace ShareInvest.GoblinBatContext
                 try
                 {
                     using (var db = new GoblinBatDbContext(key))
-                        return db.Codes.First(code => code.Info.Equals(db.Codes.Where(o => o.Code.Substring(0, 3).Equals("101") && o.Code.Substring(5, 3).Equals("000")).Max(o => o.Info))).Code;
+                        return db.Codes.First(code => code.Info.Equals(db.Codes.Where(o => o.Code.Substring(0, 3).Equals(kospi200f) && o.Code.Substring(5, 3).Equals(futures)).Max(o => o.Info))).Code;
                 }
                 catch (Exception ex)
                 {
@@ -163,7 +163,7 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    db.Logs.BulkDelete(db.Logs.Where(o => o.Code.Equals("101Q3000")));
+                    db.Logs.BulkDelete(db.Logs.Where(o => o.Code.Equals(string.Concat(kospi200f, "Q3", futures))));
             }
             catch (Exception ex)
             {
@@ -171,6 +171,9 @@ namespace ShareInvest.GoblinBatContext
             }
         }
         protected CallUpGoblinBat(string key) => this.key = key;
+        protected internal const string futures = "000";
+        protected internal const string kospi200f = "101";
+        const string date = "yyMMdd";
         readonly string key;
     }
 }
