@@ -5,16 +5,16 @@ using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy
 {
-    class Analysis : CallUpGoblinBat
+    class Analysize : CallUpGoblinBat
     {
-        internal Analysis(Specify specify, string key) : base(key)
+        internal Analysize(Specify specify, string key) : base(key)
         {
             this.specify = specify;
             Short = new Stack<double>(512);
             Long = new Stack<double>(512);
             info = new Information(key);
         }
-        void Analysize(Chart ch)
+        void OnReceiveAnalysize(Chart ch)
         {
             if (GetCheckOnTime(ch.Date))
             {

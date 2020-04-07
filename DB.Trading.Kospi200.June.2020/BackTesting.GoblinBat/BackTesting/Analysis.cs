@@ -114,19 +114,34 @@ namespace ShareInvest.Strategy.Statistics
                                     break;
                             }
                         }
-                        for (i = 4; i > -1; i--)
-                            if (being + bt.Quantity <= i && bt.SellOrder.ContainsValue(sp[i]))
-                            {
-                                var number = bt.SellOrder.First(o => o.Value == bt.SellOrder.Min(m => m.Value)).Key;
-                                var price = bt.SellOrder.Max(o => o.Value) + Const.ErrorRate;
+                        foreach (var kv in bt.SellOrder.OrderBy(o => o.Value))
+                        {
+                            var sell = being + bt.Quantity - bt.SellOrder.Count;
 
-                                if (bt.SellOrder.ContainsKey(number))
+                            if (sell > 0 && sell < 5)
+                            {
+                                if (kv.Value > sp[sell])
                                 {
-                                    bt.SendCorrectionOrder(price.ToString("F2"), number);
+                                    bt.SendCorrectionOrder((kv.Value - Const.ErrorRate).ToString("F2"), kv.Key);
+
+                                    return;
+                                }
+                                else if (kv.Value < sp[sell])
+                                {
+                                    bt.SendCorrectionOrder((kv.Value + Const.ErrorRate).ToString("F2"), kv.Key);
 
                                     return;
                                 }
                             }
+                            else if (sell < 0)
+                            {
+                                bt.SendClearingOrder(kv.Key);
+
+                                return;
+                            }
+                            else
+                                break;
+                        }
                         break;
 
                     case buy:
@@ -182,19 +197,34 @@ namespace ShareInvest.Strategy.Statistics
                                     break;
                             }
                         }
-                        for (i = 4; i > -1; i--)
-                            if (being - bt.Quantity <= i && bt.BuyOrder.ContainsValue(bp[i]))
-                            {
-                                var number = bt.BuyOrder.First(o => o.Value == bt.BuyOrder.Max(m => m.Value)).Key;
-                                var price = bt.BuyOrder.Min(o => o.Value) - Const.ErrorRate;
+                        foreach (var kv in bt.BuyOrder.OrderByDescending(o => o.Value))
+                        {
+                            var buy = being - bt.Quantity - bt.BuyOrder.Count;
 
-                                if (bt.BuyOrder.ContainsKey(number))
+                            if (buy > 0 && buy < 5)
+                            {
+                                if (kv.Value < bp[buy])
                                 {
-                                    bt.SendCorrectionOrder(price.ToString("F2"), number);
+                                    bt.SendCorrectionOrder((kv.Value + Const.ErrorRate).ToString("F2"), kv.Key);
+
+                                    return;
+                                }
+                                else if (kv.Value > bp[buy])
+                                {
+                                    bt.SendCorrectionOrder((kv.Value - Const.ErrorRate).ToString("F2"), kv.Key);
 
                                     return;
                                 }
                             }
+                            else if (buy < 0)
+                            {
+                                bt.SendClearingOrder(kv.Key);
+
+                                return;
+                            }
+                            else
+                                break;
+                        }
                         break;
                 }
                 foreach (var kv in check ? bt.BuyOrder : bt.SellOrder)
@@ -204,7 +234,7 @@ namespace ShareInvest.Strategy.Statistics
 
                         return;
                     }
-                bt.SendNewOrder(check ? e.BuyPrice : e.SellPrice, max, classification);
+                bt.SendNewOrder(check ? e.BuyPrice - Const.ErrorRate * 3 : e.SellPrice + Const.ErrorRate * 3, max, classification);
             }
         }
         void Analysize(object sender, EventHandler.BackTesting.Datum e)

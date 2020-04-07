@@ -42,6 +42,9 @@ namespace ShareInvest.Strategy.XingAPI
             }
             Short.Push(Short.Count > 0 ? EMA.Make(specify.Short, Short.Count, chart.Price, Short.Peek()) : EMA.Make(chart.Price));
             Long.Push(Long.Count > 0 ? EMA.Make(specify.Long, Long.Count, chart.Price, Long.Peek()) : EMA.Make(chart.Price));
+
+            if (specify.Time == 1440 && chart.Volume != 0 && GetCheckTime(chart.Date.ToString()))
+                OnReceiveTrend(chart.Volume);
         }
         protected internal bool GetCheckOnTime(long time)
         {
@@ -52,6 +55,20 @@ namespace ShareInvest.Strategy.XingAPI
                 return time.ToString().Length > 8 && time.ToString().Substring(6).Equals(onTime) == false;
 
             return false;
+        }
+        protected internal void OnReceiveTrend(int volume)
+        {
+            API.Volume += volume;
+        }
+        bool GetCheckTime(string time)
+        {
+            if (time.Substring(6).Equals(onTime))
+                return false;
+
+            if (time.Substring(6, 6).Equals(end))
+                return false;
+
+            return true;
         }
         bool GetCheckOnTime(string time)
         {
@@ -69,9 +86,14 @@ namespace ShareInvest.Strategy.XingAPI
         {
             get;
         }
-        const string end = "154500";
         const string onTime = "090000000";
+        protected internal const string end = "154500";
         protected internal const string start = "090000";
         protected internal readonly Specify specify;
+    }
+    enum Classification
+    {
+        Sell = '1',
+        Buy = '2'
     }
 }

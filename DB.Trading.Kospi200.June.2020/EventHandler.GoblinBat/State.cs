@@ -42,7 +42,7 @@ namespace ShareInvest.EventHandler
             SellOrderCount = sell.ToString();
             Quantity = quantity.ToString();
             BuyOrderCount = buy.ToString();
-            ScreenNumber = avg.ToString();
+            ScreenNumber = avg != null ? avg.ToString() : string.Empty;
             Max = max.ToString("F2");
         }
     }

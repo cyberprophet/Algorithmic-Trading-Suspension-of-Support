@@ -14,161 +14,82 @@ namespace ShareInvest.Strategy.XingAPI
             API.OnReceiveBalance = false;
 
             if (specify.Time == 1440)
+            {
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
+            }
         }
         void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
         {
-            if (int.TryParse(e.Time, out int time) && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(API.Classification) == false)
+            if (int.TryParse(e.Time, out int time) && (time < 090000 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(API.Classification) == false)
             {
-                string classification = API.Classification;
+                string classification = API.Classification, price;
                 var check = classification.Equals(buy);
                 var max = Max(specify.Assets / ((check ? e.Price[5] : e.Price[4]) * Const.TransactionMultiplier * Const.MarginRate200402), classification);
-                int i, being = (int)max;
-                double[] sp = new double[5], bp = new double[5];
+                double[] sp = new double[10], bp = new double[10];
                 API.MaxAmount = max * (classification.Equals(buy) ? 1 : -1);
 
-                for (i = 0; i < 5; i++)
+                for (int i = 0; i < 10; i++)
+                    if (double.TryParse((e.Price[5] - Const.ErrorRate * (9 - i)).ToString("F2"), out double bt) && double.TryParse((e.Price[4] + Const.ErrorRate * (9 - i)).ToString("F2"), out double st))
+                    {
+                        sp[i] = st;
+                        bp[i] = bt;
+                    }
+                if (API.AvgPurchase != null && API.AvgPurchase.Equals(avg) == false)
                 {
-                    sp[i] = e.Price[i];
-                    bp[i] = e.Price[9 - i];
-                }
-                switch (classification)
-                {
-                    case sell:
-                        if (API.OnReceiveBalance && API.Quantity < 0 && API.AvgPurchase != null && API.AvgPurchase.Equals(avg) == false)
-                        {
-                            var price = GetExactPrice(API.AvgPurchase);
+                    price = GetExactPrice(API.AvgPurchase);
 
-                            switch (API.BuyOrder.Count)
+                    switch (classification)
+                    {
+                        case sell:
+                            if (API.OnReceiveBalance && API.Quantity < 0)
                             {
-                                case 0:
-                                    if (API.OnReceiveBalance && price.Equals(Price) == false)
-                                    {
-                                        SendNewOrder(price, buy);
-                                        Price = price;
-
-                                        return;
-                                    }
-                                    else if (API.OnReceiveBalance && max < Math.Abs(API.Quantity))
-                                    {
-                                        SendNewOrder(e.Price, max, buy);
-
-                                        return;
-                                    }
-                                    break;
-
-                                case 1:
-                                    var number = API.BuyOrder.First().Key;
-
-                                    if (API.BuyOrder.TryGetValue(number, out double cbp))
-                                        if (cbp.ToString("F2").Equals(price) == false && API.OnReceiveBalance)
-                                        {
-                                            SendCorrectionOrder(price, number);
-
-                                            return;
-                                        }
-                                        else if (Array.Exists(bp, o => o == cbp) == false && API.OnReceiveBalance)
-                                        {
-                                            SendClearingOrder(number);
-
-                                            return;
-                                        }
-                                    break;
-
-                                default:
-                                    var order = API.BuyOrder.First(f => f.Value == API.BuyOrder.Max(o => o.Value)).Key;
-
-                                    if (API.OnReceiveBalance && API.BuyOrder.ContainsKey(order))
-                                    {
-                                        SendClearingOrder(order);
-
-                                        return;
-                                    }
-                                    break;
-                            }
-                        }
-                        for (i = 4; i > -1; i--)
-                            if (being + API.Quantity <= i && API.SellOrder.ContainsValue(sp[i]))
-                            {
-                                var number = API.SellOrder.First(o => o.Value == API.SellOrder.Min(m => m.Value)).Key;
-                                var price = API.SellOrder.Max(o => o.Value) + Const.ErrorRate;
-
-                                if (API.OnReceiveBalance && API.SellOrder.ContainsKey(number))
+                                if (API.BuyOrder.Count == 0 && max < -API.Quantity && double.TryParse(price, out double bAvg) && bAvg > bp[0])
                                 {
-                                    SendCorrectionOrder(price.ToString("F2"), number);
+                                    SendNewOrder(bAvg > bp[bp.Length - 1] ? bp[bp.Length - 1].ToString("F2") : price, buy);
 
                                     return;
                                 }
-                            }
-                        break;
-
-                    case buy:
-                        if (API.OnReceiveBalance && API.Quantity > 0 && API.AvgPurchase != null && API.AvgPurchase.Equals(avg) == false)
-                        {
-                            var price = GetExactPrice(API.AvgPurchase);
-
-                            switch (API.SellOrder.Count)
-                            {
-                                case 0:
-                                    if (API.OnReceiveBalance && (price.Equals(Price) == false))
-                                    {
-                                        SendNewOrder(price, sell);
-                                        Price = price;
-
-                                        return;
-                                    }
-                                    else if (API.OnReceiveBalance && max < API.Quantity)
-                                    {
-                                        SendNewOrder(e.Price, max, sell);
-
-                                        return;
-                                    }
-                                    break;
-
-                                case 1:
-                                    var number = API.SellOrder.First().Key;
-
-                                    if (API.SellOrder.TryGetValue(number, out double csp))
-                                        if (csp.ToString("F2").Equals(price) == false && API.OnReceiveBalance)
-                                        {
-                                            SendCorrectionOrder(price, number);
-
-                                            return;
-                                        }
-                                        else if (Array.Exists(sp, o => o == csp) == false && API.OnReceiveBalance)
-                                        {
-                                            SendClearingOrder(number);
-
-                                            return;
-                                        }
-                                    break;
-
-                                default:
-                                    var order = API.SellOrder.First(f => f.Value == API.SellOrder.Min(o => o.Value)).Key;
-
-                                    if (API.OnReceiveBalance && API.SellOrder.ContainsKey(order))
-                                    {
-                                        SendClearingOrder(order);
-
-                                        return;
-                                    }
-                                    break;
-                            }
-                        }
-                        for (i = 4; i > -1; i--)
-                            if (being - API.Quantity <= i && API.BuyOrder.ContainsValue(bp[i]))
-                            {
-                                var number = API.BuyOrder.First(o => o.Value == API.BuyOrder.Max(m => m.Value)).Key;
-                                var price = API.BuyOrder.Min(o => o.Value) - Const.ErrorRate;
-
-                                if (API.OnReceiveBalance && API.BuyOrder.ContainsKey(number))
+                                if (API.BuyOrder.Count > 0)
                                 {
-                                    SendCorrectionOrder(price.ToString("F2"), number);
+                                    var number = API.BuyOrder.First(f => f.Value == API.BuyOrder.Max(o => o.Value)).Key;
+
+                                    if (API.BuyOrder.TryGetValue(number, out double cbp) && bp[5] > cbp)
+                                    {
+                                        SendClearingOrder(number);
+
+                                        return;
+                                    }
+                                }
+                                if (API.SellOrder.Count > 0 && SetCorrectionSellOrder(price, bp))
+                                    return;
+                            }
+                            break;
+
+                        case buy:
+                            if (API.OnReceiveBalance && API.Quantity > 0)
+                            {
+                                if (API.SellOrder.Count == 0 && max < API.Quantity && double.TryParse(price, out double sAvg) && sAvg < sp[0])
+                                {
+                                    SendNewOrder(sAvg < sp[sp.Length - 1] ? sp[sp.Length - 1].ToString("F2") : price, sell);
 
                                     return;
                                 }
+                                if (API.SellOrder.Count > 0)
+                                {
+                                    var number = API.SellOrder.First(f => f.Value == API.SellOrder.Min(o => o.Value)).Key;
+
+                                    if (API.SellOrder.TryGetValue(number, out double csp) && sp[5] < csp)
+                                    {
+                                        SendClearingOrder(number);
+
+                                        return;
+                                    }
+                                }
+                                if (API.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, sp))
+                                    return;
                             }
-                        break;
+                            break;
+                    }
                 }
                 foreach (var kv in check ? API.BuyOrder : API.SellOrder)
                     if (Array.Exists(check ? bp : sp, o => o == kv.Value) == false && API.OnReceiveBalance && (check ? API.BuyOrder.ContainsKey(kv.Key) : API.SellOrder.ContainsKey(kv.Key)))
@@ -178,7 +99,7 @@ namespace ShareInvest.Strategy.XingAPI
                         return;
                     }
                 if (API.OnReceiveBalance)
-                    SendNewOrder(e.Price, max, classification);
+                    SendNewOrder(e.Price, classification);
             }
         }
         string GetExactPrice(string avg)
@@ -208,6 +129,69 @@ namespace ShareInvest.Strategy.XingAPI
                     num--;
             }
             return max * num * 0.2;
+        }
+        double Max(double max, Classification classification)
+        {
+            int num = 0;
+
+            foreach (var kv in API.Judge)
+                switch (classification)
+                {
+                    case Classification.Sell:
+                        if (kv.Value > 0)
+                            num += 2;
+
+                        break;
+
+                    case Classification.Buy:
+                        if (kv.Value < 0)
+                            num += 2;
+
+                        break;
+                }
+            return max * num * 0.1;
+        }
+        bool SetCorrectionBuyOrder(string avg, double[] sell)
+        {
+            if (double.TryParse(avg, out double sAvg) && double.TryParse(((sAvg * API.Quantity + sell[sell.Length - 1]) / (API.Quantity + 1)).ToString("F2"), out double prospect))
+            {
+                double price = API.BuyOrder.Max(o => o.Value) + Const.ErrorRate, abscond = API.BuyOrder.Min(o => o.Value) - Const.ErrorRate;
+
+                if (prospect < sAvg && price < sell[sell.Length - 1])
+                {
+                    SendCorrectionOrder(price.ToString("F2"), API.BuyOrder.OrderBy(o => o.Value).First().Key);
+
+                    return true;
+                }
+                else if (sAvg > prospect && abscond > sell[sell.Length - 1] - Const.ErrorRate * 9)
+                {
+                    SendCorrectionOrder(abscond.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key);
+
+                    return true;
+                }
+            }
+            return false;
+        }
+        bool SetCorrectionSellOrder(string avg, double[] buy)
+        {
+            if (double.TryParse(avg, out double bAvg) && double.TryParse(((buy[buy.Length - 1] - bAvg * API.Quantity) / (1 - API.Quantity)).ToString("F2"), out double prospect))
+            {
+                double price = API.SellOrder.Min(o => o.Value) - Const.ErrorRate, abscond = API.SellOrder.Max(o => o.Value) + Const.ErrorRate;
+
+                if (prospect > bAvg && price > buy[buy.Length - 1])
+                {
+                    SendCorrectionOrder(price.ToString("F2"), API.SellOrder.OrderByDescending(o => o.Value).First().Key);
+
+                    return true;
+                }
+                else if (bAvg < prospect && abscond < buy[buy.Length - 1] + Const.ErrorRate * 9)
+                {
+                    SendCorrectionOrder(abscond.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key);
+
+                    return true;
+                }
+            }
+            return false;
         }
         void SendClearingOrder(string number)
         {
@@ -243,11 +227,12 @@ namespace ShareInvest.Strategy.XingAPI
                 OrdQty = specify.Quantity
             })).Start();
         }
-        void SendNewOrder(double[] param, double max, string classification)
+        void SendNewOrder(double[] param, string classification)
         {
-            var price = param[classification.Equals(buy) ? 5 : 4];
+            var check = classification.Equals(buy);
+            var price = param[check ? param.Length - 1 : 0];
 
-            if (price > 0 && (classification.Equals(buy) ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < max && (classification.Equals(buy) ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false)
+            if (price > 0 && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402), check ? Classification.Buy : Classification.Sell) && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false)
             {
                 API.OnReceiveBalance = false;
                 new Task(() => API.orders[0].QueryExcute(new Order
@@ -259,10 +244,6 @@ namespace ShareInvest.Strategy.XingAPI
                     OrdQty = specify.Quantity
                 })).Start();
             }
-        }
-        string Price
-        {
-            get; set;
         }
         const string buy = "2";
         const string sell = "1";

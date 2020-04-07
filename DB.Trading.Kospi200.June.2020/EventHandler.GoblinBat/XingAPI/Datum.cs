@@ -4,15 +4,11 @@ namespace ShareInvest.EventHandler.XingAPI
 {
     public class Datum : EventArgs
     {
-        public Datum(string time, string price, string volume)
+        public Datum(string time, double price, int volume)
         {
             Time = time;
-
-            if (double.TryParse(price, out double p))
-                Price = p;
-
-            if (int.TryParse(volume, out int v))
-                Volume = v;
+            Volume = volume;
+            Price = price;
         }
         public Datum(string time, string price)
         {

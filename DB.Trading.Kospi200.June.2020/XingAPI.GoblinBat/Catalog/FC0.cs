@@ -14,11 +14,9 @@ namespace ShareInvest.XingAPI.Catalog
             for (int i = 0; i < array.Length - 1; i++)
                 temp[i] = GetFieldData(OutBlock, array[i]);
 
-            Send?.Invoke(this, new Datum(temp[0], temp[4]));
-
-            if (int.TryParse(string.Concat(temp[8], temp[9]), out int volume))
+            if (int.TryParse(string.Concat(temp[8], temp[9]), out int volume) && double.TryParse(temp[4], out double price))
             {
-                API.Volume += volume;
+                Send?.Invoke(this, new Datum(temp[0], price, volume));
                 SendTrend?.Invoke(this, new Trends(API.Trend, API.Volume));
             }
         }

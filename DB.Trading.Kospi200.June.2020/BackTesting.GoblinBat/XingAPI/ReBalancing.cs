@@ -37,6 +37,16 @@ namespace ShareInvest.Strategy.XingAPI
             API.Max(popShort - popLong - (Short.Peek() - Long.Peek()), specify, Check);
             Short.Push(popShort);
             Long.Push(popLong);
+
+            if (specify.Time == 1440 && GetCheckTime(e.Time))
+                OnReceiveTrend(e.Volume);
+        }
+        bool GetCheckTime(string time)
+        {
+            if (time.Equals(start) || time.Equals(end))
+                return false;
+
+            return true;
         }
         bool GetCheckOnTimeByAPI(string time)
         {

@@ -167,7 +167,6 @@ namespace ShareInvest
 
                                     continue;
                             }
-                        Xing.OnReceiveBalance = true;
                     }
                     else
                     {
@@ -439,7 +438,7 @@ namespace ShareInvest
                     switch ((char)e.NotifyIcon)
                     {
                         case (char)69:
-                            new ExceptionMessage(e.NotifyIcon.ToString());
+                            new ExceptionMessage(((char)e.NotifyIcon).ToString());
                             Dispose();
                             return;
 
@@ -447,15 +446,14 @@ namespace ShareInvest
                             if (initial.Equals(trading))
                             {
                                 Xing.OnReceiveBalance = false;
+                                new ExceptionMessage(((char)e.NotifyIcon).ToString());
                                 Process.Start("shutdown.exe", "-r");
                                 Dispose();
                             }
                             break;
 
                         case (char)21:
-                            if (initial.Equals(trading))
-                                Xing.OnReceiveBalance = true;
-
+                            new ExceptionMessage(((char)e.NotifyIcon).ToString());
                             break;
 
                         default:

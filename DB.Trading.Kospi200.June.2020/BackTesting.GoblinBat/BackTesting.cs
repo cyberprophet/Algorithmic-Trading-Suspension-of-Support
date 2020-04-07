@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ShareInvest.EventHandler.BackTesting;
 using ShareInvest.GoblinBatContext;
+using ShareInvest.Strategy.Statistics;
 
 namespace ShareInvest.Strategy
 {
@@ -29,7 +30,7 @@ namespace ShareInvest.Strategy
             foreach (var kv in Judge)
                 temp += kv.Value;
 
-            Classification = temp == 0 ? string.Empty : temp > 0 ? Statistics.Analysis.buy : Statistics.Analysis.sell;
+            Classification = temp == 0 ? string.Empty : temp > 0 ? Analysis.buy : Analysis.sell;
         }
         internal void SendClearingOrder(string number)
         {
@@ -45,7 +46,10 @@ namespace ShareInvest.Strategy
         }
         internal void SendNewOrder(double price, double max, string classification)
         {
+            if (price > 0 && (classification.Equals(Analysis.buy) ? Quantity + BuyOrder.Count : SellOrder.Count - Quantity) < max && (classification.Equals(Analysis.buy) ? BuyOrder.ContainsValue(price) : SellOrder.ContainsValue(price)) == false)
+            {
 
+            }
         }
         internal int Quantity
         {
@@ -80,7 +84,7 @@ namespace ShareInvest.Strategy
             SellOrder = new Dictionary<string, double>();
             BuyOrder = new Dictionary<string, double>();
             Judge = new Dictionary<uint, double>();
-            Parallel.ForEach(specifies, new Action<Catalog.XingAPI.Specify>((param) => new Statistics.Analysis(this, param)));
+            Parallel.ForEach(specifies, new Action<Catalog.XingAPI.Specify>((param) => new Analysis(this, param)));
             StartProgress();
         }
         public event EventHandler<Datum> SendDatum;

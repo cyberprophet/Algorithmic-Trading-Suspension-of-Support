@@ -46,7 +46,7 @@ namespace ShareInvest.XingAPI.Catalog
                 else if (API.Quantity == 0)
                     API.AvgPurchase = "000.00";
 
-            Send.Invoke(this, new Balance(str.Split('*')));
+            Send?.Invoke(this, new Balance(str.Split('*')));
         }
         public void QueryExcute()
         {

@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Message;
 using ShareInvest.Strategy;
 using ShareInvest.Verify;
-using ShareInvest.Catalog.XingAPI;
 
 namespace ShareInvest
 {
@@ -50,16 +49,10 @@ namespace ShareInvest
                                 while (stack.Count > 0)
                                     new BackTesting(stack.Pop(), str);
                             }).Start();
-                    while (DateTime.Now.Hour < 18 && (DateTime.Now.Hour > 15 || DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45) || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 9 || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
-                    {
-                        if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
+                    while (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
+                        if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 45 && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
                             break;
 
-                        else if (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 3765U).Equals(DialogResult.OK))
-                            break;
-
-                        Thread.Sleep(26235);
-                    }
                     if (initial.Equals((char)126) == false)
                     {
                         if (initial.Equals((char)Port.Trading) && stack != null && stack.Count > 0)
