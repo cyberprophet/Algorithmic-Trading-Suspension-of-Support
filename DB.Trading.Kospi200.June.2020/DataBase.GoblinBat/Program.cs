@@ -17,12 +17,7 @@ namespace ShareInvest
         [STAThread]
         static void Main()
         {
-            var secret = new Secret();
-            var handle = GetConsoleWindow();
-            var str = KeyDecoder.GetWindowsProductKeyFromRegistry();
-            ShowWindow(handle, secret.Hide);
-
-            if (secret.GetIdentify(str))
+            if (ShowWindow(GetConsoleWindow(), secret.Hide) && secret.GetIdentify(str))
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6;
@@ -67,13 +62,12 @@ namespace ShareInvest
                     else
                         new ExceptionMessage(str);
                 }
-                else
-                {
-                    ShowWindow(handle, secret.Show);
+                else if (ShowWindow(GetConsoleWindow(), secret.Show))
                     secret.SetIndentify(path, str);
-                }
             }
         }
+        static readonly Secret secret = new Secret();
+        static readonly string str = KeyDecoder.GetWindowsProductKeyFromRegistry();
         [DllImport("kernel32.dll")]
         static extern IntPtr GetConsoleWindow();
         [DllImport("user32.dll")]
