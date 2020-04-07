@@ -12,12 +12,17 @@ namespace ShareInvest.EventHandler.BackTesting
         {
             get; private set;
         }
-        public Datum(string date, string price)
+        public int Volume
         {
-            if (long.TryParse(date, out long time) && double.TryParse(price, out double close))
+            get; private set;
+        }
+        public Datum(string date, string price, string volume)
+        {
+            if (long.TryParse(date, out long time) && double.TryParse(price, out double close) && int.TryParse(volume, out int accumulate))
             {
                 Date = time;
                 Price = close;
+                Volume = accumulate;
             }
         }
     }

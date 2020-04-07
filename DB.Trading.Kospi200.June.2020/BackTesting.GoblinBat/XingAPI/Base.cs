@@ -51,7 +51,7 @@ namespace ShareInvest.Strategy.XingAPI
                                 }
                                 if (API.BuyOrder.Count > 0)
                                 {
-                                    var number = API.BuyOrder.First(f => f.Value == API.BuyOrder.Max(o => o.Value)).Key;
+                                    var number = API.BuyOrder.OrderBy(o => o.Value).First().Key;
 
                                     if (API.BuyOrder.TryGetValue(number, out double cbp) && bp[5] > cbp)
                                     {
@@ -76,7 +76,7 @@ namespace ShareInvest.Strategy.XingAPI
                                 }
                                 if (API.SellOrder.Count > 0)
                                 {
-                                    var number = API.SellOrder.First(f => f.Value == API.SellOrder.Min(o => o.Value)).Key;
+                                    var number = API.SellOrder.OrderByDescending(o => o.Value).First().Key;
 
                                     if (API.SellOrder.TryGetValue(number, out double csp) && sp[5] < csp)
                                     {

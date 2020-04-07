@@ -6,6 +6,7 @@ namespace ShareInvest.Strategy.XingAPI
 {
     public class ReBalancing : TF
     {
+        protected internal override void OnReceiveTrend(int volume) => API.Volume += volume;
         protected internal ReBalancing(Specify specify) : base(specify)
         {
             foreach (var quotes in Retrieve.Quotes)
@@ -41,13 +42,6 @@ namespace ShareInvest.Strategy.XingAPI
             if (specify.Time == 1440 && GetCheckTime(e.Time))
                 OnReceiveTrend(e.Volume);
         }
-        bool GetCheckTime(string time)
-        {
-            if (time.Equals(start) || time.Equals(end))
-                return false;
-
-            return true;
-        }
         bool GetCheckOnTimeByAPI(string time)
         {
             if (specify.Time > 0 && specify.Time < 1440)
@@ -68,6 +62,13 @@ namespace ShareInvest.Strategy.XingAPI
                 if (time.Equals(start))
                     return false;
             }
+            return true;
+        }
+        new bool GetCheckTime(string time)
+        {
+            if (time.Equals(start) || time.Equals(end))
+                return false;
+
             return true;
         }
         EMA EMA

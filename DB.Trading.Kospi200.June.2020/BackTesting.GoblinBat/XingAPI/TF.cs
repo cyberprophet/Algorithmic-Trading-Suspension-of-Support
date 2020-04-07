@@ -24,6 +24,10 @@ namespace ShareInvest.Strategy.XingAPI
         {
             get;
         }
+        protected internal int Volume
+        {
+            get; set;
+        }
         protected internal bool OnTime
         {
             get; set;
@@ -33,6 +37,7 @@ namespace ShareInvest.Strategy.XingAPI
             get; set;
         }
         protected internal ConnectAPI API => ConnectAPI.GetInstance();
+        protected internal virtual void OnReceiveTrend(int volume) => Console.WriteLine(volume);
         protected internal void Analysize(Catalog.Chart chart)
         {
             if (GetCheckOnTime(chart.Date))
@@ -56,11 +61,7 @@ namespace ShareInvest.Strategy.XingAPI
 
             return false;
         }
-        protected internal void OnReceiveTrend(int volume)
-        {
-            API.Volume += volume;
-        }
-        bool GetCheckTime(string time)
+        protected internal bool GetCheckTime(string time)
         {
             if (time.Substring(6).Equals(onTime))
                 return false;

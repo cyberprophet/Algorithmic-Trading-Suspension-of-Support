@@ -21,12 +21,12 @@ namespace ShareInvest
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6;
-                var remaining = new Random(new Random().Next(0, Application.StartupPath.Length * secret.GetIdentify().Length)).Next(classfication ? 35 : 5, classfication ? 51 : 21);
+                var remaining = new Random(Guid.NewGuid().GetHashCode()).Next(classfication ? 35 : 7, classfication ? 56 : 26);
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
-                Stack<Specify[]> stack = null;
 
                 if (secret.GetDirectoryInfoExists(path))
                 {
+                    Stack<Specify[]> stack = null;
                     var initial = secret.GetPort(str);
 
                     if (registry.GetValue(secret.GoblinBat) == null || DateTime.Now.Date.Equals(new DateTime(2020, 4, 3)))
@@ -45,7 +45,7 @@ namespace ShareInvest
                                     new BackTesting(stack.Pop(), str);
                             }).Start();
                     while (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
-                        if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 45 && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
+                        if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 45 && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false || initial.Equals((char)Port.Collecting))
                             break;
 
                     if (initial.Equals((char)126) == false)
