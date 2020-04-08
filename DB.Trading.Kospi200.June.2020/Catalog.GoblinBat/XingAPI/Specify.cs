@@ -10,11 +10,11 @@
         {
             get; set;
         }
-        public uint Reaction
+        public double Commission
         {
             get; set;
         }
-        public char RollOver
+        public bool RollOver
         {
             get; set;
         }

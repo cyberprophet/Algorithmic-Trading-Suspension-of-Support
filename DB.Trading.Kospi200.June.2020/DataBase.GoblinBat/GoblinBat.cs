@@ -34,6 +34,13 @@ namespace ShareInvest
             {
                 case collecting:
                 case trading:
+                    if (Statistical == null)
+                    {
+                        Statistical = new StatisticalAnalysis();
+                        panel.Controls.Add(Statistical);
+                        Statistical.Dock = DockStyle.Fill;
+                        Statistical.Show();
+                    }
                     if (Quotes == null)
                     {
                         Quotes = new QuotesControl();
@@ -50,67 +57,7 @@ namespace ShareInvest
                     else
                         BeginInvoke(new Action(() =>
                         {
-                            Task = new Task(() =>
-                            {
-                                Specify = new Catalog.XingAPI.Specify[]
-                                {
-                                    new Catalog.XingAPI.Specify
-                                    {
-                                        Assets = 90000000,
-                                        Code = Strategy.Retrieve.Code,
-                                        Reaction = 500,
-                                        Quantity = "1",
-                                        RollOver = 'A',
-                                        Time = 1,
-                                        Short = 4,
-                                        Long = 60
-                                    },
-                                    new Catalog.XingAPI.Specify
-                                    {
-                                        Assets = 90000000,
-                                        Code = Strategy.Retrieve.Code,
-                                        Reaction = 500,
-                                        Quantity = "1",
-                                        RollOver = 'A',
-                                        Time = 5,
-                                        Short = 4,
-                                        Long = 60
-                                    },
-                                    new Catalog.XingAPI.Specify
-                                    {
-                                        Assets = 90000000,
-                                        Code = Strategy.Retrieve.Code,
-                                        Reaction = 500,
-                                        Quantity = "1",
-                                        RollOver = 'A',
-                                        Time = 15,
-                                        Short = 4,
-                                        Long = 60
-                                    },
-                                    new Catalog.XingAPI.Specify
-                                    {
-                                        Assets = 90000000,
-                                        Code = Strategy.Retrieve.Code,
-                                        Reaction = 500,
-                                        Quantity = "1",
-                                        RollOver = 'A',
-                                        Time = 30,
-                                        Short = 4,
-                                        Long = 60
-                                    },
-                                    new Catalog.XingAPI.Specify
-                                    {
-                                        Assets = 90000000,
-                                        Code = Strategy.Retrieve.Code,
-                                        Reaction = 500,
-                                        Quantity = "1",
-                                        RollOver = 'A',
-                                        Time = 1440,
-                                        Short = 4,
-                                        Long = 60
-                                    }
-                                };
-                            });
+                            Task = new Task(() => Specify = Statistical.Statistics());
                             Task.Start();
                             Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, Strategy.Retrieve.Date);
                             Xing.Send += OnReceiveNotifyIcon;
@@ -529,13 +476,6 @@ namespace ShareInvest
                         BeginInvoke(new Action(() =>
                         {
                             ((IEvents<NotifyIconText>)ctor).Send += OnReceiveNotifyIcon;
-
-                            if (Statistical == null)
-                            {
-                                Statistical = new StatisticalAnalysis();
-                                panel.Controls.Add(Statistical);
-                                Statistical.Dock = DockStyle.Fill;
-                            }
                             ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                         }));
                         continue;

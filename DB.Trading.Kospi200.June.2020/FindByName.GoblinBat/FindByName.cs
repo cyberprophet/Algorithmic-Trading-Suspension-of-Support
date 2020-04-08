@@ -13,5 +13,7 @@ namespace ShareInvest.FindByName
         public static Label Is_Label_From(this string name, object targetClass) => FindByName<Label>(targetClass, name);
         public static TextBox TextBox(string name, object targetClass) => FindByName<TextBox>(targetClass, name);
         public static TextBox Is_TextBox_From(this string name, object targetClass) => FindByName<TextBox>(targetClass, name);
+        public static NumericUpDown NumericUpDown(string name, object targetClass) => FindByName<NumericUpDown>(targetClass, name);
+        public static NumericUpDown Is_NumericUpDown_From(this string name, object targetClass) => FindByName<NumericUpDown>(targetClass, name);
     }
 }

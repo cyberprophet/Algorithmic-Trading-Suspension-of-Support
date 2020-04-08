@@ -18,17 +18,17 @@ namespace ShareInvest.Strategy.Statistics
         }
         double Max(double max, string classification)
         {
-            int num = 5;
+            int num = 9;
 
             foreach (var kv in bt.Judge)
             {
                 if (classification.Equals(sell) && kv.Value > 0)
-                    num--;
+                    num -= 2;
 
                 else if (classification.Equals(buy) && kv.Value < 0)
-                    num--;
+                    num -= 2;
             }
-            return max * num * 0.2;
+            return max * num * 0.1;
         }
         string GetExactPrice(string avg)
         {
@@ -46,7 +46,7 @@ namespace ShareInvest.Strategy.Statistics
         }
         void OnReceiveQuotes(object sender, EventHandler.BackTesting.Quotes e)
         {
-            if (int.TryParse(e.Time, out int time) && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(bt.Classification) == false)
+            if (int.TryParse(e.Time, out int time) && (time < 090000 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(bt.Classification) == false)
             {
                 string classification = bt.Classification, price;
                 var check = classification.Equals(buy);
@@ -70,7 +70,7 @@ namespace ShareInvest.Strategy.Statistics
                             {
                                 if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && double.TryParse(price, out double bAvg) && bAvg > bp[0])
                                 {
-                                    bt.SendNewOrder(bAvg > bp[bp.Length - 1] ? bp[bp.Length - 1].ToString("F2") : price, buy);
+                                    bt.SendNewOrder(bAvg > bp[bp.Length - 1] ? bp[bp.Length - 1].ToString("F2") : price, buy, e.BuyQuantity);
 
                                     return;
                                 }
@@ -78,14 +78,14 @@ namespace ShareInvest.Strategy.Statistics
                                 {
                                     var order = bt.BuyOrder.OrderBy(o => o.Key).First();
 
-                                    if (order.Key < bp[5])
+                                    if (double.TryParse(order.Key, out double key) && key < bp[bt.BuyOrder.Count == 1 ? 5 : (bp.Length - 1)])
                                     {
                                         bt.SendClearingOrder(order.Value);
 
                                         return;
                                     }
                                 }
-                                if (bt.SellOrder.Count > 0 && SetCorrectionSellOrder(price, bp))
+                                if (bt.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1], e.SellQuantity))
                                     return;
                             }
                             break;
@@ -95,7 +95,7 @@ namespace ShareInvest.Strategy.Statistics
                             {
                                 if (bt.SellOrder.Count == 0 && max < bt.Quantity && double.TryParse(price, out double sAvg) && sAvg < sp[0])
                                 {
-                                    bt.SendNewOrder(sAvg < sp[sp.Length - 1] ? sp[sp.Length - 1].ToString("F2") : price, sell);
+                                    bt.SendNewOrder(sAvg < sp[sp.Length - 1] ? sp[sp.Length - 1].ToString("F2") : price, sell, e.SellQuantity);
 
                                     return;
                                 }
@@ -103,21 +103,21 @@ namespace ShareInvest.Strategy.Statistics
                                 {
                                     var order = bt.SellOrder.OrderByDescending(o => o.Key).First();
 
-                                    if (sp[5] < order.Key)
+                                    if (double.TryParse(order.Key, out double key) && sp[bt.SellOrder.Count == 1 ? 5 : (sp.Length - 1)] < key)
                                     {
                                         bt.SendClearingOrder(order.Value);
 
                                         return;
                                     }
                                 }
-                                if (bt.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, sp))
+                                if (bt.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1], e.BuyQuantity))
                                     return;
                             }
                             break;
                     }
                 }
                 foreach (var kv in check ? bt.BuyOrder : bt.SellOrder)
-                    if (Array.Exists(check ? bp : sp, o => o == kv.Key) == false && (check ? bt.BuyOrder.ContainsKey(kv.Key) : bt.SellOrder.ContainsKey(kv.Key)))
+                    if (double.TryParse(kv.Key, out double key) && Array.Exists(check ? bp : sp, o => o == key) == false && (check ? bt.BuyOrder.ContainsKey(kv.Key) : bt.SellOrder.ContainsKey(kv.Key)))
                     {
                         bt.SendClearingOrder(kv.Value);
 
@@ -126,42 +126,46 @@ namespace ShareInvest.Strategy.Statistics
                 bt.SendNewOrder(check ? bp : sp, classification, check ? e.BuyQuantity : e.SellQuantity);
             }
         }
-        bool SetCorrectionSellOrder(string avg, double[] buy)
+        bool SetCorrectionSellOrder(string avg, double sell, int quantity)
         {
-            if (double.TryParse(avg, out double bAvg) && double.TryParse(((buy[buy.Length - 1] - bAvg * bt.Quantity) / (1 - bt.Quantity)).ToString("F2"), out double prospect))
+            if (double.TryParse(avg, out double bAvg) && double.TryParse(GetExactPrice(((sell - (bAvg + Const.ErrorRate) * bt.Quantity) / (1 - bt.Quantity)).ToString("F2")), out double prospect))
             {
-                double price = bt.SellOrder.Min(o => o.Key) - Const.ErrorRate, abscond = bt.SellOrder.Max(o => o.Key) + Const.ErrorRate;
+                var order = bt.SellOrder.OrderByDescending(o => o.Key).First();
+                var sb = bt.SellOrder.OrderBy(o => o.Key).First();
+                double check = prospect + Const.ErrorRate;
 
-                if (prospect > bAvg && price > buy[buy.Length - 1])
+                if (double.TryParse(order.Key, out double ok) && double.TryParse(sb.Key, out double sk) && sk < check && bt.SellOrder.ContainsKey((ok + Const.ErrorRate).ToString("F2")) == false)
                 {
-                    bt.SendCorrectionOrder(price.ToString("F2"), bt.SellOrder.OrderByDescending(o => o.Key).First().Value);
+                    bt.SendCorrectionOrder((ok + Const.ErrorRate).ToString("F2"), sb.Value, quantity);
 
                     return true;
                 }
-                else if (bAvg < prospect && abscond < buy[buy.Length - 1] + Const.ErrorRate * 9)
+                if (prospect > bAvg && prospect > sell - Const.ErrorRate && bt.SellOrder.ContainsKey(check.ToString("F2")) == false)
                 {
-                    bt.SendCorrectionOrder(abscond.ToString("F2"), bt.SellOrder.OrderBy(o => o.Key).First().Value);
+                    bt.SendCorrectionOrder(check.ToString("F2"), order.Value, quantity);
 
                     return true;
                 }
             }
             return false;
         }
-        bool SetCorrectionBuyOrder(string avg, double[] sell)
+        bool SetCorrectionBuyOrder(string avg, double buy, int quantity)
         {
-            if (double.TryParse(avg, out double sAvg) && double.TryParse(((sAvg * bt.Quantity + sell[sell.Length - 1]) / (bt.Quantity + 1)).ToString("F2"), out double prospect))
+            if (double.TryParse(avg, out double sAvg) && double.TryParse(GetExactPrice((((sAvg - Const.ErrorRate) * bt.Quantity + buy) / (bt.Quantity + 1)).ToString("F2")), out double prospect))
             {
-                double price = bt.BuyOrder.Max(o => o.Key) + Const.ErrorRate, abscond = bt.BuyOrder.Min(o => o.Key) - Const.ErrorRate;
+                var order = bt.BuyOrder.OrderBy(o => o.Key).First();
+                var sb = bt.BuyOrder.OrderByDescending(o => o.Key).First();
+                double check = prospect - Const.ErrorRate;
 
-                if (prospect < sAvg && price < sell[sell.Length - 1])
+                if (double.TryParse(order.Key, out double ok) && double.TryParse(sb.Key, out double sk) && sk > check && bt.BuyOrder.ContainsKey((ok - Const.ErrorRate).ToString("F2")) == false)
                 {
-                    bt.SendCorrectionOrder(price.ToString("F2"), bt.BuyOrder.OrderBy(o => o.Key).First().Value);
+                    bt.SendCorrectionOrder((ok - Const.ErrorRate).ToString("F2"), sb.Value, quantity);
 
                     return true;
                 }
-                else if (sAvg > prospect && abscond > sell[sell.Length - 1] - Const.ErrorRate * 9)
+                if (prospect < sAvg && prospect < buy + Const.ErrorRate && bt.BuyOrder.ContainsKey(check.ToString("F2")) == false)
                 {
-                    bt.SendCorrectionOrder(abscond.ToString("F2"), bt.BuyOrder.OrderByDescending(o => o.Key).First().Value);
+                    bt.SendCorrectionOrder(check.ToString("F2"), order.Value, quantity);
 
                     return true;
                 }

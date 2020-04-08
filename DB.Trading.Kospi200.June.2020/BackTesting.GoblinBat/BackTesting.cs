@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.BackTesting;
@@ -53,7 +54,7 @@ namespace ShareInvest.Strategy
         }
         double Max(double max, XingAPI.Classification classification)
         {
-            int num = 0;
+            int num = 1;
 
             foreach (var kv in Judge)
                 switch (classification)
@@ -102,38 +103,56 @@ namespace ShareInvest.Strategy
         }
         internal void SendClearingOrder(uint number)
         {
+            if (SellOrder.ContainsValue(number) && SellOrder.Remove(SellOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
+                return;
 
+            if (BuyOrder.ContainsValue(number) && BuyOrder.Remove(BuyOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
+                return;
         }
-        internal void SendCorrectionOrder(string price, uint number)
+        internal void SendCorrectionOrder(string price, uint number, int residue)
         {
+            if (SellOrder.ContainsValue(number) && SellOrder.Remove(SellOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
+            {
+                SellOrder[price] = Count;
+                Residue[Count++] = residue;
 
+                return;
+            }
+            if (BuyOrder.ContainsValue(number) && BuyOrder.Remove(BuyOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
+            {
+                BuyOrder[price] = Count;
+                Residue[Count++] = residue;
+            }
         }
-        internal void SendNewOrder(string price, string classification)
+        internal void SendNewOrder(string price, string classification, int residue)
         {
+            switch (classification)
+            {
+                case Analysis.sell:
+                    SellOrder[price] = Count;
+                    Residue[Count++] = residue;
+                    break;
 
+                case Analysis.buy:
+                    BuyOrder[price] = Count;
+                    Residue[Count++] = residue;
+                    break;
+            }
         }
         internal void SendNewOrder(double[] param, string classification, int residue)
         {
             var check = classification.Equals(Analysis.buy);
             var price = param[5];
+            var key = price.ToString("F2");
 
-            if (price > 0 && (check ? Quantity + BuyOrder.Count : SellOrder.Count - Quantity) < Max(Specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402), check ? XingAPI.Classification.Buy : XingAPI.Classification.Sell) && (check ? BuyOrder.ContainsKey(price) : SellOrder.ContainsKey(price)) == false)
-                switch (classification)
-                {
-                    case Analysis.sell:
-                        SellOrder[price] = Count;
-                        Residue[Count++] = residue;
-                        break;
-
-                    case Analysis.buy:
-                        BuyOrder[price] = Count;
-                        Residue[Count++] = residue;
-                        break;
-                }
+            if (price > 0 && (check ? Quantity + BuyOrder.Count : SellOrder.Count - Quantity) < Max(Specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402), check ? XingAPI.Classification.Buy : XingAPI.Classification.Sell) && (check ? BuyOrder.ContainsKey(key) : SellOrder.ContainsKey(key)) == false)
+                SendNewOrder(key, classification, residue);
         }
         internal void SetSellConclusion(double price, int residue)
         {
-            if (SellOrder.TryGetValue(price, out uint number))
+            var key = price.ToString("F2");
+
+            if (SellOrder.TryGetValue(key, out uint number))
             {
                 if (Residue[number] - residue > 0)
                 {
@@ -141,7 +160,7 @@ namespace ShareInvest.Strategy
 
                     return;
                 }
-                if (SellOrder.Remove(price) && Residue.Remove(number))
+                if (SellOrder.Remove(key) && Residue.Remove(number))
                 {
                     Quantity -= 1;
                     Commission += (uint)(price * Const.TransactionMultiplier * Const.Commission);
@@ -154,7 +173,9 @@ namespace ShareInvest.Strategy
         }
         internal void SetBuyConclusion(double price, int residue)
         {
-            if (BuyOrder.TryGetValue(price, out uint number))
+            var key = price.ToString("F2");
+
+            if (BuyOrder.TryGetValue(key, out uint number))
             {
                 if (Residue[number] + residue > 0)
                 {
@@ -162,7 +183,7 @@ namespace ShareInvest.Strategy
 
                     return;
                 }
-                if (BuyOrder.Remove(price) && Residue.Remove(number))
+                if (BuyOrder.Remove(key) && Residue.Remove(number))
                 {
                     Quantity += 1;
                     Commission += (uint)(price * Const.TransactionMultiplier * Const.Commission);
@@ -185,11 +206,11 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
-        internal Dictionary<double, uint> BuyOrder
+        internal Dictionary<string, uint> BuyOrder
         {
             get;
         }
-        internal Dictionary<double, uint> SellOrder
+        internal Dictionary<string, uint> SellOrder
         {
             get;
         }
@@ -200,8 +221,8 @@ namespace ShareInvest.Strategy
         public BackTesting(Catalog.XingAPI.Specify[] specifies, string key) : base(key)
         {
             Residue = new Dictionary<uint, int>();
-            SellOrder = new Dictionary<double, uint>();
-            BuyOrder = new Dictionary<double, uint>();
+            SellOrder = new Dictionary<string, uint>();
+            BuyOrder = new Dictionary<string, uint>();
             Judge = new Dictionary<uint, double>();
             Parallel.ForEach(specifies, new Action<Catalog.XingAPI.Specify>((param) =>
             {
