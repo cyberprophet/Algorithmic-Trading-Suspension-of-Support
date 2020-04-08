@@ -137,6 +137,17 @@ namespace ShareInvest.GoblinBatControls
                 Application.DoEvents();
             }));
         }
-        public void OnReceiveOrderMsg(string message) => this.message.Text = message;
+        public void OnReceiveOrderMsg(string message)
+        {
+            int first = message.IndexOf('.'), last = message.LastIndexOf('.');
+
+            if (first == last)
+            {
+                this.message.Text = message.Trim();
+
+                return;
+            }
+            this.message.Text = string.Concat(message.Substring(0, first + 1).Trim(), "\n", message.Substring(first + 1).Trim());
+        }
     }
 }
