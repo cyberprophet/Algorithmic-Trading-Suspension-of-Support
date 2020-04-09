@@ -7,7 +7,7 @@ namespace ShareInvest.GoblinBatControls
     public partial class StatisticalAnalysis : UserControl
     {
         public StatisticalAnalysis() => InitializeComponent();
-        public Specify[] Statistics()
+        public Specify[] Statistics(string code)
         {
             var commission = string.IsNullOrEmpty(emptyCommission.Text) == false && double.TryParse(emptyCommission.Text, out double ec) ? (ec / 100) : 3e-5;
             var temp = new Specify[5];
@@ -16,7 +16,7 @@ namespace ShareInvest.GoblinBatControls
                 temp[i] = new Specify
                 {
                     Assets = (ulong)numericAssets.Value,
-                    Code = emptyCode.Text,
+                    Code = string.IsNullOrEmpty(emptyCode.Text) ? code : emptyCode.Text,
                     Commission = commission,
                     Quantity = "1",
                     RollOver = checkRollOver.Checked,

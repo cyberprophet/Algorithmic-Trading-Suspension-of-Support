@@ -57,7 +57,7 @@ namespace ShareInvest
                     else
                         BeginInvoke(new Action(() =>
                         {
-                            Task = new Task(() => Specify = Statistical.Statistics());
+                            Task = new Task(() => Specify = Statistical.Statistics(Strategy.Retrieve.Code));
                             Task.Start();
                             Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, Strategy.Retrieve.Date);
                             Xing.Send += OnReceiveNotifyIcon;

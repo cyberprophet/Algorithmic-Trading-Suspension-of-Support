@@ -40,17 +40,20 @@ namespace ShareInvest.GoblinBatControls
             BeginInvoke(new Action(() =>
             {
                 var count = 0;
-
-                foreach (var kv in e.Trend.OrderByDescending(o => o.Key.Length))
-                {
-                    var label = string.Concat("state", count++).FindByName<Label>(this);
-                    var trend = kv.Value.Contains("-");
-                    label.Text = trend ? kv.Value.Substring(1) : kv.Value;
-                    label.ForeColor = trend ? Color.Navy : Color.Maroon;
-                }
                 var check = e.Volume.Contains("-");
                 stateVolume.Text = check ? e.Volume.Substring(1) : e.Volume;
                 stateVolume.ForeColor = check ? Color.DeepSkyBlue : Color.Maroon;
+
+                foreach (var kv in e.Trend.First(o => o.Value.Equals("Base")).Value.Substring(0, 1).Equals("-") ? e.Trend.OrderBy(o => o.Value.Split('(')[0].Trim()) : e.Trend.OrderByDescending(o => o.Value.Split('(')[0].Trim()))
+                {
+                    var label = string.Concat("state", count).FindByName<Label>(this);
+                    var trend = kv.Value.Contains("-");
+                    label.Text = trend ? kv.Value.Substring(1) : kv.Value;
+                    label.ForeColor = trend ? Color.Navy : Color.Maroon;
+
+                    if (count++ == 4)
+                        break;
+                }
             }));
         }
         public void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)

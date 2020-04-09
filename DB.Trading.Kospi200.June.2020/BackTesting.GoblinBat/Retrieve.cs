@@ -27,7 +27,7 @@ namespace ShareInvest.Strategy
             Code = GetStrategy();
             SetInitialzeTheCode(Code);
 
-            return new Stack<Catalog.XingAPI.Specify[]>();
+            return GetStrategy(Code);
         }
         public void SetInitializeTheChart()
         {

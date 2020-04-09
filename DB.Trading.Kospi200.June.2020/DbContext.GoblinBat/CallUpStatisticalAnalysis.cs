@@ -73,6 +73,23 @@ namespace ShareInvest.GoblinBatContext
             }
             return string.Empty;
         }
+        protected Stack<Specify[]> GetStrategy(string code)
+        {
+            var stack = new Stack<Specify[]>();
+
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                {
+
+                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
+            return stack;
+        }
         protected CallUpStatisticalAnalysis(string key) : base(key) => this.key = key;
         readonly string key;
     }
