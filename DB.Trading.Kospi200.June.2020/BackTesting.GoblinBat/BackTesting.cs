@@ -31,10 +31,6 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
-        Catalog.XingAPI.Specify Specify
-        {
-            get; set;
-        }
         Dictionary<uint, int> Residue
         {
             get;
@@ -51,27 +47,6 @@ namespace ShareInvest.Strategy
                 }
                 SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
             }
-        }
-        double Max(double max, XingAPI.Classification classification)
-        {
-            int num = 1;
-
-            foreach (var kv in Judge)
-                switch (classification)
-                {
-                    case XingAPI.Classification.Sell:
-                        if (kv.Value > 0)
-                            num += 2;
-
-                        break;
-
-                    case XingAPI.Classification.Buy:
-                        if (kv.Value < 0)
-                            num += 2;
-
-                        break;
-                }
-            return max * num * 0.1;
         }
         double SetPurchasePrice(double price)
         {
@@ -138,15 +113,6 @@ namespace ShareInvest.Strategy
                     Residue[Count++] = residue;
                     break;
             }
-        }
-        internal void SendNewOrder(double[] param, string classification, int residue)
-        {
-            var check = classification.Equals(Analysis.buy);
-            var price = param[5];
-            var key = price.ToString("F2");
-
-            if (price > 0 && (check ? Quantity + BuyOrder.Count : SellOrder.Count - Quantity) < Max(Specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402), check ? XingAPI.Classification.Buy : XingAPI.Classification.Sell) && (check ? BuyOrder.ContainsKey(key) : SellOrder.ContainsKey(key)) == false)
-                SendNewOrder(key, classification, residue);
         }
         internal void SetSellConclusion(double price, int residue)
         {
@@ -226,13 +192,16 @@ namespace ShareInvest.Strategy
             Judge = new Dictionary<uint, double>();
             Parallel.ForEach(specifies, new Action<Catalog.XingAPI.Specify>((param) =>
             {
-                if (param.Time == 1440)
-                    Specify = param;
-
-                new Analysis(this, param);
+                switch (param.Strategy)
+                {
+                    case basic:
+                        new Base(this, param);
+                        break;
+                }
             }));
             StartProgress();
         }
+        const string basic = "Base";
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Quotes> SendQuotes;
     }

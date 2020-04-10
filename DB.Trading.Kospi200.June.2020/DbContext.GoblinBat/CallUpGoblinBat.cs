@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
 using System.Linq;
-using System.Threading.Tasks;
 using ShareInvest.Catalog;
 using ShareInvest.Message;
 using ShareInvest.Models;
@@ -130,40 +129,37 @@ namespace ShareInvest.GoblinBatContext
                 }
             return string.Empty;
         }
-        protected void SetStorage(Logs log)
-        {
-            new Task(() =>
-            {
-                try
-                {
-                    using (var db = new GoblinBatDbContext(key))
-                    {
-                        var check = db.Logs.Find(new object[]
-                        {
-                            log.Code,
-                            log.Strategy,
-                            log.Assets,
-                            log.Date
-                        });
-                        if (check != null && db.Logs.Where(o => o.Cumulative.Equals(log.Cumulative) && check.Cumulative.Equals(log.Cumulative) && o.Revenue.Equals(log.Revenue) && check.Revenue.Equals(log.Revenue) && check.Unrealized.Equals(log.Unrealized) && o.Unrealized.Equals(log.Unrealized)).Any())
-                            return;
-
-                        db.Logs.AddOrUpdate(log);
-                        db.SaveChanges();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace);
-                }
-            }).Start();
-        }
-        protected void DeleteLogs()
+        protected async void SetStorage(Logs log)
         {
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    db.Logs.BulkDelete(db.Logs.Where(o => o.Code.Equals(string.Concat(kospi200f, "Q3", futures))));
+                {
+                    var check = db.Logs.Find(new object[]
+                    {
+                            log.Code,
+                            log.Strategy,
+                            log.Assets,
+                            log.Date
+                    });
+                    if (check != null && db.Logs.Where(o => o.Cumulative.Equals(log.Cumulative) && check.Cumulative.Equals(log.Cumulative) && o.Revenue.Equals(log.Revenue) && check.Revenue.Equals(log.Revenue) && check.Unrealized.Equals(log.Unrealized) && o.Unrealized.Equals(log.Unrealized)).Any())
+                        return;
+
+                    db.Logs.AddOrUpdate(log);
+                    await db.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+        }
+        protected async void DeleteLogs()
+        {
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                    await db.Logs.BulkDeleteAsync(db.Logs.Where(o => o.Code.Equals(string.Concat(kospi200f, "Q3", futures)))).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

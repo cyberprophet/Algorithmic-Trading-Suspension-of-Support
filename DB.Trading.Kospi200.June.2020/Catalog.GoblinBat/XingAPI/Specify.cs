@@ -18,7 +18,7 @@
         {
             get; set;
         }
-        public string Quantity
+        public string Strategy
         {
             get; set;
         }

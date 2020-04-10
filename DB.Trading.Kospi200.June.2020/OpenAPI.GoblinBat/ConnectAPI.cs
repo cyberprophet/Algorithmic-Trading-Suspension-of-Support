@@ -167,7 +167,7 @@ namespace ShareInvest.OpenAPI
 
             DeadLine = true;
             Delay.Milliseconds = delay;
-            CodeList = RequestCodeList(new List<string>(32));
+            CodeList = RequestCodeListAsync(new List<string>(32)).Result;
             SendMemorize?.Invoke(this, new Memorize("Clear"));
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }

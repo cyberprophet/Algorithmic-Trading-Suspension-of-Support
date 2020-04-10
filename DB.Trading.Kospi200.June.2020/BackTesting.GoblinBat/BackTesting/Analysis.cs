@@ -5,16 +5,33 @@ using ShareInvest.Strategy.XingAPI;
 
 namespace ShareInvest.Strategy.Statistics
 {
-    class Analysis : TF
+    abstract class Analysis : TF
     {
+        protected internal abstract void SendNewOrder(double[] param, string classification, int quantity);
+        protected internal abstract bool SetCorrectionBuyOrder(string avg, double buy, int quantity);
+        protected internal abstract bool SetCorrectionSellOrder(string avg, double sell, int quantity);
         protected internal override void OnReceiveTrend(int volume) => Volume += volume;
-        internal Analysis(BackTesting bt, Catalog.XingAPI.Specify specify) : base(specify)
+        protected internal Analysis(BackTesting bt, Catalog.XingAPI.Specify specify) : base(specify)
         {
             this.bt = bt;
             bt.SendDatum += Analysize;
 
             if (specify.Time == 1440)
                 bt.SendQuotes += OnReceiveQuotes;
+        }
+        protected internal string GetExactPrice(string avg)
+        {
+            if ((avg.Length < 6 || (avg.Length == 6 && (avg.Substring(5, 1).Equals("0") || avg.Substring(5, 1).Equals("5")))) && double.TryParse(avg, out double price))
+                return (bt.Quantity > 0 ? price + Const.ErrorRate : price - Const.ErrorRate).ToString("F2");
+
+            if (int.TryParse(avg.Substring(5, 1), out int rest) && double.TryParse(string.Concat(avg.Substring(0, 5), "5"), out double rp))
+            {
+                if (rest > 0 && rest < 5)
+                    return bt.Quantity > 0 ? (rp + Const.ErrorRate).ToString("F2") : (rp - Const.ErrorRate * 2).ToString("F2");
+
+                return bt.Quantity > 0 ? (rp + Const.ErrorRate * 2).ToString("F2") : (rp - Const.ErrorRate).ToString("F2");
+            }
+            return avg;
         }
         double Max(double max, string classification)
         {
@@ -29,20 +46,6 @@ namespace ShareInvest.Strategy.Statistics
                     num -= 2;
             }
             return max * num * 0.1;
-        }
-        string GetExactPrice(string avg)
-        {
-            if ((avg.Length < 6 || (avg.Length == 6 && (avg.Substring(5, 1).Equals("0") || avg.Substring(5, 1).Equals("5")))) && double.TryParse(avg, out double price))
-                return (bt.Quantity > 0 ? price + Const.ErrorRate : price - Const.ErrorRate).ToString("F2");
-
-            if (int.TryParse(avg.Substring(5, 1), out int rest) && double.TryParse(string.Concat(avg.Substring(0, 5), "5"), out double rp))
-            {
-                if (rest > 0 && rest < 5)
-                    return bt.Quantity > 0 ? (rp + Const.ErrorRate).ToString("F2") : (rp - Const.ErrorRate * 2).ToString("F2");
-
-                return bt.Quantity > 0 ? (rp + Const.ErrorRate * 2).ToString("F2") : (rp - Const.ErrorRate).ToString("F2");
-            }
-            return avg;
         }
         void OnReceiveQuotes(object sender, EventHandler.BackTesting.Quotes e)
         {
@@ -123,54 +126,8 @@ namespace ShareInvest.Strategy.Statistics
 
                         return;
                     }
-                bt.SendNewOrder(check ? bp : sp, classification, check ? e.BuyQuantity : e.SellQuantity);
+                SendNewOrder(check ? bp : sp, classification, check ? e.BuyQuantity : e.SellQuantity);
             }
-        }
-        bool SetCorrectionSellOrder(string avg, double sell, int quantity)
-        {
-            if (double.TryParse(avg, out double bAvg) && double.TryParse(GetExactPrice(((sell - (bAvg + Const.ErrorRate) * bt.Quantity) / (1 - bt.Quantity)).ToString("F2")), out double prospect))
-            {
-                var order = bt.SellOrder.OrderByDescending(o => o.Key).First();
-                var sb = bt.SellOrder.OrderBy(o => o.Key).First();
-                double check = prospect + Const.ErrorRate;
-
-                if (double.TryParse(order.Key, out double ok) && double.TryParse(sb.Key, out double sk) && sk < check && bt.SellOrder.ContainsKey((ok + Const.ErrorRate).ToString("F2")) == false)
-                {
-                    bt.SendCorrectionOrder((ok + Const.ErrorRate).ToString("F2"), sb.Value, quantity);
-
-                    return true;
-                }
-                if (prospect > bAvg && prospect > sell - Const.ErrorRate && bt.SellOrder.ContainsKey(check.ToString("F2")) == false)
-                {
-                    bt.SendCorrectionOrder(check.ToString("F2"), order.Value, quantity);
-
-                    return true;
-                }
-            }
-            return false;
-        }
-        bool SetCorrectionBuyOrder(string avg, double buy, int quantity)
-        {
-            if (double.TryParse(avg, out double sAvg) && double.TryParse(GetExactPrice((((sAvg - Const.ErrorRate) * bt.Quantity + buy) / (bt.Quantity + 1)).ToString("F2")), out double prospect))
-            {
-                var order = bt.BuyOrder.OrderBy(o => o.Key).First();
-                var sb = bt.BuyOrder.OrderByDescending(o => o.Key).First();
-                double check = prospect - Const.ErrorRate;
-
-                if (double.TryParse(order.Key, out double ok) && double.TryParse(sb.Key, out double sk) && sk > check && bt.BuyOrder.ContainsKey((ok - Const.ErrorRate).ToString("F2")) == false)
-                {
-                    bt.SendCorrectionOrder((ok - Const.ErrorRate).ToString("F2"), sb.Value, quantity);
-
-                    return true;
-                }
-                if (prospect < sAvg && prospect < buy + Const.ErrorRate && bt.BuyOrder.ContainsKey(check.ToString("F2")) == false)
-                {
-                    bt.SendCorrectionOrder(check.ToString("F2"), order.Value, quantity);
-
-                    return true;
-                }
-            }
-            return false;
         }
         void Analysize(object sender, EventHandler.BackTesting.Datum e)
         {
@@ -201,6 +158,6 @@ namespace ShareInvest.Strategy.Statistics
         }
         internal const string buy = "2";
         internal const string sell = "1";
-        readonly BackTesting bt;
+        internal readonly BackTesting bt;
     }
 }

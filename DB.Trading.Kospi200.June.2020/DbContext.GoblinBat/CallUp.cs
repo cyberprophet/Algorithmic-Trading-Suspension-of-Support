@@ -14,8 +14,8 @@ using ShareInvest.Models;
 namespace ShareInvest.GoblinBatContext
 {
     public class CallUp
-    {        
-        protected List<string> RequestCodeList(List<string> list)
+    {
+        protected async Task<List<string>> RequestCodeListAsync(List<string> list)
         {
             string code = string.Empty;
 
@@ -30,38 +30,38 @@ namespace ShareInvest.GoblinBatContext
                         code = temp.Code;
 
                         if (db.Codes.Any(o => o.Code.Length < 6))
-                            db.Codes.BulkDelete(db.Codes.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
+                            await db.Codes.BulkDeleteAsync(db.Codes.Where(o => o.Code.Length < 6), o => o.BatchSize = 100).ConfigureAwait(false);
 
                         if (db.Days.Any(o => o.Code.Equals(temp.Code) && o.Date < 10000000))
                         {
-                            db.Days.BulkDelete(db.Days.Where(o => o.Date < 10000000), o => o.BatchSize = 100);
+                            await db.Days.BulkDeleteAsync(db.Days.Where(o => o.Date < 10000000), o => o.BatchSize = 100).ConfigureAwait(false);
 
                             if (db.Days.Any(o => o.Code.Length < 6))
-                                db.Days.BulkDelete(db.Days.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
+                                await db.Days.BulkDeleteAsync(db.Days.Where(o => o.Code.Length < 6), o => o.BatchSize = 100).ConfigureAwait(false);
                         }
                         if (temp.Code.Equals(q3) && db.Quotes.Any(o => o.Code.Equals(q3)))
-                            db.Quotes.BulkDelete(db.Quotes.Where(o => o.Code.Equals(q3)), o => o.BatchSize = 100);
+                            await db.Quotes.BulkDeleteAsync(db.Quotes.Where(o => o.Code.Equals(q3)), o => o.BatchSize = 100).ConfigureAwait(false);
 
                         if (temp.Code.Length == 6 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(code)).Min(o => o.Date).ToString().Substring(0, 6))))
                         {
                             list.Add(temp.Code);
 
                             if (db.Stocks.Any(o => o.Code.Length < 6))
-                                db.Stocks.BulkDelete(db.Stocks.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
+                                await db.Stocks.BulkDeleteAsync(db.Stocks.Where(o => o.Code.Length < 6), o => o.BatchSize = 100).ConfigureAwait(false);
                         }
                         else if (temp.Code.Length == 8 && temp.Code.Substring(5, 3).Equals("000") && db.Futures.Any(o => o.Date < 100000000000000))
                         {
-                            db.Futures.BulkDelete(db.Futures.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
+                            await db.Futures.BulkDeleteAsync(db.Futures.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100).ConfigureAwait(false);
 
                             if (db.Futures.Any(o => o.Code.Length < 8))
-                                db.Futures.BulkDelete(db.Futures.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
+                                await db.Futures.BulkDeleteAsync(db.Futures.Where(o => o.Code.Length < 8), o => o.BatchSize = 100).ConfigureAwait(false);
                         }
                         else if (temp.Code.Length == 8 && temp.Code.Substring(5, 3).Equals("000") == false && db.Options.Any(o => o.Date < 100000000000000))
                         {
-                            db.Options.BulkDelete(db.Options.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
+                            await db.Options.BulkDeleteAsync(db.Options.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100).ConfigureAwait(false);
 
                             if (db.Options.Any(o => o.Code.Length < 8))
-                                db.Options.BulkDelete(db.Options.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
+                                await db.Options.BulkDeleteAsync(db.Options.Where(o => o.Code.Length < 8), o => o.BatchSize = 100).ConfigureAwait(false);
                         }
                     }
             }
@@ -76,7 +76,7 @@ namespace ShareInvest.GoblinBatContext
                     var stocks = db.Stocks.Where(o => o.Code.Equals(code));
 
                     if (stocks.Any(o => o.Date < 100000000000000))
-                        db.Stocks.BulkDelete(stocks.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
+                        await db.Stocks.BulkDeleteAsync(stocks.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100).ConfigureAwait(false);
                 }
                 new ExceptionMessage(ex.StackTrace, code);
             }
@@ -142,149 +142,143 @@ namespace ShareInvest.GoblinBatContext
             }
             return max > 0 ? (max.ToString().Length > 12 ? max.ToString().Substring(0, 12) : max.ToString()) : "DoesNotExist";
         }
-        protected void SetInsertCode(string code, string name, string info)
+        protected async void SetInsertCode(string code, string name, string info)
         {
-            new Task(() =>
+            try
             {
-                try
+                using (var db = new GoblinBatDbContext(key))
                 {
-                    using (var db = new GoblinBatDbContext(key))
-                    {
-                        if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
-                            return;
+                    if (db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info) && o.Name.Equals(name)).Any())
+                        return;
 
-                        db.Codes.AddOrUpdate(new Codes
-                        {
-                            Code = code,
-                            Name = name,
-                            Info = info
-                        });
-                        db.SaveChanges();
-                    }
+                    db.Codes.AddOrUpdate(new Codes
+                    {
+                        Code = code,
+                        Name = name,
+                        Info = info
+                    });
+                    await db.SaveChangesAsync();
                 }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace, code);
-                }
-            }).Start();
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
         }
-        protected void SetStorage(string code, string[] param)
+        protected async void SetStorage(string code, string[] param)
         {
             if (param.Length < 3)
                 return;
 
-            new Task(() =>
+            try
             {
-                try
+                string date = string.Empty;
+                int i, count = 0;
+                bool days = param[0].Split(',')[0].Length == 8, stocks = code.Length == 6, futures = code.Length > 6 && code.Substring(5, 3).Equals("000"), options = code.Length > 6 && !code.Substring(5, 3).Equals("000");
+                IList model;
+
+                if (futures)
+                    model = new List<Futures>(32);
+
+                else if (options)
+                    model = new List<Options>(32);
+
+                else if (days)
+                    model = new List<Days>(32);
+
+                else
+                    model = new List<Stocks>(32);
+
+                for (i = param.Length - 2; i > -1; i--)
                 {
-                    string date = string.Empty;
-                    int i, count = 0;
-                    bool days = param[0].Split(',')[0].Length == 8, stocks = code.Length == 6, futures = code.Length > 6 && code.Substring(5, 3).Equals("000"), options = code.Length > 6 && !code.Substring(5, 3).Equals("000");
-                    IList model;
+                    var temp = param[i].Split(',');
 
-                    if (futures)
-                        model = new List<Futures>(32);
-
-                    else if (options)
-                        model = new List<Options>(32);
-
-                    else if (days)
-                        model = new List<Days>(32);
+                    if (temp[0].Length == 8)
+                    {
+                        model.Add(new Days
+                        {
+                            Code = code,
+                            Date = int.Parse(temp[0]),
+                            Price = double.Parse(temp[1])
+                        });
+                        continue;
+                    }
+                    else if (temp[0].Equals(date))
+                        count++;
 
                     else
-                        model = new List<Stocks>(32);
-
-                    for (i = param.Length - 2; i > -1; i--)
                     {
-                        var temp = param[i].Split(',');
-
-                        if (temp[0].Length == 8)
-                        {
-                            model.Add(new Days
-                            {
-                                Code = code,
-                                Date = int.Parse(temp[0]),
-                                Price = double.Parse(temp[1])
-                            });
-                            continue;
-                        }
-                        else if (temp[0].Equals(date))
-                            count++;
-
-                        else
-                        {
-                            date = temp[0];
-                            count = 0;
-                        }
-                        if (stocks)
-                            model.Add(new Stocks
-                            {
-                                Code = code,
-                                Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
-                                Price = int.Parse(temp[1]),
-                                Volume = int.Parse(temp[2])
-                            });
-                        else if (options)
-                            model.Add(new Options
-                            {
-                                Code = code,
-                                Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
-                                Price = double.Parse(temp[1]),
-                                Volume = int.Parse(temp[2])
-                            });
-                        else if (futures)
-                            model.Add(new Futures
-                            {
-                                Code = code,
-                                Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
-                                Price = double.Parse(temp[1]),
-                                Volume = int.Parse(temp[2])
-                            });
+                        date = temp[0];
+                        count = 0;
                     }
-                    using (var db = new GoblinBatDbContext(key))
-                    {
-                        db.Configuration.AutoDetectChangesEnabled = true;
-
-                        if (days)
-                            db.BulkInsert((List<Days>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        else if (stocks)
-                            db.BulkInsert((List<Stocks>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        else if (options)
-                            db.BulkInsert((List<Options>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        else if (futures)
-                            db.BulkInsert((List<Futures>)model, o =>
-                            {
-                                o.InsertIfNotExists = true;
-                                o.BatchSize = 10000;
-                                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                                o.AutoMapOutputDirection = false;
-                            });
-                        db.Configuration.AutoDetectChangesEnabled = false;
-                    }
+                    if (stocks)
+                        model.Add(new Stocks
+                        {
+                            Code = code,
+                            Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
+                            Price = int.Parse(temp[1]),
+                            Volume = int.Parse(temp[2])
+                        });
+                    else if (options)
+                        model.Add(new Options
+                        {
+                            Code = code,
+                            Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
+                            Price = double.Parse(temp[1]),
+                            Volume = int.Parse(temp[2])
+                        });
+                    else if (futures)
+                        model.Add(new Futures
+                        {
+                            Code = code,
+                            Date = long.Parse(string.Concat(temp[0], count.ToString("D3"))),
+                            Price = double.Parse(temp[1]),
+                            Volume = int.Parse(temp[2])
+                        });
                 }
-                catch (Exception ex)
+                using (var db = new GoblinBatDbContext(key))
                 {
-                    new ExceptionMessage(ex.StackTrace, code);
+                    db.Configuration.AutoDetectChangesEnabled = true;
+
+                    if (days)
+                        await db.BulkInsertAsync((List<Days>)model, o =>
+                        {
+                            o.InsertIfNotExists = true;
+                            o.BatchSize = 10000;
+                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                            o.AutoMapOutputDirection = false;
+                        });
+                    else if (stocks)
+                        await db.BulkInsertAsync((List<Stocks>)model, o =>
+                        {
+                            o.InsertIfNotExists = true;
+                            o.BatchSize = 10000;
+                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                            o.AutoMapOutputDirection = false;
+                        });
+                    else if (options)
+                        await db.BulkInsertAsync((List<Options>)model, o =>
+                        {
+                            o.InsertIfNotExists = true;
+                            o.BatchSize = 10000;
+                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                            o.AutoMapOutputDirection = false;
+                        });
+                    else if (futures)
+                        await db.BulkInsertAsync((List<Futures>)model, o =>
+                        {
+                            o.InsertIfNotExists = true;
+                            o.BatchSize = 10000;
+                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                            o.AutoMapOutputDirection = false;
+                        });
+                    db.Configuration.AutoDetectChangesEnabled = false;
                 }
-            }).Start();
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
         }
         protected void SetStorage(string code, StringBuilder sb)
         {
@@ -370,14 +364,14 @@ namespace ShareInvest.GoblinBatContext
                     return;
             }
         }
-        void SetStorage(List<Datum> model)
+        async void SetStorage(List<Datum> model)
         {
             try
             {
                 using (var db = new GoblinBatDbContext(key))
                 {
                     db.Configuration.AutoDetectChangesEnabled = true;
-                    db.BulkInsert(model, o =>
+                    await db.BulkInsertAsync(model, o =>
                     {
                         o.InsertIfNotExists = true;
                         o.BatchSize = 15000;

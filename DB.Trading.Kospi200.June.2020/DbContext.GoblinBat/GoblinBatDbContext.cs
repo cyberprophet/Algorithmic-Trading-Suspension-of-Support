@@ -1,4 +1,5 @@
 ﻿using System.Data.Entity;
+using System.Threading.Tasks;
 using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
@@ -45,6 +46,6 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
-        public override int SaveChanges() => this.BatchSaveChanges();
+        public override async Task<int> SaveChangesAsync() => await this.BatchSaveChangesAsync();
     }
 }

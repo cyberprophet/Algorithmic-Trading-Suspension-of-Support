@@ -42,6 +42,13 @@ namespace ShareInvest.Strategy
                 Quotes = null;
             }
         }
+        public string GetDate(string code)
+        {
+            if (DateTime.TryParseExact(SetDate(code).Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
+                return string.Concat(date.ToLongDateString(), " ", date.ToShortTimeString());
+
+            return string.Empty;
+        }
         public static string Code
         {
             get; set;

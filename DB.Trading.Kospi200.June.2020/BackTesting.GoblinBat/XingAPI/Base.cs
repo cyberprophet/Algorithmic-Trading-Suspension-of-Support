@@ -1,14 +1,10 @@
 ﻿using System.Linq;
-using System.Threading.Tasks;
 using ShareInvest.Catalog;
-using ShareInvest.Catalog.XingAPI;
-using ShareInvest.XingAPI;
 
 namespace ShareInvest.Strategy.XingAPI
 {
     public class Base : StrategicChoice
     {
-        public Base(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;
         double Max(double max, Classification classification)
         {
             int num = 1;
@@ -84,17 +80,8 @@ namespace ShareInvest.Strategy.XingAPI
             var price = param[check ? param.Length - 1 : 0];
 
             if (price > 0 && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402), check ? Classification.Buy : Classification.Sell) && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false)
-            {
-                API.OnReceiveBalance = false;
-                new Task(() => API.orders[0].QueryExcute(new Order
-                {
-                    FnoIsuNo = ConnectAPI.Code,
-                    BnsTpCode = classification,
-                    FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.지정가).ToString("D2"),
-                    OrdPrc = price.ToString("F2"),
-                    OrdQty = specify.Quantity
-                })).Start();
-            }
+                SendNewOrder(price.ToString("F2"), classification);
         }
+        public Base(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;
     }
 }

@@ -137,6 +137,7 @@ namespace ShareInvest
                         Text = Xing.GetAccountName(Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
 
                     Size = new Size(795, 433);
+                    Statistical.OnEventConnect();
                     Statistical.Show();
                     break;
 
@@ -328,7 +329,8 @@ namespace ShareInvest
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                         BeginInvoke(new Action(() =>
                         {
-                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, Strategy.Retrieve.Date);
+                            var str = KeyDecoder.GetWindowsProductKeyFromRegistry();
+                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, secret.GetIsSever(str) ? Strategy.Retrieve.Date : new Strategy.Retrieve(str).GetDate(Open.Code));
                             Xing.Send += OnReceiveNotifyIcon;
                             notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                             OnEventConnect();
@@ -496,7 +498,15 @@ namespace ShareInvest
                     ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
                 }
                 Task.Wait();
-                Parallel.ForEach(Specify, new Action<Catalog.XingAPI.Specify>((param) => new Strategy.XingAPI.Base(param)));
+                Parallel.ForEach(Specify, new Action<Catalog.XingAPI.Specify>((param) =>
+                {
+                    switch (param.Strategy)
+                    {
+                        case basic:
+                            new Strategy.XingAPI.Base(param);
+                            break;
+                    }
+                }));
             }
             WindowState = Xing.SendNotifyIconText((int)Math.Pow((initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code).Length, 4));
 
@@ -595,6 +605,7 @@ namespace ShareInvest
                             break;
 
                         case st:
+                            Statistical.OnEventDisconnect();
                             Statistical.Hide();
                             break;
 
@@ -689,5 +700,6 @@ namespace ShareInvest
         const string boolean = "Boolean";
         const string checkDataBase = "CheckDataBase";
         const string gs = "GodSword";
+        const string basic = "Base";
     }
 }

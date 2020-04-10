@@ -10,7 +10,7 @@ namespace ShareInvest.Strategy
 {
     public abstract class StrategicChoice : ReBalancing
     {
-        public StrategicChoice(Catalog.XingAPI.Specify specify) : base(specify)
+        protected internal StrategicChoice(Catalog.XingAPI.Specify specify) : base(specify)
         {
             if (specify.Time == 1440)
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
@@ -137,7 +137,7 @@ namespace ShareInvest.Strategy
             {
                 FnoIsuNo = ConnectAPI.Code,
                 OrgOrdNo = number,
-                OrdQty = specify.Quantity
+                OrdQty = sell
             })).Start();
         }
         protected internal void SendCorrectionOrder(string price, string number)
@@ -149,7 +149,7 @@ namespace ShareInvest.Strategy
                 OrgOrdNo = number,
                 FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.지정가).ToString("D2"),
                 OrdPrc = price,
-                OrdQty = specify.Quantity
+                OrdQty = sell
             })).Start();
         }
         protected internal void SendNewOrder(string price, string classification)
@@ -161,7 +161,7 @@ namespace ShareInvest.Strategy
                 BnsTpCode = classification,
                 FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.지정가).ToString("D2"),
                 OrdPrc = price,
-                OrdQty = specify.Quantity
+                OrdQty = sell
             })).Start();
         }
         protected internal const string buy = "2";

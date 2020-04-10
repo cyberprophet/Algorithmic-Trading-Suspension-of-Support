@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.FindByName;
 
@@ -18,13 +19,25 @@ namespace ShareInvest.GoblinBatControls
                     Assets = (ulong)numericAssets.Value,
                     Code = string.IsNullOrEmpty(emptyCode.Text) ? code : emptyCode.Text,
                     Commission = commission,
-                    Quantity = "1",
+                    Strategy = strategy.Text,
                     RollOver = checkRollOver.Checked,
                     Time = i == 4 && uint.TryParse(emptyNum.Text.Replace(",", string.Empty), out uint time) ? time : (uint)string.Concat("numeric", i).FindByName<NumericUpDown>(this).Value,
-                    Short = 4,
-                    Long = 60
+                    Short = (int)string.Concat("numeric", i + 10).FindByName<NumericUpDown>(this).Value,
+                    Long = (int)string.Concat("numeric", i + 20).FindByName<NumericUpDown>(this).Value
                 };
             return temp;
+        }
+        public void OnEventConnect()
+        {
+            button.Click += ButtonClick;
+        }
+        public void OnEventDisconnect()
+        {
+            button.Click -= ButtonClick;
+        }
+        void ButtonClick(object sender, EventArgs e)
+        {
+            emptyCode.Text = "101Q6000";
         }
     }
 }

@@ -8,6 +8,19 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
     {
+        protected string SetDate(string code)
+        {
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                    return db.Datums.Where(o => o.Code.Equals(code)).Max(o => o.Date);
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
+            return string.Empty;
+        }
         protected Queue<Quotes> GetQuotes(string code)
         {
             var chart = new Queue<Quotes>();

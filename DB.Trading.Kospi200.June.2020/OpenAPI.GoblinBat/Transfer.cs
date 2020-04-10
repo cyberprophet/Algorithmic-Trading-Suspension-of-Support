@@ -15,7 +15,7 @@ namespace ShareInvest.OpenAPI
                     string code = temp[temp.Length - 1].Split('.')[0], name = temp[temp.Length - 2];
 
                     if (!code.Equals("Day") && !code.Equals("Tick"))
-                        new Task(() => SetInsertCode(code, string.Concat(code.Substring(0, 3).Equals("201") ? "C " : "P ", name, " ", code.Substring(5, 3), code.Substring(7).Equals("7") || code.Substring(7).Equals("2") ? ".5" : ".0"), GetSecondThursday(name))).Start();
+                        SetInsertCode(code, string.Concat(code.Substring(0, 3).Equals("201") ? "C " : "P ", name, " ", code.Substring(5, 3), code.Substring(7).Equals("7") || code.Substring(7).Equals("2") ? ".5" : ".0"), GetSecondThursday(name));
 
                     if (sr != null)
                         while (sr.EndOfStream == false)

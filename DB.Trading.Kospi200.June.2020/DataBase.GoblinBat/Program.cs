@@ -21,7 +21,7 @@ namespace ShareInvest
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6;
-                var remaining = new Random(Guid.NewGuid().GetHashCode()).Next(classfication ? 35 : 7, classfication ? 56 : 26);
+                var remaining = secret.GetIsSever(str) ? new Random(Guid.NewGuid().GetHashCode()).Next(classfication ? 25 : 7, classfication ? 36 : 25) : 1;
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
 
                 if (secret.GetDirectoryInfoExists(path))
@@ -36,7 +36,7 @@ namespace ShareInvest
                         registry.SetValue(secret.GoblinBat, Array.Find(Directory.GetFiles(Application.StartupPath, "*.exe", SearchOption.AllDirectories), o => o.Contains(string.Concat(secret.GodSword, ".exe"))));
                     }
                     while (remaining > 0)
-                        if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
+                        if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0 && secret.GetIsSever(str))
                             new Task(() =>
                             {
                                 stack = new Strategy.Retrieve(str).SetInitialzeTheCode();
@@ -45,9 +45,14 @@ namespace ShareInvest
                                     new BackTesting(stack.Pop(), str);
                             }).Start();
                     while (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
-                        if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 45 && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false || initial.Equals((char)Port.Collecting))
-                            break;
+                        if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
+                        {
+                            if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 35 || new Random().Next(0, 10) == 9))
+                                break;
 
+                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 50)
+                                break;
+                        }
                     if (initial.Equals((char)126) == false)
                     {
                         if (initial.Equals((char)Port.Trading) && stack != null && stack.Count > 0)
