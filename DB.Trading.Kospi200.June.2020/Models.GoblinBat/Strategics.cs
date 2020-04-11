@@ -10,17 +10,17 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Required, MinLength(6), MaxLength(8)]
+        [Required, StringLength(6)]
         public string Code
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string Strategy
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string Assets
         {
             get; set;
@@ -45,147 +45,147 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string BaseShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string BaseLong
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string NonaTime
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string NonaShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string NonaLong
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string OctaTime
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string OctaShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string OctaLong
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string HeptaTime
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string HeptaShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string HeptaLong
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string HexaTime
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string HexaShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string HexaLong
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string PentaTime
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string PantaShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string PantaLong
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string QuadTime
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string QuadShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string QuadLong
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string TriTime
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string TriShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string TriLong
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string DuoTime
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string DuoShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string DuoLong
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string MonoTime
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string MonoShort
         {
             get; set;
         }
-        [Required]
+        [Required, StringLength(4)]
         public string MonoLong
         {
             get; set;

@@ -15,7 +15,7 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    return db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3))).Max().Date;
+                    return db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3))).Last(o => o.Date.Contains(temp)).Date;
             }
             catch (Exception ex)
             {

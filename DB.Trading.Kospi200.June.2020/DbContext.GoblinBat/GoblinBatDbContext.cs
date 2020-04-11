@@ -42,6 +42,10 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
+        public DbSet<Logs> Logs
+        {
+            get; set;
+        }
         public override async Task<int> SaveChangesAsync() => await this.BatchSaveChangesAsync();
     }
 }

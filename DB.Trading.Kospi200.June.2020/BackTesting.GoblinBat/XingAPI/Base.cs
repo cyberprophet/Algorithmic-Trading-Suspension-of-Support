@@ -14,13 +14,13 @@ namespace ShareInvest.Strategy.XingAPI
                 {
                     case Classification.Sell:
                         if (kv.Value > 0)
-                            num += 2;
+                            num++;
 
                         break;
 
                     case Classification.Buy:
                         if (kv.Value < 0)
-                            num += 2;
+                            num++;
 
                         break;
                 }

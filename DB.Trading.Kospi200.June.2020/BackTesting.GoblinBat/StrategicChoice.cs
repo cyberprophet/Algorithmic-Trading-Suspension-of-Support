@@ -109,10 +109,10 @@ namespace ShareInvest.Strategy
             foreach (var kv in API.Judge)
             {
                 if (classification.Equals(sell) && kv.Value > 0)
-                    num -= 2;
+                    num--;
 
                 else if (classification.Equals(buy) && kv.Value < 0)
-                    num -= 2;
+                    num--;
             }
             return max * num * 0.1;
         }

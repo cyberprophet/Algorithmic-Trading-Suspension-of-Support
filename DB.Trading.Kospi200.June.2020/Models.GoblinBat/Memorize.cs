@@ -46,7 +46,7 @@ namespace ShareInvest.Models
             get; set;
         }
         [ForeignKey("Index")]
-        public virtual Strategics Strategy
+        public virtual Strategics StrategyNumber
         {
             get; set;
         }

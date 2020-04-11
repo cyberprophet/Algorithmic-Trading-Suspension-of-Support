@@ -37,21 +37,31 @@ namespace ShareInvest
                     }
                     while (remaining > 0)
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
-                            switch (secret.GetIsSever(str))
+                            new Task(() =>
                             {
-                                case true:
-                                    new Task(() =>
-                                    {
+                                switch (secret.GetIsSever(str))
+                                {
+                                    case true:
                                         stack = new Strategy.Retrieve(str).SetInitialzeTheCode();
 
                                         while (stack.Count > 0)
                                             new BackTesting(stack.Pop(), str);
-                                    }).Start();
-                                    break;
 
-                                case false:
-                                    break;
-                            }
+                                        break;
+
+                                    case false:
+                                        new Information(str).SetInsertStrategy(new string[]
+                                        {
+                                            "0009",
+                                            "101000",
+                                            "30",
+                                            "16.2",
+                                            "Base",
+                                            "T"
+                                        });
+                                        break;
+                                }
+                            }).Start();
                     while (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
                         if (secret.GetHoliday(DateTime.Now) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
                         {
