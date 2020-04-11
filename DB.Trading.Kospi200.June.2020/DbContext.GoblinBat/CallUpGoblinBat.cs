@@ -1,43 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity.Migrations;
 using System.Linq;
 using ShareInvest.Catalog;
 using ShareInvest.Message;
-using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
-        protected bool GetRecentAnalysis(Specify s)
-        {
-            var date = DateTime.Now.Hour < 5 && DateTime.Now.Hour >= 0 ? DateTime.Now.AddDays(-1).ToString(CallUpGoblinBat.date) : DateTime.Now.ToString(CallUpGoblinBat.date);
-
-            try
-            {
-                using (var db = new GoblinBatDbContext(key))
-                    return db.Logs.Any(o => o.Date.ToString().Equals(date) && o.Code.Equals(s.Code) && o.Assets.Equals(s.Assets) && o.Strategy.Equals(s.Strategy) && o.Date.Equals(s.Time));
-            }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace, s.Code);
-            }
-            return false;
-        }
-        protected bool GetRegister()
-        {
-            try
-            {
-                using (var db = new GoblinBatDbContext(key))
-                    return db.Logs.Any();
-            }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace);
-            }
-            return false;
-        }
         protected bool GetRemainingDate(string code, long date)
         {
             try
@@ -128,43 +98,6 @@ namespace ShareInvest.GoblinBatContext
                     new ExceptionMessage(ex.StackTrace);
                 }
             return string.Empty;
-        }
-        protected async void SetStorage(Logs log)
-        {
-            try
-            {
-                using (var db = new GoblinBatDbContext(key))
-                {
-                    var check = db.Logs.Find(new object[]
-                    {
-                            log.Code,
-                            log.Strategy,
-                            log.Assets,
-                            log.Date
-                    });
-                    if (check != null && db.Logs.Where(o => o.Cumulative.Equals(log.Cumulative) && check.Cumulative.Equals(log.Cumulative) && o.Revenue.Equals(log.Revenue) && check.Revenue.Equals(log.Revenue) && check.Unrealized.Equals(log.Unrealized) && o.Unrealized.Equals(log.Unrealized)).Any())
-                        return;
-
-                    db.Logs.AddOrUpdate(log);
-                    await db.SaveChangesAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace);
-            }
-        }
-        protected async void DeleteLogs()
-        {
-            try
-            {
-                using (var db = new GoblinBatDbContext(key))
-                    await db.Logs.BulkDeleteAsync(db.Logs.Where(o => o.Code.Equals(string.Concat(kospi200f, "Q3", futures)))).ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace);
-            }
         }
         protected CallUpGoblinBat(string key) => this.key = key;
         protected internal const string futures = "000";

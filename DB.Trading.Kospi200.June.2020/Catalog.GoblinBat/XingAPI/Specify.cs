@@ -14,6 +14,10 @@
         {
             get; set;
         }
+        public double MarginRate
+        {
+            get; set;
+        }
         public bool RollOver
         {
             get; set;

@@ -25,6 +25,7 @@ namespace ShareInvest.Strategy
         }
         internal void Save(Chart ch, Specify specify)
         {
+            /*
             Revenue = CumulativeRevenue - Commission;
             SetStorage(new Logs
             {
@@ -37,6 +38,7 @@ namespace ShareInvest.Strategy
                 Cumulative = CumulativeRevenue - Commission
             });
             TodayRevenue = Revenue;
+            */
         }
         internal int Quantity
         {

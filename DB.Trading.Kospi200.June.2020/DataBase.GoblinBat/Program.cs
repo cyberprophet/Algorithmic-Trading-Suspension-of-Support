@@ -36,18 +36,26 @@ namespace ShareInvest
                         registry.SetValue(secret.GoblinBat, Array.Find(Directory.GetFiles(Application.StartupPath, "*.exe", SearchOption.AllDirectories), o => o.Contains(string.Concat(secret.GodSword, ".exe"))));
                     }
                     while (remaining > 0)
-                        if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0 && secret.GetIsSever(str))
-                            new Task(() =>
+                        if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
+                            switch (secret.GetIsSever(str))
                             {
-                                stack = new Strategy.Retrieve(str).SetInitialzeTheCode();
+                                case true:
+                                    new Task(() =>
+                                    {
+                                        stack = new Strategy.Retrieve(str).SetInitialzeTheCode();
 
-                                while (stack.Count > 0)
-                                    new BackTesting(stack.Pop(), str);
-                            }).Start();
+                                        while (stack.Count > 0)
+                                            new BackTesting(stack.Pop(), str);
+                                    }).Start();
+                                    break;
+
+                                case false:
+                                    break;
+                            }
                     while (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
-                        if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
+                        if (secret.GetHoliday(DateTime.Now) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
                         {
-                            if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 35 || new Random().Next(0, 10) == 9))
+                            if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && new Random().Next(0, 10) == 9)
                                 break;
 
                             if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 50)
@@ -62,7 +70,7 @@ namespace ShareInvest
                         }
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
-                        Application.Run(new GoblinBat(initial, secret));
+                        Application.Run(new GoblinBat(initial, secret, str));
                     }
                     else
                         new ExceptionMessage(str);

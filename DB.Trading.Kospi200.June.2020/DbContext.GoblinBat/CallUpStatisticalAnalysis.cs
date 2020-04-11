@@ -10,16 +10,18 @@ namespace ShareInvest.GoblinBatContext
     {
         protected string SetDate(string code)
         {
+            string temp = DateTime.Now.ToString(date);
+
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    return db.Datums.Where(o => o.Code.Equals(code)).Max(o => o.Date);
+                    return db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3))).Max().Date;
             }
             catch (Exception ex)
             {
                 new ExceptionMessage(ex.StackTrace, code);
             }
-            return string.Empty;
+            return temp;
         }
         protected Queue<Quotes> GetQuotes(string code)
         {
@@ -105,5 +107,6 @@ namespace ShareInvest.GoblinBatContext
         }
         protected CallUpStatisticalAnalysis(string key) : base(key) => this.key = key;
         readonly string key;
+        const string date = "yyMMddHHmmss";
     }
 }

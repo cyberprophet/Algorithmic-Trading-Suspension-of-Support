@@ -10,14 +10,15 @@ using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatControls;
 using ShareInvest.Message;
-using ShareInvest.Verify;
+using ShareInvest.Strategy;
 
 namespace ShareInvest
 {
     partial class GoblinBat : Form
     {
-        internal GoblinBat(char initial, Secret secret)
+        internal GoblinBat(char initial, Secret secret, string key)
         {
+            this.key = key;
             this.initial = initial;
             this.secret = secret;
             InitializeComponent();
@@ -26,7 +27,7 @@ namespace ShareInvest
 
             if (collect)
             {
-                Open = OpenAPI.ConnectAPI.GetInstance(KeyDecoder.GetWindowsProductKeyFromRegistry());
+                Open = OpenAPI.ConnectAPI.GetInstance(key);
                 Open.SetAPI(axAPI);
                 Open.SendCount += OnReceiveNotifyIcon;
             }
@@ -36,7 +37,7 @@ namespace ShareInvest
                 case trading:
                     if (Statistical == null)
                     {
-                        Statistical = new StatisticalAnalysis();
+                        Statistical = new StatisticalControl();
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
                         Statistical.Show();
@@ -52,12 +53,12 @@ namespace ShareInvest
                     if (collect)
                     {
                         Open.SendQuotes += Quotes.OnReceiveQuotes;
-                        Open.StartProgress(new OpenAPI.Temporary(Open, new StringBuilder(1024), KeyDecoder.GetWindowsProductKeyFromRegistry()));
+                        Open.StartProgress(new OpenAPI.Temporary(Open, new StringBuilder(1024), key));
                     }
                     else
                         BeginInvoke(new Action(() =>
                         {
-                            Task = new Task(() => Specify = Statistical.Statistics(Strategy.Retrieve.Code));
+                            Task = new Task(() => Specify = Statistical.Specifies);
                             Task.Start();
                             Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, Strategy.Retrieve.Date);
                             Xing.Send += OnReceiveNotifyIcon;
@@ -136,8 +137,9 @@ namespace ShareInvest
                     if (Xing != null && Array.Exists(XingConnect, o => o.Equals(initial)))
                         Text = Xing.GetAccountName(Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
 
-                    Size = new Size(795, 433);
+                    Size = new Size(1350, 255);
                     Statistical.OnEventConnect();
+                    Statistical.SendStatistics += OnReceiveStrategy;
                     Statistical.Show();
                     break;
 
@@ -202,6 +204,19 @@ namespace ShareInvest
             ResumeLayout();
             CenterToScreen();
         }
+        void OnReceiveStrategy(object sender, EventHandler.BackTesting.Statistics e)
+        {
+            Task = new Task(() => new BackTesting(e.Specify, key));
+            WindowState = FormWindowState.Minimized;
+            CenterToScreen();
+            Task.Start();
+
+            if (TimerBox.Show(secret.BackTesting, e.Specify.First().Strategy, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
+            {
+                Task.Wait();
+                OnClickMinimized = "";
+            }
+        }
         void OnReceiveSize(object sender, GridResize e)
         {
             var connect = Array.Exists(XingConnect, o => o.Equals(initial));
@@ -257,11 +272,11 @@ namespace ShareInvest
                         }
                         if (Statistical == null)
                         {
-                            Statistical = new StatisticalAnalysis();
+                            Statistical = new StatisticalControl();
                             panel.Controls.Add(Statistical);
                             Statistical.Dock = DockStyle.Fill;
                         }
-                        var chart = Retrieve.GetInstance(KeyDecoder.GetWindowsProductKeyFromRegistry(), Open.Code).Chart;
+                        var chart = Retrieve.GetInstance(key, Open.Code).Chart;
                         var check = e.NotifyIcon.ToString().Split((char)59);
                         Acc = new string[check.Length - 3];
                         Server = check[check.Length - 1].Equals(secret.Mock);
@@ -329,8 +344,7 @@ namespace ShareInvest
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                         BeginInvoke(new Action(() =>
                         {
-                            var str = KeyDecoder.GetWindowsProductKeyFromRegistry();
-                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, secret.GetIsSever(str) ? Strategy.Retrieve.Date : new Strategy.Retrieve(str).GetDate(Open.Code));
+                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, secret.GetIsSever(key) ? Strategy.Retrieve.Date : new Strategy.Retrieve(str).GetDate(Open.Code));
                             Xing.Send += OnReceiveNotifyIcon;
                             notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                             OnEventConnect();
@@ -445,7 +459,6 @@ namespace ShareInvest
                                 Balance = new BalanceControl();
                                 panel.Controls.Add(Balance);
                                 Balance.Dock = DockStyle.Fill;
-                                Balance.SendReSize += OnReceiveSize;
                             }
                             ((IEvents<Balance>)ctor).Send += Balance.OnReceiveBalance;
                             ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
@@ -511,7 +524,7 @@ namespace ShareInvest
             WindowState = Xing.SendNotifyIconText((int)Math.Pow((initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code).Length, 4));
 
             if ((DateTime.Now.Hour > 16 || DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45) && initial.Equals(collecting))
-                Temporary = new XingAPI.Temporary(Xing.reals[0], Xing.reals[1], new StringBuilder(1024), KeyDecoder.GetWindowsProductKeyFromRegistry());
+                Temporary = new XingAPI.Temporary(Xing.reals[0], Xing.reals[1], new StringBuilder(1024), key);
         }
         void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
@@ -605,6 +618,7 @@ namespace ShareInvest
                             break;
 
                         case st:
+                            Statistical.SendStatistics -= OnReceiveStrategy;
                             Statistical.OnEventDisconnect();
                             Statistical.Hide();
                             break;
@@ -653,7 +667,7 @@ namespace ShareInvest
         {
             get; set;
         }
-        StatisticalAnalysis Statistical
+        StatisticalControl Statistical
         {
             get; set;
         }
@@ -673,6 +687,7 @@ namespace ShareInvest
         {
             get; set;
         }
+        readonly string key;
         readonly char initial;
         readonly Secret secret;
         const char trading = (char)Port.Trading;

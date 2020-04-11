@@ -39,9 +39,6 @@ namespace ShareInvest.GoblinBatContext
                             if (db.Days.Any(o => o.Code.Length < 6))
                                 await db.Days.BulkDeleteAsync(db.Days.Where(o => o.Code.Length < 6), o => o.BatchSize = 100).ConfigureAwait(false);
                         }
-                        if (temp.Code.Equals(q3) && db.Quotes.Any(o => o.Code.Equals(q3)))
-                            await db.Quotes.BulkDeleteAsync(db.Quotes.Where(o => o.Code.Equals(q3)), o => o.BatchSize = 100).ConfigureAwait(false);
-
                         if (temp.Code.Length == 6 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(code)).Min(o => o.Date).ToString().Substring(0, 6))))
                         {
                             list.Add(temp.Code);

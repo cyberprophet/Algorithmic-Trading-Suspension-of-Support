@@ -34,15 +34,11 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
-        public DbSet<Logs> Logs
+        public DbSet<Memorize> Memorize
         {
             get; set;
         }
-        public DbSet<Quotes> Quotes
-        {
-            get; set;
-        }
-        public DbSet<Commentary> Commentaries
+        public DbSet<Strategics> Strategy
         {
             get; set;
         }
