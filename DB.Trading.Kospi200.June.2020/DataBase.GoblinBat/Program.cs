@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
@@ -85,8 +87,13 @@ namespace ShareInvest
                     else
                         new ExceptionMessage(str);
                 }
-                else if (ShowWindow(GetConsoleWindow(), secret.Show))
-                    secret.SetIndentify(path, str);
+                else if (ShowWindow(GetConsoleWindow(), secret.Show) == false)
+                {
+                    while (secret.SetIndentify(path, str) == false)
+                        Thread.Sleep(1);
+
+                    Process.Start("shutdown.exe", "-r");
+                }
             }
         }
         static readonly Secret secret = new Secret();

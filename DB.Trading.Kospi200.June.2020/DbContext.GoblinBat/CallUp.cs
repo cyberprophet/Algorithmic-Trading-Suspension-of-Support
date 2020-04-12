@@ -412,6 +412,5 @@ namespace ShareInvest.GoblinBatContext
         readonly string key;
         const string extension = ".csv";
         const string date = "yyMMdd";
-        const string q3 = "101Q3000";
     }
 }

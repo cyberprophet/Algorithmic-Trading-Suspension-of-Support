@@ -14,6 +14,10 @@ namespace ShareInvest.Strategy
         {
 
         }
+        public long OnReceiveRepositoryID(Catalog.XingAPI.Specify[] specifies)
+        {
+            return GetRepositoryID(specifies);
+        }
         public void SetInitialzeTheCode(string code)
         {
             if (Chart == null && Quotes == null)

@@ -15,6 +15,14 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
+        int Accumulative
+        {
+            get; set;
+        }
+        int TodayCommission
+        {
+            get; set;
+        }
         uint Count
         {
             get; set;
@@ -24,6 +32,14 @@ namespace ShareInvest.Strategy
             get; set;
         }
         long CumulativeRevenue
+        {
+            get; set;
+        }
+        long Revenue
+        {
+            get; set;
+        }
+        long TodayRevenue
         {
             get; set;
         }
@@ -160,6 +176,25 @@ namespace ShareInvest.Strategy
                 }
             }
         }
+        internal async void SetStatisticalStorage(string date, double price)
+        {
+            Revenue = CumulativeRevenue - Commission;
+            long revenue = Revenue - TodayRevenue, unrealized = (long)(Quantity == 0 ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * Const.TransactionMultiplier * Math.Abs(Quantity));
+            Accumulative = revenue + unrealized > 0 ? Accumulative++ : revenue + unrealized == 0 ? 0 : Accumulative--;
+            new Models.Memorize
+            {
+                Index = index,
+                Date = date,
+                Code = string.Concat(code.Substring(0, 3), code.Substring(5)),
+                Unrealized = unrealized.ToString(),
+                Revenue = revenue.ToString(),
+                Cumulative = (CumulativeRevenue - Commission).ToString(),
+                Commission = (Commission - TodayCommission).ToString(),
+                Statistic = Accumulative
+            };
+            TodayCommission = (int)Commission;
+            TodayRevenue = Revenue;
+        }
         internal int Quantity
         {
             get; set;
@@ -190,6 +225,8 @@ namespace ShareInvest.Strategy
             SellOrder = new Dictionary<string, uint>();
             BuyOrder = new Dictionary<string, uint>();
             Judge = new Dictionary<uint, double>();
+            code = specifies[0].Code;
+            var temp = specifies[0].Index > 0 ? specifies[0].Index : GetRepositoryID(specifies);
             Parallel.ForEach(specifies, new Action<Catalog.XingAPI.Specify>((param) =>
             {
                 switch (param.Strategy)
@@ -199,9 +236,21 @@ namespace ShareInvest.Strategy
                         break;
                 }
             }));
+            switch (temp)
+            {
+                case 1:
+                    temp = GetRepositoryID(specifies);
+                    break;
+
+                case 0:
+                    return;
+            }
+            index = temp;
             StartProgress();
         }
         const string basic = "Base";
+        readonly string code;
+        readonly long index;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Quotes> SendQuotes;
     }

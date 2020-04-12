@@ -38,5 +38,9 @@
         {
             get; set;
         }
+        public long Index
+        {
+            get; set;
+        }
     }
 }

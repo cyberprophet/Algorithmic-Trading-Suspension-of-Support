@@ -24,7 +24,7 @@ namespace ShareInvest.Strategy
             {
                 string classification = API.Classification, price;
                 var check = classification.Equals(buy);
-                var max = Max(specify.Assets / ((check ? e.Price[5] : e.Price[4]) * Const.TransactionMultiplier * Const.MarginRate200402), classification);
+                var max = Max(specify.Assets / ((check ? e.Price[5] : e.Price[4]) * Const.TransactionMultiplier * specify.MarginRate), classification);
                 double[] sp = new double[10], bp = new double[10];
                 API.MaxAmount = max * (classification.Equals(buy) ? 1 : -1);
 

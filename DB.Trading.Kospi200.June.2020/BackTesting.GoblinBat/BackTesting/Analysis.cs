@@ -40,20 +40,20 @@ namespace ShareInvest.Strategy.Statistics
             foreach (var kv in bt.Judge)
             {
                 if (classification.Equals(sell) && kv.Value > 0)
-                    num -= 2;
+                    num--;
 
                 else if (classification.Equals(buy) && kv.Value < 0)
-                    num -= 2;
+                    num--;
             }
             return max * num * 0.1;
         }
         void OnReceiveQuotes(object sender, EventHandler.BackTesting.Quotes e)
         {
-            if (int.TryParse(e.Time, out int time) && (time < 090000 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(bt.Classification) == false)
+            if (int.TryParse(e.Time.Substring(6, 6), out int time) && (time < 090000 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(bt.Classification) == false)
             {
                 string classification = bt.Classification, price;
                 var check = classification.Equals(buy);
-                var max = Max(specify.Assets / ((check ? e.BuyPrice : e.SellPrice) * Const.TransactionMultiplier * Const.MarginRate200402), classification);
+                var max = Max(specify.Assets / ((check ? e.BuyPrice : e.SellPrice) * Const.TransactionMultiplier * specify.MarginRate), classification);
                 double[] sp = new double[10], bp = new double[10];
 
                 for (int i = 0; i < 10; i++)
@@ -149,8 +149,14 @@ namespace ShareInvest.Strategy.Statistics
             Short.Push(popShort);
             Long.Push(popLong);
 
-            if (specify.Time == 1440 && GetCheckTime(e.Date.ToString()))
-                OnReceiveTrend(e.Volume);
+            if (specify.Time == 1440)
+            {
+                if (GetCheckTime(e.Date.ToString()))
+                    OnReceiveTrend(e.Volume);
+
+                else if (e.Date.ToString().Substring(6, 6).Equals(end))
+                    bt.SetStatisticalStorage(e.Date.ToString().Substring(0, 6), e.Price);
+            }
         }
         EMA EMA
         {

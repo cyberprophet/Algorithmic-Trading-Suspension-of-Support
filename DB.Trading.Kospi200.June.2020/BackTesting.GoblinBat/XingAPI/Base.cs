@@ -79,7 +79,7 @@ namespace ShareInvest.Strategy.XingAPI
             var check = classification.Equals(buy);
             var price = param[check ? param.Length - 1 : 0];
 
-            if (price > 0 && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * Const.MarginRate200402), check ? Classification.Buy : Classification.Sell) && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false)
+            if (price > 0 && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate), check ? Classification.Buy : Classification.Sell) && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false)
                 SendNewOrder(price.ToString("F2"), classification);
         }
         public Base(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;

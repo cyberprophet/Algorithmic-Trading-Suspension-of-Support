@@ -16,16 +16,12 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                {
-                    var temp = db.Strategy.Where(o => o.Assets.Equals(strategy.Assets) && o.Code.Equals(strategy.Code) && o.Commission.Equals(strategy.Commission) && o.MarginRate.Equals(strategy.MarginRate) && o.Strategy.Equals(strategy.Strategy) && o.RollOver.Equals(strategy.RollOver) && o.BaseTime.Equals(strategy.BaseTime) && o.BaseShort.Equals(strategy.BaseShort) && o.BaseLong.Equals(strategy.BaseLong) && o.NonaTime.Equals(strategy.NonaTime) && o.NonaShort.Equals(strategy.NonaShort) && o.NonaLong.Equals(strategy.NonaLong) && o.OctaTime.Equals(strategy.OctaTime) && o.OctaLong.Equals(strategy.OctaLong) && o.OctaShort.Equals(strategy.OctaShort) && o.HeptaTime.Equals(strategy.HeptaTime) && o.HeptaShort.Equals(strategy.HeptaShort) && o.HeptaLong.Equals(strategy.HeptaLong) && o.HexaTime.Equals(strategy.HexaTime) && o.HexaShort.Equals(strategy.HexaShort) && o.HexaLong.Equals(strategy.HexaLong) && o.PentaTime.Equals(strategy.PentaTime) && o.PantaShort.Equals(strategy.PantaShort) && o.PantaLong.Equals(strategy.PantaLong) && o.QuadTime.Equals(strategy.QuadTime) && o.QuadShort.Equals(strategy.QuadShort) && o.QuadLong.Equals(strategy.QuadLong) && o.TriTime.Equals(strategy.TriTime) && o.TriShort.Equals(strategy.TriShort) && o.TriLong.Equals(strategy.TriLong) && o.DuoTime.Equals(strategy.DuoTime) && o.DuoShort.Equals(strategy.DuoShort) && o.DuoLong.Equals(strategy.DuoLong) && o.MonoTime.Equals(strategy.MonoTime) && o.MonoShort.Equals(strategy.MonoShort) && o.MonoLong.Equals(strategy.MonoLong));
-
-                    if (temp.Any() == false)
+                    if (db.Strategy.Where(o => o.Assets.Equals(strategy.Assets) && o.Code.Equals(strategy.Code) && o.Commission.Equals(strategy.Commission) && o.MarginRate.Equals(strategy.MarginRate) && o.Strategy.Equals(strategy.Strategy) && o.RollOver.Equals(strategy.RollOver) && o.BaseTime.Equals(strategy.BaseTime) && o.BaseShort.Equals(strategy.BaseShort) && o.BaseLong.Equals(strategy.BaseLong) && o.NonaTime.Equals(strategy.NonaTime) && o.NonaShort.Equals(strategy.NonaShort) && o.NonaLong.Equals(strategy.NonaLong) && o.OctaTime.Equals(strategy.OctaTime) && o.OctaLong.Equals(strategy.OctaLong) && o.OctaShort.Equals(strategy.OctaShort) && o.HeptaTime.Equals(strategy.HeptaTime) && o.HeptaShort.Equals(strategy.HeptaShort) && o.HeptaLong.Equals(strategy.HeptaLong) && o.HexaTime.Equals(strategy.HexaTime) && o.HexaShort.Equals(strategy.HexaShort) && o.HexaLong.Equals(strategy.HexaLong) && o.PentaTime.Equals(strategy.PentaTime) && o.PantaShort.Equals(strategy.PantaShort) && o.PantaLong.Equals(strategy.PantaLong) && o.QuadTime.Equals(strategy.QuadTime) && o.QuadShort.Equals(strategy.QuadShort) && o.QuadLong.Equals(strategy.QuadLong) && o.TriTime.Equals(strategy.TriTime) && o.TriShort.Equals(strategy.TriShort) && o.TriLong.Equals(strategy.TriLong) && o.DuoTime.Equals(strategy.DuoTime) && o.DuoShort.Equals(strategy.DuoShort) && o.DuoLong.Equals(strategy.DuoLong) && o.MonoTime.Equals(strategy.MonoTime) && o.MonoShort.Equals(strategy.MonoShort) && o.MonoLong.Equals(strategy.MonoLong)).Any() == false)
                     {
                         db.Strategy.AddOrUpdate(strategy);
 
                         return await db.SaveChangesAsync();
                     }
-                }
             }
             catch (Exception ex)
             {
@@ -127,7 +123,6 @@ namespace ShareInvest.GoblinBatContext
         protected CallUpGoblinBat(string key) => this.key = key;
         protected internal const string futures = "000";
         protected internal const string kospi200f = "101";
-        const string date = "yyMMdd";
         readonly string key;
     }
 }

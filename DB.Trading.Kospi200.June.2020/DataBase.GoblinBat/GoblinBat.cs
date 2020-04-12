@@ -208,14 +208,15 @@ namespace ShareInvest
         {
             Task = new Task(() => new BackTesting(e.Specify, key));
             WindowState = FormWindowState.Minimized;
-            CenterToScreen();
+            var temp = new Strategy.Retrieve(key).OnReceiveRepositoryID(e.Specify);
             Task.Start();
 
-            if (TimerBox.Show(secret.BackTesting, e.Specify.First().Strategy, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
+            if (TimerBox.Show(secret.BackTesting, string.Concat("No.", temp), MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
             {
                 Task.Wait();
                 OnClickMinimized = "";
             }
+            GC.Collect();
         }
         void OnReceiveSize(object sender, GridResize e)
         {
