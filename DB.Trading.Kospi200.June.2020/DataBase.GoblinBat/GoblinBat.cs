@@ -206,24 +206,45 @@ namespace ShareInvest
         }
         void OnReceiveStrategy(object sender, EventHandler.BackTesting.Statistics e)
         {
+            if (Chart == null)
+            {
+                Chart = new ChartControl();
+                panel.Controls.Add(Chart);
+                Chart.Dock = DockStyle.Fill;
+            }
             var retriveve = new Strategy.Retrieve(key);
             var temp = retriveve.OnReceiveRepositoryID(e.Specify);
             var recent = retriveve.OnReceiveInformation(temp);
-            WindowState = FormWindowState.Minimized;
+            Cursor = Cursors.WaitCursor;
+            Application.DoEvents();
 
             if (recent == null)
             {
                 Task = new Task(() => new BackTesting(e.Specify, key));
                 Task.Start();
 
-                if (TimerBox.Show(secret.BackTesting, string.Concat("No.", temp), MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
+                if (TimerBox.Show(secret.BackTesting, temp > 1 ? string.Concat("No.", temp) : checkingInformation, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
                 {
                     Task.Wait();
-                    recent = retriveve.OnReceiveInformation(temp);
+                    Cursor = OnReceiveChart(retriveve.OnReceiveInformation(retriveve.OnReceiveRepositoryID(e.Specify)));
                 }
                 GC.Collect();
             }
-            OnClickMinimized = "";
+            else
+                Cursor = OnReceiveChart(recent);
+        }
+        Cursor OnReceiveChart(Dictionary<DateTime, string> param)
+        {
+            BeginInvoke(new Action(() =>
+            {
+                SuspendLayout();
+                Statistical.Hide();
+                Size = Chart.SetChartValue(param);
+                ResumeLayout();
+                Chart.Show();
+                CenterToScreen();
+            }));
+            return Cursors.Default;
         }
         void OnReceiveSize(object sender, GridResize e)
         {
@@ -626,12 +647,16 @@ namespace ShareInvest
                             break;
 
                         case st:
+                            if (Chart != null)
+                                Chart.Hide();
+
                             Statistical.SendStatistics -= OnReceiveStrategy;
                             Statistical.OnEventDisconnect();
                             Statistical.Hide();
                             break;
 
-                        default:
+                        case chart:
+                            Chart.Hide();
                             break;
                     }
                     Opacity = 0.8135;
@@ -660,6 +685,10 @@ namespace ShareInvest
             get; set;
         }
         Task Task
+        {
+            get; set;
+        }
+        ChartControl Chart
         {
             get; set;
         }
@@ -713,6 +742,7 @@ namespace ShareInvest
         const string quo = "quotes";
         const string bal = "balance";
         const string st = "strategy";
+        const string chart = "chart";
         const string ex = "exit";
         const string dic = "Dictionary`2";
         const string sb = "StringBuilder";
@@ -724,5 +754,6 @@ namespace ShareInvest
         const string checkDataBase = "CheckDataBase";
         const string gs = "GodSword";
         const string basic = "Base";
+        const string checkingInformation = "Checking Information";
     }
 }

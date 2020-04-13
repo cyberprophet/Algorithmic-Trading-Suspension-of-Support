@@ -361,6 +361,38 @@ namespace ShareInvest.GoblinBatContext
                     return;
             }
         }
+        protected void SetStorage(StringBuilder param, string code)
+        {
+            var model = new List<Datum>();
+
+            foreach (var str in param.ToString().Split(';'))
+            {
+                var temp = str.Split(',');
+
+                if (temp.Length == 3)
+                    model.Add(new Datum
+                    {
+                        Code = code,
+                        Date = temp[0],
+                        Price = temp[1],
+                        Volume = temp[2]
+                    });
+
+                else if (temp.Length > 3)
+                    model.Add(new Datum
+                    {
+                        Code = code,
+                        Date = temp[0],
+                        SellPrice = temp[1],
+                        SellQuantity = temp[2],
+                        TotalSellAmount = temp[3],
+                        BuyPrice = temp[4],
+                        BuyQuantity = temp[5],
+                        TotalBuyAmount = temp[6]
+                    });
+            }
+            SetStorage(model);
+        }
         async void SetStorage(List<Datum> model)
         {
             try

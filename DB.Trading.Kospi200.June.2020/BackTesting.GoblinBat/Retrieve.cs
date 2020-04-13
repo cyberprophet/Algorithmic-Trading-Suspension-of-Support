@@ -46,9 +46,28 @@ namespace ShareInvest.Strategy
         {
             var now = DateTime.Now;
 
-            if (DateTime.Now.Hour >= 0 && DateTime.Now.Hour < 5)
-                now = now.AddDays(-1);
+            switch (now.DayOfWeek)
+            {
+                case DayOfWeek.Monday:
+                    if (now.Hour < 16)
+                        now = now.AddDays(-3);
 
+                    break;
+
+                case DayOfWeek.Sunday:
+                    now = now.AddDays(-2);
+                    break;
+
+                case DayOfWeek.Saturday:
+                    now = now.AddDays(-1);
+                    break;
+
+                default:
+                    if (now.Hour < 16)
+                        now = now.AddDays(-1);
+
+                    break;
+            }
             return GetDuplicateResults(index, now.ToString(date));
         }
         public string GetDate(string code)

@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.Win32;
-using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Message;
 using ShareInvest.Strategy;
 using ShareInvest.Verify;

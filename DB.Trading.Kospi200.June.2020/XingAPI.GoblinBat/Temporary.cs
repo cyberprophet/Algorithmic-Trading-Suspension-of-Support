@@ -1,12 +1,40 @@
-﻿using System.Text;
+﻿using System;
+using System.IO;
+using System.Text;
+using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.XingAPI;
 using ShareInvest.GoblinBatContext;
+using ShareInvest.Message;
 
 namespace ShareInvest.XingAPI
 {
     public partial class Temporary : CallUp
     {
+        public Temporary(string key) : base(key)
+        {
+            sb = new StringBuilder();
+            var code = string.Empty;
+
+            try
+            {
+                foreach (var file in Directory.GetFiles(Path.Combine(Application.StartupPath, @"..\"), "*.csv", SearchOption.AllDirectories))
+                {
+                    var split = file.Split('\\');
+                    code = split[split.Length - 2];
+
+                    using (var sr = new StreamReader(file))
+                        if (sr != null)
+                            while (sr.EndOfStream == false)
+                                sb.Append(sr.ReadLine()).Append(';');
+                }
+                SetStorage(sb, code);
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
+        }
         public Temporary(IReals quotes, IReals datum, StringBuilder sb, string key) : base(key)
         {
             this.sb = sb;

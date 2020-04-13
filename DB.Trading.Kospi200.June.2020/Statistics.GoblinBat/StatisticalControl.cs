@@ -44,18 +44,6 @@ namespace ShareInvest.GoblinBatControls
             comboMarginRate.Items.AddRange(MaginRate);
             Specifies = Statistics();
         }
-        public void OnEventConnect()
-        {
-            buttonStartProgress.Click += ButtonClick;
-        }
-        public void OnEventDisconnect()
-        {
-            buttonStartProgress.Click -= ButtonClick;
-        }
-        public Specify[] Specifies
-        {
-            get; private set;
-        }
         Specify[] Statistics()
         {
             var temp = new Specify[10];
@@ -77,7 +65,28 @@ namespace ShareInvest.GoblinBatControls
         }
         void ButtonClick(object sender, EventArgs e)
         {
+            int value = int.MaxValue;
+
+            for (int i = 0; i < 10; i++)
+            {
+                var time = i > 0 ? string.Concat("numeric", i).FindByName<NumericUpDown>(this).Value : 1440;
+
+                if (value > time && string.Concat("numeric", i + 10).FindByName<NumericUpDown>(this).Value < string.Concat("numeric", i + 20).FindByName<NumericUpDown>(this).Value)
+                {
+                    value = (int)time;
+
+                    continue;
+                }
+                else if (MessageBox.Show(message, warning, MessageBoxButtons.OK, MessageBoxIcon.Error).Equals(DialogResult.OK))
+                    return;
+            }
             SendStatistics?.Invoke(this, new Statistics(Statistics()));
+        }
+        public void OnEventConnect() => buttonStartProgress.Click += ButtonClick;
+        public void OnEventDisconnect() => buttonStartProgress.Click -= ButtonClick;
+        public Specify[] Specifies
+        {
+            get; private set;
         }
         string[] Commission
         {
@@ -91,6 +100,8 @@ namespace ShareInvest.GoblinBatControls
         readonly string[] strategy = { strategy_0 };
         readonly double[] commission = { commission_0 };
         readonly double[] magin_rate = { magin_rate_0 };
+        const string message = "단기 값이 장기 값보다 클 수 없습니다.\n\n확인하시고 다시 설정해주세요.";
+        const string warning = "Warning";
         const string code_0 = "101Q6000";
         const string strategy_0 = "Base";
         const double commission_0 = 3e-5;
