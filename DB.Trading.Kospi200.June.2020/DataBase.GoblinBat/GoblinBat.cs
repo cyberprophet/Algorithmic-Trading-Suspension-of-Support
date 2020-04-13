@@ -206,17 +206,24 @@ namespace ShareInvest
         }
         void OnReceiveStrategy(object sender, EventHandler.BackTesting.Statistics e)
         {
-            Task = new Task(() => new BackTesting(e.Specify, key));
+            var retriveve = new Strategy.Retrieve(key);
+            var temp = retriveve.OnReceiveRepositoryID(e.Specify);
+            var recent = retriveve.OnReceiveInformation(temp);
             WindowState = FormWindowState.Minimized;
-            var temp = new Strategy.Retrieve(key).OnReceiveRepositoryID(e.Specify);
-            Task.Start();
 
-            if (TimerBox.Show(secret.BackTesting, string.Concat("No.", temp), MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
+            if (recent == null)
             {
-                Task.Wait();
-                OnClickMinimized = "";
+                Task = new Task(() => new BackTesting(e.Specify, key));
+                Task.Start();
+
+                if (TimerBox.Show(secret.BackTesting, string.Concat("No.", temp), MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
+                {
+                    Task.Wait();
+                    recent = retriveve.OnReceiveInformation(temp);
+                }
+                GC.Collect();
             }
-            GC.Collect();
+            OnClickMinimized = "";
         }
         void OnReceiveSize(object sender, GridResize e)
         {
@@ -345,7 +352,7 @@ namespace ShareInvest
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                         BeginInvoke(new Action(() =>
                         {
-                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, secret.GetIsSever(key) ? Strategy.Retrieve.Date : new Strategy.Retrieve(str).GetDate(Open.Code));
+                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, secret.GetIsSever(key) ? Strategy.Retrieve.Date : new Strategy.Retrieve(key).GetDate(Open.Code));
                             Xing.Send += OnReceiveNotifyIcon;
                             notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
                             OnEventConnect();

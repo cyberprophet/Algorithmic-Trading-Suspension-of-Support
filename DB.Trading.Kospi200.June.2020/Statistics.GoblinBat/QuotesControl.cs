@@ -11,6 +11,7 @@ namespace ShareInvest.GoblinBatControls
     {
         public QuotesControl()
         {
+            ran = new Random(Guid.NewGuid().GetHashCode());
             InitializeComponent();
             stateSell.ForeColor = Color.Navy;
             stateBuy.ForeColor = Color.Crimson;
@@ -44,7 +45,7 @@ namespace ShareInvest.GoblinBatControls
                 stateVolume.Text = check ? e.Volume.Substring(1) : e.Volume;
                 stateVolume.ForeColor = check ? Color.DeepSkyBlue : Color.Maroon;
 
-                foreach (var kv in e.Trend.First(o => o.Value.Equals("Base")).Value.Substring(0, 1).Equals("-") ? e.Trend.OrderBy(o => o.Value.Split('(')[0].Trim()) : e.Trend.OrderByDescending(o => o.Value.Split('(')[0].Trim()))
+                foreach (var kv in e.Trend.OrderBy(o => ran.Next(e.Trend.Count)))
                 {
                     var label = string.Concat("state", count).FindByName<Label>(this);
                     var trend = kv.Value.Contains("-");
@@ -152,5 +153,6 @@ namespace ShareInvest.GoblinBatControls
             }
             this.message.Text = string.Concat(message.Substring(0, first + 1).Trim(), "\n", message.Substring(first + 1).Trim());
         }
+        readonly Random ran;
     }
 }

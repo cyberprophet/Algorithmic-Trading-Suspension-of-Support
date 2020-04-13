@@ -23,14 +23,13 @@ namespace ShareInvest
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6;
-                var remaining = secret.GetIsSever(str) ? new Random(Guid.NewGuid().GetHashCode()).Next(classfication ? 25 : 7, classfication ? 36 : 25) : 1;
+                var remaining = secret.GetIsSever(str) ? ran.Next(classfication ? 25 : 7, classfication ? 36 : 25) : 1;
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
+                var initial = secret.GetPort(str);
+                var list = new List<long>();
 
                 if (secret.GetDirectoryInfoExists(path))
                 {
-                    Stack<Specify[]> stack = null;
-                    var initial = secret.GetPort(str);
-
                     if (registry.GetValue(secret.GoblinBat) == null || DateTime.Now.Date.Equals(new DateTime(2020, 4, 3)))
                     {
                         registry.Close();
@@ -44,11 +43,16 @@ namespace ShareInvest
                                 switch (secret.GetIsSever(str))
                                 {
                                     case true:
-                                        stack = new Strategy.Retrieve(str).SetInitialzeTheCode();
+                                        var retrieve = new Strategy.Retrieve(str);
+                                        list = retrieve.SetInitialzeTheCode();
 
-                                        while (stack.Count > 0)
-                                            new BackTesting(stack.Pop(), str);
+                                        while (list.Count > 0)
+                                        {
+                                            var number = list[ran.Next(0, list.Count)];
 
+                                            if (list.Remove(number) && retrieve.GetDuplicateResults(number) == false)
+                                                new BackTesting(retrieve.OnReceiveStrategy(number), str);
+                                        }
                                         break;
 
                                     case false:
@@ -67,7 +71,7 @@ namespace ShareInvest
                     while (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
                         if (secret.GetHoliday(DateTime.Now) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
                         {
-                            if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && new Random().Next(0, 10) == 9)
+                            if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && ran.Next(0, 10) == 9)
                                 break;
 
                             if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 50)
@@ -75,9 +79,9 @@ namespace ShareInvest
                         }
                     if (initial.Equals((char)126) == false)
                     {
-                        if (initial.Equals((char)Port.Trading) && stack != null && stack.Count > 0)
+                        if (initial.Equals((char)Port.Trading) && list.Count > 0)
                         {
-                            stack.Clear();
+                            list.Clear();
                             GC.Collect();
                         }
                         Application.EnableVisualStyles();
@@ -90,12 +94,13 @@ namespace ShareInvest
                 else if (ShowWindow(GetConsoleWindow(), secret.Show) == false)
                 {
                     while (secret.SetIndentify(path, str) == false)
-                        Thread.Sleep(1);
+                        Thread.Sleep(ran.Next(1, 100));
 
                     Process.Start("shutdown.exe", "-r");
                 }
             }
         }
+        static readonly Random ran = new Random(Guid.NewGuid().GetHashCode());
         static readonly Secret secret = new Secret();
         static readonly string str = KeyDecoder.GetWindowsProductKeyFromRegistry();
         [DllImport("kernel32.dll")]

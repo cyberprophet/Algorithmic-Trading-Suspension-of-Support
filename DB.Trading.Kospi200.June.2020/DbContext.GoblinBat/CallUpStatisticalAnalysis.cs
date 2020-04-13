@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
+using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Message;
 using ShareInvest.Models;
@@ -10,20 +12,85 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
     {
+        protected Dictionary<DateTime, string> GetInformation(long number)
+        {
+            try
+            {
+                var date = DateTime.Now.ToString(recent);
+
+                switch (DateTime.Now.DayOfWeek)
+                {
+                    case DayOfWeek.Monday:
+                        if (DateTime.Now.Hour < 16)
+                            date = DateTime.Now.AddDays(-3).ToString(recent);
+
+                        break;
+
+                    case DayOfWeek.Sunday:
+                        date = DateTime.Now.AddDays(-2).ToString(recent);
+                        break;
+
+                    case DayOfWeek.Saturday:
+                        date = DateTime.Now.AddDays(-1).ToString(recent);
+                        break;
+
+                    default:
+                        if (DateTime.Now.Hour < 16)
+                            date = DateTime.Now.AddDays(-1).ToString(recent);
+
+                        break;
+                }
+                using (var db = new GoblinBatDbContext(key))
+                {
+                    var memo = db.Memorize.Where(o => o.Index == number && o.Date.Equals(date));
+
+                    if (memo.Any())
+                    {
+                        var info = new Dictionary<DateTime, string>(16);
+                        var temp = new Dictionary<string, long>();
+                        long recentUnrealized = 0;
+
+                        foreach (var str in db.Memorize.Where(o => o.Index == number).Select(o => new
+                        {
+                            o.Date,
+                            o.Unrealized,
+                            o.Cumulative
+                        }).OrderBy(o => o.Date))
+                            if (long.TryParse(str.Unrealized, out long unrealized) && long.TryParse(str.Cumulative, out long cumulative))
+                            {
+                                temp[str.Date] = cumulative;
+                                recentUnrealized = unrealized;
+                            }
+                        var last = temp.Last();
+                        temp[last.Key] = last.Value + recentUnrealized;
+                        string code = memo.First().Code;
+
+                        foreach (var kv in temp.OrderBy(o => o.Key))
+                            if (DateTime.TryParseExact(string.Concat(kv.Key, "154500"), CallUpStatisticalAnalysis.date, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime infoDate) && long.TryParse(string.Concat(kv.Key, "154500000"), out long find))
+                                info[infoDate] = string.Concat(kv.Value, ';', db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(3)) && o.Date == find).FirstOrDefault().Price);
+
+                        return info;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, string.Concat("No.", number));
+            }
+            return null;
+        }
         protected string SetDate(string code)
         {
-            string temp = DateTime.Now.ToString(date);
-
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    return db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Date.Contains(temp.Substring(0, 6))).Last().Date;
+                    return db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && (o.Date.Contains("1545") || o.Date.Contains("0500"))).Max(o => o.Date).Trim();
             }
             catch (Exception ex)
             {
                 new ExceptionMessage(ex.StackTrace, code);
             }
-            return temp;
+            return DateTime.Now.ToString(date);
         }
         protected Queue<Quotes> GetQuotes(string code)
         {
@@ -90,22 +157,207 @@ namespace ShareInvest.GoblinBatContext
             }
             return string.Empty;
         }
-        protected Stack<Specify[]> GetStrategy(string code)
+        protected List<long> GetStrategy(string rate)
         {
-            var stack = new Stack<Specify[]>();
+            var list = new List<long>(128);
 
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                {
-
-                }
+                    foreach (var index in db.Strategy.Where(o => o.MarginRate.Equals(rate)).Select(o => new
+                    {
+                        o.Index
+                    }))
+                        list.Add(index.Index);
             }
             catch (Exception ex)
             {
-                new ExceptionMessage(ex.StackTrace, code);
+                new ExceptionMessage(ex.StackTrace);
             }
-            return stack;
+            return list;
+        }
+        protected Specify[] GetStrategy(long index)
+        {
+            var temp = new Specify[10];
+            var list = new List<Strategics>();
+            int i = 0;
+
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                    list = db.Strategy.Where(o => o.Index == index).ToList();
+
+                var find = list.First();
+
+                while (i < temp.Length)
+                    switch (i)
+                    {
+                        case 0:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.BaseTime),
+                                Short = int.Parse(find.BaseShort),
+                                Long = int.Parse(find.BaseLong)
+                            };
+                            break;
+
+                        case 1:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.NonaTime),
+                                Short = int.Parse(find.NonaShort),
+                                Long = int.Parse(find.NonaLong)
+                            };
+                            break;
+
+                        case 2:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.OctaTime),
+                                Short = int.Parse(find.OctaShort),
+                                Long = int.Parse(find.OctaLong)
+                            };
+                            break;
+
+                        case 3:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.HeptaTime),
+                                Short = int.Parse(find.HeptaShort),
+                                Long = int.Parse(find.HeptaLong)
+                            };
+                            break;
+
+                        case 4:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.HexaTime),
+                                Short = int.Parse(find.HexaShort),
+                                Long = int.Parse(find.HexaLong)
+                            };
+                            break;
+
+                        case 5:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.PentaTime),
+                                Short = int.Parse(find.PantaShort),
+                                Long = int.Parse(find.PantaLong)
+                            };
+                            break;
+
+                        case 6:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.QuadTime),
+                                Short = int.Parse(find.QuadShort),
+                                Long = int.Parse(find.QuadLong)
+                            };
+                            break;
+
+                        case 7:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.TriTime),
+                                Short = int.Parse(find.TriShort),
+                                Long = int.Parse(find.TriLong)
+                            };
+                            break;
+
+                        case 8:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.DuoTime),
+                                Short = int.Parse(find.DuoShort),
+                                Long = int.Parse(find.DuoLong)
+                            };
+                            break;
+
+                        case 9:
+                            temp[i++] = new Specify
+                            {
+                                Index = index,
+                                Assets = ulong.Parse(find.Assets) * ar,
+                                Code = GetConvertCode(find.Code),
+                                Commission = uint.Parse(find.Commission) / (double)cr,
+                                MarginRate = double.Parse(find.MarginRate) / mr,
+                                Strategy = find.Strategy,
+                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                Time = uint.Parse(find.MonoTime),
+                                Short = int.Parse(find.MonoShort),
+                                Long = int.Parse(find.MonoLong)
+                            };
+                            break;
+                    }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, string.Concat("No.", index));
+            }
+            return temp;
         }
         protected long GetRepositoryID(Specify[] specifies)
         {
@@ -176,11 +428,45 @@ namespace ShareInvest.GoblinBatContext
             }
             return 0;
         }
+        protected async Task<int> SetStatisticalStorage(Memorize memo)
+        {
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                    if (db.Memorize.Where(o => o.Index == memo.Index && o.Date.Equals(memo.Date) && o.Code.Equals(memo.Code) && o.Unrealized.Equals(memo.Unrealized) && o.Revenue.Equals(memo.Revenue) && o.Commission.Equals(memo.Commission) && o.Cumulative.Equals(memo.Cumulative) && o.Statistic == memo.Statistic).Any() == false)
+                    {
+                        db.Memorize.AddOrUpdate(memo);
+
+                        return await db.BatchSaveChangesAsync();
+                    }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, string.Concat("No.", memo.Index));
+            }
+            return 0;
+        }
+        protected bool GetDuplicateResults(long index, string date)
+        {
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                    if (db.Memorize.Where(o => o.Index == index && o.Date.Equals(date)).Any())
+                        return true;
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, string.Concat("No.", index));
+            }
+            return false;
+        }
+        protected virtual string GetConvertCode(string code) => code;
         protected CallUpStatisticalAnalysis(string key) : base(key) => this.key = key;
         readonly string key;
         const int mr = 100;
         const int cr = 1000000;
         const int ar = 10000000;
         const string date = "yyMMddHHmmss";
+        const string recent = "yyMMdd";
     }
 }

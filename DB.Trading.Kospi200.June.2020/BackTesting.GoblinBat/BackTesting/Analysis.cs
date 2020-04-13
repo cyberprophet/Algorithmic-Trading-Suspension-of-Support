@@ -151,10 +151,18 @@ namespace ShareInvest.Strategy.Statistics
 
             if (specify.Time == 1440)
             {
-                if (GetCheckTime(e.Date.ToString()))
-                    OnReceiveTrend(e.Volume);
+                switch (GetCheckTime(e.Date.ToString()))
+                {
+                    case true:
+                        OnReceiveTrend(e.Volume);
+                        break;
 
-                else if (e.Date.ToString().Substring(6, 6).Equals(end))
+                    case false:
+                        bt.SellOrder.Clear();
+                        bt.BuyOrder.Clear();
+                        break;
+                }
+                if (e.Date.ToString().Substring(6, 6).Equals(end))
                     bt.SetStatisticalStorage(e.Date.ToString().Substring(0, 6), e.Price);
             }
         }

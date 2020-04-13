@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.BackTesting;
 using ShareInvest.GoblinBatContext;
+using ShareInvest.Message;
 using ShareInvest.Strategy.Statistics;
 
 namespace ShareInvest.Strategy
@@ -145,7 +147,7 @@ namespace ShareInvest.Strategy
                 if (SellOrder.Remove(key) && Residue.Remove(number))
                 {
                     Quantity -= 1;
-                    Commission += (uint)(price * Const.TransactionMultiplier * Const.Commission);
+                    Commission += (uint)(price * Const.TransactionMultiplier * commission);
                     var liquidation = SetLiquidation(price);
                     PurchasePrice = SetPurchasePrice(price);
                     CumulativeRevenue += (long)(liquidation * Const.TransactionMultiplier);
@@ -168,7 +170,7 @@ namespace ShareInvest.Strategy
                 if (BuyOrder.Remove(key) && Residue.Remove(number))
                 {
                     Quantity += 1;
-                    Commission += (uint)(price * Const.TransactionMultiplier * Const.Commission);
+                    Commission += (uint)(price * Const.TransactionMultiplier * commission);
                     var liquidation = SetLiquidation(price);
                     PurchasePrice = SetPurchasePrice(price);
                     CumulativeRevenue += (long)(liquidation * Const.TransactionMultiplier);
@@ -176,12 +178,12 @@ namespace ShareInvest.Strategy
                 }
             }
         }
-        internal async void SetStatisticalStorage(string date, double price)
+        internal void SetStatisticalStorage(string date, double price)
         {
             Revenue = CumulativeRevenue - Commission;
             long revenue = Revenue - TodayRevenue, unrealized = (long)(Quantity == 0 ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * Const.TransactionMultiplier * Math.Abs(Quantity));
-            Accumulative = revenue + unrealized > 0 ? Accumulative++ : revenue + unrealized == 0 ? 0 : Accumulative--;
-            new Models.Memorize
+            Accumulative = revenue + unrealized > 0 ? ++Accumulative : revenue + unrealized < 0 ? --Accumulative : 0;
+            var result = SetStatisticalStorage(new Models.Memorize
             {
                 Index = index,
                 Date = date,
@@ -191,9 +193,26 @@ namespace ShareInvest.Strategy
                 Cumulative = (CumulativeRevenue - Commission).ToString(),
                 Commission = (Commission - TodayCommission).ToString(),
                 Statistic = Accumulative
-            };
+            }).Result;
             TodayCommission = (int)Commission;
             TodayRevenue = Revenue;
+            SellOrder.Clear();
+            BuyOrder.Clear();
+
+            switch (secret.GetState)
+            {
+                case true:
+                    if (TimerBox.Show(new Secrets(date).Storage, string.Concat("No.", index), MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, 953).Equals((DialogResult)result))
+                        return;
+
+                    else if (result < 1)
+                        new ExceptionMessage(date.Insert(2, "-").Insert(5, "-"), string.Concat("No.", index));
+
+                    break;
+
+                case false:
+                    return;
+            }
         }
         internal int Quantity
         {
@@ -225,8 +244,10 @@ namespace ShareInvest.Strategy
             SellOrder = new Dictionary<string, uint>();
             BuyOrder = new Dictionary<string, uint>();
             Judge = new Dictionary<uint, double>();
+            secret = new Secrets(key);
+            commission = specifies[0].Commission;
             code = specifies[0].Code;
-            var temp = specifies[0].Index > 0 ? specifies[0].Index : GetRepositoryID(specifies);
+            index = specifies[0].Index > 0 ? specifies[0].Index : GetRepositoryID(specifies);
             Parallel.ForEach(specifies, new Action<Catalog.XingAPI.Specify>((param) =>
             {
                 switch (param.Strategy)
@@ -236,21 +257,23 @@ namespace ShareInvest.Strategy
                         break;
                 }
             }));
-            switch (temp)
+            switch (index)
             {
                 case 1:
-                    temp = GetRepositoryID(specifies);
+                    index = GetRepositoryID(specifies);
                     break;
 
                 case 0:
                     return;
             }
-            index = temp;
-            StartProgress();
+            if (index > 0)
+                StartProgress();
         }
         const string basic = "Base";
+        readonly double commission;
         readonly string code;
         readonly long index;
+        readonly Secrets secret;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Quotes> SendQuotes;
     }
