@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.Message;
 using ShareInvest.Models;
@@ -47,58 +49,81 @@ namespace ShareInvest.GoblinBatContext
         protected Queue<Chart> GetChart(string code)
         {
             var chart = new Queue<Chart>();
+            var path = Path.Combine(Application.StartupPath, CallUpGoblinBat.chart);
+            var exists = new DirectoryInfo(path);
 
             if (code.Length > 6 && code.Substring(5, 3).Equals(futures))
                 try
                 {
-                    using (var db = new GoblinBatDbContext(key))
+                    if (GetDirectoryExists(exists))
                     {
-                        var tick = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
-                        {
-                            o.Code,
-                            o.Date,
-                            o.Price,
-                            o.Volume
-                        }).OrderBy(o => o.Date);
-                        var min = int.Parse(tick.Min(o => o.Date).ToString().Substring(0, 6));
-                        var remaining = db.Codes.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3))).Select(o => new
-                        {
-                            o.Code,
-                            o.Info
-                        }).OrderBy(o => o.Info).ToList();
+                        using (var sr = new StreamReader(string.Concat(path, @"\", basic)))
+                            if (sr != null)
+                                while (sr.EndOfStream == false)
+                                {
+                                    var str = sr.ReadLine().Split(',');
 
-                        foreach (var temp in db.Days.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3))).Select(o => new
+                                    if (long.TryParse(str[0], out long time) && double.TryParse(str[1], out double price) && int.TryParse(str[2], out int volume))
+                                        chart.Enqueue(new Chart
+                                        {
+                                            Date = time,
+                                            Price = price,
+                                            Volume = volume
+                                        });
+                                }
+                        return chart;
+                    }
+                    else
+                        using (var db = new GoblinBatDbContext(key))
                         {
-                            o.Date,
-                            o.Price
-                        }).OrderBy(o => o.Date))
-                            if (int.Parse(temp.Date.ToString().Substring(2)) < min)
+                            var tick = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
+                            {
+                                o.Code,
+                                o.Date,
+                                o.Price,
+                                o.Volume
+                            }).OrderBy(o => o.Date);
+                            var min = int.Parse(tick.Min(o => o.Date).ToString().Substring(0, 6));
+                            var remaining = db.Codes.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3))).Select(o => new
+                            {
+                                o.Code,
+                                o.Info
+                            }).OrderBy(o => o.Info).ToList();
+
+                            foreach (var temp in db.Days.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3))).Select(o => new
+                            {
+                                o.Date,
+                                o.Price
+                            }).OrderBy(o => o.Date))
+                                if (int.Parse(temp.Date.ToString().Substring(2)) < min)
+                                    chart.Enqueue(new Chart
+                                    {
+                                        Date = temp.Date,
+                                        Price = temp.Price,
+                                        Volume = 0
+                                    });
+                            foreach (var temp in tick)
+                            {
+                                int index = remaining.FindIndex(o => o.Code.Equals(temp.Code)) - 1;
+
+                                if (index > -1 && int.TryParse(temp.Date.ToString().Substring(0, 6), out int date) && int.TryParse(remaining[index].Info.Substring(2), out int remain))
+                                {
+                                    if (date < remain)
+                                        continue;
+
+                                    else if (date > 200403)
+                                        break;
+                                }
                                 chart.Enqueue(new Chart
                                 {
                                     Date = temp.Date,
                                     Price = temp.Price,
-                                    Volume = 0
+                                    Volume = temp.Volume
                                 });
-                        foreach (var temp in tick)
-                        {
-                            int index = remaining.FindIndex(o => o.Code.Equals(temp.Code)) - 1;
-
-                            if (index > -1 && int.TryParse(temp.Date.ToString().Substring(0, 6), out int date) && int.TryParse(remaining[index].Info.Substring(2), out int remain))
-                            {
-                                if (date < remain)
-                                    continue;
-
-                                else if (date > 200403)
-                                    break;
                             }
-                            chart.Enqueue(new Chart
-                            {
-                                Date = temp.Date,
-                                Price = temp.Price,
-                                Volume = temp.Volume
-                            });
                         }
-                    }
+                    exists.Create();
+                    SetChartDirectory(path, chart);
                 }
                 catch (Exception ex)
                 {
@@ -120,9 +145,18 @@ namespace ShareInvest.GoblinBatContext
                 }
             return string.Empty;
         }
+        void SetChartDirectory(string path, Queue<Chart> chart)
+        {
+            using (var sw = new StreamWriter(string.Concat(path, @"\", basic), true))
+                foreach (var str in chart.OrderBy(o => o.Date))
+                    sw.WriteLine(string.Concat(str.Date, ',', str.Price, ',', str.Volume));
+        }
+        bool GetDirectoryExists(DirectoryInfo directory) => directory.Exists;
         protected CallUpGoblinBat(string key) => this.key = key;
         protected internal const string futures = "000";
         protected internal const string kospi200f = "101";
+        const string basic = "Base.res";
+        const string chart = "Chart";
         readonly string key;
     }
 }

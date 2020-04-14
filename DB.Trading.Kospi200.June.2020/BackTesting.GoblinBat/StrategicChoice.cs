@@ -14,10 +14,11 @@ namespace ShareInvest.Strategy
         protected internal StrategicChoice(Catalog.XingAPI.Specify specify) : base(specify)
         {
             if (specify.Time == 1440)
+            {
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
-
-            ran = new Random();
-            RollOver = specify.RollOver ? false : true;
+                RollOver = specify.RollOver ? false : true;
+                ran = new Random();
+            }
         }
         protected internal abstract bool SendNewOrder(double[] param, string classification);
         protected internal abstract bool SetCorrectionBuyOrder(string avg, double buy);

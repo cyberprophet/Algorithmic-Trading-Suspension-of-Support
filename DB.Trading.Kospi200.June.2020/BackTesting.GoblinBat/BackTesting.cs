@@ -8,6 +8,7 @@ using ShareInvest.EventHandler.BackTesting;
 using ShareInvest.GoblinBatContext;
 using ShareInvest.Message;
 using ShareInvest.Strategy.Statistics;
+using System.Globalization;
 
 namespace ShareInvest.Strategy
 {
@@ -199,19 +200,13 @@ namespace ShareInvest.Strategy
             SellOrder.Clear();
             BuyOrder.Clear();
 
-            switch (secret.GetState)
+            if (secret.State && date.Equals(secret.Today < 0 ? DateTime.Now.AddDays(secret.Today).ToString(format) : DateTime.Now.ToString(format)))
             {
-                case true:
-                    if (TimerBox.Show(new Secrets(date).Storage, string.Concat("No.", index), MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, 953).Equals((DialogResult)result))
-                        return;
-
-                    else if (result < 1)
-                        new ExceptionMessage(date.Insert(2, "-").Insert(5, "-"), string.Concat("No.", index));
-
-                    break;
-
-                case false:
+                if (TimerBox.Show(new Secrets(date).Storage, string.Concat("No.", index), MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, 1359).Equals((DialogResult)result))
                     return;
+
+                else if (result < 1)
+                    new ExceptionMessage(date.Insert(2, "-").Insert(5, "-"), string.Concat("No.", index));
             }
         }
         internal int Quantity
@@ -269,6 +264,7 @@ namespace ShareInvest.Strategy
             if (index > 0)
                 StartProgress();
         }
+        const string format = "yyMMdd";
         const string basic = "Base";
         readonly double commission;
         readonly string code;
