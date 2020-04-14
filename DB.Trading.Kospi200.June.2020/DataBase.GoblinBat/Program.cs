@@ -62,7 +62,7 @@ namespace ShareInvest
                                             "30",
                                             "16.2",
                                             "Base",
-                                            "T"
+                                            "F"
                                         });
                                         break;
                                 }

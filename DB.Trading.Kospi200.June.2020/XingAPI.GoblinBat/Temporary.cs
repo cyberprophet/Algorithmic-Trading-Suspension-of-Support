@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.XingAPI;
@@ -64,7 +65,7 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
-        public void SetStorage(string code) => SetStorage(code, sb);
+        public async Task SetStorage(string code) =>await SetStorage(code, sb);
         readonly StringBuilder sb;
     }
 }

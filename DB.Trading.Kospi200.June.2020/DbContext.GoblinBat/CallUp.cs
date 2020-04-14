@@ -277,7 +277,7 @@ namespace ShareInvest.GoblinBatContext
                 new ExceptionMessage(ex.StackTrace, code);
             }
         }
-        protected void SetStorage(string code, StringBuilder sb)
+        protected async Task SetStorage(string code, StringBuilder sb)
         {
             string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd"), yesterday = DateTime.Now.AddDays(-1).ToString("yyMMdd");
             int count = 0;
@@ -350,18 +350,18 @@ namespace ShareInvest.GoblinBatContext
                             TotalBuyAmount = temp[5]
                         });
                     }
-                    SetStorage(model);
+                    await SetStorage(model);
                     return;
 
                 case false:
                     foreach (var kv in dic.OrderBy(o => o.Key))
                         record.Enqueue(string.Concat(kv.Key, ",", kv.Value));
 
-                    SetStorage(code, record);
+                    await SetStorage(code, record);
                     return;
             }
         }
-        protected void SetStorage(StringBuilder param, string code)
+        protected async void SetStorage(StringBuilder param, string code)
         {
             var model = new List<Datum>();
 
@@ -391,9 +391,9 @@ namespace ShareInvest.GoblinBatContext
                         TotalBuyAmount = temp[6]
                     });
             }
-            SetStorage(model);
+            await SetStorage(model);
         }
-        async void SetStorage(List<Datum> model)
+        async Task SetStorage(List<Datum> model)
         {
             try
             {
@@ -415,7 +415,7 @@ namespace ShareInvest.GoblinBatContext
                 new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
             }
         }
-        void SetStorage(string code, Queue<string> model)
+        Task SetStorage(string code, Queue<string> model)
         {
             var path = Path.Combine(Application.StartupPath, code);
 
@@ -439,6 +439,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
             }
+            return null;
         }
         protected CallUp(string key) => this.key = key;
         readonly string key;

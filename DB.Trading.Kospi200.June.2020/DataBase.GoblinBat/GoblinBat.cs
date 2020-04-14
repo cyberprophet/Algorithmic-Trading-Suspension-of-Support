@@ -397,7 +397,7 @@ namespace ShareInvest
                     if ((int)e.NotifyIcon < 0)
                     {
                         if (Temporary != null && initial.Equals(collecting))
-                            Temporary.SetStorage(Open.Code);
+                            Temporary.SetStorage(Open.Code).Wait();
 
                         Process.Start("shutdown.exe", "-r");
                         Dispose();

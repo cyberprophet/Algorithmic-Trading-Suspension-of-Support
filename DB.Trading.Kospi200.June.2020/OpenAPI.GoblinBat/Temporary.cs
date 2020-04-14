@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Threading.Tasks;
 using ShareInvest.EventHandler;
 using ShareInvest.EventHandler.OpenAPI;
 using ShareInvest.GoblinBatContext;
@@ -55,7 +56,7 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        internal void SetStorage(string code) => SetStorage(code, Temp);
+        internal async Task SetStorage(string code) => await SetStorage(code, Temp);
         readonly string key;
     }
 }

@@ -344,7 +344,7 @@ namespace ShareInvest.OpenAPI
 
                         if (Temporary != null)
                         {
-                            Temporary.SetStorage(Code);
+                            Temporary.SetStorage(Code).Wait();
                             SendCount?.Invoke(this, new NotifyIconText(-106));
                         }
                         else

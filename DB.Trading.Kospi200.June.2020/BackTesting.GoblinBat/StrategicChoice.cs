@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
@@ -14,10 +15,17 @@ namespace ShareInvest.Strategy
         {
             if (specify.Time == 1440)
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
+
+            ran = new Random();
+            RollOver = specify.RollOver ? false : true;
         }
-        protected internal abstract void SendNewOrder(double[] param, string classification);
+        protected internal abstract bool SendNewOrder(double[] param, string classification);
         protected internal abstract bool SetCorrectionBuyOrder(string avg, double buy);
         protected internal abstract bool SetCorrectionSellOrder(string avg, double sell);
+        protected internal abstract bool ForTheLiquidationOfSellOrder(double[] bid);
+        protected internal abstract bool ForTheLiquidationOfSellOrder(string price, double[] bid);
+        protected internal abstract bool ForTheLiquidationOfBuyOrder(double[] selling);
+        protected internal abstract bool ForTheLiquidationOfBuyOrder(string price, double[] selling);
         protected internal void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
         {
             if (int.TryParse(e.Time, out int time) && (time < 090000 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(API.Classification) == false)
@@ -43,23 +51,12 @@ namespace ShareInvest.Strategy
                         case sell:
                             if (API.OnReceiveBalance && API.Quantity < 0)
                             {
-                                if (API.BuyOrder.Count == 0 && max < -API.Quantity && double.TryParse(price, out double bAvg) && bAvg > bp[5])
-                                {
-                                    SendNewOrder(bAvg > bp[bp.Length - 1] ? bp[bp.Length - 1].ToString("F2") : price, buy);
-
+                                if (API.BuyOrder.Count == 0 && max < -API.Quantity && ForTheLiquidationOfSellOrder(price, bp))
                                     return;
-                                }
-                                if (API.BuyOrder.Count > 0)
-                                {
-                                    var number = API.BuyOrder.OrderBy(o => o.Value).First().Key;
 
-                                    if (API.BuyOrder.TryGetValue(number, out double cbp) && bp[API.BuyOrder.Count == 1 ? 5 : (bp.Length - 1)] > cbp)
-                                    {
-                                        SendClearingOrder(number);
+                                if (API.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
+                                    return;
 
-                                        return;
-                                    }
-                                }
                                 if (API.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1]))
                                     return;
                             }
@@ -68,23 +65,12 @@ namespace ShareInvest.Strategy
                         case buy:
                             if (API.OnReceiveBalance && API.Quantity > 0)
                             {
-                                if (API.SellOrder.Count == 0 && max < API.Quantity && double.TryParse(price, out double sAvg) && sAvg < sp[5])
-                                {
-                                    SendNewOrder(sAvg < sp[sp.Length - 1] ? sp[sp.Length - 1].ToString("F2") : price, sell);
-
+                                if (API.SellOrder.Count == 0 && max < API.Quantity && ForTheLiquidationOfBuyOrder(price, sp))
                                     return;
-                                }
-                                if (API.SellOrder.Count > 0)
-                                {
-                                    var number = API.SellOrder.OrderByDescending(o => o.Value).First().Key;
 
-                                    if (API.SellOrder.TryGetValue(number, out double csp) && sp[API.SellOrder.Count == 1 ? 5 : (sp.Length - 1)] < csp)
-                                    {
-                                        SendClearingOrder(number);
+                                if (API.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
+                                    return;
 
-                                        return;
-                                    }
-                                }
                                 if (API.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1]))
                                     return;
                             }
@@ -92,14 +78,16 @@ namespace ShareInvest.Strategy
                     }
                 }
                 foreach (var kv in check ? API.BuyOrder : API.SellOrder)
-                    if (Array.Exists(check ? bp : sp, o => o == kv.Value) == false && API.OnReceiveBalance && (check ? API.BuyOrder.ContainsKey(kv.Key) : API.SellOrder.ContainsKey(kv.Key)))
-                    {
-                        SendClearingOrder(kv.Key);
-
+                    if (Array.Exists(check ? bp : sp, o => o == kv.Value) == false && API.OnReceiveBalance && (check ? API.BuyOrder.ContainsKey(kv.Key) : API.SellOrder.ContainsKey(kv.Key)) && SendClearingOrder(kv.Key))
                         return;
-                    }
-                if (API.OnReceiveBalance)
-                    SendNewOrder(e.Price, classification);
+
+                if (API.OnReceiveBalance && SendNewOrder(e.Price, classification))
+                    return;
+            }
+            else if (time > 153559 && time < 154459 && RollOver)
+            {
+                RollOver = false;
+                SendLiquidationOrder();
             }
         }
         protected internal double Max(double max, string classification)
@@ -130,7 +118,7 @@ namespace ShareInvest.Strategy
             }
             return avg;
         }
-        protected internal void SendClearingOrder(string number)
+        protected internal bool SendClearingOrder(string number)
         {
             API.OnReceiveBalance = false;
             new Task(() => API.orders[2].QueryExcute(new Order
@@ -139,8 +127,10 @@ namespace ShareInvest.Strategy
                 OrgOrdNo = number,
                 OrdQty = sell
             })).Start();
+
+            return true;
         }
-        protected internal void SendCorrectionOrder(string price, string number)
+        protected internal bool SendCorrectionOrder(string price, string number)
         {
             API.OnReceiveBalance = false;
             new Task(() => API.orders[1].QueryExcute(new Order
@@ -151,8 +141,10 @@ namespace ShareInvest.Strategy
                 OrdPrc = price,
                 OrdQty = sell
             })).Start();
+
+            return true;
         }
-        protected internal void SendNewOrder(string price, string classification)
+        protected internal bool SendNewOrder(string price, string classification)
         {
             API.OnReceiveBalance = false;
             new Task(() => API.orders[0].QueryExcute(new Order
@@ -163,9 +155,37 @@ namespace ShareInvest.Strategy
                 OrdPrc = price,
                 OrdQty = sell
             })).Start();
+
+            return true;
+        }
+        void SendLiquidationOrder()
+        {
+            foreach (var order in new Dictionary<string, double>[]
+            {
+                API.SellOrder,
+                API.BuyOrder
+            })
+                foreach (var kv in order)
+                    if (SendClearingOrder(kv.Key))
+                        Thread.Sleep(ran.Next(999, 5000));
+
+            if (API.Quantity != 0)
+                API.orders[0].QueryExcute(new Order
+                {
+                    FnoIsuNo = ConnectAPI.Code,
+                    BnsTpCode = API.Quantity > 0 ? sell : buy,
+                    FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.시장가).ToString("D2"),
+                    OrdPrc = GetExactPrice(API.AvgPurchase),
+                    OrdQty = Math.Abs(API.Quantity).ToString()
+                });
+        }
+        bool RollOver
+        {
+            get; set;
         }
         protected internal const string buy = "2";
         protected internal const string sell = "1";
         protected internal const string avg = "000.00";
+        readonly Random ran;
     }
 }
