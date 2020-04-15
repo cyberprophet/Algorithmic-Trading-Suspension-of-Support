@@ -19,7 +19,7 @@ namespace ShareInvest.XingAPI
 
             try
             {
-                foreach (var file in Directory.GetFiles(Path.Combine(Application.StartupPath, @"..\"), "*.csv", SearchOption.AllDirectories))
+                foreach (var file in Directory.GetFiles(System.IO.Path.Combine(Application.StartupPath, @"..\"), "*.csv", SearchOption.AllDirectories))
                 {
                     var split = file.Split('\\');
                     code = split[split.Length - 2];
@@ -65,7 +65,7 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
-        public async Task SetStorage(string code) =>await SetStorage(code, sb);
+        public async Task SetStorage(string code) => await SetStorage(code, sb);
         readonly StringBuilder sb;
     }
 }

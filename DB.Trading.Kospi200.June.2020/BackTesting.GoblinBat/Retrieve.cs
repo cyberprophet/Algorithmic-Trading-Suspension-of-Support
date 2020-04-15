@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Globalization;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
@@ -13,7 +13,7 @@ namespace ShareInvest.Strategy
         public long OnReceiveRepositoryID(Catalog.XingAPI.Specify[] specifies) => GetRepositoryID(specifies);
         public Dictionary<DateTime, string> OnReceiveInformation(long number) => GetInformation(number);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
-        public Retrieve(string key) : base(key) => Console.WriteLine(key);
+        public Retrieve(string key) : base(key) => secret = new Secrets(key);
         public void SetInitialzeTheCode(string code)
         {
             if (Chart == null && Quotes == null)
@@ -63,7 +63,7 @@ namespace ShareInvest.Strategy
                     break;
 
                 default:
-                    if (now.Hour < 16)
+                    if (now.Hour < 16 || secret.GetHoliday(now))
                         now = now.AddDays(-1);
 
                     break;
@@ -84,6 +84,7 @@ namespace ShareInvest.Strategy
 
             return code;
         }
+        public async void SetIdentify(Setting setting) => await SetIndentify(setting);
         public static string Code
         {
             get; set;
@@ -107,6 +108,7 @@ namespace ShareInvest.Strategy
         {
             get; private set;
         }
+        readonly Secrets secret;
         const string date = "yyMMdd";
         const string format = "yyMMddHHmmss";
     }

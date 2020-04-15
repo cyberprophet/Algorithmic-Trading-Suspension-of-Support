@@ -22,7 +22,7 @@ namespace ShareInvest
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6;
-                var remaining = secret.GetIsSever(str) ? ran.Next(classfication ? 25 : 7, classfication ? 36 : 25) : 1;
+                var remaining = secret.GetIsSever(str) ? ran.Next(classfication ? 25 : 5, classfication ? 31 : 11) : 1;
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var initial = secret.GetPort(str);
                 var list = new List<long>();
@@ -37,14 +37,48 @@ namespace ShareInvest
                     }
                     while (remaining > 0)
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
-                            new Task(() =>
-                            {
-                                switch (secret.GetIsSever(str))
-                                {
-                                    case true:
-                                        var retrieve = new Strategy.Retrieve(str);
-                                        list = retrieve.SetInitialzeTheCode();
+                        {
+                            var retrieve = new Strategy.Retrieve(str);
+                            list = retrieve.SetInitialzeTheCode();
+                            int num = list.Count;
 
+                            switch (secret.GetIsSever(str))
+                            {
+                                case true:
+                                    while (num-- > 1)
+                                    {
+                                        var shuffle = ran.Next(num + 1);
+                                        var value = list[shuffle];
+                                        list[shuffle] = list[num];
+                                        list[num] = value;
+                                    }
+                                    new Task(() =>
+                                    {
+                                        Parallel.ForEach(list, new ParallelOptions
+                                        {
+                                            MaxDegreeOfParallelism = Environment.ProcessorCount
+                                        }, new Action<long>((number) =>
+                                        {
+                                            if (retrieve.GetDuplicateResults(number) == false)
+                                                new BackTesting(retrieve.OnReceiveStrategy(number), str);
+                                        }));
+                                    }).Start();
+                                    break;
+
+                                case false:
+                                    new Task(() =>
+                                    {
+                                        var info = new Information(str);
+                                        Parallel.ForEach(info.GetUserIdentity(), new ParallelOptions
+                                        {
+                                            MaxDegreeOfParallelism = Environment.ProcessorCount
+                                        }, new Action<string[]>((identify) =>
+                                        {
+                                            info.SetInsertStrategy(identify);
+                                        }));
+                                    }).Start();
+                                    new Task(() =>
+                                    {
                                         while (list.Count > 0)
                                         {
                                             var number = list[ran.Next(0, list.Count)];
@@ -52,21 +86,10 @@ namespace ShareInvest
                                             if (list.Remove(number) && retrieve.GetDuplicateResults(number) == false)
                                                 new BackTesting(retrieve.OnReceiveStrategy(number), str);
                                         }
-                                        break;
-
-                                    case false:
-                                        new Information(str).SetInsertStrategy(new string[]
-                                        {
-                                            "0009",
-                                            "101000",
-                                            "30",
-                                            "16.2",
-                                            "Base",
-                                            "F"
-                                        });
-                                        break;
-                                }
-                            }).Start();
+                                    }).Start();
+                                    break;
+                            }
+                        }
                     while (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
                         if (secret.GetHoliday(DateTime.Now) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
                         {
@@ -79,10 +102,8 @@ namespace ShareInvest
                     if (initial.Equals((char)126) == false)
                     {
                         if (initial.Equals((char)Port.Trading) && list.Count > 0)
-                        {
-                            list.Clear();
                             GC.Collect();
-                        }
+
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
                         Application.Run(new GoblinBat(initial, secret, str));

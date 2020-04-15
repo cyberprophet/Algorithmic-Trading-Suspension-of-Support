@@ -17,7 +17,10 @@ namespace ShareInvest.Strategy.Statistics
             bt.SendDatum += Analysize;
 
             if (specify.Time == 1440)
+            {
                 bt.SendQuotes += OnReceiveQuotes;
+                RollOver = specify.RollOver ? false : true;
+            }
         }
         protected internal string GetExactPrice(string avg)
         {
@@ -163,8 +166,12 @@ namespace ShareInvest.Strategy.Statistics
                         break;
                 }
                 if (e.Date.ToString().Substring(6, 6).Equals(end))
-                    bt.SetStatisticalStorage(e.Date.ToString().Substring(0, 6), e.Price);
+                    bt.SetStatisticalStorage(e.Date.ToString().Substring(0, 6), e.Price, RollOver);
             }
+        }
+        bool RollOver
+        {
+            get; set;
         }
         EMA EMA
         {

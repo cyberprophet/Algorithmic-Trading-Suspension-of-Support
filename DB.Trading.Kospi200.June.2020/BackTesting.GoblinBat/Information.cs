@@ -1,4 +1,6 @@
-﻿using ShareInvest.GoblinBatContext;
+﻿using System;
+using System.Collections.Generic;
+using ShareInvest.GoblinBatContext;
 using ShareInvest.Message;
 
 namespace ShareInvest.Strategy
@@ -43,8 +45,14 @@ namespace ShareInvest.Strategy
             shortVariable = GetVariable(new int[maxShort - 1], 1);
             longVariable = GetVariable(new int[maxLong / minLong], minLong);
         }
+        public List<string[]> GetUserIdentity()
+        {
+            return GetUserIdentity(DateTime.Now);
+        }
         public void SetInsertStrategy(string[] param)
         {
+            var list = new List<Models.Strategics>(1024);
+
             for (int ni = maxNona; ni > 0; ni -= minLong)
                 for (int oi = maxOcta; oi > 0; oi -= minLong)
                     for (int hi = maxHepta; hi > 0; hi -= minLong)
@@ -60,46 +68,52 @@ namespace ShareInvest.Strategy
                                                         if (vs >= vl || vs < minShort || vl < minLong)
                                                             continue;
 
-                                                        if (mi < di && di < ti && ti < qi && qi < pi && pi < xi && xi < hi && hi < oi && oi < ni && ni < maxBase && SetInsertStrategy(new Models.Strategics
+                                                        if (mi < di && di < ti && ti < qi && qi < pi && pi < xi && xi < hi && hi < oi && oi < ni && ni < maxBase)
+                                                            list.Add(new Models.Strategics
+                                                            {
+                                                                Assets = param[0],
+                                                                Code = param[1],
+                                                                Commission = param[2],
+                                                                MarginRate = param[3],
+                                                                Strategy = param[4],
+                                                                RollOver = param[5],
+                                                                BaseTime = maxBase.ToString("D4"),
+                                                                BaseShort = vs.ToString("D4"),
+                                                                BaseLong = vl.ToString("D4"),
+                                                                NonaTime = ni.ToString("D4"),
+                                                                NonaShort = vs.ToString("D4"),
+                                                                NonaLong = vl.ToString("D4"),
+                                                                OctaTime = oi.ToString("D4"),
+                                                                OctaShort = vs.ToString("D4"),
+                                                                OctaLong = vl.ToString("D4"),
+                                                                HeptaTime = hi.ToString("D4"),
+                                                                HeptaShort = vs.ToString("D4"),
+                                                                HeptaLong = vl.ToString("D4"),
+                                                                HexaTime = xi.ToString("D4"),
+                                                                HexaShort = vs.ToString("D4"),
+                                                                HexaLong = vl.ToString("D4"),
+                                                                PentaTime = pi.ToString("D4"),
+                                                                PantaShort = vs.ToString("D4"),
+                                                                PantaLong = vl.ToString("D4"),
+                                                                QuadTime = qi.ToString("D4"),
+                                                                QuadShort = vs.ToString("D4"),
+                                                                QuadLong = vl.ToString("D4"),
+                                                                TriTime = ti.ToString("D4"),
+                                                                TriShort = vs.ToString("D4"),
+                                                                TriLong = vl.ToString("D4"),
+                                                                DuoTime = di.ToString("D4"),
+                                                                DuoShort = vs.ToString("D4"),
+                                                                DuoLong = vl.ToString("D4"),
+                                                                MonoTime = mi.ToString("D4"),
+                                                                MonoShort = vs.ToString("D4"),
+                                                                MonoLong = vl.ToString("D4")
+                                                            });
+                                                        if (list.Count == 750000)
                                                         {
-                                                            Assets = param[0],
-                                                            Code = param[1],
-                                                            Commission = param[2],
-                                                            MarginRate = param[3],
-                                                            Strategy = param[4],
-                                                            RollOver = param[5],
-                                                            BaseTime = maxBase.ToString("D4"),
-                                                            BaseShort = vs.ToString("D4"),
-                                                            BaseLong = vl.ToString("D4"),
-                                                            NonaTime = ni.ToString("D4"),
-                                                            NonaShort = vs.ToString("D4"),
-                                                            NonaLong = vl.ToString("D4"),
-                                                            OctaTime = oi.ToString("D4"),
-                                                            OctaShort = vs.ToString("D4"),
-                                                            OctaLong = vl.ToString("D4"),
-                                                            HeptaTime = hi.ToString("D4"),
-                                                            HeptaShort = vs.ToString("D4"),
-                                                            HeptaLong = vl.ToString("D4"),
-                                                            HexaTime = xi.ToString("D4"),
-                                                            HexaShort = vs.ToString("D4"),
-                                                            HexaLong = vl.ToString("D4"),
-                                                            PentaTime = pi.ToString("D4"),
-                                                            PantaShort = vs.ToString("D4"),
-                                                            PantaLong = vl.ToString("D4"),
-                                                            QuadTime = qi.ToString("D4"),
-                                                            QuadShort = vs.ToString("D4"),
-                                                            QuadLong = vl.ToString("D4"),
-                                                            TriTime = ti.ToString("D4"),
-                                                            TriShort = vs.ToString("D4"),
-                                                            TriLong = vl.ToString("D4"),
-                                                            DuoTime = di.ToString("D4"),
-                                                            DuoShort = vs.ToString("D4"),
-                                                            DuoLong = vl.ToString("D4"),
-                                                            MonoTime = mi.ToString("D4"),
-                                                            MonoShort = vs.ToString("D4"),
-                                                            MonoLong = vl.ToString("D4")
-                                                        }).Result == 0)
-                                                            new ExceptionMessage(param[4], param[0]);
+                                                            SetInsertStrategy(list).Wait();
+                                                            list = new List<Models.Strategics>(1024);
+                                                            GC.Collect();
+                                                        }
                                                     }
         }
         int[] GetVariable(int[] param, int type)

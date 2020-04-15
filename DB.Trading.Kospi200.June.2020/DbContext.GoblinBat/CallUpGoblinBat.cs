@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Data.Entity.Migrations;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
@@ -13,23 +16,183 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
-        protected async Task<int> SetInsertStrategy(Strategics strategy)
+        protected List<string[]> GetUserIdentity(DateTime date)
+        {
+            var list = new List<string[]>();
+
+            try
+            {
+                var convert = date.ToString(recent);
+                using (var db = new GoblinBatDbContext(key))
+                    foreach (var str in db.Logs.Where(o => o.Date.Equals(convert)).Select(o => new
+                    {
+                        o.Assets,
+                        o.Code,
+                        o.Commission,
+                        o.Strategy,
+                        o.RollOver
+                    }))
+                    {
+                        var temp = new string[]
+                        {
+                            str.Assets,
+                            str.Code,
+                            str.Commission,
+                            marginRate,
+                            str.Strategy,
+                            str.RollOver
+                        };
+                        if (list.Exists(o => o[0].Equals(temp[0]) && o[1].Equals(temp[1]) && o[2].Equals(temp[2]) && o[3].Equals(temp[3]) && o[4].Equals(temp[4]) && o[5].Equals(temp[5])) == false)
+                            list.Add(temp);
+                    }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return list;
+        }
+        protected async Task<int> SetIndentify(Setting setting)
+        {
+            string temp = string.Empty;
+
+            switch (setting.RollOver)
+            {
+                case CheckState.Checked:
+                    temp = "T";
+                    break;
+
+                case CheckState.Unchecked:
+                    temp = "F";
+                    break;
+
+                case CheckState.Indeterminate:
+                    temp = "A";
+                    break;
+            }
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                {
+                    db.Logs.AddOrUpdate(new Logs
+                    {
+                        Identity = new Secret().GetIdentify(key),
+                        Date = DateTime.Now.ToString(recent),
+                        Assets = (setting.Assets / ar).ToString("D4"),
+                        Strategy = setting.Strategy,
+                        Commission = (setting.Commission * cr).ToString(),
+                        RollOver = temp,
+                        Code = string.Concat(setting.Code.Substring(0, 3), setting.Code.Substring(5))
+                    });
+                    return await db.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, setting.Strategy);
+            }
+            return 1;
+        }
+        protected async Task SetDeleteDuplicateData(List<Strategics> strategics)
+        {
+            var list = new List<long>();
+
+            foreach (var str in strategics)
+                using (var db = new GoblinBatDbContext(key))
+                {
+                    var strategy = db.Strategy.Where(o => o.Assets.Equals(str.Assets) && o.Code.Equals(str.Code) && o.Commission.Equals(str.Commission) && o.MarginRate.Equals(str.MarginRate) && o.Strategy.Equals(str.Strategy) && o.RollOver.Equals(str.RollOver) && o.BaseTime.Equals(str.BaseTime) && o.BaseShort.Equals(str.BaseShort) && o.BaseLong.Equals(str.BaseLong) && o.NonaTime.Equals(str.NonaTime) && o.NonaShort.Equals(str.NonaShort) && o.NonaLong.Equals(str.NonaLong) && o.OctaTime.Equals(str.OctaTime) && o.OctaShort.Equals(str.OctaShort) && o.OctaLong.Equals(str.OctaLong) && o.HeptaTime.Equals(str.HeptaTime) && o.HeptaShort.Equals(str.HeptaShort) && o.HeptaLong.Equals(str.HeptaLong) && o.HexaTime.Equals(str.HexaTime) && o.HexaShort.Equals(str.HexaShort) && o.HexaLong.Equals(str.HexaLong) && o.PentaTime.Equals(str.PentaTime) && o.PantaShort.Equals(str.PantaShort) && o.PantaLong.Equals(str.PantaLong) && o.QuadTime.Equals(str.QuadTime) && o.QuadShort.Equals(str.QuadShort) && o.QuadLong.Equals(str.QuadLong) && o.TriTime.Equals(str.TriTime) && o.TriShort.Equals(str.TriShort) && o.TriLong.Equals(str.TriLong) && o.DuoTime.Equals(str.DuoTime) && o.DuoShort.Equals(str.DuoShort) && o.DuoLong.Equals(str.DuoLong) && o.MonoTime.Equals(str.MonoTime) && o.MonoShort.Equals(str.MonoShort) && o.MonoLong.Equals(str.MonoLong));
+                    int i = 0;
+
+                    try
+                    {
+                        foreach (var temp in strategy.Select(o => new
+                        {
+                            o.Index
+                        }))
+                        {
+                            if (i++ > 0)
+                                list.Add(temp.Index);
+                        }
+                        i = 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        new ExceptionMessage(ex.StackTrace);
+                    }
+                }
+            if (list.Count > 0)
+                try
+                {
+                    var remove = new List<Strategics>();
+                    using (var db = new GoblinBatDbContext(key))
+                    {
+                        foreach (var index in list)
+                            remove.Add(db.Strategy.Where(o => o.Index == index).First());
+
+                        await db.Strategy.BulkDeleteAsync(db.Strategy.Where(o => o.Index > 909770), o => o.BatchSize = 50000);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+        }
+        protected async Task SetInsertStrategy(List<Strategics> strategy)
         {
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    if (db.Strategy.Where(o => o.Assets.Equals(strategy.Assets) && o.Code.Equals(strategy.Code) && o.Commission.Equals(strategy.Commission) && o.MarginRate.Equals(strategy.MarginRate) && o.Strategy.Equals(strategy.Strategy) && o.RollOver.Equals(strategy.RollOver) && o.BaseTime.Equals(strategy.BaseTime) && o.BaseShort.Equals(strategy.BaseShort) && o.BaseLong.Equals(strategy.BaseLong) && o.NonaTime.Equals(strategy.NonaTime) && o.NonaShort.Equals(strategy.NonaShort) && o.NonaLong.Equals(strategy.NonaLong) && o.OctaTime.Equals(strategy.OctaTime) && o.OctaLong.Equals(strategy.OctaLong) && o.OctaShort.Equals(strategy.OctaShort) && o.HeptaTime.Equals(strategy.HeptaTime) && o.HeptaShort.Equals(strategy.HeptaShort) && o.HeptaLong.Equals(strategy.HeptaLong) && o.HexaTime.Equals(strategy.HexaTime) && o.HexaShort.Equals(strategy.HexaShort) && o.HexaLong.Equals(strategy.HexaLong) && o.PentaTime.Equals(strategy.PentaTime) && o.PantaShort.Equals(strategy.PantaShort) && o.PantaLong.Equals(strategy.PantaLong) && o.QuadTime.Equals(strategy.QuadTime) && o.QuadShort.Equals(strategy.QuadShort) && o.QuadLong.Equals(strategy.QuadLong) && o.TriTime.Equals(strategy.TriTime) && o.TriShort.Equals(strategy.TriShort) && o.TriLong.Equals(strategy.TriLong) && o.DuoTime.Equals(strategy.DuoTime) && o.DuoShort.Equals(strategy.DuoShort) && o.DuoLong.Equals(strategy.DuoLong) && o.MonoTime.Equals(strategy.MonoTime) && o.MonoShort.Equals(strategy.MonoShort) && o.MonoLong.Equals(strategy.MonoLong)).Any() == false)
+                    await db.BulkInsertAsync(strategy, o =>
                     {
-                        db.Strategy.AddOrUpdate(strategy);
-
-                        return await db.SaveChangesAsync();
-                    }
+                        o.InsertIfNotExists = true;
+                        o.ColumnPrimaryKeyExpression = x => new
+                        {
+                            x.Assets,
+                            x.Code,
+                            x.Commission,
+                            x.MarginRate,
+                            x.Strategy,
+                            x.RollOver,
+                            x.BaseTime,
+                            x.BaseShort,
+                            x.BaseLong,
+                            x.NonaTime,
+                            x.NonaShort,
+                            x.NonaLong,
+                            x.OctaTime,
+                            x.OctaShort,
+                            x.OctaLong,
+                            x.HeptaTime,
+                            x.HeptaShort,
+                            x.HeptaLong,
+                            x.HexaTime,
+                            x.HexaShort,
+                            x.HexaLong,
+                            x.PentaTime,
+                            x.PantaShort,
+                            x.PantaLong,
+                            x.QuadTime,
+                            x.QuadShort,
+                            x.QuadLong,
+                            x.TriTime,
+                            x.TriShort,
+                            x.TriLong,
+                            x.DuoTime,
+                            x.DuoShort,
+                            x.DuoLong,
+                            x.MonoTime,
+                            x.MonoShort,
+                            x.MonoLong
+                        };
+                        o.BatchSize = 50000;
+                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                        o.AutoMapOutputDirection = false;
+                    });
             }
             catch (Exception ex)
             {
                 new ExceptionMessage(ex.StackTrace, strategy.GetType().Name);
             }
-            return int.MaxValue;
         }
         protected bool GetRemainingDate(string code, long date)
         {
@@ -49,15 +212,14 @@ namespace ShareInvest.GoblinBatContext
         protected Queue<Chart> GetChart(string code)
         {
             var chart = new Queue<Chart>();
-            var path = Path.Combine(Application.StartupPath, CallUpGoblinBat.chart);
-            var exists = new DirectoryInfo(path);
+            var exists = new DirectoryInfo(Path);
 
             if (code.Length > 6 && code.Substring(5, 3).Equals(futures))
                 try
                 {
                     if (GetDirectoryExists(exists))
                     {
-                        using (var sr = new StreamReader(string.Concat(path, @"\", basic)))
+                        using (var sr = new StreamReader(string.Concat(Path, @"\", basic)))
                             if (sr != null)
                                 while (sr.EndOfStream == false)
                                 {
@@ -123,7 +285,7 @@ namespace ShareInvest.GoblinBatContext
                             }
                         }
                     exists.Create();
-                    SetChartDirectory(path, chart);
+                    SetChartDirectory(chart);
                 }
                 catch (Exception ex)
                 {
@@ -145,18 +307,23 @@ namespace ShareInvest.GoblinBatContext
                 }
             return string.Empty;
         }
-        void SetChartDirectory(string path, Queue<Chart> chart)
+        void SetChartDirectory(Queue<Chart> chart)
         {
-            using (var sw = new StreamWriter(string.Concat(path, @"\", basic), true))
+            using (var sw = new StreamWriter(string.Concat(Path, @"\", basic), true))
                 foreach (var str in chart.OrderBy(o => o.Date))
                     sw.WriteLine(string.Concat(str.Date, ',', str.Price, ',', str.Volume));
         }
         bool GetDirectoryExists(DirectoryInfo directory) => directory.Exists;
+        protected string Path => System.IO.Path.Combine(Application.StartupPath, chart);
         protected CallUpGoblinBat(string key) => this.key = key;
         protected internal const string futures = "000";
         protected internal const string kospi200f = "101";
         const string basic = "Base.res";
-        const string chart = "Chart";
+        const string chart = "ChartOf101000";
+        const int ar = 10000000;
+        const int cr = 1000000;
+        const string recent = "yyMMdd";
+        const string marginRate = "16.2";
         readonly string key;
     }
 }

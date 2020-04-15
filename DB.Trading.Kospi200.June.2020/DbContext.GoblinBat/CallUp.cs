@@ -13,7 +13,7 @@ using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
 {
-    public class CallUp
+    public class CallUp : CallUpStatisticalAnalysis
     {
         protected async Task<List<string>> RequestCodeListAsync(List<string> list)
         {
@@ -357,7 +357,7 @@ namespace ShareInvest.GoblinBatContext
                     foreach (var kv in dic.OrderBy(o => o.Key))
                         record.Enqueue(string.Concat(kv.Key, ",", kv.Value));
 
-                    await SetStorage(code, record);
+                    await SetStorage(record);
                     return;
             }
         }
@@ -415,18 +415,11 @@ namespace ShareInvest.GoblinBatContext
                 new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
             }
         }
-        Task SetStorage(string code, Queue<string> model)
+        Task SetStorage(Queue<string> model)
         {
-            var path = Path.Combine(Application.StartupPath, code);
-
             try
             {
-                var directory = new DirectoryInfo(path);
-
-                if (directory.Exists == false)
-                    directory.Create();
-
-                using (var sw = new StreamWriter(Path.Combine(path, string.Concat(DateTime.Now.ToString(date), extension)), true))
+                using (var sw = new StreamWriter(File, true))
                     while (model.Count > 0)
                     {
                         var str = model.Dequeue();
@@ -441,9 +434,7 @@ namespace ShareInvest.GoblinBatContext
             }
             return null;
         }
-        protected CallUp(string key) => this.key = key;
+        protected CallUp(string key) : base(key) => this.key = key;
         readonly string key;
-        const string extension = ".csv";
-        const string date = "yyMMdd";
     }
 }

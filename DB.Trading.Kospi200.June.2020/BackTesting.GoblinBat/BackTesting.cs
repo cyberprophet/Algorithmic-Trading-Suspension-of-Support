@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.BackTesting;
 using ShareInvest.GoblinBatContext;
 using ShareInvest.Message;
 using ShareInvest.Strategy.Statistics;
-using System.Globalization;
 
 namespace ShareInvest.Strategy
 {
@@ -148,11 +147,7 @@ namespace ShareInvest.Strategy
                 if (SellOrder.Remove(key) && Residue.Remove(number))
                 {
                     Quantity -= 1;
-                    Commission += (uint)(price * Const.TransactionMultiplier * commission);
-                    var liquidation = SetLiquidation(price);
-                    PurchasePrice = SetPurchasePrice(price);
-                    CumulativeRevenue += (long)(liquidation * Const.TransactionMultiplier);
-                    Amount = Quantity;
+                    SetConclusion(price);
                 }
             }
         }
@@ -171,20 +166,22 @@ namespace ShareInvest.Strategy
                 if (BuyOrder.Remove(key) && Residue.Remove(number))
                 {
                     Quantity += 1;
-                    Commission += (uint)(price * Const.TransactionMultiplier * commission);
-                    var liquidation = SetLiquidation(price);
-                    PurchasePrice = SetPurchasePrice(price);
-                    CumulativeRevenue += (long)(liquidation * Const.TransactionMultiplier);
-                    Amount = Quantity;
+                    SetConclusion(price);
                 }
             }
         }
-        internal void SetStatisticalStorage(string date, double price)
+        internal void SetStatisticalStorage(string date, double price, bool over)
         {
+            if (over)
+                while (Quantity != 0)
+                {
+                    Quantity += Quantity > 0 ? -1 : 1;
+                    SetConclusion(price);
+                }
             Revenue = CumulativeRevenue - Commission;
             long revenue = Revenue - TodayRevenue, unrealized = (long)(Quantity == 0 ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * Const.TransactionMultiplier * Math.Abs(Quantity));
             Accumulative = revenue + unrealized > 0 ? ++Accumulative : revenue + unrealized < 0 ? --Accumulative : 0;
-            var result = SetStatisticalStorage(new Models.Memorize
+            queue.Enqueue(new Models.Memorize
             {
                 Index = index,
                 Date = date,
@@ -194,20 +191,19 @@ namespace ShareInvest.Strategy
                 Cumulative = (CumulativeRevenue - Commission).ToString(),
                 Commission = (Commission - TodayCommission).ToString(),
                 Statistic = Accumulative
-            }).Result;
+            });
             TodayCommission = (int)Commission;
             TodayRevenue = Revenue;
             SellOrder.Clear();
             BuyOrder.Clear();
-
-            if (secret.State && date.Equals(secret.Today < 0 ? DateTime.Now.AddDays(secret.Today).ToString(format) : DateTime.Now.ToString(format)))
-            {
-                if (TimerBox.Show(new Secrets(date).Storage, string.Concat("No.", index), MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, 1359).Equals((DialogResult)result))
-                    return;
-
-                else if (result < 1)
-                    new ExceptionMessage(date.Insert(2, "-").Insert(5, "-"), string.Concat("No.", index));
-            }
+        }
+        void SetConclusion(double price)
+        {
+            Commission += (uint)(price * Const.TransactionMultiplier * commission);
+            var liquidation = SetLiquidation(price);
+            PurchasePrice = SetPurchasePrice(price);
+            CumulativeRevenue += (long)(liquidation * Const.TransactionMultiplier);
+            Amount = Quantity;
         }
         internal int Quantity
         {
@@ -235,11 +231,11 @@ namespace ShareInvest.Strategy
         }
         public BackTesting(Catalog.XingAPI.Specify[] specifies, string key) : base(key)
         {
+            queue = new Queue<Models.Memorize>();
             Residue = new Dictionary<uint, int>();
             SellOrder = new Dictionary<string, uint>();
             BuyOrder = new Dictionary<string, uint>();
             Judge = new Dictionary<uint, double>();
-            secret = new Secrets(key);
             commission = specifies[0].Commission;
             code = specifies[0].Code;
             index = specifies[0].Index > 0 ? specifies[0].Index : GetRepositoryID(specifies);
@@ -262,14 +258,16 @@ namespace ShareInvest.Strategy
                     return;
             }
             if (index > 0)
+            {
                 StartProgress();
+                SetStatisticalStorage(queue).Wait();
+            }
         }
-        const string format = "yyMMdd";
         const string basic = "Base";
         readonly double commission;
         readonly string code;
         readonly long index;
-        readonly Secrets secret;
+        readonly Queue<Models.Memorize> queue;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Quotes> SendQuotes;
     }

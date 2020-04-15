@@ -206,16 +206,23 @@ namespace ShareInvest
         }
         void OnReceiveStrategy(object sender, EventHandler.BackTesting.Statistics e)
         {
+            var retriveve = new Strategy.Retrieve(key);
+
+            if (e.Specify == null)
+            {
+                retriveve.SetIdentify(e.Setting);
+
+                return;
+            }
             if (Chart == null)
             {
                 Chart = new ChartControl();
                 panel.Controls.Add(Chart);
                 Chart.Dock = DockStyle.Fill;
             }
-            var retriveve = new Strategy.Retrieve(key);
+            Cursor = Cursors.WaitCursor;
             var temp = retriveve.OnReceiveRepositoryID(e.Specify);
             var recent = retriveve.OnReceiveInformation(temp);
-            Cursor = Cursors.WaitCursor;
             Application.DoEvents();
 
             if (recent == null)
