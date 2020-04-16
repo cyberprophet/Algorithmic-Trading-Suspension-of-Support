@@ -42,25 +42,25 @@ namespace ShareInvest
                             list = retrieve.SetInitialzeTheCode();
                             int num = list.Count;
 
+                            while (num-- > 1)
+                            {
+                                var shuffle = ran.Next(num + 1);
+                                var value = list[shuffle];
+                                list[shuffle] = list[num];
+                                list[num] = value;
+                            }
                             switch (secret.GetIsSever(str))
                             {
                                 case true:
-                                    while (num-- > 1)
-                                    {
-                                        var shuffle = ran.Next(num + 1);
-                                        var value = list[shuffle];
-                                        list[shuffle] = list[num];
-                                        list[num] = value;
-                                    }
                                     new Task(() =>
                                     {
                                         Parallel.ForEach(list, new ParallelOptions
                                         {
-                                            MaxDegreeOfParallelism = Environment.ProcessorCount
+                                            MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * secret.GetProcessorCount(str))
                                         }, new Action<long>((number) =>
                                         {
                                             if (retrieve.GetDuplicateResults(number) == false)
-                                                new BackTesting(retrieve.OnReceiveStrategy(number), str);
+                                                new BackTesting(initial, retrieve.OnReceiveStrategy(number), str);
                                         }));
                                     }).Start();
                                     break;
@@ -76,16 +76,14 @@ namespace ShareInvest
                                         {
                                             info.SetInsertStrategy(identify);
                                         }));
-                                    }).Start();
-                                    new Task(() =>
-                                    {
-                                        while (list.Count > 0)
+                                        Parallel.ForEach(list, new ParallelOptions
                                         {
-                                            var number = list[ran.Next(0, list.Count)];
-
-                                            if (list.Remove(number) && retrieve.GetDuplicateResults(number) == false)
-                                                new BackTesting(retrieve.OnReceiveStrategy(number), str);
-                                        }
+                                            MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.375)
+                                        }, new Action<long>((number) =>
+                                        {
+                                            if (retrieve.GetDuplicateResults(number) == false)
+                                                new BackTesting(initial, retrieve.OnReceiveStrategy(number), str);
+                                        }));
                                     }).Start();
                                     break;
                             }
@@ -101,9 +99,6 @@ namespace ShareInvest
                         }
                     if (initial.Equals((char)126) == false)
                     {
-                        if (initial.Equals((char)Port.Trading) && list.Count > 0)
-                            GC.Collect();
-
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
                         Application.Run(new GoblinBat(initial, secret, str));

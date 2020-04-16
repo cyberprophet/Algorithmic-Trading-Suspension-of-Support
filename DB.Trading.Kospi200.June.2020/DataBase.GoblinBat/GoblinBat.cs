@@ -58,8 +58,8 @@ namespace ShareInvest
                     else
                         BeginInvoke(new Action(() =>
                         {
-                            Task = new Task(() => Specify = Statistical.Specifies);
-                            Task.Start();
+                            var retrieve = new Strategy.Retrieve(key);
+                            Specify = Statistical.Statistics(retrieve.GetUserStrategy());
                             Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, Strategy.Retrieve.Date);
                             Xing.Send += OnReceiveNotifyIcon;
                             notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
@@ -227,7 +227,7 @@ namespace ShareInvest
 
             if (recent == null)
             {
-                Task = new Task(() => new BackTesting(e.Specify, key));
+                Task = new Task(() => new BackTesting((char)33, e.Specify, key));
                 Task.Start();
 
                 if (TimerBox.Show(secret.BackTesting, temp > 1 ? string.Concat("No.", temp) : checkingInformation, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
@@ -546,7 +546,6 @@ namespace ShareInvest
                     ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                     ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
                 }
-                Task.Wait();
                 Parallel.ForEach(Specify, new Action<Catalog.XingAPI.Specify>((param) =>
                 {
                     switch (param.Strategy)

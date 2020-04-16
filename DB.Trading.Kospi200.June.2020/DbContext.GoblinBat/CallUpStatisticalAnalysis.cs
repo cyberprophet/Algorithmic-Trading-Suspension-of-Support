@@ -18,30 +18,7 @@ namespace ShareInvest.GoblinBatContext
         {
             try
             {
-                var date = DateTime.Now.ToString(recent);
-
-                switch (DateTime.Now.DayOfWeek)
-                {
-                    case DayOfWeek.Monday:
-                        if (DateTime.Now.Hour < 16)
-                            date = DateTime.Now.AddDays(-3).ToString(recent);
-
-                        break;
-
-                    case DayOfWeek.Sunday:
-                        date = DateTime.Now.AddDays(-2).ToString(recent);
-                        break;
-
-                    case DayOfWeek.Saturday:
-                        date = DateTime.Now.AddDays(-1).ToString(recent);
-                        break;
-
-                    default:
-                        if (DateTime.Now.Hour < 16 || new Secret().GetHoliday(DateTime.Now))
-                            date = DateTime.Now.AddDays(-1).ToString(recent);
-
-                        break;
-                }
+                var date = new Secret().RecentDate;
                 using (var db = new GoblinBatDbContext(key))
                 {
                     var memo = db.Memorize.Where(o => o.Index == number && o.Date.Equals(date));
@@ -141,40 +118,45 @@ namespace ShareInvest.GoblinBatContext
                                 }
                         var storage = new Stack<Quotes>();
                         using (var db = new GoblinBatDbContext(key))
-                            foreach (var datum in db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date.CompareTo(temp) > 0).Select(o => new
-                            {
-                                o.Date,
-                                o.Price,
-                                o.Volume,
-                                o.SellPrice,
-                                o.SellQuantity,
-                                o.TotalSellAmount,
-                                o.BuyPrice,
-                                o.BuyQuantity,
-                                o.TotalBuyAmount
-                            }).OrderByDescending(o => o.Date))
-                            {
-                                if (datum.Price == null && datum.Volume == null)
+                        {
+                            var recent = db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date.CompareTo(temp) > 0);
+
+                            if (recent.Any())
+                                foreach (var datum in recent.Select(o => new
                                 {
+                                    o.Date,
+                                    o.Price,
+                                    o.Volume,
+                                    o.SellPrice,
+                                    o.SellQuantity,
+                                    o.TotalSellAmount,
+                                    o.BuyPrice,
+                                    o.BuyQuantity,
+                                    o.TotalBuyAmount
+                                }).OrderByDescending(o => o.Date))
+                                {
+                                    if (datum.Price == null && datum.Volume == null)
+                                    {
+                                        storage.Push(new Quotes
+                                        {
+                                            Time = datum.Date,
+                                            SellPrice = datum.SellPrice,
+                                            SellQuantity = datum.SellQuantity,
+                                            SellAmount = datum.TotalSellAmount,
+                                            BuyPrice = datum.BuyPrice,
+                                            BuyQuantity = datum.BuyQuantity,
+                                            BuyAmount = datum.TotalBuyAmount
+                                        });
+                                        continue;
+                                    }
                                     storage.Push(new Quotes
                                     {
                                         Time = datum.Date,
-                                        SellPrice = datum.SellPrice,
-                                        SellQuantity = datum.SellQuantity,
-                                        SellAmount = datum.TotalSellAmount,
-                                        BuyPrice = datum.BuyPrice,
-                                        BuyQuantity = datum.BuyQuantity,
-                                        BuyAmount = datum.TotalBuyAmount
+                                        Price = datum.Price,
+                                        Volume = datum.Volume
                                     });
-                                    continue;
                                 }
-                                storage.Push(new Quotes
-                                {
-                                    Time = datum.Date,
-                                    Price = datum.Price,
-                                    Volume = datum.Volume
-                                });
-                            }
+                        }
                         using (var sw = new StreamWriter(File, true))
                             while (storage.Count > 0)
                             {
@@ -544,13 +526,7 @@ namespace ShareInvest.GoblinBatContext
                     await db.BulkInsertAsync(memo, o =>
                     {
                         o.InsertIfNotExists = true;
-                        o.ColumnPrimaryKeyExpression = x => new
-                        {
-                            x.Index,
-                            x.Date,
-                            x.Code
-                        };
-                        o.BatchSize = 100;
+                        o.BatchSize = 300;
                         o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                         o.AutoMapOutputDirection = false;
                     });
@@ -592,11 +568,10 @@ namespace ShareInvest.GoblinBatContext
         protected CallUpStatisticalAnalysis(string key) : base(key) => this.key = key;
         protected string File => string.Concat(Path, @"\", quotes);
         bool GetFileExists(FileInfo info) => info.Exists;
+        protected const int ar = 10000000;
+        protected const int mr = 100;
+        protected const int cr = 1000000;
         readonly string key;
-        const int ar = 10000000;
-        const int mr = 100;
-        const int cr = 1000000;
-        const string recent = "yyMMdd";
         const string date = "yyMMddHHmmss";
         const string quotes = "QuotesA.res";
     }

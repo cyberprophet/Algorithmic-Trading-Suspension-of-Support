@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.EventHandler.BackTesting;
@@ -43,7 +45,55 @@ namespace ShareInvest.GoblinBatControls
             comboStrategy.Items.AddRange(strategy);
             comboCommission.Items.AddRange(Commission);
             comboMarginRate.Items.AddRange(MaginRate);
-            Specifies = Statistics();
+        }
+        public Specify[] Statistics(Specify[] specifies)
+        {
+            var temp = new Dictionary<uint, int[]>();
+            int i = 0;
+
+            foreach (var specify in specifies)
+            {
+                numericAssets.Value = specify.Assets;
+                var commission = specify.Commission.ToString("P4");
+                commission = commission.Substring(5, 1).Equals("0") ? specify.Commission.ToString("P3") : commission;
+                var margin = specify.MarginRate.ToString("P2");
+                margin = margin.Split('.')[1].Substring(1, 1).Equals("0") ? specify.MarginRate.ToString("P1") : margin;
+                checkRollOver.Checked = specify.RollOver;
+                temp[specify.Time] = new int[]
+                {
+                    specify.Short,
+                    specify.Long
+                };
+                if (comboCode.Items.Contains(specify.Code) == false)
+                {
+                    comboCode.Items.Add(specify.Code);
+                    comboCode.SelectedItem = specify.Code;
+                }
+                if (comboCommission.Items.Contains(commission) == false)
+                {
+                    comboCommission.Items.Add(commission);
+                    comboCommission.SelectedItem = commission;
+                }
+                if (comboMarginRate.Items.Contains(margin) == false)
+                {
+                    comboMarginRate.Items.Add(margin);
+                    comboMarginRate.SelectedItem = margin;
+                }
+                if (comboStrategy.Items.Contains(specify.Strategy) == false)
+                {
+                    comboStrategy.Items.Add(specify.Strategy);
+                    comboStrategy.SelectedItem = specify.Strategy;
+                }
+            }
+            foreach (var kv in temp.OrderByDescending(o => o.Key))
+            {
+                if (i > 0)
+                    string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value = kv.Key;
+
+                string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
+                string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
+            }
+            return specifies;
         }
         Specify[] Statistics()
         {
@@ -120,10 +170,6 @@ namespace ShareInvest.GoblinBatControls
         {
             buttonStartProgress.Click -= ButtonClick;
             buttonStorage.Click -= ButtonClick;
-        }
-        public Specify[] Specifies
-        {
-            get; private set;
         }
         void CheckRollOverCheckStateChanged(object sender, EventArgs e)
         {

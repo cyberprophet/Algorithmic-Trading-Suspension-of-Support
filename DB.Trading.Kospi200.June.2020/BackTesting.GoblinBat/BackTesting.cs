@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.BackTesting;
 using ShareInvest.GoblinBatContext;
-using ShareInvest.Message;
 using ShareInvest.Strategy.Statistics;
 
 namespace ShareInvest.Strategy
@@ -64,6 +62,11 @@ namespace ShareInvest.Strategy
                     continue;
                 }
                 SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
+            }
+            if (initial.Equals((char)33) || Secrets.Memorizes.Count > ran.Next(1000, 2000))
+            {
+                SetStatisticalStorage(Secrets.Memorizes).Wait();
+                Secrets.Memorizes = new Queue<Models.Memorize>(1024);
             }
         }
         double SetPurchasePrice(double price)
@@ -181,7 +184,7 @@ namespace ShareInvest.Strategy
             Revenue = CumulativeRevenue - Commission;
             long revenue = Revenue - TodayRevenue, unrealized = (long)(Quantity == 0 ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * Const.TransactionMultiplier * Math.Abs(Quantity));
             Accumulative = revenue + unrealized > 0 ? ++Accumulative : revenue + unrealized < 0 ? --Accumulative : 0;
-            queue.Enqueue(new Models.Memorize
+            Secrets.Memorizes.Enqueue(new Models.Memorize
             {
                 Index = index,
                 Date = date,
@@ -229,9 +232,10 @@ namespace ShareInvest.Strategy
         {
             get;
         }
-        public BackTesting(Catalog.XingAPI.Specify[] specifies, string key) : base(key)
+        public BackTesting(char initial, Catalog.XingAPI.Specify[] specifies, string key) : base(key)
         {
-            queue = new Queue<Models.Memorize>();
+            this.initial = initial;
+            ran = new Random();
             Residue = new Dictionary<uint, int>();
             SellOrder = new Dictionary<string, uint>();
             BuyOrder = new Dictionary<string, uint>();
@@ -258,16 +262,14 @@ namespace ShareInvest.Strategy
                     return;
             }
             if (index > 0)
-            {
                 StartProgress();
-                SetStatisticalStorage(queue).Wait();
-            }
         }
         const string basic = "Base";
+        readonly char initial;
         readonly double commission;
         readonly string code;
         readonly long index;
-        readonly Queue<Models.Memorize> queue;
+        readonly Random ran;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Quotes> SendQuotes;
     }

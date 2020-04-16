@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
@@ -16,6 +14,67 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
+        protected Dictionary<long, long> GetBestStrategyRecommend()
+        {
+            var date = new Secret().RecentDate;
+            var indexes = new Dictionary<long, long>();
+            var index = 0;
+
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                    foreach (var str in db.Memorize.Where(o => o.Date.Equals(date)).Select(o => new
+                    {
+                        o.Cumulative,
+                        o.Unrealized,
+                        o.Index,
+                        o.Statistic
+                    }).OrderByDescending(o => o.Statistic))
+                    {
+                        if (long.TryParse(str.Unrealized, out long unrealized) && long.TryParse(str.Cumulative, out long cumulative))
+                            indexes[str.Index] = unrealized + cumulative;
+
+                        if (index++ > 1000)
+                            break;
+                    }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return indexes;
+        }
+        protected string[] GetUserIdentify()
+        {
+            try
+            {
+                var identity = new Secret().GetIdentify(key);
+                using (var db = new GoblinBatDbContext(key))
+                    foreach (var str in db.Logs.Where(o => o.Identity.Equals(identity)).Select(o => new
+                    {
+                        o.Date,
+                        o.Assets,
+                        o.Code,
+                        o.Commission,
+                        o.Strategy,
+                        o.RollOver
+                    }).OrderByDescending(o => o.Date))
+                        return new string[]
+                        {
+                            str.Assets,
+                            str.Code,
+                            str.Commission,
+                            marginRate,
+                            str.Strategy,
+                            str.RollOver
+                        };
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return null;
+        }
         protected List<string[]> GetUserIdentity(DateTime date)
         {
             var list = new List<string[]>();
@@ -142,52 +201,57 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    await db.BulkInsertAsync(strategy, o =>
-                    {
-                        o.InsertIfNotExists = true;
-                        o.ColumnPrimaryKeyExpression = x => new
+                {
+                    var str = strategy.First();
+
+                    if (db.Strategy.Where(o => o.Assets.Equals(str.Assets) && o.Code.Equals(str.Code) && o.Commission.Equals(str.Commission) && o.MarginRate.Equals(str.MarginRate) && o.Strategy.Equals(str.Strategy) && o.RollOver.Equals(str.RollOver) && o.BaseTime.Equals(str.BaseTime) && o.BaseShort.Equals(str.BaseShort) && o.BaseLong.Equals(str.BaseLong) && o.NonaTime.Equals(str.NonaTime) && o.NonaShort.Equals(str.NonaShort) && o.NonaLong.Equals(str.NonaLong) && o.OctaTime.Equals(str.OctaTime) && o.OctaShort.Equals(str.OctaShort) && o.OctaLong.Equals(str.OctaLong) && o.HeptaTime.Equals(str.HeptaTime) && o.HeptaShort.Equals(str.HeptaShort) && o.HeptaLong.Equals(str.HeptaLong) && o.HexaTime.Equals(str.HexaTime) && o.HexaShort.Equals(str.HexaShort) && o.HexaLong.Equals(str.HexaLong) && o.PentaTime.Equals(str.PentaTime) && o.PantaShort.Equals(str.PantaShort) && o.PantaLong.Equals(str.PantaLong) && o.QuadTime.Equals(str.QuadTime) && o.QuadShort.Equals(str.QuadShort) && o.QuadLong.Equals(str.QuadLong) && o.TriTime.Equals(str.TriTime) && o.TriShort.Equals(str.TriShort) && o.TriLong.Equals(str.TriLong) && o.DuoTime.Equals(str.DuoTime) && o.DuoShort.Equals(str.DuoShort) && o.DuoLong.Equals(str.DuoLong) && o.MonoTime.Equals(str.MonoTime) && o.MonoShort.Equals(str.MonoShort) && o.MonoLong.Equals(str.MonoLong)).Any() == false)
+                        await db.BulkInsertAsync(strategy, o =>
                         {
-                            x.Assets,
-                            x.Code,
-                            x.Commission,
-                            x.MarginRate,
-                            x.Strategy,
-                            x.RollOver,
-                            x.BaseTime,
-                            x.BaseShort,
-                            x.BaseLong,
-                            x.NonaTime,
-                            x.NonaShort,
-                            x.NonaLong,
-                            x.OctaTime,
-                            x.OctaShort,
-                            x.OctaLong,
-                            x.HeptaTime,
-                            x.HeptaShort,
-                            x.HeptaLong,
-                            x.HexaTime,
-                            x.HexaShort,
-                            x.HexaLong,
-                            x.PentaTime,
-                            x.PantaShort,
-                            x.PantaLong,
-                            x.QuadTime,
-                            x.QuadShort,
-                            x.QuadLong,
-                            x.TriTime,
-                            x.TriShort,
-                            x.TriLong,
-                            x.DuoTime,
-                            x.DuoShort,
-                            x.DuoLong,
-                            x.MonoTime,
-                            x.MonoShort,
-                            x.MonoLong
-                        };
-                        o.BatchSize = 50000;
-                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                        o.AutoMapOutputDirection = false;
-                    });
+                            o.InsertIfNotExists = true;
+                            o.ColumnPrimaryKeyExpression = x => new
+                            {
+                                x.Assets,
+                                x.Code,
+                                x.Commission,
+                                x.MarginRate,
+                                x.Strategy,
+                                x.RollOver,
+                                x.BaseTime,
+                                x.BaseShort,
+                                x.BaseLong,
+                                x.NonaTime,
+                                x.NonaShort,
+                                x.NonaLong,
+                                x.OctaTime,
+                                x.OctaShort,
+                                x.OctaLong,
+                                x.HeptaTime,
+                                x.HeptaShort,
+                                x.HeptaLong,
+                                x.HexaTime,
+                                x.HexaShort,
+                                x.HexaLong,
+                                x.PentaTime,
+                                x.PantaShort,
+                                x.PantaLong,
+                                x.QuadTime,
+                                x.QuadShort,
+                                x.QuadLong,
+                                x.TriTime,
+                                x.TriShort,
+                                x.TriLong,
+                                x.DuoTime,
+                                x.DuoShort,
+                                x.DuoLong,
+                                x.MonoTime,
+                                x.MonoShort,
+                                x.MonoLong
+                            };
+                            o.BatchSize = 50000;
+                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                            o.AutoMapOutputDirection = false;
+                        });
+                }
             }
             catch (Exception ex)
             {
