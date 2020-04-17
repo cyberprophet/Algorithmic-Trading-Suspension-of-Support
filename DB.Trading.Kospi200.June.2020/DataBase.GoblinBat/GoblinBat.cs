@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
@@ -16,11 +17,12 @@ namespace ShareInvest
 {
     partial class GoblinBat : Form
     {
-        internal GoblinBat(char initial, Secret secret, string key)
+        internal GoblinBat(char initial, Secret secret, string key, CancellationTokenSource cts)
         {
             this.key = key;
             this.initial = initial;
             this.secret = secret;
+            this.cts = cts;
             InitializeComponent();
             Opacity = 0;
             var collect = ((char)Port.Collecting).Equals(initial);
@@ -319,7 +321,11 @@ namespace ShareInvest
 
                         if (Server ? false : new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
                         {
-                            TimerBox.Show(new Secret(check[check.Length - 2]).Identify, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750);
+                            if (TimerBox.Show(new Secret(check[check.Length - 2]).Identify, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750).Equals(DialogResult.OK) && cts.IsCancellationRequested == false)
+                            {
+                                cts.Cancel();
+                                cts.Dispose();
+                            }
                             Dispose();
 
                             return;
@@ -406,8 +412,13 @@ namespace ShareInvest
                         if (Temporary != null && initial.Equals(collecting))
                             Temporary.SetStorage(Open.Code).Wait();
 
-                        Process.Start("shutdown.exe", "-r");
-                        Dispose();
+                        if (cts.IsCancellationRequested == false)
+                        {
+                            cts.Cancel();
+                            cts.Dispose();
+                            Process.Start("shutdown.exe", "-r");
+                            Dispose();
+                        }
                     }
                     else
                     {
@@ -437,13 +448,20 @@ namespace ShareInvest
                     switch ((char)e.NotifyIcon)
                     {
                         case (char)69:
-                            new ExceptionMessage(((char)e.NotifyIcon).ToString());
-                            Dispose();
+                            if (cts.IsCancellationRequested == false)
+                            {
+                                cts.Cancel();
+                                cts.Dispose();
+                                new ExceptionMessage(((char)e.NotifyIcon).ToString());
+                                Dispose();
+                            }
                             return;
 
                         case (char)41:
-                            if (initial.Equals(trading))
+                            if (initial.Equals(trading) && cts.IsCancellationRequested == false)
                             {
+                                cts.Cancel();
+                                cts.Dispose();
                                 Xing.OnReceiveBalance = false;
                                 new ExceptionMessage(((char)e.NotifyIcon).ToString());
                                 Process.Start("shutdown.exe", "-r");
@@ -569,6 +587,11 @@ namespace ShareInvest
                 WindowState = FormWindowState.Minimized;
 
                 return;
+            }
+            if (cts.IsCancellationRequested == false)
+            {
+                cts.Cancel();
+                cts.Dispose();
             }
             Dispose();
         }
@@ -733,6 +756,7 @@ namespace ShareInvest
         readonly string key;
         readonly char initial;
         readonly Secret secret;
+        readonly CancellationTokenSource cts;
         const char trading = (char)Port.Trading;
         const char collecting = (char)Port.Collecting;
         const string cfobq10500 = "CFOBQ10500";
