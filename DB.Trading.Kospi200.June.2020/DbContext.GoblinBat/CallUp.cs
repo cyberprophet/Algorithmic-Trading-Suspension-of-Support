@@ -83,7 +83,6 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                {
                     foreach (var temp in db.Codes.Select(o => new
                     {
                         o.Code,
@@ -91,7 +90,6 @@ namespace ShareInvest.GoblinBatContext
                     }))
                         if (temp.Code.Length == 6 && Array.Exists(market, o => o.Equals(temp.Code)) || temp.Code.Length == 8 && DateTime.Compare(DateTime.ParseExact(temp.Info, "yyyyMMdd", null), DateTime.Now) >= 0)
                             list.Add(temp.Code);
-                }
             }
             catch (Exception ex)
             {
@@ -106,7 +104,6 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                {
                     switch (param)
                     {
                         case 1:
@@ -125,7 +122,6 @@ namespace ShareInvest.GoblinBatContext
                             max = db.Days.Where(o => o.Code.Equals(code)).Max(o => o.Date);
                             break;
                     };
-                }
             }
             catch (InvalidOperationException ex)
             {

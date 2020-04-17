@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using ShareInvest.Catalog;
 using ShareInvest.Strategy.XingAPI;
 
@@ -10,6 +9,10 @@ namespace ShareInvest.Strategy.Statistics
         protected internal abstract void SendNewOrder(double[] param, string classification, int quantity);
         protected internal abstract bool SetCorrectionBuyOrder(string avg, double buy, int quantity);
         protected internal abstract bool SetCorrectionSellOrder(string avg, double sell, int quantity);
+        protected internal abstract bool ForTheLiquidationOfSellOrder(double[] bid);
+        protected internal abstract bool ForTheLiquidationOfSellOrder(string price, double[] bid, int quantity);
+        protected internal abstract bool ForTheLiquidationOfBuyOrder(double[] selling);
+        protected internal abstract bool ForTheLiquidationOfBuyOrder(string price, double[] selling, int quantity);
         protected internal override void OnReceiveTrend(int volume) => Volume += volume;
         protected internal Analysis(BackTesting bt, Catalog.XingAPI.Specify specify) : base(specify)
         {
@@ -74,23 +77,12 @@ namespace ShareInvest.Strategy.Statistics
                         case sell:
                             if (bt.Quantity < 0)
                             {
-                                if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && double.TryParse(price, out double bAvg) && bAvg > bp[0])
-                                {
-                                    bt.SendNewOrder(bAvg > bp[bp.Length - 1] ? bp[bp.Length - 1].ToString("F2") : price, buy, e.BuyQuantity);
-
+                                if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && ForTheLiquidationOfSellOrder(price, bp, e.BuyQuantity))
                                     return;
-                                }
-                                if (bt.BuyOrder.Count > 0)
-                                {
-                                    var order = bt.BuyOrder.OrderBy(o => o.Key).First();
 
-                                    if (double.TryParse(order.Key, out double key) && key < bp[bt.BuyOrder.Count == 1 ? 5 : (bp.Length - 1)])
-                                    {
-                                        bt.SendClearingOrder(order.Value);
+                                if (bt.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
+                                    return;
 
-                                        return;
-                                    }
-                                }
                                 if (bt.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1], e.SellQuantity))
                                     return;
                             }
@@ -99,23 +91,12 @@ namespace ShareInvest.Strategy.Statistics
                         case buy:
                             if (bt.Quantity > 0)
                             {
-                                if (bt.SellOrder.Count == 0 && max < bt.Quantity && double.TryParse(price, out double sAvg) && sAvg < sp[0])
-                                {
-                                    bt.SendNewOrder(sAvg < sp[sp.Length - 1] ? sp[sp.Length - 1].ToString("F2") : price, sell, e.SellQuantity);
-
+                                if (bt.SellOrder.Count == 0 && max < bt.Quantity && ForTheLiquidationOfBuyOrder(price, sp, e.SellQuantity))
                                     return;
-                                }
-                                if (bt.SellOrder.Count > 0)
-                                {
-                                    var order = bt.SellOrder.OrderByDescending(o => o.Key).First();
 
-                                    if (double.TryParse(order.Key, out double key) && sp[bt.SellOrder.Count == 1 ? 5 : (sp.Length - 1)] < key)
-                                    {
-                                        bt.SendClearingOrder(order.Value);
+                                if (bt.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
+                                    return;
 
-                                        return;
-                                    }
-                                }
                                 if (bt.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1], e.BuyQuantity))
                                     return;
                             }

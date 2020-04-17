@@ -40,14 +40,11 @@ namespace ShareInvest.Strategy
     }
     public partial class Information : CallUpGoblinBat
     {
+        public List<string[]> GetUserIdentity() => GetUserIdentity(DateTime.Now);
         public Information(string key) : base(key)
         {
             shortVariable = GetVariable(new int[maxShort - 1], 1);
             longVariable = GetVariable(new int[maxLong / minLong], minLong);
-        }
-        public List<string[]> GetUserIdentity()
-        {
-            return GetUserIdentity(DateTime.Now);
         }
         public void SetInsertStrategy(string[] param)
         {

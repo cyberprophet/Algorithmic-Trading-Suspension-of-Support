@@ -111,6 +111,17 @@ namespace ShareInvest.Strategy
 
             return string.Empty;
         }
+        public bool SetStatisticalStorage()
+        {
+            var memo = Secrets.Memorizes;
+
+            if (memo.Count > 0)
+                SetStatisticalStorage(memo).Wait();
+
+            Secrets.Memorizes.Clear();
+
+            return true;
+        }
         protected override string GetConvertCode(string code)
         {
             if (Code.Substring(0, 3).Equals(code.Substring(0, 3)) && Code.Substring(5).Equals(code.Substring(3)))

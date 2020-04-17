@@ -63,7 +63,7 @@ namespace ShareInvest.Strategy
                 }
                 SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
             }
-            if (initial.Equals((char)33) || Secrets.Memorizes.Count > ran.Next(1000, 2000))
+            if (initial.Equals((char)33) || Secrets.Memorizes.Count > ran.Next(9000, 30000))
             {
                 SetStatisticalStorage(Secrets.Memorizes).Wait();
                 Secrets.Memorizes = new Queue<Models.Memorize>(1024);
@@ -97,13 +97,15 @@ namespace ShareInvest.Strategy
 
             Classification = temp == 0 ? string.Empty : temp > 0 ? Analysis.buy : Analysis.sell;
         }
-        internal void SendClearingOrder(uint number)
+        internal bool SendClearingOrder(uint number)
         {
             if (SellOrder.ContainsValue(number) && SellOrder.Remove(SellOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
-                return;
+                return true;
 
             if (BuyOrder.ContainsValue(number) && BuyOrder.Remove(BuyOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
-                return;
+                return true;
+
+            return false;
         }
         internal void SendCorrectionOrder(string price, uint number, int residue)
         {
@@ -120,20 +122,21 @@ namespace ShareInvest.Strategy
                 Residue[Count++] = residue;
             }
         }
-        internal void SendNewOrder(string price, string classification, int residue)
+        internal bool SendNewOrder(string price, string classification, int residue)
         {
             switch (classification)
             {
                 case Analysis.sell:
                     SellOrder[price] = Count;
                     Residue[Count++] = residue;
-                    break;
+                    return true;
 
                 case Analysis.buy:
                     BuyOrder[price] = Count;
                     Residue[Count++] = residue;
-                    break;
+                    return true;
             }
+            return false;
         }
         internal void SetSellConclusion(double price, int residue)
         {

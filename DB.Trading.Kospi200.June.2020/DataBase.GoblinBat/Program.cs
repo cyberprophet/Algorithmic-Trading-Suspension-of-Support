@@ -20,7 +20,7 @@ namespace ShareInvest
             if (ShowWindow(GetConsoleWindow(), secret.Hide) && secret.GetIdentify(str))
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
-                var classfication = secret.GetPort(str).Equals((char)Port.Trading) && DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6;
+                var classfication = secret.GetPort(str).Equals((char)Port.Trading) && (DateTime.Now.Hour == 15 && DateTime.Now.Minute >= 45 || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6);
                 var remaining = secret.GetIsSever(str) ? ran.Next(classfication ? 25 : 5, classfication ? 31 : 11) : 1;
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var initial = secret.GetPort(str);
@@ -63,10 +63,10 @@ namespace ShareInvest
                                     {
                                         Parallel.ForEach(list, po, new Action<long>((number) =>
                                         {
+                                            po.CancellationToken.ThrowIfCancellationRequested();
+
                                             if (retrieve.GetDuplicateResults(number) == false)
                                                 new BackTesting(initial, retrieve.OnReceiveStrategy(number), str);
-
-                                            po.CancellationToken.ThrowIfCancellationRequested();
                                         }));
                                     }
                                     catch (OperationCanceledException ex)
@@ -93,8 +93,8 @@ namespace ShareInvest
                                         };
                                         Parallel.ForEach(info.GetUserIdentity(), po, new Action<string[]>((identify) =>
                                         {
-                                            info.SetInsertStrategy(identify);
                                             po.CancellationToken.ThrowIfCancellationRequested();
+                                            info.SetInsertStrategy(identify);
                                         }));
                                         po = new ParallelOptions
                                         {
@@ -103,10 +103,10 @@ namespace ShareInvest
                                         };
                                         Parallel.ForEach(list, po, new Action<long>((number) =>
                                         {
+                                            po.CancellationToken.ThrowIfCancellationRequested();
+
                                             if (retrieve.GetDuplicateResults(number) == false)
                                                 new BackTesting(initial, retrieve.OnReceiveStrategy(number), str);
-
-                                            po.CancellationToken.ThrowIfCancellationRequested();
                                         }));
                                     }
                                     catch (OperationCanceledException ex)

@@ -526,7 +526,7 @@ namespace ShareInvest.GoblinBatContext
                     await db.BulkInsertAsync(memo, o =>
                     {
                         o.InsertIfNotExists = true;
-                        o.BatchSize = 300;
+                        o.BatchSize = 10000;
                         o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                         o.AutoMapOutputDirection = false;
                     });

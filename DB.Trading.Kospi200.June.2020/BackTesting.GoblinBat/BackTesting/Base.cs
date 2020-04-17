@@ -5,6 +5,38 @@ namespace ShareInvest.Strategy.Statistics
 {
     class Base : Analysis
     {
+        protected internal override bool ForTheLiquidationOfSellOrder(double[] bid)
+        {
+            var buy = bt.BuyOrder.OrderBy(o => o.Key).First();
+
+            if (double.TryParse(buy.Key, out double cbp) && bid[bt.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp)
+                return bt.SendClearingOrder(buy.Value);
+
+            return false;
+        }
+        protected internal override bool ForTheLiquidationOfSellOrder(string price, double[] bid, int quantity)
+        {
+            if (double.TryParse(price, out double bAvg) && bAvg > bid[5])
+                return bt.SendNewOrder(bAvg > bid[bid.Length - 1] ? bid[bid.Length - 1].ToString("F2") : price, buy, quantity);
+
+            return false;
+        }
+        protected internal override bool ForTheLiquidationOfBuyOrder(double[] selling)
+        {
+            var sell = bt.SellOrder.OrderByDescending(o => o.Key).First();
+
+            if (double.TryParse(sell.Key, out double csp) && selling[API.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp)
+                return bt.SendClearingOrder(sell.Value);
+
+            return false;
+        }
+        protected internal override bool ForTheLiquidationOfBuyOrder(string price, double[] selling, int quantity)
+        {
+            if (double.TryParse(price, out double sAvg) && sAvg < selling[5])
+                return bt.SendNewOrder(sAvg < selling[selling.Length - 1] ? selling[selling.Length - 1].ToString("F2") : price, sell, quantity);
+
+            return false;
+        }
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy, int quantity)
         {
             var order = bt.BuyOrder.OrderBy(o => o.Key).First();
@@ -85,7 +117,7 @@ namespace ShareInvest.Strategy.Statistics
         }
         internal Base(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify)
         {
-            
+
         }
     }
 }

@@ -56,87 +56,84 @@ namespace ShareInvest.GoblinBatControls
                     Application.DoEvents();
                 }));
         }
-        public void OnReceiveBalance(object sender, Balance e)
+        public void OnReceiveBalance(object sender, Balance e) => BeginInvoke(new Action(() =>
         {
-            BeginInvoke(new Action(() =>
+            balGrid.SuspendLayout();
+            balGrid.Rows.Clear();
+            balGrid.AutoSize = true;
+
+            foreach (string info in e.Hold)
             {
-                balGrid.SuspendLayout();
-                balGrid.Rows.Clear();
-                balGrid.AutoSize = true;
+                string[] arr = new string[7];
+                int i = 0;
 
-                foreach (string info in e.Hold)
+                foreach (string val in info.Split(';'))
                 {
-                    string[] arr = new string[7];
-                    int i = 0;
+                    if (val.Equals(string.Empty))
+                        break;
 
-                    foreach (string val in info.Split(';'))
+                    switch (i)
                     {
-                        if (val.Equals(string.Empty))
+                        case 0:
+                        case 1:
+                            arr[i++] = val;
                             break;
 
-                        switch (i)
-                        {
-                            case 0:
-                            case 1:
-                                arr[i++] = val;
-                                break;
+                        case 2:
+                            arr[i++] = val.Equals("1") ? "매도" : "매수";
+                            break;
 
-                            case 2:
-                                arr[i++] = val.Equals("1") ? "매도" : "매수";
-                                break;
+                        case 3:
+                        case 6:
+                            arr[i++] = int.Parse(val).ToString("N0");
+                            break;
 
-                            case 3:
-                            case 6:
-                                arr[i++] = int.Parse(val).ToString("N0");
-                                break;
-
-                            case 4:
-                            case 5:
-                                arr[i++] = (val.Contains(".") ? double.Parse(val) : (double.Parse(val) / 100)).ToString("N2");
-                                break;
-                        }
+                        case 4:
+                        case 5:
+                            arr[i++] = (val.Contains(".") ? double.Parse(val) : (double.Parse(val) / 100)).ToString("N2");
+                            break;
                     }
-                    if (arr[0] != null)
-                        balGrid.Rows.Add(arr);
                 }
-                foreach (DataGridViewRow row in balGrid.Rows)
+                if (arr[0] != null)
+                    balGrid.Rows.Add(arr);
+            }
+            foreach (DataGridViewRow row in balGrid.Rows)
+            {
+                var type = row.Cells[2];
+
+                if (type.Value.Equals("매도"))
                 {
-                    var type = row.Cells[2];
-
-                    if (type.Value.Equals("매도"))
-                    {
-                        type.Style.ForeColor = Color.Navy;
-                        type.Style.SelectionForeColor = Color.DeepSkyBlue;
-                    }
-                    else if (type.Value.Equals("매수"))
-                    {
-                        type.Style.ForeColor = Color.Maroon;
-                        type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
-                    }
-                    type = row.Cells[6];
-                    long revenue = long.Parse(type.Value.ToString().Replace(",", string.Empty));
-
-                    if (revenue > 0)
-                    {
-                        type.Style.ForeColor = Color.Maroon;
-                        type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
-                    }
-                    else if (revenue < 0)
-                    {
-                        type.Value = type.Value.ToString().Replace("-", string.Empty);
-                        type.Style.ForeColor = Color.Navy;
-                        type.Style.SelectionForeColor = Color.DeepSkyBlue;
-                    }
+                    type.Style.ForeColor = Color.Navy;
+                    type.Style.SelectionForeColor = Color.DeepSkyBlue;
                 }
-                balGrid.Show();
-                balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-                balGrid.Cursor = Cursors.Hand;
-                balGrid.AutoResizeRows();
-                balGrid.AutoResizeColumns();
-                SendReSize?.Invoke(this, new GridResize(balGrid.Rows.GetRowsHeight(DataGridViewElementStates.None), balGrid.Rows.Count));
-                balGrid.ResumeLayout();
-            }));
-        }
+                else if (type.Value.Equals("매수"))
+                {
+                    type.Style.ForeColor = Color.Maroon;
+                    type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
+                }
+                type = row.Cells[6];
+                long revenue = long.Parse(type.Value.ToString().Replace(",", string.Empty));
+
+                if (revenue > 0)
+                {
+                    type.Style.ForeColor = Color.Maroon;
+                    type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
+                }
+                else if (revenue < 0)
+                {
+                    type.Value = type.Value.ToString().Replace("-", string.Empty);
+                    type.Style.ForeColor = Color.Navy;
+                    type.Style.SelectionForeColor = Color.DeepSkyBlue;
+                }
+            }
+            balGrid.Show();
+            balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            balGrid.Cursor = Cursors.Hand;
+            balGrid.AutoResizeRows();
+            balGrid.AutoResizeColumns();
+            SendReSize?.Invoke(this, new GridResize(balGrid.Rows.GetRowsHeight(DataGridViewElementStates.None), balGrid.Rows.Count));
+            balGrid.ResumeLayout();
+        }));
         readonly string[] columns = { "종목코드", "종목명", "구분", "수량", "매입가", "현재가", "평가손익" };
         public event EventHandler<GridResize> SendReSize;
     }

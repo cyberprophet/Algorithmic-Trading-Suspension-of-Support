@@ -46,54 +46,75 @@ namespace ShareInvest.GoblinBatControls
             comboCommission.Items.AddRange(Commission);
             comboMarginRate.Items.AddRange(MaginRate);
         }
+        public void OnEventConnect()
+        {
+            buttonStartProgress.Click += ButtonClick;
+            buttonStorage.Click += ButtonClick;
+        }
+        public void OnEventDisconnect()
+        {
+            buttonStartProgress.Click -= ButtonClick;
+            buttonStorage.Click -= ButtonClick;
+        }
         public Specify[] Statistics(Specify[] specifies)
         {
-            var temp = new Dictionary<uint, int[]>();
-            int i = 0;
-
-            foreach (var specify in specifies)
+            SuspendLayout();
+            var result = BeginInvoke(new Action(() =>
             {
-                numericAssets.Value = specify.Assets;
-                var commission = specify.Commission.ToString("P4");
-                commission = commission.Substring(5, 1).Equals("0") ? specify.Commission.ToString("P3") : commission;
-                var margin = specify.MarginRate.ToString("P2");
-                margin = margin.Split('.')[1].Substring(1, 1).Equals("0") ? specify.MarginRate.ToString("P1") : margin;
-                checkRollOver.Checked = specify.RollOver;
-                temp[specify.Time] = new int[]
+                var temp = new Dictionary<uint, int[]>();
+                int i = 0;
+
+                foreach (var specify in specifies)
                 {
+                    numericAssets.Value = specify.Assets;
+                    var commission = specify.Commission.ToString("P4");
+                    commission = commission.Substring(5, 1).Equals("0") ? specify.Commission.ToString("P3") : commission;
+                    var margin = specify.MarginRate.ToString("P2");
+                    margin = margin.Split('.')[1].Substring(1, 1).Equals("0") ? specify.MarginRate.ToString("P1") : margin;
+                    checkRollOver.Checked = specify.RollOver;
+                    temp[specify.Time] = new int[]
+                    {
                     specify.Short,
                     specify.Long
-                };
-                if (comboCode.Items.Contains(specify.Code) == false)
-                {
-                    comboCode.Items.Add(specify.Code);
-                    comboCode.SelectedItem = specify.Code;
+                    };
+                    if (comboCode.Items.Contains(specify.Code) == false)
+                    {
+                        comboCode.Items.Add(specify.Code);
+                        comboCode.SelectedItem = specify.Code;
+                    }
+                    if (comboCommission.Items.Contains(commission) == false)
+                    {
+                        comboCommission.Items.Add(commission);
+                        comboCommission.SelectedItem = commission;
+                    }
+                    if (comboMarginRate.Items.Contains(margin) == false)
+                    {
+                        comboMarginRate.Items.Add(margin);
+                        comboMarginRate.SelectedItem = margin;
+                    }
+                    if (comboStrategy.Items.Contains(specify.Strategy) == false)
+                    {
+                        comboStrategy.Items.Add(specify.Strategy);
+                        comboStrategy.SelectedItem = specify.Strategy;
+                    }
                 }
-                if (comboCommission.Items.Contains(commission) == false)
+                foreach (var kv in temp.OrderByDescending(o => o.Key))
                 {
-                    comboCommission.Items.Add(commission);
-                    comboCommission.SelectedItem = commission;
-                }
-                if (comboMarginRate.Items.Contains(margin) == false)
-                {
-                    comboMarginRate.Items.Add(margin);
-                    comboMarginRate.SelectedItem = margin;
-                }
-                if (comboStrategy.Items.Contains(specify.Strategy) == false)
-                {
-                    comboStrategy.Items.Add(specify.Strategy);
-                    comboStrategy.SelectedItem = specify.Strategy;
-                }
-            }
-            foreach (var kv in temp.OrderByDescending(o => o.Key))
-            {
-                if (i > 0)
-                    string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value = kv.Key;
+                    if (i > 0)
+                        string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value = kv.Key;
 
-                string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
-                string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
+                    string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
+                    string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
+                }
+            }));
+            if (result.AsyncWaitHandle.WaitOne())
+            {
+                ResumeLayout();
+
+                return specifies;
             }
-            return specifies;
+            else
+                return null;
         }
         Specify[] Statistics()
         {
@@ -114,8 +135,9 @@ namespace ShareInvest.GoblinBatControls
                 };
             return temp;
         }
-        void ButtonClick(object sender, EventArgs e)
+        void ButtonClick(object sender, EventArgs e) => BeginInvoke(new Action(() =>
         {
+            SuspendLayout();
             var button = (Button)sender;
 
             switch (button.Name)
@@ -139,6 +161,8 @@ namespace ShareInvest.GoblinBatControls
                     SendStatistics?.Invoke(this, new Statistics(Statistics()));
                     buttonStorage.Text = setting;
                     buttonStorage.ForeColor = Color.Gold;
+                    Cursor = Cursors.WaitCursor;
+                    Application.DoEvents();
                     return;
 
                 case storage:
@@ -160,18 +184,9 @@ namespace ShareInvest.GoblinBatControls
             }
             button.Text = complete;
             button.ForeColor = Color.Crimson;
-        }
-        public void OnEventConnect()
-        {
-            buttonStartProgress.Click += ButtonClick;
-            buttonStorage.Click += ButtonClick;
-        }
-        public void OnEventDisconnect()
-        {
-            buttonStartProgress.Click -= ButtonClick;
-            buttonStorage.Click -= ButtonClick;
-        }
-        void CheckRollOverCheckStateChanged(object sender, EventArgs e)
+            ResumeLayout();
+        }));
+        void CheckRollOverCheckStateChanged(object sender, EventArgs e) => BeginInvoke(new Action(() =>
         {
             var button = (CheckBox)sender;
 
@@ -194,7 +209,7 @@ namespace ShareInvest.GoblinBatControls
                     return;
             }
             button.BackColor = Color.Transparent;
-        }
+        }));
         string[] Commission
         {
             get; set;

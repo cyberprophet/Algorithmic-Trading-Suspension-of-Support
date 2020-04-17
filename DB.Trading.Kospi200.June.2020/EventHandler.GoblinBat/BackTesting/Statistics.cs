@@ -13,13 +13,7 @@ namespace ShareInvest.EventHandler.BackTesting
         {
             get; private set;
         }
-        public Statistics(Specify[] specifies)
-        {
-            Specify = specifies;
-        }
-        public Statistics(Catalog.Setting setting)
-        {
-            Setting = setting;
-        }
+        public Statistics(Specify[] specifies) => Specify = specifies;
+        public Statistics(Catalog.Setting setting) => Setting = setting;
     }
 }

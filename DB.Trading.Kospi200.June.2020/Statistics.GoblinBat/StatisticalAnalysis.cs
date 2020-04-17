@@ -27,17 +27,8 @@ namespace ShareInvest.GoblinBatControls
                 };
             return temp;
         }
-        public void OnEventConnect()
-        {
-            button.Click += ButtonClick;
-        }
-        public void OnEventDisconnect()
-        {
-            button.Click -= ButtonClick;
-        }
-        void ButtonClick(object sender, EventArgs e)
-        {
-            emptyCode.Text = "101Q6000";
-        }
+        public void OnEventConnect() => button.Click += ButtonClick;
+        public void OnEventDisconnect() => button.Click -= ButtonClick;
+        void ButtonClick(object sender, EventArgs e) => emptyCode.Text = "101Q6000";
     }
 }

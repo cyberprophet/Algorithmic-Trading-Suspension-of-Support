@@ -1,15 +1,14 @@
-﻿using System.Data.Entity;
+﻿using System.Data;
+using System.Data.Entity;
+using System.Threading;
 using System.Threading.Tasks;
+using ShareInvest.Message;
 using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
 {
     public class GoblinBatDbContext : DbContext
     {
-        public GoblinBatDbContext(string key) : base(new Secret().GetPort(key))
-        {
-
-        }
         public DbSet<Codes> Codes
         {
             get; set;
@@ -47,5 +46,14 @@ namespace ShareInvest.GoblinBatContext
             get; set;
         }
         public override async Task<int> SaveChangesAsync() => await this.BatchSaveChangesAsync();
+        public GoblinBatDbContext(string key) : base(new Secret().GetPort(key))
+        {
+            while (Database.Connection.State.Equals(ConnectionState.Closed) == false)
+            {
+                Thread.Sleep(39735);
+                new ExceptionMessage(Database.Connection.State.ToString());
+                Database.Connection.Close();
+            }
+        }
     }
 }
