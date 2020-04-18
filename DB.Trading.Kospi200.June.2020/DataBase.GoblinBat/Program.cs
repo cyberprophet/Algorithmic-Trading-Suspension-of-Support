@@ -38,7 +38,7 @@ namespace ShareInvest
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
                         {
                             var retrieve = new Strategy.Retrieve(str);
-                            var list = retrieve.SetInitialzeTheCode();
+                            var list = retrieve.SetInitialzeTheCode(initial.Equals((char)Port.Trading));
                             int num = list.Count;
                             ParallelOptions po;
                             Task task;

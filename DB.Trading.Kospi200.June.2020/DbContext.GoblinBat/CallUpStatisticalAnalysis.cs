@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Message;
 using ShareInvest.Models;
@@ -250,16 +251,47 @@ namespace ShareInvest.GoblinBatContext
         }
         protected List<long> GetStrategy(string rate)
         {
-            var list = new List<long>(128);
+            var path = System.IO.Path.Combine(Application.StartupPath, strategy);
+            var exists = new DirectoryInfo(path);
+            long temp = 0;
+            var list = new List<long>();
 
             try
             {
-                using (var db = new GoblinBatDbContext(key))
-                    foreach (var index in db.Strategy.Where(o => o.MarginRate.Equals(rate)).Select(o => new
+                if (GetDirectoryExists(exists))
+                {
+                    using (var sr = new StreamReader(string.Concat(path, @"\", code)))
+                        if (sr != null)
+                            while (sr.EndOfStream == false)
+                                if (long.TryParse(sr.ReadLine(), out long number))
+                                {
+                                    list.Add(number);
+                                    temp = number;
+                                }
+                    var presence = new List<long>();
+                    using (var db = new GoblinBatDbContext(key))
                     {
-                        o.Index
-                    }).AsNoTracking())
-                        list.Add(index.Index);
+                        var being = db.Strategy.Where(o => o.MarginRate.Equals(rate) && o.Index > temp);
+
+                        if (being.Any())
+                            foreach (var num in being.OrderBy(o => o.Index).Select(o => new { o.Index }).AsNoTracking())
+                                presence.Add(num.Index);
+
+                        else
+                            return list;
+                    }
+                    SetStrategyDirectory(path, presence);
+                    list.AddRange(presence);
+
+                    return list;
+                }
+                else
+                    using (var db = new GoblinBatDbContext(key))
+                        foreach (var index in db.Strategy.Where(o => o.MarginRate.Equals(rate)).OrderBy(o => o.Index).Select(o => new { o.Index }).AsNoTracking())
+                            list.Add(index.Index);
+
+                exists.Create();
+                SetStrategyDirectory(path, list);
             }
             catch (Exception ex)
             {
@@ -565,9 +597,16 @@ namespace ShareInvest.GoblinBatContext
                     sw.WriteLine(string.Concat(str.Time, ",", str.Price, ",", str.Volume));
                 }
         }
+        void SetStrategyDirectory(string path, List<long> list)
+        {
+            using (var sw = new StreamWriter(string.Concat(path, @"\", code), true))
+                foreach (var str in list)
+                    sw.WriteLine(str);
+        }
         protected virtual string GetConvertCode(string code) => code;
         protected CallUpStatisticalAnalysis(string key) : base(key) => this.key = key;
         protected string File => string.Concat(Path, @"\", quotes);
+        bool GetDirectoryExists(DirectoryInfo directory) => directory.Exists;
         bool GetFileExists(FileInfo info) => info.Exists;
         protected const int ar = 10000000;
         protected const int mr = 100;
@@ -575,5 +614,7 @@ namespace ShareInvest.GoblinBatContext
         readonly string key;
         const string date = "yyMMddHHmmss";
         const string quotes = "QuotesA.res";
+        const string strategy = "Strategy";
+        const string code = "101000.res";
     }
 }

@@ -15,15 +15,34 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
-        protected Dictionary<long, long> GetBestStrategyRecommend()
+        protected long GetBestStrategyRecommend()
         {
             var date = new Secret().RecentDate;
             var indexes = new Dictionary<long, long>();
+            var identity = new Secret().GetIdentify(key);
+            string assets = string.Empty, code = string.Empty, commission = string.Empty, rate = string.Empty, strategy = string.Empty, over = string.Empty;
 
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var str in db.Memorize.Where(o => o.Date.Equals(date)).OrderByDescending(o => o.Statistic).Take(1000).Select(o => new
+                {
+                    foreach (var str in db.Logs.Where(o => o.Identity.Equals(identity)).OrderByDescending(o => o.Date).Take(1).Select(o => new
+                    {
+                        o.Assets,
+                        o.Code,
+                        o.Commission,
+                        o.Strategy,
+                        o.RollOver
+                    }).AsNoTracking())
+                    {
+                        assets = str.Assets;
+                        code = str.Code;
+                        commission = str.Commission;
+                        rate = marginRate;
+                        strategy = str.Strategy;
+                        over = str.RollOver;
+                    }
+                    foreach (var str in db.Memorize.Where(o => o.Date.Equals(date)).OrderByDescending(o => o.Statistic).Take(25000).Select(o => new
                     {
                         o.Cumulative,
                         o.Unrealized,
@@ -32,20 +51,42 @@ namespace ShareInvest.GoblinBatContext
                     }).AsNoTracking())
                         if (long.TryParse(str.Unrealized, out long unrealized) && long.TryParse(str.Cumulative, out long cumulative))
                             indexes[str.Index] = unrealized + cumulative;
+                }
+                if (string.IsNullOrEmpty(assets) == false && string.IsNullOrEmpty(code) == false && string.IsNullOrEmpty(commission) == false && string.IsNullOrEmpty(rate) == false && string.IsNullOrEmpty(strategy) == false && string.IsNullOrEmpty(over) == false)
+                    foreach (var kv in indexes.OrderByDescending(o => o.Value))
+                        using (var db = new GoblinBatDbContext(key))
+                        {
+                            if (over.Equals("A") && strategy.Equals("Auto") && db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate)).AsNoTracking().Any())
+                                return kv.Key;
+
+                            else if (over.Equals("A") && strategy.Equals("Auto") == false && db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate) && o.Strategy.Equals(strategy)).AsNoTracking().Any())
+                                return kv.Key;
+
+                            else if (strategy.Equals("Auto") && over.Equals("A") == false && db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate) && o.RollOver.Equals(over)).AsNoTracking().Any())
+                                return kv.Key;
+
+                            else if (db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate) && o.Strategy.Equals(strategy) && o.RollOver.Equals(over)).AsNoTracking().Any())
+                                return kv.Key;
+                        }
             }
             catch (Exception ex)
             {
                 new ExceptionMessage(ex.StackTrace);
             }
-            return indexes;
+            return indexes.OrderByDescending(o => o.Value).FirstOrDefault().Key;
         }
-        protected string[] GetUserIdentify()
+        protected List<long> GetUserIdentify(string date)
         {
+            var select = new Dictionary<long, long>();
+            var choice = new List<long>();
+            var identity = new Secret().GetIdentify(key);
+            string assets = string.Empty, code = string.Empty, commission = string.Empty, rate = string.Empty, strategy = string.Empty, over = string.Empty;
+
             try
             {
-                var identity = new Secret().GetIdentify(key);
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var str in db.Logs.Where(o => o.Identity.Equals(identity)).OrderByDescending(o => o.Date).Select(o => new
+                {
+                    foreach (var str in db.Logs.Where(o => o.Identity.Equals(identity)).OrderByDescending(o => o.Date).Take(1).Select(o => new
                     {
                         o.Assets,
                         o.Code,
@@ -53,21 +94,48 @@ namespace ShareInvest.GoblinBatContext
                         o.Strategy,
                         o.RollOver
                     }).AsNoTracking())
-                        return new string[]
+                    {
+                        assets = str.Assets;
+                        code = str.Code;
+                        commission = str.Commission;
+                        rate = marginRate;
+                        strategy = str.Strategy;
+                        over = str.RollOver;
+                    }
+                    if (string.IsNullOrEmpty(assets) || string.IsNullOrEmpty(code) || string.IsNullOrEmpty(commission) || string.IsNullOrEmpty(rate) || string.IsNullOrEmpty(strategy) || string.IsNullOrEmpty(over))
+                        return null;
+
+                    else
+                        foreach (var str in db.Memorize.Where(o => o.Date.Equals(date)).OrderByDescending(o => o.Statistic).Take(25000).Select(o => new
                         {
-                            str.Assets,
-                            str.Code,
-                            str.Commission,
-                            marginRate,
-                            str.Strategy,
-                            str.RollOver
-                        };
+                            o.Index,
+                            o.Cumulative,
+                            o.Unrealized
+                        }).AsNoTracking())
+                            if (long.TryParse(str.Unrealized, out long unrealized) && long.TryParse(str.Cumulative, out long cumulative))
+                                select[str.Index] = unrealized + cumulative;
+                }
+                foreach (var kv in select.OrderByDescending(o => o.Value))
+                    using (var db = new GoblinBatDbContext(key))
+                    {
+                        if (over.Equals("A") && strategy.Equals("Auto") && db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate)).AsNoTracking().Any())
+                            choice.Add(kv.Key);
+
+                        else if (over.Equals("A") && strategy.Equals("Auto") == false && db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate) && o.Strategy.Equals(strategy)).AsNoTracking().Any())
+                            choice.Add(kv.Key);
+
+                        else if (strategy.Equals("Auto") && over.Equals("A") == false && db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate) && o.RollOver.Equals(over)).AsNoTracking().Any())
+                            choice.Add(kv.Key);
+
+                        else if (db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate) && o.Strategy.Equals(strategy) && o.RollOver.Equals(over)).AsNoTracking().Any())
+                            choice.Add(kv.Key);
+                    }
             }
             catch (Exception ex)
             {
                 new ExceptionMessage(ex.StackTrace);
             }
-            return null;
+            return choice;
         }
         protected List<string[]> GetUserIdentity(DateTime date)
         {
@@ -241,7 +309,7 @@ namespace ShareInvest.GoblinBatContext
                                 x.MonoShort,
                                 x.MonoLong
                             };
-                            o.BatchSize = 50000;
+                            o.BatchSize = 150000;
                             o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                             o.AutoMapOutputDirection = false;
                         });
@@ -376,12 +444,12 @@ namespace ShareInvest.GoblinBatContext
         protected CallUpGoblinBat(string key) => this.key = key;
         protected internal const string futures = "000";
         protected internal const string kospi200f = "101";
+        protected const string marginRate = "16.2";
         const string basic = "Base.res";
         const string chart = "ChartOf101000";
         const int ar = 10000000;
         const int cr = 1000000;
         const string recent = "yyMMdd";
-        const string marginRate = "16.2";
         readonly string key;
     }
 }

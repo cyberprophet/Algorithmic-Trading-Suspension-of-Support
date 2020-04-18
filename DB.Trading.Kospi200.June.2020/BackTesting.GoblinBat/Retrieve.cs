@@ -14,21 +14,20 @@ namespace ShareInvest.Strategy
         public Dictionary<DateTime, string> OnReceiveInformation(long number) => GetInformation(number);
         public long OnReceiveRepositoryID(Catalog.XingAPI.Specify[] specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
-        public Catalog.XingAPI.Specify[] GetUserStrategy() => GetStrategy(GetBestStrategyRecommend().OrderByDescending(o => o.Value).First().Key);
-        public void SetInitialzeTheCode(string code)
-        {
-            if (Chart == null && Quotes == null)
-            {
-                Chart = GetChart(code);
-                Quotes = GetQuotes(code);
-            }
-        }
-        public List<long> SetInitialzeTheCode()
+        public Catalog.XingAPI.Specify[] GetUserStrategy() => GetStrategy(GetBestStrategyRecommend());
+        public List<long> SetInitialzeTheCode(bool identify)
         {
             Code = GetStrategy();
             SetInitialzeTheCode(Code);
 
-            return GetStrategy("16.2");
+            if (identify && DateTime.Now.Hour < 18 && (DateTime.Now.Hour > 15 || DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45) && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
+            {
+                var list = GetUserIdentify(DateTime.Now.AddDays(-1).ToString(date));
+
+                if (list != null)
+                    return list;
+            }
+            return GetStrategy(marginRate);
         }
         public void SetInitializeTheChart()
         {
@@ -118,6 +117,14 @@ namespace ShareInvest.Strategy
         protected internal static Queue<Quotes> Quotes
         {
             get; private set;
+        }
+        void SetInitialzeTheCode(string code)
+        {
+            if (Chart == null && Quotes == null)
+            {
+                Chart = GetChart(code);
+                Quotes = GetQuotes(code);
+            }
         }
         readonly Secrets secret;
         const string date = "yyMMdd";

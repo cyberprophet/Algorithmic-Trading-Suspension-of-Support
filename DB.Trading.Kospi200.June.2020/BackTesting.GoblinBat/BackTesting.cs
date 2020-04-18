@@ -69,6 +69,14 @@ namespace ShareInvest.Strategy
                 Secrets.Memorizes = new Queue<Models.Memorize>(1024);
             }
         }
+        void SetConclusion(double price)
+        {
+            Commission += (uint)(price * Const.TransactionMultiplier * commission);
+            var liquidation = SetLiquidation(price);
+            PurchasePrice = SetPurchasePrice(price);
+            CumulativeRevenue += (long)(liquidation * Const.TransactionMultiplier);
+            Amount = Quantity;
+        }
         double SetPurchasePrice(double price)
         {
             if (Math.Abs(Amount) < Math.Abs(Quantity) && Quantity != 0)
@@ -202,14 +210,6 @@ namespace ShareInvest.Strategy
             TodayRevenue = Revenue;
             SellOrder.Clear();
             BuyOrder.Clear();
-        }
-        void SetConclusion(double price)
-        {
-            Commission += (uint)(price * Const.TransactionMultiplier * commission);
-            var liquidation = SetLiquidation(price);
-            PurchasePrice = SetPurchasePrice(price);
-            CumulativeRevenue += (long)(liquidation * Const.TransactionMultiplier);
-            Amount = Quantity;
         }
         internal int Quantity
         {

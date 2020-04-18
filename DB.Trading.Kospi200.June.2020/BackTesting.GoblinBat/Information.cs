@@ -50,17 +50,17 @@ namespace ShareInvest.Strategy
         {
             var list = new List<Models.Strategics>(1024);
 
-            for (int ni = maxNona; ni > 0; ni -= minLong)
-                for (int oi = maxOcta; oi > 0; oi -= minLong)
-                    for (int hi = maxHepta; hi > 0; hi -= minLong)
-                        for (int xi = maxHexa; xi > 0; xi -= minLong)
+            for (int mi = maxMono; mi > 0; mi--)
+                for (int di = maxDuo; di > 0; di--)
+                    for (int ti = maxTri; ti > 0; ti--)
+                        for (int qi = maxQuad; qi > 0; qi -= minLong)
                             for (int pi = maxPenta; pi > 0; pi -= minLong)
-                                for (int qi = maxQuad; qi > 0; qi -= minLong)
-                                    for (int ti = maxTri; ti > 0; ti--)
-                                        for (int di = maxDuo; di > 0; di--)
-                                            for (int mi = maxMono; mi > 0; mi--)
-                                                foreach (var vs in shortVariable)
-                                                    foreach (var vl in longVariable)
+                                for (int xi = maxHexa; xi > 0; xi -= minLong)
+                                    for (int hi = maxHepta; hi > 0; hi -= minLong)
+                                        for (int oi = maxOcta; oi > 0; oi -= minLong)
+                                            for (int ni = maxNona; ni > 0; ni -= minLong)
+                                                foreach (var vl in longVariable)
+                                                    foreach (var vs in shortVariable)
                                                     {
                                                         if (vs >= vl || vs < minShort || vl < minLong)
                                                             continue;
@@ -105,7 +105,7 @@ namespace ShareInvest.Strategy
                                                                 MonoShort = vs.ToString("D4"),
                                                                 MonoLong = vl.ToString("D4")
                                                             });
-                                                        if (list.Count == 750000)
+                                                        if (list.Count == 125000)
                                                         {
                                                             SetInsertStrategy(list).Wait();
                                                             list = new List<Models.Strategics>(1024);
