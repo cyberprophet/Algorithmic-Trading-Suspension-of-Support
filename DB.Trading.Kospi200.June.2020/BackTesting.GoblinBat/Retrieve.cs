@@ -10,44 +10,11 @@ namespace ShareInvest.Strategy
 {
     public partial class Retrieve : CallUpStatisticalAnalysis
     {
-        public long OnReceiveRepositoryID(Catalog.XingAPI.Specify[] specifies) => GetRepositoryID(specifies);
-        public Dictionary<DateTime, string> OnReceiveInformation(long number) => GetInformation(number);
-        public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
         public Retrieve(string key) : base(key) => secret = new Secrets(new Queue<Models.Memorize>(1024));
-        public Catalog.XingAPI.Specify[] GetUserStrategy()
-        {
-            var identity = GetUserIdentify();
-            var indexes = GetBestStrategyRecommend();
-
-            if (identity != null)
-                foreach (var kv in indexes)
-                    if (ulong.TryParse(identity[0], out ulong assets) && int.TryParse(identity[2], out int commission) && double.TryParse(identity[3], out double rate))
-                    {
-                        var strategy = GetStrategy(kv.Key);
-                        var check = strategy[0];
-
-                        if (check.Assets == assets * ar && check.Code.Equals(identity[1]) && check.Commission == commission / cr && check.MarginRate == rate / mr && check.Strategy.Equals(identity[4]))
-                        {
-                            if (identity[5].Equals("A") == false)
-                                switch (identity[5])
-                                {
-                                    case "T":
-                                        if (check.RollOver == false)
-                                            continue;
-
-                                        break;
-
-                                    case "F":
-                                        if (check.RollOver == true)
-                                            continue;
-
-                                        break;
-                                }
-                            return strategy;
-                        }
-                    }
-            return GetStrategy(indexes.OrderByDescending(o => o.Value).First().Key);
-        }
+        public Dictionary<DateTime, string> OnReceiveInformation(long number) => GetInformation(number);
+        public long OnReceiveRepositoryID(Catalog.XingAPI.Specify[] specifies) => GetRepositoryID(specifies);
+        public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
+        public Catalog.XingAPI.Specify[] GetUserStrategy() => GetStrategy(GetBestStrategyRecommend().OrderByDescending(o => o.Value).First().Key);
         public void SetInitialzeTheCode(string code)
         {
             if (Chart == null && Quotes == null)
@@ -114,11 +81,10 @@ namespace ShareInvest.Strategy
         public bool SetStatisticalStorage()
         {
             var memo = Secrets.Memorizes;
+            Secrets.Memorizes.Clear();
 
             if (memo.Count > 0)
                 SetStatisticalStorage(memo).Wait();
-
-            Secrets.Memorizes.Clear();
 
             return true;
         }

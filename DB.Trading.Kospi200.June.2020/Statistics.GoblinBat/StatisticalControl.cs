@@ -59,62 +59,54 @@ namespace ShareInvest.GoblinBatControls
         public Specify[] Statistics(Specify[] specifies)
         {
             SuspendLayout();
-            var result = BeginInvoke(new Action(() =>
-            {
-                var temp = new Dictionary<uint, int[]>();
-                int i = 0;
+            var temp = new Dictionary<uint, int[]>();
+            int i = 0;
 
-                foreach (var specify in specifies)
+            foreach (var specify in specifies)
+            {
+                numericAssets.Value = specify.Assets;
+                var commission = specify.Commission.ToString("P4");
+                commission = commission.Substring(5, 1).Equals("0") ? specify.Commission.ToString("P3") : commission;
+                var margin = specify.MarginRate.ToString("P2");
+                margin = margin.Split('.')[1].Substring(1, 1).Equals("0") ? specify.MarginRate.ToString("P1") : margin;
+                checkRollOver.Checked = specify.RollOver;
+                temp[specify.Time] = new int[]
                 {
-                    numericAssets.Value = specify.Assets;
-                    var commission = specify.Commission.ToString("P4");
-                    commission = commission.Substring(5, 1).Equals("0") ? specify.Commission.ToString("P3") : commission;
-                    var margin = specify.MarginRate.ToString("P2");
-                    margin = margin.Split('.')[1].Substring(1, 1).Equals("0") ? specify.MarginRate.ToString("P1") : margin;
-                    checkRollOver.Checked = specify.RollOver;
-                    temp[specify.Time] = new int[]
-                    {
                     specify.Short,
                     specify.Long
-                    };
-                    if (comboCode.Items.Contains(specify.Code) == false)
-                    {
-                        comboCode.Items.Add(specify.Code);
-                        comboCode.SelectedItem = specify.Code;
-                    }
-                    if (comboCommission.Items.Contains(commission) == false)
-                    {
-                        comboCommission.Items.Add(commission);
-                        comboCommission.SelectedItem = commission;
-                    }
-                    if (comboMarginRate.Items.Contains(margin) == false)
-                    {
-                        comboMarginRate.Items.Add(margin);
-                        comboMarginRate.SelectedItem = margin;
-                    }
-                    if (comboStrategy.Items.Contains(specify.Strategy) == false)
-                    {
-                        comboStrategy.Items.Add(specify.Strategy);
-                        comboStrategy.SelectedItem = specify.Strategy;
-                    }
-                }
-                foreach (var kv in temp.OrderByDescending(o => o.Key))
+                };
+                if (comboCode.Items.Contains(specify.Code) == false)
                 {
-                    if (i > 0)
-                        string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value = kv.Key;
-
-                    string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
-                    string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
+                    comboCode.Items.Add(specify.Code);
+                    comboCode.SelectedItem = specify.Code;
                 }
-            }));
-            if (result.AsyncWaitHandle.WaitOne())
-            {
-                ResumeLayout();
-
-                return specifies;
+                if (comboCommission.Items.Contains(commission) == false)
+                {
+                    comboCommission.Items.Add(commission);
+                    comboCommission.SelectedItem = commission;
+                }
+                if (comboMarginRate.Items.Contains(margin) == false)
+                {
+                    comboMarginRate.Items.Add(margin);
+                    comboMarginRate.SelectedItem = margin;
+                }
+                if (comboStrategy.Items.Contains(specify.Strategy) == false)
+                {
+                    comboStrategy.Items.Add(specify.Strategy);
+                    comboStrategy.SelectedItem = specify.Strategy;
+                }
             }
-            else
-                return null;
+            foreach (var kv in temp.OrderByDescending(o => o.Key))
+            {
+                if (i > 0)
+                    string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value = kv.Key;
+
+                string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
+                string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
+            }
+            ResumeLayout();
+
+            return specifies;
         }
         Specify[] Statistics()
         {

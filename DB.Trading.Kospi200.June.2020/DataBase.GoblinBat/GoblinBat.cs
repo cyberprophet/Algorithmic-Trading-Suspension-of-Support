@@ -207,7 +207,7 @@ namespace ShareInvest
         }
         void OnReceiveStrategy(object sender, EventHandler.BackTesting.Statistics e) => BeginInvoke(new Action(() =>
         {
-            var retriveve = new Strategy.Retrieve(key);            
+            var retriveve = new Strategy.Retrieve(key);
             SuspendLayout();
 
             if (e.Specify == null)

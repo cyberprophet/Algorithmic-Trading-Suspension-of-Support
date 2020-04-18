@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.IO;
@@ -18,25 +19,19 @@ namespace ShareInvest.GoblinBatContext
         {
             var date = new Secret().RecentDate;
             var indexes = new Dictionary<long, long>();
-            var index = 0;
 
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var str in db.Memorize.Where(o => o.Date.Equals(date)).Select(o => new
+                    foreach (var str in db.Memorize.Where(o => o.Date.Equals(date)).OrderByDescending(o => o.Statistic).Take(1000).Select(o => new
                     {
                         o.Cumulative,
                         o.Unrealized,
                         o.Index,
                         o.Statistic
-                    }).OrderByDescending(o => o.Statistic))
-                    {
+                    }).AsNoTracking())
                         if (long.TryParse(str.Unrealized, out long unrealized) && long.TryParse(str.Cumulative, out long cumulative))
                             indexes[str.Index] = unrealized + cumulative;
-
-                        if (index++ > 1000)
-                            break;
-                    }
             }
             catch (Exception ex)
             {
@@ -50,15 +45,14 @@ namespace ShareInvest.GoblinBatContext
             {
                 var identity = new Secret().GetIdentify(key);
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var str in db.Logs.Where(o => o.Identity.Equals(identity)).Select(o => new
+                    foreach (var str in db.Logs.Where(o => o.Identity.Equals(identity)).OrderByDescending(o => o.Date).Select(o => new
                     {
-                        o.Date,
                         o.Assets,
                         o.Code,
                         o.Commission,
                         o.Strategy,
                         o.RollOver
-                    }).OrderByDescending(o => o.Date))
+                    }).AsNoTracking())
                         return new string[]
                         {
                             str.Assets,
@@ -90,7 +84,7 @@ namespace ShareInvest.GoblinBatContext
                         o.Commission,
                         o.Strategy,
                         o.RollOver
-                    }))
+                    }).AsNoTracking())
                     {
                         var temp = new string[]
                         {
@@ -167,7 +161,7 @@ namespace ShareInvest.GoblinBatContext
                         foreach (var temp in strategy.Select(o => new
                         {
                             o.Index
-                        }))
+                        }).AsNoTracking())
                         {
                             if (i++ > 0)
                                 list.Add(temp.Index);
@@ -264,7 +258,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 if (code.Length == 8 && date.ToString().Substring(6).Equals("151959000"))
                     using (var db = new GoblinBatDbContext(key))
-                        if (db.Codes.FirstOrDefault(o => o.Code.Equals(code)).Info.Substring(2).Equals(date.ToString().Substring(0, 6)))
+                        if (db.Codes.AsNoTracking().FirstOrDefault(o => o.Code.Equals(code)).Info.Substring(2).Equals(date.ToString().Substring(0, 6)))
                             return true;
             }
             catch (Exception ex)
@@ -302,25 +296,25 @@ namespace ShareInvest.GoblinBatContext
                     else
                         using (var db = new GoblinBatDbContext(key))
                         {
-                            var tick = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3))).Select(o => new
+                            var tick = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3))).OrderBy(o => o.Date).Select(o => new
                             {
                                 o.Code,
                                 o.Date,
                                 o.Price,
                                 o.Volume
-                            }).OrderBy(o => o.Date);
+                            }).AsNoTracking();
                             var min = int.Parse(tick.Min(o => o.Date).ToString().Substring(0, 6));
-                            var remaining = db.Codes.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3))).Select(o => new
+                            var remaining = db.Codes.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3))).OrderBy(o => o.Info).Select(o => new
                             {
                                 o.Code,
                                 o.Info
-                            }).OrderBy(o => o.Info).ToList();
+                            }).AsNoTracking().ToList();
 
-                            foreach (var temp in db.Days.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3))).Select(o => new
+                            foreach (var temp in db.Days.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3))).OrderBy(o => o.Date).Select(o => new
                             {
                                 o.Date,
                                 o.Price
-                            }).OrderBy(o => o.Date))
+                            }).AsNoTracking())
                                 if (int.Parse(temp.Date.ToString().Substring(2)) < min)
                                     chart.Enqueue(new Chart
                                     {
@@ -363,7 +357,7 @@ namespace ShareInvest.GoblinBatContext
                 try
                 {
                     using (var db = new GoblinBatDbContext(key))
-                        return db.Codes.First(code => code.Info.Equals(db.Codes.Where(o => o.Code.Substring(0, 3).Equals(kospi200f) && o.Code.Substring(5, 3).Equals(futures)).Max(o => o.Info))).Code;
+                        return db.Codes.AsNoTracking().First(code => code.Info.Equals(db.Codes.Where(o => o.Code.Substring(0, 3).Equals(kospi200f) && o.Code.Substring(5, 3).Equals(futures)).Max(o => o.Info))).Code;
                 }
                 catch (Exception ex)
                 {

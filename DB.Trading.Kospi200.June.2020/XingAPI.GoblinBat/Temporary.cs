@@ -29,7 +29,7 @@ namespace ShareInvest.XingAPI
                             while (sr.EndOfStream == false)
                                 sb.Append(sr.ReadLine()).Append(';');
                 }
-                SetStorage(sb, code);
+                SetStorage(sb, code).Wait();
             }
             catch (Exception ex)
             {
