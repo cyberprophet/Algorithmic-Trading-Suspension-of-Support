@@ -9,6 +9,22 @@ namespace ShareInvest.GoblinBatContext
 {
     public class GoblinBatDbContext : DbContext
     {
+        public DbSet<Statistics> Statistics
+        {
+            get; set;
+        }
+        public DbSet<Identify> Identifies
+        {
+            get; set;
+        }
+        public DbSet<Charts> Charts
+        {
+            get; set;
+        }
+        public DbSet<ImitationGame> Games
+        {
+            get; set;
+        }
         public DbSet<Codes> Codes
         {
             get; set;

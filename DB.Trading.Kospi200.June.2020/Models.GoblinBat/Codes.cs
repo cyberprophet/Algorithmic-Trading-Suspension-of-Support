@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace ShareInvest.Models
 {
@@ -19,5 +20,10 @@ namespace ShareInvest.Models
         {
             get; set;
         }
+        public virtual ICollection<Statistics> Statistics
+        {
+            get; set;
+        }
+        public Codes() => Statistics = new HashSet<Statistics>();
     }
 }
