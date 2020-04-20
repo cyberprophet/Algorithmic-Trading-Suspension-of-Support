@@ -87,6 +87,14 @@ namespace ShareInvest.Strategy.XingAPI
         {
             get;
         }
+        Dictionary<string, double> ShortValue
+        {
+            get;
+        }
+        Dictionary<string, double> LongValue
+        {
+            get;
+        }
         const string onTime = "090000000";
         protected internal const string end = "154500";
         protected internal const string start = "090000";

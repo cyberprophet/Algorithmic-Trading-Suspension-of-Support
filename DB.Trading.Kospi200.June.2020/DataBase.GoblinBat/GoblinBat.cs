@@ -551,6 +551,10 @@ namespace ShareInvest
                         case basic:
                             new Strategy.XingAPI.Base(param);
                             break;
+
+                        case bantam:
+                            new Strategy.XingAPI.Bantam(param);
+                            break;
                     }
                 }));
             }
@@ -761,6 +765,7 @@ namespace ShareInvest
         const string checkDataBase = "CheckDataBase";
         const string gs = "GodSword";
         const string basic = "Base";
+        const string bantam = "Bantam";
         const string checkingInformation = "Checking Information";
     }
 }
