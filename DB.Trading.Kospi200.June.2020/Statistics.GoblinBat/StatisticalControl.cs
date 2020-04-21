@@ -11,10 +11,14 @@ namespace ShareInvest.GoblinBatControls
 {
     public partial class StatisticalControl : UserControl
     {
-        public StatisticalControl()
+        public StatisticalControl(string code, string[] strategy, double[] rate, double[] commission)
         {
+            this.code = code;
+            this.strategy = strategy;
+            this.rate = rate;
+            this.commission = commission;
             Commission = new string[commission.Length];
-            MaginRate = new string[magin_rate.Length];
+            MaginRate = new string[rate.Length];
 
             for (int i = 0; i < commission.Length; i++)
             {
@@ -28,20 +32,20 @@ namespace ShareInvest.GoblinBatControls
                 }
                 Commission[i] = temp;
             }
-            for (int i = 0; i < magin_rate.Length; i++)
+            for (int i = 0; i < rate.Length; i++)
             {
-                var temp = magin_rate[i].ToString("P2");
+                var temp = rate[i].ToString("P2");
 
                 if (temp.Split('.')[1].Substring(1, 1).Equals("0"))
                 {
-                    MaginRate[i] = magin_rate[i].ToString("P1");
+                    MaginRate[i] = rate[i].ToString("P1");
 
                     continue;
                 }
                 MaginRate[i] = temp;
             }
             InitializeComponent();
-            comboCode.Items.AddRange(code);
+            comboCode.Items.Add(code);
             comboStrategy.Items.AddRange(strategy);
             comboCommission.Items.AddRange(Commission);
             comboMarginRate.Items.AddRange(MaginRate);
@@ -108,24 +112,49 @@ namespace ShareInvest.GoblinBatControls
 
             return specifies;
         }
-        Specify[] Statistics()
+        Catalog.DataBase.ImitationGame Statistics()
         {
-            var temp = new Specify[10];
+            int i = 0;
 
-            for (int i = 0; i < temp.Length; i++)
-                temp[i] = new Specify
-                {
-                    Assets = (ulong)numericAssets.Value,
-                    Code = comboCode.SelectedIndex < 0 ? code[0] : comboCode.SelectedItem.ToString(),
-                    Commission = comboCommission.SelectedIndex < 0 ? commission[0] : commission[Array.FindIndex(Commission, o => o.Equals(comboCommission.SelectedItem.ToString()))],
-                    MarginRate = comboMarginRate.SelectedIndex < 0 ? magin_rate[0] : magin_rate[Array.FindIndex(MaginRate, o => o.Equals(comboMarginRate.SelectedItem.ToString()))],
-                    Strategy = comboStrategy.SelectedIndex < 0 ? strategy[0] : comboStrategy.SelectedItem.ToString(),
-                    RollOver = checkRollOver.Checked,
-                    Time = i == 0 ? 1440 : (uint)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
-                    Short = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
-                    Long = (int)string.Concat(numeric, i + 20).FindByName<NumericUpDown>(this).Value
-                };
-            return temp;
+            return new Catalog.DataBase.ImitationGame
+            {
+                Assets = (long)numericAssets.Value,
+                Code = comboCode.SelectedIndex < 0 ? code : comboCode.SelectedItem.ToString(),
+                Commission = comboCommission.SelectedIndex < 0 ? commission[0] : commission[Array.FindIndex(Commission, o => o.Equals(comboCommission.SelectedItem.ToString()))],
+                MarginRate = comboMarginRate.SelectedIndex < 0 ? rate[0] : rate[Array.FindIndex(MaginRate, o => o.Equals(comboMarginRate.SelectedItem.ToString()))],
+                Strategy = comboStrategy.SelectedIndex < 0 ? strategy[0] : comboStrategy.SelectedItem.ToString(),
+                RollOver = checkRollOver.Checked,
+                BaseTime = 1440,
+                BaseShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                BaseLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                NonaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                NonaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                NonaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                OctaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                OctaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                OctaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                HeptaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                HeptaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                HeptaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                HexaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                HexaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                HexaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                PentaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                PentaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                PentaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                QuadTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                QuadShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                QuadLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                TriTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                TriShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                TriLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                DuoTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                DuoShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                DuoLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                MonoTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                MonoShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                MonoLong = (int)string.Concat(numeric, i + 20).FindByName<NumericUpDown>(this).Value
+            };
         }
         void ButtonClick(object sender, EventArgs e) => BeginInvoke(new Action(() =>
         {
@@ -169,7 +198,7 @@ namespace ShareInvest.GoblinBatControls
                             Assets = (ulong)numericAssets.Value,
                             Commission = commission[Array.FindIndex(Commission, o => o.Equals(comboCommission.SelectedItem.ToString()))],
                             Strategy = strategy[Array.FindIndex(strategy, o => o.Equals(comboStrategy.SelectedItem.ToString()))],
-                            Code = code[Array.FindIndex(code, o => o.Equals(comboCode.SelectedItem.ToString()))],
+                            Code = code,
                             RollOver = checkRollOver.CheckState
                         }));
                     break;
@@ -210,10 +239,10 @@ namespace ShareInvest.GoblinBatControls
         {
             get; set;
         }
-        readonly string[] code = { code0 };
-        readonly string[] strategy = { strategy0 };
-        readonly double[] commission = { commission0 };
-        readonly double[] magin_rate = { magin_rate0 };
+        readonly string code;
+        readonly double[] rate;
+        readonly double[] commission;
+        readonly string[] strategy;
         const string numeric = "numeric";
         const string storage = "buttonStorage";
         const string start = "buttonStartProgress";
@@ -223,12 +252,8 @@ namespace ShareInvest.GoblinBatControls
         const string message = "단기 값이 장기 값보다 클 수 없습니다.\n\n확인하시고 다시 설정해주세요.";
         const string notApplicable = "설정 값을 다시 확인하세요.";
         const string warning = "Warning";
-        const string code0 = "101Q6000";
-        const string strategy0 = "Base";
         const string setting = "Setting";
         const string complete = "Complete";
-        const double commission0 = 3e-5;
-        const double magin_rate0 = 16.2e-2;
         public event EventHandler<Statistics> SendStatistics;
     }
 }

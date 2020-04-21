@@ -167,7 +167,7 @@ namespace ShareInvest.OpenAPI
 
             DeadLine = true;
             Delay.Milliseconds = delay;
-            CodeList = RequestCodeListAsync(new List<string>(32)).Result;
+            CodeList = RequestCodeList(new List<string>(32));
             SendMemorize?.Invoke(this, new Memorize("Clear"));
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
@@ -344,7 +344,7 @@ namespace ShareInvest.OpenAPI
 
                         if (Temporary != null)
                         {
-                            Temporary.SetStorage(Code).Wait();
+                            Temporary.SetStorage(Code);
                             SendCount?.Invoke(this, new NotifyIconText(-106));
                         }
                         else

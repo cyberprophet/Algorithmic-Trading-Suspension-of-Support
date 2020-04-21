@@ -1,11 +1,11 @@
 ﻿using System;
-using ShareInvest.Catalog.XingAPI;
+using ShareInvest.Catalog.DataBase;
 
 namespace ShareInvest.EventHandler.BackTesting
 {
     public class Statistics : EventArgs
     {
-        public Specify[] Specify
+        public ImitationGame Game
         {
             get; private set;
         }
@@ -13,7 +13,7 @@ namespace ShareInvest.EventHandler.BackTesting
         {
             get; private set;
         }
-        public Statistics(Specify[] specifies) => Specify = specifies;
+        public Statistics(ImitationGame game) => Game = game;
         public Statistics(Catalog.Setting setting) => Setting = setting;
     }
 }

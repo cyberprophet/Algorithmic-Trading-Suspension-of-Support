@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Message;
@@ -16,32 +14,31 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
     {
-        protected Dictionary<DateTime, string> GetInformation(long number)
+        protected Dictionary<DateTime, string> GetInformation(Catalog.DataBase.ImitationGame game)
         {
             try
             {
                 var date = new Secret().RecentDate;
                 using (var db = new GoblinBatDbContext(key))
                 {
-                    var memo = db.Memorize.Where(o => o.Index == number && o.Date.Equals(date)).AsNoTracking();
+                    var memo = db.Games.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking();
 
-                    if (memo.Any())
+                    if (memo.Any(o => o.Date.Equals(date)))
                     {
                         var info = new Dictionary<DateTime, string>(16);
                         var temp = new Dictionary<string, long>();
                         long recentUnrealized = 0;
 
-                        foreach (var str in db.Memorize.Where(o => o.Index == number).OrderBy(o => o.Date).Select(o => new
+                        foreach (var str in memo.OrderBy(o => o.Date).Select(o => new
                         {
                             o.Date,
                             o.Unrealized,
                             o.Cumulative
                         }).AsNoTracking())
-                            if (long.TryParse(str.Unrealized, out long unrealized) && long.TryParse(str.Cumulative, out long cumulative))
-                            {
-                                temp[str.Date] = cumulative;
-                                recentUnrealized = unrealized;
-                            }
+                        {
+                            temp[str.Date] = str.Cumulative;
+                            recentUnrealized = str.Unrealized;
+                        }
                         var last = temp.Last();
                         temp[last.Key] = last.Value + recentUnrealized;
                         string code = memo.First().Code;
@@ -63,9 +60,9 @@ namespace ShareInvest.GoblinBatContext
             }
             catch (Exception ex)
             {
-                new ExceptionMessage(ex.StackTrace, string.Concat("No.", number));
+                new ExceptionMessage(ex.StackTrace);
             }
-            return null;
+            return new Dictionary<DateTime, string>();
         }
         protected string SetDate(string code)
         {
@@ -482,104 +479,55 @@ namespace ShareInvest.GoblinBatContext
             }
             return temp;
         }
-        protected long GetRepositoryID(Specify[] specifies)
+        protected bool GetRepositoryID(Catalog.DataBase.ImitationGame game)
         {
             try
             {
-                int index = 0;
-                string[] time = new string[specifies.Length], st = new string[specifies.Length], lt = new string[specifies.Length];
-
-                foreach (var str in specifies.OrderByDescending(o => o.Time))
-                {
-                    time[index] = str.Time.ToString("D4");
-                    st[index] = str.Short.ToString("D4");
-                    lt[index++] = str.Long.ToString("D4");
-                }
-                string bt = time[0], bs = st[0], bl = lt[0], nt = time[1], ns = st[1], nl = lt[1], ot = time[2], os = st[2], ol = lt[2], ht = time[3], hs = st[3], hl = lt[3], xt = time[4], xs = st[4], xl = lt[4], pt = time[5], ps = st[5], pl = lt[5], qt = time[6], qs = st[6], ql = lt[6], tt = time[7], ts = st[7], tl = lt[7], dt = time[8], ds = st[8], dl = lt[8], mt = time[9], ms = st[9], ml = lt[9], name = specifies[0].Strategy, ro = specifies[0].RollOver.ToString().Substring(0, 1), margin = (specifies[0].MarginRate * mr).ToString(), commission = (specifies[0].Commission * cr).ToString(), code = string.Concat(specifies[0].Code.Substring(0, 3), specifies[0].Code.Substring(5)), assets = (specifies[0].Assets / ar).ToString("D4");
+                var date = new Secret().RecentDate;
                 using (var db = new GoblinBatDbContext(key))
-                {
-                    var temp = db.Strategy.Where(o => o.BaseTime.Equals(bt) && o.BaseShort.Equals(bs) && o.BaseLong.Equals(bl) && o.NonaTime.Equals(nt) && o.NonaShort.Equals(ns) && o.NonaLong.Equals(nl) && o.OctaTime.Equals(ot) && o.OctaLong.Equals(ol) && o.OctaShort.Equals(os) && o.HeptaTime.Equals(ht) && o.HeptaShort.Equals(hs) && o.HeptaLong.Equals(hl) && o.HexaTime.Equals(xt) && o.HexaShort.Equals(xs) && o.HexaLong.Equals(xl) && o.PentaTime.Equals(pt) && o.PantaShort.Equals(ps) && o.PantaLong.Equals(pl) && o.QuadTime.Equals(qt) && o.QuadShort.Equals(qs) && o.QuadLong.Equals(ql) && o.TriTime.Equals(tt) && o.TriShort.Equals(ts) && o.TriLong.Equals(tl) && o.DuoTime.Equals(dt) && o.DuoShort.Equals(ds) && o.DuoLong.Equals(dl) && o.MonoTime.Equals(mt) && o.MonoShort.Equals(ms) && o.MonoLong.Equals(ml) && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(margin) && o.Strategy.Equals(name) && o.RollOver.Equals(ro));
-
-                    if (temp.Any())
-                        return temp.First().Index;
-
-                    db.Strategy.AddOrUpdate(new Strategics
-                    {
-                        Assets = assets,
-                        Code = code,
-                        Commission = commission,
-                        MarginRate = margin,
-                        Strategy = name,
-                        RollOver = ro,
-                        BaseTime = bt,
-                        BaseShort = bs,
-                        BaseLong = bl,
-                        NonaTime = nt,
-                        NonaShort = ns,
-                        NonaLong = nl,
-                        OctaTime = ot,
-                        OctaShort = os,
-                        OctaLong = ol,
-                        HeptaTime = ht,
-                        HeptaShort = hs,
-                        HeptaLong = hl,
-                        HexaTime = xt,
-                        HexaShort = xs,
-                        HexaLong = xl,
-                        PentaTime = pt,
-                        PantaShort = ps,
-                        PantaLong = pl,
-                        QuadTime = qt,
-                        QuadShort = qs,
-                        QuadLong = ql,
-                        TriTime = tt,
-                        TriShort = ts,
-                        TriLong = tl,
-                        DuoTime = dt,
-                        DuoShort = ds,
-                        DuoLong = dl,
-                        MonoTime = mt,
-                        MonoShort = ms,
-                        MonoLong = ml
-                    });
-                    return db.BatchSaveChanges();
-                }
+                    if (db.Games.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong && o.Date.Equals(date)).AsNoTracking().Any())
+                        return true;
             }
             catch (Exception ex)
             {
-                new ExceptionMessage(ex.StackTrace, specifies[0].Assets.ToString("N0"));
+                new ExceptionMessage(ex.StackTrace);
             }
-            return 0;
+            return false;
         }
-        protected async Task SetStatisticalStorage(Queue<Memorize> memo)
+        protected void SetStatisticalStorage(Queue<ImitationGames> memo)
         {
-            try
-            {
-                using (var db = new GoblinBatDbContext(key))
-                    await db.BulkInsertAsync(memo, o =>
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    db.Configuration.AutoDetectChangesEnabled = false;
+                    db.BulkInsert(memo, o =>
                     {
                         o.InsertIfNotExists = true;
                         o.BatchSize = 10000;
                         o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                         o.AutoMapOutputDirection = false;
                     });
-            }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace, string.Concat("No.", memo.First().Index));
-            }
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+                finally
+                {
+                    db.Configuration.AutoDetectChangesEnabled = true;
+                }
         }
-        protected bool GetDuplicateResults(long index, string date)
+        protected bool GetDuplicateResults(ImitationGames game, string date)
         {
             try
             {
                 using (var db = new GoblinBatDbContext(key))
-                    if (db.Memorize.Where(o => o.Index == index && o.Date.Equals(date)).AsNoTracking().Any())
+                    if (db.Games.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong && o.Date.Equals(date)).AsNoTracking().Any())
                         return true;
             }
             catch (Exception ex)
             {
-                new ExceptionMessage(ex.StackTrace, string.Concat("No.", index));
+                new ExceptionMessage(ex.StackTrace);
             }
             return false;
         }

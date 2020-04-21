@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using System.Data.Entity;
 using System.Threading;
-using System.Threading.Tasks;
 using ShareInvest.Message;
 using ShareInvest.Models;
 
@@ -21,7 +20,7 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
-        public DbSet<ImitationGame> Games
+        public DbSet<ImitationGames> Games
         {
             get; set;
         }
@@ -61,7 +60,7 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
-        public override async Task<int> SaveChangesAsync() => await this.BatchSaveChangesAsync();
+        public override int SaveChanges() => this.BatchSaveChanges();
         public GoblinBatDbContext(string key) : base(new Secret().GetPort(key))
         {
             while (Database.Connection.State.Equals(ConnectionState.Closed) == false)

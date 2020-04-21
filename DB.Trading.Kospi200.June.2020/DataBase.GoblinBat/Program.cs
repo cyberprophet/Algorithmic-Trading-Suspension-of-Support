@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,91 +37,45 @@ namespace ShareInvest
                     }
                     while (remaining > 0)
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
-                        {
-                            var retrieve = new Strategy.Retrieve(str);
-                            var list = retrieve.SetInitialzeTheCode(initial.Equals((char)Port.Trading));
-                            int num = list.Count;
-                            ParallelOptions po;
-                            Task task;
+                            new Task(() =>
+                            {
+                                var retrieve = new Strategy.Retrieve(str);
+                                var count = secret.GetProcessorCount(str);
+                                var info = new Information(str);
+                                retrieve.SetInitialzeTheCode(initial.Equals((char)Port.Trading));
 
-                            while (num-- > 1)
-                            {
-                                var shuffle = ran.Next(num + 1);
-                                var value = list[shuffle];
-                                list[shuffle] = list[num];
-                                list[num] = value;
-                            }
-                            if (secret.GetIsSever(str))
-                            {
-                                po = new ParallelOptions
+                                if (secret.GetIsSever(str) == false)
+                                {
+                                    info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
+                                    count = 0.375;
+                                }
+                                info.GetUserIdentity(initial);
+                                var catalog = info.GetStatistics(count).Distinct().ToList();
+                                var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * secret.GetProcessorCount(str))
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count)
                                 };
-                                task = new Task(() =>
+                                try
                                 {
-                                    try
+                                    Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
                                     {
-                                        Parallel.ForEach(list, po, new Action<long>((number) =>
-                                        {
-                                            po.CancellationToken.ThrowIfCancellationRequested();
-
-                                            if (retrieve.GetDuplicateResults(number) == false)
-                                                new BackTesting(initial, retrieve.OnReceiveStrategy(number), str);
-                                        }));
-                                    }
-                                    catch (OperationCanceledException ex)
-                                    {
-                                        new ExceptionMessage(ex.StackTrace);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        new ExceptionMessage(ex.StackTrace);
-                                    }
-                                });
-                            }
-                            else
-                            {
-                                var info = new Information(str);
-                                task = new Task(() =>
+                                        po.CancellationToken.ThrowIfCancellationRequested();
+                                        
+                                        if (retrieve.GetDuplicateResults(number) == false)
+                                            new BackTesting(initial, number, str);
+                                    }));
+                                }
+                                catch (OperationCanceledException ex)
                                 {
-                                    try
-                                    {
-                                        po = new ParallelOptions
-                                        {
-                                            CancellationToken = cts.Token,
-                                            MaxDegreeOfParallelism = Environment.ProcessorCount
-                                        };
-                                        Parallel.ForEach(info.GetUserIdentity(), po, new Action<string[]>((identify) =>
-                                        {
-                                            po.CancellationToken.ThrowIfCancellationRequested();
-                                            info.SetInsertStrategy(identify);
-                                        }));
-                                        po = new ParallelOptions
-                                        {
-                                            CancellationToken = cts.Token,
-                                            MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.375)
-                                        };
-                                        Parallel.ForEach(list, po, new Action<long>((number) =>
-                                        {
-                                            po.CancellationToken.ThrowIfCancellationRequested();
-
-                                            if (retrieve.GetDuplicateResults(number) == false)
-                                                new BackTesting(initial, retrieve.OnReceiveStrategy(number), str);
-                                        }));
-                                    }
-                                    catch (OperationCanceledException ex)
-                                    {
-                                        new ExceptionMessage(ex.StackTrace);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        new ExceptionMessage(ex.StackTrace);
-                                    }
-                                });
-                            }
-                            task.Start();
-                        }
+                                    catalog.Clear();
+                                    new ExceptionMessage(ex.StackTrace);
+                                }
+                                catch (Exception ex)
+                                {
+                                    new ExceptionMessage(ex.StackTrace);
+                                }
+                            }).Start();
                     while (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
                         if (secret.GetHoliday(DateTime.Now) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
                         {

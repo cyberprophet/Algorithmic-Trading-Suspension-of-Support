@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-    public class ImitationGame
+    public class ImitationGames
     {
         [Key, StringLength(6), Column(Order = 1)]
         public string Date

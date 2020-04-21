@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using ShareInvest.GoblinBatContext;
-using ShareInvest.Message;
 
 namespace ShareInvest.Strategy
 {
@@ -45,6 +44,121 @@ namespace ShareInvest.Strategy
         {
             shortVariable = GetVariable(new int[maxShort - 1], 1);
             longVariable = GetVariable(new int[maxLong / minLong], minLong);
+            ran = new Random();
+        }
+        public List<Models.ImitationGames> GetStatistics(double count)
+        {
+            var list = new List<Models.ImitationGames>();
+
+            while (list.Count < 12500 * count)
+            {
+                var mi = new Models.ImitationGames
+                {
+                    BaseTime = 1440,
+                    BaseShort = ran.Next(2, 21),
+                    NonaTime = ran.Next(6, 19) * 10,
+                    NonaShort = ran.Next(2, 21),
+                    OctaShort = ran.Next(2, 21),
+                    HeptaShort = ran.Next(2, 21),
+                    HexaShort = ran.Next(2, 21),
+                    PentaShort = ran.Next(2, 21),
+                    QuadShort = ran.Next(2, 21),
+                    TriShort = ran.Next(2, 21),
+                    DuoShort = ran.Next(2, 21),
+                    MonoShort = ran.Next(2, 21)
+                };
+                mi.BaseLong = ran.Next(mi.BaseShort / 5, 25) * 5;
+                mi.NonaLong = ran.Next(mi.NonaShort / 5, 25) * 5;
+                mi.OctaLong = ran.Next(mi.OctaShort / 5, 25) * 5;
+                mi.HeptaLong = ran.Next(mi.HeptaShort / 5, 25) * 5;
+                mi.HexaLong = ran.Next(mi.HexaShort / 5, 25) * 5;
+                mi.PentaLong = ran.Next(mi.PentaShort / 5, 25) * 5;
+                mi.QuadLong = ran.Next(mi.QuadShort / 5, 25) * 5;
+                mi.TriLong = ran.Next(mi.TriShort / 5, 25) * 5;
+                mi.DuoLong = ran.Next(mi.DuoShort / 5, 25) * 5;
+                mi.MonoLong = ran.Next(mi.MonoShort / 5, 25) * 5;
+                mi.OctaTime = ran.Next(5, mi.NonaTime / 10 + 1) * 10;
+                mi.HeptaTime = ran.Next(4, mi.OctaTime / 5 + 1) * 5;
+                mi.HexaTime = ran.Next(3, mi.HeptaTime / 5 + 1) * 5;
+                mi.PentaTime = ran.Next(2, mi.HexaTime / 5 + 1) * 5;
+                mi.QuadTime = ran.Next(1, mi.PentaTime / 5 + 1) * 5;
+                mi.TriTime = ran.Next(3, mi.QuadTime + 1);
+                mi.DuoTime = ran.Next(2, mi.TriTime + 1);
+                mi.MonoTime = ran.Next(1, mi.DuoTime + 1);
+
+                if (mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
+                    foreach (var model in Statistics)
+                        list.Add(new Models.ImitationGames
+                        {
+                            Assets = model.Assets,
+                            Code = model.Code,
+                            Commission = model.Commission,
+                            MarginRate = model.MarginRate,
+                            Strategy = model.Strategy,
+                            RollOver = model.RollOver,
+                            BaseTime = mi.BaseTime,
+                            BaseShort = mi.BaseShort,
+                            BaseLong = mi.BaseLong,
+                            NonaTime = mi.NonaTime,
+                            NonaShort = mi.NonaShort,
+                            NonaLong = mi.NonaLong,
+                            OctaTime = mi.OctaTime,
+                            OctaShort = mi.OctaShort,
+                            OctaLong = mi.OctaLong,
+                            HeptaTime = mi.HeptaTime,
+                            HeptaShort = mi.HeptaShort,
+                            HeptaLong = mi.HeptaLong,
+                            HexaTime = mi.HexaTime,
+                            HexaShort = mi.HexaShort,
+                            HexaLong = mi.HexaLong,
+                            PentaTime = mi.PentaTime,
+                            PentaShort = mi.PentaShort,
+                            PentaLong = mi.PentaLong,
+                            QuadTime = mi.QuadTime,
+                            QuadShort = mi.QuadShort,
+                            QuadLong = mi.QuadLong,
+                            TriTime = mi.TriTime,
+                            TriShort = mi.TriShort,
+                            TriLong = mi.TriLong,
+                            DuoTime = mi.DuoTime,
+                            DuoShort = mi.DuoShort,
+                            DuoLong = mi.DuoLong,
+                            MonoTime = mi.MonoTime,
+                            MonoShort = mi.MonoShort,
+                            MonoLong = mi.MonoLong
+                        });
+            }
+            return list;
+        }
+        public void SetInsertBaseStrategy(string[] strategy, double[] rate, double[] commission)
+        {
+            var queue = new Queue<Models.Statistics>();
+
+            foreach (var str in strategy)
+                foreach (var margin in rate)
+                    foreach (var co in commission)
+                        if (str.Equals("Auto") == false)
+                        {
+                            queue.Enqueue(new Models.Statistics
+                            {
+                                Assets = 90000000,
+                                Code = Retrieve.Code,
+                                Commission = co,
+                                MarginRate = margin,
+                                Strategy = str,
+                                RollOver = true
+                            });
+                            queue.Enqueue(new Models.Statistics
+                            {
+                                Assets = 90000000,
+                                Code = Retrieve.Code,
+                                Commission = co,
+                                MarginRate = margin,
+                                Strategy = str,
+                                RollOver = false
+                            });
+                        }
+            SetInsertBaseStrategy(queue);
         }
         public void SetInsertStrategy(string[] param)
         {
@@ -107,11 +221,16 @@ namespace ShareInvest.Strategy
                                                             });
                                                         if (list.Count == 125000)
                                                         {
-                                                            SetInsertStrategy(list).Wait();
+                                                            SetInsertStrategy(list);
                                                             list = new List<Models.Strategics>(1024);
                                                             GC.Collect();
                                                         }
                                                     }
+        }
+        public void GetUserIdentity(char initial) => Statistics = GetBasicStrategy(initial);
+        internal static List<Models.Statistics> Statistics
+        {
+            get; set;
         }
         int[] GetVariable(int[] param, int type)
         {
@@ -120,6 +239,7 @@ namespace ShareInvest.Strategy
 
             return param;
         }
+        readonly Random ran;
         readonly int[] shortVariable;
         readonly int[] longVariable;
         const int maxBase = 1440;

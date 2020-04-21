@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace ShareInvest.OpenAPI
 {

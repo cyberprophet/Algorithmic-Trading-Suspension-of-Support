@@ -63,15 +63,18 @@ namespace ShareInvest.Strategy
                 }
                 SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
             }
-            if (initial.Equals((char)33) || Secrets.Memorizes.Count > ran.Next(9000, 30000))
+            if (initial.Equals((char)33) || Secrets.Memorizes.Count > ran.Next(3000, 10000))
             {
-                SetStatisticalStorage(Secrets.Memorizes).Wait();
-                Secrets.Memorizes = new Queue<Models.Memorize>(1024);
+                var memo = Secrets.Memorizes;
+                Secrets.Memorizes.Clear();
+
+                if (memo.Count > 0)
+                    SetStatisticalStorage(memo);
             }
         }
         void SetConclusion(double price)
         {
-            Commission += (uint)(price * Const.TransactionMultiplier * commission);
+            Commission += (uint)(price * Const.TransactionMultiplier * game.Commission);
             var liquidation = SetLiquidation(price);
             PurchasePrice = SetPurchasePrice(price);
             CumulativeRevenue += (long)(liquidation * Const.TransactionMultiplier);
@@ -195,15 +198,49 @@ namespace ShareInvest.Strategy
             Revenue = CumulativeRevenue - Commission;
             long revenue = Revenue - TodayRevenue, unrealized = (long)(Quantity == 0 ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * Const.TransactionMultiplier * Math.Abs(Quantity));
             Accumulative = revenue + unrealized > 0 ? ++Accumulative : revenue + unrealized < 0 ? --Accumulative : 0;
-            Secrets.Memorizes.Enqueue(new Models.Memorize
+            Secrets.Memorizes.Enqueue(new Models.ImitationGames
             {
-                Index = index,
+                Assets = game.Assets,
+                Code = game.Code,
+                Commission = game.Commission,
+                MarginRate = game.MarginRate,
+                Strategy = game.Strategy,
+                RollOver = game.RollOver,
+                BaseTime = game.BaseTime,
+                BaseShort = game.BaseShort,
+                BaseLong = game.BaseLong,
+                NonaTime = game.NonaTime,
+                NonaShort = game.NonaShort,
+                NonaLong = game.NonaLong,
+                OctaTime = game.OctaTime,
+                OctaShort = game.OctaShort,
+                OctaLong = game.OctaLong,
+                HeptaTime = game.HeptaTime,
+                HeptaShort = game.HeptaShort,
+                HeptaLong = game.HeptaLong,
+                HexaTime = game.HexaTime,
+                HexaShort = game.HexaShort,
+                HexaLong = game.HexaLong,
+                PentaTime = game.PentaTime,
+                PentaShort = game.PentaShort,
+                PentaLong = game.PentaLong,
+                QuadTime = game.QuadTime,
+                QuadShort = game.QuadShort,
+                QuadLong = game.QuadLong,
+                TriTime = game.TriTime,
+                TriShort = game.TriShort,
+                TriLong = game.TriLong,
+                DuoTime = game.DuoTime,
+                DuoShort = game.DuoShort,
+                DuoLong = game.DuoLong,
+                MonoTime = game.MonoTime,
+                MonoShort = game.MonoShort,
+                MonoLong = game.MonoLong,
                 Date = date,
-                Code = string.Concat(code.Substring(0, 3), code.Substring(5)),
-                Unrealized = unrealized.ToString(),
-                Revenue = revenue.ToString(),
-                Cumulative = (CumulativeRevenue - Commission).ToString(),
-                Commission = (Commission - TodayCommission).ToString(),
+                Unrealized = unrealized,
+                Revenue = revenue,
+                Cumulative = CumulativeRevenue - Commission,
+                Fees = (int)(Commission - TodayCommission),
                 Statistic = Accumulative
             });
             TodayCommission = (int)Commission;
@@ -235,43 +272,34 @@ namespace ShareInvest.Strategy
         {
             get;
         }
-        public BackTesting(char initial, Catalog.XingAPI.Specify[] specifies, string key) : base(key)
+        public BackTesting(char initial, Models.ImitationGames game, string key) : base(key)
         {
             this.initial = initial;
+            this.game = game;
             ran = new Random();
             Residue = new Dictionary<uint, int>();
             SellOrder = new Dictionary<string, uint>();
             BuyOrder = new Dictionary<string, uint>();
             Judge = new Dictionary<uint, double>();
-            commission = specifies[0].Commission;
-            code = specifies[0].Code;
-            index = specifies[0].Index > 0 ? specifies[0].Index : GetRepositoryID(specifies);
-            Parallel.ForEach(specifies, new Action<Catalog.XingAPI.Specify>((param) =>
+            Parallel.ForEach(Retrieve.GetCatalog(game), new Action<Catalog.XingAPI.Specify>((param) =>
             {
                 switch (param.Strategy)
                 {
                     case basic:
                         new Base(this, param);
                         break;
+
+                    case bantam:
+                        new Bantam(this, param);
+                        break;
                 }
             }));
-            switch (index)
-            {
-                case 1:
-                    index = GetRepositoryID(specifies);
-                    break;
-
-                case 0:
-                    return;
-            }
-            if (index > 0)
-                StartProgress();
+            StartProgress();
         }
         const string basic = "Base";
+        const string bantam = "Bantam";
         readonly char initial;
-        readonly double commission;
-        readonly string code;
-        readonly long index;
+        readonly Models.ImitationGames game;
         readonly Random ran;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Quotes> SendQuotes;

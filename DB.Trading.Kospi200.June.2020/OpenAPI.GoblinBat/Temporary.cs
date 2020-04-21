@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Threading.Tasks;
 using ShareInvest.EventHandler;
 using ShareInvest.EventHandler.OpenAPI;
 using ShareInvest.GoblinBatContext;
@@ -44,7 +43,7 @@ namespace ShareInvest.OpenAPI
             if (e.SPrevNext != null)
             {
                 if (!e.SPrevNext.Equals("Clear"))
-                    SetStorage(e.Code, Temp.ToString().Split(';')).Wait();
+                    SetStorage(e.Code, Temp.ToString().Split(';'));
 
                 Temp = new StringBuilder(1024);
 
@@ -56,7 +55,7 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        internal async Task SetStorage(string code) => await SetStorage(code, Temp);
+        internal void SetStorage(string code) => SetStorage(code, Temp);
         readonly string key;
     }
 }

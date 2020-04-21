@@ -25,6 +25,7 @@ namespace ShareInvest
             InitializeComponent();
             Opacity = 0;
             var collect = ((char)Port.Collecting).Equals(initial);
+            retrieve = new Strategy.Retrieve(key);
 
             if (collect)
             {
@@ -38,7 +39,7 @@ namespace ShareInvest
                 case trading:
                     if (Statistical == null)
                     {
-                        Statistical = new StatisticalControl();
+                        Statistical = new StatisticalControl(Strategy.Retrieve.Code, secret.strategy, secret.rate, secret.commission);
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
                         Statistical.Show();
@@ -59,7 +60,6 @@ namespace ShareInvest
                     else
                         BeginInvoke(new Action(() =>
                         {
-                            var retrieve = new Strategy.Retrieve(key);
                             Specify = Statistical.Statistics(retrieve.GetUserStrategy());
                             Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, Strategy.Retrieve.Date);
                             Xing.Send += OnReceiveNotifyIcon;
@@ -207,39 +207,31 @@ namespace ShareInvest
         }
         void OnReceiveStrategy(object sender, EventHandler.BackTesting.Statistics e) => BeginInvoke(new Action(() =>
         {
-            var retriveve = new Strategy.Retrieve(key);
             SuspendLayout();
 
-            if (e.Specify == null)
-            {
-                retriveve.SetIdentify(e.Setting);
-
+            if (string.IsNullOrEmpty(e.Setting.Code) == false && string.IsNullOrEmpty(e.Setting.Strategy) == false && retrieve.SetIdentify(e.Setting) >= 0)
                 return;
-            }
+
             if (Chart == null)
             {
                 Chart = new ChartControl();
                 panel.Controls.Add(Chart);
                 Chart.Dock = DockStyle.Fill;
             }
-            var temp = retriveve.OnReceiveRepositoryID(e.Specify);
-            var recent = retriveve.OnReceiveInformation(temp);
-            Application.DoEvents();
-
-            if (recent == null)
+            if (retrieve.OnReceiveRepositoryID(e.Game) == false)
             {
-                Task = new Task(() => new BackTesting((char)33, e.Specify, key));
+                Task = new Task(() => new BackTesting((char)33, retrieve.GetImitationModel(e.Game), key));
                 Task.Start();
 
-                if (TimerBox.Show(secret.BackTesting, temp > 1 ? string.Concat("No.", temp) : checkingInformation, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
+                if (TimerBox.Show(secret.BackTesting, e.Game.Strategy, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
                 {
                     Task.Wait();
-                    Cursor = OnReceiveChart(retriveve.OnReceiveInformation(retriveve.OnReceiveRepositoryID(e.Specify)));
+                    Cursor = OnReceiveChart(retrieve.OnReceiveInformation(e.Game));
                 }
                 GC.Collect();
             }
             else
-                Cursor = OnReceiveChart(recent);
+                Cursor = OnReceiveChart(retrieve.OnReceiveInformation(e.Game));
         }));
         Cursor OnReceiveChart(Dictionary<DateTime, string> param)
         {
@@ -306,7 +298,7 @@ namespace ShareInvest
                         }
                         if (Statistical == null)
                         {
-                            Statistical = new StatisticalControl();
+                            Statistical = new StatisticalControl(Strategy.Retrieve.Code, secret.strategy, secret.rate, secret.commission);
                             panel.Controls.Add(Statistical);
                             Statistical.Dock = DockStyle.Fill;
                         }
@@ -404,7 +396,7 @@ namespace ShareInvest
                     if ((int)e.NotifyIcon < 0)
                     {
                         if (Temporary != null && initial.Equals(collecting))
-                            Temporary.SetStorage(Open.Code).Wait();
+                            Temporary.SetStorage(Open.Code);
 
                         Dispose();
                     }
@@ -734,6 +726,7 @@ namespace ShareInvest
         {
             get; set;
         }
+        readonly Strategy.Retrieve retrieve;
         readonly string key;
         readonly char initial;
         readonly Secret secret;
@@ -766,6 +759,5 @@ namespace ShareInvest
         const string gs = "GodSword";
         const string basic = "Base";
         const string bantam = "Bantam";
-        const string checkingInformation = "Checking Information";
     }
 }

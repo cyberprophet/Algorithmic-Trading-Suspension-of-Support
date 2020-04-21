@@ -41,10 +41,10 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        public virtual ICollection<ImitationGame> Games
+        public virtual ICollection<ImitationGames> Games
         {
             get; set;
         }
-        public Statistics() => Games = new HashSet<ImitationGame>();
+        public Statistics() => Games = new HashSet<ImitationGames>();
     }
 }
