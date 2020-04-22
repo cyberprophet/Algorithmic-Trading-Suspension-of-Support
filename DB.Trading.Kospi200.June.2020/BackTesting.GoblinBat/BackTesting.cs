@@ -63,14 +63,8 @@ namespace ShareInvest.Strategy
                 }
                 SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
             }
-            if (initial.Equals((char)33) || Secrets.Memorizes.Count > ran.Next(3000, 10000))
-            {
-                var memo = Secrets.Memorizes;
+            if ((initial.Equals((char)33) || Secrets.Memorizes.Count > ran.Next(1500, 3000)) && SetStatisticalStorage(Secrets.Memorizes))
                 Secrets.Memorizes.Clear();
-
-                if (memo.Count > 0)
-                    SetStatisticalStorage(memo);
-            }
         }
         void SetConclusion(double price)
         {

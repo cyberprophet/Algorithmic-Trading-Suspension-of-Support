@@ -50,7 +50,7 @@ namespace ShareInvest.Strategy
         {
             var list = new List<Models.ImitationGames>();
 
-            while (list.Count < 12500 * count)
+            while (list.Count < 135000 * count)
             {
                 var mi = new Models.ImitationGames
                 {
@@ -77,14 +77,14 @@ namespace ShareInvest.Strategy
                 mi.TriLong = ran.Next(mi.TriShort / 5, 25) * 5;
                 mi.DuoLong = ran.Next(mi.DuoShort / 5, 25) * 5;
                 mi.MonoLong = ran.Next(mi.MonoShort / 5, 25) * 5;
-                mi.OctaTime = ran.Next(5, mi.NonaTime / 10 + 1) * 10;
-                mi.HeptaTime = ran.Next(4, mi.OctaTime / 5 + 1) * 5;
-                mi.HexaTime = ran.Next(3, mi.HeptaTime / 5 + 1) * 5;
-                mi.PentaTime = ran.Next(2, mi.HexaTime / 5 + 1) * 5;
-                mi.QuadTime = ran.Next(1, mi.PentaTime / 5 + 1) * 5;
-                mi.TriTime = ran.Next(3, mi.QuadTime + 1);
-                mi.DuoTime = ran.Next(2, mi.TriTime + 1);
-                mi.MonoTime = ran.Next(1, mi.DuoTime + 1);
+                mi.OctaTime = ran.Next(5, (maxOcta < mi.NonaTime ? maxOcta : mi.NonaTime) / 10) * 10;
+                mi.HeptaTime = ran.Next(4, (maxHepta < mi.OctaTime ? maxHepta : mi.OctaTime) / 5) * 5;
+                mi.HexaTime = ran.Next(3, (maxHexa < mi.HeptaTime ? maxHexa : mi.HeptaTime) / 5) * 5;
+                mi.PentaTime = ran.Next(2, (maxPenta < mi.HexaTime ? maxPenta : mi.HexaTime) / 5) * 5;
+                mi.QuadTime = ran.Next(1, (maxQuad < mi.PentaTime ? maxQuad : mi.PentaTime) / 5) * 5;
+                mi.TriTime = ran.Next(3, maxTri < mi.QuadTime ? maxTri : mi.QuadTime);
+                mi.DuoTime = ran.Next(2, maxDuo < mi.TriTime ? maxDuo : mi.TriTime);
+                mi.MonoTime = ran.Next(1, maxMono < mi.DuoTime ? maxMono : mi.TriTime);
 
                 if (mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
                     foreach (var model in Statistics)

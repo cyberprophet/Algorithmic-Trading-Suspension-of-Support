@@ -13,6 +13,7 @@ namespace ShareInvest.GoblinBatControls
     {
         public StatisticalControl(string code, string[] strategy, double[] rate, double[] commission)
         {
+            ran = new Random();
             this.code = code;
             this.strategy = strategy;
             this.rate = rate;
@@ -62,10 +63,29 @@ namespace ShareInvest.GoblinBatControls
         }
         public Specify[] Statistics(Specify[] specifies)
         {
-            SuspendLayout();
             var temp = new Dictionary<uint, int[]>();
             int i = 0;
 
+            if (specifies.Any(o => o.Assets == 0))
+            {
+                var basic = new Specify[10];
+                var ro = new bool[] { true, false };
+
+                for (i = 0; i < basic.Length; i++)
+                    basic[i] = new Specify
+                    {
+                        Assets = (ulong)numericAssets.Value,
+                        Code = code,
+                        Commission = commission[0],
+                        MarginRate = rate[0],
+                        Strategy = strategy[ran.Next(0, strategy.Length - 1)],
+                        RollOver = ro[ran.Next(0, ro.Length)],
+                        Time = i == 0 ? 1440 : (uint)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                        Short = (int)string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value,
+                        Long = (int)string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value
+                    };
+                return basic;
+            }
             foreach (var specify in specifies)
             {
                 numericAssets.Value = specify.Assets;
@@ -73,32 +93,28 @@ namespace ShareInvest.GoblinBatControls
                 commission = commission.Substring(5, 1).Equals("0") ? specify.Commission.ToString("P3") : commission;
                 var margin = specify.MarginRate.ToString("P2");
                 margin = margin.Split('.')[1].Substring(1, 1).Equals("0") ? specify.MarginRate.ToString("P1") : margin;
-                checkRollOver.Checked = specify.RollOver;
+                checkRollOver.CheckState = specify.RollOver ? CheckState.Checked : CheckState.Unchecked;
                 temp[specify.Time] = new int[]
                 {
                     specify.Short,
                     specify.Long
                 };
                 if (comboCode.Items.Contains(specify.Code) == false)
-                {
                     comboCode.Items.Add(specify.Code);
-                    comboCode.SelectedItem = specify.Code;
-                }
+
                 if (comboCommission.Items.Contains(commission) == false)
-                {
                     comboCommission.Items.Add(commission);
-                    comboCommission.SelectedItem = commission;
-                }
+
                 if (comboMarginRate.Items.Contains(margin) == false)
-                {
                     comboMarginRate.Items.Add(margin);
-                    comboMarginRate.SelectedItem = margin;
-                }
+
                 if (comboStrategy.Items.Contains(specify.Strategy) == false)
-                {
                     comboStrategy.Items.Add(specify.Strategy);
-                    comboStrategy.SelectedItem = specify.Strategy;
-                }
+
+                comboCommission.SelectedItem = commission;
+                comboMarginRate.SelectedItem = margin;
+                comboCode.SelectedItem = specify.Code;
+                comboStrategy.SelectedItem = specify.Strategy;
             }
             foreach (var kv in temp.OrderByDescending(o => o.Key))
             {
@@ -108,13 +124,12 @@ namespace ShareInvest.GoblinBatControls
                 string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
                 string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
             }
-            ResumeLayout();
-
             return specifies;
         }
         Catalog.DataBase.ImitationGame Statistics()
         {
             int i = 0;
+            var ro = new bool[] { true, false };
 
             return new Catalog.DataBase.ImitationGame
             {
@@ -122,8 +137,8 @@ namespace ShareInvest.GoblinBatControls
                 Code = comboCode.SelectedIndex < 0 ? code : comboCode.SelectedItem.ToString(),
                 Commission = comboCommission.SelectedIndex < 0 ? commission[0] : commission[Array.FindIndex(Commission, o => o.Equals(comboCommission.SelectedItem.ToString()))],
                 MarginRate = comboMarginRate.SelectedIndex < 0 ? rate[0] : rate[Array.FindIndex(MaginRate, o => o.Equals(comboMarginRate.SelectedItem.ToString()))],
-                Strategy = comboStrategy.SelectedIndex < 0 ? strategy[0] : comboStrategy.SelectedItem.ToString(),
-                RollOver = checkRollOver.Checked,
+                Strategy = comboStrategy.SelectedIndex < 0 && comboStrategy.SelectedItem.ToString().Equals(auto) ? strategy[ran.Next(0, strategy.Length - 1)] : comboStrategy.SelectedItem.ToString(),
+                RollOver = checkRollOver.CheckState.Equals(CheckState.Indeterminate) ? ro[ran.Next(0, ro.Length)] : checkRollOver.Checked,
                 BaseTime = 1440,
                 BaseShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
                 BaseLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
@@ -239,6 +254,7 @@ namespace ShareInvest.GoblinBatControls
         {
             get; set;
         }
+        readonly Random ran;
         readonly string code;
         readonly double[] rate;
         readonly double[] commission;

@@ -112,17 +112,17 @@ namespace ShareInvest.GoblinBatContext
                 {
                     var date = new Secret().RecentDate;
                     var temp = long.MinValue;
-                    var accumulative = int.MinValue;
+                    var max = (long)(db.Games.AsNoTracking().Max(o => o.Cumulative + o.Unrealized) * 0.75);
+                    var statistic = (int)(db.Games.AsNoTracking().Max(o => o.Statistic) * 0.75);
 
                     foreach (var choice in list)
                     {
-                        var select = db.Games.Where(o => o.Date.Equals("200420") && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver));
+                        var select = db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver)).AsNoTracking();
 
-                        foreach (var cu in select.OrderByDescending(o => o.Statistic).Take(1000).AsNoTracking())
-                            if (temp < cu.Cumulative + cu.Unrealized && cu.Statistic >= accumulative)
+                        foreach (var cu in select.OrderByDescending(o => o.Statistic).Take(25000))
+                            if (max < cu.Cumulative + cu.Unrealized && cu.Statistic >= statistic && temp < (cu.Cumulative + cu.Unrealized) * (cu.Statistic / 10))
                             {
-                                temp = cu.Cumulative + cu.Unrealized;
-                                accumulative = cu.Statistic;
+                                temp = (cu.Cumulative + cu.Unrealized) * (cu.Statistic / 10);
                                 game = new ImitationGames
                                 {
                                     Assets = cu.Assets,

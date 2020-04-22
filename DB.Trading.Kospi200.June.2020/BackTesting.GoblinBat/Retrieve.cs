@@ -79,12 +79,15 @@ namespace ShareInvest.Strategy
         }
         public bool SetStatisticalStorage()
         {
-            var memo = Secrets.Memorizes;
-            Secrets.Memorizes.Clear();
+            if (Secrets.Memorizes.Count > 15)
+            {
+                var result = SetStatisticalStorage(Secrets.Memorizes);
 
-            if (memo.Count > 0)
-                SetStatisticalStorage(memo);
+                if (result)
+                    Secrets.Memorizes.Clear();
 
+                return result;
+            }
             return true;
         }
         public Models.ImitationGames GetImitationModel(Catalog.DataBase.ImitationGame game) => new Models.ImitationGames

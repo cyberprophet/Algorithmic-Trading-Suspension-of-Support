@@ -26,6 +26,7 @@ namespace ShareInvest
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var initial = secret.GetPort(str);
                 var cts = new CancellationTokenSource();
+                var retrieve = new Strategy.Retrieve(str);
 
                 if (secret.GetDirectoryInfoExists(path))
                 {
@@ -39,7 +40,6 @@ namespace ShareInvest
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
                             new Task(() =>
                             {
-                                var retrieve = new Strategy.Retrieve(str);
                                 var count = secret.GetProcessorCount(str);
                                 var info = new Information(str);
                                 retrieve.SetInitialzeTheCode(initial.Equals((char)Port.Trading));
@@ -61,7 +61,7 @@ namespace ShareInvest
                                     Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
                                     {
                                         po.CancellationToken.ThrowIfCancellationRequested();
-                                        
+
                                         if (retrieve.GetDuplicateResults(number) == false)
                                             new BackTesting(initial, number, str);
                                     }));
@@ -82,7 +82,7 @@ namespace ShareInvest
                             if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && ran.Next(0, 10) == 9)
                                 break;
 
-                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 50)
+                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 55 || DateTime.Now.Minute > 49 && ran.Next(0, 5) == 3 && retrieve.SetStatisticalStorage()))
                                 break;
                         }
                     if (initial.Equals((char)126) == false)
