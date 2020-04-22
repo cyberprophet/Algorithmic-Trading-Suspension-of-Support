@@ -207,11 +207,12 @@ namespace ShareInvest
         }
         void OnReceiveStrategy(object sender, EventHandler.BackTesting.Statistics e) => BeginInvoke(new Action(() =>
         {
-            SuspendLayout();
-
             if (string.IsNullOrEmpty(e.Setting.Code) == false && string.IsNullOrEmpty(e.Setting.Strategy) == false && retrieve.SetIdentify(e.Setting) >= 0)
-                return;
+            {
+                Cursor = Cursors.Default;
 
+                return;
+            }
             if (Chart == null)
             {
                 Chart = new ChartControl();
@@ -220,10 +221,11 @@ namespace ShareInvest
             }
             if (retrieve.OnReceiveRepositoryID(e.Game) == false)
             {
+                SuspendLayout();
                 Task = new Task(() => new BackTesting((char)33, retrieve.GetImitationModel(e.Game), key));
                 Task.Start();
 
-                if (TimerBox.Show(secret.BackTesting, e.Game.Strategy, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)25E+3).Equals(DialogResult.OK))
+                if (TimerBox.Show(secret.BackTesting, e.Game.Strategy, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)45E+3).Equals(DialogResult.OK))
                 {
                     Task.Wait();
                     Cursor = OnReceiveChart(retrieve.OnReceiveInformation(e.Game));
@@ -231,15 +233,19 @@ namespace ShareInvest
                 GC.Collect();
             }
             else
+            {
+                SuspendLayout();
                 Cursor = OnReceiveChart(retrieve.OnReceiveInformation(e.Game));
+            }
         }));
         Cursor OnReceiveChart(Dictionary<DateTime, string> param)
         {
             Statistical.Hide();
-            Size = Chart.SetChartValue(param);
             ResumeLayout();
             Chart.Show();
+            Size = Chart.SetChartValue(param);
             CenterToScreen();
+            Application.DoEvents();
 
             return Cursors.Default;
         }

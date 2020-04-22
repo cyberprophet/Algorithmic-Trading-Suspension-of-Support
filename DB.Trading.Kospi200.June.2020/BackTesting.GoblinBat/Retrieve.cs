@@ -15,19 +15,10 @@ namespace ShareInvest.Strategy
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
         public Catalog.XingAPI.Specify[] GetUserStrategy() => GetCatalog(GetBestStrategyRecommend(Information.Statistics));
-        public List<long> SetInitialzeTheCode(bool identify)
+        public void SetInitialzeTheCode()
         {
             Code = GetStrategy();
             SetInitialzeTheCode(Code);
-
-            if (identify && DateTime.Now.Hour < 18 && (DateTime.Now.Hour > 15 || DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45) && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
-            {
-                var list = GetUserIdentify(DateTime.Now.AddDays(-1).ToString(date));
-
-                if (list != null)
-                    return list;
-            }
-            return GetStrategy("16.2");
         }
         public void SetInitializeTheChart()
         {

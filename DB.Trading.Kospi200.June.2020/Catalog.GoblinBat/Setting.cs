@@ -4,7 +4,7 @@ namespace ShareInvest.Catalog
 {
     public struct Setting
     {
-        public ulong Assets
+        public long Assets
         {
             get; set;
         }

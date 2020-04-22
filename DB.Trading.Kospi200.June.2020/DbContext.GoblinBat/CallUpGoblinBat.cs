@@ -26,21 +26,17 @@ namespace ShareInvest.GoblinBatContext
                     var identity = new Secret().GetIdentify(key);
                     var date = DateTime.Now.AddDays(-7).ToString(recent);
                     var choice = new bool[] { true, false };
-                    var strategy = db.Statistics.Select(o => new { o.Strategy }).AsNoTracking().ToArray();
-                    var str = db.Identifies.Where(o => o.Identity.Equals(identity) && o.Date.CompareTo(date) >= 0).Max();
+                    var strategy = db.Statistics.Select(o => new { o.Strategy }).AsNoTracking().Distinct().ToArray();
 
-                    if (str.Strategy.Equals("Auto") == false && str.RollOver.Equals(CheckState.Indeterminate) == false)
-                        list.Add(new Statistics
-                        {
-                            Assets = str.Assets,
-                            Code = str.Code,
-                            Commission = str.Commission,
-                            MarginRate = marginRate,
-                            Strategy = str.Strategy,
-                            RollOver = str.RollOver.Equals(CheckState.Checked) ? true : false
-                        });
-                    else if (str.RollOver.Equals(CheckState.Indeterminate) && str.Strategy.Equals("Auto") == false)
-                        foreach (var tf in choice)
+                    foreach (var str in db.Identifies.Where(o => o.Identity.Equals(identity) && o.Date.CompareTo(date) >= 0).AsNoTracking().Select(o => new
+                    {
+                        o.Assets,
+                        o.Code,
+                        o.Commission,
+                        o.Strategy,
+                        o.RollOver
+                    }))
+                        if (str.Strategy.Equals("Auto") == false && str.RollOver.Equals(CheckState.Indeterminate) == false)
                             list.Add(new Statistics
                             {
                                 Assets = str.Assets,
@@ -48,21 +44,20 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = str.Commission,
                                 MarginRate = marginRate,
                                 Strategy = str.Strategy,
-                                RollOver = tf
-                            });
-                    else if (str.RollOver.Equals(CheckState.Indeterminate) == false && str.Strategy.Equals("Auto"))
-                        foreach (var st in strategy)
-                            list.Add(new Statistics
-                            {
-                                Assets = str.Assets,
-                                Code = str.Code,
-                                Commission = str.Commission,
-                                MarginRate = marginRate,
-                                Strategy = st.Strategy,
                                 RollOver = str.RollOver.Equals(CheckState.Checked) ? true : false
                             });
-                    else
-                        foreach (var tf in choice)
+                        else if (str.RollOver.Equals(CheckState.Indeterminate) && str.Strategy.Equals("Auto") == false)
+                            foreach (var tf in choice)
+                                list.Add(new Statistics
+                                {
+                                    Assets = str.Assets,
+                                    Code = str.Code,
+                                    Commission = str.Commission,
+                                    MarginRate = marginRate,
+                                    Strategy = str.Strategy,
+                                    RollOver = tf
+                                });
+                        else if (str.RollOver.Equals(CheckState.Indeterminate) == false && str.Strategy.Equals("Auto"))
                             foreach (var st in strategy)
                                 list.Add(new Statistics
                                 {
@@ -71,15 +66,27 @@ namespace ShareInvest.GoblinBatContext
                                     Commission = str.Commission,
                                     MarginRate = marginRate,
                                     Strategy = st.Strategy,
-                                    RollOver = tf
+                                    RollOver = str.RollOver.Equals(CheckState.Checked) ? true : false
                                 });
+                        else
+                            foreach (var tf in choice)
+                                foreach (var st in strategy)
+                                    list.Add(new Statistics
+                                    {
+                                        Assets = str.Assets,
+                                        Code = str.Code,
+                                        Commission = str.Commission,
+                                        MarginRate = marginRate,
+                                        Strategy = st.Strategy,
+                                        RollOver = tf
+                                    });
                 }
                 catch (Exception ex)
                 {
                     if (TimerBox.Show(new Secret().Message, ex.TargetSite.Name, MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, 3517).Equals(DialogResult.OK))
                         return db.Statistics.ToList();
                 }
-            return list;
+            return list.Distinct().ToList();
         }
         protected void SetInsertBaseStrategy(Queue<Statistics> queue)
         {
@@ -112,17 +119,19 @@ namespace ShareInvest.GoblinBatContext
                 {
                     var date = new Secret().RecentDate;
                     var temp = long.MinValue;
-                    var max = (long)(db.Games.AsNoTracking().Max(o => o.Cumulative + o.Unrealized) * 0.75);
-                    var statistic = (int)(db.Games.AsNoTracking().Max(o => o.Statistic) * 0.75);
+                    var best = db.Games.Where(o => o.Date.Equals(date)).AsNoTracking();
+                    var max = (long)(best.Max(o => o.Cumulative + o.Unrealized) * 0.85);
+                    int statistic = (int)(best.Max(o => o.Statistic) * 0.65), remain = list.Count;
 
                     foreach (var choice in list)
                     {
-                        var select = db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver)).AsNoTracking();
+                        var select = db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver));
 
-                        foreach (var cu in select.OrderByDescending(o => o.Statistic).Take(25000))
-                            if (max < cu.Cumulative + cu.Unrealized && cu.Statistic >= statistic && temp < (cu.Cumulative + cu.Unrealized) * (cu.Statistic / 10))
+                        foreach (var cu in select.OrderByDescending(o => (o.Cumulative + o.Unrealized) * o.Statistic).AsNoTracking().Take(1000))
+                            if (max <= cu.Cumulative + cu.Unrealized && cu.Statistic >= statistic && temp <= (cu.Cumulative + cu.Unrealized) * cu.Statistic)
                             {
-                                temp = (cu.Cumulative + cu.Unrealized) * (cu.Statistic / 10);
+                                remain--;
+                                temp = (cu.Cumulative + cu.Unrealized) * cu.Statistic;
                                 game = new ImitationGames
                                 {
                                     Assets = cu.Assets,
@@ -163,6 +172,51 @@ namespace ShareInvest.GoblinBatContext
                                     MonoLong = cu.MonoLong
                                 };
                             }
+                        if (string.IsNullOrEmpty(game.Strategy) || remain-- > 0)
+                            foreach (var cu in select.OrderByDescending(o => (o.Cumulative + o.Unrealized) * o.Statistic).AsNoTracking().Take(1))
+                                if (temp <= (cu.Cumulative + cu.Unrealized) * cu.Statistic)
+                                {
+                                    temp = (cu.Cumulative + cu.Unrealized) * cu.Statistic;
+                                    game = new ImitationGames
+                                    {
+                                        Assets = cu.Assets,
+                                        Code = cu.Code,
+                                        Commission = cu.Commission,
+                                        MarginRate = cu.MarginRate,
+                                        Strategy = cu.Strategy,
+                                        RollOver = cu.RollOver,
+                                        BaseTime = cu.BaseTime,
+                                        BaseShort = cu.BaseShort,
+                                        BaseLong = cu.BaseLong,
+                                        NonaTime = cu.NonaTime,
+                                        NonaShort = cu.NonaShort,
+                                        NonaLong = cu.NonaLong,
+                                        OctaTime = cu.OctaTime,
+                                        OctaShort = cu.OctaShort,
+                                        OctaLong = cu.OctaLong,
+                                        HeptaTime = cu.HeptaTime,
+                                        HeptaShort = cu.HeptaShort,
+                                        HeptaLong = cu.HeptaLong,
+                                        HexaTime = cu.HexaTime,
+                                        HexaShort = cu.HexaShort,
+                                        HexaLong = cu.HexaLong,
+                                        PentaTime = cu.PentaTime,
+                                        PentaShort = cu.PentaShort,
+                                        PentaLong = cu.PentaLong,
+                                        QuadTime = cu.QuadTime,
+                                        QuadShort = cu.QuadShort,
+                                        QuadLong = cu.QuadLong,
+                                        TriTime = cu.TriTime,
+                                        TriShort = cu.TriShort,
+                                        TriLong = cu.TriLong,
+                                        DuoTime = cu.DuoTime,
+                                        DuoShort = cu.DuoShort,
+                                        DuoLong = cu.DuoLong,
+                                        MonoTime = cu.MonoTime,
+                                        MonoShort = cu.MonoShort,
+                                        MonoLong = cu.MonoLong
+                                    };
+                                }
                     }
                 }
                 catch (Exception ex)
@@ -271,34 +325,19 @@ namespace ShareInvest.GoblinBatContext
         }
         protected int SetIndentify(Setting setting)
         {
-            string temp = string.Empty;
-
-            switch (setting.RollOver)
-            {
-                case CheckState.Checked:
-                    temp = "T";
-                    break;
-
-                case CheckState.Unchecked:
-                    temp = "F";
-                    break;
-
-                case CheckState.Indeterminate:
-                    temp = "A";
-                    break;
-            }
+            string identity = new Secret().GetIdentify(key), date = DateTime.Now.ToString(recent);
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    db.Logs.AddOrUpdate(new Logs
+                    db.Identifies.AddOrUpdate(new Identify
                     {
-                        Identity = new Secret().GetIdentify(key),
-                        Date = DateTime.Now.ToString(recent),
-                        Assets = (setting.Assets / ar).ToString("D4"),
+                        Identity = identity,
+                        Date = date,
+                        Assets = setting.Assets,
                         Strategy = setting.Strategy,
-                        Commission = (setting.Commission * cr).ToString(),
-                        RollOver = temp,
-                        Code = string.Concat(setting.Code.Substring(0, 3), setting.Code.Substring(5))
+                        Commission = setting.Commission,
+                        RollOver = setting.RollOver,
+                        Code = setting.Code
                     });
                     return db.SaveChanges();
                 }
@@ -306,7 +345,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace, setting.Strategy);
                 }
-            return 1;
+            return 0;
         }
         protected void SetDeleteDuplicateData(List<Strategics> strategics)
         {

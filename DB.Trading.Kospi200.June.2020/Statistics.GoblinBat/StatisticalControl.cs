@@ -210,7 +210,7 @@ namespace ShareInvest.GoblinBatControls
                     if (button.ForeColor.Equals(Color.Crimson) == false)
                         SendStatistics?.Invoke(this, new Statistics(new Catalog.Setting
                         {
-                            Assets = (ulong)numericAssets.Value,
+                            Assets = (long)numericAssets.Value,
                             Commission = commission[Array.FindIndex(Commission, o => o.Equals(comboCommission.SelectedItem.ToString()))],
                             Strategy = strategy[Array.FindIndex(strategy, o => o.Equals(comboStrategy.SelectedItem.ToString()))],
                             Code = code,

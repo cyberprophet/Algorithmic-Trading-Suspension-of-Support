@@ -42,7 +42,7 @@ namespace ShareInvest
                             {
                                 var count = secret.GetProcessorCount(str);
                                 var info = new Information(str);
-                                retrieve.SetInitialzeTheCode(initial.Equals((char)Port.Trading));
+                                retrieve.SetInitialzeTheCode();
 
                                 if (secret.GetIsSever(str) == false)
                                 {
