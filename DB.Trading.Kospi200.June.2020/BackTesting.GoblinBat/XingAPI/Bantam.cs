@@ -7,7 +7,7 @@ namespace ShareInvest.Strategy.XingAPI
     {
         double Max(double max, Classification classification)
         {
-            var num = 0D;
+            var num = 5.5D;
 
             foreach (var kv in API.Judge)
                 switch (classification)
@@ -24,7 +24,7 @@ namespace ShareInvest.Strategy.XingAPI
 
                         break;
                 }
-            return max * num * 0.2;
+            return max * num * 0.1;
         }
         protected internal override bool ForTheLiquidationOfBuyOrder(double[] selling)
         {

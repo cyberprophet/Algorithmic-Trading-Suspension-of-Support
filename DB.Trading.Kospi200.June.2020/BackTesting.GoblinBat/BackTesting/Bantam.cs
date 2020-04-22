@@ -100,7 +100,7 @@ namespace ShareInvest.Strategy.Statistics
         }
         double Max(double max, XingAPI.Classification classification)
         {
-            var num = 0D;
+            var num = 5.5D;
 
             foreach (var kv in bt.Judge)
                 switch (classification)
@@ -117,7 +117,7 @@ namespace ShareInvest.Strategy.Statistics
 
                         break;
                 }
-            return max * num * 0.2;
+            return max * num * 0.1;
         }
     }
 }
