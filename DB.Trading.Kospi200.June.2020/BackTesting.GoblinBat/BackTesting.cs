@@ -65,6 +65,9 @@ namespace ShareInvest.Strategy
             }
             if ((initial.Equals((char)33) || Secrets.Memorizes.Count > ran.Next(1500, 3000)) && SetStatisticalStorage(Secrets.Memorizes))
                 Secrets.Memorizes.Clear();
+
+            else if (Secrets.Charts.Count > ran.Next(3000, 7001) && SetBasicChart(Secrets.Charts.Distinct()))
+                Secrets.Charts.Clear();
         }
         void SetConclusion(double price)
         {

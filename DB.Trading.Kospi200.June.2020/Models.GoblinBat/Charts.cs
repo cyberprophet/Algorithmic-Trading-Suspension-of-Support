@@ -15,28 +15,18 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(2, 20), Column(Order = 3)]
-        public int Short
+        [Key, Range(2, 120), Column(Order = 3)]
+        public int Base
         {
             get; set;
         }
-        [Key, Range(5, 120), Column(Order = 4)]
-        public int Long
-        {
-            get; set;
-        }
-        [Key, StringLength(6), Column(Order = 5)]
+        [Key, MinLength(6), MaxLength(10), Column(Order = 4)]
         public string Date
         {
             get; set;
         }
         [Required]
-        public double ShortValue
-        {
-            get; set;
-        }
-        [Required]
-        public double LongValue
+        public double Value
         {
             get; set;
         }

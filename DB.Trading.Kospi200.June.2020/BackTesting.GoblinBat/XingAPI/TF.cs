@@ -1,20 +1,66 @@
 ﻿using System;
 using System.Collections.Generic;
 using ShareInvest.Catalog.XingAPI;
+using ShareInvest.GoblinBatContext;
+using ShareInvest.Verify;
 using ShareInvest.XingAPI;
 
 namespace ShareInvest.Strategy.XingAPI
 {
-    public class TF
+    public class TF : CallUpBasicInformation
     {
-        protected internal TF(Specify specify)
+        protected internal TF(Specify specify) : base(KeyDecoder.GetWindowsProductKeyFromRegistry())
         {
             this.specify = specify;
-            Short = new Stack<double>(512);
-            Long = new Stack<double>(512);
+            Short = GetBasicChart(new Stack<double>(512), specify, specify.Short);
+            Long = GetBasicChart(new Stack<double>(512), specify, specify.Long);
 
-            foreach (Catalog.Chart chart in Retrieve.Chart)
-                Analysize(chart);
+            if (Short.Count == 0 || Long.Count == 0)
+            {
+                sCollection = true;
+                lCollection = true;
+
+                if (Short.Count > 0)
+                {
+                    Short.Clear();
+                    sCollection = false;
+                    LongValue = new Dictionary<string, double>();
+                }
+                else if (Long.Count > 0)
+                {
+                    Long.Clear();
+                    lCollection = false;
+                    ShortValue = new Dictionary<string, double>();
+                }
+                else
+                {
+                    ShortValue = new Dictionary<string, double>();
+                    LongValue = new Dictionary<string, double>();
+                }
+                foreach (Catalog.Chart chart in Retrieve.Chart)
+                    Analysize(chart);
+
+                if (sCollection)
+                    foreach (var kv in ShortValue)
+                        Secrets.Charts.Enqueue(new Models.Charts
+                        {
+                            Code = specify.Code,
+                            Time = (int)specify.Time,
+                            Base = specify.Short,
+                            Date = kv.Key,
+                            Value = kv.Value
+                        });
+                if (lCollection)
+                    foreach (var kv in LongValue)
+                        Secrets.Charts.Enqueue(new Models.Charts
+                        {
+                            Code = specify.Code,
+                            Time = (int)specify.Time,
+                            Base = specify.Long,
+                            Date = kv.Key,
+                            Value = kv.Value
+                        });
+            }
         }
         protected internal Stack<double> Short
         {
@@ -40,13 +86,37 @@ namespace ShareInvest.Strategy.XingAPI
         protected internal virtual void OnReceiveTrend(int volume) => Console.WriteLine(volume);
         protected internal void Analysize(Catalog.Chart chart)
         {
-            if (GetCheckOnTime(chart.Date))
+            var input = GetCheckOnTime(chart.Date);
+
+            if (input)
             {
                 Short.Pop();
                 Long.Pop();
             }
-            Short.Push(Short.Count > 0 ? EMA.Make(specify.Short, Short.Count, chart.Price, Short.Peek()) : EMA.Make(chart.Price));
-            Long.Push(Long.Count > 0 ? EMA.Make(specify.Long, Long.Count, chart.Price, Long.Peek()) : EMA.Make(chart.Price));
+            double st = Short.Count > 0 ? Short.Peek() : chart.Price, lt = Long.Count > 0 ? Long.Peek() : chart.Price;
+
+            if (input == false && (lCollection || sCollection))
+            {
+                var date = chart.Date.ToString();
+
+                switch (specify.Time)
+                {
+                    case 1440:
+                        date = date.Substring(0, 6);
+                        break;
+
+                    default:
+                        date = date.Substring(0, 10);
+                        break;
+                }
+                if (sCollection)
+                    ShortValue[date] = st;
+
+                if (lCollection)
+                    LongValue[date] = lt;
+            }
+            Short.Push(Short.Count > 0 ? EMA.Make(specify.Short, Short.Count, chart.Price, st) : EMA.Make(chart.Price));
+            Long.Push(Long.Count > 0 ? EMA.Make(specify.Long, Long.Count, chart.Price, lt) : EMA.Make(chart.Price));
 
             if (specify.Time == 1440 && chart.Volume != 0 && GetCheckTime(chart.Date.ToString()))
                 OnReceiveTrend(chart.Volume);
@@ -96,6 +166,8 @@ namespace ShareInvest.Strategy.XingAPI
             get;
         }
         const string onTime = "090000000";
+        readonly bool sCollection;
+        readonly bool lCollection;
         protected internal const string end = "154500";
         protected internal const string start = "090000";
         protected internal readonly Specify specify;

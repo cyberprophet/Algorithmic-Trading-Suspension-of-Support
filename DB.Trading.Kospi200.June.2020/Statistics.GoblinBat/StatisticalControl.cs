@@ -137,7 +137,7 @@ namespace ShareInvest.GoblinBatControls
                 Code = comboCode.SelectedIndex < 0 ? code : comboCode.SelectedItem.ToString(),
                 Commission = comboCommission.SelectedIndex < 0 ? commission[0] : commission[Array.FindIndex(Commission, o => o.Equals(comboCommission.SelectedItem.ToString()))],
                 MarginRate = comboMarginRate.SelectedIndex < 0 ? rate[0] : rate[Array.FindIndex(MaginRate, o => o.Equals(comboMarginRate.SelectedItem.ToString()))],
-                Strategy = comboStrategy.SelectedIndex < 0 && comboStrategy.SelectedItem.ToString().Equals(auto) ? strategy[ran.Next(0, strategy.Length - 1)] : comboStrategy.SelectedItem.ToString(),
+                Strategy = comboStrategy.SelectedIndex < 0 || comboStrategy.SelectedItem.ToString().Equals(auto) ? strategy[ran.Next(0, strategy.Length - 1)] : comboStrategy.SelectedItem.ToString(),
                 RollOver = checkRollOver.CheckState.Equals(CheckState.Indeterminate) ? ro[ran.Next(0, ro.Length)] : checkRollOver.Checked,
                 BaseTime = 1440,
                 BaseShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
