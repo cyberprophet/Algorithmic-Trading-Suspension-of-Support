@@ -63,11 +63,8 @@ namespace ShareInvest.Strategy
                 }
                 SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
             }
-            if ((initial.Equals((char)33) || Secrets.Memorizes.Count > ran.Next(1500, 3000)) && SetStatisticalStorage(Secrets.Memorizes))
-                Secrets.Memorizes.Clear();
-
-            else if (Secrets.Charts.Count > ran.Next(3000, 7001) && SetBasicChart(Secrets.Charts.Distinct()))
-                Secrets.Charts.Clear();
+            if (games.Count > 0 && SetStatisticalStorage(games) == false)
+                Message = new Secrets().Message;
         }
         void SetConclusion(double price)
         {
@@ -195,7 +192,7 @@ namespace ShareInvest.Strategy
             Revenue = CumulativeRevenue - Commission;
             long revenue = Revenue - TodayRevenue, unrealized = (long)(Quantity == 0 ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * Const.TransactionMultiplier * Math.Abs(Quantity));
             Accumulative = revenue + unrealized > 0 ? ++Accumulative : revenue + unrealized < 0 ? --Accumulative : 0;
-            Secrets.Memorizes.Enqueue(new Models.ImitationGames
+            games.Enqueue(new Models.ImitationGames
             {
                 Assets = game.Assets,
                 Code = game.Code,
@@ -269,11 +266,13 @@ namespace ShareInvest.Strategy
         {
             get;
         }
-        public BackTesting(char initial, Models.ImitationGames game, string key) : base(key)
+        public string Message
         {
-            this.initial = initial;
+            get; private set;
+        }
+        public BackTesting(Models.ImitationGames game, string key) : base(key)
+        {
             this.game = game;
-            ran = new Random();
             Residue = new Dictionary<uint, int>();
             SellOrder = new Dictionary<string, uint>();
             BuyOrder = new Dictionary<string, uint>();
@@ -291,13 +290,13 @@ namespace ShareInvest.Strategy
                         break;
                 }
             }));
+            games = new Queue<Models.ImitationGames>();
             StartProgress();
         }
         const string basic = "Base";
         const string bantam = "Bantam";
-        readonly char initial;
         readonly Models.ImitationGames game;
-        readonly Random ran;
+        readonly Queue<Models.ImitationGames> games;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Quotes> SendQuotes;
     }

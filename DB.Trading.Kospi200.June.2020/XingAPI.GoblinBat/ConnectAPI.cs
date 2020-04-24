@@ -159,11 +159,14 @@ namespace ShareInvest.XingAPI
             if (secret.Code.Equals(szCode) && IsConnected() && secret.Success.Equals(szMsg))
             {
                 Accounts = new string[GetAccountListCount()];
+                var detail = new Dictionary<string, string>();
 
                 for (int i = 0; i < Accounts.Length; i++)
+                {
                     Accounts[i] = GetAccountList(i);
-
-                secret.GetAccount(Accounts);
+                    detail[GetAcctDetailName(Accounts[i])] = Accounts[i];
+                }
+                secret.GetAccount(detail);
             }
         }
         ConnectAPI()

@@ -11,6 +11,13 @@ namespace ShareInvest.Verify
     }
     public static class KeyDecoder
     {
+        public static string GetKey()
+        {
+            if (Key == null)
+                Key = GetWindowsProductKeyFromRegistry();
+
+            return Key;
+        }
         public static string DecodeProductKeyWin8AndUp(byte[] digitalProductId)
         {
             var key = string.Empty;
@@ -88,6 +95,10 @@ namespace ShareInvest.Verify
                 }
             }
             return new string(decodedChars);
+        }
+        static string Key
+        {
+            get; set;
         }
         const int decodeLength = 29;
         const int decodeStringLength = 15;

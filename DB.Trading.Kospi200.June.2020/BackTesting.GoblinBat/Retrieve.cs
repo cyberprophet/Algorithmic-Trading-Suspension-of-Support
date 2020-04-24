@@ -10,7 +10,7 @@ namespace ShareInvest.Strategy
 {
     public partial class Retrieve : CallUpStatisticalAnalysis
     {
-        public Retrieve(string key) : base(key) => secret = new Secrets(new Queue<Models.ImitationGames>(1024));
+        public Retrieve(string key) : base(key) => secret = new Secrets(key);
         public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
@@ -67,19 +67,6 @@ namespace ShareInvest.Strategy
                 return string.Concat(date.ToLongDateString(), " ", date.ToShortTimeString());
 
             return string.Empty;
-        }
-        public bool SetStatisticalStorage()
-        {
-            if (Secrets.Memorizes.Count > 15)
-            {
-                var result = SetStatisticalStorage(Secrets.Memorizes);
-
-                if (result)
-                    Secrets.Memorizes.Clear();
-
-                return result;
-            }
-            return true;
         }
         public Models.ImitationGames GetImitationModel(Catalog.DataBase.ImitationGame game) => new Models.ImitationGames
         {

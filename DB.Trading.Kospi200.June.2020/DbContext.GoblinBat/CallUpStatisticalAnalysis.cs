@@ -5,7 +5,6 @@ using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.WebSockets;
 using System.Windows.Forms;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Message;
@@ -505,7 +504,7 @@ namespace ShareInvest.GoblinBatContext
                     db.BulkInsert(memo, o =>
                     {
                         o.InsertIfNotExists = true;
-                        o.BatchSize = 2000;
+                        o.BatchSize = 150;
                         o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                         o.AutoMapOutputDirection = false;
                     });

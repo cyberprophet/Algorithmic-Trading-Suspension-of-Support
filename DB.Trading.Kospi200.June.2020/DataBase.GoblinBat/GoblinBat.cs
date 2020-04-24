@@ -222,12 +222,20 @@ namespace ShareInvest
             if (retrieve.OnReceiveRepositoryID(e.Game) == false)
             {
                 SuspendLayout();
-                Task = new Task(() => new BackTesting((char)33, retrieve.GetImitationModel(e.Game), key));
+                var message = string.Empty;
+                Task = new Task(() => message = new BackTesting(retrieve.GetImitationModel(e.Game), key).Message);
                 Task.Start();
 
                 if (TimerBox.Show(secret.BackTesting, e.Game.Strategy, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)45E+3).Equals(DialogResult.OK))
                 {
                     Task.Wait();
+
+                    if (string.IsNullOrEmpty(message) == false && TimerBox.Show(message, e.Game.Strategy, MessageBoxButtons.OK, MessageBoxIcon.Warning, 3251).Equals(DialogResult.OK))
+                    {
+                        Cursor = Cursors.Default;
+
+                        return;
+                    }
                     Cursor = OnReceiveChart(retrieve.OnReceiveInformation(e.Game));
                 }
                 GC.Collect();
@@ -267,8 +275,11 @@ namespace ShareInvest
 
                     if (temp.TryGetValue(0, out string code))
                     {
-                        notifyIcon.Text = checkDataBase;
-                        Open.StartProgress(3605);
+                        if (secret.GetIsSever(key) == false)
+                        {
+                            notifyIcon.Text = checkDataBase;
+                            Open.StartProgress(3605);
+                        }
                         notifyIcon.Text = secret.GetIdentify();
 
                         return;

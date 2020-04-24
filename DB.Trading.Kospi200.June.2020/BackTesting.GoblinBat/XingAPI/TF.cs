@@ -9,7 +9,7 @@ namespace ShareInvest.Strategy.XingAPI
 {
     public class TF : CallUpBasicInformation
     {
-        protected internal TF(Specify specify) : base(KeyDecoder.GetWindowsProductKeyFromRegistry())
+        protected internal TF(Specify specify) : base(KeyDecoder.GetKey())
         {
             this.specify = specify;
             Short = GetBasicChart(new Stack<double>(512), specify, specify.Short);
@@ -19,6 +19,7 @@ namespace ShareInvest.Strategy.XingAPI
             {
                 sCollection = true;
                 lCollection = true;
+                var charts = new Queue<Models.Charts>(256);
 
                 if (Short.Count > 0)
                 {
@@ -42,7 +43,7 @@ namespace ShareInvest.Strategy.XingAPI
 
                 if (sCollection)
                     foreach (var kv in ShortValue)
-                        Secrets.Charts.Enqueue(new Models.Charts
+                        charts.Enqueue(new Models.Charts
                         {
                             Code = specify.Code,
                             Time = (int)specify.Time,
@@ -52,7 +53,7 @@ namespace ShareInvest.Strategy.XingAPI
                         });
                 if (lCollection)
                     foreach (var kv in LongValue)
-                        Secrets.Charts.Enqueue(new Models.Charts
+                        charts.Enqueue(new Models.Charts
                         {
                             Code = specify.Code,
                             Time = (int)specify.Time,
@@ -60,6 +61,8 @@ namespace ShareInvest.Strategy.XingAPI
                             Date = kv.Key,
                             Value = kv.Value
                         });
+                if (charts.Count > 0 && SetBasicChart(charts))
+                    charts.Clear();
             }
         }
         protected internal Stack<double> Short
@@ -98,6 +101,7 @@ namespace ShareInvest.Strategy.XingAPI
             if (input == false && (lCollection || sCollection))
             {
                 var date = chart.Date.ToString();
+                date = date.Length == 8 ? date.Substring(2) : date;
 
                 switch (specify.Time)
                 {
@@ -106,7 +110,9 @@ namespace ShareInvest.Strategy.XingAPI
                         break;
 
                     default:
-                        date = date.Substring(0, 10);
+                        if (date.Length > 8)
+                            date = date.Substring(0, 10);
+
                         break;
                 }
                 if (sCollection)

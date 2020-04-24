@@ -12,7 +12,7 @@ using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
 {
-    public class CallUpGoblinBat : CallUpBasicInformation
+    public class CallUpGoblinBat
     {
         protected List<Statistics> GetBasicStrategy(char initial)
         {
@@ -577,7 +577,7 @@ namespace ShareInvest.GoblinBatContext
         }
         bool GetDirectoryExists(DirectoryInfo directory) => directory.Exists;
         protected string Path => System.IO.Path.Combine(Application.StartupPath, chart);
-        protected CallUpGoblinBat(string key) : base(key)
+        protected CallUpGoblinBat(string key)
         {
             this.key = key;
             ran = new Random();

@@ -47,7 +47,7 @@ namespace ShareInvest
                                 if (secret.GetIsSever(str) == false)
                                 {
                                     info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
-                                    count = 0.375;
+                                    count = 0.625;
                                 }
                                 info.GetUserIdentity(initial);
                                 var catalog = info.GetStatistics(count).Distinct().ToList();
@@ -60,10 +60,11 @@ namespace ShareInvest
                                 {
                                     Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
                                     {
-                                        po.CancellationToken.ThrowIfCancellationRequested();
+                                        if (cts.IsCancellationRequested)
+                                            po.CancellationToken.ThrowIfCancellationRequested();
 
                                         if (retrieve.GetDuplicateResults(number) == false)
-                                            new BackTesting(initial, number, str);
+                                            new BackTesting(number, str);
                                     }));
                                 }
                                 catch (OperationCanceledException ex)
@@ -73,7 +74,7 @@ namespace ShareInvest
                                 }
                                 catch (Exception ex)
                                 {
-                                    new ExceptionMessage(ex.StackTrace);
+                                    new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                                 }
                             }).Start();
                     while (TimerBox.Show(secret.StartProgress, secret.GetIdentify(), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
@@ -82,7 +83,7 @@ namespace ShareInvest
                             if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && ran.Next(0, 10) == 9)
                                 break;
 
-                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 55 || DateTime.Now.Minute > 49 && ran.Next(0, 5) == 3 && retrieve.SetStatisticalStorage()))
+                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 55 || DateTime.Now.Minute > 49 && ran.Next(0, 5) == 3))
                                 break;
                         }
                     if (initial.Equals((char)126) == false)
