@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -22,7 +24,7 @@ namespace ShareInvest
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && (DateTime.Now.Hour == 15 && DateTime.Now.Minute >= 45 || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6);
-                var remaining = secret.GetIsSever(str) ? ran.Next(classfication ? 25 : 5, classfication ? 31 : 11) : 1;
+                var remaining = secret.GetIsSever(str) ? ran.Next(classfication ? 15 : 9, classfication ? 31 : 16) : 1;
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var initial = secret.GetPort(str);
                 var cts = new CancellationTokenSource();
@@ -43,14 +45,19 @@ namespace ShareInvest
                                 var count = secret.GetProcessorCount(str);
                                 var info = new Information(str);
                                 retrieve.SetInitialzeTheCode();
+                                IList catalog;
 
-                                if (secret.GetIsSever(str) == false)
+                                if (secret.GetIsSever(str))
+                                {
+                                    info.GetUserIdentity(initial);
+                                    catalog = info.GetStatistics(count).Distinct().ToList();
+                                }
+                                else
                                 {
                                     info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
-                                    count = 0.625;
+                                    count = 0.5;
+                                    catalog = info.GetBestStrategy();
                                 }
-                                info.GetUserIdentity(initial);
-                                var catalog = info.GetStatistics(count).Distinct().ToList();
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
@@ -58,7 +65,7 @@ namespace ShareInvest
                                 };
                                 try
                                 {
-                                    Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
+                                    Parallel.ForEach((List<Models.ImitationGames>)catalog, po, new Action<Models.ImitationGames>((number) =>
                                     {
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();

@@ -15,7 +15,7 @@ namespace ShareInvest.GoblinBatContext
     {
         protected Stack<double> GetBasicChart(Stack<double> stack, Specify specify, int period)
         {
-            var path = GetPath(specify);
+            var path = Path.Combine(Application.StartupPath, chart, specify.Code, specify.Time.ToString());
             var exists = new DirectoryInfo(path);
             var file = string.Concat(path, @"\", period, res);
             var files = new FileInfo(file);
@@ -104,7 +104,6 @@ namespace ShareInvest.GoblinBatContext
             return result;
         }
         protected CallUpBasicInformation(string key) => this.key = key;
-        string GetPath(Specify specify) => System.IO.Path.Combine(Application.StartupPath, chart, specify.Code, specify.Time.ToString());
         readonly string key;
         const string res = ".res";
         const string chart = "Chart";
