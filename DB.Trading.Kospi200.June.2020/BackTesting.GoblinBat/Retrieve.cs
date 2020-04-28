@@ -15,6 +15,7 @@ namespace ShareInvest.Strategy
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
         public Catalog.XingAPI.Specify[] GetUserStrategy() => GetCatalog(GetBestStrategyRecommend(Information.Statistics));
+        public Models.ImitationGames GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
         public void SetInitialzeTheCode()
         {
             Code = GetStrategy();

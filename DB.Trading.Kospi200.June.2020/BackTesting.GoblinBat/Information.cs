@@ -228,7 +228,7 @@ namespace ShareInvest.Strategy
                                                     }
         }
         public void GetUserIdentity(char initial) => Statistics = GetBasicStrategy(initial);
-        public List<Models.ImitationGames> GetBestStrategy() => GetBestStrategyRecommand(new List<Models.ImitationGames>(128));
+        public List<Models.ImitationGames> GetBestStrategy() => GetBestStrategyRecommend(new List<Models.ImitationGames>(128));
         internal static List<Models.Statistics> Statistics
         {
             get; set;

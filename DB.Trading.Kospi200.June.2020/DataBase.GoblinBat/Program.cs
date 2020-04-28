@@ -56,7 +56,14 @@ namespace ShareInvest
                                 {
                                     info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
                                     count = 0.5;
-                                    catalog = info.GetBestStrategy();
+                                    catalog = info.GetBestStrategy().OrderByDescending(o => o.Cumulative).ToList();
+                                    info.GetUserIdentity(initial);
+                                    var best = retrieve.GetBestStrategy();
+
+                                    if (catalog.Contains(best))
+                                        catalog.Remove(best);
+
+                                    catalog.Insert(0, best);
                                 }
                                 var po = new ParallelOptions
                                 {

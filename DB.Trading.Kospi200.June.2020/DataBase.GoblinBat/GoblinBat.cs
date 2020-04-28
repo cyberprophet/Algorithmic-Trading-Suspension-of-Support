@@ -564,6 +564,10 @@ namespace ShareInvest
                         case bantam:
                             new Strategy.XingAPI.Bantam(param);
                             break;
+
+                        case feather:
+                            new Strategy.XingAPI.Feather(param);
+                            break;
                     }
                 }));
             }
@@ -776,5 +780,6 @@ namespace ShareInvest
         const string gs = "GodSword";
         const string basic = "Base";
         const string bantam = "Bantam";
+        const string feather = "Feather";
     }
 }

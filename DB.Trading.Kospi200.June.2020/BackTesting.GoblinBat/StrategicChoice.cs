@@ -128,7 +128,6 @@ namespace ShareInvest.Strategy
                 OrgOrdNo = number,
                 OrdQty = sell
             })).Start();
-
             return true;
         }
         protected internal bool SendCorrectionOrder(string price, string number)
@@ -142,7 +141,6 @@ namespace ShareInvest.Strategy
                 OrdPrc = price,
                 OrdQty = sell
             })).Start();
-
             return true;
         }
         protected internal bool SendNewOrder(string price, string classification)
@@ -156,7 +154,22 @@ namespace ShareInvest.Strategy
                 OrdPrc = price,
                 OrdQty = sell
             })).Start();
+            return true;
+        }
+        protected internal bool SendNewOrder(double price)
+        {
+            if (API.Quantity == 0)
+                return false;
 
+            API.OnReceiveBalance = false;
+            new Task(() => API.orders[0].QueryExcute(new Order
+            {
+                FnoIsuNo = ConnectAPI.Code,
+                BnsTpCode = API.Quantity > 0 ? sell : buy,
+                FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.시장가).ToString("D2"),
+                OrdPrc = price.ToString("F2"),
+                OrdQty = sell
+            })).Start();
             return true;
         }
         void SendLiquidationOrder()
