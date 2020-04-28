@@ -25,7 +25,7 @@ namespace ShareInvest.Strategy.Statistics
         {
             var sell = bt.SellOrder.OrderByDescending(o => o.Key).First();
 
-            if (double.TryParse(sell.Key, out double csp) && selling[API.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp)
+            if (double.TryParse(sell.Key, out double csp) && selling[bt.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp)
                 return bt.SendClearingOrder(sell.Value);
 
             return false;
@@ -47,17 +47,10 @@ namespace ShareInvest.Strategy.Statistics
                 double check = prospect - Const.ErrorRate, abscond = oPrice - Const.ErrorRate, chase = sPrice + Const.ErrorRate;
 
                 if (buy < check && sAvg > check && bt.BuyOrder.ContainsKey(abscond.ToString("F2")) == false && sPrice > buy - Const.ErrorRate * 2)
-                {
-                    bt.SendCorrectionOrder(abscond.ToString("F2"), sb.Value, quantity);
+                    return bt.SendCorrectionOrder(abscond.ToString("F2"), sb.Value, quantity);
 
-                    return true;
-                }
                 if (buy > check && buy < sAvg && bt.BuyOrder.ContainsKey(chase.ToString("F2")) == false && sPrice < buy - Const.ErrorRate * 5)
-                {
-                    bt.SendCorrectionOrder(chase.ToString("F2"), order.Value, quantity);
-
-                    return true;
-                }
+                    return bt.SendCorrectionOrder(chase.ToString("F2"), order.Value, quantity);
             }
             return false;
         }
@@ -71,17 +64,10 @@ namespace ShareInvest.Strategy.Statistics
                 double check = prospect + Const.ErrorRate, abscond = oPrice + Const.ErrorRate, chase = sPrice - Const.ErrorRate;
 
                 if (sell > check && bAvg < check && bt.SellOrder.ContainsKey(abscond.ToString("F2")) == false && sPrice < sell + Const.ErrorRate * 2)
-                {
-                    bt.SendCorrectionOrder(abscond.ToString("F2"), sb.Value, quantity);
+                    return bt.SendCorrectionOrder(abscond.ToString("F2"), sb.Value, quantity);
 
-                    return true;
-                }
                 if (sell < check && sell > bAvg && bt.SellOrder.ContainsKey(chase.ToString("F2")) == false && sPrice > sell + Const.ErrorRate * 5)
-                {
-                    bt.SendCorrectionOrder(chase.ToString("F2"), order.Value, quantity);
-
-                    return true;
-                }
+                    return bt.SendCorrectionOrder(chase.ToString("F2"), order.Value, quantity);
             }
             return false;
         }

@@ -43,38 +43,34 @@ namespace ShareInvest.Strategy
                         sp[i] = st;
                         bp[i] = bt;
                     }
-                if (API.AvgPurchase != null && API.AvgPurchase.Equals(avg) == false)
+                if (API.AvgPurchase != null && API.AvgPurchase.Equals(avg) == false && API.OnReceiveBalance && API.Quantity != 0)
                 {
                     price = GetExactPrice(API.AvgPurchase);
 
                     switch (classification)
                     {
                         case sell:
-                            if (API.OnReceiveBalance && API.Quantity < 0)
-                            {
-                                if (API.BuyOrder.Count == 0 && max < -API.Quantity && ForTheLiquidationOfSellOrder(price, bp))
-                                    return;
+                            if (API.BuyOrder.Count == 0 && max < -API.Quantity && ForTheLiquidationOfSellOrder(price, bp))
+                                return;
 
-                                if (API.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
-                                    return;
+                            if (API.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
+                                return;
 
-                                if (API.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1]))
-                                    return;
-                            }
+                            if (API.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1]))
+                                return;
+
                             break;
 
                         case buy:
-                            if (API.OnReceiveBalance && API.Quantity > 0)
-                            {
-                                if (API.SellOrder.Count == 0 && max < API.Quantity && ForTheLiquidationOfBuyOrder(price, sp))
-                                    return;
+                            if (API.SellOrder.Count == 0 && max < API.Quantity && ForTheLiquidationOfBuyOrder(price, sp))
+                                return;
 
-                                if (API.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
-                                    return;
+                            if (API.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
+                                return;
 
-                                if (API.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1]))
-                                    return;
-                            }
+                            if (API.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1]))
+                                return;
+
                             break;
                     }
                 }

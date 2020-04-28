@@ -43,10 +43,6 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
-        double PurchasePrice
-        {
-            get; set;
-        }
         Dictionary<uint, int> Residue
         {
             get;
@@ -112,20 +108,23 @@ namespace ShareInvest.Strategy
 
             return false;
         }
-        internal void SendCorrectionOrder(string price, uint number, int residue)
+        internal bool SendCorrectionOrder(string price, uint number, int residue)
         {
             if (SellOrder.ContainsValue(number) && SellOrder.Remove(SellOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
             {
                 SellOrder[price] = Count;
                 Residue[Count++] = residue;
 
-                return;
+                return true;
             }
             if (BuyOrder.ContainsValue(number) && BuyOrder.Remove(BuyOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
             {
                 BuyOrder[price] = Count;
                 Residue[Count++] = residue;
+
+                return true;
             }
+            return false;
         }
         internal bool SendNewOrder(string price, string classification, int residue)
         {
@@ -142,6 +141,16 @@ namespace ShareInvest.Strategy
                     return true;
             }
             return false;
+        }
+        internal bool SendNewOrder(double price)
+        {
+            if (Quantity == 0)
+                return false;
+
+            Quantity += Quantity > 0 ? -1 : 1;
+            SetConclusion(price);
+
+            return true;
         }
         internal void SetSellConclusion(double price, int residue)
         {
@@ -246,9 +255,9 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
-        internal string AvgPurchase
+        internal double PurchasePrice
         {
-            get; set;
+            get; private set;
         }
         internal string Classification
         {
@@ -288,6 +297,10 @@ namespace ShareInvest.Strategy
                     case bantam:
                         new Bantam(this, param);
                         break;
+
+                    case feather:
+                        new Feather(this, param);
+                        break;
                 }
             }));
             games = new Queue<Models.ImitationGames>();
@@ -295,6 +308,7 @@ namespace ShareInvest.Strategy
         }
         const string basic = "Base";
         const string bantam = "Bantam";
+        const string feather = "Feather";
         readonly Models.ImitationGames game;
         readonly Queue<Models.ImitationGames> games;
         public event EventHandler<Datum> SendDatum;

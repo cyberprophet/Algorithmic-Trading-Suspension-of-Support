@@ -68,38 +68,34 @@ namespace ShareInvest.Strategy.Statistics
                         sp[i] = st;
                         bp[i] = bt;
                     }
-                if (string.IsNullOrEmpty(bt.AvgPurchase) == false)
+                if (bt.PurchasePrice > 0)
                 {
-                    price = GetExactPrice(bt.AvgPurchase);
+                    price = GetExactPrice(bt.PurchasePrice.ToString());
 
                     switch (classification)
                     {
                         case sell:
-                            if (bt.Quantity < 0)
-                            {
-                                if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && ForTheLiquidationOfSellOrder(price, bp, e.BuyQuantity))
-                                    return;
+                            if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && ForTheLiquidationOfSellOrder(price, bp, e.BuyQuantity))
+                                return;
 
-                                if (bt.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
-                                    return;
+                            if (bt.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
+                                return;
 
-                                if (bt.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1], e.SellQuantity))
-                                    return;
-                            }
+                            if (bt.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1], e.SellQuantity))
+                                return;
+
                             break;
 
                         case buy:
-                            if (bt.Quantity > 0)
-                            {
-                                if (bt.SellOrder.Count == 0 && max < bt.Quantity && ForTheLiquidationOfBuyOrder(price, sp, e.SellQuantity))
-                                    return;
+                            if (bt.SellOrder.Count == 0 && max < bt.Quantity && ForTheLiquidationOfBuyOrder(price, sp, e.SellQuantity))
+                                return;
 
-                                if (bt.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
-                                    return;
+                            if (bt.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
+                                return;
 
-                                if (bt.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1], e.BuyQuantity))
-                                    return;
-                            }
+                            if (bt.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1], e.BuyQuantity))
+                                return;
+
                             break;
                     }
                 }

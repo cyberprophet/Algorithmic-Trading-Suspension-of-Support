@@ -28,13 +28,13 @@ namespace ShareInvest.Strategy.XingAPI
         }
         protected internal override bool ForTheLiquidationOfBuyOrder(double[] selling)
         {
+            if (API.Quantity < -1)
+                return SendNewOrder(selling[selling.Length - 1]);
+
             var number = API.SellOrder.OrderByDescending(o => o.Value).First().Key;
 
             if (API.SellOrder.TryGetValue(number, out double csp) && selling[API.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp)
                 return SendClearingOrder(number);
-
-            if (API.Quantity < -1)
-                return SendNewOrder(selling[selling.Length - 1]);
 
             return false;
         }
@@ -47,13 +47,13 @@ namespace ShareInvest.Strategy.XingAPI
         }
         protected internal override bool ForTheLiquidationOfSellOrder(double[] bid)
         {
+            if (API.Quantity > 1)
+                return SendNewOrder(bid[bid.Length - 1]);
+
             var number = API.BuyOrder.OrderBy(o => o.Value).First().Key;
 
             if (API.BuyOrder.TryGetValue(number, out double cbp) && bid[API.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp)
                 return SendClearingOrder(number);
-
-            if (API.Quantity > 1)
-                return SendNewOrder(bid[bid.Length - 1]);
 
             return false;
         }
@@ -79,6 +79,13 @@ namespace ShareInvest.Strategy.XingAPI
             var order = API.BuyOrder.OrderBy(o => o.Value).First();
             var sb = API.BuyOrder.OrderByDescending(o => o.Value).First();
 
+            if (API.SellOrder.Count > 1)
+            {
+                var benchmark = API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2;
+
+                if (benchmark < buy + Const.ErrorRate * 11)
+                    return SendCorrectionOrder(benchmark.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key);
+            }
             if (double.TryParse(avg, out double sAvg) && double.TryParse(GetExactPrice((((sAvg - Const.ErrorRate) * API.Quantity + sb.Value) / (API.Quantity + 1)).ToString("F2")), out double prospect))
             {
                 double check = prospect - Const.ErrorRate, abscond = order.Value - Const.ErrorRate, chase = sb.Value + Const.ErrorRate, confirm = check - buy;
@@ -89,13 +96,6 @@ namespace ShareInvest.Strategy.XingAPI
                 if (buy > check && buy < sAvg && API.BuyOrder.ContainsValue(chase) == false && sb.Value < buy - Const.ErrorRate * 5 && API.OnReceiveBalance)
                     return SendCorrectionOrder(chase.ToString("F2"), order.Key);
             }
-            if (API.SellOrder.Count > 1)
-            {
-                var benchmark = API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2;
-
-                if (benchmark < buy + Const.ErrorRate * 11)
-                    return SendCorrectionOrder(benchmark.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key);
-            }
             return false;
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell)
@@ -103,6 +103,13 @@ namespace ShareInvest.Strategy.XingAPI
             var order = API.SellOrder.OrderByDescending(o => o.Value).First();
             var sb = API.SellOrder.OrderBy(o => o.Value).First();
 
+            if (API.BuyOrder.Count > 1)
+            {
+                var benchmark = API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2;
+
+                if (benchmark > sell * Const.ErrorRate * 11)
+                    return SendCorrectionOrder(benchmark.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key);
+            }
             if (double.TryParse(avg, out double bAvg) && double.TryParse(GetExactPrice(((sb.Value - (bAvg + Const.ErrorRate) * API.Quantity) / (1 - API.Quantity)).ToString("F2")), out double prospect))
             {
                 double check = prospect + Const.ErrorRate, abscond = order.Value + Const.ErrorRate, chase = sb.Value - Const.ErrorRate, confirm = sell - check;
@@ -112,13 +119,6 @@ namespace ShareInvest.Strategy.XingAPI
 
                 if (sell < check && sell > bAvg && API.SellOrder.ContainsValue(chase) == false && sb.Value > sell + Const.ErrorRate * 5 && API.OnReceiveBalance)
                     return SendCorrectionOrder(chase.ToString("F2"), order.Key);
-            }
-            if (API.BuyOrder.Count > 1)
-            {
-                var benchmark = API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2;
-
-                if (benchmark > sell * Const.ErrorRate * 11)
-                    return SendCorrectionOrder(benchmark.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key);
             }
             return false;
         }

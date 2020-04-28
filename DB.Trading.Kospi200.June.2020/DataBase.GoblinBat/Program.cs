@@ -47,15 +47,17 @@ namespace ShareInvest
                                 retrieve.SetInitialzeTheCode();
                                 IList catalog;
 
-                                if (secret.GetIsSever(str))
+                                if (secret.GetExternal(str))
                                 {
+                                    if (secret.GetIsSever(str) == false)
+                                        count = 0.5;
+
                                     info.GetUserIdentity(initial);
                                     catalog = info.GetStatistics(count).Distinct().ToList();
                                 }
                                 else
                                 {
                                     info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
-                                    count = 0.5;
                                     catalog = info.GetBestStrategy().OrderByDescending(o => o.Cumulative).ToList();
                                     info.GetUserIdentity(initial);
                                     var best = retrieve.GetBestStrategy();
