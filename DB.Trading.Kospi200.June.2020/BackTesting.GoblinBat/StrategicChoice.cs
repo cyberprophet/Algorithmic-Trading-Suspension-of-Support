@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ShareInvest.Catalog;
@@ -50,25 +51,35 @@ namespace ShareInvest.Strategy
                     switch (classification)
                     {
                         case sell:
-                            if (API.BuyOrder.Count == 0 && max < -API.Quantity && ForTheLiquidationOfSellOrder(price, bp))
-                                return;
+                            if (API.Quantity < 0)
+                            {
+                                if (API.BuyOrder.Count == 0 && max < -API.Quantity && ForTheLiquidationOfSellOrder(price, bp))
+                                    return;
 
-                            if (API.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
-                                return;
+                                if (API.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
+                                    return;
 
-                            if (API.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1]))
+                                if (API.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1]))
+                                    return;
+                            }
+                            else if (API.BuyOrder.Count > 1 && SetBuyDecentralize(bp[bp.Length - 1]))
                                 return;
 
                             break;
 
                         case buy:
-                            if (API.SellOrder.Count == 0 && max < API.Quantity && ForTheLiquidationOfBuyOrder(price, sp))
-                                return;
+                            if (API.Quantity > 0)
+                            {
+                                if (API.SellOrder.Count == 0 && max < API.Quantity && ForTheLiquidationOfBuyOrder(price, sp))
+                                    return;
 
-                            if (API.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
-                                return;
+                                if (API.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
+                                    return;
 
-                            if (API.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1]))
+                                if (API.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1]))
+                                    return;
+                            }
+                            else if (API.SellOrder.Count > 1 && SetSellDecentralize(sp[sp.Length - 1]))
                                 return;
 
                             break;
@@ -152,21 +163,17 @@ namespace ShareInvest.Strategy
             })).Start();
             return true;
         }
-        protected internal bool SendNewOrder(double price)
+        bool SetBuyDecentralize(double buy)
         {
-            if (API.Quantity == 0)
-                return false;
+            var benchmark = API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2;
 
-            API.OnReceiveBalance = false;
-            new Task(() => API.orders[0].QueryExcute(new Order
-            {
-                FnoIsuNo = ConnectAPI.Code,
-                BnsTpCode = API.Quantity > 0 ? sell : buy,
-                FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.시장가).ToString("D2"),
-                OrdPrc = price.ToString("F2"),
-                OrdQty = sell
-            })).Start();
-            return true;
+            return benchmark > buy - Const.ErrorRate * 11 ? SendCorrectionOrder(benchmark.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key) : false;
+        }
+        bool SetSellDecentralize(double sell)
+        {
+            var benchmark = API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2;
+
+            return benchmark < sell + Const.ErrorRate * 11 ? SendCorrectionOrder(benchmark.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key) : false;
         }
         void SendLiquidationOrder()
         {

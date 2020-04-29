@@ -7,9 +7,6 @@ namespace ShareInvest.Strategy.Statistics
     {
         protected internal override bool ForTheLiquidationOfBuyOrder(double[] selling)
         {
-            if (bt.Quantity < -1)
-                return bt.SendNewOrder(selling[selling.Length - 1]);
-
             var sell = bt.SellOrder.OrderByDescending(o => o.Key).First();
 
             if (double.TryParse(sell.Key, out double csp) && selling[bt.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp)
@@ -26,9 +23,6 @@ namespace ShareInvest.Strategy.Statistics
         }
         protected internal override bool ForTheLiquidationOfSellOrder(double[] bid)
         {
-            if (bt.Quantity > 1)
-                return bt.SendNewOrder(bid[bid.Length - 1]);
-
             var buy = bt.BuyOrder.OrderBy(o => o.Key).First();
 
             if (double.TryParse(buy.Key, out double cbp) && bid[bt.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp)
@@ -66,7 +60,7 @@ namespace ShareInvest.Strategy.Statistics
             }
             if (double.TryParse(order.Key, out double oPrice) && double.TryParse(sb.Key, out double sPrice) && double.TryParse(avg, out double sAvg) && double.TryParse(GetExactPrice((((sAvg - Const.ErrorRate) * bt.Quantity + sPrice) / (bt.Quantity + 1)).ToString("F2")), out double prospect))
             {
-                double check = prospect - Const.ErrorRate, abscond = oPrice - Const.ErrorRate, chase = sPrice + Const.ErrorRate, confirm = check - buy;
+                double check = prospect - Const.ErrorRate, abscond = oPrice - Const.ErrorRate*2, chase = sPrice + Const.ErrorRate, confirm = check - buy;
 
                 if (0 < confirm && confirm < 0.2 * bt.Quantity && sAvg > check && bt.BuyOrder.ContainsKey(abscond.ToString("F2")) == false && sPrice > buy - Const.ErrorRate * 2)
                     return bt.SendCorrectionOrder(abscond.ToString("F2"), sb.Value, quantity);
@@ -85,12 +79,12 @@ namespace ShareInvest.Strategy.Statistics
             {
                 var benchmark = bbp - Const.ErrorRate * 2;
 
-                if (benchmark > sell * Const.ErrorRate * 11)
+                if (benchmark > sell - Const.ErrorRate * 11)
                     return bt.SendCorrectionOrder(benchmark.ToString("F2"), bt.BuyOrder.OrderByDescending(o => o.Key).First().Value, quantity);
             }
             if (double.TryParse(order.Key, out double oPrice) && double.TryParse(sb.Key, out double sPrice) && double.TryParse(avg, out double bAvg) && double.TryParse(GetExactPrice(((sPrice - (bAvg + Const.ErrorRate) * bt.Quantity) / (1 - bt.Quantity)).ToString("F2")), out double prospect))
             {
-                double check = prospect + Const.ErrorRate, abscond = oPrice + Const.ErrorRate, chase = sPrice - Const.ErrorRate, confirm = sell - check;
+                double check = prospect + Const.ErrorRate, abscond = oPrice + Const.ErrorRate*2, chase = sPrice - Const.ErrorRate, confirm = sell - check;
 
                 if (0 < confirm && confirm < 0.2 * -bt.Quantity && bAvg < check && bt.SellOrder.ContainsKey(abscond.ToString("F2")) == false && sPrice < sell + Const.ErrorRate * 2)
                     return bt.SendCorrectionOrder(abscond.ToString("F2"), sb.Value, quantity);

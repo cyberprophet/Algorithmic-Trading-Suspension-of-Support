@@ -24,7 +24,7 @@ namespace ShareInvest
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && (DateTime.Now.Hour == 15 && DateTime.Now.Minute >= 45 || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6);
-                var remaining = secret.GetIsSever(str) ? ran.Next(classfication ? 15 : 9, classfication ? 31 : 16) : 1;
+                var remaining = secret.GetIsSever(str) ? ran.Next(classfication ? 15 : 13, classfication ? 31 : 20) : (secret.GetExternal(str) ? 1 : 7);
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var initial = secret.GetPort(str);
                 var cts = new CancellationTokenSource();
@@ -49,16 +49,21 @@ namespace ShareInvest
 
                                 if (secret.GetExternal(str))
                                 {
-                                    if (secret.GetIsSever(str) == false)
-                                        count = 0.5;
-
                                     info.GetUserIdentity(initial);
-                                    catalog = info.GetStatistics(count).Distinct().ToList();
+
+                                    if (secret.GetIsSever(str))
+                                        catalog = info.GetStatistics(count).Distinct().ToList();
+
+                                    else
+                                    {
+                                        count = 0.5;
+                                        catalog = info.GetBestStrategy(false);
+                                    }
                                 }
                                 else
                                 {
                                     info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
-                                    catalog = info.GetBestStrategy().OrderByDescending(o => o.Cumulative).ToList();
+                                    catalog = info.GetBestStrategy(true);
                                     info.GetUserIdentity(initial);
                                     var best = retrieve.GetBestStrategy();
 
@@ -104,6 +109,19 @@ namespace ShareInvest
                         }
                     if (initial.Equals((char)126) == false)
                     {
+                        if (initial.Equals((char)Port.Trading) && cts.IsCancellationRequested == false)
+                            try
+                            {
+                                cts.Cancel();
+                            }
+                            catch (Exception ex)
+                            {
+                                new ExceptionMessage(ex.StackTrace);
+                            }
+                            finally
+                            {
+                                cts.Dispose();
+                            }
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
                         Application.Run(new GoblinBat(initial, secret, str, cts));

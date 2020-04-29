@@ -111,12 +111,6 @@ namespace ShareInvest.Strategy.Statistics
         }
         void Analysize(object sender, EventHandler.BackTesting.Datum e)
         {
-            if (bt.SellOrder.Count > 0 && e.Volume > 0)
-                bt.SetSellConclusion(e.Price, e.Volume);
-
-            if (bt.BuyOrder.Count > 0 && e.Volume < 0)
-                bt.SetBuyConclusion(e.Price, e.Volume);
-
             if (GetCheckOnTime(e.Date))
             {
                 Short.Pop();
@@ -131,19 +125,24 @@ namespace ShareInvest.Strategy.Statistics
 
             if (specify.Time == 1440)
             {
-                switch (GetCheckTime(e.Date.ToString()))
-                {
-                    case true:
-                        OnReceiveTrend(e.Volume);
-                        break;
+                if (GetCheckTime(e.Date.ToString()))
+                    OnReceiveTrend(e.Volume);
 
-                    case false:
-                        bt.SellOrder.Clear();
-                        bt.BuyOrder.Clear();
-                        break;
-                }
-                if (e.Date.ToString().Substring(6, 6).Equals(end))
+                var date = e.Date.ToString().Substring(6, 6);
+
+                if (date.Equals(end))
                     bt.SetStatisticalStorage(e.Date.ToString().Substring(0, 6), e.Price, RollOver);
+
+                if (uint.TryParse(date, out uint cme) && cme > 45958 && cme < 85959)
+                {
+                    bt.SellOrder.Clear();
+                    bt.BuyOrder.Clear();
+                }
+                if (bt.SellOrder.Count > 0 && e.Volume > 0)
+                    bt.SetSellConclusion(e.Price, e.Volume);
+
+                if (bt.BuyOrder.Count > 0 && e.Volume < 0)
+                    bt.SetBuyConclusion(e.Price, e.Volume);
             }
         }
         bool RollOver

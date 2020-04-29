@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
@@ -500,24 +501,15 @@ namespace ShareInvest.GoblinBatContext
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    db.Configuration.AutoDetectChangesEnabled = false;
-                    db.BulkInsert(memo, o =>
-                    {
-                        o.InsertIfNotExists = true;
-                        o.BatchSize = 150;
-                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                        o.AutoMapOutputDirection = false;
-                    });
-                    result = true;
+                    while (memo.Count > 0)
+                        db.Games.AddOrUpdate(memo.Dequeue());
+
+                    result = db.SaveChanges() > 0 ? true : false;
                 }
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
                     result = false;
-                }
-                finally
-                {
-                    db.Configuration.AutoDetectChangesEnabled = true;
                 }
             return result;
         }

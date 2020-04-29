@@ -142,16 +142,6 @@ namespace ShareInvest.Strategy
             }
             return false;
         }
-        internal bool SendNewOrder(double price)
-        {
-            if (Quantity == 0)
-                return false;
-
-            Quantity += Quantity > 0 ? -1 : 1;
-            SetConclusion(price);
-
-            return true;
-        }
         internal void SetSellConclusion(double price, int residue)
         {
             var key = price.ToString("F2");
@@ -250,6 +240,8 @@ namespace ShareInvest.Strategy
             TodayRevenue = Revenue;
             SellOrder.Clear();
             BuyOrder.Clear();
+            Residue.Clear();
+            Count = 0;
         }
         internal int Quantity
         {
