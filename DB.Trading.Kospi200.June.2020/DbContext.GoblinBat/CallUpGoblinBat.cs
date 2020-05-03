@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -118,7 +117,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 List<ImitationGames> list;
                 using (var db = new GoblinBatDbContext(key))
-                    list = db.Games.OrderByDescending(o => o.Statistic).Take(7500).AsNoTracking().ToList();
+                    list = db.Games.Where(o => o.MarginRate == marginRate).OrderByDescending(o => o.Statistic).Take(7500).AsNoTracking().ToList();
 
                 foreach (var game in list.OrderByDescending(o => o.Cumulative))
                     games.Add(new ImitationGames
@@ -173,7 +172,7 @@ namespace ShareInvest.GoblinBatContext
             {
                 List<ImitationGames> list;
                 using (var db = new GoblinBatDbContext(key))
-                    list = db.Games.OrderByDescending(o => o.Cumulative).Take(7500).AsNoTracking().ToList();
+                    list = db.Games.Where(o => o.MarginRate == marginRate).OrderByDescending(o => o.Cumulative).Take(7500).AsNoTracking().ToList();
 
                 foreach (var game in list.OrderByDescending(o => o.Statistic))
                     games.Add(new ImitationGames
@@ -225,11 +224,11 @@ namespace ShareInvest.GoblinBatContext
         protected ImitationGames GetBestStrategyRecommend(List<Statistics> list)
         {
             var game = new ImitationGames();
+            var temp = long.MinValue;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
                     var date = new Secret().RecentDate;
-                    var temp = long.MinValue;
                     var best = db.Games.Where(o => o.Date.Equals(date)).AsNoTracking();
                     var max = (long)(best.Max(o => o.Cumulative + o.Unrealized) * 0.85);
                     int statistic = (int)(best.Max(o => o.Statistic) * 0.65), remain = list.Count;
@@ -283,55 +282,57 @@ namespace ShareInvest.GoblinBatContext
                                     MonoLong = cu.MonoLong
                                 };
                             }
-                        if (string.IsNullOrEmpty(game.Strategy) || remain-- > 0)
-                            foreach (var cu in select.OrderByDescending(o => (o.Cumulative + o.Unrealized) * o.Statistic).AsNoTracking().Take(1))
-                                if (temp <= (cu.Cumulative + cu.Unrealized) * cu.Statistic)
-                                {
-                                    temp = (cu.Cumulative + cu.Unrealized) * cu.Statistic;
-                                    game = new ImitationGames
-                                    {
-                                        Assets = cu.Assets,
-                                        Code = cu.Code,
-                                        Commission = cu.Commission,
-                                        MarginRate = cu.MarginRate,
-                                        Strategy = cu.Strategy,
-                                        RollOver = cu.RollOver,
-                                        BaseTime = cu.BaseTime,
-                                        BaseShort = cu.BaseShort,
-                                        BaseLong = cu.BaseLong,
-                                        NonaTime = cu.NonaTime,
-                                        NonaShort = cu.NonaShort,
-                                        NonaLong = cu.NonaLong,
-                                        OctaTime = cu.OctaTime,
-                                        OctaShort = cu.OctaShort,
-                                        OctaLong = cu.OctaLong,
-                                        HeptaTime = cu.HeptaTime,
-                                        HeptaShort = cu.HeptaShort,
-                                        HeptaLong = cu.HeptaLong,
-                                        HexaTime = cu.HexaTime,
-                                        HexaShort = cu.HexaShort,
-                                        HexaLong = cu.HexaLong,
-                                        PentaTime = cu.PentaTime,
-                                        PentaShort = cu.PentaShort,
-                                        PentaLong = cu.PentaLong,
-                                        QuadTime = cu.QuadTime,
-                                        QuadShort = cu.QuadShort,
-                                        QuadLong = cu.QuadLong,
-                                        TriTime = cu.TriTime,
-                                        TriShort = cu.TriShort,
-                                        TriLong = cu.TriLong,
-                                        DuoTime = cu.DuoTime,
-                                        DuoShort = cu.DuoShort,
-                                        DuoLong = cu.DuoLong,
-                                        MonoTime = cu.MonoTime,
-                                        MonoShort = cu.MonoShort,
-                                        MonoLong = cu.MonoLong
-                                    };
-                                }
                     }
                 }
                 catch (Exception ex)
                 {
+                    var date = db.Games.Max(o => o.Date);
+
+                    foreach (var choice in list)
+                        foreach (var cu in db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver)).OrderByDescending(o => (o.Cumulative + o.Unrealized) * o.Statistic).AsNoTracking().Take(1250))
+                            if (temp <= (cu.Cumulative + cu.Unrealized) * cu.Statistic)
+                            {
+                                temp = (cu.Cumulative + cu.Unrealized) * cu.Statistic;
+                                game = new ImitationGames
+                                {
+                                    Assets = cu.Assets,
+                                    Code = cu.Code,
+                                    Commission = cu.Commission,
+                                    MarginRate = cu.MarginRate,
+                                    Strategy = cu.Strategy,
+                                    RollOver = cu.RollOver,
+                                    BaseTime = cu.BaseTime,
+                                    BaseShort = cu.BaseShort,
+                                    BaseLong = cu.BaseLong,
+                                    NonaTime = cu.NonaTime,
+                                    NonaShort = cu.NonaShort,
+                                    NonaLong = cu.NonaLong,
+                                    OctaTime = cu.OctaTime,
+                                    OctaShort = cu.OctaShort,
+                                    OctaLong = cu.OctaLong,
+                                    HeptaTime = cu.HeptaTime,
+                                    HeptaShort = cu.HeptaShort,
+                                    HeptaLong = cu.HeptaLong,
+                                    HexaTime = cu.HexaTime,
+                                    HexaShort = cu.HexaShort,
+                                    HexaLong = cu.HexaLong,
+                                    PentaTime = cu.PentaTime,
+                                    PentaShort = cu.PentaShort,
+                                    PentaLong = cu.PentaLong,
+                                    QuadTime = cu.QuadTime,
+                                    QuadShort = cu.QuadShort,
+                                    QuadLong = cu.QuadLong,
+                                    TriTime = cu.TriTime,
+                                    TriShort = cu.TriShort,
+                                    TriLong = cu.TriLong,
+                                    DuoTime = cu.DuoTime,
+                                    DuoShort = cu.DuoShort,
+                                    DuoLong = cu.DuoLong,
+                                    MonoTime = cu.MonoTime,
+                                    MonoShort = cu.MonoShort,
+                                    MonoLong = cu.MonoLong
+                                };
+                            }
                     new ExceptionMessage(ex.StackTrace);
                 }
             return game;
@@ -695,7 +696,7 @@ namespace ShareInvest.GoblinBatContext
         }
         protected internal const string futures = "000";
         protected internal const string kospi200f = "101";
-        const double marginRate = 0.162;
+        const double marginRate = 0.1755;
         const string basic = "Base.res";
         const string chart = "ChartOf101000";
         const int ar = 10000000;

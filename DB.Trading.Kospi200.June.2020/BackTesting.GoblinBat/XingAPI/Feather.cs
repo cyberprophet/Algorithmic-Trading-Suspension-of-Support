@@ -46,7 +46,7 @@ namespace ShareInvest.Strategy.XingAPI
         {
             var sb = API.SellOrder.OrderBy(o => o.Value).First();
 
-            return double.TryParse(avg, out double bAvg) && API.OnReceiveBalance && Math.Abs(bAvg - sb.Value) < Const.ErrorRate * 2 * API.Quantity ? SendCorrectionOrder((API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2).ToString("F2"), sb.Key) : false;
+            return double.TryParse(avg, out double bAvg) && API.OnReceiveBalance && Math.Abs(bAvg - sb.Value) < Const.ErrorRate * 2 * -API.Quantity ? SendCorrectionOrder((API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2).ToString("F2"), sb.Key) : false;
         }
         public Feather(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;
     }

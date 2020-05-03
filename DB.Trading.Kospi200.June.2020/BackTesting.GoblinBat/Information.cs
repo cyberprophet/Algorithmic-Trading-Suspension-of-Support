@@ -135,29 +135,28 @@ namespace ShareInvest.Strategy
             var queue = new Queue<Models.Statistics>();
 
             foreach (var str in strategy)
-                foreach (var margin in rate)
-                    foreach (var co in commission)
-                        if (str.Equals("Auto") == false)
+                foreach (var co in commission)
+                    if (str.Equals("Auto") == false)
+                    {
+                        queue.Enqueue(new Models.Statistics
                         {
-                            queue.Enqueue(new Models.Statistics
-                            {
-                                Assets = 90000000,
-                                Code = Retrieve.Code,
-                                Commission = co,
-                                MarginRate = margin,
-                                Strategy = str,
-                                RollOver = true
-                            });
-                            queue.Enqueue(new Models.Statistics
-                            {
-                                Assets = 90000000,
-                                Code = Retrieve.Code,
-                                Commission = co,
-                                MarginRate = margin,
-                                Strategy = str,
-                                RollOver = false
-                            });
-                        }
+                            Assets = 90000000,
+                            Code = Retrieve.Code,
+                            Commission = co,
+                            MarginRate = rate[0],
+                            Strategy = str,
+                            RollOver = true
+                        });
+                        queue.Enqueue(new Models.Statistics
+                        {
+                            Assets = 90000000,
+                            Code = Retrieve.Code,
+                            Commission = co,
+                            MarginRate = rate[0],
+                            Strategy = str,
+                            RollOver = false
+                        });
+                    }
             SetInsertBaseStrategy(queue);
         }
         public void SetInsertStrategy(string[] param)

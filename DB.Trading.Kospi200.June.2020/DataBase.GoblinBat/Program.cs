@@ -58,19 +58,28 @@ namespace ShareInvest
                                     {
                                         count = 0.5;
                                         catalog = info.GetBestStrategy(false);
+                                        info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
+                                        var best = retrieve.GetBestStrategy();
+
+                                        foreach (var input in info.GetStatistics(count).Distinct())
+                                            catalog.Add(input);
+
+                                        if (best != null)
+                                        {
+                                            if (catalog.Contains(best))
+                                                catalog.Remove(best);
+
+                                            catalog.Insert(0, best);
+                                        }
                                     }
                                 }
                                 else
                                 {
-                                    info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
-                                    catalog = info.GetBestStrategy(true);
                                     info.GetUserIdentity(initial);
-                                    var best = retrieve.GetBestStrategy();
+                                    catalog = info.GetBestStrategy(true);
 
-                                    if (catalog.Contains(best))
-                                        catalog.Remove(best);
-
-                                    catalog.Insert(0, best);
+                                    foreach (var input in info.GetStatistics(count).Distinct())
+                                        catalog.Add(input);
                                 }
                                 var po = new ParallelOptions
                                 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using ShareInvest.Catalog;
 using ShareInvest.Strategy.XingAPI;
 
@@ -75,25 +76,35 @@ namespace ShareInvest.Strategy.Statistics
                     switch (classification)
                     {
                         case sell:
-                            if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && ForTheLiquidationOfSellOrder(price, bp, e.BuyQuantity))
-                                return;
+                            if (bt.Quantity < 0)
+                            {
+                                if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && ForTheLiquidationOfSellOrder(price, bp, e.BuyQuantity))
+                                    return;
 
-                            if (bt.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
-                                return;
+                                if (bt.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
+                                    return;
 
-                            if (bt.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1], e.SellQuantity))
+                                if (bt.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1], e.SellQuantity))
+                                    return;
+                            }
+                            else if (bt.BuyOrder.Count > 1 && SetBuyDecentralize(bp[bp.Length - 1], e.BuyQuantity))
                                 return;
 
                             break;
 
                         case buy:
-                            if (bt.SellOrder.Count == 0 && max < bt.Quantity && ForTheLiquidationOfBuyOrder(price, sp, e.SellQuantity))
-                                return;
+                            if (bt.Quantity > 0)
+                            {
+                                if (bt.SellOrder.Count == 0 && max < bt.Quantity && ForTheLiquidationOfBuyOrder(price, sp, e.SellQuantity))
+                                    return;
 
-                            if (bt.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
-                                return;
+                                if (bt.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
+                                    return;
 
-                            if (bt.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1], e.BuyQuantity))
+                                if (bt.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1], e.BuyQuantity))
+                                    return;
+                            }
+                            else if (bt.SellOrder.Count > 1 && SetSellDecentralize(sp[sp.Length - 1], e.SellQuantity))
                                 return;
 
                             break;
@@ -108,6 +119,26 @@ namespace ShareInvest.Strategy.Statistics
                     }
                 SendNewOrder(check ? bp : sp, classification, check ? e.BuyQuantity : e.SellQuantity);
             }
+        }
+        bool SetBuyDecentralize(double buy, int quantity)
+        {
+            if (double.TryParse(bt.BuyOrder.OrderBy(o => o.Key).First().Key, out double price))
+            {
+                var benchmark = price - Const.ErrorRate * 2;
+
+                return benchmark > buy - Const.ErrorRate * 11 ? bt.SendCorrectionOrder(benchmark.ToString("F2"), bt.BuyOrder.OrderByDescending(o => o.Key).First().Value, quantity) : false;
+            }
+            return false;
+        }
+        bool SetSellDecentralize(double sell, int quantity)
+        {
+            if (double.TryParse(bt.SellOrder.OrderByDescending(o => o.Key).First().Key, out double price))
+            {
+                var benchmark = price + Const.ErrorRate * 2;
+
+                return benchmark < sell + Const.ErrorRate * 11 ? bt.SendCorrectionOrder(benchmark.ToString("F2"), bt.SellOrder.OrderBy(o => o.Key).First().Value, quantity) : false;
+            }
+            return false;
         }
         void Analysize(object sender, EventHandler.BackTesting.Datum e)
         {
