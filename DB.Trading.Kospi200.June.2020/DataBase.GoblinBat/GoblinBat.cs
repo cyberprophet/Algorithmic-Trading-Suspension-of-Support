@@ -18,13 +18,13 @@ namespace ShareInvest
     {
         internal GoblinBat(char initial, Secret secret, string key, CancellationTokenSource cts)
         {
+            var collect = ((char)Port.Collecting).Equals(initial);
             this.key = key;
             this.initial = initial;
             this.secret = secret;
-            this.cts = cts;
+            this.cts = collect ? cts : null;
             InitializeComponent();
             Opacity = 0;
-            var collect = ((char)Port.Collecting).Equals(initial);
             retrieve = new Strategy.Retrieve(key);
 
             if (collect)
@@ -571,6 +571,10 @@ namespace ShareInvest
                         case feather:
                             new Strategy.XingAPI.Feather(param);
                             break;
+
+                        case fly:
+                            new Strategy.XingAPI.Fly(param);
+                            break;
                     }
                 }));
             }
@@ -784,5 +788,6 @@ namespace ShareInvest
         const string basic = "Base";
         const string bantam = "Bantam";
         const string feather = "Feather";
+        const string fly = "Fly";
     }
 }

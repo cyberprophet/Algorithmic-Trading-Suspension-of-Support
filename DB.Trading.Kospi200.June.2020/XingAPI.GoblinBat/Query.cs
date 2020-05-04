@@ -141,12 +141,14 @@ namespace ShareInvest.XingAPI
         }
         protected internal virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
         protected internal ConnectAPI API => ConnectAPI.GetInstance();
-        readonly string[] exclusion = { accept, cancel, correction };
+        readonly string[] exclusion = { margin, rCancel, accept, cancel, correction };
         const string record = "레코드명:";
         const string separator = "No,한글명,필드명,영문명,";
         const string cancel = "02661";
         const string correction = "02667";
         const string impossible = "03590";
         const string accept = "08683";
+        const string margin = "02752";
+        const string rCancel = "03416";
     }
 }

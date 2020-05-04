@@ -1,20 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy.XingAPI
 {
-    public class Feather : StrategicChoice
+    public class Fly : StrategicChoice
     {
-        double Max(double max, Classification classification)
-        {
-            var temp = 0D;
-
-            foreach (var kv in API.Judge)
-                temp += kv.Value < 0 ? 0.085 : -0.085;
-
-            return max * ((classification.Equals(Classification.Buy) ? 0.9 : 0.85) - Math.Abs(temp));
-        }
         protected internal override bool ForTheLiquidationOfBuyOrder(double[] selling)
         {
             var number = API.SellOrder.OrderByDescending(o => o.Value).First().Key;
@@ -34,20 +24,28 @@ namespace ShareInvest.Strategy.XingAPI
             var check = classification.Equals(buy);
             var price = param[check ? param.Length - 1 : 0];
 
-            return price > 0 && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate), check ? Classification.Buy : Classification.Sell) && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false ? SendNewOrder(price.ToString("F2"), classification) : false;
+            if (check && API.Quantity < 0 && param[5] > 0 && API.BuyOrder.Count < -API.Quantity && API.BuyOrder.ContainsValue(param[5]) == false)
+                return SendNewOrder(param[5].ToString("F2"), classification);
+
+            else if (check == false && API.Quantity > 0 && param[4] > 0 && API.SellOrder.Count < API.Quantity && API.SellOrder.ContainsValue(param[4]) == false)
+                return SendNewOrder(param[4].ToString("F2"), classification);
+
+            return price > 0 && ((check ? API.BuyOrder.Count == 0 : API.SellOrder.Count == 0) || API.Quantity == 0) && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate) - 1 && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false ? SendNewOrder(price.ToString("F2"), classification) : false;
         }
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy)
         {
             var sb = API.BuyOrder.OrderByDescending(o => o.Value).First();
+            var abscond = 4 * API.Quantity * Const.ErrorRate;
 
-            return sb.Value > buy - Const.ErrorRate * 2 && double.TryParse(avg, out double sAvg) && API.OnReceiveBalance && Math.Abs(sAvg - sb.Value) < Const.ErrorRate * 2 * API.Quantity ? SendCorrectionOrder((API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2).ToString("F2"), sb.Key) : false;
+            return double.TryParse(avg, out double sAvg) && buy < sAvg && sAvg - abscond < sb.Value ? SendCorrectionOrder((sb.Value - abscond).ToString("F2"), sb.Key) : false;
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell)
         {
             var sb = API.SellOrder.OrderBy(o => o.Value).First();
+            var abscond = 4 * API.Quantity * Const.ErrorRate;
 
-            return sb.Value < sell + Const.ErrorRate * 2 && double.TryParse(avg, out double bAvg) && API.OnReceiveBalance && Math.Abs(bAvg - sb.Value) < Const.ErrorRate * 2 * -API.Quantity ? SendCorrectionOrder((API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2).ToString("F2"), sb.Key) : false;
+            return double.TryParse(avg, out double bAvg) && sell > bAvg && bAvg - abscond > sb.Value ? SendCorrectionOrder((sb.Value - abscond).ToString("F2"), sb.Key) : false;
         }
-        public Feather(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;
+        public Fly(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;
     }
 }

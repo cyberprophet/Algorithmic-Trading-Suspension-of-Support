@@ -167,13 +167,13 @@ namespace ShareInvest.Strategy
         {
             var benchmark = API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2;
 
-            return benchmark > buy - Const.ErrorRate * 11 ? SendCorrectionOrder(benchmark.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key) : false;
+            return benchmark > buy - Const.ErrorRate * 9 ? SendCorrectionOrder(benchmark.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key) : false;
         }
         bool SetSellDecentralize(double sell)
         {
             var benchmark = API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2;
 
-            return benchmark < sell + Const.ErrorRate * 11 ? SendCorrectionOrder(benchmark.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key) : false;
+            return benchmark < sell + Const.ErrorRate * 9 ? SendCorrectionOrder(benchmark.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key) : false;
         }
         void SendLiquidationOrder()
         {

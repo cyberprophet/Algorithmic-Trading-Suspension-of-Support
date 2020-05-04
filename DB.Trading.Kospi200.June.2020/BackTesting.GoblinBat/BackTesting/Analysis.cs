@@ -126,7 +126,7 @@ namespace ShareInvest.Strategy.Statistics
             {
                 var benchmark = price - Const.ErrorRate * 2;
 
-                return benchmark > buy - Const.ErrorRate * 11 ? bt.SendCorrectionOrder(benchmark.ToString("F2"), bt.BuyOrder.OrderByDescending(o => o.Key).First().Value, quantity) : false;
+                return benchmark > buy - Const.ErrorRate * 9 ? bt.SendCorrectionOrder(benchmark.ToString("F2"), bt.BuyOrder.OrderByDescending(o => o.Key).First().Value, quantity) : false;
             }
             return false;
         }
@@ -136,7 +136,7 @@ namespace ShareInvest.Strategy.Statistics
             {
                 var benchmark = price + Const.ErrorRate * 2;
 
-                return benchmark < sell + Const.ErrorRate * 11 ? bt.SendCorrectionOrder(benchmark.ToString("F2"), bt.SellOrder.OrderBy(o => o.Key).First().Value, quantity) : false;
+                return benchmark < sell + Const.ErrorRate * 9 ? bt.SendCorrectionOrder(benchmark.ToString("F2"), bt.SellOrder.OrderBy(o => o.Key).First().Value, quantity) : false;
             }
             return false;
         }

@@ -33,13 +33,13 @@ namespace ShareInvest.Strategy.Statistics
         {
             var sb = bt.BuyOrder.OrderByDescending(o => o.Key).First();
 
-            return double.TryParse(bt.BuyOrder.OrderBy(o => o.Key).First().Key, out double oPrice) && double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double sAvg) && Math.Abs(sAvg - price) < Const.ErrorRate * 2 * bt.Quantity ? bt.SendCorrectionOrder((oPrice - Const.ErrorRate * 2).ToString("F2"), sb.Value, quantity) : false;
+            return double.TryParse(sb.Key, out double price) && price > buy - Const.ErrorRate * 2 && double.TryParse(bt.BuyOrder.OrderBy(o => o.Key).First().Key, out double oPrice) && double.TryParse(avg, out double sAvg) && Math.Abs(sAvg - price) < Const.ErrorRate * 2 * bt.Quantity ? bt.SendCorrectionOrder((oPrice - Const.ErrorRate * 2).ToString("F2"), sb.Value, quantity) : false;
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell, int quantity)
         {
             var sb = bt.SellOrder.OrderBy(o => o.Key).First();
 
-            return double.TryParse(bt.SellOrder.OrderByDescending(o => o.Key).First().Key, out double oPrice) && double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double bAvg) && Math.Abs(bAvg - price) < Const.ErrorRate * 2 * -bt.Quantity ? bt.SendCorrectionOrder((oPrice + Const.ErrorRate * 2).ToString("F2"), sb.Value, quantity) : false;
+            return double.TryParse(sb.Key, out double price) && price < sell + Const.ErrorRate * 2 && double.TryParse(bt.SellOrder.OrderByDescending(o => o.Key).First().Key, out double oPrice) && double.TryParse(avg, out double bAvg) && Math.Abs(bAvg - price) < Const.ErrorRate * 2 * -bt.Quantity ? bt.SendCorrectionOrder((oPrice + Const.ErrorRate * 2).ToString("F2"), sb.Value, quantity) : false;
         }
         internal Feather(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify)
         {
@@ -52,7 +52,7 @@ namespace ShareInvest.Strategy.Statistics
             foreach (var kv in bt.Judge)
                 temp += kv.Value < 0 ? 0.085 : -0.085;
 
-            return max * ((classification.Equals(XingAPI.Classification.Buy) ? 1 : 0.85) - Math.Abs(temp));
+            return max * ((classification.Equals(XingAPI.Classification.Buy) ? 0.9 : 0.85) - Math.Abs(temp));
         }
     }
 }
