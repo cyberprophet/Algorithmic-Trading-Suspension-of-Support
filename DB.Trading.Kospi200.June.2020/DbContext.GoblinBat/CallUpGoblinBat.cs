@@ -228,19 +228,15 @@ namespace ShareInvest.GoblinBatContext
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    var date = new Secret().RecentDate;
-                    var best = db.Games.Where(o => o.Date.Equals(date)).AsNoTracking();
-                    var max = (long)(best.Max(o => o.Cumulative + o.Unrealized) * 0.85);
-                    int statistic = (int)(best.Max(o => o.Statistic) * 0.65), remain = list.Count;
+                    var date = db.Games.Max(o => o.Date);
 
                     foreach (var choice in list)
                     {
                         var select = db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver));
 
-                        foreach (var cu in select.OrderByDescending(o => (o.Cumulative + o.Unrealized) * o.Statistic).AsNoTracking().Take(1000))
-                            if (max <= cu.Cumulative + cu.Unrealized && cu.Statistic >= statistic && temp <= (cu.Cumulative + cu.Unrealized) * cu.Statistic)
+                        foreach (var cu in select.OrderByDescending(o => o.Cumulative).AsNoTracking().Take(3751))
+                            if (temp < (cu.Cumulative + cu.Unrealized) * cu.Statistic)
                             {
-                                remain--;
                                 temp = (cu.Cumulative + cu.Unrealized) * cu.Statistic;
                                 game = new ImitationGames
                                 {
@@ -286,53 +282,6 @@ namespace ShareInvest.GoblinBatContext
                 }
                 catch (Exception ex)
                 {
-                    var date = db.Games.Max(o => o.Date);
-
-                    foreach (var choice in list)
-                        foreach (var cu in db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver)).OrderByDescending(o => (o.Cumulative + o.Unrealized) * o.Statistic).AsNoTracking().Take(1250))
-                            if (temp <= (cu.Cumulative + cu.Unrealized) * cu.Statistic)
-                            {
-                                temp = (cu.Cumulative + cu.Unrealized) * cu.Statistic;
-                                game = new ImitationGames
-                                {
-                                    Assets = cu.Assets,
-                                    Code = cu.Code,
-                                    Commission = cu.Commission,
-                                    MarginRate = cu.MarginRate,
-                                    Strategy = cu.Strategy,
-                                    RollOver = cu.RollOver,
-                                    BaseTime = cu.BaseTime,
-                                    BaseShort = cu.BaseShort,
-                                    BaseLong = cu.BaseLong,
-                                    NonaTime = cu.NonaTime,
-                                    NonaShort = cu.NonaShort,
-                                    NonaLong = cu.NonaLong,
-                                    OctaTime = cu.OctaTime,
-                                    OctaShort = cu.OctaShort,
-                                    OctaLong = cu.OctaLong,
-                                    HeptaTime = cu.HeptaTime,
-                                    HeptaShort = cu.HeptaShort,
-                                    HeptaLong = cu.HeptaLong,
-                                    HexaTime = cu.HexaTime,
-                                    HexaShort = cu.HexaShort,
-                                    HexaLong = cu.HexaLong,
-                                    PentaTime = cu.PentaTime,
-                                    PentaShort = cu.PentaShort,
-                                    PentaLong = cu.PentaLong,
-                                    QuadTime = cu.QuadTime,
-                                    QuadShort = cu.QuadShort,
-                                    QuadLong = cu.QuadLong,
-                                    TriTime = cu.TriTime,
-                                    TriShort = cu.TriShort,
-                                    TriLong = cu.TriLong,
-                                    DuoTime = cu.DuoTime,
-                                    DuoShort = cu.DuoShort,
-                                    DuoLong = cu.DuoLong,
-                                    MonoTime = cu.MonoTime,
-                                    MonoShort = cu.MonoShort,
-                                    MonoLong = cu.MonoLong
-                                };
-                            }
                     new ExceptionMessage(ex.StackTrace);
                 }
             return game;

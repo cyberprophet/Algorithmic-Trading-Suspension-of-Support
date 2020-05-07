@@ -29,6 +29,8 @@ namespace ShareInvest
                 var initial = secret.GetPort(str);
                 var cts = new CancellationTokenSource();
                 var retrieve = new Strategy.Retrieve(str);
+                var count = secret.GetProcessorCount(str);
+                var info = new Information(str);
 
                 if (secret.GetDirectoryInfoExists(path))
                 {
@@ -42,8 +44,6 @@ namespace ShareInvest
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
                             new Task(() =>
                             {
-                                var count = secret.GetProcessorCount(str);
-                                var info = new Information(str);
                                 retrieve.SetInitialzeTheCode();
                                 IList catalog;
 
@@ -119,6 +119,7 @@ namespace ShareInvest
                     if (initial.Equals((char)126) == false)
                     {
                         if (initial.Equals((char)Port.Trading) && cts.IsCancellationRequested == false)
+                        {
                             try
                             {
                                 cts.Cancel();
@@ -131,6 +132,34 @@ namespace ShareInvest
                             {
                                 cts.Dispose();
                             }
+                            var catalog = info.GetStatistics(count).Distinct().ToList();
+                            cts = new CancellationTokenSource();
+                            var po = new ParallelOptions
+                            {
+                                CancellationToken = cts.Token,
+                                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count) / 2
+                            };
+                            try
+                            {
+                                new Task(() => Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
+                                {
+                                    if (cts.IsCancellationRequested)
+                                        po.CancellationToken.ThrowIfCancellationRequested();
+
+                                    if (retrieve.GetDuplicateResults(number) == false)
+                                        new BackTesting(number, str);
+                                }))).Start();
+                            }
+                            catch (OperationCanceledException ex)
+                            {
+                                catalog.Clear();
+                                new ExceptionMessage(ex.StackTrace);
+                            }
+                            catch (Exception ex)
+                            {
+                                new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
+                            }
+                        }
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
                         Application.Run(new GoblinBat(initial, secret, str, cts));

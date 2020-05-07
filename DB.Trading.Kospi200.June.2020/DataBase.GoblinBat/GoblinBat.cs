@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -22,7 +23,7 @@ namespace ShareInvest
             this.key = key;
             this.initial = initial;
             this.secret = secret;
-            this.cts = collect ? cts : null;
+            this.cts = cts;
             InitializeComponent();
             Opacity = 0;
             retrieve = new Strategy.Retrieve(key);
@@ -453,10 +454,11 @@ namespace ShareInvest
                             return;
 
                         case (char)41:
-                            if (initial.Equals(trading))
+                            if (initial.Equals(trading) && ClosingForm == false)
                             {
                                 Xing.OnReceiveBalance = false;
                                 new ExceptionMessage(((char)e.NotifyIcon).ToString());
+                                Process.Start("shutdown.exe", "-r");
                                 Dispose();
                             }
                             break;
@@ -574,6 +576,10 @@ namespace ShareInvest
 
                         case fly:
                             new Strategy.XingAPI.Fly(param);
+                            break;
+
+                        case heavy:
+                            new Strategy.XingAPI.Heavy(param);
                             break;
                     }
                 }));
@@ -789,5 +795,6 @@ namespace ShareInvest
         const string bantam = "Bantam";
         const string feather = "Feather";
         const string fly = "Fly";
+        const string heavy = "Heavy";
     }
 }
