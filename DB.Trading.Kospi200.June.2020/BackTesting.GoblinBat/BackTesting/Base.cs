@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy.Statistics
@@ -101,9 +102,6 @@ namespace ShareInvest.Strategy.Statistics
                 }
             return max * num * 0.1;
         }
-        internal Base(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify)
-        {
-
-        }
+        internal Base(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify) => Console.WriteLine(specify.Strategy);
     }
 }

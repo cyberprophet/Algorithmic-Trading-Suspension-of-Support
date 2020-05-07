@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy.Statistics
@@ -47,9 +48,6 @@ namespace ShareInvest.Strategy.Statistics
 
             return double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double bAvg) && sell > bAvg && bAvg - abscond > price ? bt.SendCorrectionOrder((price - abscond).ToString("F2"), sb.Value, quantity) : false;
         }
-        internal Fly(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify)
-        {
-
-        }
+        internal Fly(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify) => Console.WriteLine(specify.Strategy);
     }
 }

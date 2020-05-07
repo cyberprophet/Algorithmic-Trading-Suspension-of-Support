@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy.Statistics
@@ -80,10 +81,6 @@ namespace ShareInvest.Strategy.Statistics
             }
             return false;
         }
-        internal Bantam(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify)
-        {
-
-        }
         double Max(double max, XingAPI.Classification classification)
         {
             var num = 5.5D;
@@ -105,5 +102,6 @@ namespace ShareInvest.Strategy.Statistics
                 }
             return max * num * 0.1;
         }
+        internal Bantam(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify) => Console.WriteLine(specify.Strategy);
     }
 }

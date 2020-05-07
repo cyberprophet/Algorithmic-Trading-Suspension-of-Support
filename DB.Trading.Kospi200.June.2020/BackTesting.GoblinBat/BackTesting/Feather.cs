@@ -41,10 +41,6 @@ namespace ShareInvest.Strategy.Statistics
 
             return double.TryParse(sb.Key, out double price) && price < sell + Const.ErrorRate * 2 && double.TryParse(bt.SellOrder.OrderByDescending(o => o.Key).First().Key, out double oPrice) && double.TryParse(avg, out double bAvg) && Math.Abs(bAvg - price) < Const.ErrorRate * 2 * -bt.Quantity ? bt.SendCorrectionOrder((oPrice + Const.ErrorRate * 2).ToString("F2"), sb.Value, quantity) : false;
         }
-        internal Feather(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify)
-        {
-
-        }
         double Max(double max, XingAPI.Classification classification)
         {
             var temp = 0D;
@@ -54,5 +50,6 @@ namespace ShareInvest.Strategy.Statistics
 
             return max * ((classification.Equals(XingAPI.Classification.Buy) ? 0.9 : 0.85) - Math.Abs(temp));
         }
+        internal Feather(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify) => Console.WriteLine(specify.Strategy);
     }
 }

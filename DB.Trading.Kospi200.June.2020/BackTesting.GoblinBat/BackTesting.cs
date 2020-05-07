@@ -297,6 +297,10 @@ namespace ShareInvest.Strategy
                     case fly:
                         new Fly(this, param);
                         break;
+
+                    case heavy:
+                        new Heavy(this, param);
+                        break;
                 }
             }));
             games = new Queue<Models.ImitationGames>();
@@ -306,6 +310,7 @@ namespace ShareInvest.Strategy
         const string bantam = "Bantam";
         const string feather = "Feather";
         const string fly = "Fly";
+        const string heavy = "Heavy";
         readonly Models.ImitationGames game;
         readonly Queue<Models.ImitationGames> games;
         public event EventHandler<Datum> SendDatum;
