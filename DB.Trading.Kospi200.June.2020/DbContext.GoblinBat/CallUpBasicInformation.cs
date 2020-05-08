@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -82,24 +83,15 @@ namespace ShareInvest.GoblinBatContext
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    db.Configuration.AutoDetectChangesEnabled = false;
-                    db.BulkInsert(charts, o =>
-                    {
-                        o.InsertIfNotExists = true;
-                        o.BatchSize = 3500;
-                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                        o.AutoMapOutputDirection = false;
-                    });
-                    result = true;
+                    while (charts.Count > 0)
+                        db.Charts.AddOrUpdate(charts.Dequeue());
+
+                    result = db.SaveChanges() > 0 ? true : false;
                 }
                 catch (Exception ex)
                 {
-                    result = false;
                     new ExceptionMessage(ex.StackTrace);
-                }
-                finally
-                {
-                    db.Configuration.AutoDetectChangesEnabled = true;
+                    result = false;
                 }
             return result;
         }

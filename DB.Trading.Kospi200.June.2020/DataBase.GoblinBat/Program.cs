@@ -141,7 +141,7 @@ namespace ShareInvest
                             var po = new ParallelOptions
                             {
                                 CancellationToken = cts.Token,
-                                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count) / 2
+                                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * 0.4)
                             };
                             try
                             {

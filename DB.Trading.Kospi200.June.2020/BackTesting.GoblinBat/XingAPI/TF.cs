@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.GoblinBatContext;
 using ShareInvest.Verify;
@@ -151,9 +152,9 @@ namespace ShareInvest.Strategy.XingAPI
         {
             var onTime = time.Substring(6, 6);
 
-            if (onTime.Substring(2, 2).Equals(Check) || Check == null || onTime.Equals(end) || onTime.Equals(start))
+            if ((onTime.Substring(0, 4).Equals(Check) || Check == null || onTime.Equals(end) || onTime.Equals(start)) && DateTime.TryParseExact(onTime, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
             {
-                Check = (new TimeSpan(int.Parse(onTime.Substring(0, 2)), int.Parse(onTime.Substring(2, 2)), int.Parse(onTime.Substring(4, 2))) + TimeSpan.FromMinutes(specify.Time)).Minutes.ToString("D2");
+                Check = (date + TimeSpan.FromMinutes(specify.Time)).ToString(hm);
 
                 return false;
             }
@@ -174,6 +175,8 @@ namespace ShareInvest.Strategy.XingAPI
         const string onTime = "090000000";
         readonly bool sCollection;
         readonly bool lCollection;
+        protected internal const string format = "HHmmss";
+        protected internal const string hm = "HHmm";
         protected internal const string end = "154500";
         protected internal const string start = "090000";
         protected internal readonly Specify specify;

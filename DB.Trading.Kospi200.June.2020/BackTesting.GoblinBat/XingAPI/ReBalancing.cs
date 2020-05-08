@@ -1,6 +1,7 @@
 ﻿using System;
 using ShareInvest.EventHandler.XingAPI;
 using ShareInvest.Catalog.XingAPI;
+using System.Globalization;
 
 namespace ShareInvest.Strategy.XingAPI
 {
@@ -51,9 +52,9 @@ namespace ShareInvest.Strategy.XingAPI
         {
             if (specify.Time > 0 && specify.Time < 1440)
             {
-                if (time.Substring(2, 2).Equals(Check) || Check.Equals(string.Empty))
+                if ((time.Substring(0, 4).Equals(Check) || Check.Equals(string.Empty)) && DateTime.TryParseExact(time, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
                 {
-                    Check = (new TimeSpan(int.Parse(time.Substring(0, 2)), int.Parse(time.Substring(2, 2)), int.Parse(time.Substring(4, 2))) + TimeSpan.FromMinutes(specify.Time)).Minutes.ToString("D2");
+                    Check = (date + TimeSpan.FromMinutes(specify.Time)).ToString(hm);
 
                     return false;
                 }
