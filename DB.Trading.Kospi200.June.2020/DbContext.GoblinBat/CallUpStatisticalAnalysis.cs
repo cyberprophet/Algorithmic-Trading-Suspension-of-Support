@@ -527,15 +527,18 @@ namespace ShareInvest.GoblinBatContext
                     if (check.Any(o => o.Date.Equals(date)))
                         return true;
 
-                    recent = check.Max(o => o.Date);
-                    oldest = check.Min(o => o.Date);
+                    if (check.Any())
+                    {
+                        recent = check.Max(o => o.Date);
+                        oldest = check.Min(o => o.Date);
 
-                    if (string.IsNullOrEmpty(recent) || string.IsNullOrEmpty(oldest) || recent.Equals(oldest))
-                        return false;
+                        if (string.IsNullOrEmpty(recent) || string.IsNullOrEmpty(oldest) || recent.Equals(oldest))
+                            return false;
 
-                    var closest = check.First(o => o.Date.Equals(recent));
-                    sum = closest.Cumulative + closest.Unrealized;
-                    statistic = closest.Statistic;
+                        var closest = check.First(o => o.Date.Equals(recent));
+                        sum = closest.Cumulative + closest.Unrealized;
+                        statistic = closest.Statistic;
+                    }
                 }
                 catch (Exception ex)
                 {

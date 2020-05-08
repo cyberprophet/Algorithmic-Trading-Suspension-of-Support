@@ -24,7 +24,7 @@ namespace ShareInvest
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && (DateTime.Now.Hour == 15 && DateTime.Now.Minute >= 45 || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6);
-                var remaining = secret.GetIsSever(str) ? ran.Next(classfication ? 15 : 13, classfication ? 31 : 20) : (secret.GetExternal(str) ? 1 : 7);
+                var remaining = secret.GetIsSever(str) ? secret.GetExternal(str) ? ran.Next(19, classfication ? 35 : 29) : 14 : 1;
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var initial = secret.GetPort(str);
                 var cts = new CancellationTokenSource();
@@ -52,16 +52,17 @@ namespace ShareInvest
                                     info.GetUserIdentity(initial);
 
                                     if (secret.GetIsSever(str))
-                                        catalog = info.GetStatistics(count).Distinct().ToList();
+                                        catalog = info.GetStatistics(count);
 
                                     else
                                     {
                                         count = 0.5;
                                         catalog = info.GetBestStrategy(false);
+                                        Thread.Sleep(29153);
                                         info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
                                         var best = retrieve.GetBestStrategy();
 
-                                        foreach (var input in info.GetStatistics(count).Distinct())
+                                        foreach (var input in info.GetStatistics(count))
                                             catalog.Add(input);
 
                                         if (best != null)
@@ -78,7 +79,7 @@ namespace ShareInvest
                                     info.GetUserIdentity(initial);
                                     catalog = info.GetBestStrategy(true);
 
-                                    foreach (var input in info.GetStatistics(count).Distinct())
+                                    foreach (var input in info.GetStatistics(count))
                                         catalog.Add(input);
                                 }
                                 var po = new ParallelOptions
@@ -88,10 +89,13 @@ namespace ShareInvest
                                 };
                                 try
                                 {
-                                    Parallel.ForEach((List<Models.ImitationGames>)catalog, po, new Action<Models.ImitationGames>((number) =>
+                                    Parallel.ForEach(((List<Models.ImitationGames>)catalog).Distinct(), po, new Action<Models.ImitationGames>((number) =>
                                     {
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();
+
+                                        if ((DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45 && DateTime.Now.Minute < 55) || DateTime.Now.Hour == 5 && DateTime.Now.Minute > 0 && DateTime.Now.Minute < 15)
+                                            Thread.Sleep(27935);
 
                                         if (retrieve.GetDuplicateResults(number) == false)
                                             new BackTesting(number, str);

@@ -458,7 +458,10 @@ namespace ShareInvest
                             {
                                 Xing.OnReceiveBalance = false;
                                 new ExceptionMessage(((char)e.NotifyIcon).ToString());
-                                Process.Start("shutdown.exe", "-r");
+
+                                if (cts == null)
+                                    Process.Start("shutdown.exe", "-r");
+
                                 Dispose();
                             }
                             break;
