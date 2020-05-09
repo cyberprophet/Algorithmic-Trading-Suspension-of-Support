@@ -25,10 +25,9 @@ namespace ShareInvest.DelayRequest
         public void Run() => taskWorker.Start();
         public void Dispose()
         {
-            requestTaskQueue.Clear();
             taskWorker.Abort();
-            request = null;
             taskWorker.Join();
+            requestTaskQueue.Clear();
         }
         public void RequestTrData(Task task) => requestTaskQueue.Enqueue(task);
         Delay() => taskWorker = new Thread(delegate ()
@@ -46,6 +45,7 @@ namespace ShareInvest.DelayRequest
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
+                    request = null;
                 }
         });
         static Delay request;

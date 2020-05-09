@@ -498,63 +498,44 @@ namespace ShareInvest.GoblinBatContext
         }
         protected bool SetStatisticalStorage(Queue<ImitationGames> memo)
         {
-            bool result;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
                     while (memo.Count > 0)
                         db.Games.AddOrUpdate(memo.Dequeue());
 
-                    result = db.SaveChanges() > 0 ? true : false;
+                    return db.SaveChanges() > 0 ? true : false;
                 }
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
-                    result = false;
                 }
-            return result;
+            return false;
         }
         protected async Task<bool> GetDuplicateResults(ImitationGames game, string date)
         {
-            double benchmark = game.Assets * 0.005;
-            string recent = string.Empty, oldest = string.Empty;
-            long sum = 0;
-            int statistic = 0;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
                     var check = db.Games.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking();
 
-                    if (check.Any(o => o.Date.Equals(date)))
-                        return true;
-
                     if (check.Any())
                     {
-                        recent = await check.MaxAsync(o => o.Date);
-                        oldest = await check.MinAsync(o => o.Date);
+                        if (check.Any(o => o.Date.Equals(date)))
+                            return true;
 
-                        if (string.IsNullOrEmpty(recent) || string.IsNullOrEmpty(oldest) || recent.Equals(oldest))
-                            return false;
+                        else
+                        {
+                            var recent = await check.MaxAsync(o => o.Date);
 
-                        var closest = check.First(o => o.Date.Equals(recent));
-                        sum = closest.Cumulative + closest.Unrealized;
-                        statistic = closest.Statistic;
+                            return check.Where(o => o.Date.Equals(recent)).Any(o => o.Cumulative < 0 || o.Statistic < 0);
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
-            if (DateTime.TryParseExact(recent, interval, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime rc) && DateTime.TryParseExact(oldest, interval, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime oc))
-            {
-                var td = (rc - oc).TotalDays;
-
-                if (benchmark > sum / td)
-                    return true;
-
-                if (statistic < td / 7)
-                    return true;
-            }
             return false;
         }
         void SetQuotesFile(Queue<Quotes> quotes)
@@ -586,7 +567,6 @@ namespace ShareInvest.GoblinBatContext
         protected const int mr = 100;
         protected const int cr = 1000000;
         readonly string key;
-        const string interval = "yyMMdd";
         const string date = "yyMMddHHmmss";
         const string quotes = "QuotesA.res";
         const string strategy = "Strategy";

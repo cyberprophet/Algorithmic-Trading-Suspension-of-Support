@@ -281,7 +281,7 @@ namespace ShareInvest.GoblinBatContext
         protected ImitationGames GetBestStrategyRecommend(List<Statistics> list)
         {
             var game = new ImitationGames();
-            var temp = long.MinValue;
+            var temp = double.MinValue;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
@@ -289,12 +289,35 @@ namespace ShareInvest.GoblinBatContext
 
                     foreach (var choice in list)
                     {
-                        var select = db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver)).AsNoTracking();
+                        var select = db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver) && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking();
 
-                        foreach (var cu in select.OrderByDescending(o => o.Cumulative).Take(3751))
-                            if (cu.Cumulative > 0 && cu.Statistic > 0 && temp < (cu.Cumulative + cu.Unrealized) * cu.Statistic)
+                        foreach (var cu in select.OrderByDescending(o => o.Statistic * (o.Unrealized + o.Cumulative)).Take(35))
+                        {
+                            uint count = 0;
+                            double before = 0, avg = 0;
+
+                            foreach (var en in from ea in db.Games
+                                               where ea.Assets == cu.Assets && ea.Code.Equals(cu.Code) && ea.Commission == cu.Commission && ea.MarginRate == cu.MarginRate && ea.RollOver.Equals(cu.RollOver) && ea.Strategy.Equals(cu.Strategy) && ea.BaseTime == cu.BaseTime && ea.BaseShort == cu.BaseShort && ea.BaseLong == cu.BaseLong && ea.NonaTime == cu.NonaTime && ea.NonaShort == cu.NonaShort && ea.NonaLong == cu.NonaLong && ea.OctaTime == cu.OctaTime && ea.OctaShort == cu.OctaShort && ea.OctaLong == cu.OctaLong && ea.HeptaTime == cu.HeptaTime && ea.HeptaShort == cu.HeptaShort && ea.HeptaLong == cu.HeptaLong && ea.HexaTime == cu.HexaTime && ea.HexaShort == cu.HexaShort && ea.HexaLong == cu.HexaLong && ea.PentaTime == cu.PentaTime && ea.PentaShort == cu.PentaShort && ea.PentaLong == cu.PentaLong && ea.QuadTime == cu.QuadTime && ea.QuadShort == cu.QuadShort && ea.QuadLong == cu.QuadLong && ea.TriTime == cu.TriTime && ea.TriShort == cu.TriShort && ea.TriLong == cu.TriLong && ea.DuoTime == cu.DuoTime && ea.DuoShort == cu.DuoShort && ea.DuoLong == cu.DuoLong && ea.MonoTime == cu.MonoTime && ea.MonoShort == cu.MonoShort && ea.MonoLong == cu.MonoLong
+                                               orderby ea.Date
+                                               select new
+                                               {
+                                                   ea.Unrealized,
+                                                   ea.Revenue
+                                               })
                             {
-                                temp = (cu.Cumulative + cu.Unrealized) * cu.Statistic;
+                                if (count++ > 0)
+                                {
+                                    var k = 2 / (double)(1 + count);
+                                    avg = (en.Unrealized + en.Revenue) * k + before * (1 - k);
+                                }
+                                else
+                                    avg = en.Unrealized + en.Revenue;
+
+                                before = avg;
+                            }
+                            if (temp < avg)
+                            {
+                                temp = avg;
                                 game = new ImitationGames
                                 {
                                     Assets = cu.Assets,
@@ -335,6 +358,7 @@ namespace ShareInvest.GoblinBatContext
                                     MonoLong = cu.MonoLong
                                 };
                             }
+                        }
                     }
                 }
                 catch (Exception ex)

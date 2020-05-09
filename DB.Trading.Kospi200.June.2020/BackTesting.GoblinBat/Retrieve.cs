@@ -41,7 +41,7 @@ namespace ShareInvest.Strategy
             switch (now.DayOfWeek)
             {
                 case DayOfWeek.Monday:
-                    if (now.Hour < 16)
+                    if (now.Hour < 15 || now.Hour == 15 && now.Minute < 45)
                         now = now.AddDays(-3);
 
                     break;
@@ -55,7 +55,7 @@ namespace ShareInvest.Strategy
                     break;
 
                 default:
-                    if (now.Hour < 16 || secret.GetHoliday(now))
+                    if (now.Hour < 15 || now.Hour == 15 && now.Minute < 45 || secret.GetHoliday(now))
                         now = now.AddDays(-1);
 
                     break;

@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.XingAPI;
 using ShareInvest.GoblinBatContext;
