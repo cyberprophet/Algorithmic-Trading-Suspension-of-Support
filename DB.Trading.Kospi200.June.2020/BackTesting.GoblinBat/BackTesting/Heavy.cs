@@ -60,7 +60,7 @@ namespace ShareInvest.Strategy.Statistics
             else if (check == false && bt.Quantity > 0 && param[param.Length - 1] > 0 && bt.SellOrder.Count < bt.Quantity && bt.SellOrder.ContainsKey(oPrice) == false && bt.SendNewOrder(oPrice, sell, quantity))
                 return;
 
-            else if (price > 0 && (check ? bt.Quantity + bt.BuyOrder.Count : bt.SellOrder.Count - bt.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate), check ? XingAPI.Classification.Buy : XingAPI.Classification.Sell) && (check ? bt.BuyOrder.ContainsKey(key) : bt.SellOrder.ContainsKey(key)) == false && bt.SendNewOrder(key, classification, quantity))
+            else if (price > 0 && GetPermission(price) && (check ? bt.Quantity + bt.BuyOrder.Count : bt.SellOrder.Count - bt.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate), check ? XingAPI.Classification.Buy : XingAPI.Classification.Sell) && (check ? bt.BuyOrder.ContainsKey(key) : bt.SellOrder.ContainsKey(key)) == false && bt.SendNewOrder(key, classification, quantity))
                 return;
         }
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy, int quantity)
@@ -90,6 +90,24 @@ namespace ShareInvest.Strategy.Statistics
                 price = kv.Key;
             }
             return false;
+        }
+        bool GetPermission(double price)
+        {
+            if (bt.BuyOrder.Count > 0 && bt.Quantity > 0)
+            {
+                var cPrice = (price - Const.ErrorRate).ToString("F2");
+
+                if (double.TryParse(cPrice, out double bPrice) && double.TryParse(bt.BuyOrder.OrderBy(o => o.Key).First().Key, out double bKey) && bPrice > bKey && bt.BuyOrder.ContainsKey(cPrice))
+                    return false;
+            }
+            if (bt.SellOrder.Count > 0 && bt.Quantity < 0)
+            {
+                var cPrice = (price + Const.ErrorRate).ToString("F2");
+
+                if (double.TryParse(cPrice, out double sPrice) && double.TryParse(bt.SellOrder.OrderByDescending(o => o.Key).First().Key, out double sKey) && sPrice < sKey && bt.SellOrder.ContainsKey(cPrice))
+                    return false;
+            }
+            return true;
         }
         double Max(double max, XingAPI.Classification classification)
         {

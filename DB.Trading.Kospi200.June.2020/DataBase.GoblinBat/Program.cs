@@ -24,7 +24,7 @@ namespace ShareInvest
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var classfication = secret.GetPort(str).Equals((char)Port.Trading) && (DateTime.Now.Hour == 15 && DateTime.Now.Minute >= 45 || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6);
-                var remaining = secret.GetIsSever(str) ? secret.GetExternal(str) ? ran.Next(19, classfication ? 35 : 29) : 14 : 1;
+                var remaining = secret.GetIsSever(str) ? secret.GetExternal(str) ? ran.Next(3, classfication ? 10 : 5) : 2 : 1;
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var initial = secret.GetPort(str);
                 var cts = new CancellationTokenSource();
@@ -56,9 +56,12 @@ namespace ShareInvest
 
                                     else
                                     {
+                                        catalog = info.GetBestStrategy();
                                         count = 0.5;
-                                        catalog = info.GetBestStrategy(false);
-                                        Thread.Sleep(29153);
+
+                                        foreach (var input in info.GetBestStrategy(false))
+                                            catalog.Add(input);
+
                                         info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
                                         var best = retrieve.GetBestStrategy();
 
@@ -82,6 +85,7 @@ namespace ShareInvest
                                     foreach (var input in info.GetStatistics(count))
                                         catalog.Add(input);
                                 }
+                                Count = catalog.Count;
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
@@ -93,9 +97,6 @@ namespace ShareInvest
                                     {
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();
-
-                                        if ((DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45 && DateTime.Now.Minute < 55) || DateTime.Now.Hour == 5 && DateTime.Now.Minute > 0 && DateTime.Now.Minute < 15)
-                                            Thread.Sleep(27935);
 
                                         if (retrieve.GetDuplicateResults(number) == false)
                                             new BackTesting(number, str);
@@ -137,32 +138,36 @@ namespace ShareInvest
                                 cts.Dispose();
                             }
                             var catalog = info.GetStatistics(count).Distinct().ToList();
+                            Count = catalog.Count;
                             cts = new CancellationTokenSource();
-                            var po = new ParallelOptions
+                            new Task(() =>
                             {
-                                CancellationToken = cts.Token,
-                                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * 0.4)
-                            };
-                            try
-                            {
-                                new Task(() => Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
+                                var po = new ParallelOptions
                                 {
-                                    if (cts.IsCancellationRequested)
-                                        po.CancellationToken.ThrowIfCancellationRequested();
+                                    CancellationToken = cts.Token,
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * 0.4)
+                                };
+                                try
+                                {
+                                    Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
+                                    {
+                                        if (cts.IsCancellationRequested)
+                                            po.CancellationToken.ThrowIfCancellationRequested();
 
-                                    if (retrieve.GetDuplicateResults(number) == false)
-                                        new BackTesting(number, str);
-                                }))).Start();
-                            }
-                            catch (OperationCanceledException ex)
-                            {
-                                catalog.Clear();
-                                new ExceptionMessage(ex.StackTrace);
-                            }
-                            catch (Exception ex)
-                            {
-                                new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
-                            }
+                                        if (retrieve.GetDuplicateResults(number) == false)
+                                            new BackTesting(number, str);
+                                    }));
+                                }
+                                catch (OperationCanceledException ex)
+                                {
+                                    catalog.Clear();
+                                    new ExceptionMessage(ex.StackTrace);
+                                }
+                                catch (Exception ex)
+                                {
+                                    new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
+                                }
+                            }).Start();
                         }
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
@@ -187,5 +192,9 @@ namespace ShareInvest
         static extern IntPtr GetConsoleWindow();
         [DllImport("user32.dll")]
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        internal static int Count
+        {
+            get; set;
+        }
     }
 }

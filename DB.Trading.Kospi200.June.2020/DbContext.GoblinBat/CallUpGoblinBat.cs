@@ -5,6 +5,7 @@ using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.Message;
@@ -111,6 +112,60 @@ namespace ShareInvest.GoblinBatContext
                     db.Configuration.AutoDetectChangesEnabled = true;
                 }
         }
+        protected async Task<List<ImitationGames>> Preheat(List<ImitationGames> games)
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    var date = await db.Games.MaxAsync(o => o.Date);
+
+                    foreach (var game in db.Games.Where(o => o.Date.Equals(date) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).OrderByDescending(o => o.Statistic * (o.Cumulative + o.Unrealized)).AsNoTracking())
+                        games.Add(new ImitationGames
+                        {
+                            Assets = game.Assets,
+                            Code = game.Code,
+                            Commission = game.Commission,
+                            MarginRate = game.MarginRate,
+                            Strategy = game.Strategy,
+                            RollOver = game.RollOver,
+                            BaseTime = game.BaseTime,
+                            BaseShort = game.BaseShort,
+                            BaseLong = game.BaseLong,
+                            NonaTime = game.NonaTime,
+                            NonaShort = game.NonaShort,
+                            NonaLong = game.NonaLong,
+                            OctaTime = game.OctaTime,
+                            OctaShort = game.OctaShort,
+                            OctaLong = game.OctaLong,
+                            HeptaTime = game.HeptaTime,
+                            HeptaShort = game.HeptaShort,
+                            HeptaLong = game.HeptaLong,
+                            HexaTime = game.HexaTime,
+                            HexaShort = game.HexaShort,
+                            HexaLong = game.HexaLong,
+                            PentaTime = game.PentaTime,
+                            PentaShort = game.PentaShort,
+                            PentaLong = game.PentaLong,
+                            QuadTime = game.QuadTime,
+                            QuadShort = game.QuadShort,
+                            QuadLong = game.QuadLong,
+                            TriTime = game.TriTime,
+                            TriShort = game.TriShort,
+                            TriLong = game.TriLong,
+                            DuoTime = game.DuoTime,
+                            DuoShort = game.DuoShort,
+                            DuoLong = game.DuoLong,
+                            MonoTime = game.MonoTime,
+                            MonoShort = game.MonoShort,
+                            MonoLong = game.MonoLong
+                        });
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return games;
+        }
         protected List<ImitationGames> GetBestExternalRecommend(List<ImitationGames> games)
         {
             try
@@ -120,7 +175,7 @@ namespace ShareInvest.GoblinBatContext
                     date = db.Games.Max(o => o.Date);
 
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var game in db.Games.Where(o => o.Date.Equals(date) && o.MarginRate == marginRate).OrderByDescending(o => o.Statistic).AsNoTracking().Take(3750))
+                    foreach (var game in db.Games.Where(o => o.Date.Equals(date) && o.MarginRate == marginRate).OrderByDescending(o => o.Cumulative).AsNoTracking().Take(3750))
                         games.Add(new ImitationGames
                         {
                             Assets = game.Assets,
@@ -176,7 +231,7 @@ namespace ShareInvest.GoblinBatContext
                     date = db.Games.Max(o => o.Date);
 
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var game in db.Games.Where(o => o.MarginRate == marginRate && o.Date.Equals(date)).OrderByDescending(o => o.Cumulative).AsNoTracking().Take(3750))
+                    foreach (var game in db.Games.Where(o => o.MarginRate == marginRate && o.Date.Equals(date)).OrderByDescending(o => o.Statistic).AsNoTracking().Take(3750))
                         games.Add(new ImitationGames
                         {
                             Assets = game.Assets,
@@ -234,9 +289,9 @@ namespace ShareInvest.GoblinBatContext
 
                     foreach (var choice in list)
                     {
-                        var select = db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver));
+                        var select = db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver)).AsNoTracking();
 
-                        foreach (var cu in select.OrderByDescending(o => o.Cumulative).AsNoTracking().Take(3751))
+                        foreach (var cu in select.OrderByDescending(o => o.Cumulative).Take(3751))
                             if (cu.Cumulative > 0 && cu.Statistic > 0 && temp < (cu.Cumulative + cu.Unrealized) * cu.Statistic)
                             {
                                 temp = (cu.Cumulative + cu.Unrealized) * cu.Statistic;

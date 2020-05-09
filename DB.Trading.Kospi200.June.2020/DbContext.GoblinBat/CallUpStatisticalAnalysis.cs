@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Message;
@@ -513,7 +514,7 @@ namespace ShareInvest.GoblinBatContext
                 }
             return result;
         }
-        protected bool GetDuplicateResults(ImitationGames game, string date)
+        protected async Task<bool> GetDuplicateResults(ImitationGames game, string date)
         {
             double benchmark = game.Assets * 0.005;
             string recent = string.Empty, oldest = string.Empty;
@@ -529,8 +530,8 @@ namespace ShareInvest.GoblinBatContext
 
                     if (check.Any())
                     {
-                        recent = check.Max(o => o.Date);
-                        oldest = check.Min(o => o.Date);
+                        recent = await check.MaxAsync(o => o.Date);
+                        oldest = await check.MinAsync(o => o.Date);
 
                         if (string.IsNullOrEmpty(recent) || string.IsNullOrEmpty(oldest) || recent.Equals(oldest))
                             return false;

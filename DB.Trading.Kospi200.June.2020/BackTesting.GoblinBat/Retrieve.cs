@@ -60,7 +60,7 @@ namespace ShareInvest.Strategy
 
                     break;
             }
-            return GetDuplicateResults(game, now.ToString(date));
+            return GetDuplicateResults(game, now.ToString(date)).Result;
         }
         public string GetDate(string code)
         {

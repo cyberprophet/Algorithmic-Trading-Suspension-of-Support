@@ -85,6 +85,9 @@ namespace ShareInvest.OpenAPI
         {
             if (reset)
             {
+                if (request != null)
+                    request.Dispose();
+
                 if (API != null)
                     API = null;
 
@@ -167,7 +170,7 @@ namespace ShareInvest.OpenAPI
 
             DeadLine = true;
             Delay.Milliseconds = delay;
-            CodeList = RequestCodeList(new List<string>(32));
+            CodeList = RequestCodeList(new List<string>(32)).Result;
             SendMemorize?.Invoke(this, new Memorize("Clear"));
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }

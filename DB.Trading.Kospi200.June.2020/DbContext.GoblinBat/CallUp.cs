@@ -7,6 +7,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using ShareInvest.Message;
 using ShareInvest.Models;
 
@@ -14,7 +15,7 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUp : CallUpStatisticalAnalysis
     {
-        protected List<string> RequestCodeList(List<string> list)
+        protected async Task<List<string>> RequestCodeList(List<string> list)
         {
             string code = string.Empty;
             using (var db = new GoblinBatDbContext(key))
@@ -28,35 +29,35 @@ namespace ShareInvest.GoblinBatContext
                     try
                     {
                         if (db.Codes.Any(o => o.Code.Length < 6))
-                            db.Codes.BulkDelete(db.Codes.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
+                            await db.Codes.BulkDeleteAsync(db.Codes.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
 
                         if (db.Days.Any(o => o.Code.Equals(temp.Code) && o.Date < 10000000))
                         {
-                            db.Days.BulkDelete(db.Days.Where(o => o.Date < 10000000), o => o.BatchSize = 100);
+                            await db.Days.BulkDeleteAsync(db.Days.Where(o => o.Date < 10000000), o => o.BatchSize = 100);
 
                             if (db.Days.Any(o => o.Code.Length < 6))
-                                db.Days.BulkDelete(db.Days.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
+                                await db.Days.BulkDeleteAsync(db.Days.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
                         }
                         if (temp.Code.Length == 6 && (db.Days.Any(o => o.Code.Equals(temp.Code)) == false || db.Stocks.Any(o => o.Code.Equals(temp.Code)) == false || int.Parse(db.Days.Where(o => o.Code.Equals(temp.Code)).Max(o => o.Date).ToString().Substring(2)) < int.Parse(db.Stocks.Where(o => o.Code.Equals(code)).Min(o => o.Date).ToString().Substring(0, 6))))
                         {
                             list.Add(temp.Code);
 
                             if (db.Stocks.Any(o => o.Code.Length < 6))
-                                db.Stocks.BulkDelete(db.Stocks.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
+                                await db.Stocks.BulkDeleteAsync(db.Stocks.Where(o => o.Code.Length < 6), o => o.BatchSize = 100);
                         }
                         else if (temp.Code.Length == 8 && temp.Code.Substring(5, 3).Equals("000") && db.Futures.Any(o => o.Date < 100000000000000))
                         {
-                            db.Futures.BulkDelete(db.Futures.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
+                            await db.Futures.BulkDeleteAsync(db.Futures.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
 
                             if (db.Futures.Any(o => o.Code.Length < 8))
-                                db.Futures.BulkDelete(db.Futures.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
+                                await db.Futures.BulkDeleteAsync(db.Futures.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
                         }
                         else if (temp.Code.Length == 8 && temp.Code.Substring(5, 3).Equals("000") == false && db.Options.Any(o => o.Date < 100000000000000))
                         {
-                            db.Options.BulkDelete(db.Options.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
+                            await db.Options.BulkDeleteAsync(db.Options.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
 
                             if (db.Options.Any(o => o.Code.Length < 8))
-                                db.Options.BulkDelete(db.Options.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
+                                await db.Options.BulkDeleteAsync(db.Options.Where(o => o.Code.Length < 8), o => o.BatchSize = 100);
                         }
                     }
                     catch (InvalidOperationException ex)
@@ -69,7 +70,7 @@ namespace ShareInvest.GoblinBatContext
                         var stocks = db.Stocks.Where(o => o.Code.Equals(code));
 
                         if (stocks.Any(o => o.Date < 100000000000000))
-                            db.Stocks.BulkDelete(stocks.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
+                            await db.Stocks.BulkDeleteAsync(stocks.Where(o => o.Date < 100000000000000), o => o.BatchSize = 100);
                     }
                 }
             return list;

@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.XingAPI;
 using ShareInvest.GoblinBatContext;
@@ -38,8 +39,16 @@ namespace ShareInvest.XingAPI
         public Temporary(IReals quotes, IReals datum, StringBuilder sb, string key) : base(key)
         {
             this.sb = sb;
+            this.quotes = quotes;
+            this.datum = datum;
             ((IEvents<Quotes>)quotes).Send += OnReceiveMemorize;
             ((IEvents<Datum>)datum).Send += OnReceiveMemorize;
+        }
+        public void Dispose()
+        {
+            ((IEvents<Quotes>)quotes).Send -= OnReceiveMemorize;
+            ((IEvents<Datum>)datum).Send -= OnReceiveMemorize;
+            sb.Clear();
         }
         void OnReceiveMemorize(object sender, Datum e)
         {
@@ -66,5 +75,7 @@ namespace ShareInvest.XingAPI
         }
         public void SetStorage(string code) => SetStorage(code, sb);
         readonly StringBuilder sb;
+        readonly IReals quotes;
+        readonly IReals datum;
     }
 }

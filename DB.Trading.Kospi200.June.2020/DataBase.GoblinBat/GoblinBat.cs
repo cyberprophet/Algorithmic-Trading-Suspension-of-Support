@@ -602,6 +602,7 @@ namespace ShareInvest
                 return;
             }
             ClosingForm = true;
+            strip.ItemClicked -= OnItemClick;
             Dispose();
         }
         void GoblinBatResize(object sender, EventArgs e) => BeginInvoke(new Action(() =>

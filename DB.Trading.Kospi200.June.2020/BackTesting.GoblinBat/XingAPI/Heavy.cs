@@ -34,11 +34,14 @@ namespace ShareInvest.Strategy.XingAPI
                 var cPrice = sAvg - Const.ErrorRate;
                 var oPrice = cPrice.ToString("F2");
 
+                if (API.BuyOrder.Count > 0 && double.TryParse(oPrice, out double check) && API.BuyOrder.ContainsValue(check) == false)
+                {
+                    var op = API.BuyOrder.OrderBy(o => o.Value).First();
+
+                    return SendCorrectionOrder(oPrice, op.Key);
+                }
                 if (API.BuyOrder.Count == 0 && API.Quantity + 1 < specify.Assets / (cPrice * Const.TransactionMultiplier * specify.MarginRate))
                     return SendNewOrder(oPrice, buy);
-
-                if (API.BuyOrder.Count > 0 && API.BuyOrder.ContainsValue(cPrice) == false)
-                    return SendCorrectionOrder(oPrice, API.BuyOrder.OrderBy(o => o.Value).First().Key);
             }
             return false;
         }
@@ -49,11 +52,14 @@ namespace ShareInvest.Strategy.XingAPI
                 var cPrice = bAvg + Const.ErrorRate;
                 var oPrice = cPrice.ToString("F2");
 
+                if (API.SellOrder.Count > 0 && double.TryParse(oPrice, out double check) && API.SellOrder.ContainsValue(check) == false)
+                {
+                    var op = API.SellOrder.OrderByDescending(o => o.Value).First();
+
+                    return SendCorrectionOrder(oPrice, op.Key);
+                }
                 if (API.SellOrder.Count == 0 && Math.Abs(API.Quantity - 1) < specify.Assets / (cPrice * Const.TransactionMultiplier * specify.MarginRate))
                     return SendNewOrder(oPrice, sell);
-
-                if (API.SellOrder.Count > 0 && API.SellOrder.ContainsValue(cPrice) == false)
-                    return SendCorrectionOrder(oPrice, API.SellOrder.OrderByDescending(o => o.Value).First().Key);
             }
             return false;
         }
@@ -61,23 +67,24 @@ namespace ShareInvest.Strategy.XingAPI
         {
             var number = API.SellOrder.OrderBy(o => o.Value).First().Key;
 
-            return API.SellOrder.TryGetValue(number, out double csp) && selling[API.SellOrder.Count == 1 ? 3 : (selling.Length - 1)] < csp ? SendClearingOrder(number) : false;
+            return API.SellOrder.TryGetValue(number, out double csp) && selling[API.SellOrder.Count == 1 ? 3 : (selling.Length - 1)] < csp && API.OnReceiveBalance ? SendClearingOrder(number) : false;
         }
         protected internal override bool ForTheLiquidationOfSellOrder(double[] bid)
         {
             var number = API.BuyOrder.OrderByDescending(o => o.Value).First().Key;
 
-            return API.BuyOrder.TryGetValue(number, out double cbp) && bid[API.BuyOrder.Count == 1 ? 3 : (bid.Length - 1)] > cbp ? SendClearingOrder(number) : false;
+            return API.BuyOrder.TryGetValue(number, out double cbp) && bid[API.BuyOrder.Count == 1 ? 3 : (bid.Length - 1)] > cbp && API.OnReceiveBalance ? SendClearingOrder(number) : false;
         }
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy)
         {
             var price = string.Empty;
             var gap = double.TryParse(avg, out double bAvg) && bAvg > buy ? Const.ErrorRate * 2 : Const.ErrorRate * 3;
+            var op = API.BuyOrder.OrderBy(o => o.Value).First();
 
             foreach (var kv in API.BuyOrder.OrderByDescending(o => o.Value))
             {
-                if (string.IsNullOrEmpty(price) == false && (kv.Value + Const.ErrorRate).ToString("F2").Equals(price))
-                    return SendCorrectionOrder((API.BuyOrder.OrderBy(o => o.Value).First().Value - gap).ToString("F2"), kv.Key);
+                if (string.IsNullOrEmpty(price) == false && (kv.Value + Const.ErrorRate).ToString("F2").Equals(price) && API.OnReceiveBalance)
+                    return SendCorrectionOrder((op.Value - gap).ToString("F2"), kv.Key);
 
                 price = kv.Value.ToString("F2");
             }
@@ -87,11 +94,12 @@ namespace ShareInvest.Strategy.XingAPI
         {
             var price = string.Empty;
             var gap = double.TryParse(avg, out double sAvg) && sAvg < sell ? Const.ErrorRate * 2 : Const.ErrorRate * 3;
+            var op = API.SellOrder.OrderByDescending(o => o.Value).First();
 
             foreach (var kv in API.SellOrder.OrderBy(o => o.Value))
             {
-                if (string.IsNullOrEmpty(price) == false && (kv.Value - Const.ErrorRate).ToString("F2").Equals(price))
-                    return SendCorrectionOrder((API.SellOrder.OrderByDescending(o => o.Value).First().Value + gap).ToString("F2"), kv.Key);
+                if (string.IsNullOrEmpty(price) == false && (kv.Value - Const.ErrorRate).ToString("F2").Equals(price) && API.OnReceiveBalance)
+                    return SendCorrectionOrder((op.Value + gap).ToString("F2"), kv.Key);
 
                 price = kv.Value.ToString("F2");
             }

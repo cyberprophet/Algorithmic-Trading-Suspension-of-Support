@@ -23,6 +23,13 @@ namespace ShareInvest.DelayRequest
         }
         public int QueueCount => requestTaskQueue.Count;
         public void Run() => taskWorker.Start();
+        public void Dispose()
+        {
+            requestTaskQueue.Clear();
+            taskWorker.Abort();
+            request = null;
+            taskWorker.Join();
+        }
         public void RequestTrData(Task task) => requestTaskQueue.Enqueue(task);
         Delay() => taskWorker = new Thread(delegate ()
         {
