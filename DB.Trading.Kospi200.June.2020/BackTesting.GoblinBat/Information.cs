@@ -50,7 +50,7 @@ namespace ShareInvest.Strategy
         {
             var list = new List<Models.ImitationGames>();
 
-            while (list.Count < 135000 * count)
+            while (list.Count < 375000 * count)
             {
                 var mi = new Models.ImitationGames
                 {

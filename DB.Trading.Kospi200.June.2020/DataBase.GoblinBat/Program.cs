@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,47 +42,21 @@ namespace ShareInvest
                             new Task(() =>
                             {
                                 retrieve.SetInitialzeTheCode();
-                                IList catalog;
+                                info.GetUserIdentity(initial);
+                                var catalog = info.GetStatistics(count);
+                                int length = 0;
 
-                                if (secret.GetExternal(str))
+                                if (secret.GetIsSever(str) == false)
                                 {
-                                    info.GetUserIdentity(initial);
+                                    count = 0.5;
+                                    info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
+                                    var priority = info.GetBestStrategy();
+                                    length = priority.Count;
 
-                                    if (secret.GetIsSever(str))
-                                        catalog = info.GetStatistics(count);
-
-                                    else
-                                    {
-                                        catalog = info.GetBestStrategy();
-                                        count = 0.5;
-
-                                        foreach (var input in info.GetBestStrategy(false))
-                                            catalog.Add(input);
-
-                                        info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
-                                        var best = retrieve.GetBestStrategy();
-
-                                        foreach (var input in info.GetStatistics(count))
-                                            catalog.Add(input);
-
-                                        if (best != null)
-                                        {
-                                            if (catalog.Contains(best))
-                                                catalog.Remove(best);
-
-                                            catalog.Insert(0, best);
-                                        }
-                                    }
+                                    foreach (var best in priority)
+                                        catalog.Insert(0, best);
                                 }
-                                else
-                                {
-                                    info.GetUserIdentity(initial);
-                                    catalog = info.GetBestStrategy(true);
-
-                                    foreach (var input in info.GetStatistics(count))
-                                        catalog.Add(input);
-                                }
-                                Count = catalog.Count;
+                                var recent = retrieve.RecentDate;
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
@@ -93,13 +64,19 @@ namespace ShareInvest
                                 };
                                 try
                                 {
-                                    Parallel.ForEach(((List<Models.ImitationGames>)catalog).Distinct(), po, new Action<Models.ImitationGames>((number) =>
+                                    Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
                                     {
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();
 
-                                        if (retrieve.GetDuplicateResults(number) == false)
+                                        if (retrieve.GetDuplicateResults(recent, number) == false)
+                                        {
                                             new BackTesting(number, str);
+                                            Count++;
+
+                                            if (length == Count)
+                                                recent = retrieve.RecentDate;
+                                        }
                                     }));
                                 }
                                 catch (OperationCanceledException ex)
@@ -137,8 +114,8 @@ namespace ShareInvest
                             {
                                 cts.Dispose();
                             }
-                            var catalog = info.GetStatistics(count).Distinct().ToList();
-                            Count = catalog.Count;
+                            var catalog = info.GetStatistics(count);
+                            var recent = retrieve.RecentDate;
                             cts = new CancellationTokenSource();
                             new Task(() =>
                             {
@@ -154,8 +131,11 @@ namespace ShareInvest
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();
 
-                                        if (retrieve.GetDuplicateResults(number) == false)
+                                        if (retrieve.GetDuplicateResults(recent, number) == false)
+                                        {
                                             new BackTesting(number, str);
+                                            Count++;
+                                        }
                                     }));
                                 }
                                 catch (OperationCanceledException ex)
@@ -192,7 +172,7 @@ namespace ShareInvest
         static extern IntPtr GetConsoleWindow();
         [DllImport("user32.dll")]
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-        internal static int Count
+        internal static uint Count
         {
             get; set;
         }

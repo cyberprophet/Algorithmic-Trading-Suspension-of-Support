@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Migrations;
-using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -512,6 +511,19 @@ namespace ShareInvest.GoblinBatContext
                 }
             return false;
         }
+        protected async Task<string> GetRecentDate()
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    return await db.Games.MaxAsync(o => o.Date);
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return string.Empty;
+        }
         protected async Task<bool> GetDuplicateResults(ImitationGames game, string date)
         {
             using (var db = new GoblinBatDbContext(key))
@@ -528,7 +540,7 @@ namespace ShareInvest.GoblinBatContext
                         {
                             var recent = await check.MaxAsync(o => o.Date);
 
-                            return check.Where(o => o.Date.Equals(recent)).Any(o => o.Cumulative < 0 || o.Statistic < 0);
+                            return check.Where(o => o.Date.Equals(date)).Any(o => o.Cumulative < 0 || o.Statistic < 0);
                         }
                     }
                 }

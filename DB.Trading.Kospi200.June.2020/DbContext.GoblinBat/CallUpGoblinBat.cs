@@ -119,7 +119,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     var date = await db.Games.MaxAsync(o => o.Date);
 
-                    foreach (var game in db.Games.Where(o => o.Date.Equals(date) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).OrderByDescending(o => o.Statistic * (o.Cumulative + o.Unrealized)).AsNoTracking())
+                    foreach (var game in db.Games.Where(o => o.Date.Equals(date) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).OrderBy(o => o.Statistic * (o.Cumulative + o.Unrealized)).AsNoTracking())
                         games.Add(new ImitationGames
                         {
                             Assets = game.Assets,

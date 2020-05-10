@@ -10,7 +10,7 @@ namespace ShareInvest.Strategy
 {
     public partial class Retrieve : CallUpStatisticalAnalysis
     {
-        public Retrieve(string key) : base(key) => secret = new Secrets(key);
+        public Retrieve(string key) : base(key) => Console.WriteLine(key);
         public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
@@ -34,34 +34,7 @@ namespace ShareInvest.Strategy
                 Quotes = null;
             }
         }
-        public bool GetDuplicateResults(Models.ImitationGames game)
-        {
-            var now = DateTime.Now;
-
-            switch (now.DayOfWeek)
-            {
-                case DayOfWeek.Monday:
-                    if (now.Hour < 15 || now.Hour == 15 && now.Minute < 45)
-                        now = now.AddDays(-3);
-
-                    break;
-
-                case DayOfWeek.Sunday:
-                    now = now.AddDays(-2);
-                    break;
-
-                case DayOfWeek.Saturday:
-                    now = now.AddDays(-1);
-                    break;
-
-                default:
-                    if (now.Hour < 15 || now.Hour == 15 && now.Minute < 45 || secret.GetHoliday(now))
-                        now = now.AddDays(-1);
-
-                    break;
-            }
-            return GetDuplicateResults(game, now.ToString(date)).Result;
-        }
+        public bool GetDuplicateResults(string recent, Models.ImitationGames game) => GetDuplicateResults(game, recent).Result;
         public string GetDate(string code)
         {
             if (DateTime.TryParseExact(SetDate(code).Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
@@ -116,6 +89,21 @@ namespace ShareInvest.Strategy
             return code;
         }
         public int SetIdentify(Setting setting) => SetIndentify(setting);
+        public string RecentDate
+        {
+            get
+            {
+                string recent;
+
+                do
+                {
+                    recent = GetRecentDate().Result;
+                }
+                while (string.IsNullOrEmpty(recent));
+
+                return recent;
+            }
+        }
         public static string Code
         {
             get; set;
@@ -307,8 +295,6 @@ namespace ShareInvest.Strategy
                 Quotes = GetQuotes(code);
             }
         }
-        readonly Secrets secret;
-        const string date = "yyMMdd";
         const string format = "yyMMddHHmmss";
     }
 }
