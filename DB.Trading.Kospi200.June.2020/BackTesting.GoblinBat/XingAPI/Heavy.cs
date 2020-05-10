@@ -77,14 +77,14 @@ namespace ShareInvest.Strategy.XingAPI
         }
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy)
         {
-            var price = string.Empty;
-            var gap = double.TryParse(avg, out double bAvg) && bAvg > buy ? Const.ErrorRate * 2 : Const.ErrorRate * 3;
+            var gap = Const.ErrorRate * API.Quantity;
             var op = API.BuyOrder.OrderBy(o => o.Value).First();
+            string price = string.Empty, oPrice = (op.Value - gap).ToString("F2");
 
             foreach (var kv in API.BuyOrder.OrderByDescending(o => o.Value))
             {
-                if (string.IsNullOrEmpty(price) == false && (kv.Value + Const.ErrorRate).ToString("F2").Equals(price) && API.OnReceiveBalance)
-                    return SendCorrectionOrder((op.Value - gap).ToString("F2"), kv.Key);
+                if (string.IsNullOrEmpty(price) == false && (kv.Value + Const.ErrorRate).ToString("F2").Equals(price) && double.TryParse(oPrice, out double bPrice) && bPrice > buy + Const.ErrorRate * 9 && API.BuyOrder.ContainsValue(bPrice) == false && API.OnReceiveBalance)
+                    return SendCorrectionOrder(oPrice, kv.Key);
 
                 price = kv.Value.ToString("F2");
             }
@@ -92,14 +92,14 @@ namespace ShareInvest.Strategy.XingAPI
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell)
         {
-            var price = string.Empty;
-            var gap = double.TryParse(avg, out double sAvg) && sAvg < sell ? Const.ErrorRate * 2 : Const.ErrorRate * 3;
+            var gap = Const.ErrorRate * API.Quantity;
             var op = API.SellOrder.OrderByDescending(o => o.Value).First();
+            string price = string.Empty, oPrice = (op.Value - gap).ToString("F2");
 
             foreach (var kv in API.SellOrder.OrderBy(o => o.Value))
             {
-                if (string.IsNullOrEmpty(price) == false && (kv.Value - Const.ErrorRate).ToString("F2").Equals(price) && API.OnReceiveBalance)
-                    return SendCorrectionOrder((op.Value + gap).ToString("F2"), kv.Key);
+                if (string.IsNullOrEmpty(price) == false && (kv.Value - Const.ErrorRate).ToString("F2").Equals(price) && double.TryParse(oPrice, out double sPrice) && sPrice < sell + Const.ErrorRate * 9 && API.SellOrder.ContainsValue(sPrice) == false && API.OnReceiveBalance)
+                    return SendCorrectionOrder(oPrice, kv.Key);
 
                 price = kv.Value.ToString("F2");
             }

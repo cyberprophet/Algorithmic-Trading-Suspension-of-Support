@@ -35,16 +35,16 @@ namespace ShareInvest.Strategy.XingAPI
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy)
         {
             var sb = API.BuyOrder.OrderByDescending(o => o.Value).First();
-            var abscond = API.Quantity * Const.ErrorRate;
+            double abscond = API.Quantity * Const.ErrorRate, oPrice = sb.Value - abscond;
 
-            return double.TryParse(avg, out double sAvg) && buy < sAvg && sAvg - abscond < sb.Value && API.BuyOrder.ContainsValue(sb.Value - abscond) == false ? SendCorrectionOrder((sb.Value - abscond).ToString("F2"), sb.Key) : false;
+            return oPrice > buy - Const.ErrorRate * 9 && double.TryParse(avg, out double sAvg) && buy < sAvg && sAvg - abscond < sb.Value && API.BuyOrder.ContainsValue(oPrice) == false ? SendCorrectionOrder(oPrice.ToString("F2"), sb.Key) : false;
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell)
         {
             var sb = API.SellOrder.OrderBy(o => o.Value).First();
-            var abscond = API.Quantity * Const.ErrorRate;
+            double abscond = API.Quantity * Const.ErrorRate, oPrice = sb.Value - abscond;
 
-            return double.TryParse(avg, out double bAvg) && sell > bAvg && bAvg - abscond > sb.Value && API.SellOrder.ContainsValue(sb.Value - abscond) == false ? SendCorrectionOrder((sb.Value - abscond).ToString("F2"), sb.Key) : false;
+            return oPrice < sell + Const.ErrorRate * 9 && double.TryParse(avg, out double bAvg) && sell > bAvg && bAvg - abscond > sb.Value && API.SellOrder.ContainsValue(oPrice) == false ? SendCorrectionOrder(oPrice.ToString("F2"), sb.Key) : false;
         }
         public Fly(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;
     }

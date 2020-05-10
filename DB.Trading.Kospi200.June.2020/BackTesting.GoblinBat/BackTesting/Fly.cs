@@ -39,14 +39,28 @@ namespace ShareInvest.Strategy.Statistics
             var sb = bt.BuyOrder.OrderByDescending(o => o.Key).First();
             var abscond = bt.Quantity * Const.ErrorRate;
 
-            return double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double sAvg) && buy < sAvg && sAvg - abscond < price ? bt.SendCorrectionOrder((price - abscond).ToString("F2"), sb.Value, quantity) : false;
+            if (double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double sAvg) && buy < sAvg && sAvg - abscond < price)
+            {
+                var oPrice = (price - abscond).ToString("F2");
+
+                if (price - abscond > buy - Const.ErrorRate * 9 && bt.BuyOrder.ContainsKey(oPrice) == false)
+                    return bt.SendCorrectionOrder(oPrice, sb.Value, quantity);
+            }
+            return false;
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell, int quantity)
         {
             var sb = bt.SellOrder.OrderBy(o => o.Key).First();
             var abscond = bt.Quantity * Const.ErrorRate;
 
-            return double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double bAvg) && sell > bAvg && bAvg - abscond > price ? bt.SendCorrectionOrder((price - abscond).ToString("F2"), sb.Value, quantity) : false;
+            if (double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double bAvg) && sell > bAvg && bAvg - abscond > price)
+            {
+                var oPrice = (price - abscond).ToString("F2");
+
+                if (price - abscond < sell + Const.ErrorRate * 9 && bt.SellOrder.ContainsKey(oPrice) == false)
+                    return bt.SendCorrectionOrder(oPrice, sb.Value, quantity);
+            }
+            return false;
         }
         internal Fly(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify) => Console.WriteLine(specify.Strategy);
     }
