@@ -5,6 +5,7 @@ using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
@@ -25,7 +26,7 @@ namespace ShareInvest.GoblinBatContext
                         return db.Statistics.AsNoTracking().Distinct().ToList();
 
                     var identity = new Secret().GetIdentify(key);
-                    var date = DateTime.Now.AddDays(-7).ToString(recent);
+                    var date = DateTime.Now.AddDays(-27).ToString(recent);
                     var choice = new bool[] { true, false };
                     var strategy = db.Statistics.Select(o => new { o.Strategy }).AsNoTracking().Distinct().ToArray();
 
@@ -88,6 +89,20 @@ namespace ShareInvest.GoblinBatContext
                         return db.Statistics.ToList();
                 }
             return list.Distinct().ToList();
+        }
+        protected List<long> GetUserAssets(List<long> list)
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    var assets = from identity in db.Identifies select identity.Assets;
+                    list = assets.Distinct().ToList();
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return list;
         }
         protected void SetInsertBaseStrategy(Queue<Statistics> queue)
         {

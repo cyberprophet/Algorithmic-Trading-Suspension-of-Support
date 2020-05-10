@@ -20,8 +20,7 @@ namespace ShareInvest
             if (ShowWindow(GetConsoleWindow(), secret.Hide) && secret.GetIdentify(str))
             {
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
-                var classfication = secret.GetPort(str).Equals((char)Port.Trading) && (DateTime.Now.Hour == 15 && DateTime.Now.Minute >= 45 || DateTime.Now.Hour > 4 && DateTime.Now.Hour < 6);
-                var remaining = secret.GetIsSever(str) ? secret.GetExternal(str) ? ran.Next(3, classfication ? 10 : 5) : 2 : 1;
+                var remaining = secret.GetIsSever(str) ? ran.Next(1, 6) : 7;
                 var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var initial = secret.GetPort(str);
                 var cts = new CancellationTokenSource();
@@ -44,17 +43,14 @@ namespace ShareInvest
                                 retrieve.SetInitialzeTheCode();
                                 info.GetUserIdentity(initial);
                                 var catalog = info.GetStatistics(count);
-                                int length = 0;
 
                                 if (secret.GetIsSever(str) == false)
                                 {
                                     count = 0.5;
                                     info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
-                                    var priority = info.GetBestStrategy();
-                                    length = priority.Count;
 
-                                    foreach (var best in priority)
-                                        catalog.Insert(0, best);
+                                    foreach (var best in info.GetBestStrategy())
+                                        catalog.Insert(9, best);
                                 }
                                 var recent = retrieve.RecentDate;
                                 var po = new ParallelOptions
@@ -72,9 +68,8 @@ namespace ShareInvest
                                         if (retrieve.GetDuplicateResults(recent, number) == false)
                                         {
                                             new BackTesting(number, str);
-                                            Count++;
 
-                                            if (length == Count)
+                                            if (Count++ == 9)
                                                 recent = retrieve.RecentDate;
                                         }
                                     }));

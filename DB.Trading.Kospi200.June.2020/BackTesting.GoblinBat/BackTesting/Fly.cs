@@ -37,14 +37,14 @@ namespace ShareInvest.Strategy.Statistics
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy, int quantity)
         {
             var sb = bt.BuyOrder.OrderByDescending(o => o.Key).First();
-            var abscond = 4 * bt.Quantity * Const.ErrorRate;
+            var abscond = bt.Quantity * Const.ErrorRate;
 
             return double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double sAvg) && buy < sAvg && sAvg - abscond < price ? bt.SendCorrectionOrder((price - abscond).ToString("F2"), sb.Value, quantity) : false;
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell, int quantity)
         {
             var sb = bt.SellOrder.OrderBy(o => o.Key).First();
-            var abscond = 4 * bt.Quantity * Const.ErrorRate;
+            var abscond = bt.Quantity * Const.ErrorRate;
 
             return double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double bAvg) && sell > bAvg && bAvg - abscond > price ? bt.SendCorrectionOrder((price - abscond).ToString("F2"), sb.Value, quantity) : false;
         }

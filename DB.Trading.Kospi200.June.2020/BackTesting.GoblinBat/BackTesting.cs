@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.BackTesting;
 using ShareInvest.GoblinBatContext;
+using ShareInvest.Message;
 using ShareInvest.Strategy.Statistics;
 
 namespace ShareInvest.Strategy
@@ -236,6 +237,9 @@ namespace ShareInvest.Strategy
                 Fees = (int)(Commission - TodayCommission),
                 Statistic = Accumulative
             });
+            if (Count > 5000)
+                new ExceptionMessage(game.Strategy, string.Concat(date, '_', Count));
+
             TodayCommission = (int)Commission;
             TodayRevenue = Revenue;
             SellOrder.Clear();
