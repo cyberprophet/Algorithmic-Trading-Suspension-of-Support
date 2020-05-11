@@ -33,11 +33,10 @@ namespace ShareInvest.GoblinBatControls
                         if (str.Equals(current.Value))
                             break;
 
-                        if (row.Cells[0].Value.ToString().Contains("101"))
+                        if (row.Cells[0].Value.ToString().Contains("101") && double.TryParse(row.Cells[4].Value.ToString(), out double purchase))
                         {
                             current.Value = str;
                             int absolute = e.Quantity > 0 ? e.Quantity : -e.Quantity;
-                            double purchase = double.Parse(row.Cells[4].Value.ToString());
                             revenue = (long)((e.Price - purchase) * e.Quantity * Const.TransactionMultiplier - purchase * absolute * Const.TransactionMultiplier * Const.Commission - e.Price * absolute * Const.TransactionMultiplier * Const.Commission);
                             type.Value = revenue.ToString("N0");
                         }
@@ -69,7 +68,7 @@ namespace ShareInvest.GoblinBatControls
 
                 foreach (string val in info.Split(';'))
                 {
-                    if (val.Equals(string.Empty))
+                    if (string.IsNullOrEmpty(val))
                         break;
 
                     switch (i)
@@ -85,12 +84,16 @@ namespace ShareInvest.GoblinBatControls
 
                         case 3:
                         case 6:
-                            arr[i++] = int.Parse(val).ToString("N0");
+                            if (int.TryParse(val, out int num))
+                                arr[i++] = num.ToString("N0");
+
                             break;
 
                         case 4:
                         case 5:
-                            arr[i++] = (val.Contains(".") ? double.Parse(val) : (double.Parse(val) / 100)).ToString("N2");
+                            if (double.TryParse(val, out double dot))
+                                arr[i++] = (val.Contains(".") ? dot : (dot / 100)).ToString("N2");
+
                             break;
                     }
                 }
@@ -111,20 +114,20 @@ namespace ShareInvest.GoblinBatControls
                     type.Style.ForeColor = Color.Maroon;
                     type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
                 }
-                type = row.Cells[6];
-                long revenue = long.Parse(type.Value.ToString().Replace(",", string.Empty));
+                var str = row.Cells[6].Value.ToString();
 
-                if (revenue > 0)
-                {
-                    type.Style.ForeColor = Color.Maroon;
-                    type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
-                }
-                else if (revenue < 0)
-                {
-                    type.Value = type.Value.ToString().Replace("-", string.Empty);
-                    type.Style.ForeColor = Color.Navy;
-                    type.Style.SelectionForeColor = Color.DeepSkyBlue;
-                }
+                if (string.IsNullOrEmpty(str) == false && long.TryParse(str.Replace(",", string.Empty), out long revenue))
+                    if (revenue > 0)
+                    {
+                        type.Style.ForeColor = Color.Maroon;
+                        type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
+                    }
+                    else if (revenue < 0)
+                    {
+                        type.Value = type.Value.ToString().Replace("-", string.Empty);
+                        type.Style.ForeColor = Color.Navy;
+                        type.Style.SelectionForeColor = Color.DeepSkyBlue;
+                    }
             }
             balGrid.Show();
             balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;

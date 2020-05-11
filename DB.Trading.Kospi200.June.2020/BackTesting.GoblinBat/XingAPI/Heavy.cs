@@ -83,7 +83,7 @@ namespace ShareInvest.Strategy.XingAPI
 
             foreach (var kv in API.BuyOrder.OrderByDescending(o => o.Value))
             {
-                if (string.IsNullOrEmpty(price) == false && (kv.Value + Const.ErrorRate).ToString("F2").Equals(price) && double.TryParse(oPrice, out double bPrice) && bPrice > buy + Const.ErrorRate * 9 && API.BuyOrder.ContainsValue(bPrice) == false && API.OnReceiveBalance)
+                if (string.IsNullOrEmpty(price) == false && (kv.Value + Const.ErrorRate).ToString("F2").Equals(price) && double.TryParse(oPrice, out double bPrice) && bPrice > buy - Const.ErrorRate * 9 && API.BuyOrder.ContainsValue(bPrice) == false && API.OnReceiveBalance)
                     return SendCorrectionOrder(oPrice, kv.Key);
 
                 price = kv.Value.ToString("F2");

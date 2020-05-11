@@ -65,28 +65,36 @@ namespace ShareInvest.Strategy.Statistics
         }
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy, int quantity)
         {
-            var price = string.Empty;
-            var gap = double.TryParse(avg, out double bAvg) && bAvg > buy ? Const.ErrorRate * 2 : Const.ErrorRate * 3;
+            string price = string.Empty, bPrice = bt.BuyOrder.OrderBy(o => o.Key).First().Key;
+            var gap = Const.ErrorRate * bt.Quantity;
 
             foreach (var kv in bt.BuyOrder.OrderByDescending(o => o.Key))
             {
-                if (string.IsNullOrEmpty(price) == false && double.TryParse(kv.Key, out double oPrice) && (oPrice + Const.ErrorRate).ToString("F2").Equals(price) && double.TryParse(bt.BuyOrder.OrderBy(o => o.Key).First().Key, out double cPrice))
-                    return bt.SendCorrectionOrder((cPrice - gap).ToString("F2"), kv.Value, quantity);
+                if (string.IsNullOrEmpty(price) == false && double.TryParse(kv.Key, out double oPrice) && (oPrice + Const.ErrorRate).ToString("F2").Equals(price) && double.TryParse(bPrice, out double cPrice) && cPrice - gap > buy - Const.ErrorRate * 9)
+                {
+                    var sPrice = (cPrice - gap).ToString("F2");
 
+                    if (bt.BuyOrder.ContainsKey(sPrice) == false)
+                        return bt.SendCorrectionOrder(sPrice, kv.Value, quantity);
+                }
                 price = kv.Key;
             }
             return false;
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell, int quantity)
         {
-            var price = string.Empty;
-            var gap = double.TryParse(avg, out double sAvg) && sAvg < sell ? Const.ErrorRate * 2 : Const.ErrorRate * 3;
+            string price = string.Empty, sPrice = bt.SellOrder.OrderByDescending(o => o.Key).First().Key;
+            var gap = Const.ErrorRate * bt.Quantity;
 
             foreach (var kv in bt.SellOrder.OrderBy(o => o.Key))
             {
-                if (string.IsNullOrEmpty(price) == false && double.TryParse(kv.Key, out double oPrice) && (oPrice - Const.ErrorRate).ToString("F2").Equals(price) && double.TryParse(bt.SellOrder.OrderByDescending(o => o.Key).First().Key, out double cPrice))
-                    return bt.SendCorrectionOrder((cPrice + gap).ToString("F2"), kv.Value, quantity);
+                if (string.IsNullOrEmpty(price) == false && double.TryParse(kv.Key, out double oPrice) && (oPrice - Const.ErrorRate).ToString("F2").Equals(price) && double.TryParse(sPrice, out double cPrice) && cPrice - gap < sell + Const.ErrorRate * 9)
+                {
+                    var bPrice = (cPrice - gap).ToString("F2");
 
+                    if (bt.SellOrder.ContainsKey(bPrice) == false)
+                        return bt.SendCorrectionOrder(bPrice, kv.Value, quantity);
+                }
                 price = kv.Key;
             }
             return false;

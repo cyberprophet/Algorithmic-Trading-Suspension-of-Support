@@ -19,9 +19,9 @@ namespace ShareInvest
         {
             if (ShowWindow(GetConsoleWindow(), secret.Hide) && secret.GetIdentify(str))
             {
+                string path = Path.Combine(Application.StartupPath, secret.Indentify), recent = string.Empty;
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var remaining = secret.GetIsSever(str) ? ran.Next(1, 6) : 7;
-                var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var initial = secret.GetPort(str);
                 var cts = new CancellationTokenSource();
                 var retrieve = new Strategy.Retrieve(str);
@@ -42,6 +42,7 @@ namespace ShareInvest
                             {
                                 retrieve.SetInitialzeTheCode();
                                 info.GetUserIdentity(initial);
+                                recent = retrieve.RecentDate;
                                 var catalog = info.GetStatistics(count);
 
                                 if (secret.GetIsSever(str) == false)
@@ -52,7 +53,6 @@ namespace ShareInvest
                                     foreach (var best in info.GetBestStrategy())
                                         catalog.Insert(9, best);
                                 }
-                                var recent = retrieve.RecentDate;
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
@@ -90,7 +90,7 @@ namespace ShareInvest
                             if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && ran.Next(0, 10) == 9)
                                 break;
 
-                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 55 || DateTime.Now.Minute > 49 && ran.Next(0, 5) == 3))
+                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 50 || DateTime.Now.Minute > 47 && ran.Next(0, 5) == 3))
                                 break;
                         }
                     if (initial.Equals((char)126) == false)
@@ -109,8 +109,7 @@ namespace ShareInvest
                             {
                                 cts.Dispose();
                             }
-                            var catalog = info.GetStatistics(count);
-                            var recent = retrieve.RecentDate;
+                            var catalog = info.GetStatistics(count / 5);
                             cts = new CancellationTokenSource();
                             new Task(() =>
                             {
