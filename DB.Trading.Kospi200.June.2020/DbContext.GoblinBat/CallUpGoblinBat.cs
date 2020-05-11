@@ -127,14 +127,25 @@ namespace ShareInvest.GoblinBatContext
                     db.Configuration.AutoDetectChangesEnabled = true;
                 }
         }
-        protected async Task<List<ImitationGames>> Preheat(List<ImitationGames> games)
+        protected List<ImitationGames> Preheat(List<ImitationGames> games)
         {
+            string max = DateTime.Now.ToString(recent);
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    var date = await db.Games.MaxAsync(o => o.Date);
+                    foreach (var sm in db.Games.Select(o => new { o.Date }).AsNoTracking().Distinct().OrderByDescending(o => o.Date))
+                    {
+                        if (max.CompareTo(sm.Date) == 0)
+                            continue;
 
-                    foreach (var game in db.Games.Where(o => o.Date.Equals(date) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).OrderBy(o => o.Statistic * (o.Cumulative + o.Unrealized)).AsNoTracking())
+                        else
+                        {
+                            max = sm.Date;
+
+                            break;
+                        }
+                    }
+                    foreach (var game in db.Games.Where(o => o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic * (o.Cumulative + o.Unrealized)))
                         games.Add(new ImitationGames
                         {
                             Assets = game.Assets,
@@ -304,21 +315,18 @@ namespace ShareInvest.GoblinBatContext
 
                     foreach (var choice in list)
                     {
-                        var select = db.Games.Where(o => o.Date.Equals(date) && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver) && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking();
+                        var select = db.Games.Where(o => o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver) && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking();
 
-                        foreach (var cu in select.OrderByDescending(o => o.Statistic * (o.Unrealized + o.Cumulative)).Take(35))
+                        foreach (var cu in select.Where(o => o.Date.Equals(date)).OrderByDescending(o => o.Statistic * (o.Unrealized + o.Cumulative)).AsNoTracking().Take(25))
                         {
                             uint count = 0;
                             double before = 0, avg = 0;
 
-                            foreach (var en in from ea in db.Games
-                                               where ea.Assets == cu.Assets && ea.Code.Equals(cu.Code) && ea.Commission == cu.Commission && ea.MarginRate == cu.MarginRate && ea.RollOver.Equals(cu.RollOver) && ea.Strategy.Equals(cu.Strategy) && ea.BaseTime == cu.BaseTime && ea.BaseShort == cu.BaseShort && ea.BaseLong == cu.BaseLong && ea.NonaTime == cu.NonaTime && ea.NonaShort == cu.NonaShort && ea.NonaLong == cu.NonaLong && ea.OctaTime == cu.OctaTime && ea.OctaShort == cu.OctaShort && ea.OctaLong == cu.OctaLong && ea.HeptaTime == cu.HeptaTime && ea.HeptaShort == cu.HeptaShort && ea.HeptaLong == cu.HeptaLong && ea.HexaTime == cu.HexaTime && ea.HexaShort == cu.HexaShort && ea.HexaLong == cu.HexaLong && ea.PentaTime == cu.PentaTime && ea.PentaShort == cu.PentaShort && ea.PentaLong == cu.PentaLong && ea.QuadTime == cu.QuadTime && ea.QuadShort == cu.QuadShort && ea.QuadLong == cu.QuadLong && ea.TriTime == cu.TriTime && ea.TriShort == cu.TriShort && ea.TriLong == cu.TriLong && ea.DuoTime == cu.DuoTime && ea.DuoShort == cu.DuoShort && ea.DuoLong == cu.DuoLong && ea.MonoTime == cu.MonoTime && ea.MonoShort == cu.MonoShort && ea.MonoLong == cu.MonoLong
-                                               orderby ea.Date
-                                               select new
-                                               {
-                                                   ea.Unrealized,
-                                                   ea.Revenue
-                                               })
+                            foreach (var en in select.Where(ea => ea.BaseTime == cu.BaseTime && ea.BaseShort == cu.BaseShort && ea.BaseLong == cu.BaseLong && ea.NonaTime == cu.NonaTime && ea.NonaShort == cu.NonaShort && ea.NonaLong == cu.NonaLong && ea.OctaTime == cu.OctaTime && ea.OctaShort == cu.OctaShort && ea.OctaLong == cu.OctaLong && ea.HeptaTime == cu.HeptaTime && ea.HeptaShort == cu.HeptaShort && ea.HeptaLong == cu.HeptaLong && ea.HexaTime == cu.HexaTime && ea.HexaShort == cu.HexaShort && ea.HexaLong == cu.HexaLong && ea.PentaTime == cu.PentaTime && ea.PentaShort == cu.PentaShort && ea.PentaLong == cu.PentaLong && ea.QuadTime == cu.QuadTime && ea.QuadShort == cu.QuadShort && ea.QuadLong == cu.QuadLong && ea.TriTime == cu.TriTime && ea.TriShort == cu.TriShort && ea.TriLong == cu.TriLong && ea.DuoTime == cu.DuoTime && ea.DuoShort == cu.DuoShort && ea.DuoLong == cu.DuoLong && ea.MonoTime == cu.MonoTime && ea.MonoShort == cu.MonoShort && ea.MonoLong == cu.MonoLong).OrderBy(ea => ea.Date).AsNoTracking().Select(ea => new
+                            {
+                                ea.Unrealized,
+                                ea.Revenue
+                            }))
                             {
                                 if (count++ > 0)
                                 {
