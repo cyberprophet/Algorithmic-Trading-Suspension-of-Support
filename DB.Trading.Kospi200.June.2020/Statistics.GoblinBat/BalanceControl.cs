@@ -79,7 +79,7 @@ namespace ShareInvest.GoblinBatControls
                             break;
 
                         case 2:
-                            arr[i++] = val.Equals("1") ? "매도" : "매수";
+                            arr[i++] = val.Equals("1") ? sell : buy;
                             break;
 
                         case 3:
@@ -104,17 +104,18 @@ namespace ShareInvest.GoblinBatControls
             {
                 var type = row.Cells[2];
 
-                if (type.Value.Equals("매도"))
+                if (type.Value.Equals(sell))
                 {
                     type.Style.ForeColor = Color.Navy;
                     type.Style.SelectionForeColor = Color.DeepSkyBlue;
                 }
-                else if (type.Value.Equals("매수"))
+                else if (type.Value.Equals(buy))
                 {
                     type.Style.ForeColor = Color.Maroon;
                     type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
                 }
-                var str = row.Cells[6].Value.ToString();
+                type = row.Cells[6];
+                var str = type.Value.ToString();
 
                 if (string.IsNullOrEmpty(str) == false && long.TryParse(str.Replace(",", string.Empty), out long revenue))
                     if (revenue > 0)
@@ -137,6 +138,8 @@ namespace ShareInvest.GoblinBatControls
             SendReSize?.Invoke(this, new GridResize(balGrid.Rows.GetRowsHeight(DataGridViewElementStates.None), balGrid.Rows.Count));
             balGrid.ResumeLayout();
         }));
+        const string sell = "매도";
+        const string buy = "매수";
         readonly string[] columns = { "종목코드", "종목명", "구분", "수량", "매입가", "현재가", "평가손익" };
         public event EventHandler<GridResize> SendReSize;
     }

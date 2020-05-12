@@ -47,7 +47,7 @@ namespace ShareInvest
 
                                 if (secret.GetIsSever(str) == false)
                                 {
-                                    count = 0.4;
+                                    count = 0.25;
                                     info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
 
                                     foreach (var best in info.GetBestStrategy())
@@ -116,7 +116,7 @@ namespace ShareInvest
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * 0.3)
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * 0.429)
                                 };
                                 try
                                 {
