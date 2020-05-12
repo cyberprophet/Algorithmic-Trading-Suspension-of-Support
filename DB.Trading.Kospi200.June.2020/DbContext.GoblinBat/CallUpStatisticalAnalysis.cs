@@ -15,18 +15,17 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
     {
-        protected Dictionary<DateTime, string> GetInformation(Catalog.DataBase.ImitationGame game)
+        protected async Task<Dictionary<DateTime, string>> GetInformation(Catalog.DataBase.ImitationGame game)
         {
-            try
-            {
-                var date = new Secret().RecentDate;
-                using (var db = new GoblinBatDbContext(key))
+            var date = new Secret().RecentDate;
+            var info = new Dictionary<DateTime, string>(16);
+            using (var db = new GoblinBatDbContext(key))
+                try
                 {
                     var memo = db.Games.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking();
 
-                    if (memo.Any(o => o.Date.Equals(date)))
+                    if (await memo.AnyAsync(o => o.Date.Equals(date)))
                     {
-                        var info = new Dictionary<DateTime, string>(16);
                         var temp = new Dictionary<string, long>();
                         long recentUnrealized = 0;
 
@@ -55,15 +54,13 @@ namespace ShareInvest.GoblinBatContext
                                 else
                                     info[infoDate] = string.Concat(kv.Value, ';', db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(3)) && o.Date.Equals(find.ToString())).AsNoTracking().FirstOrDefault().Price);
                             }
-                        return info;
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace);
-            }
-            return new Dictionary<DateTime, string>();
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return info;
         }
         protected string SetDate(string code)
         {

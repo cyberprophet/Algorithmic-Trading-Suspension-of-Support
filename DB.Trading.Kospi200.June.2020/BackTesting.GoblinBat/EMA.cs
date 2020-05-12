@@ -8,6 +8,12 @@
 
             return price * k + before * (1 - k);
         }
+        internal double Make(int count, double revenue, double before)
+        {
+            var k = 2 / (double)(1 + count);
+
+            return revenue * k + before * (1 - k);
+        }
         internal double Make(double price) => price;
         double K(int count, int period) => count > period ? 2 / (double)(period + 1) : 2 / (double)(count + 1);
     }

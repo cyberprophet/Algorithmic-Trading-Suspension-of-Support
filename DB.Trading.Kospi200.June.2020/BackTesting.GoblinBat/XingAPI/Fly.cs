@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy.XingAPI
@@ -24,10 +26,10 @@ namespace ShareInvest.Strategy.XingAPI
             var check = classification.Equals(buy);
             var price = param[check ? param.Length - 1 : 0];
 
-            if (check && API.Quantity <= 0 && param[5] > 0 && API.BuyOrder.Count < -API.Quantity && API.BuyOrder.ContainsValue(param[5]) == false)
+            if (check && API.Quantity < 0 && param[5] > 0 && API.BuyOrder.Count < -API.Quantity && API.BuyOrder.ContainsValue(param[5]) == false)
                 return SendNewOrder(param[5].ToString("F2"), classification);
 
-            else if (check == false && API.Quantity >= 0 && param[4] > 0 && API.SellOrder.Count < API.Quantity && API.SellOrder.ContainsValue(param[4]) == false)
+            else if (check == false && API.Quantity > 0 && param[4] > 0 && API.SellOrder.Count < API.Quantity && API.SellOrder.ContainsValue(param[4]) == false)
                 return SendNewOrder(param[4].ToString("F2"), classification);
 
             return price > 0 && ((check ? API.BuyOrder.Count == 0 : API.SellOrder.Count == 0) || API.Quantity == 0) && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate) - 1 && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false ? SendNewOrder(price.ToString("F2"), classification) : false;

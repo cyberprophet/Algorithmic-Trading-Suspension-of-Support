@@ -67,7 +67,7 @@ namespace ShareInvest
 
                                         if (retrieve.GetDuplicateResults(recent, number) == false)
                                         {
-                                            new BackTesting(number, str);
+                                            new BackTesting(initial, number, str);
 
                                             if (Count++ == 9)
                                                 recent = retrieve.RecentDate;
@@ -127,7 +127,7 @@ namespace ShareInvest
 
                                         if (retrieve.GetDuplicateResults(recent, number) == false)
                                         {
-                                            new BackTesting(number, str);
+                                            new BackTesting(initial, number, str);
                                             Count++;
                                         }
                                     }));

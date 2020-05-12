@@ -145,7 +145,7 @@ namespace ShareInvest.GoblinBatContext
                             break;
                         }
                     }
-                    foreach (var game in db.Games.Where(o => o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic * (o.Cumulative + o.Unrealized)))
+                    foreach (var game in db.Games.Where(o => o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
                         games.Add(new ImitationGames
                         {
                             Assets = game.Assets,
@@ -303,6 +303,66 @@ namespace ShareInvest.GoblinBatContext
                 new ExceptionMessage(ex.StackTrace);
             }
             return games;
+        }
+        protected async Task<ImitationGames> GetBestStrategyRecommend(List<Statistics> list, ImitationGames game)
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    var temp = double.MinValue;
+                    var max = await db.Games.MaxAsync(o => o.Date);
+
+                    foreach (var ch in list)
+                        foreach (var choice in db.Games.Where(o => o.Date.Equals(max) && o.Assets == ch.Assets && o.Code.Equals(ch.Code) && o.Commission == ch.Commission && o.MarginRate == ch.MarginRate && o.Strategy.Equals(ch.Strategy) && o.RollOver.Equals(ch.RollOver) && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic).Take(1))
+                            if (temp < choice.Statistic)
+                            {
+                                game = new ImitationGames
+                                {
+                                    Assets = choice.Assets,
+                                    Code = choice.Code,
+                                    Commission = choice.Commission,
+                                    MarginRate = choice.MarginRate,
+                                    Strategy = choice.Strategy,
+                                    RollOver = choice.RollOver,
+                                    BaseTime = choice.BaseTime,
+                                    BaseShort = choice.BaseShort,
+                                    BaseLong = choice.BaseLong,
+                                    NonaTime = choice.NonaTime,
+                                    NonaShort = choice.NonaShort,
+                                    NonaLong = choice.NonaLong,
+                                    OctaTime = choice.OctaTime,
+                                    OctaShort = choice.OctaShort,
+                                    OctaLong = choice.OctaLong,
+                                    HeptaTime = choice.HeptaTime,
+                                    HeptaShort = choice.HeptaShort,
+                                    HeptaLong = choice.HeptaLong,
+                                    HexaTime = choice.HexaTime,
+                                    HexaShort = choice.HexaShort,
+                                    HexaLong = choice.HexaLong,
+                                    PentaTime = choice.PentaTime,
+                                    PentaShort = choice.PentaShort,
+                                    PentaLong = choice.PentaLong,
+                                    QuadTime = choice.QuadTime,
+                                    QuadShort = choice.QuadShort,
+                                    QuadLong = choice.QuadLong,
+                                    TriTime = choice.TriTime,
+                                    TriShort = choice.TriShort,
+                                    TriLong = choice.TriLong,
+                                    DuoTime = choice.DuoTime,
+                                    DuoShort = choice.DuoShort,
+                                    DuoLong = choice.DuoLong,
+                                    MonoTime = choice.MonoTime,
+                                    MonoShort = choice.MonoShort,
+                                    MonoLong = choice.MonoLong
+                                };
+                                temp = choice.Statistic;
+                            }
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return game;
         }
         protected ImitationGames GetBestStrategyRecommend(List<Statistics> list)
         {

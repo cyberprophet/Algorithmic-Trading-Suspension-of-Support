@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.BackTesting;
 using ShareInvest.GoblinBatContext;
@@ -12,6 +16,10 @@ namespace ShareInvest.Strategy
 {
     public class BackTesting : CallUpStatisticalAnalysis
     {
+        EMA EMA
+        {
+            get;
+        }
         int Amount
         {
             get; set;
@@ -44,11 +52,15 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
+        double Before
+        {
+            get; set;
+        }
         Dictionary<uint, int> Residue
         {
             get;
         }
-        void StartProgress()
+        int StartProgress()
         {
             foreach (var quotes in Retrieve.Quotes)
             {
@@ -62,6 +74,8 @@ namespace ShareInvest.Strategy
             }
             if (games.Count > 0 && SetStatisticalStorage(games) == false)
                 Message = new Secrets().Message;
+
+            return statement == null ? 0 : statement.Count;
         }
         void SetConclusion(double price)
         {
@@ -70,6 +84,13 @@ namespace ShareInvest.Strategy
             PurchasePrice = SetPurchasePrice(price);
             CumulativeRevenue += (long)(liquidation * Const.TransactionMultiplier);
             Amount = Quantity;
+        }
+        double SetWeight(long param)
+        {
+            if (param > 0)
+                return param * 0.925;
+
+            return param * 1.075;
         }
         double SetPurchasePrice(double price)
         {
@@ -89,6 +110,13 @@ namespace ShareInvest.Strategy
             else
                 return 0;
         }
+        string ConvertDateTime(string time)
+        {
+            if (time.Length > 6 && DateTime.TryParseExact(time.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
+                return string.Concat(date.ToShortDateString(), " ", date.ToShortTimeString());
+
+            return DateTime.Parse(time).ToLongDateString();
+        }
         internal void Max(double trend, Catalog.XingAPI.Specify specify)
         {
             Judge[specify.Time] = trend;
@@ -99,23 +127,49 @@ namespace ShareInvest.Strategy
 
             Classification = temp == 0 ? string.Empty : temp > 0 ? Analysis.buy : Analysis.sell;
         }
-        internal bool SendClearingOrder(uint number)
+        internal bool SendClearingOrder(string time, uint number)
         {
             if (SellOrder.ContainsValue(number) && SellOrder.Remove(SellOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
+            {
+                if (verify)
+                    statement.Enqueue(new Conclusion
+                    {
+                        Time = ConvertDateTime(time),
+                        Division = string.Concat(sell, cancel),
+                        Price = string.Empty,
+                        OrderNumber = number.ToString("N0")
+                    });
                 return true;
-
+            }
             if (BuyOrder.ContainsValue(number) && BuyOrder.Remove(BuyOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
+            {
+                if (verify)
+                    statement.Enqueue(new Conclusion
+                    {
+                        Time = ConvertDateTime(time),
+                        Division = string.Concat(buy, cancel),
+                        Price = string.Empty,
+                        OrderNumber = number.ToString("N0")
+                    });
                 return true;
-
+            }
             return false;
         }
-        internal bool SendCorrectionOrder(string price, uint number, int residue)
+        internal bool SendCorrectionOrder(string time, string price, uint number, int residue)
         {
             if (SellOrder.ContainsValue(number) && SellOrder.Remove(SellOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
             {
                 SellOrder[price] = Count;
                 Residue[Count++] = residue;
 
+                if (verify)
+                    statement.Enqueue(new Conclusion
+                    {
+                        Time = ConvertDateTime(time),
+                        Division = string.Concat(sell, correction),
+                        Price = price,
+                        OrderNumber = SellOrder[price].ToString("N0")
+                    });
                 return true;
             }
             if (BuyOrder.ContainsValue(number) && BuyOrder.Remove(BuyOrder.First(o => o.Value == number).Key) && Residue.Remove(number))
@@ -123,27 +177,53 @@ namespace ShareInvest.Strategy
                 BuyOrder[price] = Count;
                 Residue[Count++] = residue;
 
+                if (verify)
+                    statement.Enqueue(new Conclusion
+                    {
+                        Time = ConvertDateTime(time),
+                        Division = string.Concat(buy, correction),
+                        Price = price,
+                        OrderNumber = BuyOrder[price].ToString("N0")
+                    });
                 return true;
             }
             return false;
         }
-        internal bool SendNewOrder(string price, string classification, int residue)
+        internal bool SendNewOrder(string time, string price, string classification, int residue)
         {
             switch (classification)
             {
                 case Analysis.sell:
                     SellOrder[price] = Count;
                     Residue[Count++] = residue;
+
+                    if (verify)
+                        statement.Enqueue(new Conclusion
+                        {
+                            Time = ConvertDateTime(time),
+                            Division = string.Concat(sell, order),
+                            Price = price,
+                            OrderNumber = SellOrder[price].ToString("N0")
+                        });
                     return true;
 
                 case Analysis.buy:
                     BuyOrder[price] = Count;
                     Residue[Count++] = residue;
+
+                    if (verify)
+                        statement.Enqueue(new Conclusion
+                        {
+                            Time = ConvertDateTime(time),
+                            Division = string.Concat(buy, order),
+                            Price = price,
+                            OrderNumber = BuyOrder[price].ToString("N0")
+                        });
                     return true;
             }
             return false;
         }
-        internal void SetSellConclusion(double price, int residue)
+        internal void SetSellConclusion(string time, double price, int residue)
         {
             var key = price.ToString("F2");
 
@@ -157,12 +237,20 @@ namespace ShareInvest.Strategy
                 }
                 if (SellOrder.Remove(key) && Residue.Remove(number))
                 {
+                    if (verify)
+                        statement.Enqueue(new Conclusion
+                        {
+                            Time = ConvertDateTime(time),
+                            Division = string.Concat(sell, conclusion),
+                            Price = price.ToString("F2"),
+                            OrderNumber = number.ToString("N0")
+                        });
                     Quantity -= 1;
                     SetConclusion(price);
                 }
             }
         }
-        internal void SetBuyConclusion(double price, int residue)
+        internal void SetBuyConclusion(string time, double price, int residue)
         {
             var key = price.ToString("F2");
 
@@ -176,6 +264,14 @@ namespace ShareInvest.Strategy
                 }
                 if (BuyOrder.Remove(key) && Residue.Remove(number))
                 {
+                    if (verify)
+                        statement.Enqueue(new Conclusion
+                        {
+                            Time = ConvertDateTime(time),
+                            Division = string.Concat(buy, conclusion),
+                            Price = price.ToString("F2"),
+                            OrderNumber = number.ToString("N0")
+                        });
                     Quantity += 1;
                     SetConclusion(price);
                 }
@@ -186,12 +282,20 @@ namespace ShareInvest.Strategy
             if (over)
                 while (Quantity != 0)
                 {
+                    if (verify)
+                        statement.Enqueue(new Conclusion
+                        {
+                            Time = ConvertDateTime(date),
+                            Division = string.Concat(Quantity > 0 ? sell : buy, conclusion),
+                            Price = price.ToString("F2"),
+                            OrderNumber = Count.ToString("N0")
+                        });
                     Quantity += Quantity > 0 ? -1 : 1;
                     SetConclusion(price);
                 }
             Revenue = CumulativeRevenue - Commission;
             long revenue = Revenue - TodayRevenue, unrealized = (long)(Quantity == 0 ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * Const.TransactionMultiplier * Math.Abs(Quantity));
-            Accumulative = revenue + unrealized > 0 ? ++Accumulative : revenue + unrealized < 0 ? --Accumulative : 0;
+            var avg = EMA.Make(++Accumulative, SetWeight(revenue + unrealized), Before);
             games.Enqueue(new Models.ImitationGames
             {
                 Assets = game.Assets,
@@ -235,11 +339,12 @@ namespace ShareInvest.Strategy
                 Revenue = revenue,
                 Cumulative = CumulativeRevenue - Commission,
                 Fees = (int)(Commission - TodayCommission),
-                Statistic = Accumulative
+                Statistic = (int)avg
             });
             if (Count > 5000)
                 new ExceptionMessage(game.Strategy, string.Concat(date, '_', Count));
 
+            Before = avg;
             TodayCommission = (int)Commission;
             TodayRevenue = Revenue;
             SellOrder.Clear();
@@ -275,13 +380,15 @@ namespace ShareInvest.Strategy
         {
             get; private set;
         }
-        public BackTesting(Models.ImitationGames game, string key) : base(key)
+        public BackTesting(char verify, Models.ImitationGames game, string key) : base(key)
         {
+            this.verify = verify.Equals((char)86);
             this.game = game;
             Residue = new Dictionary<uint, int>();
             SellOrder = new Dictionary<string, uint>();
             BuyOrder = new Dictionary<string, uint>();
             Judge = new Dictionary<uint, double>();
+            games = new Queue<Models.ImitationGames>();
             Parallel.ForEach(Retrieve.GetCatalog(game), new Action<Catalog.XingAPI.Specify>((param) =>
             {
                 switch (param.Strategy)
@@ -307,16 +414,40 @@ namespace ShareInvest.Strategy
                         break;
                 }
             }));
-            games = new Queue<Models.ImitationGames>();
-            StartProgress();
+            if (this.verify)
+                statement = new Queue<Conclusion>(32);
+
+            if (StartProgress() > 0)
+                using (var sw = new StreamWriter(new Secrets().Path(game.Strategy, games.Last().Statistic), true))
+                    try
+                    {
+                        while (statement.Count > 0)
+                        {
+                            var str = statement.Dequeue();
+                            sw.WriteLine(new StringBuilder(str.Time).Append(',').Append(str.Division).Append(',').Append(str.Price).Append(',').Append(str.OrderNumber));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        new ExceptionMessage(ex.StackTrace);
+                    }
         }
+        const string format = "yyMMddHHmmss";
+        const string sell = "매도";
+        const string buy = "매수";
+        const string order = "주문";
+        const string correction = "정정";
+        const string cancel = "취소";
+        const string conclusion = "체결";
         const string basic = "Base";
         const string bantam = "Bantam";
         const string feather = "Feather";
         const string fly = "Fly";
         const string heavy = "Heavy";
+        readonly bool verify;
         readonly Models.ImitationGames game;
         readonly Queue<Models.ImitationGames> games;
+        readonly Queue<Conclusion> statement;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Quotes> SendQuotes;
     }

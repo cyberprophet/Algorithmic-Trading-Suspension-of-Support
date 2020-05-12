@@ -7,13 +7,13 @@ namespace ShareInvest.Strategy.Statistics
 {
     abstract class Analysis : TF
     {
-        protected internal abstract void SendNewOrder(double[] param, string classification, int quantity);
-        protected internal abstract bool SetCorrectionBuyOrder(string avg, double buy, int quantity);
-        protected internal abstract bool SetCorrectionSellOrder(string avg, double sell, int quantity);
-        protected internal abstract bool ForTheLiquidationOfSellOrder(double[] bid);
-        protected internal abstract bool ForTheLiquidationOfSellOrder(string price, double[] bid, int quantity);
-        protected internal abstract bool ForTheLiquidationOfBuyOrder(double[] selling);
-        protected internal abstract bool ForTheLiquidationOfBuyOrder(string price, double[] selling, int quantity);
+        protected internal abstract void SendNewOrder(string time, double[] param, string classification, int quantity);
+        protected internal abstract bool SetCorrectionBuyOrder(string time, string avg, double buy, int quantity);
+        protected internal abstract bool SetCorrectionSellOrder(string time, string avg, double sell, int quantity);
+        protected internal abstract bool ForTheLiquidationOfSellOrder(string time, double[] bid);
+        protected internal abstract bool ForTheLiquidationOfSellOrder(string time, string price, double[] bid, int quantity);
+        protected internal abstract bool ForTheLiquidationOfBuyOrder(string time, double[] selling);
+        protected internal abstract bool ForTheLiquidationOfBuyOrder(string time, string price, double[] selling, int quantity);
         protected internal override void OnReceiveTrend(int volume) => Volume += volume;
         protected internal Analysis(BackTesting bt, Catalog.XingAPI.Specify specify) : base(specify)
         {
@@ -78,16 +78,16 @@ namespace ShareInvest.Strategy.Statistics
                         case sell:
                             if (bt.Quantity < 0)
                             {
-                                if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && ForTheLiquidationOfSellOrder(price, bp, e.BuyQuantity))
+                                if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && ForTheLiquidationOfSellOrder(e.Time, price, bp, e.BuyQuantity))
                                     return;
 
-                                if (bt.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
+                                if (bt.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(e.Time, bp))
                                     return;
 
-                                if (bt.SellOrder.Count > 0 && SetCorrectionSellOrder(price, sp[sp.Length - 1], e.SellQuantity))
+                                if (bt.SellOrder.Count > 0 && SetCorrectionSellOrder(e.Time, price, sp[sp.Length - 1], e.SellQuantity))
                                     return;
                             }
-                            else if (bt.BuyOrder.Count > 1 && SetBuyDecentralize(bp[bp.Length - 1], e.BuyQuantity))
+                            else if (bt.BuyOrder.Count > 1 && SetBuyDecentralize(e.Time, bp[bp.Length - 1], e.BuyQuantity))
                                 return;
 
                             break;
@@ -95,16 +95,16 @@ namespace ShareInvest.Strategy.Statistics
                         case buy:
                             if (bt.Quantity > 0)
                             {
-                                if (bt.SellOrder.Count == 0 && max < bt.Quantity && ForTheLiquidationOfBuyOrder(price, sp, e.SellQuantity))
+                                if (bt.SellOrder.Count == 0 && max < bt.Quantity && ForTheLiquidationOfBuyOrder(e.Time, price, sp, e.SellQuantity))
                                     return;
 
-                                if (bt.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
+                                if (bt.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(e.Time, sp))
                                     return;
 
-                                if (bt.BuyOrder.Count > 0 && SetCorrectionBuyOrder(price, bp[bp.Length - 1], e.BuyQuantity))
+                                if (bt.BuyOrder.Count > 0 && SetCorrectionBuyOrder(e.Time, price, bp[bp.Length - 1], e.BuyQuantity))
                                     return;
                             }
-                            else if (bt.SellOrder.Count > 1 && SetSellDecentralize(sp[sp.Length - 1], e.SellQuantity))
+                            else if (bt.SellOrder.Count > 1 && SetSellDecentralize(e.Time, sp[sp.Length - 1], e.SellQuantity))
                                 return;
 
                             break;
@@ -113,30 +113,30 @@ namespace ShareInvest.Strategy.Statistics
                 foreach (var kv in check ? bt.BuyOrder : bt.SellOrder)
                     if (double.TryParse(kv.Key, out double key) && Array.Exists(check ? bp : sp, o => o == key) == false && (check ? bt.BuyOrder.ContainsKey(kv.Key) : bt.SellOrder.ContainsKey(kv.Key)))
                     {
-                        bt.SendClearingOrder(kv.Value);
+                        bt.SendClearingOrder(e.Time, kv.Value);
 
                         return;
                     }
-                SendNewOrder(check ? bp : sp, classification, check ? e.BuyQuantity : e.SellQuantity);
+                SendNewOrder(e.Time, check ? bp : sp, classification, check ? e.BuyQuantity : e.SellQuantity);
             }
         }
-        bool SetBuyDecentralize(double buy, int quantity)
+        bool SetBuyDecentralize(string time, double buy, int quantity)
         {
             if (double.TryParse(bt.BuyOrder.OrderBy(o => o.Key).First().Key, out double price))
             {
                 var benchmark = price - Const.ErrorRate * 2;
 
-                return benchmark > buy - Const.ErrorRate * 9 ? bt.SendCorrectionOrder(benchmark.ToString("F2"), bt.BuyOrder.OrderByDescending(o => o.Key).First().Value, quantity) : false;
+                return benchmark > buy - Const.ErrorRate * 9 ? bt.SendCorrectionOrder(time, benchmark.ToString("F2"), bt.BuyOrder.OrderByDescending(o => o.Key).First().Value, quantity) : false;
             }
             return false;
         }
-        bool SetSellDecentralize(double sell, int quantity)
+        bool SetSellDecentralize(string time, double sell, int quantity)
         {
             if (double.TryParse(bt.SellOrder.OrderByDescending(o => o.Key).First().Key, out double price))
             {
                 var benchmark = price + Const.ErrorRate * 2;
 
-                return benchmark < sell + Const.ErrorRate * 9 ? bt.SendCorrectionOrder(benchmark.ToString("F2"), bt.SellOrder.OrderBy(o => o.Key).First().Value, quantity) : false;
+                return benchmark < sell + Const.ErrorRate * 9 ? bt.SendCorrectionOrder(time, benchmark.ToString("F2"), bt.SellOrder.OrderBy(o => o.Key).First().Value, quantity) : false;
             }
             return false;
         }
@@ -170,10 +170,10 @@ namespace ShareInvest.Strategy.Statistics
                     bt.BuyOrder.Clear();
                 }
                 if (bt.SellOrder.Count > 0 && e.Volume > 0)
-                    bt.SetSellConclusion(e.Price, e.Volume);
+                    bt.SetSellConclusion(e.Date.ToString(), e.Price, e.Volume);
 
                 if (bt.BuyOrder.Count > 0 && e.Volume < 0)
-                    bt.SetBuyConclusion(e.Price, e.Volume);
+                    bt.SetBuyConclusion(e.Date.ToString(), e.Price, e.Volume);
             }
         }
         bool RollOver
