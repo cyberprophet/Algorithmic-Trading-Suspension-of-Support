@@ -206,7 +206,7 @@ namespace ShareInvest
             ResumeLayout();
             CenterToScreen();
         }
-        void OnReceiveStrategy(object sender, EventHandler.BackTesting.Statistics e) => BeginInvoke(new Action(() =>
+        void OnReceiveStrategy(object sender, EventHandler.BackTesting.Statistics e)
         {
             if (string.IsNullOrEmpty(e.Setting.Code) == false && string.IsNullOrEmpty(e.Setting.Strategy) == false && retrieve.SetIdentify(e.Setting) >= 0)
             {
@@ -239,18 +239,16 @@ namespace ShareInvest
                 }
             }
             SuspendLayout();
-            Cursor = OnReceiveChart(retrieve.OnReceiveInformation(e.Game));
+            BeginInvoke(new Action(() => Cursor = OnReceiveChart(retrieve.OnReceiveInformation(e.Game))));
             Application.DoEvents();
-            GC.Collect();
-        }));
+            ResumeLayout();
+            CenterToScreen();
+        }
         Cursor OnReceiveChart(Dictionary<DateTime, string> param)
         {
             Statistical.Hide();
-            ResumeLayout();
-            Chart.Show();
             Size = Chart.SetChartValue(param);
-            CenterToScreen();
-            Application.DoEvents();
+            Chart.Show();
 
             return Cursors.Default;
         }

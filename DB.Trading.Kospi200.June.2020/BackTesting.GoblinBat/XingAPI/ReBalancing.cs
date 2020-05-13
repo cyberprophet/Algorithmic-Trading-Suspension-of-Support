@@ -50,15 +50,11 @@ namespace ShareInvest.Strategy.XingAPI
         }
         bool GetCheckOnTimeByAPI(string time)
         {
-            if (specify.Time > 0 && specify.Time < 1440)
+            if (specify.Time > 0 && specify.Time < 1440 && (time.Substring(0, 4).Equals(Check) || Check.Equals(string.Empty)) && DateTime.TryParseExact(time, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
             {
-                if ((time.Substring(0, 4).Equals(Check) || Check.Equals(string.Empty)) && DateTime.TryParseExact(time, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
-                {
-                    Check = (date + TimeSpan.FromMinutes(specify.Time)).ToString(hm);
+                Check = (date + TimeSpan.FromMinutes(specify.Time)).ToString(hm);
 
-                    return false;
-                }
-                return true;
+                return false;
             }
             else if (OnTime && specify.Time == 1440)
             {

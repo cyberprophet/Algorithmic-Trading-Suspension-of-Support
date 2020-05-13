@@ -11,10 +11,10 @@ namespace ShareInvest.Strategy
     public partial class Retrieve : CallUpStatisticalAnalysis
     {
         public Retrieve(string key) : base(key) => Console.WriteLine(key);
-        public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number).Result;
+        public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
-        public Catalog.XingAPI.Specify[] GetUserStrategy() => GetCatalog(GetBestStrategyRecommend(Information.Statistics, new Models.ImitationGames()).Result);
+        public Catalog.XingAPI.Specify[] GetUserStrategy() => GetCatalog(GetBestStrategyRecommend(Information.Statistics, new Models.ImitationGames()));
         public Models.ImitationGames GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
         public void SetInitialzeTheCode()
         {
@@ -34,7 +34,7 @@ namespace ShareInvest.Strategy
                 Quotes = null;
             }
         }
-        public bool GetDuplicateResults(string recent, Models.ImitationGames game) => GetDuplicateResults(game, recent).Result;
+        public bool GetDuplicateResults(string recent, Models.ImitationGames game) => false;// GetDuplicateResults(game, recent).Result;
         public string GetDate(string code)
         {
             if (DateTime.TryParseExact(SetDate(code).Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))

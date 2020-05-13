@@ -5,8 +5,6 @@ using System.Data.Entity.Migrations;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.Message;
@@ -304,13 +302,13 @@ namespace ShareInvest.GoblinBatContext
             }
             return games;
         }
-        protected async Task<ImitationGames> GetBestStrategyRecommend(List<Statistics> list, ImitationGames game)
+        protected ImitationGames GetBestStrategyRecommend(List<Statistics> list, ImitationGames game)
         {
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
                     var temp = double.MinValue;
-                    var max = await db.Games.MaxAsync(o => o.Date);
+                    var max = db.Games.Max(o => o.Date);
 
                     foreach (var ch in list)
                         foreach (var choice in db.Games.Where(o => o.Date.Equals(max) && o.Assets == ch.Assets && o.Code.Equals(ch.Code) && o.Commission == ch.Commission && o.MarginRate == ch.MarginRate && o.Strategy.Equals(ch.Strategy) && o.RollOver.Equals(ch.RollOver) && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic).Take(1))

@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.BackTesting;
 using ShareInvest.GoblinBatContext;
@@ -113,9 +112,9 @@ namespace ShareInvest.Strategy
         string ConvertDateTime(string time)
         {
             if (time.Length > 6 && DateTime.TryParseExact(time.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
-                return string.Concat(date.ToShortDateString(), " ", date.ToShortTimeString());
+                return string.Concat(date.ToShortDateString(), ";", date.ToLongTimeString());
 
-            return DateTime.Parse(time).ToLongDateString();
+            return DateTime.ParseExact(time, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None).ToLongDateString();
         }
         internal void Max(double trend, Catalog.XingAPI.Specify specify)
         {
@@ -418,13 +417,23 @@ namespace ShareInvest.Strategy
                 statement = new Queue<Conclusion>(32);
 
             if (StartProgress() > 0)
-                using (var sw = new StreamWriter(new Secrets().Path(game.Strategy, games.Last().Statistic), true))
+                using (var sw = new StreamWriter(new Secrets().Path(game.Strategy, statement.Count), true))
                     try
                     {
                         while (statement.Count > 0)
                         {
+                            var sb = new StringBuilder();
                             var str = statement.Dequeue();
-                            sw.WriteLine(new StringBuilder(str.Time).Append(',').Append(str.Division).Append(',').Append(str.Price).Append(',').Append(str.OrderNumber));
+
+                            if (str.Time.Contains(';'))
+                            {
+                                var split = str.Time.Split(';');
+                                sb.Append(split[0]).Append(',').Append(split[1]).Append(',').Append(str.Division).Append(',').Append(str.Price).Append(',').Append(str.OrderNumber);
+                            }
+                            else
+                                sb.Append(str.Time).Append(',').Append(str.Division).Append(',').Append(str.Price).Append(',').Append(str.OrderNumber);
+
+                            sw.WriteLine(sb);
                         }
                     }
                     catch (Exception ex)
