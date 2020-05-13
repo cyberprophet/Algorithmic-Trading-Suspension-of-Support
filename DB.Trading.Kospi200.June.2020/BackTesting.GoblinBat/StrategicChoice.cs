@@ -129,38 +129,38 @@ namespace ShareInvest.Strategy
         protected internal bool SendClearingOrder(string number)
         {
             API.OnReceiveBalance = false;
-            new Task(() => API.orders[2].QueryExcute(new Order
+            API.orders[2].QueryExcute(new Order
             {
                 FnoIsuNo = ConnectAPI.Code,
                 OrgOrdNo = number,
                 OrdQty = sell
-            })).Start();
+            });
             return true;
         }
         protected internal bool SendCorrectionOrder(string price, string number)
         {
             API.OnReceiveBalance = false;
-            new Task(() => API.orders[1].QueryExcute(new Order
+            API.orders[1].QueryExcute(new Order
             {
                 FnoIsuNo = ConnectAPI.Code,
                 OrgOrdNo = number,
                 FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.지정가).ToString("D2"),
                 OrdPrc = price,
                 OrdQty = sell
-            })).Start();
+            });
             return true;
         }
         protected internal bool SendNewOrder(string price, string classification)
         {
             API.OnReceiveBalance = false;
-            new Task(() => API.orders[0].QueryExcute(new Order
+            API.orders[0].QueryExcute(new Order
             {
                 FnoIsuNo = ConnectAPI.Code,
                 BnsTpCode = classification,
                 FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.지정가).ToString("D2"),
                 OrdPrc = price,
                 OrdQty = sell
-            })).Start();
+            });
             return true;
         }
         bool SetBuyDecentralize(double buy)
