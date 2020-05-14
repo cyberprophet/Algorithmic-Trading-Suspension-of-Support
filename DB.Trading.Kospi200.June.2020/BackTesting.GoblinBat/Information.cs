@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using ShareInvest.GoblinBatContext;
 
 namespace ShareInvest.Strategy
@@ -226,6 +228,88 @@ namespace ShareInvest.Strategy
                                                             GC.Collect();
                                                         }
                                                     }
+        }
+        public Stack<Models.ImitationGames> SeekingBetterAround()
+        {
+            var games = new Stack<Models.ImitationGames>();
+            var game = Preheat(new Models.ImitationGames());
+
+            if (game != null)
+                foreach (int ns in new int[] { game.NonaShort, ran.Next(0, 2) == 0 ? game.NonaShort - 1 : game.NonaShort + 1 })
+                    foreach (int os in new int[] { game.OctaShort, ran.Next(0, 2) == 0 ? game.OctaShort - 1 : game.OctaShort + 1 })
+                        foreach (int hs in new int[] { game.HeptaShort, ran.Next(0, 2) == 0 ? game.HeptaShort - 1 : game.HeptaShort + 1 })
+                            foreach (int xs in new int[] { game.HexaShort, ran.Next(0, 2) == 0 ? game.HexaShort - 1 : game.HexaShort + 1 })
+                                foreach (int ps in new int[] { game.PentaShort, ran.Next(0, 2) == 0 ? game.PentaShort - 1 : game.PentaShort + 1 })
+                                    foreach (int qs in new int[] { game.QuadShort, ran.Next(0, 2) == 0 ? game.QuadShort - 1 : game.QuadShort + 1 })
+                                        foreach (int ts in new int[] { game.TriShort, ran.Next(0, 2) == 0 ? game.TriShort - 1 : game.TriShort + 1 })
+                                            foreach (int ds in new int[] { game.DuoShort, ran.Next(0, 2) == 0 ? game.DuoShort - 1 : game.DuoShort + 1 })
+                                                foreach (int ms in new int[] { game.MonoShort, ran.Next(0, 2) == 0 ? game.MonoShort - 1 : game.MonoShort + 1 })
+                                                    foreach (int bs in new int[] { game.BaseShort, ran.Next(0, 2) == 0 ? game.BaseShort - 1 : game.BaseShort + 1 })
+                                                        foreach (int bl in new int[] { game.BaseLong, ran.Next(0, 2) == 0 ? game.BaseLong - 5 : game.BaseLong + 5 })
+                                                            foreach (int nl in new int[] { game.NonaLong, ran.Next(0, 2) == 0 ? game.NonaLong - 5 : game.NonaLong + 5 })
+                                                                foreach (int ol in new int[] { game.OctaLong, ran.Next(0, 2) == 0 ? game.OctaLong - 5 : game.OctaLong + 5 })
+                                                                    foreach (int hl in new int[] { game.HeptaLong, ran.Next(0, 2) == 0 ? game.HeptaLong - 5 : game.HeptaLong + 5 })
+                                                                        foreach (int xl in new int[] { game.HexaLong, ran.Next(0, 2) == 0 ? game.HexaLong - 5 : game.HexaLong + 5 })
+                                                                            foreach (int pl in new int[] { game.PentaLong, ran.Next(0, 2) == 0 ? game.PentaLong - 5 : game.PentaLong + 5 })
+                                                                                foreach (int ql in new int[] { game.QuadLong, ran.Next(0, 2) == 0 ? game.QuadLong - 5 : game.QuadLong + 5 })
+                                                                                    foreach (int tl in new int[] { game.TriLong, ran.Next(0, 2) == 0 ? game.TriLong - 5 : game.TriLong + 5 })
+                                                                                        foreach (int dl in new int[] { game.DuoLong, ran.Next(0, 2) == 0 ? game.DuoLong - 5 : game.DuoLong + 5 })
+                                                                                            foreach (int ml in new int[] { game.MonoLong, ran.Next(0, 2) == 0 ? game.MonoLong - 5 : game.MonoLong + 5 })
+                                                                                                foreach (int nt in new int[] { game.NonaTime, ran.Next(0, 2) == 0 ? game.NonaTime - 10 : game.NonaTime + 10 })
+                                                                                                    foreach (int ot in new int[] { game.OctaTime, ran.Next(0, 2) == 0 ? game.OctaTime - 10 : game.OctaTime + 10 })
+                                                                                                        foreach (int ht in new int[] { game.HeptaTime, ran.Next(0, 2) == 0 ? game.HeptaTime - 10 : game.HeptaTime + 10 })
+                                                                                                            foreach (int xt in new int[] { game.HexaTime, ran.Next(0, 2) == 0 ? game.HexaTime - 10 : game.HexaTime + 10 })
+                                                                                                                foreach (int pt in new int[] { game.PentaTime, ran.Next(0, 2) == 0 ? game.PentaTime - 5 : game.PentaTime + 5 })
+                                                                                                                    foreach (int qt in new int[] { game.QuadTime, ran.Next(0, 2) == 0 ? game.QuadTime - 5 : game.QuadTime + 5 })
+                                                                                                                        foreach (int tt in new int[] { game.TriTime, ran.Next(0, 2) == 0 ? game.TriTime - 1 : game.TriTime + 1 })
+                                                                                                                            foreach (int dt in new int[] { game.DuoTime, ran.Next(0, 2) == 0 ? game.DuoTime - 1 : game.DuoTime + 1 })
+                                                                                                                                foreach (var mt in new int[] { game.MonoTime, ran.Next(0, 2) == 0 ? game.MonoTime - 1 : game.MonoTime + 1 })
+                                                                                                                                    if (bs >= minShort && bs <= maxShort && ns >= minShort && ns <= maxShort && os >= minShort && os <= maxShort && hs >= minShort && hs <= maxShort && xs >= minShort && xs <= maxShort && ps >= minShort && ps <= maxShort && qs >= minShort && qs <= maxShort && ts >= minShort && ts <= maxShort && ds >= minShort && ds <= maxShort && ms >= minShort && ms <= maxShort && bl >= minLong && bl <= maxLong && nl >= minLong && nl <= maxLong && ol >= minLong && ol <= maxLong && hl >= minLong && hl <= maxLong && xl >= minLong && xl <= maxLong && pl >= minLong && pl <= maxLong && ql >= minLong && ql <= maxLong && tl >= minLong && tl <= maxLong && dl >= minLong && dl <= maxLong && ml >= minLong && ml <= maxLong && bs < bl && ns < nl && os < ol && hs < hl && xs < xl && ps < pl && qs < ql && ts < tl && ds < dl && ms < ml && nt <= maxNona && ot <= maxOcta && ht <= maxHepta && xt <= maxHexa && pt <= maxPenta && qt <= maxQuad && tt <= maxTri && dt <= maxDuo && mt <= maxMono && nt > ot && ot > ht && ht > xt && xt > pt && pt > qt && qt > tt && tt > dt && dt > mt && mt > 0)
+                                                                                                                                        foreach (var model in Statistics.Select(o => new { o.Strategy }).Distinct())
+                                                                                                                                        {
+                                                                                                                                            games.Push(new Models.ImitationGames
+                                                                                                                                            {
+                                                                                                                                                Assets = game.Assets,
+                                                                                                                                                Code = game.Code,
+                                                                                                                                                Commission = game.Commission,
+                                                                                                                                                MarginRate = game.MarginRate,
+                                                                                                                                                Strategy = model.Strategy,
+                                                                                                                                                RollOver = game.RollOver,
+                                                                                                                                                BaseTime = maxBase,
+                                                                                                                                                BaseShort = bs,
+                                                                                                                                                BaseLong = bl,
+                                                                                                                                                NonaTime = nt,
+                                                                                                                                                NonaShort = ns,
+                                                                                                                                                NonaLong = nl,
+                                                                                                                                                OctaTime = ot,
+                                                                                                                                                OctaShort = os,
+                                                                                                                                                OctaLong = ol,
+                                                                                                                                                HeptaTime = ht,
+                                                                                                                                                HeptaShort = hs,
+                                                                                                                                                HeptaLong = hl,
+                                                                                                                                                HexaTime = xt,
+                                                                                                                                                HexaShort = xs,
+                                                                                                                                                HexaLong = xl,
+                                                                                                                                                PentaTime = pt,
+                                                                                                                                                PentaShort = ps,
+                                                                                                                                                PentaLong = pl,
+                                                                                                                                                QuadTime = qt,
+                                                                                                                                                QuadShort = qs,
+                                                                                                                                                QuadLong = ql,
+                                                                                                                                                TriTime = tt,
+                                                                                                                                                TriShort = ts,
+                                                                                                                                                TriLong = tl,
+                                                                                                                                                DuoTime = dt,
+                                                                                                                                                DuoShort = ds,
+                                                                                                                                                DuoLong = dl,
+                                                                                                                                                MonoTime = mt,
+                                                                                                                                                MonoShort = ms,
+                                                                                                                                                MonoLong = ml
+                                                                                                                                            });
+                                                                                                                                            if (games.Count > 137525)
+                                                                                                                                                return games;
+                                                                                                                                        }
+            return games;
         }
         public void GetUserIdentity(char initial) => Statistics = GetBasicStrategy(initial);
         public List<Models.ImitationGames> GetBestStrategy(bool external) => external ? GetBestExternalRecommend(new List<Models.ImitationGames>(128)) : GetBestStrategyRecommend(new List<Models.ImitationGames>(128));

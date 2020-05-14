@@ -53,6 +53,13 @@ namespace ShareInvest
                                     foreach (var best in info.GetBestStrategy())
                                         catalog.Insert(9, best);
                                 }
+                                else
+                                {
+                                    var better = info.SeekingBetterAround();
+
+                                    while (better.Count > 0)
+                                        catalog.Insert(25, better.Pop());
+                                }
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,

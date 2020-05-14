@@ -3,7 +3,7 @@ using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy.XingAPI
 {
-    public class Fly : StrategicChoice
+    public class SuperFly : StrategicChoice
     {
         protected internal override bool ForTheLiquidationOfBuyOrder(double[] selling)
         {
@@ -46,6 +46,6 @@ namespace ShareInvest.Strategy.XingAPI
 
             return oPrice < sell + Const.ErrorRate * 9 && double.TryParse(avg, out double bAvg) && sell > bAvg && bAvg - abscond > sb.Value - Const.ErrorRate && API.SellOrder.ContainsValue(oPrice) == false ? SendCorrectionOrder(oPrice.ToString("F2"), sb.Key) : false;
         }
-        public Fly(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;
+        public SuperFly(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;
     }
 }

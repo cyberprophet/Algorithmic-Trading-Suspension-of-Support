@@ -34,7 +34,7 @@ namespace ShareInvest.Strategy
                 Quotes = null;
             }
         }
-        public bool GetDuplicateResults(string recent, Models.ImitationGames game) => false;// GetDuplicateResults(game, recent).Result;
+        public bool GetDuplicateResults(string recent, Models.ImitationGames game) => GetDuplicateResults(game, recent).Result;
         public string GetDate(string code)
         {
             if (DateTime.TryParseExact(SetDate(code).Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))

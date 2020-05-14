@@ -152,7 +152,7 @@ namespace ShareInvest.Strategy.XingAPI
         {
             var onTime = time.Substring(6, 6);
 
-            if ((onTime.Substring(0, 4).Equals(Check) || string.IsNullOrEmpty(Check) || onTime.Equals(end) || time.Substring(6).Equals(TF.onTime)) && DateTime.TryParseExact(onTime, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
+            if ((onTime.Substring(0, 4).Equals(Check) || string.IsNullOrEmpty(Check) || onTime.Equals(end) || time.Substring(6).Equals(TF.onTime) || time.Substring(6).Equals(nTime)) && DateTime.TryParseExact(onTime, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
             {
                 Check = (date + TimeSpan.FromMinutes(specify.Time)).ToString(hm);
 
@@ -172,6 +172,7 @@ namespace ShareInvest.Strategy.XingAPI
         {
             get;
         }
+        const string nTime = "180000000";
         const string onTime = "090000000";
         readonly bool sCollection;
         readonly bool lCollection;

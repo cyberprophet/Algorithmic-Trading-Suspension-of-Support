@@ -125,25 +125,71 @@ namespace ShareInvest.GoblinBatContext
                     db.Configuration.AutoDetectChangesEnabled = true;
                 }
         }
+        protected ImitationGames Preheat(ImitationGames imitation)
+        {
+            var index = new Secret().GetIdentityIndex(key);
+
+            if (index > 0)
+            {
+                string max = MostRecentDate;
+                using (var db = new GoblinBatDbContext(key))
+                    try
+                    {
+                        foreach (var game in db.Games.Where(o => o.Date.Equals(max) && o.RollOver.Equals(false) && o.Cumulative > 0 && o.Statistic > 0 && o.MarginRate == marginRate).AsNoTracking().OrderByDescending(o => o.Statistic).Take(index))
+                            imitation = new ImitationGames
+                            {
+                                Assets = game.Assets,
+                                Code = game.Code,
+                                Commission = game.Commission,
+                                MarginRate = game.MarginRate,
+                                RollOver = game.RollOver,
+                                BaseTime = game.BaseTime,
+                                BaseShort = game.BaseShort,
+                                BaseLong = game.BaseLong,
+                                NonaTime = game.NonaTime,
+                                NonaShort = game.NonaShort,
+                                NonaLong = game.NonaLong,
+                                OctaTime = game.OctaTime,
+                                OctaShort = game.OctaShort,
+                                OctaLong = game.OctaLong,
+                                HeptaTime = game.HeptaTime,
+                                HeptaShort = game.HeptaShort,
+                                HeptaLong = game.HeptaLong,
+                                HexaTime = game.HexaTime,
+                                HexaShort = game.HexaShort,
+                                HexaLong = game.HexaLong,
+                                PentaTime = game.PentaTime,
+                                PentaShort = game.PentaShort,
+                                PentaLong = game.PentaLong,
+                                QuadTime = game.QuadTime,
+                                QuadShort = game.QuadShort,
+                                QuadLong = game.QuadLong,
+                                TriTime = game.TriTime,
+                                TriShort = game.TriShort,
+                                TriLong = game.TriLong,
+                                DuoTime = game.DuoTime,
+                                DuoShort = game.DuoShort,
+                                DuoLong = game.DuoLong,
+                                MonoTime = game.MonoTime,
+                                MonoShort = game.MonoShort,
+                                MonoLong = game.MonoLong
+                            };
+                        return imitation;
+                    }
+                    catch (Exception ex)
+                    {
+                        new ExceptionMessage(ex.StackTrace);
+                    }
+            }
+            return null;
+        }
         protected List<ImitationGames> Preheat(List<ImitationGames> games)
         {
-            string max = DateTime.Now.ToString(recent);
+            string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    foreach (var sm in db.Games.Select(o => new { o.Date }).AsNoTracking().Distinct().OrderByDescending(o => o.Date))
-                    {
-                        if (max.CompareTo(sm.Date) == 0)
-                            continue;
-
-                        else
-                        {
-                            max = sm.Date;
-
-                            break;
-                        }
-                    }
-                    foreach (var game in db.Games.Where(o => o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
+                    foreach (var game in db.Games.Where(o => o.RollOver.Equals(false) && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
                         games.Add(new ImitationGames
                         {
                             Assets = game.Assets,
@@ -799,6 +845,34 @@ namespace ShareInvest.GoblinBatContext
                     sw.WriteLine(string.Concat(str.Date, ',', str.Price, ',', str.Volume));
         }
         bool GetDirectoryExists(DirectoryInfo directory) => directory.Exists;
+        string MostRecentDate
+        {
+            get
+            {
+                string max = DateTime.Now.ToString(recent);
+                using (var db = new GoblinBatDbContext(key))
+                    try
+                    {
+                        foreach (var sm in db.Games.Select(o => new { o.Date }).AsNoTracking().Distinct().OrderByDescending(o => o.Date))
+                        {
+                            if (max.CompareTo(sm.Date) == 0)
+                                continue;
+
+                            else
+                            {
+                                max = sm.Date;
+
+                                break;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        new ExceptionMessage(ex.StackTrace);
+                    }
+                return max;
+            }
+        }
         protected string Path => System.IO.Path.Combine(Application.StartupPath, chart);
         protected CallUpGoblinBat(string key)
         {
