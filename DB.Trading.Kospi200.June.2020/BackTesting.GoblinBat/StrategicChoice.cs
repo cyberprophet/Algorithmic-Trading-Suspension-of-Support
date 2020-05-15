@@ -27,9 +27,9 @@ namespace ShareInvest.Strategy
         protected internal abstract bool ForTheLiquidationOfSellOrder(string price, double[] bid);
         protected internal abstract bool ForTheLiquidationOfBuyOrder(double[] selling);
         protected internal abstract bool ForTheLiquidationOfBuyOrder(string price, double[] selling);
-        protected internal void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
+        void OnReceiveQuotes(object sender, EventHandler.XingAPI.Quotes e)
         {
-            if (int.TryParse(e.Time, out int time) && (time < 090000 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(API.Classification) == false)
+            if (int.TryParse(e.Time, out int time) && (time < 090007 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(API.Classification) == false)
             {
                 string classification = API.Classification, price;
                 var check = classification.Equals(buy);
@@ -52,7 +52,7 @@ namespace ShareInvest.Strategy
                         case sell:
                             if (API.Quantity < 0)
                             {
-                                if (API.BuyOrder.Count == 0 && max < -API.Quantity && ForTheLiquidationOfSellOrder(price, bp))
+                                if (API.BuyOrder.Count == 0 && specify.Strategy.Equals(sFly) ? API.Quantity < -1 : max < 1 - API.Quantity && ForTheLiquidationOfSellOrder(price, bp))
                                     return;
 
                                 if (API.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
@@ -69,7 +69,7 @@ namespace ShareInvest.Strategy
                         case buy:
                             if (API.Quantity > 0)
                             {
-                                if (API.SellOrder.Count == 0 && max < API.Quantity && ForTheLiquidationOfBuyOrder(price, sp))
+                                if (API.SellOrder.Count == 0 && specify.Strategy.Equals(sFly) ? API.Quantity > 1 : max < API.Quantity + 1 && ForTheLiquidationOfBuyOrder(price, sp))
                                     return;
 
                                 if (API.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
@@ -97,7 +97,7 @@ namespace ShareInvest.Strategy
                 SendLiquidationOrder();
             }
         }
-        protected internal double Max(double max, string classification)
+        double Max(double max, string classification)
         {
             int num = 9;
 
@@ -110,6 +110,43 @@ namespace ShareInvest.Strategy
                     num--;
             }
             return max * num * 0.1;
+        }
+        bool SetBuyDecentralize(double buy)
+        {
+            var benchmark = API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2;
+
+            return benchmark > buy - Const.ErrorRate * 9 ? SendCorrectionOrder(benchmark.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key) : false;
+        }
+        bool SetSellDecentralize(double sell)
+        {
+            var benchmark = API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2;
+
+            return benchmark < sell + Const.ErrorRate * 9 ? SendCorrectionOrder(benchmark.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key) : false;
+        }
+        void SendLiquidationOrder()
+        {
+            foreach (var order in new Dictionary<string, double>[]
+            {
+                API.SellOrder,
+                API.BuyOrder
+            })
+                foreach (var kv in order)
+                    if (SendClearingOrder(kv.Key))
+                        Thread.Sleep(ran.Next(999, 5000));
+
+            if (API.Quantity != 0)
+                API.orders[0].QueryExcute(new Order
+                {
+                    FnoIsuNo = ConnectAPI.Code,
+                    BnsTpCode = API.Quantity > 0 ? sell : buy,
+                    FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.시장가).ToString("D2"),
+                    OrdPrc = GetExactPrice(API.AvgPurchase),
+                    OrdQty = Math.Abs(API.Quantity).ToString()
+                });
+        }
+        bool RollOver
+        {
+            get; set;
         }
         protected internal string GetExactPrice(string avg)
         {
@@ -162,46 +199,10 @@ namespace ShareInvest.Strategy
             });
             return true;
         }
-        bool SetBuyDecentralize(double buy)
-        {
-            var benchmark = API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2;
-
-            return benchmark > buy - Const.ErrorRate * 9 ? SendCorrectionOrder(benchmark.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key) : false;
-        }
-        bool SetSellDecentralize(double sell)
-        {
-            var benchmark = API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2;
-
-            return benchmark < sell + Const.ErrorRate * 9 ? SendCorrectionOrder(benchmark.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key) : false;
-        }
-        void SendLiquidationOrder()
-        {
-            foreach (var order in new Dictionary<string, double>[]
-            {
-                API.SellOrder,
-                API.BuyOrder
-            })
-                foreach (var kv in order)
-                    if (SendClearingOrder(kv.Key))
-                        Thread.Sleep(ran.Next(999, 5000));
-
-            if (API.Quantity != 0)
-                API.orders[0].QueryExcute(new Order
-                {
-                    FnoIsuNo = ConnectAPI.Code,
-                    BnsTpCode = API.Quantity > 0 ? sell : buy,
-                    FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.시장가).ToString("D2"),
-                    OrdPrc = GetExactPrice(API.AvgPurchase),
-                    OrdQty = Math.Abs(API.Quantity).ToString()
-                });
-        }
-        bool RollOver
-        {
-            get; set;
-        }
         protected internal const string buy = "2";
         protected internal const string sell = "1";
         protected internal const string avg = "000.00";
         readonly Random ran;
+        const string sFly = "SuperFly";
     }
 }

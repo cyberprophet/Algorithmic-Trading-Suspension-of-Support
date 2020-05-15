@@ -51,6 +51,10 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
+        long UnRealize
+        {
+            get; set;
+        }
         double Before
         {
             get; set;
@@ -294,7 +298,7 @@ namespace ShareInvest.Strategy
                 }
             Revenue = CumulativeRevenue - Commission;
             long revenue = Revenue - TodayRevenue, unrealized = (long)(Quantity == 0 ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * Const.TransactionMultiplier * Math.Abs(Quantity));
-            var avg = EMA.Make(++Accumulative, SetWeight(revenue + unrealized), Before);
+            var avg = EMA.Make(++Accumulative, SetWeight(revenue + unrealized - UnRealize), Before);
             games.Enqueue(new Models.ImitationGames
             {
                 Assets = game.Assets,
@@ -346,6 +350,7 @@ namespace ShareInvest.Strategy
             Before = avg;
             TodayCommission = (int)Commission;
             TodayRevenue = Revenue;
+            UnRealize = unrealized;
             SellOrder.Clear();
             BuyOrder.Clear();
             Residue.Clear();
@@ -358,6 +363,10 @@ namespace ShareInvest.Strategy
         internal double PurchasePrice
         {
             get; private set;
+        }
+        internal double MaxAmount
+        {
+            get; set;
         }
         internal string Classification
         {
@@ -375,6 +384,10 @@ namespace ShareInvest.Strategy
         {
             get;
         }
+        internal Dictionary<uint, double> TradingJudge
+        {
+            get;
+        }
         public string Message
         {
             get; private set;
@@ -387,6 +400,7 @@ namespace ShareInvest.Strategy
             SellOrder = new Dictionary<string, uint>();
             BuyOrder = new Dictionary<string, uint>();
             Judge = new Dictionary<uint, double>();
+            TradingJudge = new Dictionary<uint, double>();
             games = new Queue<Models.ImitationGames>();
             Parallel.ForEach(Retrieve.GetCatalog(game), new Action<Catalog.XingAPI.Specify>((param) =>
             {

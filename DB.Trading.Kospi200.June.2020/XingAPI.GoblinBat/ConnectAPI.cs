@@ -49,6 +49,10 @@ namespace ShareInvest.XingAPI
         {
             get;
         }
+        public Dictionary<uint, double> TradingJudge
+        {
+            get;
+        }
         public int Volume
         {
             get; set;
@@ -192,6 +196,7 @@ namespace ShareInvest.XingAPI
             Trend = new Dictionary<string, string>();
             SellOrder = new Dictionary<string, double>();
             BuyOrder = new Dictionary<string, double>();
+            TradingJudge = new Dictionary<uint, double>();
         }
         static ConnectAPI XingAPI
         {

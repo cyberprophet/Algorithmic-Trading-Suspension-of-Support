@@ -56,12 +56,13 @@ namespace ShareInvest.Strategy.Statistics
         }
         void OnReceiveQuotes(object sender, EventHandler.BackTesting.Quotes e)
         {
-            if (int.TryParse(e.Time.Substring(6, 6), out int time) && (time < 090000 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(bt.Classification) == false)
+            if (int.TryParse(e.Time.Substring(6, 6), out int time) && (time < 090007 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(bt.Classification) == false)
             {
                 string classification = bt.Classification, price;
                 var check = classification.Equals(buy);
                 var max = Max(specify.Assets / ((check ? e.BuyPrice : e.SellPrice) * Const.TransactionMultiplier * specify.MarginRate), classification);
                 double[] sp = new double[10], bp = new double[10];
+                bt.MaxAmount = max * (classification.Equals(buy) ? 1 : -1);
 
                 for (int i = 0; i < 10; i++)
                     if (double.TryParse((e.BuyPrice - Const.ErrorRate * (9 - i)).ToString("F2"), out double bt) && double.TryParse((e.SellPrice + Const.ErrorRate * (9 - i)).ToString("F2"), out double st))
@@ -78,7 +79,7 @@ namespace ShareInvest.Strategy.Statistics
                         case sell:
                             if (bt.Quantity < 0)
                             {
-                                if (bt.BuyOrder.Count == 0 && max < -bt.Quantity && ForTheLiquidationOfSellOrder(e.Time, price, bp, e.BuyQuantity))
+                                if (bt.BuyOrder.Count == 0 && max < 1 - bt.Quantity && ForTheLiquidationOfSellOrder(e.Time, price, bp, e.BuyQuantity))
                                     return;
 
                                 if (bt.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(e.Time, bp))
@@ -95,7 +96,7 @@ namespace ShareInvest.Strategy.Statistics
                         case buy:
                             if (bt.Quantity > 0)
                             {
-                                if (bt.SellOrder.Count == 0 && max < bt.Quantity && ForTheLiquidationOfBuyOrder(e.Time, price, sp, e.SellQuantity))
+                                if (bt.SellOrder.Count == 0 && max < bt.Quantity + 1 && ForTheLiquidationOfBuyOrder(e.Time, price, sp, e.SellQuantity))
                                     return;
 
                                 if (bt.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(e.Time, sp))
@@ -175,6 +176,7 @@ namespace ShareInvest.Strategy.Statistics
                 if (bt.BuyOrder.Count > 0 && e.Volume < 0)
                     bt.SetBuyConclusion(e.Date.ToString(), e.Price, e.Volume);
             }
+            bt.TradingJudge[specify.Time] = popShort;
         }
         bool RollOver
         {

@@ -39,14 +39,10 @@ namespace ShareInvest.Strategy.XingAPI
             API.Max(popShort - popLong - (Short.Peek() - Long.Peek()), specify, Check);
             Short.Push(popShort);
             Long.Push(popLong);
+            API.TradingJudge[specify.Time] = popShort;
 
-            if (specify.Time == 1440)
-                switch (GetCheckTime(e.Time))
-                {
-                    case true:
-                        OnReceiveTrend(e.Volume);
-                        break;
-                }
+            if (specify.Time == 1440 && GetCheckTime(e.Time))
+                OnReceiveTrend(e.Volume);
         }
         bool GetCheckOnTimeByAPI(string time)
         {

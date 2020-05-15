@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Threading;
 using ShareInvest.Message;
@@ -136,8 +137,13 @@ namespace ShareInvest.XingAPI
 
                 return;
             }
-            if (int.TryParse(nMessageCode, out int code) && code > 999 && Array.Exists(exclusion, o => o.Equals(nMessageCode)) == false)
+            if (int.TryParse(nMessageCode, out int code) && code > 999)
+            {
+                if (Array.Exists(exclusion, o => o.Equals(nMessageCode)) && TimerBox.Show(string.Concat(szMessage, new Secret().Message), nMessageCode, MessageBoxButtons.YesNo, MessageBoxIcon.Question, nMessageCode.Equals(rCancel) ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 5175).Equals(DialogResult.Yes))
+                    API.OnReceiveBalance = true;
+
                 new ExceptionMessage(szMessage, nMessageCode);
+            }
         }
         protected internal virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
         protected internal ConnectAPI API => ConnectAPI.GetInstance();

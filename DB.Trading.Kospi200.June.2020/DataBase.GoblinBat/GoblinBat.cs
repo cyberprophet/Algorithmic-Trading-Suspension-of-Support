@@ -11,6 +11,7 @@ using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatControls;
 using ShareInvest.Message;
+using ShareInvest.Models;
 using ShareInvest.Strategy;
 
 namespace ShareInvest
@@ -239,18 +240,12 @@ namespace ShareInvest
                 }
             }
             SuspendLayout();
-            BeginInvoke(new Action(() => Cursor = OnReceiveChart(retrieve.OnReceiveInformation(e.Game))));
-            Application.DoEvents();
+            Size = Chart.SetChartValue(retrieve.OnReceiveInformation(e.Game));
+            Statistical.Hide();
+            Chart.Show();
             ResumeLayout();
             CenterToScreen();
-        }
-        Cursor OnReceiveChart(Dictionary<DateTime, string> param)
-        {
-            Statistical.Hide();
-            Size = Chart.SetChartValue(param);
-            Chart.Show();
-
-            return Cursors.Default;
+            Cursor = Cursors.Default;
         }
         void OnReceiveSize(object sender, GridResize e)
         {
