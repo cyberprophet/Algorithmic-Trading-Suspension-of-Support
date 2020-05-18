@@ -96,7 +96,7 @@ namespace ShareInvest.Strategy.Statistics
                         case buy:
                             if (bt.Quantity > 0)
                             {
-                                if (bt.SellOrder.Count == 0 && max < bt.Quantity + 1 && ForTheLiquidationOfBuyOrder(e.Time, price, sp, e.SellQuantity))
+                                if (bt.SellOrder.Count == 0 && max < bt.Quantity - 1 && ForTheLiquidationOfBuyOrder(e.Time, price, sp, e.SellQuantity))
                                     return;
 
                                 if (bt.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(e.Time, sp))

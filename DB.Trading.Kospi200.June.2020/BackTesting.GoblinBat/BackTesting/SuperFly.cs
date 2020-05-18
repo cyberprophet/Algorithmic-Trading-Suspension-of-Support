@@ -6,61 +6,107 @@ namespace ShareInvest.Strategy.Statistics
 {
     class SuperFly : Analysis
     {
+        protected internal override bool ForTheLiquidationOfBuyOrder(string time, string price, double[] selling, int quantity)
+        {
+            var gap = bt.MaxAmount - bt.Quantity;
+
+            if (0 < gap && gap < 1)
+                foreach (var kv in bt.Judge.OrderBy(o => o.Key))
+                    if (kv.Value < 0)
+                    {
+                        var index = selling[selling.Length - 1] - bt.TradingJudge[kv.Key];
+
+                        return bt.SendNewOrder(time, selling[index > 0 && index < 5 ? (int)(selling.Length - index) : selling.Length - 1].ToString("F2"), sell, quantity);
+                    }
+            return selling[selling.Length - 1].ToString("F2").Equals(price) ? bt.SendNewOrder(time, price, sell, quantity) : false;
+        }
+        protected internal override bool ForTheLiquidationOfSellOrder(string time, string price, double[] bid, int quantity)
+        {
+            var gap = bt.Quantity - bt.MaxAmount;
+
+            if (0 < gap && gap < 1)
+                foreach (var kv in bt.Judge.OrderBy(o => o.Key))
+                    if (kv.Value > 0)
+                    {
+                        var index = bt.TradingJudge[kv.Key] - bid[bid.Length - 1];
+
+                        return bt.SendNewOrder(time, bid[index > 0 && index < 5 ? (int)(bid.Length - index) : bid.Length - 1].ToString("F2"), buy, quantity);
+                    }
+            return bid[bid.Length - 1].ToString("F2").Equals(price) ? bt.SendNewOrder(time, price, buy, quantity) : false;
+        }
         protected internal override bool ForTheLiquidationOfBuyOrder(string time, double[] selling)
         {
             var sell = bt.SellOrder.OrderByDescending(o => o.Key).First();
 
             return double.TryParse(sell.Key, out double csp) && selling[bt.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp ? bt.SendClearingOrder(time, sell.Value) : false;
         }
-        protected internal override bool ForTheLiquidationOfBuyOrder(string time, string price, double[] selling, int quantity) => double.TryParse(price, out double sAvg) && sAvg < selling[5] ? bt.SendNewOrder(time, sAvg < selling[selling.Length - 1] ? selling[selling.Length - 1].ToString("F2") : price, sell, quantity) : false;
         protected internal override bool ForTheLiquidationOfSellOrder(string time, double[] bid)
         {
             var buy = bt.BuyOrder.OrderBy(o => o.Key).First();
 
             return double.TryParse(buy.Key, out double cbp) && bid[bt.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp ? bt.SendClearingOrder(time, buy.Value) : false;
         }
-        protected internal override bool ForTheLiquidationOfSellOrder(string time, string price, double[] bid, int quantity) => double.TryParse(price, out double bAvg) && bAvg > bid[5] ? bt.SendNewOrder(time, bAvg > bid[bid.Length - 1] ? bid[bid.Length - 1].ToString("F2") : price, buy, quantity) : false;
-        protected internal override void SendNewOrder(string time, double[] param, string classification, int quantity)
-        {
-            var check = classification.Equals(buy);
-            string key = param[5].ToString("F2"), liquidation = param[param.Length - 1].ToString("F2");
-
-            if (check && bt.Quantity < 0 && param[param.Length - 1] > 0 && bt.BuyOrder.Count < -bt.Quantity && bt.BuyOrder.ContainsKey(liquidation) == false)
-                bt.SendNewOrder(time, liquidation, classification, quantity);
-
-            else if (check == false && bt.Quantity > 0 && param[param.Length - 1] > 0 && bt.SellOrder.Count < bt.Quantity && bt.SellOrder.ContainsKey(liquidation) == false)
-                bt.SendNewOrder(time, liquidation, classification, quantity);
-
-            else if (param[5] > 0 && ((check ? bt.BuyOrder.Count == 0 : bt.SellOrder.Count == 0) || bt.Quantity == 0) && (check ? bt.Quantity + bt.BuyOrder.Count : bt.SellOrder.Count - bt.Quantity) < specify.Assets / (param[5] * Const.TransactionMultiplier * specify.MarginRate) - 1 && (check ? bt.BuyOrder.ContainsKey(key) : bt.SellOrder.ContainsKey(key)) == false)
-                bt.SendNewOrder(time, key, classification, quantity);
-        }
         protected internal override bool SetCorrectionBuyOrder(string time, string avg, double buy, int quantity)
         {
-            var sb = bt.BuyOrder.OrderByDescending(o => o.Key).First();
-            var abscond = bt.Quantity * Const.ErrorRate;
-
-            if (double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double sAvg) && buy < sAvg && sAvg - abscond < price + Const.ErrorRate)
+            if (double.TryParse(avg, out double rAvg) && Math.Abs(rAvg - buy) < Const.ErrorRate * bt.Quantity)
             {
-                var oPrice = (price - abscond).ToString("F2");
+                var price = double.MaxValue;
+                var order = bt.BuyOrder.OrderByDescending(o => o.Key);
 
-                if (price - abscond > buy - Const.ErrorRate * 9 && bt.BuyOrder.ContainsKey(oPrice) == false)
-                    return bt.SendCorrectionOrder(time, oPrice, sb.Value, quantity);
+                foreach (var kv in order)
+                {
+                    if (double.TryParse(kv.Key, out double oPrice) && price - oPrice == Const.ErrorRate && bt.BuyOrder.ContainsKey((oPrice - Const.ErrorRate).ToString("F2")) == false)
+                        return bt.SendCorrectionOrder(time, (oPrice - Const.ErrorRate).ToString("F2"), order.First().Value, quantity);
+
+                    price = oPrice;
+                }
             }
             return false;
         }
         protected internal override bool SetCorrectionSellOrder(string time, string avg, double sell, int quantity)
         {
-            var sb = bt.SellOrder.OrderBy(o => o.Key).First();
-            var abscond = bt.Quantity * Const.ErrorRate;
-
-            if (double.TryParse(sb.Key, out double price) && double.TryParse(avg, out double bAvg) && sell > bAvg && bAvg - abscond > price - Const.ErrorRate)
+            if (double.TryParse(avg, out double rAvg) && Math.Abs(rAvg - sell) < Const.ErrorRate * -bt.Quantity)
             {
-                var oPrice = (price - abscond).ToString("F2");
+                var price = double.MinValue;
+                var order = bt.SellOrder.OrderBy(o => o.Key);
 
-                if (price - abscond < sell + Const.ErrorRate * 9 && bt.SellOrder.ContainsKey(oPrice) == false)
-                    return bt.SendCorrectionOrder(time, oPrice, sb.Value, quantity);
+                foreach (var kv in order)
+                {
+                    if (double.TryParse(kv.Key, out double oPrice) && oPrice - price == Const.ErrorRate && bt.SellOrder.ContainsKey((oPrice + Const.ErrorRate).ToString("F2")) == false)
+                        return bt.SendCorrectionOrder(time, (oPrice + Const.ErrorRate).ToString("F2"), order.First().Value, quantity);
+
+                    price = oPrice;
+                }
             }
             return false;
+        }
+        protected internal override void SendNewOrder(string time, double[] param, string classification, int quantity)
+        {
+            var check = classification.Equals(buy);
+            var index = GetMaxJudge(param[param.Length - 1], check);
+
+            if (index < 3 && index >= 0)
+            {
+                var price = param[7 - index].ToString("F2");
+
+                if ((check ? bt.BuyOrder.ContainsKey(price) : bt.SellOrder.ContainsKey(price)) == false)
+                    bt.SendNewOrder(time, price, classification, quantity);
+            }
+        }
+        int GetMaxJudge(double price, bool judge)
+        {
+            int count = 0;
+
+            while ((judge ? bt.MaxAmount - bt.Quantity - bt.BuyOrder.Count : bt.Quantity - bt.SellOrder.Count - bt.MaxAmount) > 1)
+                foreach (var kv in bt.TradingJudge.OrderBy(o => o.Key))
+                {
+                    if (judge && ++count > bt.Quantity + bt.BuyOrder.Count)
+                        return (int)((kv.Value - price) * count);
+
+                    if (judge == false && ++count > bt.SellOrder.Count - bt.Quantity)
+                        return (int)((price - kv.Value) * count);
+                }
+            return int.MinValue;
         }
         internal SuperFly(BackTesting bt, Catalog.XingAPI.Specify specify) : base(bt, specify) => Console.WriteLine(specify.Strategy);
     }

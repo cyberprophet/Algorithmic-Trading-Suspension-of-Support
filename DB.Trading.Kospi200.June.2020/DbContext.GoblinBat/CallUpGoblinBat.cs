@@ -24,11 +24,10 @@ namespace ShareInvest.GoblinBatContext
                         return db.Statistics.AsNoTracking().Distinct().ToList();
 
                     var identity = new Secret().GetIdentify(key);
-                    var date = DateTime.Now.AddDays(-27).ToString(recent);
                     var choice = new bool[] { true, false };
                     var strategy = db.Statistics.Select(o => new { o.Strategy }).AsNoTracking().Distinct().ToArray();
 
-                    foreach (var str in db.Identifies.Where(o => o.Identity.Equals(identity) && o.Date.CompareTo(date) >= 0).AsNoTracking().Select(o => new
+                    foreach (var str in db.Identifies.Where(o => o.Identity.Equals(identity)).OrderByDescending(o => o.Date).AsNoTracking().Take(1).Select(o => new
                     {
                         o.Assets,
                         o.Code,

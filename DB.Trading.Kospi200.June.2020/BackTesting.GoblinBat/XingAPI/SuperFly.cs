@@ -65,30 +65,48 @@ namespace ShareInvest.Strategy.XingAPI
         {
             var check = classification.Equals(buy);
             var index = GetMaxJudge(param[check ? 5 : 4], check);
-            var price = check ? param[5 + index] : param[4 - index];
 
-            return index < 5 && index >= 0 && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false ? SendNewOrder(price.ToString("F2"), classification) : false;
+            if (index < 3 && index >= 0)
+            {
+                var price = check ? param[7 - index] : param[2 + index];
+
+                if ((check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false)
+                    return SendNewOrder(price.ToString("F2"), classification);
+            }
+            return false;
         }
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy)
         {
-            var count = 0;
+            if (double.TryParse(avg, out double rAvg) && Math.Abs(rAvg - buy) < Const.ErrorRate * API.Quantity)
+            {
+                var price = double.MaxValue;
+                var order = API.BuyOrder.OrderByDescending(o => o.Value);
 
-            if (double.TryParse(avg, out double rAvg) && Math.Abs(rAvg - buy) > Const.ErrorRate)
-                foreach (var kv in API.Judge.OrderByDescending(o => o.Key))
-                    if (API.MaxAmount - API.Quantity > count++ && kv.Value > 0 && API.TradingJudge[kv.Key] < buy && API.BuyOrder.ContainsValue(buy) == false)
-                        return SendCorrectionOrder(buy.ToString("F2"), API.BuyOrder.OrderBy(o => o.Value).First().Key);
+                foreach (var kv in order)
+                {
+                    if (price - kv.Value == Const.ErrorRate && API.BuyOrder.ContainsValue(kv.Value - Const.ErrorRate) == false)
+                        return SendCorrectionOrder((kv.Value - Const.ErrorRate).ToString("F2"), order.First().Key);
 
+                    price = kv.Value;
+                }
+            }
             return false;
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell)
         {
-            var count = 0;
+            if (double.TryParse(avg, out double rAvg) && Math.Abs(rAvg - sell) < Const.ErrorRate * -API.Quantity)
+            {
+                var price = double.MinValue;
+                var order = API.SellOrder.OrderBy(o => o.Value);
 
-            if (double.TryParse(avg, out double rAvg) && Math.Abs(rAvg - sell) > Const.ErrorRate)
-                foreach (var kv in API.Judge.OrderByDescending(o => o.Key))
-                    if (API.Quantity - API.MaxAmount > count++ && kv.Value < 0 && API.TradingJudge[kv.Key] > sell && API.SellOrder.ContainsValue(sell) == false)
-                        return SendCorrectionOrder(sell.ToString("F2"), API.SellOrder.OrderByDescending(o => o.Value).First().Key);
+                foreach (var kv in order)
+                {
+                    if (kv.Value - price == Const.ErrorRate && API.SellOrder.ContainsValue(kv.Value + Const.ErrorRate) == false)
+                        return SendCorrectionOrder((kv.Value + Const.ErrorRate).ToString("F2"), order.First().Key);
 
+                    price = kv.Value;
+                }
+            }
             return false;
         }
         public SuperFly(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;

@@ -52,7 +52,7 @@ namespace ShareInvest.Strategy
                         case sell:
                             if (API.Quantity < 0)
                             {
-                                if (API.BuyOrder.Count == 0 && specify.Strategy.Equals(sFly) ? API.Quantity < -1 : max < 1 - API.Quantity && ForTheLiquidationOfSellOrder(price, bp))
+                                if (API.BuyOrder.Count == 0 && max < 1 - API.Quantity && ForTheLiquidationOfSellOrder(price, bp))
                                     return;
 
                                 if (API.BuyOrder.Count > 0 && ForTheLiquidationOfSellOrder(bp))
@@ -69,7 +69,7 @@ namespace ShareInvest.Strategy
                         case buy:
                             if (API.Quantity > 0)
                             {
-                                if (API.SellOrder.Count == 0 && specify.Strategy.Equals(sFly) ? API.Quantity > 1 : max < API.Quantity + 1 && ForTheLiquidationOfBuyOrder(price, sp))
+                                if (API.SellOrder.Count == 0 && max < API.Quantity + 1 && ForTheLiquidationOfBuyOrder(price, sp))
                                     return;
 
                                 if (API.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))
@@ -203,6 +203,5 @@ namespace ShareInvest.Strategy
         protected internal const string sell = "1";
         protected internal const string avg = "000.00";
         readonly Random ran;
-        const string sFly = "SuperFly";
     }
 }

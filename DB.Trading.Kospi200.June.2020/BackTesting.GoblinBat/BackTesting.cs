@@ -422,6 +422,10 @@ namespace ShareInvest.Strategy
                         new Fly(this, param);
                         break;
 
+                    case sFly:
+                        new SuperFly(this, param);
+                        break;
+
                     case heavy:
                         new Heavy(this, param);
                         break;
@@ -466,6 +470,7 @@ namespace ShareInvest.Strategy
         const string bantam = "Bantam";
         const string feather = "Feather";
         const string fly = "Fly";
+        const string sFly = "SuperFly";
         const string heavy = "Heavy";
         readonly bool verify;
         readonly Models.ImitationGames game;

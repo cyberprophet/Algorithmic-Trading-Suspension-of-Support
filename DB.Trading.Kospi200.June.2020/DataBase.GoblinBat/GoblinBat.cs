@@ -567,6 +567,10 @@ namespace ShareInvest
                             new Strategy.XingAPI.Fly(param);
                             break;
 
+                        case sFly:
+                            new Strategy.XingAPI.SuperFly(param);
+                            break;
+
                         case heavy:
                             new Strategy.XingAPI.Heavy(param);
                             break;
@@ -785,6 +789,7 @@ namespace ShareInvest
         const string bantam = "Bantam";
         const string feather = "Feather";
         const string fly = "Fly";
+        const string sFly = "SuperFly";
         const string heavy = "Heavy";
     }
 }
