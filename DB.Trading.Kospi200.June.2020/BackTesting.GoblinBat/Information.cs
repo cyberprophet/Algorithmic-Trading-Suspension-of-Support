@@ -367,12 +367,22 @@ namespace ShareInvest.Strategy
                                                                                                                                             }
             return games;
         }
-        public void GetUserIdentity(char initial) => Statistics = GetBasicStrategy(initial);
+        public void GetUserIdentity(char initial)
+        {
+            Statistics = GetBasicStrategy(initial);
+
+            if (initial.Equals((char)67) == false)
+                RemainingDay = GetRemainingDay(Retrieve.Code);
+        }
         public List<Models.ImitationGames> GetBestStrategy(bool external) => external ? GetBestExternalRecommend(new List<Models.ImitationGames>(128)) : GetBestStrategyRecommend(new List<Models.ImitationGames>(128));
         public List<Models.ImitationGames> GetBestStrategy() => Preheat(new List<Models.ImitationGames>(256));
         internal static List<Models.Statistics> Statistics
         {
             get; set;
+        }
+        internal static string[] RemainingDay
+        {
+            get; private set;
         }
         int[] GetVariable(int[] param, int type)
         {

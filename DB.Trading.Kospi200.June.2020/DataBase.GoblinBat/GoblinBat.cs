@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatControls;
@@ -265,7 +266,7 @@ namespace ShareInvest
 
                     if (temp.TryGetValue(0, out string code))
                     {
-                        if (secret.GetIsSever(key) == false)
+                        if (secret.GetIsSever(key))
                         {
                             notifyIcon.Text = checkDataBase;
                             Open.StartProgress(3605);

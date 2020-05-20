@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+
 using ShareInvest.Catalog;
 using ShareInvest.Message;
 using ShareInvest.Models;
@@ -14,6 +15,29 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
+        protected string[] GetRemainingDay(string code)
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    var array = db.Codes.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5))).AsNoTracking().Select(o => new { o.Info }).ToArray();
+                    var days = new string[array.Length + 1];
+                    var count = 0;
+
+                    foreach (var remaining in array)
+                        if (int.TryParse(remaining.Info.Substring(2), out int day))
+                            days[++count] = (day - 1).ToString();
+
+                    days[0] = "191211";
+
+                    return days;
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return null;
+        }
         protected List<Statistics> GetBasicStrategy(char initial)
         {
             var list = new List<Statistics>();

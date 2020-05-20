@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 
-using ShareInvest.Catalog.XingAPI;
+using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy.Statistics
 {
     class Consecutive
     {
-        internal Consecutive(BackTesting bt, Specify specify)
+        internal Consecutive(BackTesting bt, Catalog.XingAPI.Specify specify)
         {
             this.bt = bt;
             this.specify = specify;
+            this.judge = specify.Strategy.Length == 2 && int.TryParse(specify.Strategy, out int judge) ? judge : int.MaxValue;
             Short = new Stack<double>(256);
             Long = new Stack<double>(256);
             bt.SendDatum += Analysize;
@@ -33,19 +35,92 @@ namespace ShareInvest.Strategy.Statistics
                 Short.Push(popShort);
                 Long.Push(popLong);
                 bt.TradingJudge[specify.Time] = popShort;
-            }
-            if (specify.Time == 1440)
-            {
-                var date = e.Date.ToString().Substring(6);
 
-                if (date.Equals(end))
-                    bt.SetStatisticalStorage(e.Date.ToString().Substring(0, 6), e.Price, !specify.RollOver);
+                if (specify.Time == 1440)
+                    switch (e.Date.ToString().Substring(6))
+                    {
+                        case end:
+                            bt.SetStatisticalStorage(e.Date.ToString().Substring(0, 6), e.Price, !specify.RollOver);
+                            break;
 
-                if ((bt.SellOrder.Count > 0 || bt.BuyOrder.Count > 0) && (date.Equals(onTime) || date.Equals(nTime)))
-                {
-                    bt.SellOrder.Clear();
-                    bt.BuyOrder.Clear();
-                }
+                        case onTime:
+                        case nTime:
+                            if (bt.SellOrder.Count > 0 || bt.BuyOrder.Count > 0)
+                            {
+                                bt.SellOrder.Clear();
+                                bt.BuyOrder.Clear();
+                            }
+                            break;
+
+                        default:
+                            if (int.TryParse(e.Date.ToString().Substring(6, 6), out int time) && (time < 090001 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(bt.Classification) == false)
+                            {
+                                var judge = bt.Judge.OrderBy(o => o.Key);
+                                var trend = judge.First().Value;
+
+                                if ((bt.Classification.Equals(buy) ? e.Volume + trend > e.Volume : e.Volume + trend < e.Volume) && GetJudgeTheTrading(e.Price, e.Volume))
+                                {
+                                    if (bt.Judge.Count > 2)
+                                    {
+                                        var num = 0;
+
+                                        foreach (var kv in judge)
+                                        {
+                                            if (kv.Key == judge.First().Key)
+                                                continue;
+
+                                            if (kv.Key == 1440)
+                                                break;
+
+                                            if (bt.Classification.Equals(buy) && kv.Value < 0 || bt.Classification.Equals(sell) && kv.Value > 0)
+                                                num++;
+                                        }
+                                        if (num == 8 && bt.SetConclusion(e.Date, e.Price, bt.Classification))
+                                            return;
+                                    }
+                                    if (bt.Judge.Count == 2 && bt.SetConclusion(e.Date, e.Price, bt.Classification))
+                                        return;
+                                }
+                                if (bt.Judge.Count > 2)
+                                {
+                                    var num = 0;
+
+                                    if (bt.Quantity > 0 && e.Volume < -this.judge && e.Volume + trend < e.Volume)
+                                    {
+                                        foreach (var kv in judge)
+                                        {
+                                            if (kv.Key == judge.First().Key)
+                                                continue;
+
+                                            if (kv.Key == 1440)
+                                                break;
+
+                                            if (bt.Classification.Equals(buy) && kv.Value > 0)
+                                                num++;
+                                        }
+                                        if (num == 8 && bt.SetConclusion(e.Date, e.Price, sell))
+                                            return;
+                                    }
+                                    else if (bt.Quantity < 0 && e.Volume > this.judge && e.Volume + trend > e.Volume)
+                                    {
+                                        foreach (var kv in judge)
+                                        {
+                                            if (kv.Key == judge.First().Key)
+                                                continue;
+
+                                            if (kv.Key == 1440)
+                                                break;
+
+                                            if (bt.Classification.Equals(sell) && kv.Value < 0)
+                                                num++;
+                                        }
+                                        if (num == 8 && bt.SetConclusion(e.Date, e.Price, buy))
+                                            return;
+                                    }
+                                }
+                            }
+                            break;
+                    }
             }
         }
         bool GetCheckOnTime(long time)
@@ -70,6 +145,26 @@ namespace ShareInvest.Strategy.Statistics
             }
             return true;
         }
+        bool GetJudgeTheTrading(double price, int quantity)
+        {
+            var max = specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate);
+
+            switch (bt.Classification)
+            {
+                case buy:
+                    if (max - bt.Quantity > 1)
+                        return judge < quantity;
+
+                    break;
+
+                case sell:
+                    if (max + bt.Quantity > 1)
+                        return -judge > quantity;
+
+                    break;
+            }
+            return false;
+        }
         Stack<double> Short
         {
             get;
@@ -86,12 +181,15 @@ namespace ShareInvest.Strategy.Statistics
         {
             get; set;
         }
+        readonly int judge;
         readonly BackTesting bt;
-        readonly Specify specify;
+        readonly Catalog.XingAPI.Specify specify;
         const string nTime = "180000000";
         const string onTime = "090000000";
         const string format = "HHmmss";
         const string hm = "HHmm";
         const string end = "154500000";
+        internal const string sell = "1";
+        internal const string buy = "2";
     }
 }

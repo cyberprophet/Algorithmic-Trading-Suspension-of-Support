@@ -140,10 +140,9 @@ namespace ShareInvest.Strategy
         internal void Max(double trend, uint time)
         {
             Judge[time] = trend;
-            double temp = 0;
 
-            foreach (var kv in Judge)
-                temp += kv.Value;
+            if (Judge.TryGetValue(1440U, out double temp))
+                Classification = temp == 0 ? string.Empty : temp > 0 ? Consecutive.buy : Consecutive.sell;
         }
         internal bool SendClearingOrder(string time, uint number)
         {
@@ -241,6 +240,36 @@ namespace ShareInvest.Strategy
             }
             return false;
         }
+        internal bool SetConclusion(long time, double price, string classification)
+        {
+            if (classification.Equals(Consecutive.buy))
+            {
+                if (verify)
+                    statement.Enqueue(new Conclusion
+                    {
+                        Time = ConvertDateTime(time.ToString()),
+                        Division = string.Concat(buy, conclusion),
+                        Price = price.ToString("F2"),
+                        OrderNumber = Count++.ToString("N0")
+                    });
+                Quantity += 1;
+                SetConclusion(price);
+
+                return true;
+            }
+            if (verify)
+                statement.Enqueue(new Conclusion
+                {
+                    Time = ConvertDateTime(time.ToString()),
+                    Division = string.Concat(sell, conclusion),
+                    Price = price.ToString("F2"),
+                    OrderNumber = Count++.ToString("N0")
+                });
+            Quantity -= 1;
+            SetConclusion(price);
+
+            return true;
+        }
         internal void SetSellConclusion(string time, double price, int residue)
         {
             var key = price.ToString("F2");
@@ -297,7 +326,7 @@ namespace ShareInvest.Strategy
         }
         internal void SetStatisticalStorage(string date, double price, bool over)
         {
-            if (over)
+            if (over || Array.Exists(Information.RemainingDay, o => o.Equals(date)))
                 while (Quantity != 0)
                 {
                     if (verify)

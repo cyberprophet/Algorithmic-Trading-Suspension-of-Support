@@ -23,7 +23,7 @@ namespace ShareInvest
             {
                 string path = Path.Combine(Application.StartupPath, secret.Indentify), recent = string.Empty;
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
-                var remaining = secret.GetIsSever(str) ? ran.Next(1, 6) : 7;
+                var remaining = secret.GetIsSever(str) ? 7 : ran.Next(1, 7);
                 var initial = secret.GetPort(str);
                 var cts = new CancellationTokenSource();
                 var retrieve = new Strategy.Retrieve(str);
@@ -47,7 +47,7 @@ namespace ShareInvest
                                 recent = retrieve.RecentDate;
                                 var catalog = info.GetStatistics(count);
 
-                                if (secret.GetIsSever(str) == false)
+                                if (secret.GetIsSever(str))
                                 {
                                     count = 0.25;
                                     info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
