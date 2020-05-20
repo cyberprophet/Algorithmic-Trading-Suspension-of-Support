@@ -40,13 +40,13 @@ namespace ShareInvest.Strategy.Statistics
         {
             var sell = bt.SellOrder.OrderBy(o => o.Key).First();
 
-            return double.TryParse(sell.Key, out double csp) && selling[bt.SellOrder.Count == 1 ? 3 : (selling.Length - 1)] < csp ? bt.SendClearingOrder(time, sell.Value) : false;
+            return double.TryParse(sell.Key, out double csp) && selling[bt.SellOrder.Count == 1 ? 3 : (selling.Length - 1)] < csp && bt.SendClearingOrder(time, sell.Value);
         }
         protected internal override bool ForTheLiquidationOfSellOrder(string time, double[] bid)
         {
             var buy = bt.BuyOrder.OrderByDescending(o => o.Key).First();
 
-            return double.TryParse(buy.Key, out double cbp) && bid[bt.BuyOrder.Count == 1 ? 3 : (bid.Length - 1)] > cbp ? bt.SendClearingOrder(time, buy.Value) : false;
+            return double.TryParse(buy.Key, out double cbp) && bid[bt.BuyOrder.Count == 1 ? 3 : (bid.Length - 1)] > cbp && bt.SendClearingOrder(time, buy.Value);
         }
         protected internal override void SendNewOrder(string time, double[] param, string classification, int quantity)
         {

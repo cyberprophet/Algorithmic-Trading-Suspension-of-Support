@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Message;
 using ShareInvest.Models;
@@ -319,7 +320,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.BaseTime),
                                 Short = int.Parse(find.BaseShort),
                                 Long = int.Parse(find.BaseLong)
@@ -335,7 +336,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.NonaTime),
                                 Short = int.Parse(find.NonaShort),
                                 Long = int.Parse(find.NonaLong)
@@ -351,7 +352,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.OctaTime),
                                 Short = int.Parse(find.OctaShort),
                                 Long = int.Parse(find.OctaLong)
@@ -367,7 +368,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.HeptaTime),
                                 Short = int.Parse(find.HeptaShort),
                                 Long = int.Parse(find.HeptaLong)
@@ -383,7 +384,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.HexaTime),
                                 Short = int.Parse(find.HexaShort),
                                 Long = int.Parse(find.HexaLong)
@@ -399,7 +400,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.PentaTime),
                                 Short = int.Parse(find.PantaShort),
                                 Long = int.Parse(find.PantaLong)
@@ -415,7 +416,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.QuadTime),
                                 Short = int.Parse(find.QuadShort),
                                 Long = int.Parse(find.QuadLong)
@@ -431,7 +432,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.TriTime),
                                 Short = int.Parse(find.TriShort),
                                 Long = int.Parse(find.TriLong)
@@ -447,7 +448,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.DuoTime),
                                 Short = int.Parse(find.DuoShort),
                                 Long = int.Parse(find.DuoLong)
@@ -463,7 +464,7 @@ namespace ShareInvest.GoblinBatContext
                                 Commission = uint.Parse(find.Commission) / (double)cr,
                                 MarginRate = double.Parse(find.MarginRate) / mr,
                                 Strategy = find.Strategy,
-                                RollOver = find.RollOver.Equals("T") ? true : false,
+                                RollOver = find.RollOver.Equals("T"),
                                 Time = uint.Parse(find.MonoTime),
                                 Short = int.Parse(find.MonoShort),
                                 Long = int.Parse(find.MonoLong)
@@ -500,7 +501,7 @@ namespace ShareInvest.GoblinBatContext
                     while (memo.Count > 0)
                         db.Games.AddOrUpdate(memo.Dequeue());
 
-                    return db.SaveChanges() > 0 ? true : false;
+                    return db.SaveChanges() > 0;
                 }
                 catch (Exception ex)
                 {

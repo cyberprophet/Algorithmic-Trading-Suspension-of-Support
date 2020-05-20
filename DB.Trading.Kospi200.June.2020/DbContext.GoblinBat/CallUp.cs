@@ -368,8 +368,7 @@ namespace ShareInvest.GoblinBatContext
                         Price = temp[1],
                         Volume = temp[2]
                     });
-
-                else if (temp.Length > 3)
+                else if (temp.Length == 7)
                     model.Add(new Datum
                     {
                         Code = code,
@@ -381,6 +380,8 @@ namespace ShareInvest.GoblinBatContext
                         BuyQuantity = temp[5],
                         TotalBuyAmount = temp[6]
                     });
+                else
+                    Console.WriteLine(temp);
             }
             SetStorage(model);
         }

@@ -61,7 +61,7 @@ namespace ShareInvest.Strategy
             },
             {
                 shareinvest,
-                (char)Port.Collecting
+                (char)Port.Seriate
             },
             {
                 s0,
@@ -106,6 +106,7 @@ namespace ShareInvest.Strategy
     enum Port
     {
         Collecting = 67,
+        Seriate = 83,
         Trading = 84
     }
 }

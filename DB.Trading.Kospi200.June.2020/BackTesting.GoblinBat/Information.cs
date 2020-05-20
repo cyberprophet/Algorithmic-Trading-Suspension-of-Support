@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using ShareInvest.GoblinBatContext;
 
 namespace ShareInvest.Strategy
@@ -47,11 +48,9 @@ namespace ShareInvest.Strategy
             longVariable = GetVariable(new int[maxLong / minLong], minLong);
             ran = new Random();
         }
-        public List<Models.ImitationGames> GetStatistics(double count)
+        Models.ImitationGames Imitation
         {
-            var list = new List<Models.ImitationGames>();
-
-            while (list.Count < 375000 * count)
+            get
             {
                 var mi = new Models.ImitationGames
                 {
@@ -87,47 +86,104 @@ namespace ShareInvest.Strategy
                 mi.DuoTime = ran.Next(2, maxDuo < mi.TriTime ? maxDuo : mi.TriTime);
                 mi.MonoTime = ran.Next(1, maxMono < mi.DuoTime ? maxMono : mi.TriTime);
 
+                return mi;
+            }
+        }
+        public List<Models.ImitationGames> GetStatistics(double count)
+        {
+            var list = new List<Models.ImitationGames>();
+
+            while (list.Count < 375000 * count)
+            {
+                var mi = Imitation;
+
+                if (Statistics.Count == 1 && Statistics.Where(o => o.Strategy.Equals(string.Empty)).Any() && mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
+                {
+                    mi.Strategy = ran.Next(20, 100).ToString();
+                    var model = Statistics.First();
+                    list.Add(new Models.ImitationGames
+                    {
+                        Assets = model.Assets,
+                        Code = model.Code,
+                        Commission = model.Commission,
+                        MarginRate = model.MarginRate,
+                        Strategy = mi.Strategy,
+                        RollOver = model.RollOver,
+                        BaseTime = mi.BaseTime,
+                        BaseShort = mi.BaseShort,
+                        BaseLong = mi.BaseLong,
+                        NonaTime = mi.NonaTime,
+                        NonaShort = mi.NonaShort,
+                        NonaLong = mi.NonaLong,
+                        OctaTime = mi.OctaTime,
+                        OctaShort = mi.OctaShort,
+                        OctaLong = mi.OctaLong,
+                        HeptaTime = mi.HeptaTime,
+                        HeptaShort = mi.HeptaShort,
+                        HeptaLong = mi.HeptaLong,
+                        HexaTime = mi.HexaTime,
+                        HexaShort = mi.HexaShort,
+                        HexaLong = mi.HexaLong,
+                        PentaTime = mi.PentaTime,
+                        PentaShort = mi.PentaShort,
+                        PentaLong = mi.PentaLong,
+                        QuadTime = mi.QuadTime,
+                        QuadShort = mi.QuadShort,
+                        QuadLong = mi.QuadLong,
+                        TriTime = mi.TriTime,
+                        TriShort = mi.TriShort,
+                        TriLong = mi.TriLong,
+                        DuoTime = mi.DuoTime,
+                        DuoShort = mi.DuoShort,
+                        DuoLong = mi.DuoLong,
+                        MonoTime = mi.MonoTime,
+                        MonoShort = mi.MonoShort,
+                        MonoLong = mi.MonoLong
+                    });
+                    continue;
+                }
                 if (mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
                     foreach (var model in Statistics)
-                        list.Add(new Models.ImitationGames
-                        {
-                            Assets = model.Assets,
-                            Code = model.Code,
-                            Commission = model.Commission,
-                            MarginRate = model.MarginRate,
-                            Strategy = model.Strategy,
-                            RollOver = model.RollOver,
-                            BaseTime = mi.BaseTime,
-                            BaseShort = mi.BaseShort,
-                            BaseLong = mi.BaseLong,
-                            NonaTime = mi.NonaTime,
-                            NonaShort = mi.NonaShort,
-                            NonaLong = mi.NonaLong,
-                            OctaTime = mi.OctaTime,
-                            OctaShort = mi.OctaShort,
-                            OctaLong = mi.OctaLong,
-                            HeptaTime = mi.HeptaTime,
-                            HeptaShort = mi.HeptaShort,
-                            HeptaLong = mi.HeptaLong,
-                            HexaTime = mi.HexaTime,
-                            HexaShort = mi.HexaShort,
-                            HexaLong = mi.HexaLong,
-                            PentaTime = mi.PentaTime,
-                            PentaShort = mi.PentaShort,
-                            PentaLong = mi.PentaLong,
-                            QuadTime = mi.QuadTime,
-                            QuadShort = mi.QuadShort,
-                            QuadLong = mi.QuadLong,
-                            TriTime = mi.TriTime,
-                            TriShort = mi.TriShort,
-                            TriLong = mi.TriLong,
-                            DuoTime = mi.DuoTime,
-                            DuoShort = mi.DuoShort,
-                            DuoLong = mi.DuoLong,
-                            MonoTime = mi.MonoTime,
-                            MonoShort = mi.MonoShort,
-                            MonoLong = mi.MonoLong
-                        });
+                        if (model.Strategy.Length > 2)
+                            list.Add(new Models.ImitationGames
+                            {
+                                Assets = model.Assets,
+                                Code = model.Code,
+                                Commission = model.Commission,
+                                MarginRate = model.MarginRate,
+                                Strategy = model.Strategy,
+                                RollOver = model.RollOver,
+                                BaseTime = mi.BaseTime,
+                                BaseShort = mi.BaseShort,
+                                BaseLong = mi.BaseLong,
+                                NonaTime = mi.NonaTime,
+                                NonaShort = mi.NonaShort,
+                                NonaLong = mi.NonaLong,
+                                OctaTime = mi.OctaTime,
+                                OctaShort = mi.OctaShort,
+                                OctaLong = mi.OctaLong,
+                                HeptaTime = mi.HeptaTime,
+                                HeptaShort = mi.HeptaShort,
+                                HeptaLong = mi.HeptaLong,
+                                HexaTime = mi.HexaTime,
+                                HexaShort = mi.HexaShort,
+                                HexaLong = mi.HexaLong,
+                                PentaTime = mi.PentaTime,
+                                PentaShort = mi.PentaShort,
+                                PentaLong = mi.PentaLong,
+                                QuadTime = mi.QuadTime,
+                                QuadShort = mi.QuadShort,
+                                QuadLong = mi.QuadLong,
+                                TriTime = mi.TriTime,
+                                TriShort = mi.TriShort,
+                                TriLong = mi.TriLong,
+                                DuoTime = mi.DuoTime,
+                                DuoShort = mi.DuoShort,
+                                DuoLong = mi.DuoLong,
+                                MonoTime = mi.MonoTime,
+                                MonoShort = mi.MonoShort,
+                                MonoLong = mi.MonoLong
+                            });
             }
             return list;
         }
@@ -265,49 +321,50 @@ namespace ShareInvest.Strategy
                                                                                                                                 foreach (var mt in new int[] { game.MonoTime, ran.Next(0, 2) == 0 ? game.MonoTime - 1 : game.MonoTime + 1 })
                                                                                                                                     if (bs >= minShort && bs <= maxShort && ns >= minShort && ns <= maxShort && os >= minShort && os <= maxShort && hs >= minShort && hs <= maxShort && xs >= minShort && xs <= maxShort && ps >= minShort && ps <= maxShort && qs >= minShort && qs <= maxShort && ts >= minShort && ts <= maxShort && ds >= minShort && ds <= maxShort && ms >= minShort && ms <= maxShort && bl >= minLong && bl <= maxLong && nl >= minLong && nl <= maxLong && ol >= minLong && ol <= maxLong && hl >= minLong && hl <= maxLong && xl >= minLong && xl <= maxLong && pl >= minLong && pl <= maxLong && ql >= minLong && ql <= maxLong && tl >= minLong && tl <= maxLong && dl >= minLong && dl <= maxLong && ml >= minLong && ml <= maxLong && bs < bl && ns < nl && os < ol && hs < hl && xs < xl && ps < pl && qs < ql && ts < tl && ds < dl && ms < ml && nt <= maxNona && ot <= maxOcta && ht <= maxHepta && xt <= maxHexa && pt <= maxPenta && qt <= maxQuad && tt <= maxTri && dt <= maxDuo && mt <= maxMono && nt > ot && ot > ht && ht > xt && xt > pt && pt > qt && qt > tt && tt > dt && dt > mt && mt > 0)
                                                                                                                                         foreach (var model in Statistics.Select(o => new { o.Strategy }).Distinct())
-                                                                                                                                        {
-                                                                                                                                            games.Push(new Models.ImitationGames
+                                                                                                                                            if (model.Strategy.Length > 2)
                                                                                                                                             {
-                                                                                                                                                Assets = game.Assets,
-                                                                                                                                                Code = game.Code,
-                                                                                                                                                Commission = game.Commission,
-                                                                                                                                                MarginRate = game.MarginRate,
-                                                                                                                                                Strategy = model.Strategy,
-                                                                                                                                                RollOver = game.RollOver,
-                                                                                                                                                BaseTime = maxBase,
-                                                                                                                                                BaseShort = bs,
-                                                                                                                                                BaseLong = bl,
-                                                                                                                                                NonaTime = nt,
-                                                                                                                                                NonaShort = ns,
-                                                                                                                                                NonaLong = nl,
-                                                                                                                                                OctaTime = ot,
-                                                                                                                                                OctaShort = os,
-                                                                                                                                                OctaLong = ol,
-                                                                                                                                                HeptaTime = ht,
-                                                                                                                                                HeptaShort = hs,
-                                                                                                                                                HeptaLong = hl,
-                                                                                                                                                HexaTime = xt,
-                                                                                                                                                HexaShort = xs,
-                                                                                                                                                HexaLong = xl,
-                                                                                                                                                PentaTime = pt,
-                                                                                                                                                PentaShort = ps,
-                                                                                                                                                PentaLong = pl,
-                                                                                                                                                QuadTime = qt,
-                                                                                                                                                QuadShort = qs,
-                                                                                                                                                QuadLong = ql,
-                                                                                                                                                TriTime = tt,
-                                                                                                                                                TriShort = ts,
-                                                                                                                                                TriLong = tl,
-                                                                                                                                                DuoTime = dt,
-                                                                                                                                                DuoShort = ds,
-                                                                                                                                                DuoLong = dl,
-                                                                                                                                                MonoTime = mt,
-                                                                                                                                                MonoShort = ms,
-                                                                                                                                                MonoLong = ml
-                                                                                                                                            });
-                                                                                                                                            if (games.Count > 137525)
-                                                                                                                                                return games;
-                                                                                                                                        }
+                                                                                                                                                games.Push(new Models.ImitationGames
+                                                                                                                                                {
+                                                                                                                                                    Assets = game.Assets,
+                                                                                                                                                    Code = game.Code,
+                                                                                                                                                    Commission = game.Commission,
+                                                                                                                                                    MarginRate = game.MarginRate,
+                                                                                                                                                    Strategy = model.Strategy,
+                                                                                                                                                    RollOver = game.RollOver,
+                                                                                                                                                    BaseTime = maxBase,
+                                                                                                                                                    BaseShort = bs,
+                                                                                                                                                    BaseLong = bl,
+                                                                                                                                                    NonaTime = nt,
+                                                                                                                                                    NonaShort = ns,
+                                                                                                                                                    NonaLong = nl,
+                                                                                                                                                    OctaTime = ot,
+                                                                                                                                                    OctaShort = os,
+                                                                                                                                                    OctaLong = ol,
+                                                                                                                                                    HeptaTime = ht,
+                                                                                                                                                    HeptaShort = hs,
+                                                                                                                                                    HeptaLong = hl,
+                                                                                                                                                    HexaTime = xt,
+                                                                                                                                                    HexaShort = xs,
+                                                                                                                                                    HexaLong = xl,
+                                                                                                                                                    PentaTime = pt,
+                                                                                                                                                    PentaShort = ps,
+                                                                                                                                                    PentaLong = pl,
+                                                                                                                                                    QuadTime = qt,
+                                                                                                                                                    QuadShort = qs,
+                                                                                                                                                    QuadLong = ql,
+                                                                                                                                                    TriTime = tt,
+                                                                                                                                                    TriShort = ts,
+                                                                                                                                                    TriLong = tl,
+                                                                                                                                                    DuoTime = dt,
+                                                                                                                                                    DuoShort = ds,
+                                                                                                                                                    DuoLong = dl,
+                                                                                                                                                    MonoTime = mt,
+                                                                                                                                                    MonoShort = ms,
+                                                                                                                                                    MonoLong = ml
+                                                                                                                                                });
+                                                                                                                                                if (games.Count > 137525)
+                                                                                                                                                    return games;
+                                                                                                                                            }
             return games;
         }
         public void GetUserIdentity(char initial) => Statistics = GetBasicStrategy(initial);

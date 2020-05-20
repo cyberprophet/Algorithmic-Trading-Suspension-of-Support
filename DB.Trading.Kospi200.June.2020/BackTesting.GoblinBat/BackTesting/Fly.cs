@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+
 using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy.Statistics
@@ -10,16 +11,16 @@ namespace ShareInvest.Strategy.Statistics
         {
             var sell = bt.SellOrder.OrderByDescending(o => o.Key).First();
 
-            return double.TryParse(sell.Key, out double csp) && selling[bt.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp ? bt.SendClearingOrder(time, sell.Value) : false;
+            return double.TryParse(sell.Key, out double csp) && selling[bt.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp && bt.SendClearingOrder(time, sell.Value);
         }
-        protected internal override bool ForTheLiquidationOfBuyOrder(string time, string price, double[] selling, int quantity) => double.TryParse(price, out double sAvg) && sAvg < selling[5] ? bt.SendNewOrder(time, sAvg < selling[selling.Length - 1] ? selling[selling.Length - 1].ToString("F2") : price, sell, quantity) : false;
+        protected internal override bool ForTheLiquidationOfBuyOrder(string time, string price, double[] selling, int quantity) => double.TryParse(price, out double sAvg) && sAvg < selling[5] && bt.SendNewOrder(time, sAvg < selling[selling.Length - 1] ? selling[selling.Length - 1].ToString("F2") : price, sell, quantity);
         protected internal override bool ForTheLiquidationOfSellOrder(string time, double[] bid)
         {
             var buy = bt.BuyOrder.OrderBy(o => o.Key).First();
 
-            return double.TryParse(buy.Key, out double cbp) && bid[bt.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp ? bt.SendClearingOrder(time, buy.Value) : false;
+            return double.TryParse(buy.Key, out double cbp) && bid[bt.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp && bt.SendClearingOrder(time, buy.Value);
         }
-        protected internal override bool ForTheLiquidationOfSellOrder(string time, string price, double[] bid, int quantity) => double.TryParse(price, out double bAvg) && bAvg > bid[5] ? bt.SendNewOrder(time, bAvg > bid[bid.Length - 1] ? bid[bid.Length - 1].ToString("F2") : price, buy, quantity) : false;
+        protected internal override bool ForTheLiquidationOfSellOrder(string time, string price, double[] bid, int quantity) => double.TryParse(price, out double bAvg) && bAvg > bid[5] && bt.SendNewOrder(time, bAvg > bid[bid.Length - 1] ? bid[bid.Length - 1].ToString("F2") : price, buy, quantity);
         protected internal override void SendNewOrder(string time, double[] param, string classification, int quantity)
         {
             var check = classification.Equals(buy);

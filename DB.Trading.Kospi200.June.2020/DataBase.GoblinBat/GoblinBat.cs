@@ -314,7 +314,7 @@ namespace ShareInvest
                         Acc = new string[check.Length - 3];
                         Server = check[check.Length - 1].Equals(secret.Mock);
 
-                        if (Server ? false : new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
+                        if (!Server && new VerifyIdentity().Identify(check[check.Length - 3], check[check.Length - 2]) == false)
                         {
                             if (TimerBox.Show(new Secret(check[check.Length - 2]).Identify, secret.GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, 3750).Equals(DialogResult.OK))
                             {

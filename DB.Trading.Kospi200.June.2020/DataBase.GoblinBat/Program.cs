@@ -5,7 +5,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
 using Microsoft.Win32;
+
 using ShareInvest.Message;
 using ShareInvest.Strategy;
 using ShareInvest.Verify;
@@ -40,7 +42,7 @@ namespace ShareInvest
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
                             new Task(() =>
                             {
-                                retrieve.SetInitialzeTheCode();
+                                retrieve.SetInitialzeTheCode(initial);
                                 info.GetUserIdentity(initial);
                                 recent = retrieve.RecentDate;
                                 var catalog = info.GetStatistics(count);
@@ -53,7 +55,7 @@ namespace ShareInvest
                                     foreach (var best in info.GetBestStrategy())
                                         catalog.Insert(9, best);
                                 }
-                                else
+                                else if (initial.Equals((char)84))
                                 {
                                     var better = info.SeekingBetterAround();
 

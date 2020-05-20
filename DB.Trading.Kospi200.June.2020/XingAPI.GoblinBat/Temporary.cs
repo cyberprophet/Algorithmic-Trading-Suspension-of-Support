@@ -18,7 +18,7 @@ namespace ShareInvest.XingAPI
 
             try
             {
-                foreach (var file in Directory.GetFiles(System.IO.Path.Combine(Application.StartupPath, @"..\"), "*.csv", SearchOption.AllDirectories))
+                foreach (var file in Directory.GetFiles(System.IO.Path.Combine(Application.StartupPath, "101Q6000"), "*.csv", SearchOption.AllDirectories))
                 {
                     var split = file.Split('\\');
                     code = split[split.Length - 2];

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+
 using ShareInvest.Catalog;
 
 namespace ShareInvest.Strategy.XingAPI
@@ -33,7 +34,7 @@ namespace ShareInvest.Strategy.XingAPI
 
                         return SendNewOrder(selling[index > 0 && index < 5 ? (int)(selling.Length - index) : selling.Length - 1].ToString("F2"), sell);
                     }
-            return selling[selling.Length - 1].ToString("F2").Equals(price) ? SendNewOrder(price, sell) : false;
+            return selling[selling.Length - 1].ToString("F2").Equals(price) && SendNewOrder(price, sell);
         }
         protected internal override bool ForTheLiquidationOfSellOrder(string price, double[] bid)
         {
@@ -47,19 +48,19 @@ namespace ShareInvest.Strategy.XingAPI
 
                         return SendNewOrder(bid[index > 0 && index < 5 ? (int)(bid.Length - index) : bid.Length - 1].ToString("F2"), buy);
                     }
-            return bid[bid.Length - 1].ToString("F2").Equals(price) ? SendNewOrder(price, buy) : false;
+            return bid[bid.Length - 1].ToString("F2").Equals(price) && SendNewOrder(price, buy);
         }
         protected internal override bool ForTheLiquidationOfBuyOrder(double[] selling)
         {
             var number = API.SellOrder.OrderByDescending(o => o.Value).First().Key;
 
-            return API.SellOrder.TryGetValue(number, out double csp) && selling[API.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp ? SendClearingOrder(number) : false;
+            return API.SellOrder.TryGetValue(number, out double csp) && selling[API.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp && SendClearingOrder(number);
         }
         protected internal override bool ForTheLiquidationOfSellOrder(double[] bid)
         {
             var number = API.BuyOrder.OrderBy(o => o.Value).First().Key;
 
-            return API.BuyOrder.TryGetValue(number, out double cbp) && bid[API.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp ? SendClearingOrder(number) : false;
+            return API.BuyOrder.TryGetValue(number, out double cbp) && bid[API.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp && SendClearingOrder(number);
         }
         protected internal override bool SendNewOrder(double[] param, string classification)
         {

@@ -18,7 +18,7 @@ namespace ShareInvest.Strategy.Statistics
 
                         return bt.SendNewOrder(time, selling[index > 0 && index < 5 ? (int)(selling.Length - index) : selling.Length - 1].ToString("F2"), sell, quantity);
                     }
-            return selling[selling.Length - 1].ToString("F2").Equals(price) ? bt.SendNewOrder(time, price, sell, quantity) : false;
+            return selling[selling.Length - 1].ToString("F2").Equals(price) && bt.SendNewOrder(time, price, sell, quantity);
         }
         protected internal override bool ForTheLiquidationOfSellOrder(string time, string price, double[] bid, int quantity)
         {
@@ -32,19 +32,19 @@ namespace ShareInvest.Strategy.Statistics
 
                         return bt.SendNewOrder(time, bid[index > 0 && index < 5 ? (int)(bid.Length - index) : bid.Length - 1].ToString("F2"), buy, quantity);
                     }
-            return bid[bid.Length - 1].ToString("F2").Equals(price) ? bt.SendNewOrder(time, price, buy, quantity) : false;
+            return bid[bid.Length - 1].ToString("F2").Equals(price) && bt.SendNewOrder(time, price, buy, quantity);
         }
         protected internal override bool ForTheLiquidationOfBuyOrder(string time, double[] selling)
         {
             var sell = bt.SellOrder.OrderByDescending(o => o.Key).First();
 
-            return double.TryParse(sell.Key, out double csp) && selling[bt.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp ? bt.SendClearingOrder(time, sell.Value) : false;
+            return double.TryParse(sell.Key, out double csp) && selling[bt.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp && bt.SendClearingOrder(time, sell.Value);
         }
         protected internal override bool ForTheLiquidationOfSellOrder(string time, double[] bid)
         {
             var buy = bt.BuyOrder.OrderBy(o => o.Key).First();
 
-            return double.TryParse(buy.Key, out double cbp) && bid[bt.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp ? bt.SendClearingOrder(time, buy.Value) : false;
+            return double.TryParse(buy.Key, out double cbp) && bid[bt.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp && bt.SendClearingOrder(time, buy.Value);
         }
         protected internal override bool SetCorrectionBuyOrder(string time, string avg, double buy, int quantity)
         {

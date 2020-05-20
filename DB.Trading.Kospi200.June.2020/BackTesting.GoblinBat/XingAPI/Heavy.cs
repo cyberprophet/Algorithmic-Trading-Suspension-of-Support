@@ -67,13 +67,13 @@ namespace ShareInvest.Strategy.XingAPI
         {
             var number = API.SellOrder.OrderBy(o => o.Value).First().Key;
 
-            return API.SellOrder.TryGetValue(number, out double csp) && selling[API.SellOrder.Count == 1 ? 3 : (selling.Length - 1)] < csp && API.OnReceiveBalance ? SendClearingOrder(number) : false;
+            return API.SellOrder.TryGetValue(number, out double csp) && selling[API.SellOrder.Count == 1 ? 3 : (selling.Length - 1)] < csp && API.OnReceiveBalance && SendClearingOrder(number);
         }
         protected internal override bool ForTheLiquidationOfSellOrder(double[] bid)
         {
             var number = API.BuyOrder.OrderByDescending(o => o.Value).First().Key;
 
-            return API.BuyOrder.TryGetValue(number, out double cbp) && bid[API.BuyOrder.Count == 1 ? 3 : (bid.Length - 1)] > cbp && API.OnReceiveBalance ? SendClearingOrder(number) : false;
+            return API.BuyOrder.TryGetValue(number, out double cbp) && bid[API.BuyOrder.Count == 1 ? 3 : (bid.Length - 1)] > cbp && API.OnReceiveBalance && SendClearingOrder(number);
         }
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy)
         {
@@ -116,7 +116,7 @@ namespace ShareInvest.Strategy.XingAPI
             else if (check == false && API.Quantity > 0 && param[4] > 0 && API.SellOrder.Count < API.Quantity && API.SellOrder.ContainsValue(param[4]) == false)
                 return SendNewOrder(param[4].ToString("F2"), sell);
 
-            return price > 0 && GetPermission(price) && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate), check ? Classification.Buy : Classification.Sell) && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false ? SendNewOrder(price.ToString("F2"), classification) : false;
+            return price > 0 && GetPermission(price) && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate), check ? Classification.Buy : Classification.Sell) && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false && SendNewOrder(price.ToString("F2"), classification);
         }
         bool GetPermission(double price)
         {

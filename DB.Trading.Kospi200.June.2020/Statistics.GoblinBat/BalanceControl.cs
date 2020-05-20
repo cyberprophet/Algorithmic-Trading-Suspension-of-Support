@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ShareInvest.EventHandler;
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.OpenAPI;
+using ShareInvest.Message;
 
 namespace ShareInvest.GoblinBatControls
 {
@@ -61,74 +62,81 @@ namespace ShareInvest.GoblinBatControls
             balGrid.Rows.Clear();
             balGrid.AutoSize = true;
 
-            foreach (string info in e.Hold)
+            try
             {
-                string[] arr = new string[7];
-                int i = 0;
-
-                foreach (string val in info.Split(';'))
+                foreach (string info in e.Hold)
                 {
-                    if (string.IsNullOrEmpty(val))
-                        break;
+                    string[] arr = new string[7];
+                    int i = 0;
 
-                    switch (i)
+                    foreach (string val in info.Split(';'))
                     {
-                        case 0:
-                        case 1:
-                            arr[i++] = val;
+                        if (string.IsNullOrEmpty(val))
                             break;
 
-                        case 2:
-                            arr[i++] = val.Equals("1") ? sell : buy;
-                            break;
+                        switch (i)
+                        {
+                            case 0:
+                            case 1:
+                                arr[i++] = val;
+                                break;
 
-                        case 3:
-                        case 6:
-                            if (int.TryParse(val, out int num))
-                                arr[i++] = num.ToString("N0");
+                            case 2:
+                                arr[i++] = val.Equals("1") ? sell : buy;
+                                break;
 
-                            break;
+                            case 3:
+                            case 6:
+                                if (int.TryParse(val, out int num))
+                                    arr[i++] = num.ToString("N0");
 
-                        case 4:
-                        case 5:
-                            if (double.TryParse(val, out double dot))
-                                arr[i++] = (val.Contains(".") ? dot : (dot / 100)).ToString("N2");
+                                break;
 
-                            break;
+                            case 4:
+                            case 5:
+                                if (double.TryParse(val, out double dot))
+                                    arr[i++] = (val.Contains(".") ? dot : (dot / 100)).ToString("N2");
+
+                                break;
+                        }
                     }
+                    if (arr[0] != null)
+                        balGrid.Rows.Add(arr);
                 }
-                if (arr[0] != null)
-                    balGrid.Rows.Add(arr);
-            }
-            foreach (DataGridViewRow row in balGrid.Rows)
-            {
-                var type = row.Cells[2];
-
-                if (type.Value.Equals(sell))
+                foreach (DataGridViewRow row in balGrid.Rows)
                 {
-                    type.Style.ForeColor = Color.Navy;
-                    type.Style.SelectionForeColor = Color.DeepSkyBlue;
-                }
-                else if (type.Value.Equals(buy))
-                {
-                    type.Style.ForeColor = Color.Maroon;
-                    type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
-                }
-                type = row.Cells[6];
-                var str = type.Value.ToString();
+                    var type = row.Cells[2];
 
-                if (string.IsNullOrEmpty(str) == false && long.TryParse(str.Replace(",", string.Empty), out long revenue))
-                    if (revenue > 0)
+                    if (type.Value.Equals(sell))
+                    {
+                        type.Style.ForeColor = Color.Navy;
+                        type.Style.SelectionForeColor = Color.DeepSkyBlue;
+                    }
+                    else if (type.Value.Equals(buy))
                     {
                         type.Style.ForeColor = Color.Maroon;
                         type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
                     }
-                    else if (revenue < 0)
-                    {
-                        type.Value = type.Value.ToString().Replace("-", string.Empty);
-                        type.Style.ForeColor = Color.Navy;
-                        type.Style.SelectionForeColor = Color.DeepSkyBlue;
-                    }
+                    type = row.Cells[6];
+                    var str = type.Value.ToString();
+
+                    if (string.IsNullOrEmpty(str) == false && long.TryParse(str.Replace(",", string.Empty), out long revenue))
+                        if (revenue > 0)
+                        {
+                            type.Style.ForeColor = Color.Maroon;
+                            type.Style.SelectionForeColor = Color.FromArgb(0xB9062F);
+                        }
+                        else if (revenue < 0)
+                        {
+                            type.Value = type.Value.ToString().Replace("-", string.Empty);
+                            type.Style.ForeColor = Color.Navy;
+                            type.Style.SelectionForeColor = Color.DeepSkyBlue;
+                        }
+                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
             }
             balGrid.Show();
             balGrid.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;

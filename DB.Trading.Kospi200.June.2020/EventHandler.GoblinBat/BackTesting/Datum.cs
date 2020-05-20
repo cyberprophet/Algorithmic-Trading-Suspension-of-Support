@@ -25,5 +25,11 @@ namespace ShareInvest.EventHandler.BackTesting
                 Volume = accumulate;
             }
         }
+        public Datum(long date, double price, int volume)
+        {
+            Date = date;
+            Price = price;
+            Volume = volume;
+        }
     }
 }

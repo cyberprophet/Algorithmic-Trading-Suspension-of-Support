@@ -16,9 +16,16 @@ namespace ShareInvest.Strategy
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
         public Catalog.XingAPI.Specify[] GetUserStrategy() => GetCatalog(GetBestStrategyRecommend(Information.Statistics, new Models.ImitationGames()));
         public Models.ImitationGames GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
-        public void SetInitialzeTheCode()
+        public void SetInitialzeTheCode(char initial)
         {
             Code = GetStrategy();
+
+            if (initial.Equals((char)Port.Seriate))
+            {
+                SetInitialzeTheCode();
+
+                return;
+            }
             SetInitialzeTheCode(Code);
         }
         public void SetInitializeTheChart()
@@ -287,6 +294,10 @@ namespace ShareInvest.Strategy
         {
             get; private set;
         }
+        protected internal static Dictionary<DateTime, Queue<Chart>> Charts
+        {
+            get; private set;
+        }
         void SetInitialzeTheCode(string code)
         {
             if (Chart == null && Quotes == null)
@@ -294,6 +305,11 @@ namespace ShareInvest.Strategy
                 Chart = GetChart(code);
                 Quotes = GetQuotes(code);
             }
+        }
+        void SetInitialzeTheCode()
+        {
+            if (Charts == null && Code != null)
+                Charts = GetChart(new Dictionary<DateTime, Queue<Chart>>(), Code);
         }
         const string format = "yyMMddHHmmss";
     }

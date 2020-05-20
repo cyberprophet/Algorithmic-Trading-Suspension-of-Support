@@ -36,7 +36,7 @@ namespace ShareInvest.Strategy.XingAPI
             else if (API.Quantity < 0 && API.BuyOrder.TryGetValue(number, out double buy) && buy == GetExactPrice())
                 return false;
 
-            return specify.Strategy.Equals(number) && API.Quantity != 0 && (API.Quantity > 0 ? API.SellOrder.Count > 0 : API.BuyOrder.Count > 0) ? false : true;
+            return !specify.Strategy.Equals(number) || API.Quantity == 0 || !(API.Quantity > 0 ? API.SellOrder.Count > 0 : API.BuyOrder.Count > 0);
         }
         protected internal void SendNewOrder(string classification, double price)
         {

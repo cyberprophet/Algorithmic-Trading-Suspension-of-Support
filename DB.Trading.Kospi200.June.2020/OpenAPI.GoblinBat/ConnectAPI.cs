@@ -182,7 +182,7 @@ namespace ShareInvest.OpenAPI
                 var temp = e.sMsg.Substring(9);
 
                 if ((temp.Equals(basic[2]) || temp.Equals(basic[6]) || temp.Equals(basic[8])) && OnReceiveBalance == false)
-                    OnReceiveBalance = request.QueueCount == 0 ? true : false;
+                    OnReceiveBalance = request.QueueCount == 0;
 
                 if (e.sMsg.Contains("모의투자"))
                     temp = temp.Replace("모의투자 ", string.Empty);
@@ -242,13 +242,13 @@ namespace ShareInvest.OpenAPI
 
                             case "접수":
                                 if (int.Parse(param[11]) == 0)
-                                    OnReceiveBalance = request.QueueCount == 0 ? true : false;
+                                    OnReceiveBalance = request.QueueCount == 0;
 
                                 break;
 
                             case "확인":
                                 if (param[12].Substring(3).Equals("취소") || param[12].Substring(3).Equals("정정"))
-                                    OnReceiveBalance = request.QueueCount == 0 ? true : false;
+                                    OnReceiveBalance = request.QueueCount == 0;
 
                                 break;
                         }
@@ -264,7 +264,7 @@ namespace ShareInvest.OpenAPI
                     {
                         Quantity = param[9].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
                         AvgPurchase = param[5];
-                        OnReceiveBalance = request.QueueCount == 0 ? true : false;
+                        OnReceiveBalance = request.QueueCount == 0;
                         SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     }
                     return;
@@ -530,7 +530,7 @@ namespace ShareInvest.OpenAPI
                 if (Temporary == null)
                     PrepareForTrading(API.GetLoginInfo("ACCLIST"));
 
-                DeadLine = DateTime.Now.Hour < 9 ? false : true;
+                DeadLine = DateTime.Now.Hour >= 9;
             }
             else if (Temporary != null)
                 OnCollectingData(GetInformation());
@@ -546,7 +546,7 @@ namespace ShareInvest.OpenAPI
             LookUpTheDeposit(account.Split(';'));
             LookUpTheBalance(account.Split(';'));
             SetPasswordWhileCollectingData(5971);
-            OnReceiveBalance = DateTime.Now.Hour > 8 ? true : false;
+            OnReceiveBalance = DateTime.Now.Hour > 8;
         }
         void SetPasswordWhileCollectingData(int wait)
         {

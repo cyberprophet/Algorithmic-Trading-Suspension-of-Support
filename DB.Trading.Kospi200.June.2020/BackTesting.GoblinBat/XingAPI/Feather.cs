@@ -19,34 +19,34 @@ namespace ShareInvest.Strategy.XingAPI
         {
             var number = API.SellOrder.OrderByDescending(o => o.Value).First().Key;
 
-            return API.SellOrder.TryGetValue(number, out double csp) && selling[API.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp ? SendClearingOrder(number) : false;
+            return API.SellOrder.TryGetValue(number, out double csp) && selling[API.SellOrder.Count == 1 ? 5 : (selling.Length - 1)] < csp && SendClearingOrder(number);
         }
-        protected internal override bool ForTheLiquidationOfBuyOrder(string price, double[] selling) => double.TryParse(price, out double sAvg) && sAvg < selling[5] ? SendNewOrder(sAvg < selling[selling.Length - 1] ? selling[selling.Length - 1].ToString("F2") : price, sell) : false;
+        protected internal override bool ForTheLiquidationOfBuyOrder(string price, double[] selling) => double.TryParse(price, out double sAvg) && sAvg < selling[5] && SendNewOrder(sAvg < selling[selling.Length - 1] ? selling[selling.Length - 1].ToString("F2") : price, sell);
         protected internal override bool ForTheLiquidationOfSellOrder(double[] bid)
         {
             var number = API.BuyOrder.OrderBy(o => o.Value).First().Key;
 
-            return API.BuyOrder.TryGetValue(number, out double cbp) && bid[API.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp ? SendClearingOrder(number) : false;
+            return API.BuyOrder.TryGetValue(number, out double cbp) && bid[API.BuyOrder.Count == 1 ? 5 : (bid.Length - 1)] > cbp && SendClearingOrder(number);
         }
-        protected internal override bool ForTheLiquidationOfSellOrder(string price, double[] bid) => double.TryParse(price, out double bAvg) && bAvg > bid[5] ? SendNewOrder(bAvg > bid[bid.Length - 1] ? bid[bid.Length - 1].ToString("F2") : price, buy) : false;
+        protected internal override bool ForTheLiquidationOfSellOrder(string price, double[] bid) => double.TryParse(price, out double bAvg) && bAvg > bid[5] && SendNewOrder(bAvg > bid[bid.Length - 1] ? bid[bid.Length - 1].ToString("F2") : price, buy);
         protected internal override bool SendNewOrder(double[] param, string classification)
         {
             var check = classification.Equals(buy);
             var price = param[check ? param.Length - 1 : 0];
 
-            return price > 0 && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate), check ? Classification.Buy : Classification.Sell) && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false ? SendNewOrder(price.ToString("F2"), classification) : false;
+            return price > 0 && (check ? API.Quantity + API.BuyOrder.Count : API.SellOrder.Count - API.Quantity) < Max(specify.Assets / (price * Const.TransactionMultiplier * specify.MarginRate), check ? Classification.Buy : Classification.Sell) && (check ? API.BuyOrder.ContainsValue(price) : API.SellOrder.ContainsValue(price)) == false && SendNewOrder(price.ToString("F2"), classification);
         }
         protected internal override bool SetCorrectionBuyOrder(string avg, double buy)
         {
             var sb = API.BuyOrder.OrderByDescending(o => o.Value).First();
 
-            return sb.Value > buy - Const.ErrorRate * 2 && double.TryParse(avg, out double sAvg) && API.OnReceiveBalance && Math.Abs(sAvg - sb.Value) < Const.ErrorRate * 2 * API.Quantity ? SendCorrectionOrder((API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2).ToString("F2"), sb.Key) : false;
+            return sb.Value > buy - Const.ErrorRate * 2 && double.TryParse(avg, out double sAvg) && API.OnReceiveBalance && Math.Abs(sAvg - sb.Value) < Const.ErrorRate * 2 * API.Quantity && SendCorrectionOrder((API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2).ToString("F2"), sb.Key);
         }
         protected internal override bool SetCorrectionSellOrder(string avg, double sell)
         {
             var sb = API.SellOrder.OrderBy(o => o.Value).First();
 
-            return sb.Value < sell + Const.ErrorRate * 2 && double.TryParse(avg, out double bAvg) && API.OnReceiveBalance && Math.Abs(bAvg - sb.Value) < Const.ErrorRate * 2 * -API.Quantity ? SendCorrectionOrder((API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2).ToString("F2"), sb.Key) : false;
+            return sb.Value < sell + Const.ErrorRate * 2 && double.TryParse(avg, out double bAvg) && API.OnReceiveBalance && Math.Abs(bAvg - sb.Value) < Const.ErrorRate * 2 * -API.Quantity && SendCorrectionOrder((API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2).ToString("F2"), sb.Key);
         }
         public Feather(Catalog.XingAPI.Specify specify) : base(specify) => API.OnReceiveBalance = false;
     }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.BackTesting;
 using ShareInvest.GoblinBatContext;
@@ -63,18 +64,24 @@ namespace ShareInvest.Strategy
         {
             get;
         }
-        int StartProgress()
+        int StartProgress(int length)
         {
-            foreach (var quotes in Retrieve.Quotes)
-            {
-                if (quotes.Price != null && quotes.Volume != null)
+            if (length > 2)
+                foreach (var quotes in Retrieve.Quotes)
                 {
-                    SendDatum?.Invoke(this, new Datum(quotes.Time, quotes.Price, quotes.Volume));
+                    if (quotes.Price != null && quotes.Volume != null)
+                    {
+                        SendDatum?.Invoke(this, new Datum(quotes.Time, quotes.Price, quotes.Volume));
 
-                    continue;
+                        continue;
+                    }
+                    SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
                 }
-                SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
-            }
+            else
+                foreach (var kv in Retrieve.Charts.OrderBy(o => o.Key))
+                    foreach (var chart in kv.Value.OrderBy(o => o.Date))
+                        SendDatum?.Invoke(this, new Datum(chart.Date, chart.Price, chart.Volume));
+
             if (games.Count > 0 && SetStatisticalStorage(games) == false)
                 Message = new Secrets().Message;
 
@@ -129,6 +136,14 @@ namespace ShareInvest.Strategy
                 temp += kv.Value;
 
             Classification = temp == 0 ? string.Empty : temp > 0 ? Analysis.buy : Analysis.sell;
+        }
+        internal void Max(double trend, uint time)
+        {
+            Judge[time] = trend;
+            double temp = 0;
+
+            foreach (var kv in Judge)
+                temp += kv.Value;
         }
         internal bool SendClearingOrder(string time, uint number)
         {
@@ -404,37 +419,43 @@ namespace ShareInvest.Strategy
             games = new Queue<Models.ImitationGames>();
             Parallel.ForEach(Retrieve.GetCatalog(game), new Action<Catalog.XingAPI.Specify>((param) =>
             {
-                switch (param.Strategy)
+                if (param.Time > 0)
                 {
-                    case basic:
-                        new Base(this, param);
-                        break;
+                    if (param.Strategy.Length > 2)
+                        switch (param.Strategy)
+                        {
+                            case basic:
+                                new Base(this, param);
+                                break;
 
-                    case bantam:
-                        new Bantam(this, param);
-                        break;
+                            case bantam:
+                                new Bantam(this, param);
+                                break;
 
-                    case feather:
-                        new Feather(this, param);
-                        break;
+                            case feather:
+                                new Feather(this, param);
+                                break;
 
-                    case fly:
-                        new Fly(this, param);
-                        break;
+                            case fly:
+                                new Fly(this, param);
+                                break;
 
-                    case sFly:
-                        new SuperFly(this, param);
-                        break;
+                            case sFly:
+                                new SuperFly(this, param);
+                                break;
 
-                    case heavy:
-                        new Heavy(this, param);
-                        break;
+                            case heavy:
+                                new Heavy(this, param);
+                                break;
+                        }
+                    else
+                        new Consecutive(this, param);
                 }
             }));
             if (this.verify)
                 statement = new Queue<Conclusion>(32);
 
-            if (StartProgress() > 0)
+            if (StartProgress(game.Strategy.Length) > 0)
                 using (var sw = new StreamWriter(new Secrets().Path(game.Strategy, statement.Count), true))
                     try
                     {

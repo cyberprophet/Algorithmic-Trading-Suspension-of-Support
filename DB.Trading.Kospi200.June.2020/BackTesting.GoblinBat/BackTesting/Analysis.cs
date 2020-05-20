@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+
 using ShareInvest.Catalog;
 using ShareInvest.Strategy.XingAPI;
 
@@ -17,13 +18,16 @@ namespace ShareInvest.Strategy.Statistics
         protected internal override void OnReceiveTrend(int volume) => Volume += volume;
         protected internal Analysis(BackTesting bt, Catalog.XingAPI.Specify specify) : base(specify)
         {
-            this.bt = bt;
-            bt.SendDatum += Analysize;
-
-            if (specify.Time == 1440)
+            if (specify.Strategy.Length > 2)
             {
-                bt.SendQuotes += OnReceiveQuotes;
-                RollOver = specify.RollOver ? false : true;
+                this.bt = bt;
+                bt.SendDatum += Analysize;
+
+                if (specify.Time == 1440)
+                {
+                    bt.SendQuotes += OnReceiveQuotes;
+                    RollOver = !specify.RollOver;
+                }
             }
         }
         protected internal string GetExactPrice(string avg)
@@ -127,7 +131,7 @@ namespace ShareInvest.Strategy.Statistics
             {
                 var benchmark = price - Const.ErrorRate * 2;
 
-                return benchmark > buy - Const.ErrorRate * 9 ? bt.SendCorrectionOrder(time, benchmark.ToString("F2"), bt.BuyOrder.OrderByDescending(o => o.Key).First().Value, quantity) : false;
+                return benchmark > buy - Const.ErrorRate * 9 && bt.SendCorrectionOrder(time, benchmark.ToString("F2"), bt.BuyOrder.OrderByDescending(o => o.Key).First().Value, quantity);
             }
             return false;
         }
@@ -137,7 +141,7 @@ namespace ShareInvest.Strategy.Statistics
             {
                 var benchmark = price + Const.ErrorRate * 2;
 
-                return benchmark < sell + Const.ErrorRate * 9 ? bt.SendCorrectionOrder(time, benchmark.ToString("F2"), bt.SellOrder.OrderBy(o => o.Key).First().Value, quantity) : false;
+                return benchmark < sell + Const.ErrorRate * 9 && bt.SendCorrectionOrder(time, benchmark.ToString("F2"), bt.SellOrder.OrderBy(o => o.Key).First().Value, quantity);
             }
             return false;
         }

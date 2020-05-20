@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.GoblinBatContext;
 using ShareInvest.Verify;
@@ -13,57 +14,61 @@ namespace ShareInvest.Strategy.XingAPI
         protected internal TF(Specify specify) : base(KeyDecoder.GetKey())
         {
             this.specify = specify;
-            Short = GetBasicChart(new Stack<double>(512), specify, specify.Short);
-            Long = GetBasicChart(new Stack<double>(512), specify, specify.Long);
 
-            if (Short.Count == 0 || Long.Count == 0)
+            if (specify.Strategy.Length > 2)
             {
-                sCollection = true;
-                lCollection = true;
-                var charts = new Queue<Models.Charts>(256);
+                Short = GetBasicChart(new Stack<double>(512), specify, specify.Short);
+                Long = GetBasicChart(new Stack<double>(512), specify, specify.Long);
 
-                if (Short.Count > 0)
+                if (Short.Count == 0 || Long.Count == 0)
                 {
-                    Short.Clear();
-                    sCollection = false;
-                    LongValue = new Dictionary<string, double>();
-                }
-                else if (Long.Count > 0)
-                {
-                    Long.Clear();
-                    lCollection = false;
-                    ShortValue = new Dictionary<string, double>();
-                }
-                else
-                {
-                    ShortValue = new Dictionary<string, double>();
-                    LongValue = new Dictionary<string, double>();
-                }
-                foreach (Catalog.Chart chart in Retrieve.Chart)
-                    Analysize(chart);
+                    sCollection = true;
+                    lCollection = true;
+                    var charts = new Queue<Models.Charts>(256);
 
-                if (sCollection)
-                    foreach (var kv in ShortValue)
-                        charts.Enqueue(new Models.Charts
-                        {
-                            Code = specify.Code,
-                            Time = (int)specify.Time,
-                            Base = specify.Short,
-                            Date = kv.Key,
-                            Value = kv.Value
-                        });
-                if (lCollection)
-                    foreach (var kv in LongValue)
-                        charts.Enqueue(new Models.Charts
-                        {
-                            Code = specify.Code,
-                            Time = (int)specify.Time,
-                            Base = specify.Long,
-                            Date = kv.Key,
-                            Value = kv.Value
-                        });
-                if (charts.Count > 0 && SetBasicChart(charts))
-                    charts.Clear();
+                    if (Short.Count > 0)
+                    {
+                        Short.Clear();
+                        sCollection = false;
+                        LongValue = new Dictionary<string, double>();
+                    }
+                    else if (Long.Count > 0)
+                    {
+                        Long.Clear();
+                        lCollection = false;
+                        ShortValue = new Dictionary<string, double>();
+                    }
+                    else
+                    {
+                        ShortValue = new Dictionary<string, double>();
+                        LongValue = new Dictionary<string, double>();
+                    }
+                    foreach (Catalog.Chart chart in Retrieve.Chart)
+                        Analysize(chart);
+
+                    if (sCollection)
+                        foreach (var kv in ShortValue)
+                            charts.Enqueue(new Models.Charts
+                            {
+                                Code = specify.Code,
+                                Time = (int)specify.Time,
+                                Base = specify.Short,
+                                Date = kv.Key,
+                                Value = kv.Value
+                            });
+                    if (lCollection)
+                        foreach (var kv in LongValue)
+                            charts.Enqueue(new Models.Charts
+                            {
+                                Code = specify.Code,
+                                Time = (int)specify.Time,
+                                Base = specify.Long,
+                                Date = kv.Key,
+                                Value = kv.Value
+                            });
+                    if (charts.Count > 0 && SetBasicChart(charts))
+                        charts.Clear();
+                }
             }
         }
         protected internal Stack<double> Short
