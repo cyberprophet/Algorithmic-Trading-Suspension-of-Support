@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.GoblinBatContext;
@@ -119,7 +120,9 @@ namespace ShareInvest.Strategy
         {
             get
             {
-                if (DateTime.TryParseExact(Quotes.Last().Time.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
+                var time = Quotes != null ? Quotes.Last().Time : Charts.Last().Value.Last().Date.ToString();
+
+                if (DateTime.TryParseExact(time.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
                     return string.Concat(date.ToLongDateString(), " ", date.ToShortTimeString());
 
                 else

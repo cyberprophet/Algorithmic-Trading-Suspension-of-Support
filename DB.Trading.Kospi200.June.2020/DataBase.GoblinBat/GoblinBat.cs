@@ -40,9 +40,10 @@ namespace ShareInvest
             {
                 case collecting:
                 case trading:
+                case (char)83:
                     if (Statistical == null)
                     {
-                        Statistical = new StatisticalControl(Strategy.Retrieve.Code, secret.strategy, secret.rate, secret.commission);
+                        Statistical = initial.Equals(trading) ? new StatisticalControl(Strategy.Retrieve.Code, secret.strategy, secret.rate, secret.commission) : new StatisticalControl(Strategy.Retrieve.Code, secret.rate, secret.commission);
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
                         Statistical.Show();
@@ -64,9 +65,9 @@ namespace ShareInvest
                         BeginInvoke(new Action(() =>
                         {
                             Specify = Statistical.Statistics(retrieve.GetUserStrategy());
-                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code, Strategy.Retrieve.Date);
+                            Xing = XingAPI.ConnectAPI.GetInstance(Strategy.Retrieve.Code, Strategy.Retrieve.Date);
                             Xing.Send += OnReceiveNotifyIcon;
-                            notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
+                            notifyIcon.Text = string.Concat("Trading Code_", Strategy.Retrieve.Code);
                             OnEventConnect();
                             OnClickMinimized = quo;
                             Text = gs;
@@ -513,7 +514,7 @@ namespace ShareInvest
                         if (initial.Equals(trading))
                             ((ITrends<Trends>)ctor).SendTrend += Quotes.OnReceiveTrend;
 
-                        ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
+                        ctor.OnReceiveRealTime(initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code);
                         continue;
 
                     case fh0:
@@ -522,26 +523,26 @@ namespace ShareInvest
                             Open.SendQuotes -= Quotes.OnReceiveQuotes;
 
                         ((IEvents<EventHandler.XingAPI.Quotes>)ctor).Send += Quotes.OnReceiveQuotes;
-                        ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
+                        ctor.OnReceiveRealTime(initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code);
                         continue;
 
                     case jif:
                         BeginInvoke(new Action(() =>
                         {
                             ((IEvents<NotifyIconText>)ctor).Send += OnReceiveNotifyIcon;
-                            ctor.OnReceiveRealTime(initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code);
+                            ctor.OnReceiveRealTime(initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code);
                         }));
                         continue;
 
                     default:
-                        if (initial.Equals(trading))
+                        if (initial.Equals(collecting) == false)
                         {
                             ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
                             ctor.OnReceiveRealTime(Strategy.Retrieve.Code);
                         }
                         continue;
                 }
-            if (initial.Equals(trading))
+            if (initial.Equals(collecting) == false)
             {
                 foreach (var ctor in Xing.orders)
                 {
@@ -578,7 +579,7 @@ namespace ShareInvest
                     }
                 }));
             }
-            WindowState = Xing.SendNotifyIconText((int)Math.Pow((initial.Equals(trading) ? Strategy.Retrieve.Code : Open.Code).Length, 4));
+            WindowState = Xing.SendNotifyIconText((int)Math.Pow((initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code).Length, 4));
 
             if ((DateTime.Now.Hour > 16 || DateTime.Now.Hour == 15 && DateTime.Now.Minute > 45) && initial.Equals(collecting))
                 Temporary = new XingAPI.Temporary(Xing.reals[0], Xing.reals[1], new StringBuilder(1024), key);
@@ -697,7 +698,8 @@ namespace ShareInvest
         char[] XingConnect => new char[]
         {
             collecting,
-            trading
+            trading,
+            (char)83
         };
         string[] Acc
         {

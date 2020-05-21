@@ -190,9 +190,13 @@ namespace ShareInvest.Strategy
         public void SetInsertBaseStrategy(string[] strategy, double[] rate, double[] commission)
         {
             var queue = new Queue<Models.Statistics>();
+            var list = new List<string>(strategy);
+
+            for (int i = 20; i < 100; i++)
+                list.Add(i.ToString());
 
             foreach (var assets in GetUserAssets(new List<long>()))
-                foreach (var str in strategy)
+                foreach (var str in list)
                     foreach (var co in commission)
                         if (str.Equals("Auto") == false)
                         {

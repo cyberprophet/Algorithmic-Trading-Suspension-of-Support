@@ -81,7 +81,7 @@ namespace ShareInvest.Strategy.Statistics
                                     if (bt.Judge.Count == 2 && bt.SetConclusion(e.Date, e.Price, bt.Classification))
                                         return;
                                 }
-                                if (bt.Judge.Count > 2)
+                                if (bt.Judge.Count > 2 && this.judge % 2 == 0)
                                 {
                                     var num = 0;
 

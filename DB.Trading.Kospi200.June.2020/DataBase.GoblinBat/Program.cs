@@ -99,7 +99,7 @@ namespace ShareInvest
                             if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && ran.Next(0, 10) == 9)
                                 break;
 
-                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 50 || DateTime.Now.Minute > 47 && ran.Next(0, 5) == 3))
+                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 50 || DateTime.Now.Minute > 45 && ran.Next(0, 5) == 3))
                                 break;
                         }
                     if (initial.Equals((char)126) == false)
