@@ -34,7 +34,6 @@ namespace ShareInvest.Strategy.Statistics
                 bt.Max(popShort - popLong - (Short.Peek() - Long.Peek()), specify.Time);
                 Short.Push(popShort);
                 Long.Push(popLong);
-                bt.TradingJudge[specify.Time] = popShort;
 
                 if (specify.Time == 1440)
                     switch (e.Date.ToString().Substring(6))

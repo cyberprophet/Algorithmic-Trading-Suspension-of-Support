@@ -2,6 +2,7 @@
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.XingAPI;
 using ShareInvest.GoblinBatContext;
@@ -34,6 +35,10 @@ namespace ShareInvest.XingAPI
             {
                 new ExceptionMessage(ex.StackTrace, code);
             }
+        }
+        public Temporary(string key, string info, string code) : base(key)
+        {
+            DeleteUnnecessaryInformation(code, info);
         }
         public Temporary(IReals quotes, IReals datum, StringBuilder sb, string key) : base(key)
         {

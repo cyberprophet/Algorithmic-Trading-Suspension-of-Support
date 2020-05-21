@@ -28,6 +28,20 @@ namespace ShareInvest.GoblinBatControls
             }
             return new Size(1350, 750);
         }
+        public void OnReceiveChartValue(object sender, EventHandler.BackTesting.Statistics e)
+        {
+            price.Points.Clear();
+            revenue.Points.Clear();
+
+            foreach (var kv in e.Information)
+            {
+                var splits = kv.Value.Split(';');
+
+                price.Points.AddXY(kv.Key, splits[1]);
+                revenue.Points.AddXY(kv.Key, splits[0]);
+            }
+        }
+        public Size SetChartValue() => new Size(1350, 750);
         readonly Series price;
         readonly Series revenue;
         const string priceChart = "Price";

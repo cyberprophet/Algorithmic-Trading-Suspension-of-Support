@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.Message;
 using ShareInvest.Verify;
 using ShareInvest.XingAPI.Catalog;
+
 using XA_SESSIONLib;
 
 namespace ShareInvest.XingAPI
@@ -114,6 +116,14 @@ namespace ShareInvest.XingAPI
 
             Classification = temp == 0 ? string.Empty : temp > 0 ? buy : sell;
             Trend[specify.Time.ToString()] = string.Concat(trend.ToString("F2"), " (", specify.Time == 1440 ? "Base" : check, ")");
+        }
+        public void Max(double trend, uint time, string check)
+        {
+            Judge[time] = trend;
+            Trend[time.ToString()] = string.Concat(trend.ToString("F2"), " (", time == 1440 ? "Base" : check, ")");
+
+            if (Judge.TryGetValue(1440U, out double temp))
+                Classification = temp == 0 ? string.Empty : temp > 0 ? buy : sell;
         }
         public FormWindowState SendNotifyIconText(int number)
         {

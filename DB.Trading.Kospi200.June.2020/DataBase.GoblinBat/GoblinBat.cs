@@ -12,7 +12,6 @@ using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.GoblinBatControls;
 using ShareInvest.Message;
-using ShareInvest.Models;
 using ShareInvest.Strategy;
 
 namespace ShareInvest
@@ -43,7 +42,7 @@ namespace ShareInvest
                 case (char)83:
                     if (Statistical == null)
                     {
-                        Statistical = initial.Equals(trading) ? new StatisticalControl(Strategy.Retrieve.Code, secret.strategy, secret.rate, secret.commission) : new StatisticalControl(Strategy.Retrieve.Code, secret.rate, secret.commission);
+                        Statistical = initial.Equals((char)83) ? new StatisticalControl(Strategy.Retrieve.Code, secret.rate, secret.commission) : new StatisticalControl(Strategy.Retrieve.Code, secret.strategy, secret.rate, secret.commission);
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
                         Statistical.Show();
@@ -241,13 +240,20 @@ namespace ShareInvest
                     }
                 }
             }
+            var task = new Task<Dictionary<DateTime, string>>(() => retrieve.OnReceiveInformation(e.Game));
+            task.Start();
+            Cursor = Cursors.WaitCursor;
+            SendInformation += Chart.OnReceiveChartValue;
+            task.Wait();
             SuspendLayout();
-            Size = Chart.SetChartValue(retrieve.OnReceiveInformation(e.Game));
+            SendInformation?.Invoke(this, new EventHandler.BackTesting.Statistics(task.Result));
+            Size = Chart.SetChartValue();
             Statistical.Hide();
             Chart.Show();
             ResumeLayout();
             CenterToScreen();
             Cursor = Cursors.Default;
+            SendInformation -= Chart.OnReceiveChartValue;
         }
         void OnReceiveSize(object sender, GridResize e)
         {
@@ -551,32 +557,37 @@ namespace ShareInvest
                 }
                 Parallel.ForEach(Specify, new Action<Catalog.XingAPI.Specify>((param) =>
                 {
-                    switch (param.Strategy)
-                    {
-                        case basic:
-                            new Strategy.XingAPI.Base(param);
-                            break;
+                    if (param.Time > 0)
+                        switch (param.Strategy)
+                        {
+                            case basic:
+                                new Strategy.XingAPI.Base(param);
+                                break;
 
-                        case bantam:
-                            new Strategy.XingAPI.Bantam(param);
-                            break;
+                            case bantam:
+                                new Strategy.XingAPI.Bantam(param);
+                                break;
 
-                        case feather:
-                            new Strategy.XingAPI.Feather(param);
-                            break;
+                            case feather:
+                                new Strategy.XingAPI.Feather(param);
+                                break;
 
-                        case fly:
-                            new Strategy.XingAPI.Fly(param);
-                            break;
+                            case fly:
+                                new Strategy.XingAPI.Fly(param);
+                                break;
 
-                        case sFly:
-                            new Strategy.XingAPI.SuperFly(param);
-                            break;
+                            case sFly:
+                                new Strategy.XingAPI.SuperFly(param);
+                                break;
 
-                        case heavy:
-                            new Strategy.XingAPI.Heavy(param);
-                            break;
-                    }
+                            case heavy:
+                                new Strategy.XingAPI.Heavy(param);
+                                break;
+
+                            default:
+                                new Strategy.XingAPI.Consecutive(param);
+                                break;
+                        }
                 }));
             }
             WindowState = Xing.SendNotifyIconText((int)Math.Pow((initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code).Length, 4));
@@ -794,5 +805,6 @@ namespace ShareInvest
         const string fly = "Fly";
         const string sFly = "SuperFly";
         const string heavy = "Heavy";
+        public event EventHandler<EventHandler.BackTesting.Statistics> SendInformation;
     }
 }

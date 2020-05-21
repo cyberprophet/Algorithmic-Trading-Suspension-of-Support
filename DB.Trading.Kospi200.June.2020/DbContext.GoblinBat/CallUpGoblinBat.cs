@@ -21,7 +21,7 @@ namespace ShareInvest.GoblinBatContext
                 try
                 {
                     var array = db.Codes.Where(o => o.Code.Length == 8 && o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5))).AsNoTracking().Select(o => new { o.Info }).ToArray();
-                    var days = new string[array.Length + 1];
+                    var days = new string[array.Length + 2];
                     var count = 0;
 
                     foreach (var remaining in array)
@@ -29,6 +29,7 @@ namespace ShareInvest.GoblinBatContext
                             days[++count] = (day - 1).ToString();
 
                     days[0] = "191211";
+                    days[days.Length - 1] = "190910";
 
                     return days;
                 }
@@ -287,6 +288,60 @@ namespace ShareInvest.GoblinBatContext
                 }
             return games;
         }
+        protected Stack<ImitationGames> GetBestStrategy(Stack<ImitationGames> stack, List<long> list)
+        {
+            string max = MostRecentDate;
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    foreach (var assets in list)
+                        foreach (var game in db.Games.Where(o => o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic).Take(3751))
+                            stack.Push(new ImitationGames
+                            {
+                                Assets = game.Assets,
+                                Code = game.Code,
+                                Commission = game.Commission,
+                                MarginRate = game.MarginRate,
+                                Strategy = game.Strategy,
+                                RollOver = game.RollOver,
+                                BaseTime = game.BaseTime,
+                                BaseShort = game.BaseShort,
+                                BaseLong = game.BaseLong,
+                                NonaTime = game.NonaTime,
+                                NonaShort = game.NonaShort,
+                                NonaLong = game.NonaLong,
+                                OctaTime = game.OctaTime,
+                                OctaShort = game.OctaShort,
+                                OctaLong = game.OctaLong,
+                                HeptaTime = game.HeptaTime,
+                                HeptaShort = game.HeptaShort,
+                                HeptaLong = game.HeptaLong,
+                                HexaTime = game.HexaTime,
+                                HexaShort = game.HexaShort,
+                                HexaLong = game.HexaLong,
+                                PentaTime = game.PentaTime,
+                                PentaShort = game.PentaShort,
+                                PentaLong = game.PentaLong,
+                                QuadTime = game.QuadTime,
+                                QuadShort = game.QuadShort,
+                                QuadLong = game.QuadLong,
+                                TriTime = game.TriTime,
+                                TriShort = game.TriShort,
+                                TriLong = game.TriLong,
+                                DuoTime = game.DuoTime,
+                                DuoShort = game.DuoShort,
+                                DuoLong = game.DuoLong,
+                                MonoTime = game.MonoTime,
+                                MonoShort = game.MonoShort,
+                                MonoLong = game.MonoLong
+                            });
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return stack;
+        }
         protected List<ImitationGames> GetBestExternalRecommend(List<ImitationGames> games)
         {
             try
@@ -408,8 +463,14 @@ namespace ShareInvest.GoblinBatContext
                     var max = db.Games.Max(o => o.Date);
                     var seriate = list.First();
 
-                    if (list.Count == 1 && seriate.Strategy.Length == 2)
-                        foreach (var select in db.Games.Where(o => o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == seriate.Assets && o.Code.Equals(seriate.Code) && o.Commission == seriate.Commission && o.MarginRate == seriate.MarginRate && o.RollOver.Equals(seriate.RollOver) && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic).Take(1))
+                    if (list.Count == 1 && seriate.Strategy.Length < 3)
+                    {
+                        var consecutive = db.Games.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == seriate.Assets && o.Code.Equals(seriate.Code) && o.Commission == seriate.Commission && o.MarginRate == seriate.MarginRate).AsNoTracking();
+
+                        if (string.IsNullOrEmpty(seriate.Strategy) == false)
+                            consecutive = consecutive.Where(o => o.Strategy.Equals(seriate.Strategy) && o.RollOver.Equals(seriate.RollOver)).AsNoTracking();
+
+                        foreach (var select in consecutive.OrderByDescending(o => o.Statistic).Take(1))
                             return new ImitationGames
                             {
                                 Assets = select.Assets,
@@ -449,6 +510,7 @@ namespace ShareInvest.GoblinBatContext
                                 MonoShort = select.MonoShort,
                                 MonoLong = select.MonoLong
                             };
+                    }
                     foreach (var ch in list)
                         if (ch.Strategy.Length > 2)
                             foreach (var choice in db.Games.Where(o => o.Date.Equals(max) && o.Assets == ch.Assets && o.Code.Equals(ch.Code) && o.Commission == ch.Commission && o.MarginRate == ch.MarginRate && o.Strategy.Equals(ch.Strategy) && o.RollOver.Equals(ch.RollOver) && o.Strategy.Length > 2 && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic).Take(1))

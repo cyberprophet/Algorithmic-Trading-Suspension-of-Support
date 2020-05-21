@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Strategy.XingAPI;
@@ -16,7 +17,7 @@ namespace ShareInvest.Strategy
             if (specify.Time == 1440)
             {
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
-                RollOver = specify.RollOver ? false : true;
+                RollOver = !specify.RollOver;
                 ran = new Random();
             }
         }
@@ -115,13 +116,13 @@ namespace ShareInvest.Strategy
         {
             var benchmark = API.BuyOrder.OrderBy(o => o.Value).First().Value - Const.ErrorRate * 2;
 
-            return benchmark > buy - Const.ErrorRate * 9 ? SendCorrectionOrder(benchmark.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key) : false;
+            return benchmark > buy - Const.ErrorRate * 9 && SendCorrectionOrder(benchmark.ToString("F2"), API.BuyOrder.OrderByDescending(o => o.Value).First().Key);
         }
         bool SetSellDecentralize(double sell)
         {
             var benchmark = API.SellOrder.OrderByDescending(o => o.Value).First().Value + Const.ErrorRate * 2;
 
-            return benchmark < sell + Const.ErrorRate * 9 ? SendCorrectionOrder(benchmark.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key) : false;
+            return benchmark < sell + Const.ErrorRate * 9 && SendCorrectionOrder(benchmark.ToString("F2"), API.SellOrder.OrderBy(o => o.Value).First().Key);
         }
         void SendLiquidationOrder()
         {

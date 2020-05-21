@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using ShareInvest.Message;
 using ShareInvest.Models;
 
@@ -15,6 +16,37 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUp : CallUpStatisticalAnalysis
     {
+        protected string OnReceiveRemainingDay(string code)
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    var day = db.Codes.Where(o => o.Code.Equals(code)).First().Info;
+
+                    return day.Substring(2);
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return string.Empty;
+        }
+        protected int DeleteUnnecessaryInformation(string code, string info)
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    var entity = db.Codes.Where(o => o.Code.Equals(code) && o.Info.Equals(info)).First();
+                    db.Codes.Remove(entity);
+
+                    return db.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return int.MinValue;
+        }
         protected async Task<List<string>> RequestCodeList(List<string> list)
         {
             string code = string.Empty;

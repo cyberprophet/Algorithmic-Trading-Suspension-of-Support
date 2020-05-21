@@ -42,11 +42,15 @@ namespace ShareInvest.GoblinBatControls
             numericReaction.TextAlign = HorizontalAlignment.Center;
             numericReaction.ThousandsSeparator = true;
             numericReaction.Value = 50;
+            numeric9.Maximum = 90;
             panel.ResumeLayout(false);
             panel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numericReaction).EndInit();
             labelStrategy.Text = "반 응";
             ResumeLayout(false);
+
+            for (int i = 1; i < 9; i++)
+                string.Concat(numeric, i).FindByName<NumericUpDown>(this).Minimum = 0;
         }
         public StatisticalControl(string code, string[] strategy, double[] rate, double[] commission)
         {
@@ -71,69 +75,71 @@ namespace ShareInvest.GoblinBatControls
         }
         public Specify[] Statistics(Specify[] specifies)
         {
-            if (strategy != null)
+            var temp = new Dictionary<uint, int[]>();
+            int i = 0;
+
+            if (specifies.Any(o => o.Assets == 0))
             {
-                var temp = new Dictionary<uint, int[]>();
-                int i = 0;
+                var basic = new Specify[10];
+                var ro = new bool[] { true, false };
 
-                if (specifies.Any(o => o.Assets == 0))
-                {
-                    var basic = new Specify[10];
-                    var ro = new bool[] { true, false };
-
-                    for (i = 0; i < basic.Length; i++)
-                        basic[i] = new Specify
-                        {
-                            Assets = (ulong)numericAssets.Value,
-                            Code = code,
-                            Commission = commission[0],
-                            MarginRate = rate[0],
-                            Strategy = strategy[ran.Next(0, strategy.Length - 1)],
-                            RollOver = ro[ran.Next(0, ro.Length)],
-                            Time = i == 0 ? 1440 : (uint)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
-                            Short = (int)string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value,
-                            Long = (int)string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value
-                        };
-                    return basic;
-                }
-                foreach (var specify in specifies)
-                {
-                    numericAssets.Value = specify.Assets;
-                    var commission = specify.Commission.ToString("P4");
-                    commission = commission.Substring(5, 1).Equals("0") ? specify.Commission.ToString("P3") : commission;
-                    var margin = specify.MarginRate.ToString("P2");
-                    margin = margin.Split('.')[1].Substring(1, 1).Equals("0") ? specify.MarginRate.ToString("P1") : margin;
-                    checkRollOver.CheckState = specify.RollOver ? CheckState.Checked : CheckState.Unchecked;
-                    temp[specify.Time] = new int[]
+                for (i = 0; i < basic.Length; i++)
+                    basic[i] = new Specify
                     {
+                        Assets = (ulong)numericAssets.Value,
+                        Code = code,
+                        Commission = commission[0],
+                        MarginRate = rate[0],
+                        Strategy = strategy[ran.Next(0, strategy.Length - 1)],
+                        RollOver = ro[ran.Next(0, ro.Length)],
+                        Time = i == 0 ? 1440 : (uint)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                        Short = (int)string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value,
+                        Long = (int)string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value
+                    };
+                return basic;
+            }
+            foreach (var specify in specifies)
+            {
+                numericAssets.Value = specify.Assets;
+                var commission = specify.Commission.ToString("P4");
+                commission = commission.Substring(5, 1).Equals("0") ? specify.Commission.ToString("P3") : commission;
+                var margin = specify.MarginRate.ToString("P2");
+                margin = margin.Split('.')[1].Substring(1, 1).Equals("0") ? specify.MarginRate.ToString("P1") : margin;
+                checkRollOver.CheckState = specify.RollOver ? CheckState.Checked : CheckState.Unchecked;
+                temp[specify.Time] = new int[]
+                {
                     specify.Short,
                     specify.Long
-                    };
-                    if (comboCode.Items.Contains(specify.Code) == false)
-                        comboCode.Items.Add(specify.Code);
+                };
+                if (comboCode.Items.Contains(specify.Code) == false)
+                    comboCode.Items.Add(specify.Code);
 
-                    if (comboCommission.Items.Contains(commission) == false)
-                        comboCommission.Items.Add(commission);
+                if (comboCommission.Items.Contains(commission) == false)
+                    comboCommission.Items.Add(commission);
 
-                    if (comboMarginRate.Items.Contains(margin) == false)
-                        comboMarginRate.Items.Add(margin);
+                if (comboMarginRate.Items.Contains(margin) == false)
+                    comboMarginRate.Items.Add(margin);
 
-                    if (comboStrategy.Items.Contains(specify.Strategy) == false)
-                        comboStrategy.Items.Add(specify.Strategy);
+                if (strategy != null && comboStrategy.Items.Contains(specify.Strategy) == false)
+                    comboStrategy.Items.Add(specify.Strategy);
 
-                    comboCommission.SelectedItem = commission;
-                    comboMarginRate.SelectedItem = margin;
-                    comboCode.SelectedItem = specify.Code;
+                comboCommission.SelectedItem = commission;
+                comboMarginRate.SelectedItem = margin;
+                comboCode.SelectedItem = specify.Code;
+
+                if (strategy == null && specify.Strategy.Length == 2 && int.TryParse(specify.Strategy, out int reaction))
+                    numericReaction.Value = reaction;
+
+                else if (strategy != null)
                     comboStrategy.SelectedItem = specify.Strategy;
-                }
-                foreach (var kv in temp.OrderByDescending(o => o.Key))
-                {
-                    if (i > 0)
-                        string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value = kv.Key;
+            }
+            foreach (var kv in temp.OrderByDescending(o => o.Key))
+            {
+                if (i > 0)
+                    string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value = kv.Key;
 
-                    string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
-                    string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
-                }
+                string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
+                string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
             }
             return specifies;
         }
@@ -141,6 +147,13 @@ namespace ShareInvest.GoblinBatControls
         {
             int i = 0;
             var ro = new bool[] { true, false };
+            string strategy;
+
+            if (this.strategy != null)
+                strategy = comboStrategy.SelectedIndex < 0 || comboStrategy.SelectedItem.ToString().Equals(auto) ? this.strategy[ran.Next(0, this.strategy.Length - 1)] : comboStrategy.SelectedItem.ToString();
+
+            else
+                strategy = numericReaction.Value.ToString();
 
             return new Catalog.DataBase.ImitationGame
             {
@@ -148,7 +161,7 @@ namespace ShareInvest.GoblinBatControls
                 Code = comboCode.SelectedIndex < 0 ? code : comboCode.SelectedItem.ToString(),
                 Commission = comboCommission.SelectedIndex < 0 ? commission[0] : commission[Array.FindIndex(Commission, o => o.Equals(comboCommission.SelectedItem.ToString()))],
                 MarginRate = comboMarginRate.SelectedIndex < 0 ? rate[0] : rate[Array.FindIndex(MaginRate, o => o.Equals(comboMarginRate.SelectedItem.ToString()))],
-                Strategy = comboStrategy.SelectedIndex < 0 || comboStrategy.SelectedItem.ToString().Equals(auto) ? strategy[ran.Next(0, strategy.Length - 1)] : comboStrategy.SelectedItem.ToString(),
+                Strategy = strategy,
                 RollOver = checkRollOver.CheckState.Equals(CheckState.Indeterminate) ? ro[ran.Next(0, ro.Length)] : checkRollOver.Checked,
                 BaseTime = 1440,
                 BaseShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
@@ -229,7 +242,17 @@ namespace ShareInvest.GoblinBatControls
                     {
                         var time = i > 0 ? string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value : 1440;
 
-                        if (value > time && string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value < string.Concat(numeric, i + 20).FindByName<NumericUpDown>(this).Value)
+                        if (strategy == null && i > 0 && i < 9 && time == 0)
+                        {
+                            for (int j = 1; j < 9; j++)
+                            {
+                                string.Concat(numeric, j).FindByName<NumericUpDown>(this).Value = 0;
+                                string.Concat(numeric, 10 + j).FindByName<NumericUpDown>(this).Value = 4;
+                                string.Concat(numeric, 20 + j).FindByName<NumericUpDown>(this).Value = 60;
+                            }
+                            continue;
+                        }
+                        else if (value > time && string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value < string.Concat(numeric, i + 20).FindByName<NumericUpDown>(this).Value)
                         {
                             value = (int)time;
 

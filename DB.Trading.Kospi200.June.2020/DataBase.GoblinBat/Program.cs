@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,6 +63,13 @@ namespace ShareInvest
                                     while (better.Count > 0)
                                         catalog.Insert(25, better.Pop());
                                 }
+                                else if (secret.GetIsMirror(str))
+                                {
+                                    var better = info.GetStatistics(secret.rate, secret.commission);
+
+                                    while (better.Count > 0)
+                                        catalog.Insert(5, better.Pop());
+                                }
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
@@ -69,7 +77,7 @@ namespace ShareInvest
                                 };
                                 try
                                 {
-                                    Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
+                                    Parallel.ForEach(catalog.Distinct(), po, new Action<Models.ImitationGames>((number) =>
                                     {
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();
@@ -129,7 +137,7 @@ namespace ShareInvest
                                 };
                                 try
                                 {
-                                    Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
+                                    Parallel.ForEach(catalog.Distinct(), po, new Action<Models.ImitationGames>((number) =>
                                     {
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();

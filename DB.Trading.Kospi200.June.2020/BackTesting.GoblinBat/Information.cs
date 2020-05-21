@@ -187,6 +187,65 @@ namespace ShareInvest.Strategy
             }
             return list;
         }
+        public Stack<Models.ImitationGames> GetStatistics(double[] rate, double[] commission)
+        {
+            var stack = new Stack<Models.ImitationGames>(256);
+            var assets = GetUserAssets(new List<long>());
+
+            while (stack.Count < 75123)
+                foreach (var asset in assets)
+                    foreach (var co in commission)
+                    {
+                        var mt = ran.Next(1, maxHexa + 1);
+                        var ms = ran.Next(minShort, maxShort + 1);
+                        var ml = ran.Next(ms / 5, 25) * 5;
+                        var bs = ran.Next(minShort, maxShort + 1);
+                        var bl = ran.Next(bs / 5, 25) * 5;
+                        var strategy = ran.Next(maxShort, maxLong - maxShort);
+
+                        if (ms < ml && bs < bl && ml <= maxLong && bl <= maxLong)
+                            stack.Push(new Models.ImitationGames
+                            {
+                                Assets = asset,
+                                Code = Retrieve.Code,
+                                Commission = co,
+                                MarginRate = rate[0],
+                                Strategy = strategy.ToString(),
+                                RollOver = true,
+                                BaseTime = 1440,
+                                BaseShort = bs,
+                                BaseLong = bl,
+                                NonaTime = 0,
+                                NonaShort = 4,
+                                NonaLong = 60,
+                                OctaTime = 0,
+                                OctaShort = 4,
+                                OctaLong = 60,
+                                HeptaTime = 0,
+                                HeptaShort = 4,
+                                HeptaLong = 60,
+                                HexaTime = 0,
+                                HexaShort = 4,
+                                HexaLong = 60,
+                                PentaTime = 0,
+                                PentaShort = 4,
+                                PentaLong = 60,
+                                QuadTime = 0,
+                                QuadShort = 4,
+                                QuadLong = 60,
+                                TriTime = 0,
+                                TriShort = 4,
+                                TriLong = 60,
+                                DuoTime = 0,
+                                DuoShort = 4,
+                                DuoLong = 60,
+                                MonoTime = mt,
+                                MonoShort = ms,
+                                MonoLong = ml
+                            });
+                    }
+            return GetBestStrategy(stack,assets);
+        }
         public void SetInsertBaseStrategy(string[] strategy, double[] rate, double[] commission)
         {
             var queue = new Queue<Models.Statistics>();
@@ -366,7 +425,7 @@ namespace ShareInvest.Strategy
                                                                                                                                                     MonoShort = ms,
                                                                                                                                                     MonoLong = ml
                                                                                                                                                 });
-                                                                                                                                                if (games.Count > 137525)
+                                                                                                                                                if (games.Count > 937)
                                                                                                                                                     return games;
                                                                                                                                             }
             return games;
@@ -374,9 +433,7 @@ namespace ShareInvest.Strategy
         public void GetUserIdentity(char initial)
         {
             Statistics = GetBasicStrategy(initial);
-
-            if (initial.Equals((char)67) == false)
-                RemainingDay = GetRemainingDay(Retrieve.Code);
+            RemainingDay = GetRemainingDay(Retrieve.Code);
         }
         public List<Models.ImitationGames> GetBestStrategy(bool external) => external ? GetBestExternalRecommend(new List<Models.ImitationGames>(128)) : GetBestStrategyRecommend(new List<Models.ImitationGames>(128));
         public List<Models.ImitationGames> GetBestStrategy() => Preheat(new List<Models.ImitationGames>(256));

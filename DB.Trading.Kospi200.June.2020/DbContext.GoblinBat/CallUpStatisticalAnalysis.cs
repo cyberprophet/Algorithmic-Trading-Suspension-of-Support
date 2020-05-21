@@ -47,13 +47,13 @@ namespace ShareInvest.GoblinBatContext
                         foreach (var kv in temp.OrderBy(o => o.Key))
                             if (DateTime.TryParseExact(string.Concat(kv.Key, "154500"), CallUpStatisticalAnalysis.date, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime infoDate) && long.TryParse(string.Concat(kv.Key, "154500000"), out long find))
                             {
-                                var recent = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(3)) && o.Date == find).AsNoTracking();
+                                var recent = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date == find).AsNoTracking();
 
                                 if (recent.Any())
                                     info[infoDate] = string.Concat(kv.Value, ';', recent.FirstOrDefault().Price);
 
                                 else
-                                    info[infoDate] = string.Concat(kv.Value, ';', db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(3)) && o.Date.Equals(find.ToString())).AsNoTracking().FirstOrDefault().Price);
+                                    info[infoDate] = string.Concat(kv.Value, ';', db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date.Equals(find.ToString())).AsNoTracking().FirstOrDefault().Price);
                             }
                     }
                 }

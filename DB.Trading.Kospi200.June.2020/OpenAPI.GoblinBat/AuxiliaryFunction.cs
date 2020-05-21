@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+
 using ShareInvest.Catalog;
 using ShareInvest.GoblinBatContext;
 
@@ -52,7 +53,7 @@ namespace ShareInvest.OpenAPI
         protected internal string Collection => collection;
         protected internal string Response => response;
         protected internal StringBuilder Exists => new StringBuilder(exists);
-        protected internal AuxiliaryFunction(string key) : base(key) => Console.WriteLine(key);
+        protected internal AuxiliaryFunction(string key) : base(key) => this.key = key;
         protected internal readonly IEnumerable[] catalogReal =
         {
             new 주문체결(),
@@ -122,6 +123,8 @@ namespace ShareInvest.OpenAPI
             "001880",
             "072770"
         };
+        protected internal readonly string key;
+        protected internal const string format = "yyMMdd";
         const string collection = "백테스팅에 필요한 자료를 수집합니다.";
         const string exists = "Information that already Exists";
         const string lookUp = "모의투자 조회가 완료되었습니다";

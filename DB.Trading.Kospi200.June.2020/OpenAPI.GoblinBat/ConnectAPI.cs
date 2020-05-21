@@ -6,7 +6,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+
 using AxKHOpenAPILib;
+
 using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
@@ -348,6 +350,19 @@ namespace ShareInvest.OpenAPI
                         if (Temporary != null)
                         {
                             Temporary.SetStorage(Code);
+
+                            if (new Secrets().IsServer(key))
+                                do
+                                {
+                                    if (OnReceiveRemainingDay(Code).Equals(DateTime.Now.AddDays(1).ToString(format)))
+                                        RemainingDay(API.GetFutureCodeByIndex(1));
+
+                                    Temporary.SetConnection(OpenAPI);
+                                    SendMemorize?.Invoke(this, new Memorize("Clear"));
+                                    Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
+                                }
+                                while (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)Math.Pow(430, 2)).Equals(DialogResult.Abort));
+
                             SendCount?.Invoke(this, new NotifyIconText(-106));
                         }
                         else
@@ -519,7 +534,8 @@ namespace ShareInvest.OpenAPI
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
             SendErrorMessage(e.nErrCode);
-            Code = API.GetFutureCodeByIndex(e.nErrCode);
+            var code = API.GetFutureCodeByIndex(e.nErrCode);
+            Code = OnReceiveRemainingDay(code).Equals(DateTime.Now.ToString(format)) ? API.GetFutureCodeByIndex(1) : code;
             RemainingDay(Code);
             CodeList = new List<string>
             {
@@ -636,7 +652,7 @@ namespace ShareInvest.OpenAPI
         }
         void Request(string code)
         {
-            if (code != null && code.Equals(string.Empty) == false)
+            if (string.IsNullOrEmpty(code) == false)
             {
                 int param = DeadLine ? 4 : (code.Length > 6 ? (code.Substring(5, 3).Equals("000") ? 1 : 2) : 3);
                 ITRs tr = (ITRs)catalogTR[param];
