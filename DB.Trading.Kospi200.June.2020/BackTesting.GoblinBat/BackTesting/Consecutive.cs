@@ -62,6 +62,7 @@ namespace ShareInvest.Strategy.Statistics
                                     if (bt.Judge.Count > 2)
                                     {
                                         var num = 0;
+                                        var accumulative = 0D;
 
                                         foreach (var kv in judge)
                                         {
@@ -69,9 +70,19 @@ namespace ShareInvest.Strategy.Statistics
                                                 continue;
 
                                             if (kv.Key == 1440)
-                                                break;
+                                            {
+                                                if (bt.Classification.Equals(sell) && kv.Value + accumulative < 0)
+                                                    num = 8;
 
-                                            if (bt.Classification.Equals(buy) && kv.Value < 0 || bt.Classification.Equals(sell) && kv.Value > 0)
+                                                break;
+                                            }
+                                            if (bt.Classification.Equals(sell))
+                                            {
+                                                accumulative += kv.Value;
+
+                                                continue;
+                                            }
+                                            if (bt.Classification.Equals(buy) && kv.Value < 0)
                                                 num++;
                                         }
                                         if (num == 8 && bt.SetConclusion(e.Date, e.Price, bt.Classification))

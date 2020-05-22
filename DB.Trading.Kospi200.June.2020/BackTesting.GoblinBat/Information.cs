@@ -97,7 +97,7 @@ namespace ShareInvest.Strategy
             {
                 var mi = Imitation;
 
-                if (Statistics.Count == 1 && Statistics.Where(o => o.Strategy.Equals(string.Empty)).Any() && mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
+                if (Statistics.Count == 1 && Statistics.Any(o => o.Strategy.Equals(string.Empty) || o.Strategy.Length == 2) && mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
                 {
                     mi.Strategy = ran.Next(20, 100).ToString();
                     var model = Statistics.First();
@@ -244,7 +244,7 @@ namespace ShareInvest.Strategy
                                 MonoLong = ml
                             });
                     }
-            return GetBestStrategy(stack,assets);
+            return GetBestStrategy(stack, assets);
         }
         public void SetInsertBaseStrategy(string[] strategy, double[] rate, double[] commission)
         {

@@ -18,5 +18,10 @@ namespace ShareInvest.EventHandler
             Trend = trend;
             Volume = volume.ToString("N0");
         }
+        public Trends(Dictionary<string, string> trend, string avg)
+        {
+            Trend = trend;
+            Volume = avg;
+        }
     }
 }

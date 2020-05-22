@@ -16,52 +16,36 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
     {
-        protected Dictionary<DateTime, string> GetInformation(Catalog.DataBase.ImitationGame game)
+        protected Dictionary<DateTime, string> GetInformation(Catalog.DataBase.ImitationGame game, string code)
         {
-            var date = new Secret().RecentDate;
-            var info = new Dictionary<DateTime, string>(16);
-            using (var db = new GoblinBatDbContext(key))
-                try
-                {
-                    var memo = db.Games.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking();
+            try
+            {
+                var info = new Dictionary<DateTime, string>(32);
+                var temp = new Dictionary<string, long>(32);
+                string date = new Secret().RecentDate;
+                using (var db = new GoblinBatDbContext(key))
+                    foreach (var str in db.Games.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking().OrderBy(o => o.Date).Select(o => new { o.Date, o.Unrealized, o.Cumulative }))
+                        temp[str.Date] = str.Cumulative + str.Unrealized;
 
-                    if (memo.Any(o => o.Date.Equals(date)))
-                    {
-                        var temp = new Dictionary<string, long>();
-                        long recentUnrealized = 0;
+                foreach (var kv in temp.OrderBy(o => o.Key))
+                    if (DateTime.TryParseExact(string.Concat(kv.Key, "154500"), CallUpStatisticalAnalysis.date, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime infoDate) && long.TryParse(string.Concat(kv.Key, "154500000"), out long find))
+                        using (var db = new GoblinBatDbContext(key))
+                        {
+                            var recent = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date == find).AsNoTracking();
 
-                        foreach (var str in memo.OrderBy(o => o.Date).Select(o => new
-                        {
-                            o.Date,
-                            o.Unrealized,
-                            o.Cumulative
-                        }).AsNoTracking())
-                        {
-                            temp[str.Date] = str.Cumulative;
-                            recentUnrealized = str.Unrealized;
+                            if (recent.Any())
+                                info[infoDate] = string.Concat(kv.Value, ';', recent.FirstOrDefault().Price);
+
+                            else
+                                info[infoDate] = string.Concat(kv.Value, ';', db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date.Equals(find.ToString())).AsNoTracking().FirstOrDefault().Price);
                         }
-                        var last = temp.Last();
-                        temp[last.Key] = last.Value + recentUnrealized;
-                        string code = memo.First().Code;
-
-                        foreach (var kv in temp.OrderBy(o => o.Key))
-                            if (DateTime.TryParseExact(string.Concat(kv.Key, "154500"), CallUpStatisticalAnalysis.date, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime infoDate) && long.TryParse(string.Concat(kv.Key, "154500000"), out long find))
-                            {
-                                var recent = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date == find).AsNoTracking();
-
-                                if (recent.Any())
-                                    info[infoDate] = string.Concat(kv.Value, ';', recent.FirstOrDefault().Price);
-
-                                else
-                                    info[infoDate] = string.Concat(kv.Value, ';', db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date.Equals(find.ToString())).AsNoTracking().FirstOrDefault().Price);
-                            }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace);
-                }
-            return info;
+                return info;
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return null;
         }
         protected string SetDate(string code)
         {

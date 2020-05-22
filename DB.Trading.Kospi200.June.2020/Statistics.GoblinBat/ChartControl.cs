@@ -33,13 +33,14 @@ namespace ShareInvest.GoblinBatControls
             price.Points.Clear();
             revenue.Points.Clear();
 
-            foreach (var kv in e.Information)
-            {
-                var splits = kv.Value.Split(';');
+            if (e.Information != null)
+                foreach (var kv in e.Information)
+                {
+                    var splits = kv.Value.Split(';');
 
-                price.Points.AddXY(kv.Key, splits[1]);
-                revenue.Points.AddXY(kv.Key, splits[0]);
-            }
+                    price.Points.AddXY(kv.Key, splits[1]);
+                    revenue.Points.AddXY(kv.Key, splits[0]);
+                }
         }
         public Size SetChartValue() => new Size(1350, 750);
         readonly Series price;

@@ -66,6 +66,7 @@ namespace ShareInvest
                                 else if (secret.GetIsMirror(str))
                                 {
                                     var better = info.GetStatistics(secret.rate, secret.commission);
+                                    retrieve.SetIsMirror();
 
                                     while (better.Count > 0)
                                         catalog.Insert(5, better.Pop());
@@ -159,6 +160,7 @@ namespace ShareInvest
                                     new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                                 }
                             }).Start();
+                            GC.Collect();
                         }
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);

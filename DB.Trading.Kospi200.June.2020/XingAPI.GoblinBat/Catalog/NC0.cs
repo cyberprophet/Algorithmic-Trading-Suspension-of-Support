@@ -1,4 +1,5 @@
 ﻿using System;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 using ShareInvest.EventHandler.XingAPI;
@@ -17,7 +18,7 @@ namespace ShareInvest.XingAPI.Catalog
             if (int.TryParse(string.Concat(temp[8], temp[9]), out int volume) && double.TryParse(temp[4], out double price))
             {
                 Send?.Invoke(this, new Datum(temp[0], price, volume));
-                SendTrend?.Invoke(this, new Trends(API.Trend, API.Volume));
+                SendTrend?.Invoke(this, API.Volume == 0 ? new Trends(API.Trend, API.AvgPurchase) : new Trends(API.Trend, API.Volume));
             }
         }
         public void OnReceiveRealTime(string code)

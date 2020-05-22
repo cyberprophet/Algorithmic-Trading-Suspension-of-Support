@@ -12,11 +12,12 @@ namespace ShareInvest.Strategy
     public partial class Retrieve : CallUpStatisticalAnalysis
     {
         public Retrieve(string key) : base(key) => Console.WriteLine(key);
-        public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number);
+        public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number, Code);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
         public Catalog.XingAPI.Specify[] GetUserStrategy() => GetCatalog(GetBestStrategyRecommend(Information.Statistics, new Models.ImitationGames()));
         public Models.ImitationGames GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
+        public void SetIsMirror() => SetInitialzeTheCode();
         public void SetInitialzeTheCode(char initial)
         {
             Code = GetStrategy();

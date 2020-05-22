@@ -49,18 +49,20 @@ namespace ShareInvest.Strategy.XingAPI
         }
         void Analysize(object sender, Datum e)
         {
-            if (GetCheckOnTimeByAPI(e.Time))
+            if (Short.Count > 205)
             {
-                Short.Pop();
-                Long.Pop();
+                if (GetCheckOnTimeByAPI(e.Time))
+                {
+                    Short.Pop();
+                    Long.Pop();
+                }
+                Short.Push(EMA.Make(specify.Short, Short.Count, e.Price, Short.Peek()));
+                Long.Push(EMA.Make(specify.Long, Long.Count, e.Price, Long.Peek()));
+                double popShort = Short.Pop(), popLong = Long.Pop();
+                API.Max(popShort - popLong - (Short.Peek() - Long.Peek()), specify.Time, Check);
+                Short.Push(popShort);
+                Long.Push(popLong);
             }
-            Short.Push(EMA.Make(specify.Short, Short.Count, e.Price, Short.Peek()));
-            Long.Push(EMA.Make(specify.Long, Long.Count, e.Price, Long.Peek()));
-            double popShort = Short.Pop(), popLong = Long.Pop();
-            API.Max(popShort - popLong - (Short.Peek() - Long.Peek()), specify.Time, Check);
-            Short.Push(popShort);
-            Long.Push(popLong);
-
             if (specify.Time == 1440 && string.IsNullOrEmpty(API.Classification) == false && API.OnReceiveBalance)
             {
                 var judge = API.Judge.OrderBy(o => o.Key);
@@ -210,6 +212,8 @@ namespace ShareInvest.Strategy.XingAPI
 
             if (API.MaxAmount < 0 && API.Quantity - API.MaxAmount > 1)
                 return -judge > quantity;
+
+            API.Volume = 0;
 
             return false;
         }

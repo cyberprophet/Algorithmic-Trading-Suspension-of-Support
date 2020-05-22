@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
 
@@ -36,10 +37,19 @@ namespace ShareInvest.GoblinBatControls
         public void OnReceiveTrend(object sender, Trends e) => BeginInvoke(new Action(() =>
         {
             var count = 0;
-            var check = e.Volume.Contains("-");
-            stateVolume.Text = check ? e.Volume.Substring(1) : e.Volume;
-            stateVolume.ForeColor = check ? Color.DeepSkyBlue : Color.Maroon;
 
+            if (string.IsNullOrEmpty(e.Volume) == false)
+                if (e.Volume.Contains("."))
+                {
+                    stateVolume.Text = e.Volume;
+                    stateVolume.ForeColor = Color.Ivory;
+                }
+                else
+                {
+                    var check = e.Volume.Contains("-");
+                    stateVolume.Text = check ? e.Volume.Substring(1) : e.Volume;
+                    stateVolume.ForeColor = check ? Color.DeepSkyBlue : Color.Maroon;
+                }
             foreach (var kv in e.Trend.OrderBy(o => ran.Next(e.Trend.Count)))
             {
                 var label = string.Concat("state", count).FindByName<Label>(this);

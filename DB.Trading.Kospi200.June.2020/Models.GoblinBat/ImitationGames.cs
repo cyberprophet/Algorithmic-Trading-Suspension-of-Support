@@ -50,7 +50,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(9, 180), Column(Order = 10)]
+        [Key, Range(0, 180), Column(Order = 10)]
         public int NonaTime
         {
             get; set;
@@ -65,7 +65,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(8, 150), Column(Order = 13)]
+        [Key, Range(0, 150), Column(Order = 13)]
         public int OctaTime
         {
             get; set;
@@ -80,7 +80,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(7, 120), Column(Order = 16)]
+        [Key, Range(0, 120), Column(Order = 16)]
         public int HeptaTime
         {
             get; set;
@@ -95,7 +95,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(6, 90), Column(Order = 19)]
+        [Key, Range(0, 90), Column(Order = 19)]
         public int HexaTime
         {
             get; set;
@@ -110,7 +110,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(5, 60), Column(Order = 22)]
+        [Key, Range(0, 60), Column(Order = 22)]
         public int PentaTime
         {
             get; set;
@@ -125,7 +125,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(4, 45), Column(Order = 25)]
+        [Key, Range(0, 45), Column(Order = 25)]
         public int QuadTime
         {
             get; set;
@@ -140,7 +140,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(3, 30), Column(Order = 28)]
+        [Key, Range(0, 30), Column(Order = 28)]
         public int TriTime
         {
             get; set;
@@ -155,7 +155,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(2, 15), Column(Order = 31)]
+        [Key, Range(0, 15), Column(Order = 31)]
         public int DuoTime
         {
             get; set;

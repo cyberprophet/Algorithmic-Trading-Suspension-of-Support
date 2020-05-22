@@ -351,18 +351,19 @@ namespace ShareInvest.OpenAPI
                         {
                             Temporary.SetStorage(Code);
 
-                            if (new Secrets().IsServer(key))
-                                do
-                                {
-                                    if (OnReceiveRemainingDay(Code).Equals(DateTime.Now.AddDays(1).ToString(format)))
-                                        RemainingDay(API.GetFutureCodeByIndex(1));
+                            while (new Secrets().IsServer(key))
+                            {
+                                if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
+                                    RemainingDay(API.GetFutureCodeByIndex(1));
 
-                                    Temporary.SetConnection(OpenAPI);
-                                    SendMemorize?.Invoke(this, new Memorize("Clear"));
-                                    Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
-                                }
-                                while (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)Math.Pow(430, 2)).Equals(DialogResult.Abort));
+                                Temporary.SetConnection(OpenAPI);
+                                SetScreenNumber(9000, 9031);
+                                SendMemorize?.Invoke(this, new Memorize("Clear"));
+                                Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
 
+                                if (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)Math.Pow(430, 2)).Equals(DialogResult.OK))
+                                    break;
+                            }
                             SendCount?.Invoke(this, new NotifyIconText(-106));
                         }
                         else
