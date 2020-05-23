@@ -73,6 +73,7 @@ namespace ShareInvest.Strategy.XingAPI
                     if (API.Judge.Count > 2)
                     {
                         var num = 0;
+                        var accumulative = 0D;
 
                         foreach (var kv in judge)
                         {
@@ -80,9 +81,19 @@ namespace ShareInvest.Strategy.XingAPI
                                 continue;
 
                             if (kv.Key == 1440)
-                                break;
+                            {
+                                if (API.Classification.Equals(sell) && kv.Value + accumulative < 0)
+                                    num = 8;
 
-                            if (API.Classification.Equals(buy) && kv.Value < 0 || API.Classification.Equals(sell) && kv.Value > 0)
+                                break;
+                            }
+                            if (API.Classification.Equals(sell))
+                            {
+                                accumulative += kv.Value;
+
+                                continue;
+                            }
+                            if (API.Classification.Equals(buy) && kv.Value < 0)
                                 num++;
                         }
                         if (num == 8 && API.OnReceiveBalance && SendNewOrder(e.Price, API.Classification))

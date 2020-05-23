@@ -170,7 +170,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(1, 5), Column(Order = 34)]
+        [Key, Range(1, 90), Column(Order = 34)]
         public int MonoTime
         {
             get; set;

@@ -133,13 +133,39 @@ namespace ShareInvest.GoblinBatControls
                 else if (strategy != null)
                     comboStrategy.SelectedItem = specify.Strategy;
             }
-            foreach (var kv in temp.OrderByDescending(o => o.Key))
-            {
-                if (i > 0)
-                    string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value = kv.Key;
+            if (temp.Count > 3)
+                foreach (var kv in temp.OrderByDescending(o => o.Key))
+                {
+                    if (i > 0)
+                        string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value = kv.Key;
 
-                string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
-                string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
+                    string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
+                    string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
+                }
+            else
+            {
+                for (int j = 1; j < 9; j++)
+                {
+                    string.Concat(numeric, j).FindByName<NumericUpDown>(this).Value = 0;
+                    string.Concat(numeric, 10 + j).FindByName<NumericUpDown>(this).Value = 4;
+                    string.Concat(numeric, 20 + j).FindByName<NumericUpDown>(this).Value = 60;
+                }
+                foreach (var kv in temp.OrderByDescending(o => o.Key))
+                {
+                    if (kv.Key == 0)
+                        continue;
+
+                    if (i == 0)
+                    {
+                        string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
+                        string.Concat(numeric, 20 + i++).FindByName<NumericUpDown>(this).Value = kv.Value[1];
+
+                        continue;
+                    }
+                    string.Concat(numeric, 10 - i).FindByName<NumericUpDown>(this).Value = kv.Key;
+                    string.Concat(numeric, 20 - i).FindByName<NumericUpDown>(this).Value = kv.Value[0];
+                    string.Concat(numeric, 30 - i).FindByName<NumericUpDown>(this).Value = kv.Value[1];
+                }
             }
             return specifies;
         }

@@ -506,7 +506,7 @@ namespace ShareInvest.GoblinBatContext
                 }
             return string.Empty;
         }
-        protected async Task<bool> GetDuplicateResults(ImitationGames game, string date)
+        protected bool GetDuplicateResults(ImitationGames game, string date)
         {
             using (var db = new GoblinBatDbContext(key))
                 try
@@ -518,12 +518,9 @@ namespace ShareInvest.GoblinBatContext
                         if (check.Any(o => o.Date.Equals(date)))
                             return true;
 
-                        else
-                        {
-                            var recent = await check.MaxAsync(o => o.Date);
+                        var max = check.Max(o => o.Date);
 
-                            return check.Where(o => o.Date.Equals(date)).Any(o => o.Cumulative < 0 || o.Statistic < 0);
-                        }
+                        return check.Where(o => o.Date.Equals(max)).Any(o => o.Cumulative < 0 || o.Statistic < 0);
                     }
                 }
                 catch (Exception ex)

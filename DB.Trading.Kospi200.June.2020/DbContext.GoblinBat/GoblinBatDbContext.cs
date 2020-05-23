@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Data.Entity;
 using System.Threading;
+
 using ShareInvest.Message;
 using ShareInvest.Models;
 

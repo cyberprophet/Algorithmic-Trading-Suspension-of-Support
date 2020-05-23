@@ -83,7 +83,7 @@ namespace ShareInvest.Strategy
                         SendDatum?.Invoke(this, new Datum(chart.Date, chart.Price, chart.Volume));
 
             if (games.Count > 0 && SetStatisticalStorage(games) == false)
-                Message = new Secrets().Message;
+                Message = new Secret().Message;
 
             return statement == null ? 0 : statement.Count;
         }
@@ -485,7 +485,7 @@ namespace ShareInvest.Strategy
                 statement = new Queue<Conclusion>(32);
 
             if (StartProgress(game.Strategy.Length) > 0)
-                using (var sw = new StreamWriter(new Secrets().Path(game.Strategy, statement.Count), true))
+                using (var sw = new StreamWriter(new Secret().Path(game.Strategy, statement.Count), true))
                     try
                     {
                         while (statement.Count > 0)

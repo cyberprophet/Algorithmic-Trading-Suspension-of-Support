@@ -101,45 +101,47 @@ namespace ShareInvest.Strategy
                 {
                     mi.Strategy = ran.Next(20, 100).ToString();
                     var model = Statistics.First();
-                    list.Add(new Models.ImitationGames
-                    {
-                        Assets = model.Assets,
-                        Code = model.Code,
-                        Commission = model.Commission,
-                        MarginRate = model.MarginRate,
-                        Strategy = mi.Strategy,
-                        RollOver = model.RollOver,
-                        BaseTime = mi.BaseTime,
-                        BaseShort = mi.BaseShort,
-                        BaseLong = mi.BaseLong,
-                        NonaTime = mi.NonaTime,
-                        NonaShort = mi.NonaShort,
-                        NonaLong = mi.NonaLong,
-                        OctaTime = mi.OctaTime,
-                        OctaShort = mi.OctaShort,
-                        OctaLong = mi.OctaLong,
-                        HeptaTime = mi.HeptaTime,
-                        HeptaShort = mi.HeptaShort,
-                        HeptaLong = mi.HeptaLong,
-                        HexaTime = mi.HexaTime,
-                        HexaShort = mi.HexaShort,
-                        HexaLong = mi.HexaLong,
-                        PentaTime = mi.PentaTime,
-                        PentaShort = mi.PentaShort,
-                        PentaLong = mi.PentaLong,
-                        QuadTime = mi.QuadTime,
-                        QuadShort = mi.QuadShort,
-                        QuadLong = mi.QuadLong,
-                        TriTime = mi.TriTime,
-                        TriShort = mi.TriShort,
-                        TriLong = mi.TriLong,
-                        DuoTime = mi.DuoTime,
-                        DuoShort = mi.DuoShort,
-                        DuoLong = mi.DuoLong,
-                        MonoTime = mi.MonoTime,
-                        MonoShort = mi.MonoShort,
-                        MonoLong = mi.MonoLong
-                    });
+
+                    for (int i = 0; i < 2; i++)
+                        list.Add(new Models.ImitationGames
+                        {
+                            Assets = model.Assets,
+                            Code = model.Code,
+                            Commission = model.Commission,
+                            MarginRate = model.MarginRate,
+                            Strategy = mi.Strategy,
+                            RollOver = model.RollOver,
+                            BaseTime = mi.BaseTime,
+                            BaseShort = mi.BaseShort,
+                            BaseLong = mi.BaseLong,
+                            NonaTime = i == 0 ? 0 : mi.NonaTime,
+                            NonaShort = i == 0 ? 4 : mi.NonaShort,
+                            NonaLong = i == 0 ? 60 : mi.NonaLong,
+                            OctaTime = i == 0 ? 0 : mi.OctaTime,
+                            OctaShort = i == 0 ? 4 : mi.OctaShort,
+                            OctaLong = i == 0 ? 60 : mi.OctaLong,
+                            HeptaTime = i == 0 ? 0 : mi.HeptaTime,
+                            HeptaShort = i == 0 ? 4 : mi.HeptaShort,
+                            HeptaLong = i == 0 ? 60 : mi.HeptaLong,
+                            HexaTime = i == 0 ? 0 : mi.HexaTime,
+                            HexaShort = i == 0 ? 4 : mi.HexaShort,
+                            HexaLong = i == 0 ? 60 : mi.HexaLong,
+                            PentaTime = i == 0 ? 0 : mi.PentaTime,
+                            PentaShort = i == 0 ? 4 : mi.PentaShort,
+                            PentaLong = i == 0 ? 60 : mi.PentaLong,
+                            QuadTime = i == 0 ? 0 : mi.QuadTime,
+                            QuadShort = i == 0 ? 4 : mi.QuadShort,
+                            QuadLong = i == 0 ? 60 : mi.QuadLong,
+                            TriTime = i == 0 ? 0 : mi.TriTime,
+                            TriShort = i == 0 ? 4 : mi.TriShort,
+                            TriLong = i == 0 ? 60 : mi.TriLong,
+                            DuoTime = i == 0 ? 0 : mi.DuoTime,
+                            DuoShort = i == 0 ? 4 : mi.DuoShort,
+                            DuoLong = i == 0 ? 60 : mi.DuoLong,
+                            MonoTime = mi.MonoTime,
+                            MonoShort = mi.MonoShort,
+                            MonoLong = mi.MonoLong
+                        });
                     continue;
                 }
                 if (mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
@@ -192,7 +194,7 @@ namespace ShareInvest.Strategy
             var stack = new Stack<Models.ImitationGames>(256);
             var assets = GetUserAssets(new List<long>());
 
-            while (stack.Count < 75123)
+            while (stack.Count < 7513)
                 foreach (var asset in assets)
                     foreach (var co in commission)
                     {
@@ -203,7 +205,7 @@ namespace ShareInvest.Strategy
                         var bl = ran.Next(bs / 5, 25) * 5;
                         var strategy = ran.Next(maxShort, maxLong - maxShort);
 
-                        if (ms < ml && bs < bl && ml <= maxLong && bl <= maxLong)
+                        if (ms < ml && bs < bl && minLong < bl && ml <= maxLong && bl <= maxLong)
                             stack.Push(new Models.ImitationGames
                             {
                                 Assets = asset,

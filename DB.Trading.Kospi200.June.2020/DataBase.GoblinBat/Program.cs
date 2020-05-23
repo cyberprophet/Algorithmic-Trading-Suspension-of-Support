@@ -65,11 +65,12 @@ namespace ShareInvest
                                 }
                                 else if (secret.GetIsMirror(str))
                                 {
-                                    var better = info.GetStatistics(secret.rate, secret.commission);
                                     retrieve.SetIsMirror();
+                                    var better = info.GetStatistics(secret.rate, secret.commission);
+                                    var i = 0;
 
                                     while (better.Count > 0)
-                                        catalog.Insert(5, better.Pop());
+                                        catalog.Insert(5 + i++ * 3, better.Pop());
                                 }
                                 var po = new ParallelOptions
                                 {
@@ -83,11 +84,11 @@ namespace ShareInvest
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();
 
-                                        if (retrieve.GetDuplicateResults(recent, number) == false)
+                                        if (number != null && retrieve.GetDuplicateResults(recent, number) == false)
                                         {
                                             new BackTesting(initial, number, str);
 
-                                            if (Count++ == 9)
+                                            if (Count++ == 29)
                                                 recent = retrieve.RecentDate;
                                         }
                                     }));
@@ -143,7 +144,7 @@ namespace ShareInvest
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();
 
-                                        if (retrieve.GetDuplicateResults(recent, number) == false)
+                                        if (number != null && retrieve.GetDuplicateResults(recent, number) == false)
                                         {
                                             new BackTesting(initial, number, str);
                                             Count++;
