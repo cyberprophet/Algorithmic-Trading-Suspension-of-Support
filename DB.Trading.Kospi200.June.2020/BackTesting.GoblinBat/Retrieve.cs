@@ -23,11 +23,8 @@ namespace ShareInvest.Strategy
             Code = GetStrategy();
 
             if (initial.Equals((char)Port.Seriate))
-            {
                 SetInitialzeTheCode();
 
-                return;
-            }
             SetInitialzeTheCode(Code);
         }
         public void SetInitializeTheChart()

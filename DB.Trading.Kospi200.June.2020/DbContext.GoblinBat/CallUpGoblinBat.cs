@@ -15,6 +15,24 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
+        protected IEnumerable<string> GetStrategy(List<string> strategy)
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    foreach (var st in db.Statistics.Select(o => new { o.Strategy }).AsNoTracking())
+                        if (st.Strategy.Length > 2)
+                            strategy.Add(st.Strategy);
+
+                    strategy.Insert(0, start);
+                    strategy.Add(end);
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return strategy.Distinct();
+        }
         protected string[] GetRemainingDay(string code)
         {
             using (var db = new GoblinBatDbContext(key))
@@ -241,7 +259,7 @@ namespace ShareInvest.GoblinBatContext
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    foreach (var game in db.Games.Where(o => o.RollOver.Equals(false) && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
+                    foreach (var game in db.Games.Where(o => o.Strategy.Length > 2 && o.RollOver.Equals(false) && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
                         games.Add(new ImitationGames
                         {
                             Assets = game.Assets,
@@ -464,13 +482,7 @@ namespace ShareInvest.GoblinBatContext
                     var seriate = list.First();
 
                     if (list.Count == 1 && seriate.Strategy.Length < 3)
-                    {
-                        var consecutive = db.Games.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == seriate.Assets && o.Code.Equals(seriate.Code) && o.Commission == seriate.Commission && o.MarginRate == seriate.MarginRate).AsNoTracking();
-
-                        if (string.IsNullOrEmpty(seriate.Strategy) == false)
-                            consecutive = consecutive.Where(o => o.Strategy.Equals(seriate.Strategy) && o.RollOver.Equals(seriate.RollOver)).AsNoTracking();
-
-                        foreach (var select in consecutive.OrderByDescending(o => o.Statistic).Take(1))
+                        foreach (var select in db.Games.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.RollOver.Equals(seriate.RollOver) && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == seriate.Assets && o.Code.Equals(seriate.Code) && o.Commission == seriate.Commission && o.MarginRate == seriate.MarginRate).AsNoTracking().OrderByDescending(o => o.Statistic).Take(1))
                             return new ImitationGames
                             {
                                 Assets = select.Assets,
@@ -510,7 +522,6 @@ namespace ShareInvest.GoblinBatContext
                                 MonoShort = select.MonoShort,
                                 MonoLong = select.MonoLong
                             };
-                    }
                     foreach (var ch in list)
                         if (ch.Strategy.Length > 2)
                             foreach (var choice in db.Games.Where(o => o.Date.Equals(max) && o.Assets == ch.Assets && o.Code.Equals(ch.Code) && o.Commission == ch.Commission && o.MarginRate == ch.MarginRate && o.Strategy.Equals(ch.Strategy) && o.RollOver.Equals(ch.RollOver) && o.Strategy.Length > 2 && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic).Take(1))
@@ -1162,6 +1173,8 @@ namespace ShareInvest.GoblinBatContext
         }
         protected internal const string futures = "000";
         protected internal const string kospi200f = "101";
+        protected internal const string start = "StartPoint";
+        protected internal const string end = "EndPoint";
         const double marginRate = 0.1755;
         const string basic = "Base.res";
         const string chart = "ChartOf101000";

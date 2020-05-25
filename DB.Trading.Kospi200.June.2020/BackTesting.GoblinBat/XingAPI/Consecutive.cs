@@ -49,20 +49,18 @@ namespace ShareInvest.Strategy.XingAPI
         }
         void Analysize(object sender, Datum e)
         {
-            if (Short.Count > 205)
+            if (GetCheckOnTimeByAPI(e.Time))
             {
-                if (GetCheckOnTimeByAPI(e.Time))
-                {
-                    Short.Pop();
-                    Long.Pop();
-                }
-                Short.Push(EMA.Make(specify.Short, Short.Count, e.Price, Short.Peek()));
-                Long.Push(EMA.Make(specify.Long, Long.Count, e.Price, Long.Peek()));
-                double popShort = Short.Pop(), popLong = Long.Pop();
-                API.Max(popShort - popLong - (Short.Peek() - Long.Peek()), specify.Time, Check);
-                Short.Push(popShort);
-                Long.Push(popLong);
+                Short.Pop();
+                Long.Pop();
             }
+            Short.Push(EMA.Make(specify.Short, Short.Count, e.Price, Short.Peek()));
+            Long.Push(EMA.Make(specify.Long, Long.Count, e.Price, Long.Peek()));
+            double popShort = Short.Pop(), popLong = Long.Pop();
+            API.Max(popShort - popLong - (Short.Peek() - Long.Peek()), specify.Time, Check);
+            Short.Push(popShort);
+            Long.Push(popLong);
+
             if (specify.Time == 1440 && string.IsNullOrEmpty(API.Classification) == false && API.OnReceiveBalance)
             {
                 var judge = API.Judge.OrderBy(o => o.Key);
@@ -161,12 +159,15 @@ namespace ShareInvest.Strategy.XingAPI
         {
             if (int.TryParse(e.Time, out int time) && (time < 090007 && time > 045959) == false && (time > 153459 && time < 180000) == false && string.IsNullOrEmpty(API.Classification) == false)
             {
-                var check = API.Classification.Equals(buy);
                 double[] bp = new double[] { e.Price[e.Price.Length - 3], e.Price[e.Price.Length - 4], e.Price[e.Price.Length - 5] }, sp = new double[] { e.Price[2], e.Price[3], e.Price[4] };
-                API.MaxAmount = specify.Assets / ((check ? bp[2] : -sp[4]) * Const.TransactionMultiplier * specify.MarginRate);
+                API.MaxAmount = specify.Assets / ((API.Classification.Equals(buy) ? bp[2] : -sp[2]) * Const.TransactionMultiplier * specify.MarginRate);
 
-                foreach (var kv in check ? API.BuyOrder : API.SellOrder)
-                    if (Array.Exists(check ? bp : sp, o => o == kv.Value) == false && API.OnReceiveBalance && (check ? API.BuyOrder.ContainsKey(kv.Key) : API.SellOrder.ContainsKey(kv.Key)) && SendClearingOrder(kv.Key))
+                foreach (var kv in API.BuyOrder)
+                    if (Array.Exists(bp, o => o == kv.Value) == false && API.OnReceiveBalance && API.BuyOrder.ContainsKey(kv.Key) && SendClearingOrder(kv.Key))
+                        return;
+
+                foreach (var kv in API.SellOrder)
+                    if (Array.Exists(sp, o => o == kv.Value) == false && API.OnReceiveBalance && API.SellOrder.ContainsKey(kv.Key) && SendClearingOrder(kv.Key))
                         return;
             }
             else if (time > 153559 && time < 154459 && RollOver)
@@ -218,10 +219,10 @@ namespace ShareInvest.Strategy.XingAPI
         }
         bool GetJudgeTheTrading(int quantity)
         {
-            if (API.MaxAmount > 0 && API.MaxAmount - API.Quantity > 1)
+            if (API.MaxAmount > 0 && API.MaxAmount - API.Quantity - API.BuyOrder.Count > 1)
                 return judge < quantity;
 
-            if (API.MaxAmount < 0 && API.Quantity - API.MaxAmount > 1)
+            if (API.MaxAmount < 0 && API.Quantity - API.SellOrder.Count - API.MaxAmount > 1)
                 return -judge > quantity;
 
             API.Volume = 0;

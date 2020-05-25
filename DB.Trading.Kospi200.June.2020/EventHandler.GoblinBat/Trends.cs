@@ -5,6 +5,10 @@ namespace ShareInvest.EventHandler
 {
     public class Trends : EventArgs
     {
+        public bool OnAir
+        {
+            get; private set;
+        }
         public string Volume
         {
             get; private set;
@@ -18,10 +22,11 @@ namespace ShareInvest.EventHandler
             Trend = trend;
             Volume = volume.ToString("N0");
         }
-        public Trends(Dictionary<string, string> trend, string avg)
+        public Trends(Dictionary<string, string> trend, string avg, bool onAir)
         {
             Trend = trend;
             Volume = avg;
+            OnAir = onAir;
         }
     }
 }

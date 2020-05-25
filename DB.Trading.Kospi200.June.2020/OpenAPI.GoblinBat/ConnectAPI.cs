@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -356,8 +357,9 @@ namespace ShareInvest.OpenAPI
                                 if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
                                     RemainingDay(API.GetFutureCodeByIndex(1));
 
+                                Thread.Sleep(new Random().Next(61527, 69275));
                                 Temporary.SetConnection(OpenAPI);
-                                SetScreenNumber(9000, 9031);
+                                SetScreenNumber(8900, 9031);
                                 SendMemorize?.Invoke(this, new Memorize("Clear"));
                                 Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
 

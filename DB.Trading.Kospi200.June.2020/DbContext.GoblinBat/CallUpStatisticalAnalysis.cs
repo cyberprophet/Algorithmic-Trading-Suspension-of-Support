@@ -518,9 +518,8 @@ namespace ShareInvest.GoblinBatContext
                         if (check.Any(o => o.Date.Equals(date)))
                             return true;
 
-                        var max = check.Max(o => o.Date);
-
-                        return check.Where(o => o.Date.Equals(max)).Any(o => o.Cumulative < 0 || o.Statistic < 0);
+                        foreach (var cs in check.OrderByDescending(o => o.Date).Select(o => new { o.Cumulative, o.Statistic }).AsNoTracking())
+                            return cs.Statistic < 0 || cs.Cumulative < 0;
                     }
                 }
                 catch (Exception ex)

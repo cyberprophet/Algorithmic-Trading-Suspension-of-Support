@@ -70,7 +70,7 @@ namespace ShareInvest
                                     var i = 0;
 
                                     while (better.Count > 0)
-                                        catalog.Insert(5 + i++ * 3, better.Pop());
+                                        catalog.Insert(5 + i++ * 5, better.Pop());
                                 }
                                 var po = new ParallelOptions
                                 {
@@ -100,7 +100,27 @@ namespace ShareInvest
                                 }
                                 catch (Exception ex)
                                 {
+                                    cts.Dispose();
                                     new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
+                                    GC.Collect();
+                                    cts = new CancellationTokenSource();
+                                    po = new ParallelOptions
+                                    {
+                                        CancellationToken = cts.Token,
+                                        MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * 0.6)
+                                    };
+                                    if (ex.TargetSite.Name.Equals("ThrowIfExceptional"))
+                                        Parallel.ForEach(catalog.Distinct().Reverse(), po, new Action<Models.ImitationGames>((number) =>
+                                        {
+                                            if (cts.IsCancellationRequested)
+                                                po.CancellationToken.ThrowIfCancellationRequested();
+
+                                            if (number != null && retrieve.GetDuplicateResults(recent, number) == false)
+                                            {
+                                                new BackTesting(initial, number, str);
+                                                Count++;
+                                            }
+                                        }));
                                 }
                             }).Start();
                     while (TimerBox.Show(secret.StartProgress, string.Concat("N0.", Count.ToString("N0")), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))

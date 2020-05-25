@@ -42,7 +42,7 @@ namespace ShareInvest.GoblinBatControls
                 if (e.Volume.Contains("."))
                 {
                     stateVolume.Text = e.Volume;
-                    stateVolume.ForeColor = Color.Ivory;
+                    stateVolume.ForeColor = e.OnAir ? Color.Ivory : Color.Gold;
                 }
                 else
                 {
