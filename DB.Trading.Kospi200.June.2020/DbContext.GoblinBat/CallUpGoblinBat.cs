@@ -24,8 +24,8 @@ namespace ShareInvest.GoblinBatContext
                         if (st.Strategy.Length > 2)
                             strategy.Add(st.Strategy);
 
-                    strategy.Insert(0, start);
-                    strategy.Add(end);
+                    strategy.Add(start);
+                    strategy.Insert(strategy.Count / 2, end);
                 }
                 catch (Exception ex)
                 {

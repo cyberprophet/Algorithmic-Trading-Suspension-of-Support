@@ -186,6 +186,7 @@ namespace ShareInvest
                                 }
                                 catch (OperationCanceledException ex)
                                 {
+                                    catalog.Clear();
                                     new ExceptionMessage(ex.StackTrace);
                                 }
                                 catch (Exception ex)

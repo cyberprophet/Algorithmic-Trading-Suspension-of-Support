@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.GoblinBatContext;
+using ShareInvest.Message;
 
 namespace ShareInvest.Strategy
 {
@@ -15,9 +17,15 @@ namespace ShareInvest.Strategy
         public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number, Code);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
-        public Catalog.XingAPI.Specify[] GetUserStrategy() => GetCatalog(GetBestStrategyRecommend(Information.Statistics, new Models.ImitationGames()));
         public Models.ImitationGames GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
         public void SetIsMirror() => SetInitialzeTheCode();
+        public Catalog.XingAPI.Specify[] GetUserStrategy()
+        {
+            var recommend = GetBestStrategyRecommend(Information.Statistics, new Models.ImitationGames());
+            new Task(() => new ExceptionMessage(recommend)).Start();
+
+            return GetCatalog(recommend);
+        }
         public void SetInitialzeTheCode(char initial)
         {
             Code = GetStrategy();

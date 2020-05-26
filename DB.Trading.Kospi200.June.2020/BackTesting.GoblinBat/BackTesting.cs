@@ -482,8 +482,10 @@ namespace ShareInvest.Strategy
                 }
             }));
             if (this.verify)
+            {
                 statement = new Queue<Conclusion>(32);
-
+                new Task(() => new ExceptionMessage(game)).Start();
+            }
             if (StartProgress(game.Strategy.Length) > 0)
                 using (var sw = new StreamWriter(new Secret().Path(game.Strategy, statement.Count), true))
                     try
