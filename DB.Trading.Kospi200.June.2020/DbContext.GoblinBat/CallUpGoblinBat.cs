@@ -253,7 +253,7 @@ namespace ShareInvest.GoblinBatContext
             }
             return null;
         }
-        protected List<ImitationGames> Preheat(List<ImitationGames> games)
+        protected IEnumerable<ImitationGames> Preheat(List<ImitationGames> games)
         {
             string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
@@ -306,15 +306,15 @@ namespace ShareInvest.GoblinBatContext
                 }
             return games;
         }
-        protected Stack<ImitationGames> GetBestStrategy(Stack<ImitationGames> stack, List<long> list)
+        protected Queue<ImitationGames> GetBestStrategy(Queue<ImitationGames> queue, List<long> list)
         {
             string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
                     foreach (var assets in list)
-                        foreach (var game in db.Games.Where(o => o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic).Take(3751))
-                            stack.Push(new ImitationGames
+                        foreach (var game in db.Games.Where(o => o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
+                            queue.Enqueue(new ImitationGames
                             {
                                 Assets = game.Assets,
                                 Code = game.Code,
@@ -358,7 +358,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
-            return stack;
+            return queue;
         }
         protected List<ImitationGames> GetBestExternalRecommend(List<ImitationGames> games)
         {
@@ -1175,7 +1175,7 @@ namespace ShareInvest.GoblinBatContext
         protected internal const string kospi200f = "101";
         protected internal const string start = "StartPoint";
         protected internal const string end = "EndPoint";
-        const double marginRate = 0.1755;
+        const double marginRate = 0.1395;
         const string basic = "Base.res";
         const string chart = "ChartOf101000";
         const string charts = "Charts";

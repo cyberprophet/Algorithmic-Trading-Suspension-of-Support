@@ -95,7 +95,7 @@ namespace ShareInvest.Strategy.Statistics
                                 {
                                     var num = 0;
 
-                                    if (bt.Quantity > 0 && e.Volume < -this.judge && e.Volume + trend < e.Volume)
+                                    if (bt.Quantity > 0 && e.Volume < (CME ? this.judge / -5 : -this.judge) && e.Volume + trend < e.Volume)
                                     {
                                         foreach (var kv in judge)
                                         {
@@ -111,7 +111,7 @@ namespace ShareInvest.Strategy.Statistics
                                         if (num == 8 && bt.SetConclusion(e.Date, e.Price, sell))
                                             return;
                                     }
-                                    else if (bt.Quantity < 0 && e.Volume > this.judge && e.Volume + trend > e.Volume)
+                                    else if (bt.Quantity < 0 && e.Volume > (CME ? this.judge / 5 : this.judge) && e.Volume + trend > e.Volume)
                                     {
                                         foreach (var kv in judge)
                                         {
@@ -139,8 +139,14 @@ namespace ShareInvest.Strategy.Statistics
                 return time.ToString().Length > 8 && GetCheckOnTime(time.ToString());
 
             else if (specify.Time == 1440)
-                return time.ToString().Length > 8 && time.ToString().Substring(6).Equals(onTime) == false;
+            {
+                var sTime = time.ToString();
 
+                if (sTime.Length > 8 && int.TryParse(sTime.Substring(6, 2), out int hour))
+                    CME = hour > 17 || hour < 5;
+
+                return sTime.Length > 8 && sTime.Substring(6).Equals(onTime) == false;
+            }
             return false;
         }
         bool GetCheckOnTime(string time)
@@ -163,13 +169,13 @@ namespace ShareInvest.Strategy.Statistics
             {
                 case buy:
                     if (max - bt.Quantity > 1)
-                        return judge < quantity;
+                        return CME ? judge / 5 < quantity : judge < quantity;
 
                     break;
 
                 case sell:
                     if (max + bt.Quantity > 1)
-                        return -judge > quantity;
+                        return CME ? judge / -5 > quantity : -judge > quantity;
 
                     break;
             }
@@ -188,6 +194,10 @@ namespace ShareInvest.Strategy.Statistics
             get;
         }
         string Check
+        {
+            get; set;
+        }
+        bool CME
         {
             get; set;
         }

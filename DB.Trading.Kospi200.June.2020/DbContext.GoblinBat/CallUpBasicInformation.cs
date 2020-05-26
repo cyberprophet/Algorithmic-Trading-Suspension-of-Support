@@ -85,7 +85,7 @@ namespace ShareInvest.GoblinBatContext
                     while (charts.Count > 0)
                         db.Charts.AddOrUpdate(charts.Dequeue());
 
-                    result = db.SaveChanges() > 0 ? true : false;
+                    result = db.SaveChanges() > 0;
                 }
                 catch (Exception ex)
                 {

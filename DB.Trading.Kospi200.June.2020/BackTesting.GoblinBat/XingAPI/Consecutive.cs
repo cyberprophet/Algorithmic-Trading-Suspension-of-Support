@@ -31,6 +31,9 @@ namespace ShareInvest.Strategy.XingAPI
                 OnTime = true;
                 API.OnReceiveBalance = false;
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
+
+                if (DateTime.Now.Hour < 5 || DateTime.Now.Hour > 16)
+                    this.judge /= 5;
             }
             else
                 Check = string.Empty;

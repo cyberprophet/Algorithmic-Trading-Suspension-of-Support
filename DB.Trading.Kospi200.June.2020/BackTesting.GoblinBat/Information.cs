@@ -89,12 +89,12 @@ namespace ShareInvest.Strategy
                 return mi;
             }
         }
-        public List<Models.ImitationGames> GetStatistics(double count)
+        public Stack<Models.ImitationGames> GetStatistics(double count)
         {
-            var list = new List<Models.ImitationGames>();
+            var stack = new Stack<Models.ImitationGames>();
             var strategy = GetStrategy(new List<string>());
 
-            while (list.Count < 375000 * count)
+            while (stack.Count < 375000 * count)
             {
                 var mi = Imitation;
 
@@ -104,7 +104,7 @@ namespace ShareInvest.Strategy
                     var model = Statistics.First();
 
                     foreach (var st in strategy)
-                        list.Add(new Models.ImitationGames
+                        stack.Push(new Models.ImitationGames
                         {
                             Assets = model.Assets,
                             Code = model.Code,
@@ -148,7 +148,7 @@ namespace ShareInvest.Strategy
                 if (mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
                     foreach (var model in Statistics)
                         if (model.Strategy.Length > 2)
-                            list.Add(new Models.ImitationGames
+                            stack.Push(new Models.ImitationGames
                             {
                                 Assets = model.Assets,
                                 Code = model.Code,
@@ -188,15 +188,15 @@ namespace ShareInvest.Strategy
                                 MonoLong = mi.MonoLong
                             });
             }
-            return list;
+            return stack;
         }
-        public Stack<Models.ImitationGames> GetStatistics(double[] rate, double[] commission)
+        public Queue<Models.ImitationGames> GetStatistics(double[] rate, double[] commission)
         {
-            var stack = new Stack<Models.ImitationGames>(256);
+            var queue = new Queue<Models.ImitationGames>(256);
             var assets = GetUserAssets(new List<long>());
             var roll = new bool[] { true, false };
 
-            while (stack.Count < 7513)
+            while (queue.Count < 7513)
                 foreach (var asset in assets)
                     foreach (var co in commission)
                     {
@@ -209,7 +209,7 @@ namespace ShareInvest.Strategy
 
                         if (ms < ml && bs < bl && minLong < bl && ml <= maxLong && bl <= maxLong)
                             foreach (var over in roll)
-                                stack.Push(new Models.ImitationGames
+                                queue.Enqueue(new Models.ImitationGames
                                 {
                                     Assets = asset,
                                     Code = Retrieve.Code,
@@ -249,7 +249,7 @@ namespace ShareInvest.Strategy
                                     MonoLong = ml
                                 });
                     }
-            return GetBestStrategy(stack, assets);
+            return GetBestStrategy(queue, assets);
         }
         public void SetInsertBaseStrategy(string[] strategy, double[] rate, double[] commission)
         {
@@ -441,7 +441,7 @@ namespace ShareInvest.Strategy
             RemainingDay = GetRemainingDay(Retrieve.Code);
         }
         public List<Models.ImitationGames> GetBestStrategy(bool external) => external ? GetBestExternalRecommend(new List<Models.ImitationGames>(128)) : GetBestStrategyRecommend(new List<Models.ImitationGames>(128));
-        public List<Models.ImitationGames> GetBestStrategy() => Preheat(new List<Models.ImitationGames>(256));
+        public IEnumerable<Models.ImitationGames> GetBestStrategy() => Preheat(new List<Models.ImitationGames>(256));
         internal static List<Models.Statistics> Statistics
         {
             get; set;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
@@ -15,12 +16,12 @@ namespace ShareInvest.XingAPI
 {
     public class ConnectAPI : XASessionClass, IEvents<NotifyIconText>
     {
-        public static ConnectAPI GetInstance(string code, string date)
+        public static ConnectAPI GetInstance(char initial, string code, string date)
         {
             if (XingAPI == null)
             {
                 Date = date;
-                XingAPI = new ConnectAPI();
+                XingAPI = new ConnectAPI(initial);
                 Code = code;
                 new T9943().QueryExcute();
             }
@@ -174,18 +175,57 @@ namespace ShareInvest.XingAPI
             {
                 Accounts = new string[GetAccountListCount()];
                 var detail = new Dictionary<string, string>();
+                var list = new List<string>();
 
                 for (int i = 0; i < Accounts.Length; i++)
                 {
                     Accounts[i] = GetAccountList(i);
-                    detail[GetAcctDetailName(Accounts[i])] = Accounts[i];
+                    var futures = GetAcctDetailName(Accounts[i]);
+
+                    if (detail.ContainsKey(futures))
+                    {
+                        Multiple = true;
+
+                        continue;
+                    }
+                    detail[futures] = Accounts[i];
+                }
+                if (Multiple)
+                {
+                    foreach (var str in Accounts)
+                        if (GetAcctDetailName(str).Equals(secret.Futures))
+                            list.Add(str);
+
+                    if (list.Count > 1)
+                    {
+                        int index = 0;
+
+                        foreach (var str in list.OrderBy(o => o))
+                            switch (initial)
+                            {
+                                case (char)83:
+                                    secret.GetAccount(str);
+                                    break;
+
+                                case (char)84:
+                                    if (index++ == 1)
+                                    {
+                                        secret.GetAccount(str);
+
+                                        return;
+                                    }
+                                    break;
+                            }
+                        return;
+                    }
                 }
                 secret.GetAccount(detail);
             }
         }
-        ConnectAPI()
+        ConnectAPI(char initial)
         {
             secret = new Secret();
+            this.initial = initial;
             var str = KeyDecoder.GetWindowsProductKeyFromRegistry();
 
             if (str.Length > 0 && secret.InfoToConnect.TryGetValue(str, out string[] connect) && secret.Server.TryGetValue(str, out string server) && ConnectServer(server, secret.Port) && Login(connect[0], connect[1], connect[2], 0, true) && IsLoadAPI())
@@ -216,6 +256,11 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
+        bool Multiple
+        {
+            get; set;
+        }
+        readonly char initial;
         readonly Secret secret;
         const string buy = "2";
         const string sell = "1";
