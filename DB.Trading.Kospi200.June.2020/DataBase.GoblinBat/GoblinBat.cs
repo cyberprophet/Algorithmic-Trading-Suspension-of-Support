@@ -69,10 +69,10 @@ namespace ShareInvest
                             notifyIcon.Text = string.Concat("Trading Code_", Strategy.Retrieve.Code);
                             OnEventConnect();
                             OnClickMinimized = quo;
-                            Text = gs;
+                            Text = Xing.Account;
                             Application.DoEvents();
                         }));
-                    Size = new Size(5, 5);
+                    Size = new Size(275, 5);
                     break;
 
                 default:
@@ -139,7 +139,7 @@ namespace ShareInvest
 
                 case st:
                     if (Xing != null && Array.Exists(XingConnect, o => o.Equals(initial)))
-                        Text = Xing.GetAccountName(Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
+                        Text = Xing.AccountName;
 
                     Size = new Size(1350, 255);
                     Statistical.OnEventConnect();
@@ -150,7 +150,7 @@ namespace ShareInvest
                 case acc:
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                     {
-                        Text = (Xing.Accounts.Length == 1 ? Xing.Accounts[0] : Array.Find(Xing.Accounts, o => o.Substring(o.Length - 2, 2).Equals("02"))).Insert(5, "-").Insert(3, "-");
+                        Text = Xing.Account;
                         var query = Xing.querys[0];
                         ((IEvents<Deposit>)query).Send += Account.OnReceiveDeposit;
                         ((IMessage<NotifyIconText>)query).SendMessage += OnReceiveNotifyIcon;
@@ -274,7 +274,7 @@ namespace ShareInvest
 
                     if (temp.TryGetValue(0, out string code))
                     {
-                        if (DateTime.Now.Hour > 21 && secret.GetIsSever(key))
+                        if (secret.GetIsSever(key))
                         {
                             notifyIcon.Text = checkDataBase;
                             Open.StartProgress(3605);
@@ -807,7 +807,6 @@ namespace ShareInvest
         const string cha = "Char";
         const string boolean = "Boolean";
         const string checkDataBase = "CheckDataBase";
-        const string gs = "GodSword";
         const string basic = "Base";
         const string bantam = "Bantam";
         const string feather = "Feather";

@@ -190,7 +190,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [ForeignKey("Statistics"), Range(90000000, long.MaxValue), Column(Order = 37)]
+        [ForeignKey("Statistics"), Range(40000000, long.MaxValue), Column(Order = 37)]
         public long Assets
         {
             get; set;

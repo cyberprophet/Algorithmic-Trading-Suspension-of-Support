@@ -24,7 +24,6 @@ namespace ShareInvest.GoblinBatContext
                         if (st.Strategy.Length > 2)
                             strategy.Add(st.Strategy);
 
-                    strategy.Add(start);
                     strategy.Insert(strategy.Count / 2, end);
                 }
                 catch (Exception ex)
@@ -153,19 +152,20 @@ namespace ShareInvest.GoblinBatContext
                 }
             return list.Distinct().ToList();
         }
-        protected List<long> GetUserAssets(List<long> list)
+        protected IEnumerable<long> GetUserAssets(List<long> list)
         {
+            var recent = DateTime.Now.ToString(CallUpGoblinBat.recent);
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    var assets = from identity in db.Identifies select identity.Assets;
-                    list = assets.Distinct().ToList();
+                    foreach (var assets in db.Identifies.Where(o => o.Equals(recent)).AsNoTracking().Select(o => new { o.Assets }))
+                        list.Add(assets.Assets);
                 }
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
-            return list;
+            return list.Distinct();
         }
         protected void SetInsertBaseStrategy(Queue<Statistics> queue)
         {
@@ -306,7 +306,7 @@ namespace ShareInvest.GoblinBatContext
                 }
             return games;
         }
-        protected Queue<ImitationGames> GetBestStrategy(Queue<ImitationGames> queue, List<long> list)
+        protected Queue<ImitationGames> GetBestStrategy(Queue<ImitationGames> queue, IEnumerable<long> list)
         {
             string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
@@ -472,108 +472,249 @@ namespace ShareInvest.GoblinBatContext
             }
             return games;
         }
-        protected ImitationGames GetBestStrategyRecommend(List<Statistics> list, ImitationGames game)
+        protected (int, ImitationGames, uint, int, ImitationGames) GetBestStrategyRecommend(List<Statistics> list, ImitationGames game)
         {
+            uint count = 1;
+            int temp = int.MinValue, eTemp = int.MinValue;
+            var seriate = list.First();
+            var exist = new ImitationGames();
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    var temp = double.MinValue;
                     var max = db.Games.Max(o => o.Date);
-                    var seriate = list.First();
-
+                    var identify = new Secret().GetIdentify(key);
+                    var identity = db.Identifies.Any(o => o.Identity.Equals(identify)) ? db.Identifies.Where(o => o.Identity.Equals(identify)).AsNoTracking().OrderByDescending(o => o.Date).Select(o => new
+                    {
+                        o.Assets,
+                        o.Code,
+                        o.Commission,
+                        o.Strategy,
+                        o.BaseShort,
+                        o.BaseLong,
+                        o.NonaTime,
+                        o.NonaShort,
+                        o.NonaLong,
+                        o.OctaTime,
+                        o.OctaShort,
+                        o.OctaLong,
+                        o.HeptaTime,
+                        o.HeptaShort,
+                        o.HeptaLong,
+                        o.HexaTime,
+                        o.HexaShort,
+                        o.HexaLong,
+                        o.PentaTime,
+                        o.PentaShort,
+                        o.PentaLong,
+                        o.QuadTime,
+                        o.QuadShort,
+                        o.QuadLong,
+                        o.TriTime,
+                        o.TriShort,
+                        o.TriLong,
+                        o.DuoTime,
+                        o.DuoShort,
+                        o.DuoLong,
+                        o.MonoTime,
+                        o.MonoShort,
+                        o.MonoLong
+                    }).Take(1).First() : null;
                     if (list.Count == 1 && seriate.Strategy.Length < 3)
-                        foreach (var select in db.Games.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.RollOver.Equals(seriate.RollOver) && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == seriate.Assets && o.Code.Equals(seriate.Code) && o.Commission == seriate.Commission && o.MarginRate == seriate.MarginRate).AsNoTracking().OrderByDescending(o => o.Statistic).Take(1))
-                            return new ImitationGames
+                        foreach (var select in db.Games.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == seriate.Assets && o.Code.Equals(seriate.Code) && o.Commission == seriate.Commission && o.MarginRate == seriate.MarginRate).AsNoTracking().OrderByDescending(o => o.Statistic))
+                        {
+                            if (temp < select.Statistic)
                             {
-                                Assets = select.Assets,
-                                Code = select.Code,
-                                Commission = select.Commission,
-                                MarginRate = select.MarginRate,
-                                Strategy = select.Strategy,
-                                RollOver = select.RollOver,
-                                BaseTime = select.BaseTime,
-                                BaseShort = select.BaseShort,
-                                BaseLong = select.BaseLong,
-                                NonaTime = select.NonaTime,
-                                NonaShort = select.NonaShort,
-                                NonaLong = select.NonaLong,
-                                OctaTime = select.OctaTime,
-                                OctaShort = select.OctaShort,
-                                OctaLong = select.OctaLong,
-                                HeptaTime = select.HeptaTime,
-                                HeptaShort = select.HeptaShort,
-                                HeptaLong = select.HeptaLong,
-                                HexaTime = select.HexaTime,
-                                HexaShort = select.HexaShort,
-                                HexaLong = select.HexaLong,
-                                PentaTime = select.PentaTime,
-                                PentaShort = select.PentaShort,
-                                PentaLong = select.PentaLong,
-                                QuadTime = select.QuadTime,
-                                QuadShort = select.QuadShort,
-                                QuadLong = select.QuadLong,
-                                TriTime = select.TriTime,
-                                TriShort = select.TriShort,
-                                TriLong = select.TriLong,
-                                DuoTime = select.DuoTime,
-                                DuoShort = select.DuoShort,
-                                DuoLong = select.DuoLong,
-                                MonoTime = select.MonoTime,
-                                MonoShort = select.MonoShort,
-                                MonoLong = select.MonoLong
-                            };
-                    foreach (var ch in list)
-                        if (ch.Strategy.Length > 2)
-                            foreach (var choice in db.Games.Where(o => o.Date.Equals(max) && o.Assets == ch.Assets && o.Code.Equals(ch.Code) && o.Commission == ch.Commission && o.MarginRate == ch.MarginRate && o.Strategy.Equals(ch.Strategy) && o.RollOver.Equals(ch.RollOver) && o.Strategy.Length > 2 && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic).Take(1))
-                                if (temp < choice.Statistic)
+                                game = new ImitationGames
                                 {
-                                    game = new ImitationGames
+                                    Assets = select.Assets,
+                                    Code = select.Code,
+                                    Commission = select.Commission,
+                                    MarginRate = select.MarginRate,
+                                    Strategy = select.Strategy,
+                                    RollOver = select.RollOver,
+                                    BaseTime = select.BaseTime,
+                                    BaseShort = select.BaseShort,
+                                    BaseLong = select.BaseLong,
+                                    NonaTime = select.NonaTime,
+                                    NonaShort = select.NonaShort,
+                                    NonaLong = select.NonaLong,
+                                    OctaTime = select.OctaTime,
+                                    OctaShort = select.OctaShort,
+                                    OctaLong = select.OctaLong,
+                                    HeptaTime = select.HeptaTime,
+                                    HeptaShort = select.HeptaShort,
+                                    HeptaLong = select.HeptaLong,
+                                    HexaTime = select.HexaTime,
+                                    HexaShort = select.HexaShort,
+                                    HexaLong = select.HexaLong,
+                                    PentaTime = select.PentaTime,
+                                    PentaShort = select.PentaShort,
+                                    PentaLong = select.PentaLong,
+                                    QuadTime = select.QuadTime,
+                                    QuadShort = select.QuadShort,
+                                    QuadLong = select.QuadLong,
+                                    TriTime = select.TriTime,
+                                    TriShort = select.TriShort,
+                                    TriLong = select.TriLong,
+                                    DuoTime = select.DuoTime,
+                                    DuoShort = select.DuoShort,
+                                    DuoLong = select.DuoLong,
+                                    MonoTime = select.MonoTime,
+                                    MonoShort = select.MonoShort,
+                                    MonoLong = select.MonoLong
+                                };
+                                temp = select.Statistic;
+                            }
+                            if (identity != null && identity.Strategy.Length == 2 && select.Assets == identity.Assets && select.Code.Equals(identity.Code) && select.Strategy.Length == identity.Strategy.Length && select.Commission == identity.Commission && select.MarginRate == marginRate && select.BaseShort == identity.BaseShort && select.BaseLong == identity.BaseLong && select.NonaTime == identity.NonaTime && select.NonaShort == identity.NonaShort && select.NonaLong == identity.NonaLong && select.OctaTime == identity.OctaTime && select.OctaShort == identity.OctaShort && select.OctaLong == identity.OctaLong && select.HeptaTime == identity.HeptaTime && select.HeptaShort == identity.HeptaShort && select.HeptaLong == identity.HeptaLong && select.HexaTime == identity.HexaTime && select.HexaShort == identity.HexaShort && select.HexaLong == identity.HexaLong && select.PentaTime == identity.PentaTime && select.PentaShort == identity.PentaShort && select.PentaLong == identity.PentaLong && select.QuadTime == identity.QuadTime && select.QuadShort == identity.QuadShort && select.QuadLong == identity.QuadLong && select.TriTime == identity.TriTime && select.TriShort == identity.TriShort && select.TriLong == identity.TriLong && select.DuoTime == identity.DuoTime && select.DuoShort == identity.DuoShort && select.DuoLong == identity.DuoLong && select.MonoTime == identity.MonoTime && select.MonoShort == identity.MonoShort && select.MonoLong == identity.MonoLong)
+                            {
+                                exist = new ImitationGames
+                                {
+                                    Assets = select.Assets,
+                                    Code = select.Code,
+                                    Commission = select.Commission,
+                                    MarginRate = select.MarginRate,
+                                    Strategy = select.Strategy,
+                                    RollOver = select.RollOver,
+                                    BaseTime = select.BaseTime,
+                                    BaseShort = select.BaseShort,
+                                    BaseLong = select.BaseLong,
+                                    NonaTime = select.NonaTime,
+                                    NonaShort = select.NonaShort,
+                                    NonaLong = select.NonaLong,
+                                    OctaTime = select.OctaTime,
+                                    OctaShort = select.OctaShort,
+                                    OctaLong = select.OctaLong,
+                                    HeptaTime = select.HeptaTime,
+                                    HeptaShort = select.HeptaShort,
+                                    HeptaLong = select.HeptaLong,
+                                    HexaTime = select.HexaTime,
+                                    HexaShort = select.HexaShort,
+                                    HexaLong = select.HexaLong,
+                                    PentaTime = select.PentaTime,
+                                    PentaShort = select.PentaShort,
+                                    PentaLong = select.PentaLong,
+                                    QuadTime = select.QuadTime,
+                                    QuadShort = select.QuadShort,
+                                    QuadLong = select.QuadLong,
+                                    TriTime = select.TriTime,
+                                    TriShort = select.TriShort,
+                                    TriLong = select.TriLong,
+                                    DuoTime = select.DuoTime,
+                                    DuoShort = select.DuoShort,
+                                    DuoLong = select.DuoLong,
+                                    MonoTime = select.MonoTime,
+                                    MonoShort = select.MonoShort,
+                                    MonoLong = select.MonoLong
+                                };
+                                eTemp = select.Statistic;
+                                break;
+                            }
+                            count++;
+                        }
+                    else
+                        foreach (var ch in list)
+                        {
+                            count = 1;
+
+                            if (ch.Strategy.Length > 2)
+                                foreach (var choice in db.Games.Where(o => o.Date.Equals(max) && o.Assets == ch.Assets && o.Code.Equals(ch.Code) && o.Commission == ch.Commission && o.MarginRate == ch.MarginRate && o.Strategy.Length > 2 && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic))
+                                {
+                                    if (temp < choice.Statistic)
                                     {
-                                        Assets = choice.Assets,
-                                        Code = choice.Code,
-                                        Commission = choice.Commission,
-                                        MarginRate = choice.MarginRate,
-                                        Strategy = choice.Strategy,
-                                        RollOver = choice.RollOver,
-                                        BaseTime = choice.BaseTime,
-                                        BaseShort = choice.BaseShort,
-                                        BaseLong = choice.BaseLong,
-                                        NonaTime = choice.NonaTime,
-                                        NonaShort = choice.NonaShort,
-                                        NonaLong = choice.NonaLong,
-                                        OctaTime = choice.OctaTime,
-                                        OctaShort = choice.OctaShort,
-                                        OctaLong = choice.OctaLong,
-                                        HeptaTime = choice.HeptaTime,
-                                        HeptaShort = choice.HeptaShort,
-                                        HeptaLong = choice.HeptaLong,
-                                        HexaTime = choice.HexaTime,
-                                        HexaShort = choice.HexaShort,
-                                        HexaLong = choice.HexaLong,
-                                        PentaTime = choice.PentaTime,
-                                        PentaShort = choice.PentaShort,
-                                        PentaLong = choice.PentaLong,
-                                        QuadTime = choice.QuadTime,
-                                        QuadShort = choice.QuadShort,
-                                        QuadLong = choice.QuadLong,
-                                        TriTime = choice.TriTime,
-                                        TriShort = choice.TriShort,
-                                        TriLong = choice.TriLong,
-                                        DuoTime = choice.DuoTime,
-                                        DuoShort = choice.DuoShort,
-                                        DuoLong = choice.DuoLong,
-                                        MonoTime = choice.MonoTime,
-                                        MonoShort = choice.MonoShort,
-                                        MonoLong = choice.MonoLong
-                                    };
-                                    temp = choice.Statistic;
+                                        game = new ImitationGames
+                                        {
+                                            Assets = choice.Assets,
+                                            Code = choice.Code,
+                                            Commission = choice.Commission,
+                                            MarginRate = choice.MarginRate,
+                                            Strategy = choice.Strategy,
+                                            RollOver = choice.RollOver,
+                                            BaseTime = choice.BaseTime,
+                                            BaseShort = choice.BaseShort,
+                                            BaseLong = choice.BaseLong,
+                                            NonaTime = choice.NonaTime,
+                                            NonaShort = choice.NonaShort,
+                                            NonaLong = choice.NonaLong,
+                                            OctaTime = choice.OctaTime,
+                                            OctaShort = choice.OctaShort,
+                                            OctaLong = choice.OctaLong,
+                                            HeptaTime = choice.HeptaTime,
+                                            HeptaShort = choice.HeptaShort,
+                                            HeptaLong = choice.HeptaLong,
+                                            HexaTime = choice.HexaTime,
+                                            HexaShort = choice.HexaShort,
+                                            HexaLong = choice.HexaLong,
+                                            PentaTime = choice.PentaTime,
+                                            PentaShort = choice.PentaShort,
+                                            PentaLong = choice.PentaLong,
+                                            QuadTime = choice.QuadTime,
+                                            QuadShort = choice.QuadShort,
+                                            QuadLong = choice.QuadLong,
+                                            TriTime = choice.TriTime,
+                                            TriShort = choice.TriShort,
+                                            TriLong = choice.TriLong,
+                                            DuoTime = choice.DuoTime,
+                                            DuoShort = choice.DuoShort,
+                                            DuoLong = choice.DuoLong,
+                                            MonoTime = choice.MonoTime,
+                                            MonoShort = choice.MonoShort,
+                                            MonoLong = choice.MonoLong
+                                        };
+                                        temp = choice.Statistic;
+                                    }
+                                    if (identity != null && identity.Strategy.Length > 2 && choice.Assets == identity.Assets && choice.Code.Equals(identity.Code) && choice.Strategy.Length == identity.Strategy.Length && choice.Commission == identity.Commission && choice.MarginRate == marginRate && choice.BaseShort == identity.BaseShort && choice.BaseLong == identity.BaseLong && choice.NonaTime == identity.NonaTime && choice.NonaShort == identity.NonaShort && choice.NonaLong == identity.NonaLong && choice.OctaTime == identity.OctaTime && choice.OctaShort == identity.OctaShort && choice.OctaLong == identity.OctaLong && choice.HeptaTime == identity.HeptaTime && choice.HeptaShort == identity.HeptaShort && choice.HeptaLong == identity.HeptaLong && choice.HexaTime == identity.HexaTime && choice.HexaShort == identity.HexaShort && choice.HexaLong == identity.HexaLong && choice.PentaTime == identity.PentaTime && choice.PentaShort == identity.PentaShort && choice.PentaLong == identity.PentaLong && choice.QuadTime == identity.QuadTime && choice.QuadShort == identity.QuadShort && choice.QuadLong == identity.QuadLong && choice.TriTime == identity.TriTime && choice.TriShort == identity.TriShort && choice.TriLong == identity.TriLong && choice.DuoTime == identity.DuoTime && choice.DuoShort == identity.DuoShort && choice.DuoLong == identity.DuoLong && choice.MonoTime == identity.MonoTime && choice.MonoShort == identity.MonoShort && choice.MonoLong == identity.MonoLong)
+                                    {
+                                        exist = new ImitationGames
+                                        {
+                                            Assets = choice.Assets,
+                                            Code = choice.Code,
+                                            Commission = choice.Commission,
+                                            MarginRate = choice.MarginRate,
+                                            Strategy = choice.Strategy,
+                                            RollOver = choice.RollOver,
+                                            BaseTime = choice.BaseTime,
+                                            BaseShort = choice.BaseShort,
+                                            BaseLong = choice.BaseLong,
+                                            NonaTime = choice.NonaTime,
+                                            NonaShort = choice.NonaShort,
+                                            NonaLong = choice.NonaLong,
+                                            OctaTime = choice.OctaTime,
+                                            OctaShort = choice.OctaShort,
+                                            OctaLong = choice.OctaLong,
+                                            HeptaTime = choice.HeptaTime,
+                                            HeptaShort = choice.HeptaShort,
+                                            HeptaLong = choice.HeptaLong,
+                                            HexaTime = choice.HexaTime,
+                                            HexaShort = choice.HexaShort,
+                                            HexaLong = choice.HexaLong,
+                                            PentaTime = choice.PentaTime,
+                                            PentaShort = choice.PentaShort,
+                                            PentaLong = choice.PentaLong,
+                                            QuadTime = choice.QuadTime,
+                                            QuadShort = choice.QuadShort,
+                                            QuadLong = choice.QuadLong,
+                                            TriTime = choice.TriTime,
+                                            TriShort = choice.TriShort,
+                                            TriLong = choice.TriLong,
+                                            DuoTime = choice.DuoTime,
+                                            DuoShort = choice.DuoShort,
+                                            DuoLong = choice.DuoLong,
+                                            MonoTime = choice.MonoTime,
+                                            MonoShort = choice.MonoShort,
+                                            MonoLong = choice.MonoLong
+                                        };
+                                        eTemp = choice.Statistic;
+                                        break;
+                                    }
+                                    count++;
                                 }
+                        }
                 }
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
-            return game;
+            return (temp, game, count, eTemp, exist ?? null);
         }
         protected ImitationGames GetBestStrategyRecommend(List<Statistics> list)
         {
@@ -759,22 +900,15 @@ namespace ShareInvest.GoblinBatContext
             }
             return list;
         }
-        protected int SetIndentify(Setting setting)
+        protected int SetIdentify(Identify setting)
         {
-            string identity = new Secret().GetIdentify(key), date = DateTime.Now.ToString(recent);
+            setting.Identity = new Secret().GetIdentify(key);
+            setting.Date = DateTime.Now.ToString(recent);
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    db.Identifies.AddOrUpdate(new Identify
-                    {
-                        Identity = identity,
-                        Date = date,
-                        Assets = setting.Assets,
-                        Strategy = setting.Strategy,
-                        Commission = setting.Commission,
-                        RollOver = setting.RollOver,
-                        Code = setting.Code
-                    });
+                    db.Identifies.AddOrUpdate(setting);
+
                     return db.SaveChanges();
                 }
                 catch (Exception ex)
@@ -1173,7 +1307,6 @@ namespace ShareInvest.GoblinBatContext
         }
         protected internal const string futures = "000";
         protected internal const string kospi200f = "101";
-        protected internal const string start = "StartPoint";
         protected internal const string end = "EndPoint";
         const double marginRate = 0.1395;
         const string basic = "Base.res";

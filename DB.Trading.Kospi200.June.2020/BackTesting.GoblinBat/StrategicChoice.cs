@@ -36,7 +36,7 @@ namespace ShareInvest.Strategy
                 var check = classification.Equals(buy);
                 var max = Max(specify.Assets / ((check ? e.Price[5] : e.Price[4]) * Const.TransactionMultiplier * specify.MarginRate), classification);
                 double[] sp = new double[10], bp = new double[10];
-                API.MaxAmount = max * (classification.Equals(buy) ? 1 : -1);
+                API.MaxAmount = max * (check ? 1 : -1);
 
                 for (int i = 0; i < 10; i++)
                     if (double.TryParse((e.Price[5] - Const.ErrorRate * (9 - i)).ToString("F2"), out double bt) && double.TryParse((e.Price[4] + Const.ErrorRate * (9 - i)).ToString("F2"), out double st))
@@ -70,7 +70,7 @@ namespace ShareInvest.Strategy
                         case buy:
                             if (API.Quantity > 0)
                             {
-                                if (API.SellOrder.Count == 0 && max < API.Quantity + 1 && ForTheLiquidationOfBuyOrder(price, sp))
+                                if (API.SellOrder.Count == 0 && max < API.Quantity - 1 && ForTheLiquidationOfBuyOrder(price, sp))
                                     return;
 
                                 if (API.SellOrder.Count > 0 && ForTheLiquidationOfBuyOrder(sp))

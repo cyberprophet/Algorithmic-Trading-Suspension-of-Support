@@ -487,7 +487,7 @@ namespace ShareInvest.Strategy
                 new Task(() => new ExceptionMessage(game)).Start();
             }
             if (StartProgress(game.Strategy.Length) > 0)
-                using (var sw = new StreamWriter(new Secret().Path(game.Strategy, statement.Count), true))
+                using (var sw = new StreamWriter(new Secret().GetPath(game.Strategy, statement.Count), true))
                     try
                     {
                         while (statement.Count > 0)

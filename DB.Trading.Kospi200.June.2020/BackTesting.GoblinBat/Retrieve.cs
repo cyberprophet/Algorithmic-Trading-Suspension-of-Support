@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
@@ -13,7 +14,7 @@ namespace ShareInvest.Strategy
 {
     public partial class Retrieve : CallUpStatisticalAnalysis
     {
-        public Retrieve(string key) : base(key) => Console.WriteLine(key);
+        public Retrieve(string key) : base(key) => secret = new Secret();
         public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number, Code);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
@@ -21,10 +22,54 @@ namespace ShareInvest.Strategy
         public void SetIsMirror() => SetInitialzeTheCode();
         public Catalog.XingAPI.Specify[] GetUserStrategy()
         {
-            var recommend = GetBestStrategyRecommend(Information.Statistics, new Models.ImitationGames());
-            new Task(() => new ExceptionMessage(recommend)).Start();
+            var game = new Models.ImitationGames();
+            var recommend = GetBestStrategyRecommend(Information.Statistics, game);
 
-            return GetCatalog(recommend);
+            if (recommend.Item5 == null || TimerBox.Show(secret.GetMessage(recommend.Item4, recommend.Item1, recommend.Item4 / (double)recommend.Item1), secret.GetRank(recommend.Item3), MessageBoxButtons.YesNo, MessageBoxIcon.Question, (recommend.Item2.MarginRate + 0.5713) * recommend.Item1 > recommend.Item4 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 7135U).Equals(DialogResult.Yes))
+                game = recommend.Item2;
+
+            else
+                game = recommend.Item5;
+
+            new Task(() => new ExceptionMessage(game)).Start();
+            SetIdentify(new Models.Identify
+            {
+                Assets = game.Assets,
+                Strategy = game.Strategy,
+                Commission = game.Commission,
+                RollOver = game.RollOver ? CheckState.Checked : CheckState.Unchecked,
+                Code = game.Code,
+                BaseShort = game.BaseShort,
+                BaseLong = game.BaseLong,
+                NonaTime = game.NonaTime,
+                NonaShort = game.NonaShort,
+                NonaLong = game.NonaLong,
+                OctaTime = game.OctaTime,
+                OctaShort = game.OctaShort,
+                OctaLong = game.OctaLong,
+                HeptaTime = game.HeptaTime,
+                HeptaShort = game.HeptaShort,
+                HeptaLong = game.HeptaLong,
+                HexaTime = game.HexaTime,
+                HexaShort = game.HexaShort,
+                HexaLong = game.HexaLong,
+                PentaTime = game.PentaTime,
+                PentaShort = game.PentaShort,
+                PentaLong = game.PentaLong,
+                QuadTime = game.QuadTime,
+                QuadShort = game.QuadShort,
+                QuadLong = game.QuadLong,
+                TriTime = game.TriTime,
+                TriShort = game.TriShort,
+                TriLong = game.TriLong,
+                DuoTime = game.DuoTime,
+                DuoShort = game.DuoShort,
+                DuoLong = game.DuoLong,
+                MonoTime = game.MonoTime,
+                MonoShort = game.MonoShort,
+                MonoLong = game.MonoLong
+            });
+            return GetCatalog(game);
         }
         public void SetInitialzeTheCode(char initial)
         {
@@ -102,7 +147,43 @@ namespace ShareInvest.Strategy
 
             return code;
         }
-        public int SetIdentify(Setting setting) => SetIndentify(setting);
+        public int SetIdentify(Setting setting) => SetIdentify(new Models.Identify
+        {
+            Assets = setting.Assets,
+            Strategy = setting.Strategy,
+            Commission = setting.Commission,
+            RollOver = setting.RollOver,
+            Code = setting.Code,
+            BaseShort = setting.BaseShort,
+            BaseLong = setting.BaseLong,
+            NonaTime = setting.NonaTime,
+            NonaShort = setting.NonaShort,
+            NonaLong = setting.NonaLong,
+            OctaTime = setting.OctaTime,
+            OctaShort = setting.OctaShort,
+            OctaLong = setting.OctaLong,
+            HeptaTime = setting.HeptaTime,
+            HeptaShort = setting.HeptaShort,
+            HeptaLong = setting.HeptaLong,
+            HexaTime = setting.HexaTime,
+            HexaShort = setting.HexaShort,
+            HexaLong = setting.HexaLong,
+            PentaTime = setting.PentaTime,
+            PentaShort = setting.PentaShort,
+            PentaLong = setting.PentaLong,
+            QuadTime = setting.QuadTime,
+            QuadShort = setting.QuadShort,
+            QuadLong = setting.QuadLong,
+            TriTime = setting.TriTime,
+            TriShort = setting.TriShort,
+            TriLong = setting.TriLong,
+            DuoTime = setting.DuoTime,
+            DuoShort = setting.DuoShort,
+            DuoLong = setting.DuoLong,
+            MonoTime = setting.MonoTime,
+            MonoShort = setting.MonoShort,
+            MonoLong = setting.MonoLong
+        });
         public string RecentDate
         {
             get
@@ -321,5 +402,6 @@ namespace ShareInvest.Strategy
                 Charts = GetChart(new Dictionary<DateTime, Queue<Chart>>(), Code);
         }
         const string format = "yyMMddHHmmss";
+        readonly Secret secret;
     }
 }

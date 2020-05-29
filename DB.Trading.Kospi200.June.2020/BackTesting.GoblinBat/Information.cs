@@ -98,54 +98,55 @@ namespace ShareInvest.Strategy
             {
                 var mi = Imitation;
 
-                if (Statistics.Count == 1 && Statistics.Any(o => o.Strategy.Equals(string.Empty) || o.Strategy.Length == 2) && mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
-                {
-                    mi.Strategy = ran.Next(20, 100).ToString();
-                    var model = Statistics.First();
-
-                    foreach (var st in strategy)
-                        stack.Push(new Models.ImitationGames
-                        {
-                            Assets = model.Assets,
-                            Code = model.Code,
-                            Commission = model.Commission,
-                            MarginRate = model.MarginRate,
-                            Strategy = st.Equals(end) || st.Equals(start) ? mi.Strategy : st,
-                            RollOver = model.RollOver,
-                            BaseTime = mi.BaseTime,
-                            BaseShort = mi.BaseShort,
-                            BaseLong = mi.BaseLong,
-                            NonaTime = st.Equals(end) ? 0 : mi.NonaTime,
-                            NonaShort = st.Equals(end) ? 4 : mi.NonaShort,
-                            NonaLong = st.Equals(end) ? 60 : mi.NonaLong,
-                            OctaTime = st.Equals(end) ? 0 : mi.OctaTime,
-                            OctaShort = st.Equals(end) ? 4 : mi.OctaShort,
-                            OctaLong = st.Equals(end) ? 60 : mi.OctaLong,
-                            HeptaTime = st.Equals(end) ? 0 : mi.HeptaTime,
-                            HeptaShort = st.Equals(end) ? 4 : mi.HeptaShort,
-                            HeptaLong = st.Equals(end) ? 60 : mi.HeptaLong,
-                            HexaTime = st.Equals(end) ? 0 : mi.HexaTime,
-                            HexaShort = st.Equals(end) ? 4 : mi.HexaShort,
-                            HexaLong = st.Equals(end) ? 60 : mi.HexaLong,
-                            PentaTime = st.Equals(end) ? 0 : mi.PentaTime,
-                            PentaShort = st.Equals(end) ? 4 : mi.PentaShort,
-                            PentaLong = st.Equals(end) ? 60 : mi.PentaLong,
-                            QuadTime = st.Equals(end) ? 0 : mi.QuadTime,
-                            QuadShort = st.Equals(end) ? 4 : mi.QuadShort,
-                            QuadLong = st.Equals(end) ? 60 : mi.QuadLong,
-                            TriTime = st.Equals(end) ? 0 : mi.TriTime,
-                            TriShort = st.Equals(end) ? 4 : mi.TriShort,
-                            TriLong = st.Equals(end) ? 60 : mi.TriLong,
-                            DuoTime = st.Equals(end) ? 0 : mi.DuoTime,
-                            DuoShort = st.Equals(end) ? 4 : mi.DuoShort,
-                            DuoLong = st.Equals(end) ? 60 : mi.DuoLong,
-                            MonoTime = mi.MonoTime,
-                            MonoShort = mi.MonoShort,
-                            MonoLong = mi.MonoLong
-                        });
-                    continue;
-                }
                 if (mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
+                {
+                    if (Statistics.Count == 1 && Statistics.Any(o => o.Strategy.Equals(string.Empty) || o.Strategy.Length == 2))
+                    {
+                        mi.Strategy = ran.Next(20, 100).ToString();
+                        var model = Statistics.First();
+
+                        foreach (var st in strategy)
+                            stack.Push(new Models.ImitationGames
+                            {
+                                Assets = model.Assets,
+                                Code = model.Code,
+                                Commission = model.Commission,
+                                MarginRate = model.MarginRate,
+                                Strategy = st.Equals(end) ? mi.Strategy : st,
+                                RollOver = model.RollOver,
+                                BaseTime = mi.BaseTime,
+                                BaseShort = mi.BaseShort,
+                                BaseLong = mi.BaseLong,
+                                NonaTime = st.Equals(end) ? 0 : mi.NonaTime,
+                                NonaShort = st.Equals(end) ? 4 : mi.NonaShort,
+                                NonaLong = st.Equals(end) ? 60 : mi.NonaLong,
+                                OctaTime = st.Equals(end) ? 0 : mi.OctaTime,
+                                OctaShort = st.Equals(end) ? 4 : mi.OctaShort,
+                                OctaLong = st.Equals(end) ? 60 : mi.OctaLong,
+                                HeptaTime = st.Equals(end) ? 0 : mi.HeptaTime,
+                                HeptaShort = st.Equals(end) ? 4 : mi.HeptaShort,
+                                HeptaLong = st.Equals(end) ? 60 : mi.HeptaLong,
+                                HexaTime = st.Equals(end) ? 0 : mi.HexaTime,
+                                HexaShort = st.Equals(end) ? 4 : mi.HexaShort,
+                                HexaLong = st.Equals(end) ? 60 : mi.HexaLong,
+                                PentaTime = st.Equals(end) ? 0 : mi.PentaTime,
+                                PentaShort = st.Equals(end) ? 4 : mi.PentaShort,
+                                PentaLong = st.Equals(end) ? 60 : mi.PentaLong,
+                                QuadTime = st.Equals(end) ? 0 : mi.QuadTime,
+                                QuadShort = st.Equals(end) ? 4 : mi.QuadShort,
+                                QuadLong = st.Equals(end) ? 60 : mi.QuadLong,
+                                TriTime = st.Equals(end) ? 0 : mi.TriTime,
+                                TriShort = st.Equals(end) ? 4 : mi.TriShort,
+                                TriLong = st.Equals(end) ? 60 : mi.TriLong,
+                                DuoTime = st.Equals(end) ? 0 : mi.DuoTime,
+                                DuoShort = st.Equals(end) ? 4 : mi.DuoShort,
+                                DuoLong = st.Equals(end) ? 60 : mi.DuoLong,
+                                MonoTime = mi.MonoTime,
+                                MonoShort = mi.MonoShort,
+                                MonoLong = mi.MonoLong
+                            });
+                        continue;
+                    }
                     foreach (var model in Statistics)
                         if (model.Strategy.Length > 2)
                             stack.Push(new Models.ImitationGames
@@ -187,6 +188,7 @@ namespace ShareInvest.Strategy
                                 MonoShort = mi.MonoShort,
                                 MonoLong = mi.MonoLong
                             });
+                }
             }
             return stack;
         }
@@ -244,7 +246,7 @@ namespace ShareInvest.Strategy
                                     DuoTime = 0,
                                     DuoShort = 4,
                                     DuoLong = 60,
-                                    MonoTime = mt,
+                                    MonoTime = mt < 10 ? mt : mt % 5 == 0 ? mt : mt / 5 * 0b101,
                                     MonoShort = ms,
                                     MonoLong = ml
                                 });

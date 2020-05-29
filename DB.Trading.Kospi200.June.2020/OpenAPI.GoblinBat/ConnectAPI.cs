@@ -354,16 +354,16 @@ namespace ShareInvest.OpenAPI
 
                             while (new Secrets().IsServer(key))
                             {
-                                if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
-                                    RemainingDay(API.GetFutureCodeByIndex(1));
+                                Temporary.SetConnection(OpenAPI, key);
+                                Delay.Milliseconds = 605;
 
-                                if (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)Math.Pow(235, 2)).Equals(DialogResult.OK))
+                                if (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)Math.Pow(413, 2)).Equals(DialogResult.OK))
                                 {
-                                    Temporary.SetConnection(OpenAPI);
-                                    Request(CodeList.First());
+                                    if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
+                                        RemainingDay(API.GetFutureCodeByIndex(1));
 
-                                    if (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)Math.Pow(413, 2)).Equals(DialogResult.OK))
-                                        break;
+                                    Request(CodeList.First());
+                                    break;
                                 }
                             }
                             SendCount?.Invoke(this, new NotifyIconText(-106));
@@ -579,7 +579,7 @@ namespace ShareInvest.OpenAPI
         }
         void OnCollectingData(string[] markets)
         {
-            Temporary.SetConnection(OpenAPI);
+            Temporary.SetConnection(OpenAPI, key);
             SetScreenNumber(8900, 9050);
             new Task(() => SetScreenNumber(1000, 8900)).Start();
             SetPasswordWhileCollectingData(markets.Length);

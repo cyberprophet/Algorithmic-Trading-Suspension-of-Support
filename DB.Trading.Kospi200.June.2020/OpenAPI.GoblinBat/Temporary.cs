@@ -1,4 +1,5 @@
 ﻿using System.Text;
+
 using ShareInvest.EventHandler;
 using ShareInvest.EventHandler.OpenAPI;
 using ShareInvest.GoblinBatContext;
@@ -9,7 +10,6 @@ namespace ShareInvest.OpenAPI
     {
         public Temporary(ConnectAPI api, StringBuilder sb, string key) : base(key)
         {
-            this.key = key;
             Temp = sb;
             api.SendQuotes += OnReceiveMemorize;
             api.SendDatum += OnReceiveMemorize;
@@ -19,7 +19,7 @@ namespace ShareInvest.OpenAPI
             Temp = new StringBuilder(1024);
             api.SendMemorize += OnReceiveMemorize;
         }
-        internal void SetConnection(ConnectAPI api)
+        internal void SetConnection(ConnectAPI api, string key)
         {
             api.SendQuotes -= OnReceiveMemorize;
             api.SendDatum -= OnReceiveMemorize;
@@ -56,6 +56,5 @@ namespace ShareInvest.OpenAPI
             get; set;
         }
         internal void SetStorage(string code) => SetStorage(code, Temp);
-        readonly string key;
     }
 }

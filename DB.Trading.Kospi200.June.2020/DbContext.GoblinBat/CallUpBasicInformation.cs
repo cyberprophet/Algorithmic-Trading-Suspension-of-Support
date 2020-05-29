@@ -5,6 +5,7 @@ using System.Data.Entity.Migrations;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Message;
 using ShareInvest.Models;
@@ -58,21 +59,19 @@ namespace ShareInvest.GoblinBatContext
                         new ExceptionMessage(ex.StackTrace);
                     }
                 if (temp.Count > 0)
-                {
-                    if (exists.Exists == false)
-                        exists.Create();
+                    try
+                    {
+                        if (exists.Exists == false)
+                            exists.Create();
 
-                    using (var sw = new StreamWriter(file))
-                        try
-                        {
+                        using (var sw = new StreamWriter(file))
                             foreach (var kv in temp.OrderBy(o => o.Key))
                                 sw.WriteLine(string.Concat(kv.Key, ',', kv.Value));
-                        }
-                        catch (Exception ex)
-                        {
-                            new ExceptionMessage(ex.StackTrace);
-                        }
-                }
+                    }
+                    catch (Exception ex)
+                    {
+                        new ExceptionMessage(ex.StackTrace);
+                    }
             }
             return stack;
         }

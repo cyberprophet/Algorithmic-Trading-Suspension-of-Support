@@ -11,7 +11,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(90000000, long.MaxValue), Column(Order = 1)]
+        [Key, Range(40000000, long.MaxValue), Column(Order = 1)]
         public long Assets
         {
             get; set;

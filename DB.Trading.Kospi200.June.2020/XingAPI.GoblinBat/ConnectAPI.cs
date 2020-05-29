@@ -96,7 +96,9 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
-        public string DetailName => GetAcctDetailName(Accounts.Length == 1 ? Accounts[0] : Array.Find(Accounts, o => o.Substring(o.Length - 2, 2).Equals("02")));
+        public string AccountName => GetAccountName(secret.ShowAccount.Replace("-", string.Empty));
+        public string Account => secret.ShowAccount;
+        public string DetailName => GetAcctDetailName(secret.ShowAccount.Replace("-", string.Empty));
         public void Dispose()
         {
             Process.Start("shutdown.exe", "-r");

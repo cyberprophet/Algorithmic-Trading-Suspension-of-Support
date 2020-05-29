@@ -258,13 +258,14 @@ namespace ShareInvest.GoblinBatControls
         {
             SuspendLayout();
             var button = (Button)sender;
+            int i = 0;
 
             switch (button.Name)
             {
                 case start:
                     int value = int.MaxValue;
 
-                    for (int i = 0; i < 10; i++)
+                    for (i = 0; i < 10; i++)
                     {
                         var time = i > 0 ? string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value : 1440;
 
@@ -306,7 +307,36 @@ namespace ShareInvest.GoblinBatControls
                             Commission = commission[Array.FindIndex(Commission, o => o.Equals(comboCommission.SelectedItem.ToString()))],
                             Strategy = strategy != null ? strategy[Array.FindIndex(strategy, o => o.Equals(comboStrategy.SelectedItem.ToString()))] : numericReaction.Value.ToString(),
                             Code = code,
-                            RollOver = checkRollOver.CheckState
+                            RollOver = checkRollOver.CheckState,
+                            BaseShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            BaseLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                            NonaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                            NonaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            NonaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                            OctaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                            OctaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            OctaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                            HeptaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                            HeptaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            HeptaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                            HexaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                            HexaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            HexaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                            PentaTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                            PentaShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            PentaLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                            QuadTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                            QuadShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            QuadLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                            TriTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                            TriShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            TriLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                            DuoTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                            DuoShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            DuoLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,
+                            MonoTime = (int)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
+                            MonoShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
+                            MonoLong = (int)string.Concat(numeric, i + 20).FindByName<NumericUpDown>(this).Value
                         }));
                     break;
             }

@@ -66,6 +66,7 @@ namespace ShareInvest
                                 else if (secret.GetIsMirror(str))
                                 {
                                     retrieve.SetIsMirror();
+                                    count *= 0.6;
                                     var better = info.GetStatistics(secret.rate, secret.commission);
                                     var temp = new Stack<Models.ImitationGames>();
                                     var index = 0;
@@ -83,7 +84,7 @@ namespace ShareInvest
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count)
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * (initial.Equals(Port.Seriate) ? count * 0.8 : count))
                                 };
                                 try
                                 {
@@ -108,6 +109,9 @@ namespace ShareInvest
                                 }
                                 catch (Exception ex)
                                 {
+                                    cts.Dispose();
+                                    new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
+
                                     if (ex.TargetSite.Name.Equals("ThrowIfExceptional"))
                                         while (catalog.Count > 0)
                                         {
@@ -123,17 +127,27 @@ namespace ShareInvest
 
                                                     case 2:
                                                         new BackTesting(initial, number, str);
+
+                                                        if (Count == uint.MaxValue)
+                                                        {
+                                                            catalog.Clear();
+
+                                                            return;
+                                                        }
                                                         break;
 
                                                     default:
-                                                        new Task(() => new BackTesting(initial, number, str)).Start();
+                                                        if (Count % 5 > ran.Next(0, 2))
+                                                            new Task(() => new BackTesting(initial, number, str)).Start();
+
+                                                        else
+                                                            new BackTesting(initial, number, str);
+
                                                         break;
                                                 }
                                                 Count++;
                                             }
                                         }
-                                    cts.Dispose();
-                                    new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                                 }
                             }).Start();
                     while (TimerBox.Show(secret.StartProgress, string.Concat("N0.", Count.ToString("N0")), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))

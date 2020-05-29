@@ -10,18 +10,13 @@ namespace ShareInvest.Message
 {
     public class ExceptionMessage
     {
-        public ExceptionMessage(string message, string code)
-        {
-            this.code = code;
-            new Task(() => Record(message)).Start();
-        }
         void Record(string message)
         {
             try
             {
-                var path = Path.Combine(Application.StartupPath, @"Message\");
+                var path = Path.Combine(Application.StartupPath, ExceptionMessage.message);
                 var di = new DirectoryInfo(path);
-                var date = int.Parse(DateTime.Now.AddDays(-30).ToString("yyMMdd"));
+                var date = int.Parse(DateTime.Now.AddDays(-30).ToString(format));
 
                 if (di.Exists)
                     foreach (var file in Directory.GetFiles(path))
@@ -37,7 +32,7 @@ namespace ShareInvest.Message
                 else
                     di.Create();
 
-                using (var sw = new StreamWriter(string.Concat(path, DateTime.Now.ToString("yyMMdd"), ".txt"), true))
+                using (var sw = new StreamWriter(string.Concat(path, DateTime.Now.ToString(format), txt), true))
                 {
                     if (code != null)
                         sw.WriteLine(code);
@@ -48,12 +43,20 @@ namespace ShareInvest.Message
             }
             catch (Exception ex)
             {
-                Record(ex.StackTrace);
+                Record(ex.TargetSite.Name);
             }
         }
-        public ExceptionMessage(ImitationGames games) => Record(new StringBuilder(where).Append(games.Assets).Append(nCode).Append(games.Code).Append(commission).Append(games.Commission).Append(rate).Append(games.MarginRate).Append(strategy).Append(games.Strategy).Append(over).Append(games.RollOver).Append(bs).Append(games.BaseShort).Append(bl).Append(games.BaseLong).Append(nt).Append(games.NonaTime).Append(ns).Append(games.NonaShort).Append(nl).Append(games.NonaLong).Append(ot).Append(games.OctaTime).Append(os).Append(games.OctaShort).Append(ol).Append(games.OctaLong).Append(ht).Append(games.HeptaTime).Append(hs).Append(games.HeptaShort).Append(hl).Append(games.HeptaLong).Append(xt).Append(games.HexaTime).Append(xs).Append(games.HexaShort).Append(xl).Append(games.HexaLong).Append(pt).Append(games.PentaTime).Append(ps).Append(games.PentaShort).Append(pl).Append(games.PentaLong).Append(qt).Append(games.QuadTime).Append(qs).Append(games.QuadShort).Append(ql).Append(games.QuadLong).Append(tt).Append(games.TriTime).Append(ts).Append(games.TriShort).Append(tl).Append(games.TriLong).Append(dt).Append(games.DuoTime).Append(ds).Append(games.DuoShort).Append(dl).Append(games.DuoLong).Append(mt).Append(games.MonoTime).Append(ms).Append(games.MonoShort).Append(ml).Append(games.MonoLong).Append(date).ToString());
+        public ExceptionMessage(string message, string code)
+        {
+            this.code = code;
+            new Task(() => Record(message)).Start();
+        }
+        public ExceptionMessage(ImitationGames games) => Record(new StringBuilder(where).Append(games.Assets).Append(nCode).Append(games.Code).Append(commission).Append(games.Commission).Append(rate).Append(games.MarginRate).Append(strategy).Append(games.Strategy).Append(over).Append(games.RollOver ? 1 : 0).Append(bs).Append(games.BaseShort).Append(bl).Append(games.BaseLong).Append(nt).Append(games.NonaTime).Append(ns).Append(games.NonaShort).Append(nl).Append(games.NonaLong).Append(ot).Append(games.OctaTime).Append(os).Append(games.OctaShort).Append(ol).Append(games.OctaLong).Append(ht).Append(games.HeptaTime).Append(hs).Append(games.HeptaShort).Append(hl).Append(games.HeptaLong).Append(xt).Append(games.HexaTime).Append(xs).Append(games.HexaShort).Append(xl).Append(games.HexaLong).Append(pt).Append(games.PentaTime).Append(ps).Append(games.PentaShort).Append(pl).Append(games.PentaLong).Append(qt).Append(games.QuadTime).Append(qs).Append(games.QuadShort).Append(ql).Append(games.QuadLong).Append(tt).Append(games.TriTime).Append(ts).Append(games.TriShort).Append(tl).Append(games.TriLong).Append(dt).Append(games.DuoTime).Append(ds).Append(games.DuoShort).Append(dl).Append(games.DuoLong).Append(mt).Append(games.MonoTime).Append(ms).Append(games.MonoShort).Append(ml).Append(games.MonoLong).Append(date).ToString());
         public ExceptionMessage(string message) => new Task(() => Record(message)).Start();
         readonly string code;
+        const string message = @"Message\";
+        const string txt = ".txt";
+        const string format = "yyMMdd";
         const string date = " order by Date desc";
         const string mt = " and MonoTime=";
         const string ms = " and MonoShort=";
@@ -84,11 +87,11 @@ namespace ShareInvest.Message
         const string nl = " and NonaLong=";
         const string bs = " and BaseShort=";
         const string bl = " and BaseLong=";
-        const string over = " and RollOver=";
-        const string strategy = " and Strategy=";
+        const string over = "' and RollOver=";
+        const string strategy = " and Strategy='";
         const string rate = " and MarginRate=";
         const string where = "where Assets=";
-        const string nCode = " and Code=";
-        const string commission = " and Commission=";
+        const string nCode = " and Code='";
+        const string commission = "' and Commission=";
     }
 }
