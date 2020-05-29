@@ -356,15 +356,13 @@ namespace ShareInvest.OpenAPI
                             {
                                 Temporary.SetConnection(OpenAPI, key);
                                 Delay.Milliseconds = 605;
+                                Request(CodeList.First());
 
-                                if (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, (uint)Math.Pow(413, 2)).Equals(DialogResult.OK))
-                                {
-                                    if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
-                                        RemainingDay(API.GetFutureCodeByIndex(1));
+                                if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
+                                    RemainingDay(API.GetFutureCodeByIndex(1));
 
-                                    Request(CodeList.First());
+                                if (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, 93175).Equals(DialogResult.OK))
                                     break;
-                                }
                             }
                             SendCount?.Invoke(this, new NotifyIconText(-106));
                         }

@@ -148,7 +148,7 @@ namespace ShareInvest.GoblinBatContext
                 catch (Exception ex)
                 {
                     if (TimerBox.Show(new Secret().Message, ex.TargetSite.Name, MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1, 3517).Equals(DialogResult.OK))
-                        return db.Statistics.ToList();
+                        return db.Statistics.Distinct().ToList();
                 }
             return list.Distinct().ToList();
         }
@@ -158,7 +158,7 @@ namespace ShareInvest.GoblinBatContext
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    foreach (var assets in db.Identifies.Where(o => o.Equals(recent)).AsNoTracking().Select(o => new { o.Assets }))
+                    foreach (var assets in db.Identifies.Where(o => o.Date.Equals(recent)).AsNoTracking().Select(o => new { o.Assets }))
                         list.Add(assets.Assets);
                 }
                 catch (Exception ex)
@@ -476,7 +476,6 @@ namespace ShareInvest.GoblinBatContext
         {
             uint count = 1;
             int temp = int.MinValue, eTemp = int.MinValue;
-            var seriate = list.First();
             var exist = new ImitationGames();
             using (var db = new GoblinBatDbContext(key))
                 try
@@ -519,8 +518,8 @@ namespace ShareInvest.GoblinBatContext
                         o.MonoShort,
                         o.MonoLong
                     }).Take(1).First() : null;
-                    if (list.Count == 1 && seriate.Strategy.Length < 3)
-                        foreach (var select in db.Games.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == seriate.Assets && o.Code.Equals(seriate.Code) && o.Commission == seriate.Commission && o.MarginRate == seriate.MarginRate).AsNoTracking().OrderByDescending(o => o.Statistic))
+                    if (list.Count == 1 && list.First().Strategy.Length < 3)
+                        foreach (var select in db.Games.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == identity.Assets && o.Code.Equals(identity.Code) && o.Commission == identity.Commission && o.MarginRate == marginRate).AsNoTracking().OrderByDescending(o => o.Statistic))
                         {
                             if (temp < select.Statistic)
                             {
@@ -617,7 +616,7 @@ namespace ShareInvest.GoblinBatContext
                             count = 1;
 
                             if (ch.Strategy.Length > 2)
-                                foreach (var choice in db.Games.Where(o => o.Date.Equals(max) && o.Assets == ch.Assets && o.Code.Equals(ch.Code) && o.Commission == ch.Commission && o.MarginRate == ch.MarginRate && o.Strategy.Length > 2 && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic))
+                                foreach (var choice in db.Games.Where(o => o.Date.Equals(max) && o.Assets == identity.Assets && o.Code.Equals(identity.Code) && o.Commission == identity.Commission && o.MarginRate == marginRate && o.Strategy.Length > 2 && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic))
                                 {
                                     if (temp < choice.Statistic)
                                     {
@@ -714,7 +713,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
-            return (temp, game, count, eTemp, exist ?? null);
+            return (temp, game, count, eTemp == int.MinValue ? 0 : eTemp, exist ?? null);
         }
         protected ImitationGames GetBestStrategyRecommend(List<Statistics> list)
         {

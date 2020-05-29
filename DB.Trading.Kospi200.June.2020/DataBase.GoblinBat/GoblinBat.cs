@@ -61,18 +61,16 @@ namespace ShareInvest
                         Open.StartProgress(new OpenAPI.Temporary(Open, new StringBuilder(1024), key));
                     }
                     else
-                        BeginInvoke(new Action(() =>
-                        {
-                            Specify = Statistical.Statistics(retrieve.GetUserStrategy());
-                            Xing = XingAPI.ConnectAPI.GetInstance(initial, Strategy.Retrieve.Code, Strategy.Retrieve.Date);
-                            Xing.Send += OnReceiveNotifyIcon;
-                            notifyIcon.Text = string.Concat("Trading Code_", Strategy.Retrieve.Code);
-                            OnEventConnect();
-                            OnClickMinimized = quo;
-                            Text = Xing.Account;
-                            Application.DoEvents();
-                        }));
-                    Size = new Size(275, 5);
+                    {
+                        Specify = Statistical.Statistics(retrieve.GetUserStrategy());
+                        Xing = XingAPI.ConnectAPI.GetInstance(initial, Strategy.Retrieve.Code, Strategy.Retrieve.Date);
+                        Xing.Send += OnReceiveNotifyIcon;
+                        notifyIcon.Text = string.Concat("Trading Code_", Strategy.Retrieve.Code);
+                        Text = Xing.Account;
+                        BeginInvoke(new Action(() => OnEventConnect()));
+                        OnClickMinimized = quo;
+                    }
+                    Size = new Size(281, 5);
                     break;
 
                 default:
@@ -482,33 +480,27 @@ namespace ShareInvest
                 {
                     case cfobq10500:
                     case ccebq10500:
-                        BeginInvoke(new Action(() =>
+                        if (Account == null)
                         {
-                            if (Account == null)
-                            {
-                                Account = new AccountControl();
-                                panel.Controls.Add(Account);
-                                Account.Dock = DockStyle.Fill;
-                                Account.Show();
-                            }
+                            Account = new AccountControl();
+                            panel.Controls.Add(Account);
+                            Account.Dock = DockStyle.Fill;
+                            Account.Show();
+                        }
                             ((IEvents<Deposit>)ctor).Send += Account.OnReceiveDeposit;
-                            ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
-                        }));
+                        ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                         break;
 
                     case t0441:
                     case cceaq50600:
-                        BeginInvoke(new Action(() =>
+                        if (Balance == null)
                         {
-                            if (Balance == null)
-                            {
-                                Balance = new BalanceControl();
-                                panel.Controls.Add(Balance);
-                                Balance.Dock = DockStyle.Fill;
-                            }
+                            Balance = new BalanceControl();
+                            panel.Controls.Add(Balance);
+                            Balance.Dock = DockStyle.Fill;
+                        }
                             ((IEvents<Balance>)ctor).Send += Balance.OnReceiveBalance;
-                            ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
-                        }));
+                        ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                         break;
                 }
                 ctor.QueryExcute();
@@ -534,11 +526,8 @@ namespace ShareInvest
                         continue;
 
                     case jif:
-                        BeginInvoke(new Action(() =>
-                        {
-                            ((IEvents<NotifyIconText>)ctor).Send += OnReceiveNotifyIcon;
-                            ctor.OnReceiveRealTime(initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code);
-                        }));
+                        ((IEvents<NotifyIconText>)ctor).Send += OnReceiveNotifyIcon;
+                        ctor.OnReceiveRealTime(initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code);
                         continue;
 
                     default:
@@ -552,8 +541,6 @@ namespace ShareInvest
             if (initial.Equals(collecting) == false)
             {
                 Opacity = 0;
-                Application.DoEvents();
-                SuspendLayout();
 
                 foreach (var ctor in Xing.orders)
                 {
@@ -594,10 +581,6 @@ namespace ShareInvest
                     foreach (var specify in Specify.OrderByDescending(o => o.Time))
                         if (specify.Time > 0)
                             Invoke(new Action(() => new Strategy.XingAPI.Consecutive(specify)));
-
-                ResumeLayout();
-                Opacity = 0.8735;
-                Application.DoEvents();
             }
             WindowState = Xing.SendNotifyIconText((int)Math.Pow((initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code).Length, 4));
 
