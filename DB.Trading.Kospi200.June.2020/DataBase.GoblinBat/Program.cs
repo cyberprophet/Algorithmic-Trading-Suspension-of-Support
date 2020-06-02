@@ -24,8 +24,8 @@ namespace ShareInvest
             {
                 string path = Path.Combine(Application.StartupPath, secret.Indentify), recent = string.Empty;
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
-                var remaining = secret.GetIsSever(str) ? 7 : ran.Next(1, 7);
                 var initial = secret.GetPort(str);
+                var remaining = secret.GetIsSever(str) ? 9 : ran.Next(initial.Equals((char)Port.Seriate) ? 3 : 1, 9);
                 var cts = new CancellationTokenSource();
                 var retrieve = new Strategy.Retrieve(str);
                 var count = secret.GetProcessorCount(str);
@@ -73,7 +73,7 @@ namespace ShareInvest
 
                                     while (better.Count > 0)
                                     {
-                                        if (index++ % 5 > 0)
+                                        if (index++ % 3 > 0)
                                             temp.Push(catalog.Pop());
 
                                         else
@@ -84,10 +84,15 @@ namespace ShareInvest
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * (initial.Equals(Port.Seriate) ? count * 0.8 : count))
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * (initial.Equals(Port.Seriate) ? count * 0.6 : count))
                                 };
                                 try
                                 {
+                                    if (initial.Equals((char)Port.Collecting) == false)
+                                    {
+                                        new BackTesting(initial, retrieve.OnReceiveMyStrategy(), str);
+                                        Count++;
+                                    }
                                     Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
                                     {
                                         if (cts.IsCancellationRequested)
@@ -109,45 +114,9 @@ namespace ShareInvest
                                 }
                                 catch (Exception ex)
                                 {
+                                    Process.Start("shutdown.exe", "-r");
                                     cts.Dispose();
                                     new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
-
-                                    if (ex.TargetSite.Name.Equals("ThrowIfExceptional"))
-                                        while (catalog.Count > 0)
-                                        {
-                                            var number = catalog.Pop();
-
-                                            if (retrieve.GetDuplicateResults(recent, number) == false)
-                                            {
-                                                switch (number.Strategy.Length)
-                                                {
-                                                    case 0:
-                                                    case 1:
-                                                        continue;
-
-                                                    case 2:
-                                                        new BackTesting(initial, number, str);
-
-                                                        if (Count == uint.MaxValue)
-                                                        {
-                                                            catalog.Clear();
-
-                                                            return;
-                                                        }
-                                                        break;
-
-                                                    default:
-                                                        if (Count % 5 > ran.Next(0, 2))
-                                                            new Task(() => new BackTesting(initial, number, str)).Start();
-
-                                                        else
-                                                            new BackTesting(initial, number, str);
-
-                                                        break;
-                                                }
-                                                Count++;
-                                            }
-                                        }
                                 }
                             }).Start();
                     while (TimerBox.Show(secret.StartProgress, string.Concat("N0.", Count.ToString("N0")), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))

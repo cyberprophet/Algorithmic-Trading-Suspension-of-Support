@@ -472,6 +472,97 @@ namespace ShareInvest.GoblinBatContext
             }
             return games;
         }
+        protected ImitationGames GetMyStrategy()
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    var identify = new Secret().GetIdentify(key);
+                    var identity = db.Identifies.Any(o => o.Identity.Equals(identify)) ? db.Identifies.Where(o => o.Identity.Equals(identify)).AsNoTracking().OrderByDescending(o => o.Date).Select(o => new
+                    {
+                        o.Assets,
+                        o.Code,
+                        o.Commission,
+                        o.Strategy,
+                        o.RollOver,
+                        o.BaseShort,
+                        o.BaseLong,
+                        o.NonaTime,
+                        o.NonaShort,
+                        o.NonaLong,
+                        o.OctaTime,
+                        o.OctaShort,
+                        o.OctaLong,
+                        o.HeptaTime,
+                        o.HeptaShort,
+                        o.HeptaLong,
+                        o.HexaTime,
+                        o.HexaShort,
+                        o.HexaLong,
+                        o.PentaTime,
+                        o.PentaShort,
+                        o.PentaLong,
+                        o.QuadTime,
+                        o.QuadShort,
+                        o.QuadLong,
+                        o.TriTime,
+                        o.TriShort,
+                        o.TriLong,
+                        o.DuoTime,
+                        o.DuoShort,
+                        o.DuoLong,
+                        o.MonoTime,
+                        o.MonoShort,
+                        o.MonoLong
+                    }).Take(1).First() : null;
+
+                    if (identity != null)
+                        return new ImitationGames
+                        {
+                            Assets = identity.Assets,
+                            Code = identity.Code,
+                            Commission = identity.Commission,
+                            Strategy = identity.Strategy,
+                            MarginRate = marginRate,
+                            RollOver = identity.RollOver.Equals(CheckState.Checked),
+                            BaseTime = 1440,
+                            BaseShort = identity.BaseShort,
+                            BaseLong = identity.BaseLong,
+                            NonaTime = identity.NonaTime,
+                            NonaShort = identity.NonaShort,
+                            NonaLong = identity.NonaLong,
+                            OctaTime = identity.OctaTime,
+                            OctaShort = identity.OctaShort,
+                            OctaLong = identity.OctaLong,
+                            HeptaTime = identity.HeptaTime,
+                            HeptaShort = identity.HeptaShort,
+                            HeptaLong = identity.HeptaLong,
+                            HexaTime = identity.HexaTime,
+                            HexaShort = identity.HexaShort,
+                            HexaLong = identity.HexaLong,
+                            PentaTime = identity.PentaTime,
+                            PentaShort = identity.PentaShort,
+                            PentaLong = identity.PentaLong,
+                            QuadTime = identity.QuadTime,
+                            QuadShort = identity.QuadShort,
+                            QuadLong = identity.QuadLong,
+                            TriTime = identity.TriTime,
+                            TriShort = identity.TriShort,
+                            TriLong = identity.TriLong,
+                            DuoTime = identity.DuoTime,
+                            DuoShort = identity.DuoShort,
+                            DuoLong = identity.DuoLong,
+                            MonoTime = identity.MonoTime,
+                            MonoShort = identity.MonoShort,
+                            MonoLong = identity.MonoLong
+                        };
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return null;
+        }
         protected (int, ImitationGames, uint, int, ImitationGames) GetBestStrategyRecommend(List<Statistics> list, ImitationGames game)
         {
             uint count = 1;
@@ -518,10 +609,10 @@ namespace ShareInvest.GoblinBatContext
                         o.MonoShort,
                         o.MonoLong
                     }).Take(1).First() : null;
-                    if (list.Count == 1 && list.First().Strategy.Length < 3)
+                    if (list.Count == 1 && list.First().Strategy.Length == 2)
                         foreach (var select in db.Games.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == identity.Assets && o.Code.Equals(identity.Code) && o.Commission == identity.Commission && o.MarginRate == marginRate).AsNoTracking().OrderByDescending(o => o.Statistic))
                         {
-                            if (temp < select.Statistic)
+                            if (temp < select.Statistic && select.Fees > 0)
                             {
                                 game = new ImitationGames
                                 {
@@ -618,7 +709,7 @@ namespace ShareInvest.GoblinBatContext
                             if (ch.Strategy.Length > 2)
                                 foreach (var choice in db.Games.Where(o => o.Date.Equals(max) && o.Assets == identity.Assets && o.Code.Equals(identity.Code) && o.Commission == identity.Commission && o.MarginRate == marginRate && o.Strategy.Length > 2 && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic))
                                 {
-                                    if (temp < choice.Statistic)
+                                    if (temp < choice.Statistic && choice.Revenue < 0)
                                     {
                                         game = new ImitationGames
                                         {

@@ -102,7 +102,6 @@ namespace ShareInvest.Strategy
                 {
                     if (Statistics.Count == 1 && Statistics.Any(o => o.Strategy.Equals(string.Empty) || o.Strategy.Length == 2))
                     {
-                        mi.Strategy = ran.Next(20, 100).ToString();
                         var model = Statistics.First();
 
                         foreach (var st in strategy)
@@ -112,7 +111,7 @@ namespace ShareInvest.Strategy
                                 Code = model.Code,
                                 Commission = model.Commission,
                                 MarginRate = model.MarginRate,
-                                Strategy = st.Equals(end) ? mi.Strategy : st,
+                                Strategy = st.Equals(end) ? ran.Next(20, 100).ToString() : st,
                                 RollOver = model.RollOver,
                                 BaseTime = mi.BaseTime,
                                 BaseShort = mi.BaseShort,
