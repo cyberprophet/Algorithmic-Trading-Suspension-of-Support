@@ -21,7 +21,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Required, Range(40000000, long.MaxValue)]
+        [Required, Range(30000000, long.MaxValue)]
         public long Assets
         {
             get; set;

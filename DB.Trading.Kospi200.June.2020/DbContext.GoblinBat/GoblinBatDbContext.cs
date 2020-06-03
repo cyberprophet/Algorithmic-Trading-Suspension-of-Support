@@ -21,7 +21,7 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
-        public DbSet<ImitationGames> Games
+        public DbSet<Simulations> Virtual
         {
             get; set;
         }

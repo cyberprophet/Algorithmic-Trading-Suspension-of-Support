@@ -127,6 +127,7 @@ namespace ShareInvest.Strategy
 
             return DateTime.ParseExact(time, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None).ToLongDateString();
         }
+        string GetPrimary(long assets, string code, double commission, bool over) => string.Concat(code.Length == 8 ? string.Concat(code.Substring(0, 3), code.Substring(5, 3)) : code, (assets / 10000000).ToString("D3"), ((int)(commission * 1000000)).ToString("D2"), over ? 1 : 0);
         internal void Max(double trend, Catalog.XingAPI.Specify specify)
         {
             Judge[specify.Time] = trend;
@@ -343,8 +344,9 @@ namespace ShareInvest.Strategy
             Revenue = CumulativeRevenue - Commission;
             long revenue = Revenue - TodayRevenue, unrealized = (long)(Quantity == 0 ? 0 : (Quantity > 0 ? price - PurchasePrice : PurchasePrice - price) * Const.TransactionMultiplier * Math.Abs(Quantity));
             var avg = EMA.Make(++Accumulative, SetWeight(revenue + unrealized - UnRealize), Before);
-            games.Enqueue(new Models.ImitationGames
+            games.Enqueue(new Models.Simulations
             {
+                Primary = GetPrimary(game.Assets, game.Code, game.Commission, game.RollOver),
                 Assets = game.Assets,
                 Code = game.Code,
                 Commission = game.Commission,
@@ -436,7 +438,7 @@ namespace ShareInvest.Strategy
         {
             get; private set;
         }
-        public BackTesting(char verify, Models.ImitationGames game, string key) : base(key)
+        public BackTesting(char verify, Models.Simulations game, string key) : base(key)
         {
             this.verify = verify.Equals((char)86);
             this.game = game;
@@ -445,7 +447,7 @@ namespace ShareInvest.Strategy
             BuyOrder = new Dictionary<string, uint>();
             Judge = new Dictionary<uint, double>();
             TradingJudge = new Dictionary<uint, double>();
-            games = new Queue<Models.ImitationGames>();
+            games = new Queue<Models.Simulations>();
             Parallel.ForEach(Retrieve.GetCatalog(game), new Action<Catalog.XingAPI.Specify>((param) =>
             {
                 if (param.Time > 0)
@@ -525,8 +527,8 @@ namespace ShareInvest.Strategy
         const string sFly = "SuperFly";
         const string heavy = "Heavy";
         readonly bool verify;
-        readonly Models.ImitationGames game;
-        readonly Queue<Models.ImitationGames> games;
+        readonly Models.Simulations game;
+        readonly Queue<Models.Simulations> games;
         readonly Queue<Conclusion> statement;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Quotes> SendQuotes;

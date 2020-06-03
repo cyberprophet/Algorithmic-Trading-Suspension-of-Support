@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -68,7 +67,7 @@ namespace ShareInvest
                                         new BackTesting(initial, retrieve.OnReceiveMyStrategy(), str);
                                         Count++;
                                     }
-                                    Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
+                                    Parallel.ForEach(catalog, po, new Action<Models.Simulations>((number) =>
                                     {
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();
@@ -132,7 +131,7 @@ namespace ShareInvest
                                 };
                                 try
                                 {
-                                    Parallel.ForEach(catalog, po, new Action<Models.ImitationGames>((number) =>
+                                    Parallel.ForEach(catalog, po, new Action<Models.Simulations>((number) =>
                                     {
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();

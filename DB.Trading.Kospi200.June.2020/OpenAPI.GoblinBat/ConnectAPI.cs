@@ -354,7 +354,9 @@ namespace ShareInvest.OpenAPI
 
                             while (new Secrets().IsServer(key))
                             {
-                                Temporary.SetConnection(OpenAPI, key);
+                                Temporary.SetConnection(OpenAPI);
+                                Temporary = new Temporary(OpenAPI, key);
+                                SendMemorize?.Invoke(this, new Memorize("Clear"));
                                 Request(CodeList.First());
 
                                 if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))

@@ -12,6 +12,7 @@ namespace ShareInvest.XingAPI
 {
     public partial class Temporary : CallUp
     {
+        public Temporary(string key, char initial) : base(key) => Console.WriteLine(initial);
         public Temporary(string key) : base(key)
         {
             sb = new StringBuilder();
@@ -47,6 +48,13 @@ namespace ShareInvest.XingAPI
             this.datum = datum;
             ((IEvents<Quotes>)quotes).Send += OnReceiveMemorize;
             ((IEvents<Datum>)datum).Send += OnReceiveMemorize;
+        }
+        public void BulkDelete(string code)
+        {
+            for (int i = 0; i > -300; i--)
+                BulkRemove(DateTime.Now.AddDays(i).ToString("yyMMdd"));
+
+            Console.WriteLine(code);
         }
         public void Dispose()
         {

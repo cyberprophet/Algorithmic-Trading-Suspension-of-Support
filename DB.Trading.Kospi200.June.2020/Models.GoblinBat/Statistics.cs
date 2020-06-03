@@ -11,7 +11,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Range(40000000, long.MaxValue), Column(Order = 1)]
+        [Key, Range(30000000, long.MaxValue), Column(Order = 1)]
         public long Assets
         {
             get; set;
@@ -41,10 +41,10 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        public virtual ICollection<ImitationGames> Games
+        public virtual ICollection<Simulations> Games
         {
             get; set;
         }
-        public Statistics() => Games = new HashSet<ImitationGames>();
+        public Statistics() => Games = new HashSet<Simulations>();
     }
 }

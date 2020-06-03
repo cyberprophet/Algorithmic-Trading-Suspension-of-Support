@@ -16,6 +16,18 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUp : CallUpStatisticalAnalysis
     {
+        protected void BulkRemove(string code)
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    db.Virtual.BulkDelete(db.Virtual.Where(o => o.Date.Equals(code)), o => o.BatchSize = 1000000);
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+        }
         protected string OnReceiveRemainingDay(string code)
         {
             using (var db = new GoblinBatDbContext(key))

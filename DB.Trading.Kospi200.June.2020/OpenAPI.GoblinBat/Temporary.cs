@@ -14,7 +14,7 @@ namespace ShareInvest.OpenAPI
             api.SendQuotes += OnReceiveMemorize;
             api.SendDatum += OnReceiveMemorize;
         }
-        Temporary(ConnectAPI api, string key) : base(key)
+        internal Temporary(ConnectAPI api, string key) : base(key)
         {
             Temp = new StringBuilder(1024);
             api.SendMemorize += OnReceiveMemorize;
@@ -24,6 +24,11 @@ namespace ShareInvest.OpenAPI
             api.SendQuotes -= OnReceiveMemorize;
             api.SendDatum -= OnReceiveMemorize;
             new Temporary(api, key);
+        }
+        internal void SetConnection(ConnectAPI api)
+        {
+            api.SendQuotes -= OnReceiveMemorize;
+            api.SendDatum -= OnReceiveMemorize;
         }
         void OnReceiveMemorize(object sender, Datum e)
         {

@@ -18,12 +18,12 @@ namespace ShareInvest.Strategy
         public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number, Code);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
-        public Models.ImitationGames GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
-        public Models.ImitationGames OnReceiveMyStrategy() => GetMyStrategy();
+        public Models.Simulations GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
+        public Models.Simulations OnReceiveMyStrategy() => GetMyStrategy();
         public void SetIsMirror() => SetInitialzeTheCode();
         public Catalog.XingAPI.Specify[] GetUserStrategy()
         {
-            var game = new Models.ImitationGames();
+            var game = new Models.Simulations();
             var recommend = GetBestStrategyRecommend(Information.Statistics, game);
 
             if (recommend.Item5 == null || TimerBox.Show(secret.GetMessage(recommend.Item4, recommend.Item1, recommend.Item4 / (double)recommend.Item1), secret.GetRank(recommend.Item3), MessageBoxButtons.YesNo, MessageBoxIcon.Question, (recommend.Item2.MarginRate + 0.5713) * recommend.Item1 > recommend.Item4 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 13975U).Equals(DialogResult.Yes))
@@ -91,7 +91,7 @@ namespace ShareInvest.Strategy
                 Quotes = null;
             }
         }
-        public bool GetDuplicateResults(string recent, Models.ImitationGames game) => GetDuplicateResults(game, recent);
+        public bool GetDuplicateResults(string recent, Models.Simulations game) => GetDuplicateResults(game, recent);
         public string GetDate(string code)
         {
             if (DateTime.TryParseExact(SetDate(code).Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
@@ -99,7 +99,7 @@ namespace ShareInvest.Strategy
 
             return string.Empty;
         }
-        public Models.ImitationGames GetImitationModel(Catalog.DataBase.ImitationGame game) => new Models.ImitationGames
+        public Models.Simulations GetImitationModel(Catalog.DataBase.ImitationGame game) => new Models.Simulations
         {
             Assets = game.Assets,
             Code = game.Code,
@@ -214,7 +214,7 @@ namespace ShareInvest.Strategy
                     return string.Empty;
             }
         }
-        internal static Catalog.XingAPI.Specify[] GetCatalog(Models.ImitationGames find)
+        internal static Catalog.XingAPI.Specify[] GetCatalog(Models.Simulations find)
         {
             var temp = new Catalog.XingAPI.Specify[10];
             int i = 0;

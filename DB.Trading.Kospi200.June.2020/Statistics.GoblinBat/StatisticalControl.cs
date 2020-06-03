@@ -172,14 +172,6 @@ namespace ShareInvest.GoblinBatControls
         Catalog.DataBase.ImitationGame Statistics()
         {
             int i = 0;
-            var ro = new bool[] { true, false };
-            string strategy;
-
-            if (this.strategy != null)
-                strategy = comboStrategy.SelectedIndex < 0 || comboStrategy.SelectedItem.ToString().Equals(auto) ? this.strategy[ran.Next(0, this.strategy.Length - 1)] : comboStrategy.SelectedItem.ToString();
-
-            else
-                strategy = numericReaction.Value.ToString();
 
             return new Catalog.DataBase.ImitationGame
             {
@@ -187,8 +179,8 @@ namespace ShareInvest.GoblinBatControls
                 Code = comboCode.SelectedIndex < 0 ? code : comboCode.SelectedItem.ToString(),
                 Commission = comboCommission.SelectedIndex < 0 ? commission[0] : commission[Array.FindIndex(Commission, o => o.Equals(comboCommission.SelectedItem.ToString()))],
                 MarginRate = comboMarginRate.SelectedIndex < 0 ? rate[0] : rate[Array.FindIndex(MaginRate, o => o.Equals(comboMarginRate.SelectedItem.ToString()))],
-                Strategy = strategy,
-                RollOver = checkRollOver.CheckState.Equals(CheckState.Indeterminate) ? ro[ran.Next(0, ro.Length)] : checkRollOver.Checked,
+                Strategy = strategy == null ? numericReaction.Value.ToString() : comboStrategy.SelectedIndex < 0 || comboStrategy.SelectedItem.ToString().Equals(auto) ? this.strategy[ran.Next(0, this.strategy.Length - 1)] : comboStrategy.SelectedItem.ToString(),
+                RollOver = checkRollOver.CheckState.Equals(CheckState.Checked),
                 BaseTime = 1440,
                 BaseShort = (int)string.Concat(numeric, i + 10).FindByName<NumericUpDown>(this).Value,
                 BaseLong = (int)string.Concat(numeric, i++ + 20).FindByName<NumericUpDown>(this).Value,

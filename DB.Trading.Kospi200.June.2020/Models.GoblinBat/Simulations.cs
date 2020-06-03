@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-    public class ImitationGames
+    public class Simulations
     {
         [Key, StringLength(6), Column(Order = 1)]
         public string Date
@@ -190,7 +190,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [ForeignKey("Statistics"), Range(40000000, long.MaxValue), Column(Order = 37)]
+        [ForeignKey("Statistics"), Range(30000000, long.MaxValue), Column(Order = 37)]
         public long Assets
         {
             get; set;
@@ -210,8 +210,13 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [ForeignKey("Statistics"), Key, Column(Order = 42)]
+        [ForeignKey("Statistics"), Column(Order = 42)]
         public bool RollOver
+        {
+            get; set;
+        }
+        [Key, StringLength(12), Column(Order = 43)]
+        public string Primary
         {
             get; set;
         }

@@ -226,7 +226,7 @@ namespace ShareInvest
                 Task = new Task(() => message = new BackTesting((char)86, retrieve.GetImitationModel(e.Game), key).Message);
                 Task.Start();
 
-                if (TimerBox.Show(secret.BackTesting, e.Game.Strategy, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)45E+3).Equals(DialogResult.OK))
+                if (TimerBox.Show(secret.BackTesting, e.Game.Strategy, MessageBoxButtons.OK, MessageBoxIcon.Warning, (uint)15E+3).Equals(DialogResult.OK))
                 {
                     Cursor = Cursors.AppStarting;
                     Task.Wait();
