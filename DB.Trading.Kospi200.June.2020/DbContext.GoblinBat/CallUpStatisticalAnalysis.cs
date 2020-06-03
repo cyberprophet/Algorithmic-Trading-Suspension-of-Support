@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Data.Entity.Migrations;
+using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -479,19 +479,29 @@ namespace ShareInvest.GoblinBatContext
         }
         protected bool SetStatisticalStorage(Queue<ImitationGames> memo)
         {
+            string message = string.Empty;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    while (memo.Count > 0)
-                        db.Games.AddOrUpdate(memo.Dequeue());
-
-                    return db.SaveChanges() > 0;
+                    db.Configuration.AutoDetectChangesEnabled = false;
+                    db.BulkInsert(memo, o =>
+                    {
+                        o.InsertIfNotExists = true;
+                        o.BatchSize = 250;
+                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                        o.AutoMapOutputDirection = false;
+                    });
                 }
                 catch (Exception ex)
                 {
-                    new ExceptionMessage(ex.StackTrace);
+                    message = ex.TargetSite.Name;
+                    new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                 }
-            return false;
+                finally
+                {
+                    db.Configuration.AutoDetectChangesEnabled = true;
+                }
+            return string.IsNullOrEmpty(message);
         }
         protected async Task<string> GetRecentDate()
         {

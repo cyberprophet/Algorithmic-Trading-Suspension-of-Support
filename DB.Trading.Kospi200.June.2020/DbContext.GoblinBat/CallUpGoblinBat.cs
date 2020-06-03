@@ -15,16 +15,29 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
-        protected IEnumerable<string> GetStrategy(List<string> strategy)
+        protected IEnumerable<ImitationGames> GetStrategy(List<ImitationGames> strategy)
         {
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    foreach (var st in db.Statistics.Select(o => new { o.Strategy }).AsNoTracking())
+                    foreach (var st in db.Statistics.Select(o => new
+                    {
+                        o.Assets,
+                        o.Code,
+                        o.Commission,
+                        o.Strategy,
+                        o.RollOver
+                    }).AsNoTracking())
                         if (st.Strategy.Length > 2)
-                            strategy.Add(st.Strategy);
-
-                    strategy.Insert(strategy.Count / 2, end);
+                            strategy.Add(new ImitationGames
+                            {
+                                Assets = st.Assets,
+                                Code = st.Code,
+                                Commission = st.Commission,
+                                MarginRate = marginRate,
+                                Strategy = st.Strategy,
+                                RollOver = st.RollOver
+                            });
                 }
                 catch (Exception ex)
                 {
@@ -306,7 +319,7 @@ namespace ShareInvest.GoblinBatContext
                 }
             return games;
         }
-        protected Queue<ImitationGames> GetBestStrategy(Queue<ImitationGames> queue, IEnumerable<long> list)
+        protected Stack<ImitationGames> GetBestStrategy(Stack<ImitationGames> stack, IEnumerable<long> list)
         {
             string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
@@ -314,7 +327,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     foreach (var assets in list)
                         foreach (var game in db.Games.Where(o => o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
-                            queue.Enqueue(new ImitationGames
+                            stack.Push(new ImitationGames
                             {
                                 Assets = game.Assets,
                                 Code = game.Code,
@@ -358,7 +371,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
-            return queue;
+            return stack;
         }
         protected List<ImitationGames> GetBestExternalRecommend(List<ImitationGames> games)
         {
@@ -612,7 +625,7 @@ namespace ShareInvest.GoblinBatContext
                     if (list.Count == 1 && list.First().Strategy.Length == 2)
                         foreach (var select in db.Games.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == identity.Assets && o.Code.Equals(identity.Code) && o.Commission == identity.Commission && o.MarginRate == marginRate).AsNoTracking().OrderByDescending(o => o.Statistic))
                         {
-                            if (temp < select.Statistic && select.Fees > 0)
+                            if (temp < select.Statistic)
                             {
                                 game = new ImitationGames
                                 {
@@ -1189,7 +1202,7 @@ namespace ShareInvest.GoblinBatContext
                                     Volume = str.Volume
                                 });
                             }
-                        catalog[new FileInfo(file).CreationTime] = new Queue<Chart>(chart);
+                        catalog[new FileInfo(file).CreationTime] = new Queue<Chart>(chart.OrderBy(o => o.Date));
                         chart.Clear();
                     }
                 else
@@ -1214,7 +1227,7 @@ namespace ShareInvest.GoblinBatContext
                         foreach (var str in chart.OrderBy(o => o.Date))
                             sw.WriteLine(string.Concat(str.Date, ',', str.Price, ',', str.Volume));
 
-                    catalog[new FileInfo(info).CreationTime] = new Queue<Chart>(chart);
+                    catalog[new FileInfo(info).CreationTime] = new Queue<Chart>(chart.OrderBy(o => o.Date));
                     chart.Clear();
                     var remaining = new Dictionary<string, string>();
                     using (var db = new GoblinBatDbContext(key))
@@ -1244,7 +1257,7 @@ namespace ShareInvest.GoblinBatContext
                             foreach (var str in chart.OrderBy(o => o.Date))
                                 sw.WriteLine(string.Concat(str.Date, ',', str.Price, ',', str.Volume));
 
-                        catalog[new FileInfo(info).LastWriteTime] = new Queue<Chart>(chart);
+                        catalog[new FileInfo(info).LastWriteTime] = new Queue<Chart>(chart.OrderBy(o => o.Date));
                         info = kv.Value.Substring(2);
                         chart.Clear();
                     }
@@ -1397,7 +1410,6 @@ namespace ShareInvest.GoblinBatContext
         }
         protected internal const string futures = "000";
         protected internal const string kospi200f = "101";
-        protected internal const string end = "EndPoint";
         const double marginRate = 0.1395;
         const string basic = "Base.res";
         const string chart = "ChartOf101000";

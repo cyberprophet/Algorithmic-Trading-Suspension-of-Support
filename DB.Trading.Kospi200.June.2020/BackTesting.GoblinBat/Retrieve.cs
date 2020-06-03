@@ -72,14 +72,11 @@ namespace ShareInvest.Strategy
             });
             return GetCatalog(game);
         }
-        public void SetInitialzeTheCode(char initial)
+        public void GetInitialzeTheCode()
         {
             Code = GetStrategy();
-
-            if (initial.Equals((char)Port.Seriate))
-                SetInitialzeTheCode();
-
             SetInitialzeTheCode(Code);
+            SetInitialzeTheCode();
         }
         public void SetInitializeTheChart()
         {
@@ -385,7 +382,7 @@ namespace ShareInvest.Strategy
         {
             get; private set;
         }
-        protected internal static Dictionary<DateTime, Queue<Chart>> Charts
+        protected internal static IOrderedEnumerable<KeyValuePair<DateTime, Queue<Chart>>> Charts
         {
             get; private set;
         }
@@ -400,7 +397,7 @@ namespace ShareInvest.Strategy
         void SetInitialzeTheCode()
         {
             if (Charts == null && Code != null)
-                Charts = GetChart(new Dictionary<DateTime, Queue<Chart>>(), Code);
+                Charts = GetChart(new Dictionary<DateTime, Queue<Chart>>(), Code).OrderBy(o => o.Key);
         }
         const string format = "yyMMddHHmmss";
         readonly Secret secret;

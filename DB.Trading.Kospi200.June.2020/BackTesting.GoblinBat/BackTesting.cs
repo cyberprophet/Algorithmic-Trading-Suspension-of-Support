@@ -78,8 +78,8 @@ namespace ShareInvest.Strategy
                     SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
                 }
             else
-                foreach (var kv in Retrieve.Charts.OrderBy(o => o.Key))
-                    foreach (var chart in kv.Value.OrderBy(o => o.Date))
+                foreach (var kv in Retrieve.Charts)
+                    foreach (var chart in kv.Value)
                         SendDatum?.Invoke(this, new Datum(chart.Date, chart.Price, chart.Volume));
 
             if (games.Count > 0 && SetStatisticalStorage(games) == false)

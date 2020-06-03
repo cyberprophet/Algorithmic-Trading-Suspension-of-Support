@@ -43,10 +43,10 @@ namespace ShareInvest
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
                             new Task(() =>
                             {
-                                retrieve.SetInitialzeTheCode(initial);
+                                retrieve.GetInitialzeTheCode();
                                 info.GetUserIdentity(initial);
                                 recent = retrieve.RecentDate;
-                                var catalog = info.GetStatistics(count);
+                                var catalog = count == 0.75 ? info.GetStatistics(secret.GetExternal(str), secret.rate, secret.commission) : info.GetStatistics(count);
 
                                 if (secret.GetIsSever(str))
                                 {
@@ -56,35 +56,10 @@ namespace ShareInvest
                                     foreach (var best in info.GetBestStrategy())
                                         catalog.Push(best);
                                 }
-                                else if (initial.Equals((char)84))
-                                {
-                                    var better = info.SeekingBetterAround();
-
-                                    while (better.Count > 0)
-                                        catalog.Push(better.Pop());
-                                }
-                                else if (secret.GetIsMirror(str))
-                                {
-                                    retrieve.SetIsMirror();
-                                    count *= 0.6;
-                                    var better = info.GetStatistics(secret.rate, secret.commission);
-                                    var temp = new Stack<Models.ImitationGames>();
-                                    var index = 0;
-
-                                    while (better.Count > 0)
-                                    {
-                                        if (index++ % 3 > 0)
-                                            temp.Push(catalog.Pop());
-
-                                        else
-                                            temp.Push(better.Dequeue());
-                                    }
-                                    catalog = temp;
-                                }
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * (initial.Equals(Port.Seriate) ? count * 0.6 : count))
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count)
                                 };
                                 try
                                 {
@@ -114,7 +89,9 @@ namespace ShareInvest
                                 }
                                 catch (Exception ex)
                                 {
-                                    Process.Start("shutdown.exe", "-r");
+                                    if (secret.GetIsSever(str) == false)
+                                        Process.Start("shutdown.exe", "-r");
+
                                     cts.Dispose();
                                     new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                                 }
@@ -130,7 +107,7 @@ namespace ShareInvest
                         }
                     if (initial.Equals((char)126) == false)
                     {
-                        if (initial.Equals((char)Port.Trading) && cts.IsCancellationRequested == false)
+                        if (initial.Equals((char)Port.Collecting) == false && cts.IsCancellationRequested == false)
                         {
                             try
                             {
