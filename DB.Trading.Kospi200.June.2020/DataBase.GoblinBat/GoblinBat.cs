@@ -414,6 +414,11 @@ namespace ShareInvest
 
                         Dispose();
                     }
+                    else if (Xing != null && (int)e.NotifyIcon == 0)
+                    {
+                        Xing.DisconnectServer();
+                        Open.Request((int)e.NotifyIcon);
+                    }
                     else
                     {
                         foreach (var ctor in Xing.querys)

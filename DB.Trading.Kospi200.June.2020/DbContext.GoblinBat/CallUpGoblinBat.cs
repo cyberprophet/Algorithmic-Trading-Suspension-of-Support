@@ -1148,7 +1148,7 @@ namespace ShareInvest.GoblinBatContext
         {
             var path = System.IO.Path.Combine(Application.StartupPath, charts);
             var exists = new DirectoryInfo(path);
-            var chart = new Queue<Chart>();
+            var chart = new Queue<Chart>(2048);
 
             try
             {
@@ -1202,6 +1202,7 @@ namespace ShareInvest.GoblinBatContext
                                     Volume = str.Volume
                                 });
                             }
+                        GC.Collect();
                         catalog[new FileInfo(file).CreationTime] = new Queue<Chart>(chart);
                         chart.Clear();
                     }
@@ -1257,6 +1258,7 @@ namespace ShareInvest.GoblinBatContext
                             foreach (var str in chart.OrderBy(o => o.Date))
                                 sw.WriteLine(string.Concat(str.Date, ',', str.Price, ',', str.Volume));
 
+                        GC.Collect();
                         catalog[new FileInfo(info).LastWriteTime] = new Queue<Chart>(chart);
                         info = kv.Value.Substring(2);
                         chart.Clear();

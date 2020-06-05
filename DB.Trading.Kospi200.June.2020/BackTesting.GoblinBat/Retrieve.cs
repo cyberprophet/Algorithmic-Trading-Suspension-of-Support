@@ -397,7 +397,7 @@ namespace ShareInvest.Strategy
         void SetInitialzeTheCode()
         {
             if (Charts == null && Code != null)
-                Charts = GetChart(new Dictionary<DateTime, Queue<Chart>>(), Code).OrderBy(o => o.Key);
+                Charts = GetChart(new Dictionary<DateTime, Queue<Chart>>(1048576), Code).OrderBy(o => o.Key);
         }
         const string format = "yyMMddHHmmss";
         readonly Secret secret;

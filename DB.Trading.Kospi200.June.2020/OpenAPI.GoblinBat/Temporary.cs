@@ -47,7 +47,7 @@ namespace ShareInvest.OpenAPI
         {
             if (e.SPrevNext != null)
             {
-                if (!e.SPrevNext.Equals("Clear"))
+                if (e.SPrevNext.Equals("Clear") == false)
                     SetStorage(e.Code, Temp.ToString().Split(';'));
 
                 Temp = new StringBuilder(1024);
