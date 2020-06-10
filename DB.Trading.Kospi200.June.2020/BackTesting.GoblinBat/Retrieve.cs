@@ -17,7 +17,6 @@ namespace ShareInvest.Strategy
         public Retrieve(string key) : base(key) => secret = new Secret();
         public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number, Code);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
-        public Catalog.XingAPI.Specify[] OnReceiveStrategy(long index) => GetStrategy(index);
         public Models.Simulations GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
         public Models.Simulations OnReceiveMyStrategy() => GetMyStrategy();
         public void SetIsMirror() => SetInitialzeTheCode();

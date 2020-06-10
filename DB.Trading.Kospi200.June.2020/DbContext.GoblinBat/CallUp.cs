@@ -16,6 +16,178 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUp : CallUpStatisticalAnalysis
     {
+        protected void MoveStorageSpace(char emergency)
+        {
+            try
+            {
+                var code = new Stack<string>();
+                var date = new List<string>();
+                using (var db = new GoblinBatDbContext(key))
+                    foreach (var temp in db.Codes.Select(o => new { o.Code, o.Name, o.Info }).AsNoTracking())
+                    {
+                        using (var e = new GoblinBatDbContext(emergency, key))
+                        {
+                            e.Codes.AddOrUpdate(new Codes
+                            {
+                                Code = temp.Code,
+                                Name = temp.Name,
+                                Info = temp.Info
+                            });
+                            e.SaveChanges();
+                        }
+                        code.Push(temp.Code);
+                    }
+                foreach (var c in code)
+                    using (var db = new GoblinBatDbContext(key))
+                        if (db.Futures.Any(o => o.Code.Equals(c)))
+                            foreach (var f in db.Futures.Where(o => o.Code.Equals(c)).AsNoTracking().OrderByDescending(o => o.Date).Select(o => new { o.Date }))
+                            {
+                                var str = f.Date.ToString().Substring(0, 6);
+
+                                if (date.Contains(str) == false)
+                                    date.Add(str);
+                            }
+                foreach (var d in date.Distinct())
+                    foreach (var c in code)
+                    {
+                        var stocks = new Queue<Stocks>(1024);
+                        var options = new Queue<Options>(1024);
+                        var futures = new Queue<Futures>(1024);
+                        var datum = new Queue<Datum>(1024);
+                        var days = new Queue<Days>(256);
+                        using (var e = new GoblinBatDbContext(emergency, key))
+                        {
+                            string str = string.Concat(d, "000000000"), end = string.Concat(d, "999999999");
+                            long start = long.TryParse(str, out long num) ? num : long.MaxValue, eNum = long.TryParse(end, out long eum) ? eum : long.MaxValue;
+
+                            if (e.Days.Any(o => o.Code.Equals(c)) == false)
+                                using (var db = new GoblinBatDbContext(key))
+                                    foreach (var day in db.Days.Where(o => o.Code.Equals(c)).AsNoTracking().OrderBy(o => o.Date))
+                                        days.Enqueue(new Days
+                                        {
+                                            Code = day.Code,
+                                            Date = day.Date,
+                                            Price = day.Price
+                                        });
+                            if (e.Datums.Any(o => o.Code.Equals(c)) && e.Datums.Any(o => o.Code.Equals(c) && string.Compare(o.Date, end) < 0 && string.Compare(o.Date, str) >= 0) == false)
+                                using (var db = new GoblinBatDbContext(key))
+                                    foreach (var q in db.Datums.Where(o => o.Code.Equals(c) && string.Compare(o.Date, end) < 0 && string.Compare(o.Date, str) >= 0).AsNoTracking().OrderBy(o => o.Date))
+                                        datum.Enqueue(new Datum
+                                        {
+                                            Code = q.Code,
+                                            Date = q.Date,
+                                            Price = q.Price,
+                                            Volume = q.Volume,
+                                            SellPrice = q.SellPrice,
+                                            SellQuantity = q.SellQuantity,
+                                            TotalSellAmount = q.TotalSellAmount,
+                                            BuyPrice = q.BuyPrice,
+                                            BuyQuantity = q.BuyQuantity,
+                                            TotalBuyAmount = q.TotalBuyAmount
+                                        });
+                            if (e.Futures.Any(o => o.Code.Equals(c)) && e.Futures.Any(o => o.Code.Equals(c) && o.Date < eNum && o.Date >= start) == false)
+                                using (var db = new GoblinBatDbContext(key))
+                                    foreach (var f in db.Futures.Where(o => o.Code.Equals(c) && o.Date < eNum && o.Date >= start).AsNoTracking().OrderBy(o => o.Date))
+                                        futures.Enqueue(new Futures
+                                        {
+                                            Code = f.Code,
+                                            Date = f.Date,
+                                            Price = f.Price,
+                                            Volume = f.Volume
+                                        });
+                            if (e.Options.Any(o => o.Code.Equals(c)) && e.Options.Any(o => o.Code.Equals(c) && o.Date < eNum && o.Date >= start) == false)
+                                using (var db = new GoblinBatDbContext(key))
+                                    foreach (var o in db.Options.Where(o => o.Code.Equals(c) && o.Date < eNum && o.Date >= start).AsNoTracking().OrderBy(o => o.Date))
+                                        options.Enqueue(new Options
+                                        {
+                                            Code = o.Code,
+                                            Date = o.Date,
+                                            Price = o.Price,
+                                            Volume = o.Volume
+                                        });
+                            if (e.Stocks.Any(o => o.Code.Equals(c)) && e.Stocks.Any(o => o.Code.Equals(c) && o.Date < eNum && o.Date >= start) == false)
+                                using (var db = new GoblinBatDbContext(key))
+                                    foreach (var s in db.Stocks.Where(o => o.Code.Equals(c) && o.Date < eNum && o.Date >= start).AsNoTracking().OrderBy(o => o.Date))
+                                        stocks.Enqueue(new Stocks
+                                        {
+                                            Code = s.Code,
+                                            Date = s.Date,
+                                            Price = s.Price,
+                                            Volume = s.Volume
+                                        });
+                        }
+                        if (stocks.Count > 0)
+                            using (var e = new GoblinBatDbContext(emergency, key))
+                            {
+                                e.Configuration.AutoDetectChangesEnabled = false;
+                                e.BulkInsert(stocks, o =>
+                                {
+                                    o.InsertIfNotExists = true;
+                                    o.BatchSize = 15000;
+                                    o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                                    o.AutoMapOutputDirection = false;
+                                });
+                                e.Configuration.AutoDetectChangesEnabled = true;
+                            }
+                        if (options.Count > 0)
+                            using (var e = new GoblinBatDbContext(emergency, key))
+                            {
+                                e.Configuration.AutoDetectChangesEnabled = false;
+                                e.BulkInsert(options, o =>
+                                {
+                                    o.InsertIfNotExists = true;
+                                    o.BatchSize = 15000;
+                                    o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                                    o.AutoMapOutputDirection = false;
+                                });
+                                e.Configuration.AutoDetectChangesEnabled = true;
+                            }
+                        if (futures.Count > 0)
+                            using (var e = new GoblinBatDbContext(emergency, key))
+                            {
+                                e.Configuration.AutoDetectChangesEnabled = false;
+                                e.BulkInsert(futures, o =>
+                                {
+                                    o.InsertIfNotExists = true;
+                                    o.BatchSize = 15000;
+                                    o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                                    o.AutoMapOutputDirection = false;
+                                });
+                                e.Configuration.AutoDetectChangesEnabled = true;
+                            }
+                        if (days.Count > 0)
+                            using (var e = new GoblinBatDbContext(emergency, key))
+                            {
+                                e.Configuration.AutoDetectChangesEnabled = false;
+                                e.BulkInsert(days, o =>
+                                {
+                                    o.InsertIfNotExists = true;
+                                    o.BatchSize = 15000;
+                                    o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                                    o.AutoMapOutputDirection = false;
+                                });
+                                e.Configuration.AutoDetectChangesEnabled = true;
+                            }
+                        if (datum.Count > 0)
+                            using (var e = new GoblinBatDbContext(emergency, key))
+                            {
+                                e.Configuration.AutoDetectChangesEnabled = false;
+                                e.BulkInsert(datum, o =>
+                                {
+                                    o.InsertIfNotExists = true;
+                                    o.BatchSize = 15000;
+                                    o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                                    o.AutoMapOutputDirection = false;
+                                });
+                                e.Configuration.AutoDetectChangesEnabled = true;
+                            }
+                    }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+        }
         protected void BulkRemove(string code)
         {
             using (var db = new GoblinBatDbContext(key))

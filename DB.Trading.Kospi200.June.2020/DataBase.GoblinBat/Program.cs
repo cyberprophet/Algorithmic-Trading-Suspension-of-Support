@@ -47,6 +47,15 @@ namespace ShareInvest
                                 recent = retrieve.RecentDate;
                                 var catalog = count == 0.75 ? info.GetStatistics(secret.GetExternal(str), secret.rate, secret.commission) : info.GetStatistics(count);
 
+                                if (initial.Equals((char)Port.Collecting) == false)
+                                {
+                                    var mine = retrieve.OnReceiveMyStrategy();
+                                    new BackTesting(initial, mine, str);
+                                    Count++;
+
+                                    foreach (var my in info.GetStatistics(mine, secret.rate[0]))
+                                        catalog.Push(my);
+                                }
                                 if (secret.GetIsSever(str))
                                 {
                                     count = 0.25;
@@ -58,15 +67,10 @@ namespace ShareInvest
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count)
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * secret.GetOverload(str))
                                 };
                                 try
                                 {
-                                    if (initial.Equals((char)Port.Collecting) == false)
-                                    {
-                                        new BackTesting(initial, retrieve.OnReceiveMyStrategy(), str);
-                                        Count++;
-                                    }
                                     Parallel.ForEach(catalog, po, new Action<Models.Simulations>((number) =>
                                     {
                                         if (cts.IsCancellationRequested)

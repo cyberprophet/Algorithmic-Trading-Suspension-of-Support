@@ -177,24 +177,6 @@ namespace ShareInvest.OpenAPI
             SendMemorize?.Invoke(this, new Memorize("Clear"));
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
-        public void Request(int index)
-        {
-            while (new Secrets().IsServer(key))
-            {
-                Temporary.SetConnection(OpenAPI);
-                Delay.Milliseconds = 605;
-                Temporary = new Temporary(OpenAPI, key);
-                SendMemorize?.Invoke(this, new Memorize("Clear"));
-                Request(CodeList[index]);
-
-                if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
-                    RemainingDay(API.GetFutureCodeByIndex(1));
-
-                if (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, 93175).Equals(DialogResult.OK) && DateTime.Now.ToString(format).Equals(GetRetention(1, Code).Substring(0, 6)))
-                    break;
-            }
-            SendCount?.Invoke(this, new NotifyIconText(-106));
-        }
         public void OnReceiveOrder(PurchaseInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo))));
         void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
@@ -369,7 +351,7 @@ namespace ShareInvest.OpenAPI
                         if (Temporary != null && CodeList.Count == 1)
                         {
                             Temporary.SetStorage(Code);
-                            SendCount?.Invoke(this, new NotifyIconText(CodeList.Count - 1));
+                            Request(CodeList.Count);
                         }
                         else
                             OnReceiveBalance = false;
@@ -686,6 +668,23 @@ namespace ShareInvest.OpenAPI
                 return;
             }
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
+        }
+        void Request(int index)
+        {
+            while (CodeList.Count == index && new Secrets().IsServer(key))
+            {
+                Temporary.SetConnection();
+                Delay.Milliseconds = 205;
+                SendMemorize?.Invoke(this, new Memorize("Clear"));
+                Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
+
+                if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
+                    RemainingDay(API.GetFutureCodeByIndex(1));
+
+                if (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, 93175).Equals(DialogResult.OK) && DateTime.Now.ToString(format).Equals(GetRetention(1, Code).Substring(0, 6)))
+                    break;
+            }
+            SendCount?.Invoke(this, new NotifyIconText(-106));
         }
         void FixUp(string[] param, string code)
         {

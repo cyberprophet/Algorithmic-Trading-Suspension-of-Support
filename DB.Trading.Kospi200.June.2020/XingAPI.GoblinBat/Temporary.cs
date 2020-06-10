@@ -12,7 +12,7 @@ namespace ShareInvest.XingAPI
 {
     public partial class Temporary : CallUp
     {
-        public Temporary(string key, char initial) : base(key) => Console.WriteLine(initial);
+        public Temporary(string key, char initial) : base(key) => this.initial = initial;
         public Temporary(string key) : base(key)
         {
             sb = new StringBuilder();
@@ -62,6 +62,8 @@ namespace ShareInvest.XingAPI
             ((IEvents<Datum>)datum).Send -= OnReceiveMemorize;
             sb.Clear();
         }
+        public void MoveStorageSpace() => MoveStorageSpace(initial);
+        public void SetStorage(string code) => SetStorage(code, sb);
         void OnReceiveMemorize(object sender, Datum e)
         {
             if (e.Time != null && e.Price > 0 && e.Volume != 0)
@@ -85,7 +87,7 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
-        public void SetStorage(string code) => SetStorage(code, sb);
+        readonly char initial;
         readonly StringBuilder sb;
         readonly IReals quotes;
         readonly IReals datum;

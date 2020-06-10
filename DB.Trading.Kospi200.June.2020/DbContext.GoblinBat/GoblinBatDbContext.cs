@@ -49,22 +49,19 @@ namespace ShareInvest.GoblinBatContext
         {
             get; set;
         }
-        public DbSet<Memorize> Memorize
-        {
-            get; set;
-        }
-        public DbSet<Strategics> Strategy
-        {
-            get; set;
-        }
-        public DbSet<Logs> Logs
-        {
-            get; set;
-        }
         public override int SaveChanges() => this.BatchSaveChanges();
         public GoblinBatDbContext(string key) : base(new Secret().GetPort(key))
         {
             while (Database.Connection.State.Equals(ConnectionState.Closed) == false)
+            {
+                Thread.Sleep(39735);
+                new ExceptionMessage(Database.Connection.State.ToString());
+                Database.Connection.Close();
+            }
+        }
+        public GoblinBatDbContext(char emergency, string key) : base(new Secret().GetEmergencyPort(key))
+        {
+            while (emergency.Equals((char)69) == false && Database.Connection.State.Equals(ConnectionState.Closed) == false)
             {
                 Thread.Sleep(39735);
                 new ExceptionMessage(Database.Connection.State.ToString());

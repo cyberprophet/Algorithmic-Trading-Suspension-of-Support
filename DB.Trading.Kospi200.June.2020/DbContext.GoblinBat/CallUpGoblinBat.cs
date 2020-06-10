@@ -167,11 +167,11 @@ namespace ShareInvest.GoblinBatContext
         }
         protected IEnumerable<long> GetUserAssets(List<long> list)
         {
-            var recent = DateTime.Now.ToString(CallUpGoblinBat.recent);
+            string max = DateTime.Now.AddDays(-5).ToString(recent);
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    foreach (var assets in db.Identifies.Where(o => o.Date.Equals(recent)).AsNoTracking().Select(o => new { o.Assets }))
+                    foreach (var assets in db.Identifies.Where(o => string.Compare(o.Date, max) > 0).Select(o => new { o.Assets }).AsNoTracking())
                         list.Add(assets.Assets);
                 }
                 catch (Exception ex)
@@ -905,104 +905,6 @@ namespace ShareInvest.GoblinBatContext
                 }
             return game;
         }
-        protected List<long> GetUserIdentify(string date)
-        {
-            var select = new Dictionary<long, long>();
-            var choice = new List<long>();
-            var identity = new Secret().GetIdentify(key);
-            string assets = string.Empty, code = string.Empty, commission = string.Empty, rate = string.Empty, strategy = string.Empty, over = string.Empty;
-
-            try
-            {
-                using (var db = new GoblinBatDbContext(key))
-                {
-                    foreach (var str in db.Logs.Where(o => o.Identity.Equals(identity)).OrderByDescending(o => o.Date).Take(1).Select(o => new
-                    {
-                        o.Assets,
-                        o.Code,
-                        o.Commission,
-                        o.Strategy,
-                        o.RollOver
-                    }).AsNoTracking())
-                    {
-                        assets = str.Assets;
-                        code = str.Code;
-                        commission = str.Commission;
-                        rate = marginRate.ToString();
-                        strategy = str.Strategy;
-                        over = str.RollOver;
-                    }
-                    if (string.IsNullOrEmpty(assets) || string.IsNullOrEmpty(code) || string.IsNullOrEmpty(commission) || string.IsNullOrEmpty(rate) || string.IsNullOrEmpty(strategy) || string.IsNullOrEmpty(over))
-                        return null;
-
-                    else
-                        foreach (var str in db.Memorize.Where(o => o.Date.Equals(date)).OrderByDescending(o => o.Statistic).Take(25000).Select(o => new
-                        {
-                            o.Index,
-                            o.Cumulative,
-                            o.Unrealized
-                        }).AsNoTracking())
-                            if (long.TryParse(str.Unrealized, out long unrealized) && long.TryParse(str.Cumulative, out long cumulative))
-                                select[str.Index] = unrealized + cumulative;
-                }
-                foreach (var kv in select.OrderByDescending(o => o.Value))
-                    using (var db = new GoblinBatDbContext(key))
-                    {
-                        if (over.Equals("A") && strategy.Equals("Auto") && db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate)).AsNoTracking().Any())
-                            choice.Add(kv.Key);
-
-                        else if (over.Equals("A") && strategy.Equals("Auto") == false && db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate) && o.Strategy.Equals(strategy)).AsNoTracking().Any())
-                            choice.Add(kv.Key);
-
-                        else if (strategy.Equals("Auto") && over.Equals("A") == false && db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate) && o.RollOver.Equals(over)).AsNoTracking().Any())
-                            choice.Add(kv.Key);
-
-                        else if (db.Strategy.Where(o => o.Index == kv.Key && o.Assets.Equals(assets) && o.Code.Equals(code) && o.Commission.Equals(commission) && o.MarginRate.Equals(rate) && o.Strategy.Equals(strategy) && o.RollOver.Equals(over)).AsNoTracking().Any())
-                            choice.Add(kv.Key);
-                    }
-            }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace);
-            }
-            return choice;
-        }
-        protected List<string[]> GetUserIdentity(DateTime date)
-        {
-            var list = new List<string[]>();
-
-            try
-            {
-                var convert = date.ToString(recent);
-                using (var db = new GoblinBatDbContext(key))
-                    foreach (var str in db.Logs.Where(o => o.Date.Equals(convert)).Select(o => new
-                    {
-                        o.Assets,
-                        o.Code,
-                        o.Commission,
-                        o.Strategy,
-                        o.RollOver
-                    }).AsNoTracking())
-                    {
-                        var temp = new string[]
-                        {
-                            str.Assets,
-                            str.Code,
-                            str.Commission,
-                            marginRate.ToString(),
-                            str.Strategy,
-                            str.RollOver
-                        };
-                        if (list.Exists(o => o[0].Equals(temp[0]) && o[1].Equals(temp[1]) && o[2].Equals(temp[2]) && o[3].Equals(temp[3]) && o[4].Equals(temp[4]) && o[5].Equals(temp[5])) == false)
-                            list.Add(temp);
-                    }
-            }
-            catch (Exception ex)
-            {
-                new ExceptionMessage(ex.StackTrace);
-            }
-            return list;
-        }
         protected int SetIdentify(Identify setting)
         {
             setting.Identity = new Secret().GetIdentify(key);
@@ -1019,115 +921,6 @@ namespace ShareInvest.GoblinBatContext
                     new ExceptionMessage(ex.StackTrace, setting.Strategy);
                 }
             return 0;
-        }
-        protected void SetDeleteDuplicateData(List<Strategics> strategics)
-        {
-            var list = new List<long>();
-
-            foreach (var str in strategics)
-                using (var db = new GoblinBatDbContext(key))
-                {
-                    var strategy = db.Strategy.Where(o => o.Assets.Equals(str.Assets) && o.Code.Equals(str.Code) && o.Commission.Equals(str.Commission) && o.MarginRate.Equals(str.MarginRate) && o.Strategy.Equals(str.Strategy) && o.RollOver.Equals(str.RollOver) && o.BaseTime.Equals(str.BaseTime) && o.BaseShort.Equals(str.BaseShort) && o.BaseLong.Equals(str.BaseLong) && o.NonaTime.Equals(str.NonaTime) && o.NonaShort.Equals(str.NonaShort) && o.NonaLong.Equals(str.NonaLong) && o.OctaTime.Equals(str.OctaTime) && o.OctaShort.Equals(str.OctaShort) && o.OctaLong.Equals(str.OctaLong) && o.HeptaTime.Equals(str.HeptaTime) && o.HeptaShort.Equals(str.HeptaShort) && o.HeptaLong.Equals(str.HeptaLong) && o.HexaTime.Equals(str.HexaTime) && o.HexaShort.Equals(str.HexaShort) && o.HexaLong.Equals(str.HexaLong) && o.PentaTime.Equals(str.PentaTime) && o.PantaShort.Equals(str.PantaShort) && o.PantaLong.Equals(str.PantaLong) && o.QuadTime.Equals(str.QuadTime) && o.QuadShort.Equals(str.QuadShort) && o.QuadLong.Equals(str.QuadLong) && o.TriTime.Equals(str.TriTime) && o.TriShort.Equals(str.TriShort) && o.TriLong.Equals(str.TriLong) && o.DuoTime.Equals(str.DuoTime) && o.DuoShort.Equals(str.DuoShort) && o.DuoLong.Equals(str.DuoLong) && o.MonoTime.Equals(str.MonoTime) && o.MonoShort.Equals(str.MonoShort) && o.MonoLong.Equals(str.MonoLong));
-                    int i = 0;
-
-                    try
-                    {
-                        foreach (var temp in strategy.Select(o => new
-                        {
-                            o.Index
-                        }).AsNoTracking())
-                        {
-                            if (i++ > 0)
-                                list.Add(temp.Index);
-                        }
-                        i = 0;
-                    }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace);
-                    }
-                }
-            if (list.Count > 0)
-                try
-                {
-                    var remove = new List<Strategics>();
-                    using (var db = new GoblinBatDbContext(key))
-                    {
-                        foreach (var index in list)
-                            remove.Add(db.Strategy.Where(o => o.Index == index).First());
-
-                        db.Strategy.BulkDelete(db.Strategy.Where(o => o.Index > 909770), o => o.BatchSize = 50000);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace);
-                }
-        }
-        protected void SetInsertStrategy(List<Strategics> strategy)
-        {
-            using (var db = new GoblinBatDbContext(key))
-                try
-                {
-                    var str = strategy.First();
-                    db.Configuration.AutoDetectChangesEnabled = false;
-
-                    if (db.Strategy.Where(o => o.Assets.Equals(str.Assets) && o.Code.Equals(str.Code) && o.Commission.Equals(str.Commission) && o.MarginRate.Equals(str.MarginRate) && o.Strategy.Equals(str.Strategy) && o.RollOver.Equals(str.RollOver) && o.BaseTime.Equals(str.BaseTime) && o.BaseShort.Equals(str.BaseShort) && o.BaseLong.Equals(str.BaseLong) && o.NonaTime.Equals(str.NonaTime) && o.NonaShort.Equals(str.NonaShort) && o.NonaLong.Equals(str.NonaLong) && o.OctaTime.Equals(str.OctaTime) && o.OctaShort.Equals(str.OctaShort) && o.OctaLong.Equals(str.OctaLong) && o.HeptaTime.Equals(str.HeptaTime) && o.HeptaShort.Equals(str.HeptaShort) && o.HeptaLong.Equals(str.HeptaLong) && o.HexaTime.Equals(str.HexaTime) && o.HexaShort.Equals(str.HexaShort) && o.HexaLong.Equals(str.HexaLong) && o.PentaTime.Equals(str.PentaTime) && o.PantaShort.Equals(str.PantaShort) && o.PantaLong.Equals(str.PantaLong) && o.QuadTime.Equals(str.QuadTime) && o.QuadShort.Equals(str.QuadShort) && o.QuadLong.Equals(str.QuadLong) && o.TriTime.Equals(str.TriTime) && o.TriShort.Equals(str.TriShort) && o.TriLong.Equals(str.TriLong) && o.DuoTime.Equals(str.DuoTime) && o.DuoShort.Equals(str.DuoShort) && o.DuoLong.Equals(str.DuoLong) && o.MonoTime.Equals(str.MonoTime) && o.MonoShort.Equals(str.MonoShort) && o.MonoLong.Equals(str.MonoLong)).Any() == false)
-                        db.BulkInsert(strategy, o =>
-                        {
-                            o.InsertIfNotExists = true;
-                            o.ColumnPrimaryKeyExpression = x => new
-                            {
-                                x.Assets,
-                                x.Code,
-                                x.Commission,
-                                x.MarginRate,
-                                x.Strategy,
-                                x.RollOver,
-                                x.BaseTime,
-                                x.BaseShort,
-                                x.BaseLong,
-                                x.NonaTime,
-                                x.NonaShort,
-                                x.NonaLong,
-                                x.OctaTime,
-                                x.OctaShort,
-                                x.OctaLong,
-                                x.HeptaTime,
-                                x.HeptaShort,
-                                x.HeptaLong,
-                                x.HexaTime,
-                                x.HexaShort,
-                                x.HexaLong,
-                                x.PentaTime,
-                                x.PantaShort,
-                                x.PantaLong,
-                                x.QuadTime,
-                                x.QuadShort,
-                                x.QuadLong,
-                                x.TriTime,
-                                x.TriShort,
-                                x.TriLong,
-                                x.DuoTime,
-                                x.DuoShort,
-                                x.DuoLong,
-                                x.MonoTime,
-                                x.MonoShort,
-                                x.MonoLong
-                            };
-                            o.BatchSize = 150000;
-                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                            o.AutoMapOutputDirection = false;
-                        });
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace, strategy.GetType().Name);
-                }
-                finally
-                {
-                    db.Configuration.AutoDetectChangesEnabled = true;
-                }
         }
         protected bool GetRemainingDate(string code, long date)
         {

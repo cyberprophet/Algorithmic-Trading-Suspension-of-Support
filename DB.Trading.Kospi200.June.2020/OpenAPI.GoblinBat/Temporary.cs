@@ -11,13 +11,9 @@ namespace ShareInvest.OpenAPI
         public Temporary(ConnectAPI api, StringBuilder sb, string key) : base(key)
         {
             Temp = sb;
+            this.api = api;
             api.SendQuotes += OnReceiveMemorize;
             api.SendDatum += OnReceiveMemorize;
-        }
-        internal Temporary(ConnectAPI api, string key) : base(key)
-        {
-            Temp = new StringBuilder(1024);
-            api.SendMemorize += OnReceiveMemorize;
         }
         internal void SetConnection(ConnectAPI api, string key)
         {
@@ -25,11 +21,13 @@ namespace ShareInvest.OpenAPI
             api.SendDatum -= OnReceiveMemorize;
             new Temporary(api, key);
         }
-        internal void SetConnection(ConnectAPI api)
+        internal void SetConnection()
         {
             api.SendQuotes -= OnReceiveMemorize;
             api.SendDatum -= OnReceiveMemorize;
+            api.SendMemorize += OnReceiveMemorize;
         }
+        internal void SetStorage(string code) => SetStorage(code, Temp);
         void OnReceiveMemorize(object sender, Datum e)
         {
             if (e.Time != null && e.Price > 0 && e.Volume != 0)
@@ -60,6 +58,11 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        internal void SetStorage(string code) => SetStorage(code, Temp);
+        Temporary(ConnectAPI api, string key) : base(key)
+        {
+            Temp = new StringBuilder(1024);
+            api.SendMemorize += OnReceiveMemorize;
+        }
+        readonly ConnectAPI api;
     }
 }
