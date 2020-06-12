@@ -15,7 +15,39 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat
     {
-        protected IEnumerable<Simulations> GetStrategy(List<Simulations> strategy)
+        protected string[] GetClosestDueDate()
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    var temp = new string[2];
+                    var count = 0;
+
+                    foreach (var codes in db.Codes.Where(o => o.Code.Contains(kospi200f) && o.Code.Contains(futures) && o.Code.Length == 8).AsNoTracking().OrderByDescending(o => o.Info))
+                    {
+                        if (count == 0)
+                        {
+                            temp[count++] = codes.Code;
+
+                            continue;
+                        }
+                        if (count == 1)
+                        {
+                            temp[count++] = codes.Info.Substring(2);
+
+                            continue;
+                        }
+                        if (count > 1)
+                            return temp;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return null;
+        }
+        protected IEnumerable<Simulations> GetStrategy(List<Simulations> strategy, string code)
         {
             using (var db = new GoblinBatDbContext(key))
                 try
@@ -28,7 +60,7 @@ namespace ShareInvest.GoblinBatContext
                         o.Strategy,
                         o.RollOver
                     }).AsNoTracking())
-                        if (st.Strategy.Length > 2)
+                        if (st.Strategy.Length > 2 && st.Code.Equals(code))
                             strategy.Add(new Simulations
                             {
                                 Assets = st.Assets,
@@ -69,7 +101,7 @@ namespace ShareInvest.GoblinBatContext
                 }
             return null;
         }
-        protected List<Statistics> GetBasicStrategy(char initial)
+        protected List<Statistics> GetBasicStrategy(char initial, string code)
         {
             var list = new List<Statistics>();
             var identity = new Secret().GetIdentify(key);
@@ -79,10 +111,10 @@ namespace ShareInvest.GoblinBatContext
                     switch (initial)
                     {
                         case (char)67:
-                            return db.Statistics.AsNoTracking().Distinct().ToList();
+                            return db.Statistics.Where(o => o.Code.Equals(code)).AsNoTracking().Distinct().ToList();
 
                         case (char)83:
-                            var select = db.Identifies.Where(o => o.Identity.Equals(identity)).AsNoTracking().OrderByDescending(o => o.Date).First();
+                            var select = db.Identifies.Where(o => o.Code.Equals(code) && o.Identity.Equals(identity)).AsNoTracking().OrderByDescending(o => o.Date).First();
 
                             return new List<Statistics>()
                             {
@@ -100,7 +132,7 @@ namespace ShareInvest.GoblinBatContext
                             var choice = new bool[] { true, false };
                             var strategy = db.Statistics.Select(o => new { o.Strategy }).AsNoTracking().Distinct().ToArray();
 
-                            foreach (var str in db.Identifies.Where(o => o.Identity.Equals(identity)).OrderByDescending(o => o.Date).AsNoTracking().Take(1).Select(o => new
+                            foreach (var str in db.Identifies.Where(o => o.Code.Equals(code) && o.Identity.Equals(identity)).OrderByDescending(o => o.Date).AsNoTracking().Take(1).Select(o => new
                             {
                                 o.Assets,
                                 o.Code,
@@ -167,11 +199,10 @@ namespace ShareInvest.GoblinBatContext
         }
         protected IEnumerable<long> GetUserAssets(List<long> list)
         {
-            string max = DateTime.Now.AddDays(-5).ToString(recent);
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    foreach (var assets in db.Identifies.Where(o => string.Compare(o.Date, max) > 0).Select(o => new { o.Assets }).AsNoTracking())
+                    foreach (var assets in db.Identifies.Select(o => new { o.Assets }).AsNoTracking())
                         list.Add(assets.Assets);
                 }
                 catch (Exception ex)
@@ -266,7 +297,7 @@ namespace ShareInvest.GoblinBatContext
             }
             return null;
         }
-        protected IEnumerable<Simulations> Preheat(List<Simulations> games)
+        protected IEnumerable<Simulations> Preheat(List<Simulations> games, string code)
         {
             string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
@@ -276,7 +307,7 @@ namespace ShareInvest.GoblinBatContext
                         games.Add(new Simulations
                         {
                             Assets = game.Assets,
-                            Code = game.Code,
+                            Code = code,
                             Commission = game.Commission,
                             MarginRate = game.MarginRate,
                             Strategy = game.Strategy,
@@ -319,18 +350,18 @@ namespace ShareInvest.GoblinBatContext
                 }
             return games;
         }
-        protected Stack<Simulations> GetBestStrategy(Stack<Simulations> stack, IEnumerable<long> list)
+        protected IEnumerable<Simulations> GetBestStrategy(Stack<Simulations> stack, IEnumerable<long> list, string code)
         {
             string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
                     foreach (var assets in list)
-                        foreach (var game in db.Virtual.Where(o => o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
+                        foreach (var game in db.Virtual.Where(o => o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderByDescending(o => o.Statistic))
                             stack.Push(new Simulations
                             {
                                 Assets = game.Assets,
-                                Code = game.Code,
+                                Code = code,
                                 Commission = game.Commission,
                                 MarginRate = game.MarginRate,
                                 Strategy = game.Strategy,
@@ -371,7 +402,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
-            return stack;
+            return stack.Distinct();
         }
         protected List<Simulations> GetBestExternalRecommend(List<Simulations> games)
         {
@@ -946,6 +977,7 @@ namespace ShareInvest.GoblinBatContext
             try
             {
                 if (GetDirectoryExists(exists))
+                {
                     foreach (var file in Directory.GetFiles(path, "*.res", SearchOption.AllDirectories))
                     {
                         long info = long.MaxValue;
@@ -974,7 +1006,7 @@ namespace ShareInvest.GoblinBatContext
                             var check = db.Codes.Where(o => o.Code.Length == 8 && o.Code.Equals(search)).First().Info;
                             var recent = db.Futures.Where(o => o.Date > info && o.Code.Length == 8 && o.Code.Equals(search)).AsNoTracking();
 
-                            if (recent.Any() && check.Substring(2).CompareTo(info.ToString().Substring(0, 6)) > 0)
+                            if (recent.Any() && check.Substring(2).CompareTo(info.ToString().Substring(0, 6)) > 0 && recent.Max(o => o.Date).ToString().Substring(6, 4).Equals(remaining))
                                 foreach (var find in recent.OrderByDescending(o => o.Date).Select(o => new { o.Date, o.Price, o.Volume }))
                                     storage.Push(new Chart
                                     {
@@ -999,6 +1031,41 @@ namespace ShareInvest.GoblinBatContext
                         catalog[new FileInfo(file).CreationTime] = new Queue<Chart>(chart);
                         chart.Clear();
                     }
+                    if (GetClosestDueDate()[1].Equals(DateTime.Now.ToString(recent)) && new FileInfo(string.Concat(path, @"\", code, res)).Exists == false)
+                    {
+                        var storage = new Stack<Chart>();
+                        var today = long.TryParse(DateTime.Now.ToString(recent), out long date) ? date * 1000000000 : long.MinValue;
+                        using (var db = new GoblinBatDbContext(key))
+                            foreach (var find in db.Futures.Where(o => o.Code.Equals(code)).AsNoTracking().OrderByDescending(o => o.Date))
+                            {
+                                if (find.Date < today)
+                                    break;
+
+                                storage.Push(new Chart
+                                {
+                                    Date = find.Date,
+                                    Price = find.Price,
+                                    Volume = find.Volume
+                                });
+                            }
+                        var file = string.Concat(path, @"\", code, res);
+                        using (var sw = new StreamWriter(file, true))
+                            while (storage.Count > 0)
+                            {
+                                var str = storage.Pop();
+                                sw.WriteLine(string.Concat(str.Date, ',', str.Price, ',', str.Volume));
+                                chart.Enqueue(new Chart
+                                {
+                                    Date = str.Date,
+                                    Price = str.Price,
+                                    Volume = str.Volume
+                                });
+                            }
+                        GC.Collect();
+                        catalog[new FileInfo(file).CreationTime] = new Queue<Chart>(chart);
+                        chart.Clear();
+                    }
+                }
                 else
                 {
                     exists.Create();
@@ -1197,21 +1264,23 @@ namespace ShareInvest.GoblinBatContext
                 return max;
             }
         }
-        protected string Path => System.IO.Path.Combine(Application.StartupPath, chart);
         protected CallUpGoblinBat(string key)
         {
             this.key = key;
             ran = new Random();
         }
+        protected internal string Path => System.IO.Path.Combine(Application.StartupPath, chart);
         protected internal const string futures = "000";
         protected internal const string kospi200f = "101";
+        protected internal const string recent = "yyMMdd";
+        protected internal const string res = ".res";
         const double marginRate = 0.1395;
         const string basic = "Base.res";
         const string chart = "ChartOf101000";
         const string charts = "Charts";
+        const string remaining = "1545";
         const int ar = 10000000;
         const int cr = 1000000;
-        const string recent = "yyMMdd";
         readonly string key;
         readonly Random ran;
     }

@@ -67,6 +67,7 @@ namespace ShareInvest.Strategy
         int StartProgress(int length)
         {
             if (length > 2)
+            {
                 foreach (var quotes in Retrieve.Quotes)
                 {
                     if (quotes.Price != null && quotes.Volume != null)
@@ -77,6 +78,19 @@ namespace ShareInvest.Strategy
                     }
                     SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
                 }
+                if (Retrieve.QuotesEnumerable != null)
+                    foreach (var qe in Retrieve.QuotesEnumerable)
+                        foreach (var quotes in qe.Value)
+                        {
+                            if (quotes.Price != null && quotes.Volume != null)
+                            {
+                                SendDatum?.Invoke(this, new Datum(quotes.Time, quotes.Price, quotes.Volume));
+
+                                continue;
+                            }
+                            SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
+                        }
+            }
             else
                 foreach (var kv in Retrieve.Charts)
                     foreach (var chart in kv.Value)

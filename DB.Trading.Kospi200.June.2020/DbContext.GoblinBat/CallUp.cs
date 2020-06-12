@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 using ShareInvest.Message;
 using ShareInvest.Models;
@@ -564,7 +565,7 @@ namespace ShareInvest.GoblinBatContext
                     foreach (var kv in dic.OrderBy(o => o.Key))
                         record.Enqueue(string.Concat(kv.Key, ",", kv.Value));
 
-                    SetStorage(record);
+                    SetStorage(record, code);
                     return;
             }
         }
@@ -624,11 +625,17 @@ namespace ShareInvest.GoblinBatContext
                     db.Configuration.AutoDetectChangesEnabled = true;
                 }
         }
-        void SetStorage(Queue<string> model)
+        void SetStorage(Queue<string> model, string code)
         {
             try
             {
-                using (var sw = new StreamWriter(File, true))
+                var path = System.IO.Path.Combine(Application.StartupPath, quotes, code);
+                var directory = new DirectoryInfo(path);
+
+                if (directory.Exists == false)
+                    directory.Create();
+
+                using (var sw = new StreamWriter(string.Concat(path, @"\", DateTime.Now.ToString(storage), res), true))
                     while (model.Count > 0)
                     {
                         var str = model.Dequeue();
@@ -644,5 +651,7 @@ namespace ShareInvest.GoblinBatContext
         }
         protected CallUp(string key) : base(key) => this.key = key;
         readonly string key;
+        const string quotes = "Quotes";
+        const string storage = "yyMMddHH";
     }
 }

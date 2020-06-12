@@ -92,16 +92,16 @@ namespace ShareInvest.Strategy
                 for (i = st > 30 ? st - 10 : st - st % 20; i < (st < 90 ? st + 10 : st + 10 - st % 90); i++)
                     for (ms = strategy.MonoShort - 3 > minShort ? strategy.MonoShort - 3 : minShort; ms < (strategy.MonoShort + 3 > maxShort ? maxShort + 1 : strategy.MonoShort + 3); ms++)
                         for (ml = strategy.MonoLong / 5 - 3 > minLong / 5 ? strategy.MonoLong - 15 : minLong; ml < (strategy.MonoLong / 5 + 3 > maxLong / 5 ? maxLong + 1 : strategy.MonoLong + 15 + 1); ml += 5)
-                            for (bs = strategy.BaseShort - 3 > minShort ? strategy.BaseShort - 3 : minShort; ms < (strategy.BaseShort + 3 > maxShort ? maxShort + 1 : strategy.BaseShort + 3); ms++)
-                                for (bl = strategy.BaseLong / 5 - 3 > minLong / 5 ? strategy.BaseLong - 15 : minLong; ml < (strategy.BaseLong / 5 + 3 > maxLong / 5 ? maxLong + 1 : strategy.BaseLong + 15 + 1); ml += 5)
+                            for (bs = strategy.BaseShort - 3 > minShort ? strategy.BaseShort - 3 : minShort; bs < (strategy.BaseShort + 3 > maxShort ? maxShort + 1 : strategy.BaseShort + 3); bs++)
+                                for (bl = strategy.BaseLong / 5 - 3 > minLong / 5 ? strategy.BaseLong - 15 : minLong; bl < (strategy.BaseLong / 5 + 3 > maxLong / 5 ? maxLong + 1 : strategy.BaseLong + 15 + 1); bl += 5)
                                     if (ms < ml && bs < bl)
                                         list.Add(new Models.Simulations
                                         {
                                             Assets = strategy.Assets,
-                                            Code = strategy.Code,
+                                            Code = Retrieve.Code,
                                             Commission = strategy.Commission,
                                             MarginRate = rate,
-                                            Strategy = st.ToString("D2"),
+                                            Strategy = i.ToString("D2"),
                                             RollOver = strategy.RollOver,
                                             BaseTime = 1440,
                                             BaseShort = bs,
@@ -139,7 +139,7 @@ namespace ShareInvest.Strategy
         public Stack<Models.Simulations> GetStatistics(double count)
         {
             var stack = new Stack<Models.Simulations>();
-            var strategy = GetStrategy(new List<Models.Simulations>());
+            var strategy = GetStrategy(new List<Models.Simulations>(), Retrieve.Code);
 
             while (stack.Count < 375000 * count)
             {
@@ -195,9 +195,6 @@ namespace ShareInvest.Strategy
             var assets = GetUserAssets(new List<long>());
             var roll = new bool[] { true, false };
 
-            if (external)
-                return GetBestStrategy(stack, assets);
-
             while (stack.Count < 397251)
                 foreach (var asset in assets)
                     foreach (var co in commission)
@@ -251,6 +248,10 @@ namespace ShareInvest.Strategy
                                     MonoLong = ml
                                 });
                     }
+            if (external)
+                foreach (var best in GetBestStrategy(stack, assets, Retrieve.Code))
+                    stack.Push(best);
+
             return stack;
         }
         public void SetInsertBaseStrategy(string[] strategy, double[] rate, double[] commission)
@@ -372,18 +373,18 @@ namespace ShareInvest.Strategy
         }
         public void GetUserIdentity(char initial)
         {
-            Statistics = GetBasicStrategy(initial);
+            Statistics = GetBasicStrategy(initial, Retrieve.Code);
             RemainingDay = GetRemainingDay(Retrieve.Code);
         }
         public List<Models.Simulations> GetBestStrategy(bool external) => external ? GetBestExternalRecommend(new List<Models.Simulations>(128)) : GetBestStrategyRecommend(new List<Models.Simulations>(128));
-        public IEnumerable<Models.Simulations> GetBestStrategy() => Preheat(new List<Models.Simulations>(256));
+        public IEnumerable<Models.Simulations> GetBestStrategy() => Preheat(new List<Models.Simulations>(256), Retrieve.Code);
+        public static string[] RemainingDay
+        {
+            get; private set;
+        }
         internal static List<Models.Statistics> Statistics
         {
             get; set;
-        }
-        internal static string[] RemainingDay
-        {
-            get; private set;
         }
         readonly Random ran;
         const int maxBase = 1440;

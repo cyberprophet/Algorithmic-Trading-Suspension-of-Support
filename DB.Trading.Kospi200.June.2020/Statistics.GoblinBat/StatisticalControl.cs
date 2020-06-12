@@ -90,7 +90,7 @@ namespace ShareInvest.GoblinBatControls
                         Code = code,
                         Commission = commission[0],
                         MarginRate = rate[0],
-                        Strategy = strategy[ran.Next(0, strategy.Length - 1)],
+                        Strategy = strategy != null ? strategy[ran.Next(0, strategy.Length - 1)] : ran.Next(20, 100).ToString("D2"),
                         RollOver = ro[ran.Next(0, ro.Length)],
                         Time = i == 0 ? 1440 : (uint)string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value,
                         Short = (int)string.Concat(numeric, 10 + i).FindByName<NumericUpDown>(this).Value,

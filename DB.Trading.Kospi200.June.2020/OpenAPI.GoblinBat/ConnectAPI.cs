@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -21,10 +20,10 @@ namespace ShareInvest.OpenAPI
 {
     public class ConnectAPI : AuxiliaryFunction
     {
-        public static ConnectAPI GetInstance(string key)
+        public static ConnectAPI GetInstance(string key, int delay)
         {
             if (OpenAPI == null)
-                OpenAPI = new ConnectAPI(key);
+                OpenAPI = new ConnectAPI(key, delay);
 
             return OpenAPI;
         }
@@ -198,19 +197,10 @@ namespace ShareInvest.OpenAPI
 
                 return;
             }
-            if (e.sMsg.Equals(TR))
+            if (e.sMsg.Equals(TR) || e.sMsg.Equals(Failure))
             {
                 SendMemorize?.Invoke(this, new Memorize("Clear"));
                 Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
-
-                return;
-            }
-            if (e.sMsg.Equals(Failure))
-            {
-                Process.Start("shutdown.exe", "-r");
-                Dispose();
-
-                return;
             }
             if (e.sMsg.Contains(Response) && TimerBox.Show(string.Concat(Response, "."), GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 1375).Equals(DialogResult.OK))
                 return;
@@ -351,7 +341,7 @@ namespace ShareInvest.OpenAPI
                         if (Temporary != null && CodeList.Count == 1)
                         {
                             Temporary.SetStorage(Code);
-                            Request(CodeList.Count);
+                            SendCount?.Invoke(this, new NotifyIconText(-106));
                         }
                         else
                             OnReceiveBalance = false;
@@ -537,8 +527,10 @@ namespace ShareInvest.OpenAPI
                 DeadLine = DateTime.Now.Hour >= 9;
             }
             else if (Temporary != null)
+            {
                 OnCollectingData(GetInformation());
-
+                Request();
+            }
             SendCount?.Invoke(this, new NotifyIconText((byte)e.nErrCode));
         }
         void PrepareForTrading(string account)
@@ -571,7 +563,12 @@ namespace ShareInvest.OpenAPI
             CodeList = RequestCodeList(new List<string>(32), markets);
             SendMemorize?.Invoke(this, new Memorize("Clear"));
             Delay.Milliseconds = 4315;
-            Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
+
+            if (new Secrets().IsServer(key))
+                Request(Code);
+
+            else
+                Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
         string[] GetInformation()
         {
@@ -669,22 +666,14 @@ namespace ShareInvest.OpenAPI
             }
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
-        void Request(int index)
+        void Request()
         {
-            while (CodeList.Count == index && new Secrets().IsServer(key))
+            if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
             {
-                Temporary.SetConnection();
-                Delay.Milliseconds = 205;
-                SendMemorize?.Invoke(this, new Memorize("Clear"));
-                Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
-
-                if (DateTime.Now.AddDays(1).ToString(format).Equals(OnReceiveRemainingDay(Code)))
-                    RemainingDay(API.GetFutureCodeByIndex(1));
-
-                if (TimerBox.Show(OnReceiveData, GoblinBat, MessageBoxButtons.OK, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, 93175).Equals(DialogResult.OK) && DateTime.Now.ToString(format).Equals(GetRetention(1, Code).Substring(0, 6)))
-                    break;
+                var code = API.GetFutureCodeByIndex(1);
+                RemainingDay(code);
+                Code = code;
             }
-            SendCount?.Invoke(this, new NotifyIconText(-106));
         }
         void FixUp(string[] param, string code)
         {
@@ -808,10 +797,10 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        ConnectAPI(string key) : base(key)
+        ConnectAPI(string key, int delay) : base(key)
         {
             error = new Error();
-            request = Delay.GetInstance(205);
+            request = Delay.GetInstance(delay);
             request.Run();
         }
         AxKHOpenAPI API

@@ -27,11 +27,11 @@ namespace ShareInvest
             this.cts = cts;
             InitializeComponent();
             Opacity = 0;
-            retrieve = new Strategy.Retrieve(key);
+            retrieve = new Strategy.Retrieve(key, initial);
 
             if (collect)
             {
-                Open = OpenAPI.ConnectAPI.GetInstance(key);
+                Open = OpenAPI.ConnectAPI.GetInstance(key, 205);
                 Open.SetAPI(axAPI);
                 Open.SendCount += OnReceiveNotifyIcon;
             }
@@ -211,6 +211,7 @@ namespace ShareInvest
             if (string.IsNullOrEmpty(e.Setting.Code) == false && string.IsNullOrEmpty(e.Setting.Strategy) == false && retrieve.SetIdentify(e.Setting) >= 0)
             {
                 Cursor = Cursors.Default;
+                retrieve.SetStatistics(e.Setting, new List<string>(secret.strategy), secret.rate[0]);
 
                 return;
             }
@@ -547,7 +548,7 @@ namespace ShareInvest
                     ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                     ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
                 }
-                if (initial.Equals(trading))
+                if (initial.Equals(trading) && Array.Exists(Specify, o => o.Strategy.Length > 2))
                     Parallel.ForEach(Specify, new Action<Catalog.XingAPI.Specify>((param) =>
                     {
                         switch (param.Strategy)

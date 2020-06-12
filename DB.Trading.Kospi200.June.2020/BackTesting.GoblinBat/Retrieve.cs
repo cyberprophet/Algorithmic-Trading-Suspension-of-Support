@@ -14,7 +14,11 @@ namespace ShareInvest.Strategy
 {
     public partial class Retrieve : CallUpStatisticalAnalysis
     {
-        public Retrieve(string key) : base(key) => secret = new Secret();
+        public Retrieve(string key, char initial) : base(key)
+        {
+            secret = new Secret();
+            Initial = initial;
+        }
         public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number, Code);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
         public Models.Simulations GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
@@ -24,14 +28,15 @@ namespace ShareInvest.Strategy
         {
             var game = new Models.Simulations();
             var recommend = GetBestStrategyRecommend(Information.Statistics, game);
+            var rank = secret.GetRank(recommend.Item3);
 
-            if (recommend.Item5 == null || TimerBox.Show(secret.GetMessage(recommend.Item4, recommend.Item1, recommend.Item4 / (double)recommend.Item1), secret.GetRank(recommend.Item3), MessageBoxButtons.YesNo, MessageBoxIcon.Question, (recommend.Item2.MarginRate + 0.5713) * recommend.Item1 > recommend.Item4 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 13975U).Equals(DialogResult.Yes))
+            if (recommend.Item5 == null || TimerBox.Show(secret.GetMessage(recommend.Item4, recommend.Item1, recommend.Item4 / (double)recommend.Item1), rank, MessageBoxButtons.YesNo, MessageBoxIcon.Question, (recommend.Item2.MarginRate + 0.5713) * recommend.Item1 > recommend.Item4 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 13975U).Equals(DialogResult.Yes))
                 game = recommend.Item2;
 
             else
                 game = recommend.Item5;
 
-            new Task(() => new ExceptionMessage(game)).Start();
+            new Task(() => new ExceptionMessage(game, rank)).Start();
             SetIdentify(new Models.Identify
             {
                 Assets = game.Assets,
@@ -144,6 +149,37 @@ namespace ShareInvest.Strategy
 
             return code;
         }
+        public void SetStatistics(Setting setting, List<string> list, double rate)
+        {
+            var queue = new Queue<Models.Statistics>();
+
+            for (int i = 20; i < 100; i++)
+                list.Add(i.ToString());
+
+            foreach (var str in list)
+                if (str.Equals("Auto") == false)
+                {
+                    queue.Enqueue(new Models.Statistics
+                    {
+                        Assets = setting.Assets,
+                        Code = setting.Code,
+                        Commission = setting.Commission,
+                        MarginRate = rate,
+                        Strategy = str,
+                        RollOver = true
+                    });
+                    queue.Enqueue(new Models.Statistics
+                    {
+                        Assets = setting.Assets,
+                        Code = setting.Code,
+                        Commission = setting.Commission,
+                        MarginRate = rate,
+                        Strategy = str,
+                        RollOver = false
+                    });
+                }
+            SetInsertBaseStrategy(queue);
+        }
         public int SetIdentify(Setting setting) => SetIdentify(new Models.Identify
         {
             Assets = setting.Assets,
@@ -204,7 +240,7 @@ namespace ShareInvest.Strategy
         {
             get
             {
-                var time = Quotes != null ? Quotes.Last().Time : Charts.Last().Value.Last().Date.ToString();
+                var time = Initial.Equals((char)Port.Trading) && QuotesEnumerable != null ? QuotesEnumerable.Last().Value.Last().Time : Charts.Last().Value.Last().Date.ToString();
 
                 if (DateTime.TryParseExact(time.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
                     return string.Concat(date.ToLongDateString(), " ", date.ToShortTimeString());
@@ -385,12 +421,21 @@ namespace ShareInvest.Strategy
         {
             get; private set;
         }
+        protected internal static IOrderedEnumerable<KeyValuePair<DateTime, Queue<Quotes>>> QuotesEnumerable
+        {
+            get; private set;
+        }
+        static char Initial
+        {
+            get; set;
+        }
         void SetInitialzeTheCode(string code)
         {
-            if (Chart == null && Quotes == null)
+            if (Chart == null && Quotes == null && QuotesEnumerable == null)
             {
                 Chart = GetChart(code);
                 Quotes = GetQuotes(code);
+                QuotesEnumerable = GetQuotes(new Dictionary<DateTime, Queue<Quotes>>(1048576), code);
             }
         }
         void SetInitialzeTheCode()

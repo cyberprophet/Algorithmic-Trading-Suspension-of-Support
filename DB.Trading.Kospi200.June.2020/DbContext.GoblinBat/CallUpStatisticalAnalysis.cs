@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Data.SqlClient;
+using System.Data.Entity.Migrations;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -60,6 +60,171 @@ namespace ShareInvest.GoblinBatContext
             }
             return DateTime.Now.ToString(date);
         }
+        protected IOrderedEnumerable<KeyValuePair<DateTime, Queue<Quotes>>> GetQuotes(Dictionary<DateTime, Queue<Quotes>> catalog, string code)
+        {
+            string path = System.IO.Path.Combine(Application.StartupPath, enumerable), date = string.Empty;
+            var search = new List<string>();
+            var exists = new DirectoryInfo(path);
+            var chart = new Queue<Quotes>(2048);
+
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                    date = db.Datums.Where(o => o.Code.Equals(code)).AsNoTracking().Max(o => o.Date).Substring(0, 8);
+
+                if (exists.Exists)
+                {
+                    foreach (var file in Directory.GetFiles(path, "*.res", SearchOption.AllDirectories))
+                    {
+                        using (var sr = new StreamReader(file))
+                            if (sr != null)
+                                while (sr.EndOfStream == false)
+                                {
+                                    var str = sr.ReadLine().Split(',');
+
+                                    if (str.Length == 3)
+                                    {
+                                        chart.Enqueue(new Quotes
+                                        {
+                                            Time = str[0],
+                                            Price = str[1],
+                                            Volume = str[2]
+                                        });
+                                        continue;
+                                    }
+                                    chart.Enqueue(new Quotes
+                                    {
+                                        Time = str[0],
+                                        SellPrice = str[1],
+                                        SellQuantity = str[2],
+                                        SellAmount = str[3],
+                                        BuyPrice = str[4],
+                                        BuyQuantity = str[5],
+                                        BuyAmount = str[6]
+                                    });
+                                }
+                        var temp = file.Split('\\');
+                        search.Add(temp[temp.Length - 1].Split('.')[0]);
+                        catalog[new FileInfo(file).CreationTime] = new Queue<Quotes>(chart);
+                        chart.Clear();
+                        GC.Collect();
+                    }
+                    if (string.IsNullOrEmpty(date) == false && string.Compare(search.Max(), date) < 0)
+                    {
+                        var storage = new Stack<Quotes>();
+                        var max = search.Max();
+                        using (var db = new GoblinBatDbContext(key))
+                            foreach (var datum in db.Datums.Where(o => o.Code.Equals(code)).AsNoTracking().OrderByDescending(o => o.Date))
+                            {
+                                if (string.Compare(datum.Date.Substring(0, 8), max) <= 0)
+                                    break;
+
+                                if (datum.Price == null && datum.Volume == null)
+                                {
+                                    storage.Push(new Quotes
+                                    {
+                                        Time = datum.Date,
+                                        SellPrice = datum.SellPrice,
+                                        SellQuantity = datum.SellQuantity,
+                                        SellAmount = datum.TotalSellAmount,
+                                        BuyPrice = datum.BuyPrice,
+                                        BuyQuantity = datum.BuyQuantity,
+                                        BuyAmount = datum.TotalBuyAmount
+                                    });
+                                    continue;
+                                }
+                                storage.Push(new Quotes
+                                {
+                                    Time = datum.Date,
+                                    Price = datum.Price,
+                                    Volume = datum.Volume
+                                });
+                            }
+                        var file = string.Concat(path, @"\", code, @"\", date, res);
+                        using (var sw = new StreamWriter(file, true))
+                            while (storage.Count > 0)
+                            {
+                                var str = storage.Pop();
+
+                                if (str.Price == null && str.Volume == null)
+                                {
+                                    sw.WriteLine(string.Concat(str.Time, ",", str.SellPrice, ",", str.SellQuantity, ",", str.SellAmount, ",", str.BuyPrice, ",", str.BuyQuantity, ",", str.BuyAmount));
+                                    chart.Enqueue(new Quotes
+                                    {
+                                        Time = str.Time,
+                                        SellPrice = str.SellPrice,
+                                        SellQuantity = str.SellQuantity,
+                                        SellAmount = str.SellAmount,
+                                        BuyPrice = str.BuyPrice,
+                                        BuyQuantity = str.BuyQuantity,
+                                        BuyAmount = str.BuyAmount
+                                    });
+                                    continue;
+                                }
+                                sw.WriteLine(string.Concat(str.Time, ",", str.Price, ",", str.Volume));
+                                chart.Enqueue(new Quotes
+                                {
+                                    Time = str.Time,
+                                    Price = str.Price,
+                                    Volume = str.Volume
+                                });
+                            }
+                        catalog[new FileInfo(file).CreationTime] = new Queue<Quotes>(chart);
+                        chart.Clear();
+                        GC.Collect();
+                    }
+                }
+                else
+                {
+                    exists.Create();
+                    using (var db = new GoblinBatDbContext(key))
+                        foreach (var tick in db.Datums.Where(o => o.Code.Equals(code)).AsNoTracking().OrderBy(o => o.Date))
+                        {
+                            if (tick.Price == null && tick.Volume == null)
+                            {
+                                chart.Enqueue(new Quotes
+                                {
+                                    Time = tick.Date,
+                                    SellPrice = tick.SellPrice,
+                                    SellQuantity = tick.SellQuantity,
+                                    SellAmount = tick.TotalSellAmount,
+                                    BuyPrice = tick.BuyPrice,
+                                    BuyQuantity = tick.BuyQuantity,
+                                    BuyAmount = tick.TotalBuyAmount
+                                });
+                                continue;
+                            }
+                            chart.Enqueue(new Quotes
+                            {
+                                Time = tick.Date,
+                                Price = tick.Price,
+                                Volume = tick.Volume
+                            });
+                        }
+                    var file = string.Concat(path, @"\", code, @"\", date, res);
+                    using (var sw = new StreamWriter(file, true))
+                        foreach (var str in chart.OrderBy(o => o.Time))
+                        {
+                            if (str.Price == null && str.Volume == null)
+                            {
+                                sw.WriteLine(string.Concat(str.Time, ",", str.SellPrice, ",", str.SellQuantity, ",", str.SellAmount, ",", str.BuyPrice, ",", str.BuyQuantity, ",", str.BuyAmount));
+
+                                continue;
+                            }
+                            sw.WriteLine(string.Concat(str.Time, ',', str.Price, ',', str.Volume));
+                        }
+                    catalog[new FileInfo(file).LastWriteTime] = new Queue<Quotes>(chart);
+                    chart.Clear();
+                    GC.Collect();
+                }
+                return catalog.OrderBy(o => o.Key);
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
+            return null;
+        }
         protected Queue<Quotes> GetQuotes(string code)
         {
             var chart = new Queue<Quotes>();
@@ -98,6 +263,9 @@ namespace ShareInvest.GoblinBatContext
                                         BuyAmount = str[6]
                                     });
                                 }
+                        if (temp.Equals(end))
+                            return chart;
+
                         var storage = new Stack<Quotes>();
                         using (var db = new GoblinBatDbContext(key))
                         {
@@ -207,6 +375,8 @@ namespace ShareInvest.GoblinBatContext
                                     Price = temp.Price,
                                     Volume = temp.Volume
                                 });
+                                if (temp.Date.Equals(end))
+                                    return chart;
                             }
                     SetQuotesFile(chart);
                 }
@@ -245,29 +415,20 @@ namespace ShareInvest.GoblinBatContext
         }
         protected bool SetStatisticalStorage(Queue<Simulations> memo)
         {
-            string message = string.Empty;
+            int count = 0;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    db.Configuration.AutoDetectChangesEnabled = false;
-                    db.BulkInsert(memo, o =>
-                    {
-                        o.InsertIfNotExists = true;
-                        o.BatchSize = 250;
-                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                        o.AutoMapOutputDirection = false;
-                    });
+                    while (memo.Count > 0)
+                        db.Virtual.AddOrUpdate(memo.Dequeue());
+
+                    count = db.SaveChanges();
                 }
                 catch (Exception ex)
                 {
-                    message = ex.TargetSite.Name;
                     new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                 }
-                finally
-                {
-                    db.Configuration.AutoDetectChangesEnabled = true;
-                }
-            return string.IsNullOrEmpty(message);
+            return count > 0;
         }
         protected async Task<string> GetRecentDate()
         {
@@ -328,5 +489,7 @@ namespace ShareInvest.GoblinBatContext
         readonly string key;
         const string date = "yyMMddHHmmss";
         const string quotes = "QuotesA.res";
+        const string end = "200611154500001";
+        const string enumerable = "Quotes";
     }
 }

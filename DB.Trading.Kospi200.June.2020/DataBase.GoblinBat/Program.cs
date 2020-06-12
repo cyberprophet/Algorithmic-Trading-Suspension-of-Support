@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -24,11 +25,12 @@ namespace ShareInvest
                 string path = Path.Combine(Application.StartupPath, secret.Indentify), recent = string.Empty;
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var initial = secret.GetPort(str);
-                var remaining = secret.GetIsSever(str) ? 9 : ran.Next(initial.Equals((char)Port.Seriate) ? 3 : 1, 9);
+                var remaining = secret.GetIsSever(str) ? 1 : ran.Next(initial.Equals((char)Port.Seriate) ? 15 : 12, 20);
                 var cts = new CancellationTokenSource();
-                var retrieve = new Strategy.Retrieve(str);
+                var retrieve = new Strategy.Retrieve(str, initial);
                 var count = secret.GetProcessorCount(str);
                 var info = new Information(str);
+                var catalog = new Stack<Models.Simulations>();
 
                 if (secret.GetDirectoryInfoExists(path))
                 {
@@ -45,7 +47,7 @@ namespace ShareInvest
                                 retrieve.GetInitialzeTheCode();
                                 info.GetUserIdentity(initial);
                                 recent = retrieve.RecentDate;
-                                var catalog = count == 0.75 ? info.GetStatistics(secret.GetExternal(str), secret.rate, secret.commission) : info.GetStatistics(count);
+                                catalog = count == 0.75 ? info.GetStatistics(secret.GetExternal(str), secret.rate, secret.commission) : info.GetStatistics(count);
 
                                 if (initial.Equals((char)Port.Collecting) == false)
                                 {
@@ -67,7 +69,7 @@ namespace ShareInvest
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * secret.GetOverload(str))
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * (initial.Equals((char)Port.Collecting) ? 1 : 2))
                                 };
                                 try
                                 {
@@ -92,9 +94,24 @@ namespace ShareInvest
                                 }
                                 catch (Exception ex)
                                 {
-                                    if (secret.GetIsSever(str) == false)
+                                    if (Array.Exists(Information.RemainingDay, o => o.Equals(DateTime.Now.ToString(format))) == false && secret.GetIsSever(str) == false && (DateTime.Now.Hour > 4 && DateTime.Now.Hour < 9 || DateTime.Now.Hour > 15 && DateTime.Now.Hour < 18))
                                         Process.Start("shutdown.exe", "-r");
 
+                                    else
+                                    {
+                                        new ExceptionMessage(ex.TargetSite.Name);
+
+                                        while (catalog.Count > 0)
+                                        {
+                                            var pop = catalog.Pop();
+
+                                            if (retrieve.GetDuplicateResults(recent, pop) == false)
+                                            {
+                                                new BackTesting(initial, pop, str);
+                                                Count++;
+                                            }
+                                        }
+                                    }
                                     cts.Dispose();
                                     new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                                 }
@@ -105,13 +122,15 @@ namespace ShareInvest
                             if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 35 && ran.Next(0, 10) == 9)
                                 break;
 
-                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 50 || DateTime.Now.Minute > 45 && ran.Next(0, 5) == 3))
+                            if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 54 || DateTime.Now.Minute > 49 && ran.Next(0, 5) == 3))
+                                break;
+
+                            if (DateTime.Now.Hour == 15 && DateTime.Now.Minute > 47 && DateTime.Now.Minute < 51 && secret.GetIsSever(str))
                                 break;
                         }
                     if (initial.Equals((char)126) == false)
                     {
-                        if (initial.Equals((char)Port.Collecting) == false && cts.IsCancellationRequested == false)
-                        {
+                        if (initial.Equals((char)Port.Collecting) == false && cts.IsCancellationRequested == false && DateTime.Now.Hour == 8)
                             try
                             {
                                 cts.Cancel();
@@ -122,43 +141,12 @@ namespace ShareInvest
                             }
                             finally
                             {
-                                cts.Dispose();
-                            }
-                            cts = new CancellationTokenSource();
-                            new Task(() =>
-                            {
-                                var catalog = info.GetStatistics(count / 5);
-                                var po = new ParallelOptions
-                                {
-                                    CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * 0.6)
-                                };
-                                try
-                                {
-                                    Parallel.ForEach(catalog, po, new Action<Models.Simulations>((number) =>
-                                    {
-                                        if (cts.IsCancellationRequested)
-                                            po.CancellationToken.ThrowIfCancellationRequested();
-
-                                        if (retrieve.GetDuplicateResults(recent, number) == false)
-                                        {
-                                            new BackTesting(initial, number, str);
-                                            Count++;
-                                        }
-                                    }));
-                                }
-                                catch (OperationCanceledException ex)
-                                {
+                                if (catalog.Count > 0)
                                     catalog.Clear();
-                                    new ExceptionMessage(ex.StackTrace);
-                                }
-                                catch (Exception ex)
-                                {
-                                    new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
-                                }
-                            }).Start();
-                        }
-                        GC.Collect();
+
+                                cts.Dispose();
+                                GC.Collect();
+                            }
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
                         Application.Run(new GoblinBat(initial, secret, str, cts));
@@ -186,5 +174,6 @@ namespace ShareInvest
         {
             get; set;
         }
+        const string format = "yyMMdd";
     }
 }

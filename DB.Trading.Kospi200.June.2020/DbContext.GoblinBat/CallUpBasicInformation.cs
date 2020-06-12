@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Data.Entity.Migrations;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -32,7 +32,7 @@ namespace ShareInvest.GoblinBatContext
                     }
                     catch (Exception ex)
                     {
-                        new ExceptionMessage(ex.StackTrace);
+                        new ExceptionMessage(ex.StackTrace, specify.Strategy);
                     }
             else
             {
@@ -56,7 +56,7 @@ namespace ShareInvest.GoblinBatContext
                     }
                     catch (Exception ex)
                     {
-                        new ExceptionMessage(ex.StackTrace);
+                        new ExceptionMessage(ex.StackTrace, specify.Strategy);
                     }
                 if (temp.Count > 0)
                     try
@@ -70,7 +70,7 @@ namespace ShareInvest.GoblinBatContext
                     }
                     catch (Exception ex)
                     {
-                        new ExceptionMessage(ex.StackTrace);
+                        new ExceptionMessage(ex.StackTrace, specify.Strategy);
                     }
             }
             return stack;
@@ -81,15 +81,24 @@ namespace ShareInvest.GoblinBatContext
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    while (charts.Count > 0)
-                        db.Charts.AddOrUpdate(charts.Dequeue());
-
-                    result = db.SaveChanges() > 0;
+                    db.Configuration.AutoDetectChangesEnabled = false;
+                    db.BulkInsert(charts, o =>
+                    {
+                        o.InsertIfNotExists = true;
+                        o.BatchSize = 15000;
+                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                        o.AutoMapOutputDirection = false;
+                    });
+                    result = true;
                 }
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
                     result = false;
+                }
+                finally
+                {
+                    db.Configuration.AutoDetectChangesEnabled = true;
                 }
             return result;
         }

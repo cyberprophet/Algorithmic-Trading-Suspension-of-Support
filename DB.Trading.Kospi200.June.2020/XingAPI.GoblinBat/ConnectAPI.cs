@@ -101,9 +101,12 @@ namespace ShareInvest.XingAPI
         public string DetailName => GetAcctDetailName(secret.ShowAccount.Replace("-", string.Empty));
         public void Dispose()
         {
-            if (TimerBox.Show(secret.Message, GetErrorMessage(GetLastError()), MessageBoxButtons.OK, MessageBoxIcon.Information, 180000).Equals(DialogResult.OK))
+            var message = GetErrorMessage(GetLastError());
+
+            if (TimerBox.Show(secret.Message, message, MessageBoxButtons.OK, MessageBoxIcon.Information, 180000).Equals(DialogResult.OK))
             {
                 Process.Start("shutdown.exe", "-r");
+                new ExceptionMessage(message);
                 Send?.Invoke(this, new NotifyIconText((char)69));
             }
         }
