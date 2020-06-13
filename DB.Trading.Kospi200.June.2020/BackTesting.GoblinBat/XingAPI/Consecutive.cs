@@ -20,8 +20,8 @@ namespace ShareInvest.Strategy.XingAPI
             Short = new Stack<double>(256);
             Long = new Stack<double>(256);
 
-            foreach (var kv in Retrieve.Charts.OrderBy(o => o.Key))
-                foreach (var chart in kv.Value.OrderBy(o => o.Date))
+            foreach (var kv in Retrieve.Charts)
+                foreach (var chart in kv.Value)
                     Analysize(chart);
 
             if (specify.Time == 1440)
@@ -33,7 +33,7 @@ namespace ShareInvest.Strategy.XingAPI
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
 
                 if (DateTime.Now.Hour < 5 || DateTime.Now.Hour > 16)
-                    this.judge /= 5;
+                    this.judge /= 10;
             }
             else
                 Check = string.Empty;

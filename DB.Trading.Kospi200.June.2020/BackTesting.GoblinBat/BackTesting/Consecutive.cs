@@ -40,6 +40,46 @@ namespace ShareInvest.Strategy.Statistics
                     {
                         case end:
                             bt.SetStatisticalStorage(e.Date.ToString().Substring(0, 6), e.Price, !specify.RollOver);
+                            bt.Charts.Enqueue(new Models.Charts
+                            {
+                                Code = specify.Code,
+                                Date = e.Date.ToString().Substring(0, 6),
+                                Time = 405,
+                                Base = specify.Short,
+                                Value = Short.Peek()
+                            });
+                            bt.Charts.Enqueue(new Models.Charts
+                            {
+                                Code = specify.Code,
+                                Date = e.Date.ToString().Substring(0, 6),
+                                Time = 405,
+                                Base = specify.Long,
+                                Value = Long.Peek()
+                            });
+                            break;
+
+                        case "045959000":
+                        case "045959001":
+                        case "045959002":
+                        case "045959003":
+                        case "045959004":
+                        case "045959005":
+                            bt.Charts.Enqueue(new Models.Charts
+                            {
+                                Code = specify.Code,
+                                Date = e.Date.ToString().Substring(0, 6),
+                                Time = 660,
+                                Base = specify.Short,
+                                Value = Short.Peek()
+                            });
+                            bt.Charts.Enqueue(new Models.Charts
+                            {
+                                Code = specify.Code,
+                                Date = e.Date.ToString().Substring(0, 6),
+                                Time = 660,
+                                Base = specify.Long,
+                                Value = Long.Peek()
+                            });
                             break;
 
                         case onTime:
@@ -169,13 +209,13 @@ namespace ShareInvest.Strategy.Statistics
             {
                 case buy:
                     if (max - bt.Quantity > 1)
-                        return CME ? judge / 5 < quantity : judge < quantity;
+                        return CME ? judge / 10 < quantity : judge < quantity;
 
                     break;
 
                 case sell:
                     if (max + bt.Quantity > 1)
-                        return CME ? judge / -5 > quantity : -judge > quantity;
+                        return CME ? judge / -10 > quantity : -judge > quantity;
 
                     break;
             }

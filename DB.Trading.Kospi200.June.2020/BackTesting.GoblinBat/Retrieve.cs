@@ -221,15 +221,15 @@ namespace ShareInvest.Strategy
         {
             get
             {
-                string recent;
-
-                do
+                for (int i = -1; i > int.MinValue; i--)
                 {
-                    recent = GetRecentDate().Result;
-                }
-                while (string.IsNullOrEmpty(recent));
+                    var date = DateTime.Now.AddDays(i);
+                    var max = GetRecentDate(date.ToString(recent));
 
-                return recent;
+                    if (string.IsNullOrEmpty(max) == false)
+                        return max;
+                }
+                return string.Empty;
             }
         }
         public static string Code

@@ -13,6 +13,8 @@ namespace ShareInvest.GoblinBatControls
             InitializeComponent();
             price = chart.Series[priceChart];
             revenue = chart.Series[revenueChart];
+            _short = chart.Series[shortChart];
+            _long = chart.Series[longChart];
         }
         public Size SetChartValue(Dictionary<DateTime, string> param)
         {
@@ -32,6 +34,8 @@ namespace ShareInvest.GoblinBatControls
         {
             price.Points.Clear();
             revenue.Points.Clear();
+            _short.Points.Clear();
+            _long.Points.Clear();
 
             if (e.Information != null)
                 foreach (var kv in e.Information)
@@ -40,12 +44,18 @@ namespace ShareInvest.GoblinBatControls
 
                     price.Points.AddXY(kv.Key, splits[1]);
                     revenue.Points.AddXY(kv.Key, splits[0]);
+                    _short.Points.AddXY(kv.Key, splits[2]);
+                    _long.Points.AddXY(kv.Key, splits[3]);
                 }
         }
         public Size SetChartValue() => new Size(1350, 750);
         readonly Series price;
         readonly Series revenue;
+        readonly Series _short;
+        readonly Series _long;
         const string priceChart = "Price";
         const string revenueChart = "Revenue";
+        const string shortChart = "Short";
+        const string longChart = "Long";
     }
 }

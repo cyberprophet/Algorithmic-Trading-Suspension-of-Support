@@ -488,7 +488,7 @@ namespace ShareInvest
                             Account.Dock = DockStyle.Fill;
                             Account.Show();
                         }
-                            ((IEvents<Deposit>)ctor).Send += Account.OnReceiveDeposit;
+                        ((IEvents<Deposit>)ctor).Send += Account.OnReceiveDeposit;
                         ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                         break;
 
@@ -500,7 +500,7 @@ namespace ShareInvest
                             panel.Controls.Add(Balance);
                             Balance.Dock = DockStyle.Fill;
                         }
-                            ((IEvents<Balance>)ctor).Send += Balance.OnReceiveBalance;
+                        ((IEvents<Balance>)ctor).Send += Balance.OnReceiveBalance;
                         ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                         break;
                 }

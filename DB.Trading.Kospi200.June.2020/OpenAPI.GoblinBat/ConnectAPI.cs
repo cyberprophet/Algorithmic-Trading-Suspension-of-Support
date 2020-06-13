@@ -446,6 +446,9 @@ namespace ShareInvest.OpenAPI
                 SendMemorize?.Invoke(this, new Memorize("Clear"));
                 Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
 
+                if (DateTime.Now.Hour == 16 && new Secrets().IsServer(key))
+                    SendCount?.Invoke(this, new NotifyIconText(-106));
+
                 return;
             }
             var str = new StringBuilder(512);
@@ -562,9 +565,10 @@ namespace ShareInvest.OpenAPI
             SetPasswordWhileCollectingData(markets.Length);
             CodeList = RequestCodeList(new List<string>(32), markets);
             SendMemorize?.Invoke(this, new Memorize("Clear"));
-            Delay.Milliseconds = 4315;
+            var server = DateTime.Now.Hour == 15 && new Secrets().IsServer(key);
+            Delay.Milliseconds = server ? 1935 : 4315;
 
-            if (new Secrets().IsServer(key))
+            if (server)
                 Request(Code);
 
             else

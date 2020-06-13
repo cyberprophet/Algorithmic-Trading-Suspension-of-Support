@@ -78,27 +78,29 @@ namespace ShareInvest.Strategy
                     }
                     SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
                 }
-                if (Retrieve.QuotesEnumerable != null)
-                    foreach (var qe in Retrieve.QuotesEnumerable)
-                        foreach (var quotes in qe.Value)
+                foreach (var qe in Retrieve.QuotesEnumerable)
+                    foreach (var quotes in qe.Value)
+                    {
+                        if (quotes.Price != null && quotes.Volume != null)
                         {
-                            if (quotes.Price != null && quotes.Volume != null)
-                            {
-                                SendDatum?.Invoke(this, new Datum(quotes.Time, quotes.Price, quotes.Volume));
+                            SendDatum?.Invoke(this, new Datum(quotes.Time, quotes.Price, quotes.Volume));
 
-                                continue;
-                            }
-                            SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
+                            continue;
                         }
+                        SendQuotes?.Invoke(this, new Quotes(quotes.Time, quotes.SellPrice, quotes.BuyPrice, quotes.SellQuantity, quotes.BuyQuantity, quotes.SellAmount, quotes.BuyAmount));
+                    }
+                if (games.Count > 0 && SetStatisticalStorage(games) == false)
+                    Message = new Secret().Message;
             }
             else
+            {
                 foreach (var kv in Retrieve.Charts)
                     foreach (var chart in kv.Value)
                         SendDatum?.Invoke(this, new Datum(chart.Date, chart.Price, chart.Volume));
 
-            if (games.Count > 0 && SetStatisticalStorage(games) == false)
-                Message = new Secret().Message;
-
+                if (Charts.Count > 0 && SetBasicChart(Charts) == false && games.Count > 0 && SetStatisticalBulkStorage(games) == false)
+                    Message = new Secret().Message;
+            }
             return statement == null ? 0 : statement.Count;
         }
         void SetConclusion(double price)
@@ -448,12 +450,19 @@ namespace ShareInvest.Strategy
         {
             get;
         }
+        internal Queue<Models.Charts> Charts
+        {
+            get;
+        }
         public string Message
         {
             get; private set;
         }
         public BackTesting(char verify, Models.Simulations game, string key) : base(key)
         {
+            if (game.Strategy.Length == 2)
+                Charts = new Queue<Models.Charts>(128);
+
             this.verify = verify.Equals((char)86);
             this.game = game;
             Residue = new Dictionary<uint, int>();

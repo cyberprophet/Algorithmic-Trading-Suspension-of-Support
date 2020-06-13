@@ -528,9 +528,10 @@ namespace ShareInvest.GoblinBatContext
                         }
                     }
                 }
-            switch (external)
+            if (dic.Count > 0)
             {
-                case true:
+                if (external)
+                {
                     foreach (var kv in dic)
                     {
                         var temp = kv.Value.Split(',');
@@ -559,14 +560,11 @@ namespace ShareInvest.GoblinBatContext
                         });
                     }
                     SetStorage(model);
-                    return;
+                }
+                foreach (var kv in dic.OrderBy(o => o.Key))
+                    record.Enqueue(string.Concat(kv.Key, ",", kv.Value));
 
-                case false:
-                    foreach (var kv in dic.OrderBy(o => o.Key))
-                        record.Enqueue(string.Concat(kv.Key, ",", kv.Value));
-
-                    SetStorage(record, code);
-                    return;
+                SetStorage(record, code);
             }
         }
         protected void SetStorage(StringBuilder param, string code)

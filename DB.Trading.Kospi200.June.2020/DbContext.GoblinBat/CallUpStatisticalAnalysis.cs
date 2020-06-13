@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Migrations;
+using System.Data.SqlClient;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog.XingAPI;
@@ -16,6 +16,20 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
     {
+        protected string GetRecentDate(string max)
+        {
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    if (db.Virtual.Any(o => o.Date.Equals(max)))
+                        return max;
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace);
+                }
+            return string.Empty;
+        }
         protected Dictionary<DateTime, string> GetInformation(Catalog.DataBase.ImitationGame game, string code)
         {
             try
@@ -24,7 +38,7 @@ namespace ShareInvest.GoblinBatContext
                 var temp = new Dictionary<string, long>(32);
                 string date = new Secret().RecentDate;
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var str in db.Virtual.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking().OrderBy(o => o.Date).Select(o => new { o.Date, o.Unrealized, o.Cumulative }))
+                    foreach (var str in db.Virtual.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking().OrderBy(o => o.Date))
                         temp[str.Date] = str.Cumulative + str.Unrealized;
 
                 foreach (var kv in temp.OrderBy(o => o.Key))
@@ -32,12 +46,15 @@ namespace ShareInvest.GoblinBatContext
                         using (var db = new GoblinBatDbContext(key))
                         {
                             var recent = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date == find).AsNoTracking();
+                            var value = db.Charts.Where(o => o.Code.Equals(code) && o.Date.Equals(kv.Key) && o.Time == 405).AsNoTracking();
+                            var bs = value.First(o => o.Base == game.BaseShort).Value;
+                            var bl = value.First(o => o.Base == game.BaseLong).Value;
 
                             if (recent.Any())
-                                info[infoDate] = string.Concat(kv.Value, ';', recent.FirstOrDefault().Price);
+                                info[infoDate] = string.Concat(kv.Value, ';', recent.FirstOrDefault().Price, ';', bs, ';', bl);
 
                             else
-                                info[infoDate] = string.Concat(kv.Value, ';', db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date.Equals(find.ToString())).AsNoTracking().FirstOrDefault().Price);
+                                info[infoDate] = string.Concat(kv.Value, ';', db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date.Equals(find.ToString())).AsNoTracking().FirstOrDefault().Price, ';', bs, ';', bl);
                         }
                 return info;
             }
@@ -62,7 +79,7 @@ namespace ShareInvest.GoblinBatContext
         }
         protected IOrderedEnumerable<KeyValuePair<DateTime, Queue<Quotes>>> GetQuotes(Dictionary<DateTime, Queue<Quotes>> catalog, string code)
         {
-            string path = System.IO.Path.Combine(Application.StartupPath, enumerable), date = string.Empty;
+            string path = System.IO.Path.Combine(Application.StartupPath, enumerable, code), date = string.Empty;
             var search = new List<string>();
             var exists = new DirectoryInfo(path);
             var chart = new Queue<Quotes>(2048);
@@ -74,6 +91,8 @@ namespace ShareInvest.GoblinBatContext
 
                 if (exists.Exists)
                 {
+                    path = System.IO.Path.Combine(Application.StartupPath, enumerable);
+
                     foreach (var file in Directory.GetFiles(path, "*.res", SearchOption.AllDirectories))
                     {
                         using (var sr = new StreamReader(file))
@@ -201,7 +220,7 @@ namespace ShareInvest.GoblinBatContext
                                 Volume = tick.Volume
                             });
                         }
-                    var file = string.Concat(path, @"\", code, @"\", date, res);
+                    var file = string.Concat(path, @"\", date, res);
                     using (var sw = new StreamWriter(file, true))
                         foreach (var str in chart.OrderBy(o => o.Time))
                         {
@@ -430,18 +449,31 @@ namespace ShareInvest.GoblinBatContext
                 }
             return count > 0;
         }
-        protected async Task<string> GetRecentDate()
+        protected bool SetStatisticalBulkStorage(Queue<Simulations> memo)
         {
+            var complete = false;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    return await db.Virtual.MaxAsync(o => o.Date);
+                    db.Configuration.AutoDetectChangesEnabled = false;
+                    db.BulkInsert(memo, o =>
+                    {
+                        o.InsertIfNotExists = true;
+                        o.BatchSize = 13750;
+                        o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                        o.AutoMapOutputDirection = false;
+                    });
+                    complete = true;
                 }
                 catch (Exception ex)
                 {
-                    new ExceptionMessage(ex.StackTrace);
+                    new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                 }
-            return string.Empty;
+                finally
+                {
+                    db.Configuration.AutoDetectChangesEnabled = true;
+                }
+            return complete;
         }
         protected bool GetDuplicateResults(Simulations game, string date)
         {

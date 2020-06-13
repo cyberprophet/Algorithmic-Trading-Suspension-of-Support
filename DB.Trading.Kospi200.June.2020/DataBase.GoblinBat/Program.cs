@@ -25,7 +25,7 @@ namespace ShareInvest
                 string path = Path.Combine(Application.StartupPath, secret.Indentify), recent = string.Empty;
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var initial = secret.GetPort(str);
-                var remaining = secret.GetIsSever(str) ? 1 : ran.Next(initial.Equals((char)Port.Seriate) ? 15 : 12, 20);
+                var remaining = secret.GetIsSever(str) ? 1 : ran.Next(initial.Equals((char)Port.Seriate) ? 11 : 9, 15);
                 var cts = new CancellationTokenSource();
                 var retrieve = new Strategy.Retrieve(str, initial);
                 var count = secret.GetProcessorCount(str);
@@ -42,6 +42,17 @@ namespace ShareInvest
                     }
                     while (remaining > 0)
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
+                        {
+                            if (DateTime.Now.Hour == 15 && secret.GetIsSever(str))
+                            {
+                                retrieve.GetInitialzeTheCode();
+                                info.GetUserIdentity(initial);
+                                Application.EnableVisualStyles();
+                                Application.SetCompatibleTextRenderingDefault(false);
+                                Application.Run(new GoblinBat(initial, secret, str, cts));
+
+                                return;
+                            }
                             new Task(() =>
                             {
                                 retrieve.GetInitialzeTheCode();
@@ -81,9 +92,7 @@ namespace ShareInvest
                                         if (retrieve.GetDuplicateResults(recent, number) == false)
                                         {
                                             new BackTesting(initial, number, str);
-
-                                            if (Count++ == 29)
-                                                recent = retrieve.RecentDate;
+                                            Count++;
                                         }
                                     }));
                                 }
@@ -116,6 +125,7 @@ namespace ShareInvest
                                     new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                                 }
                             }).Start();
+                        }
                     while (TimerBox.Show(secret.StartProgress, string.Concat("N0.", Count.ToString("N0")), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
                         if (secret.GetHoliday(DateTime.Now) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
                         {
@@ -123,9 +133,6 @@ namespace ShareInvest
                                 break;
 
                             if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 54 || DateTime.Now.Minute > 49 && ran.Next(0, 5) == 3))
-                                break;
-
-                            if (DateTime.Now.Hour == 15 && DateTime.Now.Minute > 47 && DateTime.Now.Minute < 51 && secret.GetIsSever(str))
                                 break;
                         }
                     if (initial.Equals((char)126) == false)
@@ -141,9 +148,7 @@ namespace ShareInvest
                             }
                             finally
                             {
-                                if (catalog.Count > 0)
-                                    catalog.Clear();
-
+                                catalog.Clear();
                                 cts.Dispose();
                                 GC.Collect();
                             }

@@ -13,7 +13,7 @@ using ShareInvest.Models;
 
 namespace ShareInvest.GoblinBatContext
 {
-    public class CallUpGoblinBat
+    public class CallUpGoblinBat : CallUpBasicInformation
     {
         protected string[] GetClosestDueDate()
         {
@@ -199,10 +199,12 @@ namespace ShareInvest.GoblinBatContext
         }
         protected IEnumerable<long> GetUserAssets(List<long> list)
         {
+            var now = DateTime.Now;
+            string today = now.ToString(recent), yesterday = now.AddDays(-1).ToString(recent);
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    foreach (var assets in db.Identifies.Select(o => new { o.Assets }).AsNoTracking())
+                    foreach (var assets in db.Identifies.Where(o => o.Date.Equals(today) || o.Date.Equals(yesterday)).AsNoTracking())
                         list.Add(assets.Assets);
                 }
                 catch (Exception ex)
@@ -350,20 +352,20 @@ namespace ShareInvest.GoblinBatContext
                 }
             return games;
         }
-        protected IEnumerable<Simulations> GetBestStrategy(Stack<Simulations> stack, IEnumerable<long> list, string code)
+        protected Stack<Simulations> GetBestStrategy(Stack<Simulations> stack, IEnumerable<long> list, string code)
         {
             string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
                     foreach (var assets in list)
-                        foreach (var game in db.Virtual.Where(o => o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderByDescending(o => o.Statistic))
+                        foreach (var game in db.Virtual.Where(o => o.MonoTime == 1 && o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
                             stack.Push(new Simulations
                             {
                                 Assets = game.Assets,
                                 Code = code,
                                 Commission = game.Commission,
-                                MarginRate = game.MarginRate,
+                                MarginRate = marginRate,
                                 Strategy = game.Strategy,
                                 RollOver = game.RollOver,
                                 BaseTime = game.BaseTime,
@@ -402,7 +404,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace);
                 }
-            return stack.Distinct();
+            return stack;
         }
         protected List<Simulations> GetBestExternalRecommend(List<Simulations> games)
         {
@@ -1240,31 +1242,25 @@ namespace ShareInvest.GoblinBatContext
         {
             get
             {
-                string max = DateTime.Now.ToString(recent);
-                using (var db = new GoblinBatDbContext(key))
-                    try
-                    {
-                        foreach (var sm in db.Virtual.Select(o => new { o.Date }).AsNoTracking().Distinct().OrderByDescending(o => o.Date))
+                for (int i = -1; i > int.MinValue; i--)
+                {
+                    var date = DateTime.Now.AddDays(i);
+                    string max = date.ToString(recent);
+                    using (var db = new GoblinBatDbContext(key))
+                        try
                         {
-                            if (max.CompareTo(sm.Date) == 0)
-                                continue;
-
-                            else
-                            {
-                                max = sm.Date;
-
-                                break;
-                            }
+                            if (db.Virtual.Any(o => o.Date.Equals(max)))
+                                return max;
                         }
-                    }
-                    catch (Exception ex)
-                    {
-                        new ExceptionMessage(ex.StackTrace);
-                    }
-                return max;
+                        catch (Exception ex)
+                        {
+                            new ExceptionMessage(ex.StackTrace);
+                        }
+                }
+                return string.Empty;
             }
         }
-        protected CallUpGoblinBat(string key)
+        protected CallUpGoblinBat(string key) : base(key)
         {
             this.key = key;
             ran = new Random();

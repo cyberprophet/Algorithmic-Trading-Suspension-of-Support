@@ -18,16 +18,15 @@ namespace ShareInvest.Strategy.XingAPI
                         Price = price,
                         Volume = volume
                     });
-            if (Retrieve.QuotesEnumerable != null)
-                foreach (var qe in Retrieve.QuotesEnumerable)
-                    foreach (var quotes in qe.Value)
-                        if (quotes.Price != null && quotes.Volume != null && long.TryParse(quotes.Time, out long time) && double.TryParse(quotes.Price, out double price) && int.TryParse(quotes.Volume, out int volume))
-                            Analysize(new Catalog.Chart
-                            {
-                                Date = time,
-                                Price = price,
-                                Volume = volume
-                            });
+            foreach (var qe in Retrieve.QuotesEnumerable)
+                foreach (var quotes in qe.Value)
+                    if (quotes.Price != null && quotes.Volume != null && long.TryParse(quotes.Time, out long time) && double.TryParse(quotes.Price, out double price) && int.TryParse(quotes.Volume, out int volume))
+                        Analysize(new Catalog.Chart
+                        {
+                            Date = time,
+                            Price = price,
+                            Volume = volume
+                        });
             if (specify.Time == 1440)
                 OnTime = true;
 
