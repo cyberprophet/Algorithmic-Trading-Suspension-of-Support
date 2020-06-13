@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
 using ShareInvest.Message;
 
 namespace ShareInvest.DelayRequest
@@ -23,12 +24,7 @@ namespace ShareInvest.DelayRequest
         }
         public int QueueCount => requestTaskQueue.Count;
         public void Run() => taskWorker.Start();
-        public void Dispose()
-        {
-            taskWorker.Abort();
-            taskWorker.Join();
-            requestTaskQueue.Clear();
-        }
+        public void Dispose() => requestTaskQueue.Clear();
         public void RequestTrData(Task task) => requestTaskQueue.Enqueue(task);
         Delay() => taskWorker = new Thread(delegate ()
         {

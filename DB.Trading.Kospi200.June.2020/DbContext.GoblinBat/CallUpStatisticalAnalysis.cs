@@ -77,7 +77,7 @@ namespace ShareInvest.GoblinBatContext
             }
             return DateTime.Now.ToString(date);
         }
-        protected IOrderedEnumerable<KeyValuePair<DateTime, Queue<Quotes>>> GetQuotes(Dictionary<DateTime, Queue<Quotes>> catalog, string code)
+        protected IOrderedEnumerable<KeyValuePair<long, Queue<Quotes>>> GetQuotes(Dictionary<long, Queue<Quotes>> catalog, string code)
         {
             string path = System.IO.Path.Combine(Application.StartupPath, enumerable, code), date = string.Empty;
             var search = new List<string>();
@@ -124,7 +124,7 @@ namespace ShareInvest.GoblinBatContext
                                 }
                         var temp = file.Split('\\');
                         search.Add(temp[temp.Length - 1].Split('.')[0]);
-                        catalog[new FileInfo(file).CreationTime] = new Queue<Quotes>(chart);
+                        catalog[new FileInfo(file).CreationTime.Ticks] = new Queue<Quotes>(chart);
                         chart.Clear();
                         GC.Collect();
                     }
@@ -188,7 +188,7 @@ namespace ShareInvest.GoblinBatContext
                                     Volume = str.Volume
                                 });
                             }
-                        catalog[new FileInfo(file).CreationTime] = new Queue<Quotes>(chart);
+                        catalog[new FileInfo(file).CreationTime.Ticks] = new Queue<Quotes>(chart);
                         chart.Clear();
                         GC.Collect();
                     }
@@ -232,7 +232,7 @@ namespace ShareInvest.GoblinBatContext
                             }
                             sw.WriteLine(string.Concat(str.Time, ',', str.Price, ',', str.Volume));
                         }
-                    catalog[new FileInfo(file).LastWriteTime] = new Queue<Quotes>(chart);
+                    catalog[new FileInfo(file).LastWriteTime.Ticks] = new Queue<Quotes>(chart);
                     chart.Clear();
                     GC.Collect();
                 }

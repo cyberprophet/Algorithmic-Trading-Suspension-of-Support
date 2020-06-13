@@ -489,10 +489,8 @@ namespace ShareInvest.GoblinBatContext
         {
             string onTime = string.Empty, date = DateTime.Now.ToString("yyMMdd"), yesterday = DateTime.Now.AddDays(-1).ToString("yyMMdd");
             int count = 0;
-            var external = new Secret().GetTrustedConnection(key);
             var dic = new Dictionary<string, string>();
             var model = new List<Datum>();
-            var record = new Queue<string>();
 
             foreach (var str in sb.ToString().Split('*'))
                 if (str.Length > 0)
@@ -530,7 +528,7 @@ namespace ShareInvest.GoblinBatContext
                 }
             if (dic.Count > 0)
             {
-                if (external)
+                if (new Secret().GetTrustedConnection(key))
                 {
                     foreach (var kv in dic)
                     {
@@ -561,11 +559,60 @@ namespace ShareInvest.GoblinBatContext
                     }
                     SetStorage(model);
                 }
-                foreach (var kv in dic.OrderBy(o => o.Key))
-                    record.Enqueue(string.Concat(kv.Key, ",", kv.Value));
-
-                SetStorage(record, code);
+                var param = dic.OrderBy(o => o.Key);
+                SetStorage(param, code);
+                SetStorage(code, param, new Queue<Futures>());
             }
+        }
+        protected void SetStorage(string code, IOrderedEnumerable<KeyValuePair<string, string>> param, Queue<Futures> cme)
+        {
+            using (var sw = new StreamWriter(string.Concat(System.IO.Path.Combine(Application.StartupPath, charts), @"\", code, res), true))
+                foreach (var kv in param)
+                {
+                    if (kv.Key.Substring(6, 4).Equals(start))
+                        return;
+
+                    var temp = kv.Value.Split(',');
+
+                    if (temp.Length == 2)
+                        try
+                        {
+                            if (int.TryParse(temp[1], out int cVolume) && double.TryParse(temp[0], out double cPrice) && long.TryParse(kv.Key, out long cDate))
+                                cme.Enqueue(new Futures
+                                {
+                                    Code = code,
+                                    Date = cDate,
+                                    Price = cPrice,
+                                    Volume = cVolume
+                                });
+                            sw.WriteLine(string.Concat(kv.Key, ",", temp[0], ",", temp[1]));
+                        }
+                        catch (Exception ex)
+                        {
+                            new ExceptionMessage(ex.StackTrace, code);
+                        }
+                }
+            if (new Secret().GetTrustedConnection(key))
+                using (var db = new GoblinBatDbContext(key))
+                    try
+                    {
+                        db.Configuration.AutoDetectChangesEnabled = false;
+                        db.BulkInsert(cme, o =>
+                        {
+                            o.InsertIfNotExists = true;
+                            o.BatchSize = 15000;
+                            o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                            o.AutoMapOutputDirection = false;
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        new ExceptionMessage(ex.StackTrace, code);
+                    }
+                    finally
+                    {
+                        db.Configuration.AutoDetectChangesEnabled = true;
+                    }
         }
         protected void SetStorage(StringBuilder param, string code)
         {
@@ -623,7 +670,7 @@ namespace ShareInvest.GoblinBatContext
                     db.Configuration.AutoDetectChangesEnabled = true;
                 }
         }
-        void SetStorage(Queue<string> model, string code)
+        void SetStorage(IOrderedEnumerable<KeyValuePair<string, string>> param, string code)
         {
             try
             {
@@ -634,13 +681,8 @@ namespace ShareInvest.GoblinBatContext
                     directory.Create();
 
                 using (var sw = new StreamWriter(string.Concat(path, @"\", DateTime.Now.ToString(storage), res), true))
-                    while (model.Count > 0)
-                    {
-                        var str = model.Dequeue();
-
-                        if (str.Length > 0)
-                            sw.WriteLine(str);
-                    }
+                    foreach (var kv in param)
+                        sw.WriteLine(string.Concat(kv.Key, ",", kv.Value));
             }
             catch (Exception ex)
             {
@@ -651,5 +693,6 @@ namespace ShareInvest.GoblinBatContext
         readonly string key;
         const string quotes = "Quotes";
         const string storage = "yyMMddHH";
+        const string start = "0900";
     }
 }

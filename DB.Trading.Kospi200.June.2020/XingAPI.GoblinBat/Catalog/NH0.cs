@@ -1,4 +1,5 @@
 ﻿using System;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler.XingAPI;
 
@@ -43,7 +44,7 @@ namespace ShareInvest.XingAPI.Catalog
                 if (str.Equals(string.Empty) == false && index < 6)
                     time[index++] = str;
             }
-            Send?.Invoke(this, new Quotes(price, quantity, time, API.SellOrder, API.BuyOrder));
+            Send?.Invoke(this, new Quotes(price, quantity, time, API.SellOrder, API.BuyOrder, API.OnReceiveBalance));
         }
         public void OnReceiveRealTime(string code)
         {

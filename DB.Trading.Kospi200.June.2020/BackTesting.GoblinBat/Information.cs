@@ -195,9 +195,6 @@ namespace ShareInvest.Strategy
             var assets = GetUserAssets(new List<long>());
             var roll = new bool[] { true, false };
 
-            if (external)
-                return GetBestStrategy(stack, assets, Retrieve.Code);
-
             while (stack.Count < 397251)
                 foreach (var asset in assets)
                     foreach (var co in commission)
@@ -251,6 +248,9 @@ namespace ShareInvest.Strategy
                                     MonoLong = ml
                                 });
                     }
+            if (external)
+                return GetBestStrategy(stack, assets, Retrieve.Code);
+
             return stack;
         }
         public void SetInsertBaseStrategy(string[] strategy, double[] rate, double[] commission)

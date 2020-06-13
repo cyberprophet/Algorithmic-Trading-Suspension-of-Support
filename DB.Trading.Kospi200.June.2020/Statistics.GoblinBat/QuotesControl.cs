@@ -65,6 +65,9 @@ namespace ShareInvest.GoblinBatControls
         {
             var time = DateTime.ParseExact(e.Time, "HHmmss", null).ToString("HH : mm : ss");
 
+            if (quotes10.ForeColor.Equals(e.Color) == false)
+                quotes10.ForeColor = e.Color;
+
             if (quotes10.Text.Equals(time) == false)
                 quotes10.Text = time;
 
@@ -137,7 +140,6 @@ namespace ShareInvest.GoblinBatControls
                 else
                     temporary.Text = string.Empty;
             }
-            Application.DoEvents();
         }));
         public void OnReceiveOrderMsg(string message)
         {
@@ -151,6 +153,17 @@ namespace ShareInvest.GoblinBatControls
             }
             this.message.Text = string.Concat(message.Substring(0, first + 1).Trim(), "\n", message.Substring(first + 1).Trim());
         }
+        void Quotes10Click(object sender, EventArgs e)
+        {
+            if (quotes10.ForeColor.Equals(Color.Gold) == false)
+            {
+                SendState?.Invoke(this, new EventHandler.XingAPI.OnReceiveOperatingState(quotes10.ForeColor));
+
+                if (quotes10.Text.Length == 0)
+                    quotes10.Text = chapterOperatingHours;
+            }
+        }
         readonly Random ran;
+        public event EventHandler<EventHandler.XingAPI.OnReceiveOperatingState> SendState;
     }
 }

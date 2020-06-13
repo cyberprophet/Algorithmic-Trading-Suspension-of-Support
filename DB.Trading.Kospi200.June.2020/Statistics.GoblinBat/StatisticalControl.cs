@@ -374,17 +374,6 @@ namespace ShareInvest.GoblinBatControls
         readonly double[] rate;
         readonly double[] commission;
         readonly string[] strategy;
-        const string numeric = "numeric";
-        const string storage = "buttonStorage";
-        const string start = "buttonStartProgress";
-        const string auto = "Auto";
-        const string notUsed = "NotUsed";
-        const string over = "RollOver";
-        const string message = "단기 값이 장기 값보다 클 수 없습니다.\n\n확인하시고 다시 설정해주세요.";
-        const string notApplicable = "설정 값을 다시 확인하세요.";
-        const string warning = "Warning";
-        const string setting = "Setting";
-        const string complete = "Complete";
         public event EventHandler<Statistics> SendStatistics;
     }
 }

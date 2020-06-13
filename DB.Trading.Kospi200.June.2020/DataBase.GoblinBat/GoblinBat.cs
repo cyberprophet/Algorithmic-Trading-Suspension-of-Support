@@ -90,8 +90,10 @@ namespace ShareInvest
                         foreach (var ctor in Xing.orders)
                         {
                             if (initial.Equals(collecting) == false)
+                            {
                                 ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
-
+                                Quotes.SendState += Xing.OnReceiveOperatingState;
+                            }
                             ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                         }
                         for (int i = 0; i < Xing.reals.Length; i++)
@@ -450,12 +452,10 @@ namespace ShareInvest
                         case (char)41:
                             if (initial.Equals(collecting) == false && ClosingForm == false)
                             {
-                                Xing.OnReceiveBalance = false;
-                                new ExceptionMessage(((char)e.NotifyIcon).ToString());
-
                                 if (cts == null)
                                     Process.Start("shutdown.exe", "-r");
 
+                                new ExceptionMessage(((char)e.NotifyIcon).ToString());
                                 Dispose();
                             }
                             break;
@@ -611,11 +611,14 @@ namespace ShareInvest
                         if (Array.Exists(XingConnect, o => o.Equals(initial)))
                         {
                             if (initial.Equals(collecting) == false)
+                            {
                                 foreach (var ctor in Xing.orders)
                                 {
                                     ((IStates<State>)ctor).SendState -= Quotes.OnReceiveState;
                                     ((IMessage<NotifyIconText>)ctor).SendMessage -= OnReceiveNotifyIcon;
                                 }
+                                Quotes.SendState -= Xing.OnReceiveOperatingState;
+                            }
                             for (int i = 0; i < Xing.reals.Length; i++)
                             {
                                 if (i == 2)

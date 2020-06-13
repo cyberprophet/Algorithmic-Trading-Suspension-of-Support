@@ -43,7 +43,7 @@ namespace ShareInvest
                     while (remaining > 0)
                         if (TimerBox.Show(new Secret(remaining--).RemainingTime, secret.GetIdentify(), MessageBoxButtons.OK, MessageBoxIcon.Information, 60000U).Equals(DialogResult.OK) && remaining == 0)
                         {
-                            if (DateTime.Now.Hour == 15 && secret.GetIsSever(str))
+                            if (DateTime.Now.Hour == 15 && (secret.GetHoliday(DateTime.Now) == false || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false) && secret.GetIsSever(str))
                             {
                                 retrieve.GetInitialzeTheCode();
                                 info.GetUserIdentity(initial);
@@ -80,7 +80,7 @@ namespace ShareInvest
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * (initial.Equals((char)Port.Collecting) ? 1 : 2))
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * (initial.Equals((char)Port.Collecting) ? 1 : initial.Equals((char)Port.Trading) ? 2 : 2.5))
                                 };
                                 try
                                 {

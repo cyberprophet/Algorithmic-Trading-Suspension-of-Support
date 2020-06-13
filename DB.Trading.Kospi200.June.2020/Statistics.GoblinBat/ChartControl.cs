@@ -53,9 +53,5 @@ namespace ShareInvest.GoblinBatControls
         readonly Series revenue;
         readonly Series _short;
         readonly Series _long;
-        const string priceChart = "Price";
-        const string revenueChart = "Revenue";
-        const string shortChart = "Short";
-        const string longChart = "Long";
     }
 }

@@ -417,11 +417,11 @@ namespace ShareInvest.Strategy
         {
             get; private set;
         }
-        protected internal static IOrderedEnumerable<KeyValuePair<DateTime, Queue<Chart>>> Charts
+        protected internal static IOrderedEnumerable<KeyValuePair<long, Queue<Chart>>> Charts
         {
             get; private set;
         }
-        protected internal static IOrderedEnumerable<KeyValuePair<DateTime, Queue<Quotes>>> QuotesEnumerable
+        protected internal static IOrderedEnumerable<KeyValuePair<long, Queue<Quotes>>> QuotesEnumerable
         {
             get; private set;
         }
@@ -435,13 +435,13 @@ namespace ShareInvest.Strategy
             {
                 Chart = GetChart(code);
                 Quotes = GetQuotes(code);
-                QuotesEnumerable = GetQuotes(new Dictionary<DateTime, Queue<Quotes>>(1048576), code);
+                QuotesEnumerable = GetQuotes(new Dictionary<long, Queue<Quotes>>(1048576), code);
             }
         }
         void SetInitialzeTheCode()
         {
             if (Charts == null && Code != null)
-                Charts = GetChart(new Dictionary<DateTime, Queue<Chart>>(1048576), Code).OrderBy(o => o.Key);
+                Charts = GetChart(new Dictionary<long, Queue<Chart>>(1048576), Code).OrderBy(o => o.Key);
         }
         const string format = "yyMMddHHmmss";
         readonly Secret secret;

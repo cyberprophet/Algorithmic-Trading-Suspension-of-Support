@@ -145,10 +145,7 @@ namespace ShareInvest.GoblinBatControls
             balGrid.AutoResizeColumns();
             SendReSize?.Invoke(this, new GridResize(balGrid.Rows.GetRowsHeight(DataGridViewElementStates.None), balGrid.Rows.Count));
             balGrid.ResumeLayout();
-        }));
-        const string sell = "매도";
-        const string buy = "매수";
-        readonly string[] columns = { "종목코드", "종목명", "구분", "수량", "매입가", "현재가", "평가손익" };
+        }));        
         public event EventHandler<GridResize> SendReSize;
     }
 }

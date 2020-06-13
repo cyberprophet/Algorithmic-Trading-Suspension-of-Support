@@ -970,7 +970,7 @@ namespace ShareInvest.GoblinBatContext
             }
             return false;
         }
-        protected Dictionary<DateTime, Queue<Chart>> GetChart(Dictionary<DateTime, Queue<Chart>> catalog, string code)
+        protected Dictionary<long, Queue<Chart>> GetChart(Dictionary<long, Queue<Chart>> catalog, string code)
         {
             var path = System.IO.Path.Combine(Application.StartupPath, charts);
             var exists = new DirectoryInfo(path);
@@ -1030,7 +1030,7 @@ namespace ShareInvest.GoblinBatContext
                                 });
                             }
                         GC.Collect();
-                        catalog[new FileInfo(file).CreationTime] = new Queue<Chart>(chart);
+                        catalog[new FileInfo(file).CreationTime.Ticks] = new Queue<Chart>(chart);
                         chart.Clear();
                     }
                     if (GetClosestDueDate()[1].Equals(DateTime.Now.ToString(recent)) && new FileInfo(string.Concat(path, @"\", code, res)).Exists == false)
@@ -1064,7 +1064,7 @@ namespace ShareInvest.GoblinBatContext
                                 });
                             }
                         GC.Collect();
-                        catalog[new FileInfo(file).CreationTime] = new Queue<Chart>(chart);
+                        catalog[new FileInfo(file).CreationTime.Ticks] = new Queue<Chart>(chart);
                         chart.Clear();
                     }
                 }
@@ -1090,7 +1090,7 @@ namespace ShareInvest.GoblinBatContext
                         foreach (var str in chart.OrderBy(o => o.Date))
                             sw.WriteLine(string.Concat(str.Date, ',', str.Price, ',', str.Volume));
 
-                    catalog[new FileInfo(info).CreationTime] = new Queue<Chart>(chart);
+                    catalog[new FileInfo(info).CreationTime.Ticks] = new Queue<Chart>(chart);
                     chart.Clear();
                     var remaining = new Dictionary<string, string>();
                     using (var db = new GoblinBatDbContext(key))
@@ -1121,7 +1121,7 @@ namespace ShareInvest.GoblinBatContext
                                 sw.WriteLine(string.Concat(str.Date, ',', str.Price, ',', str.Volume));
 
                         GC.Collect();
-                        catalog[new FileInfo(info).LastWriteTime] = new Queue<Chart>(chart);
+                        catalog[new FileInfo(info).LastWriteTime.Ticks] = new Queue<Chart>(chart);
                         info = kv.Value.Substring(2);
                         chart.Clear();
                     }
@@ -1270,10 +1270,10 @@ namespace ShareInvest.GoblinBatContext
         protected internal const string kospi200f = "101";
         protected internal const string recent = "yyMMdd";
         protected internal const string res = ".res";
+        protected internal const string charts = "Charts";
         const double marginRate = 0.1395;
         const string basic = "Base.res";
         const string chart = "ChartOf101000";
-        const string charts = "Charts";
         const string remaining = "1545";
         const int ar = 10000000;
         const int cr = 1000000;

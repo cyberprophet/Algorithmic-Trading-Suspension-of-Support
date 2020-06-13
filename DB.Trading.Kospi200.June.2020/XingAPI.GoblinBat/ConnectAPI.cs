@@ -96,6 +96,7 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
+        public void OnReceiveOperatingState(object sender, EventHandler.XingAPI.OnReceiveOperatingState e) => OnReceiveBalance = e.State;
         public string AccountName => GetAccountName(secret.ShowAccount.Replace("-", string.Empty));
         public string Account => secret.ShowAccount;
         public string DetailName => GetAcctDetailName(secret.ShowAccount.Replace("-", string.Empty));
@@ -110,10 +111,13 @@ namespace ShareInvest.XingAPI
                 Send?.Invoke(this, new NotifyIconText((char)69));
             }
         }
-        public void Dispose(bool reset)
+        public void Dispose(bool connect)
         {
-            if (reset)
+            if (connect)
+            {
+                DisconnectServer();
                 XingAPI = null;
+            }
         }
         public void Max(double trend, ShareInvest.Catalog.XingAPI.Specify specify, string check)
         {
