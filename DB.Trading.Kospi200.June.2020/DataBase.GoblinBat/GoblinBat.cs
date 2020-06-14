@@ -90,10 +90,8 @@ namespace ShareInvest
                         foreach (var ctor in Xing.orders)
                         {
                             if (initial.Equals(collecting) == false)
-                            {
                                 ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
-                                Quotes.SendState += Xing.OnReceiveOperatingState;
-                            }
+
                             ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                         }
                         for (int i = 0; i < Xing.reals.Length; i++)
@@ -119,6 +117,8 @@ namespace ShareInvest
 
                                     continue;
                             }
+                        if (initial.Equals(collecting) == false)
+                            Quotes.SendState += Xing.OnReceiveOperatingState;
                     }
                     else
                     {
@@ -579,9 +579,9 @@ namespace ShareInvest
                         }
                     }));
                 else
-                    foreach (var specify in Specify.OrderByDescending(o => o.Time))
+                    foreach (var specify in Specify)
                         if (specify.Time > 0)
-                            Invoke(new Action(() => new Strategy.XingAPI.Consecutive(specify)));
+                            new Strategy.XingAPI.Consecutive(specify);
             }
             WindowState = Xing.SendNotifyIconText((int)Math.Pow((initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code).Length, 4));
 
@@ -610,14 +610,12 @@ namespace ShareInvest
                     case quo:
                         if (Array.Exists(XingConnect, o => o.Equals(initial)))
                         {
-                            if (initial.Equals(collecting) == false)
+                            foreach (var ctor in Xing.orders)
                             {
-                                foreach (var ctor in Xing.orders)
-                                {
+                                if (initial.Equals(collecting) == false)
                                     ((IStates<State>)ctor).SendState -= Quotes.OnReceiveState;
-                                    ((IMessage<NotifyIconText>)ctor).SendMessage -= OnReceiveNotifyIcon;
-                                }
-                                Quotes.SendState -= Xing.OnReceiveOperatingState;
+
+                                ((IMessage<NotifyIconText>)ctor).SendMessage -= OnReceiveNotifyIcon;
                             }
                             for (int i = 0; i < Xing.reals.Length; i++)
                             {
@@ -643,6 +641,8 @@ namespace ShareInvest
                                     continue;
                                 }
                             }
+                            if (initial.Equals(collecting) == false)
+                                Quotes.SendState -= Xing.OnReceiveOperatingState;
                         }
                         else
                         {
@@ -769,37 +769,6 @@ namespace ShareInvest
         readonly char initial;
         readonly Secret secret;
         readonly CancellationTokenSource cts;
-        const char trading = (char)Port.Trading;
-        const char collecting = (char)Port.Collecting;
-        const string cfobq10500 = "CFOBQ10500";
-        const string ccebq10500 = "CCEBQ10500";
-        const string cceaq50600 = "CCEAQ50600";
-        const string t0441 = "T0441";
-        const string fc0 = "FC0";
-        const string fh0 = "FH0";
-        const string nc0 = "NC0";
-        const string nh0 = "NH0";
-        const string jif = "JIF";
-        const string acc = "account";
-        const string quo = "quotes";
-        const string bal = "balance";
-        const string st = "strategy";
-        const string chart = "chart";
-        const string ex = "exit";
-        const string dic = "Dictionary`2";
-        const string sb = "StringBuilder";
-        const string str = "String";
-        const string bt = "Byte";
-        const string int32 = "Int32";
-        const string cha = "Char";
-        const string boolean = "Boolean";
-        const string checkDataBase = "CheckDataBase";
-        const string basic = "Base";
-        const string bantam = "Bantam";
-        const string feather = "Feather";
-        const string fly = "Fly";
-        const string sFly = "SuperFly";
-        const string heavy = "Heavy";
         public event EventHandler<EventHandler.BackTesting.Statistics> SendInformation;
     }
 }
