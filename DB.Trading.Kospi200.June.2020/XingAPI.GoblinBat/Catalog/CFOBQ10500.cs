@@ -1,4 +1,5 @@
 ﻿using System;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 
@@ -66,7 +67,6 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(GetType().Name, Request(false));
             }
         }
-        internal CFOBQ10500() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<Deposit> Send;
         public event EventHandler<NotifyIconText> SendMessage;
     }

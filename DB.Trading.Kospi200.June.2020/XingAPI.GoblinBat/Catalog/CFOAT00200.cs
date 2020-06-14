@@ -1,4 +1,5 @@
 ﻿using System;
+
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.EventHandler;
@@ -39,7 +40,6 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(name, Request(false));
             }
         }
-        internal CFOAT00200() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<NotifyIconText> SendMessage;
         public event EventHandler<State> SendState;
     }

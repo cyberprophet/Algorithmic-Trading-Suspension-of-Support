@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+
 using ShareInvest.Catalog;
 
 namespace ShareInvest.XingAPI.Catalog
@@ -58,7 +58,6 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(GetType().Name, Request(false));
             }
         }
-        internal T9943() : base() => Console.WriteLine(GetType().Name);
         const string kospi200 = "KOSPI200 ";
     }
 }

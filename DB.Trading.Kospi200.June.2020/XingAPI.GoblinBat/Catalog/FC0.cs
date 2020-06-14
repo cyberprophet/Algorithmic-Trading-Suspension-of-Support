@@ -30,7 +30,6 @@ namespace ShareInvest.XingAPI.Catalog
                 AdviseRealData();
             }
         }
-        internal FC0() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<Datum> Send;
         public event EventHandler<Trends> SendTrend;
     }

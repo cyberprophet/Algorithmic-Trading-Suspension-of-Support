@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 
@@ -58,7 +59,6 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(GetType().Name, Request(false));
             }
         }
-        internal T0441() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<Balance> Send;
         public event EventHandler<NotifyIconText> SendMessage;
     }

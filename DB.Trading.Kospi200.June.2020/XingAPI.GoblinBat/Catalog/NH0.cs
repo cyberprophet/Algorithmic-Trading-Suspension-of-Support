@@ -55,7 +55,6 @@ namespace ShareInvest.XingAPI.Catalog
                 AdviseRealData();
             }
         }
-        internal NH0() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<Quotes> Send;
     }
 }

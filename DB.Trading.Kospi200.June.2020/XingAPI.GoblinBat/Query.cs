@@ -1,8 +1,10 @@
 ﻿using System;
-using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Threading;
+using System.Windows.Forms;
+
 using ShareInvest.Message;
+
 using XA_DATASETLib;
 
 namespace ShareInvest.XingAPI

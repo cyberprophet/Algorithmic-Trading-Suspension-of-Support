@@ -1,4 +1,5 @@
 ﻿using System;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 
@@ -34,7 +35,6 @@ namespace ShareInvest.XingAPI.Catalog
             if (LoadFromResFile(new Secret().GetResFileName(GetType().Name)))
                 AdviseRealData();
         }
-        internal CM0() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<State> SendState;
     }
 }

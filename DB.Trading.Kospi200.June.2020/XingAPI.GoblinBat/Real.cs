@@ -1,4 +1,5 @@
 ﻿using System;
+
 using XA_DATASETLib;
 
 namespace ShareInvest.XingAPI

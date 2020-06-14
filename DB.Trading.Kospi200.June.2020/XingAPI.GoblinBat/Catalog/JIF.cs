@@ -1,4 +1,5 @@
 ﻿using System;
+
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
 
@@ -19,7 +20,6 @@ namespace ShareInvest.XingAPI.Catalog
                 AdviseRealData();
             }
         }
-        internal JIF() : base() => Console.WriteLine(GetType().Name);
         public event EventHandler<NotifyIconText> Send;
     }
     enum Attribute
