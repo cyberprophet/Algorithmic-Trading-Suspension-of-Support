@@ -98,7 +98,7 @@ namespace ShareInvest.Strategy
                     foreach (var chart in kv.Value)
                         SendDatum?.Invoke(this, new Datum(chart.Date, chart.Price, chart.Volume));
 
-                if (Charts.Count > 0 && SetBasicChart(Charts) == false && games.Count > 0 && SetStatisticalBulkStorage(games) == false)
+                if (Charts.Count > 0 && SetBasicChart(Charts) && games.Count > 0 && SetStatisticalBulkStorage(games) == false)
                     Message = new Secret().Message;
             }
             return statement == null ? 0 : statement.Count;

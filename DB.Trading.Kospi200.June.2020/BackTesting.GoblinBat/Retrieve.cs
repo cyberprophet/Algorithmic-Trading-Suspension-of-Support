@@ -20,7 +20,7 @@ namespace ShareInvest.Strategy
             Initial = initial;
         }
         public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number, Code);
-        public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies);
+        public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies, RecentDate);
         public Models.Simulations GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
         public Models.Simulations OnReceiveMyStrategy() => GetMyStrategy();
         public void SetIsMirror() => SetInitialzeTheCode();
@@ -79,7 +79,6 @@ namespace ShareInvest.Strategy
         public void GetInitialzeTheCode()
         {
             Code = GetStrategy();
-            SetInitialzeTheCode(Code);
             SetInitialzeTheCode();
         }
         public void SetInitializeTheChart()
@@ -95,7 +94,13 @@ namespace ShareInvest.Strategy
                 Quotes = null;
             }
         }
-        public bool GetDuplicateResults(string recent, Models.Simulations game) => GetDuplicateResults(game, recent);
+        public bool GetDuplicateResults(Models.Simulations game)
+        {
+            if (string.IsNullOrEmpty(RecentDate))
+                GetRecentDate(DateTime.Now);
+
+            return GetDuplicateResults(game, RecentDate);
+        }
         public string GetDate(string code)
         {
             if (DateTime.TryParseExact(SetDate(code).Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
@@ -217,24 +222,24 @@ namespace ShareInvest.Strategy
             MonoShort = setting.MonoShort,
             MonoLong = setting.MonoLong
         });
-        public string RecentDate
+        public void GetRecentDate(DateTime now)
         {
-            get
+            for (int i = -1; i > int.MinValue; i--)
             {
-                for (int i = -1; i > int.MinValue; i--)
-                {
-                    var date = DateTime.Now.AddDays(i);
-                    var max = GetRecentDate(date.ToString(recent));
+                var date = now.AddDays(i);
+                var max = GetRecentDate(date.ToString(recent));
 
-                    if (string.IsNullOrEmpty(max) == false)
-                        return max;
+                if (string.IsNullOrEmpty(max) == false)
+                {
+                    RecentDate = max;
+
+                    return;
                 }
-                return string.Empty;
             }
         }
         public static string Code
         {
-            get; set;
+            get; private set;
         }
         public static string Date
         {
@@ -429,21 +434,21 @@ namespace ShareInvest.Strategy
         {
             get; set;
         }
-        void SetInitialzeTheCode(string code)
+        static string RecentDate
         {
-            if (Chart == null && Quotes == null && QuotesEnumerable == null)
-            {
-                Chart = GetChart(code);
-                Quotes = GetQuotes(code);
-                QuotesEnumerable = GetQuotes(new Dictionary<long, Queue<Quotes>>(1048576), code);
-            }
+            get; set;
         }
         void SetInitialzeTheCode()
         {
-            if (Charts == null && Code != null)
+            if (Chart == null && Quotes == null && QuotesEnumerable == null && Charts == null && Code != null)
+            {
                 Charts = GetChart(new Dictionary<long, Queue<Chart>>(1048576), Code).OrderBy(o => o.Key);
+                Chart = GetChart(Code, new Queue<Chart>(1048576), new System.IO.DirectoryInfo(Path));
+                Quotes = GetQuotes(Code, new Queue<Quotes>(1048576));
+                QuotesEnumerable = GetQuotes(new Dictionary<long, Queue<Quotes>>(1048576), Code);
+            }
         }
-        const string format = "yyMMddHHmmss";
         readonly Secret secret;
+        const string format = "yyMMddHHmmss";
     }
 }

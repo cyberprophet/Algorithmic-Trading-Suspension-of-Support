@@ -14,6 +14,53 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpBasicInformation
     {
+        protected Stack<double> GetBasicChart(string check, DateTime now, Specify specify, int period, Stack<double> stack)
+        {
+            if (specify.Time == 1440)
+                try
+                {
+                    for (int i = 0; i > int.MinValue; i--)
+                    {
+                        var date = i == 0 ? now.ToString(format) : now.AddDays(i).ToString(format);
+                        int time;
+
+                        if (check.Equals(date))
+                            using (var db = new GoblinBatDbContext(key))
+                            {
+                                switch (DateTime.Now.Hour)
+                                {
+                                    case 6:
+                                    case 7:
+                                    case 8:
+                                        time = db.Charts.Any(o => o.Time == 660) ? 660 : 405;
+                                        break;
+
+                                    case 16:
+                                    case 17:
+                                        time = 405;
+                                        break;
+
+                                    default:
+                                        return stack;
+                                }
+                                var call = db.Charts.Where(o => o.Code.Equals(specify.Code) && o.Time == time && o.Base == period).AsNoTracking();
+
+                                if (call.Any(o => o.Date.Equals(check)))
+                                {
+                                    foreach (var e in call.OrderByDescending(o => o.Date).Take(period + 1).Select(o => new { o.Value, o.Date }).OrderBy(o => o.Date))
+                                        stack.Push(e.Value);
+
+                                    return stack;
+                                }
+                            }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(ex.StackTrace, specify.Code);
+                }
+            return stack;
+        }
         protected Stack<double> GetBasicChart(Stack<double> stack, Specify specify, int period)
         {
             var path = Path.Combine(Application.StartupPath, chart, specify.Code, specify.Time.ToString());
@@ -104,6 +151,7 @@ namespace ShareInvest.GoblinBatContext
         }
         protected CallUpBasicInformation(string key) => this.key = key;
         readonly string key;
+        const string format = "yyMMdd";
         const string res = ".res";
         const string chart = "Chart";
         const string rDate = "200403";

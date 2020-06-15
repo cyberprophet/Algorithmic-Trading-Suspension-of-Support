@@ -205,7 +205,7 @@ namespace ShareInvest.OpenAPI
             if (e.sMsg.Contains(Response) && TimerBox.Show(string.Concat(Response, "."), GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 1375).Equals(DialogResult.OK))
                 return;
 
-            if (e.sMsg.Substring(9).Equals(LookUp))
+            if (e.sMsg.Substring(9).Equals(LookUp) || e.sMsg.Substring(9).Equals(End))
                 return;
 
             new ExceptionMessage(e.sMsg);
@@ -446,7 +446,7 @@ namespace ShareInvest.OpenAPI
                 SendMemorize?.Invoke(this, new Memorize("Clear"));
                 Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
 
-                if (DateTime.Now.Hour == 16 && new Secrets().IsServer(key))
+                if (DateTime.Now.Hour == 16 && secret.IsServer(key))
                     SendCount?.Invoke(this, new NotifyIconText(-106));
 
                 return;
@@ -454,10 +454,12 @@ namespace ShareInvest.OpenAPI
             var str = new StringBuilder(512);
             int i, cnt = API.GetRepeatCnt(e.sTrCode, e.sRQName);
 
-            for (i = 0; i < (cnt > 0 ? cnt : cnt + 1); i++)
+            for (i = 0; i < (cnt > 0 && index < 12 ? cnt : cnt + 1); i++)
             {
+                Opw00005.Switch = index == 12 && i == 0;
+
                 foreach (string item in Array.Find(catalogTR, o => o.ToString().Contains(e.sTrCode.Substring(1))))
-                    str.Append(API.GetCommData(e.sTrCode, e.sRQName, i, item).Trim()).Append(';');
+                    str.Append(API.GetCommData(e.sTrCode, e.sRQName, Opw00005.Switch == false && index == 12 ? i - 1 : i, item).Trim()).Append(';');
 
                 if (cnt > 0)
                     str.Append("*");
@@ -510,6 +512,15 @@ namespace ShareInvest.OpenAPI
                         SendBalance?.Invoke(this, new Balance(temporary));
                     }).Start();
                     break;
+
+                case 12:
+                    new ExceptionMessage(SetCollectionConditions(0, str.ToString().Split('*')).ToString("N0"));
+                    break;
+
+                case 13:
+                case 14:
+                    secret.SetStorage(string.Concat(str.ToString().Split(';')[0], ";", e.sRQName));
+                    break;
             }
         }
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
@@ -528,6 +539,9 @@ namespace ShareInvest.OpenAPI
                     PrepareForTrading(API.GetLoginInfo("ACCLIST"));
 
                 DeadLine = DateTime.Now.Hour >= 9;
+
+                if (secret.IsCollector(key, API.GetLoginInfo("ACCLIST"), API.GetLoginInfo("USER_ID")) && string.IsNullOrEmpty(secret.Account) == false)
+                    LookUpTheBalance(secret.Account);
             }
             else if (Temporary != null)
             {
@@ -565,7 +579,7 @@ namespace ShareInvest.OpenAPI
             SetPasswordWhileCollectingData(markets.Length);
             CodeList = RequestCodeList(new List<string>(32), markets);
             SendMemorize?.Invoke(this, new Memorize("Clear"));
-            var server = DateTime.Now.Hour == 15 && new Secrets().IsServer(key);
+            var server = DateTime.Now.Hour == 15 && secret.IsServer(key);
             Delay.Milliseconds = server ? 1935 : 4315;
 
             if (server)
@@ -793,6 +807,44 @@ namespace ShareInvest.OpenAPI
             new Task(() => SendCount?.Invoke(this, new NotifyIconText((char)69))).Start();
             Dispose(true);
         }
+        void LookUpTheBalance(string account) => request.RequestTrData(new Task(() =>
+        {
+            InputValueRqData(new Opw00005
+            {
+                Value = string.Concat(account, ";;00"),
+                PrevNext = 0
+            });
+        }));
+        uint SetCollectionConditions(uint count, string[] param)
+        {
+            if (long.TryParse(param[0].Split(';')[7], out long cash))
+                for (int i = 1; i < param.Length - 1; i++)
+                {
+                    var o = FixUp(param[i]);
+                    var quantity = o.Amount;
+
+                    if (o.Price > 0)
+                    {
+                        var stock = API.KOA_Functions("GetMasterStockInfo", o.Code).Split(';')[0].Contains(market);
+                        int sell = (int)(o.Purchase * 1.05), buy = (int)(o.Purchase * 0.95), upper = (int)(o.Price * 1.3), lower = (int)(o.Price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
+
+                        while (quantity-- > 0 && sPrice < upper)
+                        {
+                            request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(string.Concat(o.Name, ';', sPrice), string.Concat((int)OrderType.신규매도, GetScreenNumber().ToString("D2"), i), secret.Account, (int)OrderType.신규매도, o.Code, 1, sPrice, ((int)HogaGb.지정가).ToString("D2"), string.Empty))));
+                            sPrice += GetQuoteUnit(sPrice, stock);
+                            count++;
+                        }
+                        while (bPrice < buy && cash > buy * 1.00015)
+                        {
+                            request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(string.Concat(o.Name, ';', bPrice), string.Concat((int)OrderType.신규매수, GetScreenNumber().ToString("D2"), i), secret.Account, (int)OrderType.신규매수, o.Code, 1, bPrice, ((int)HogaGb.지정가).ToString("D2"), string.Empty))));
+                            bPrice += GetQuoteUnit(bPrice, stock);
+                            cash -= (long)(buy * 1.00015);
+                            count++;
+                        }
+                    }
+                }
+            return count;
+        }
         bool DeadLine
         {
             get; set;
@@ -804,6 +856,7 @@ namespace ShareInvest.OpenAPI
         ConnectAPI(string key, int delay) : base(key)
         {
             error = new Error();
+            secret = new Secrets();
             request = Delay.GetInstance(delay);
             request.Run();
         }
@@ -817,6 +870,7 @@ namespace ShareInvest.OpenAPI
         }
         readonly Error error;
         readonly Delay request;
+        readonly Secrets secret;
         public event EventHandler<Datum> SendDatum;
         public event EventHandler<Memorize> SendMemorize;
         public event EventHandler<NotifyIconText> SendCount;

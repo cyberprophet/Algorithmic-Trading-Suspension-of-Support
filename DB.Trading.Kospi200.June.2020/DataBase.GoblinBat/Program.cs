@@ -22,7 +22,7 @@ namespace ShareInvest
         {
             if (ShowWindow(GetConsoleWindow(), secret.Hide) && secret.GetIdentify(str))
             {
-                string path = Path.Combine(Application.StartupPath, secret.Indentify), recent = string.Empty;
+                var path = Path.Combine(Application.StartupPath, secret.Indentify);
                 var registry = Registry.CurrentUser.OpenSubKey(new Secret().Path);
                 var initial = secret.GetPort(str);
                 var remaining = secret.GetIsSever(str) ? 1 : ran.Next(initial.Equals((char)Port.Seriate) ? 11 : 9, 15);
@@ -49,15 +49,15 @@ namespace ShareInvest
                                 info.GetUserIdentity(initial);
                                 Application.EnableVisualStyles();
                                 Application.SetCompatibleTextRenderingDefault(false);
-                                Application.Run(new GoblinBat(initial, secret, str, cts));
+                                Application.Run(new GoblinBat(initial, secret, str, cts, retrieve));
 
                                 return;
                             }
                             new Task(() =>
                             {
+                                retrieve.GetRecentDate(DateTime.Now);
                                 retrieve.GetInitialzeTheCode();
                                 info.GetUserIdentity(initial);
-                                recent = retrieve.RecentDate;
                                 catalog = count == 0.75 ? info.GetStatistics(secret.GetExternal(str), secret.rate, secret.commission) : info.GetStatistics(count);
 
                                 if (initial.Equals((char)Port.Collecting) == false)
@@ -80,7 +80,7 @@ namespace ShareInvest
                                 var po = new ParallelOptions
                                 {
                                     CancellationToken = cts.Token,
-                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * (initial.Equals((char)Port.Collecting) ? 1 : initial.Equals((char)Port.Trading) ? 2 : 2.5))
+                                    MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * count * (initial.Equals((char)Port.Collecting) ? 1 : 2))
                                 };
                                 try
                                 {
@@ -89,7 +89,7 @@ namespace ShareInvest
                                         if (cts.IsCancellationRequested)
                                             po.CancellationToken.ThrowIfCancellationRequested();
 
-                                        if (retrieve.GetDuplicateResults(recent, number) == false)
+                                        if (retrieve.GetDuplicateResults(number) == false)
                                         {
                                             new BackTesting(initial, number, str);
                                             Count++;
@@ -114,7 +114,7 @@ namespace ShareInvest
                                         {
                                             var pop = catalog.Pop();
 
-                                            if (retrieve.GetDuplicateResults(recent, pop) == false)
+                                            if (retrieve.GetDuplicateResults(pop) == false)
                                             {
                                                 new BackTesting(initial, pop, str);
                                                 Count++;
@@ -154,7 +154,7 @@ namespace ShareInvest
                             }
                         Application.EnableVisualStyles();
                         Application.SetCompatibleTextRenderingDefault(false);
-                        Application.Run(new GoblinBat(initial, secret, str, cts));
+                        Application.Run(new GoblinBat(initial, secret, str, cts, retrieve));
                     }
                     else
                         new ExceptionMessage(str);

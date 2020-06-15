@@ -7,22 +7,26 @@ using System.Threading;
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.EventHandler.XingAPI;
+using ShareInvest.GoblinBatContext;
+using ShareInvest.Verify;
 using ShareInvest.XingAPI;
 
 namespace ShareInvest.Strategy.XingAPI
 {
-    public class Consecutive
+    public class Consecutive : CallUpBasicInformation
     {
-        public Consecutive(Catalog.XingAPI.Specify specify)
+        public Consecutive(Catalog.XingAPI.Specify specify) : base(KeyDecoder.GetKey())
         {
             this.specify = specify;
             this.judge = specify.Strategy.Length == 2 && int.TryParse(specify.Strategy, out int judge) ? judge : int.MaxValue;
-            Short = new Stack<double>(256);
-            Long = new Stack<double>(256);
+            var recent = Retrieve.Charts.Last().Value.Last().Date.ToString().Substring(0, 6);
+            Short = GetBasicChart(recent, DateTime.Now, specify, specify.Short, new Stack<double>(256));
+            Long = GetBasicChart(recent, DateTime.Now, specify, specify.Long, new Stack<double>(256));
 
-            foreach (var kv in Retrieve.Charts)
-                foreach (var chart in kv.Value)
-                    Analysize(chart);
+            if (Short.Count == 0 || Long.Count == 0)
+                foreach (var kv in Retrieve.Charts)
+                    foreach (var chart in kv.Value)
+                        Analysize(chart);
 
             if (specify.Time == 1440)
             {

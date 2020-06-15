@@ -1133,11 +1133,8 @@ namespace ShareInvest.GoblinBatContext
             }
             return catalog;
         }
-        protected Queue<Chart> GetChart(string code)
+        protected Queue<Chart> GetChart(string code, Queue<Chart> chart, DirectoryInfo exists)
         {
-            var chart = new Queue<Chart>();
-            var exists = new DirectoryInfo(Path);
-
             if (code.Length > 6 && code.Substring(5, 3).Equals(futures))
                 try
                 {

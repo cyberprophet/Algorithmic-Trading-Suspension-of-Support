@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using ShareInvest.Catalog;
 using ShareInvest.OpenAPI;
 
@@ -84,7 +85,7 @@ namespace ShareInvest.Strategy.OpenAPI
             else if (api.Quantity < 0 && api.BuyOrder.TryGetValue(number, out double buy) && buy == GetExactPrice())
                 return false;
 
-            return specify.Strategy.Equals(number) && api.Quantity != 0 && (api.Quantity > 0 ? api.SellOrder.Count > 0 : api.BuyOrder.Count > 0) ? false : true;
+            return !specify.Strategy.Equals(number) || api.Quantity == 0 || !(api.Quantity > 0 ? api.SellOrder.Count > 0 : api.BuyOrder.Count > 0);
         }
         void SendRollOverOrder(int over)
         {

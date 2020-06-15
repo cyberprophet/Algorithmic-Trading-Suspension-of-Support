@@ -4,6 +4,8 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
+using ShareInvest.Message;
+
 namespace ShareInvest.GoblinBatControls
 {
     public partial class ChartControl : UserControl
@@ -37,7 +39,7 @@ namespace ShareInvest.GoblinBatControls
             _short.Points.Clear();
             _long.Points.Clear();
 
-            if (e.Information != null)
+            if (e.Information != null && e.Information.Count > 0)
                 foreach (var kv in e.Information)
                 {
                     var splits = kv.Value.Split(';');
@@ -47,6 +49,11 @@ namespace ShareInvest.GoblinBatControls
                     _short.Points.AddXY(kv.Key, splits[2]);
                     _long.Points.AddXY(kv.Key, splits[3]);
                 }
+            else if (e.Information == null)
+                new ExceptionMessage(exception);
+
+            else if (e.Information.Count == 0)
+                new ExceptionMessage(exception, string.Concat("Count.", e.Information.Count));
         }
         public Size SetChartValue() => new Size(1350, 750);
         readonly Series price;

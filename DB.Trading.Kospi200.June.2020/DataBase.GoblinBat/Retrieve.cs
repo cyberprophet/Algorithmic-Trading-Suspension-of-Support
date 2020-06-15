@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
-using ShareInvest.GoblinBatContext;
+using System.IO;
+
 using ShareInvest.Catalog;
+using ShareInvest.GoblinBatContext;
 
 namespace ShareInvest
 {
@@ -29,7 +31,7 @@ namespace ShareInvest
         {
             get; set;
         }
-        Retrieve(string key, string code) : base(key) => Chart = GetChart(code);
+        Retrieve(string key, string code) : base(key) => Chart = GetChart(code, new Queue<Chart>(1048576), new DirectoryInfo(Path));
         static Retrieve retrieve;
     }
 }

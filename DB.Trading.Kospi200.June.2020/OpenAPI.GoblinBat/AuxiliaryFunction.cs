@@ -10,12 +10,33 @@ namespace ShareInvest.OpenAPI
 {
     public class AuxiliaryFunction : CallUp
     {
+        static uint Accumulate
+        {
+            get; set;
+        }
+        static uint ScreenNumber
+        {
+            get; set;
+        }
         protected internal string GetDistinctDate(int usWeekNumber)
         {
             DayOfWeek dt = DateTime.Now.AddDays(1 - DateTime.Now.Day).DayOfWeek;
             int check = dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 3 : 2;
 
             return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString("yyyyMM") : DateTime.Now.ToString("yyyyMM");
+        }
+        protected internal CollectedInformation FixUp(string param)
+        {
+            var info = param.Split(';');
+
+            return new CollectedInformation
+            {
+                Code = info[3].Substring(1),
+                Name = info[4],
+                Amount = uint.TryParse(info[6], out uint amount) ? amount : 0,
+                Price = uint.TryParse(info[7], out uint price) ? price : 0,
+                Purchase = uint.TryParse(info[8], out uint purchase) ? purchase : 0
+            };
         }
         protected internal void FixUp(string[] info)
         {
@@ -44,6 +65,68 @@ namespace ShareInvest.OpenAPI
 
             return inven;
         }
+        protected internal int GetStartingPrice(int price, bool info)
+        {
+            switch (price)
+            {
+                case int n when n >= 0 && n < 1000:
+                    return price;
+
+                case int n when n >= 1000 && n < 5000:
+                    return (price / 5 + 1) * 5;
+
+                case int n when n >= 5000 && n < 10000:
+                    return (price / 10 + 1) * 10;
+
+                case int n when n >= 10000 && n < 50000:
+                    return (price / 50 + 1) * 50;
+
+                case int n when n >= 100000 && n < 500000 && info:
+                    return (price / 500 + 1) * 500;
+
+                case int n when n >= 500000 && info:
+                    return (price / 1000 + 1) * 1000;
+
+                default:
+                    return (price / 100 + 1) * 100;
+            }
+        }
+        protected internal int GetQuoteUnit(int price, bool info)
+        {
+            switch (price)
+            {
+                case int n when n >= 0 && n < 1000:
+                    return 1;
+
+                case int n when n >= 1000 && n < 5000:
+                    return 5;
+
+                case int n when n >= 5000 && n < 10000:
+                    return 10;
+
+                case int n when n >= 10000 && n < 50000:
+                    return 50;
+
+                case int n when n >= 100000 && n < 500000 && info:
+                    return 500;
+
+                case int n when n >= 500000 && info:
+                    return 1000;
+
+                default:
+                    return 100;
+            }
+        }
+        protected internal uint GetScreenNumber()
+        {
+            if (Accumulate++ > 99)
+                Accumulate = 0;
+
+            if (Accumulate == 0 && ++ScreenNumber > 99)
+                ScreenNumber = 0;
+
+            return ScreenNumber;
+        }
         protected internal string SetPassword => password;
         protected internal string OnReceiveData => data;
         protected internal string TR => tr;
@@ -52,6 +135,7 @@ namespace ShareInvest.OpenAPI
         protected internal string GoblinBat => goblin;
         protected internal string Collection => collection;
         protected internal string Response => response;
+        protected internal string End => end;
         protected internal StringBuilder Exists => new StringBuilder(exists);
         protected internal AuxiliaryFunction(string key) : base(key) => this.key = key;
         protected internal readonly IEnumerable[] catalogReal =
@@ -102,7 +186,10 @@ namespace ShareInvest.OpenAPI
             new KOA_NORMAL_FO_MOD(),
             new KOA_NORMAL_FO_CANCEL(),
             new OPW20010(),
-            new OPW20007()
+            new OPW20007(),
+            new Opw00005(),
+            new KOA_NORMAL_BUY_KP_ORD(),
+            new KOA_NORMAL_SELL_KP_ORD()
         };
         protected internal readonly string[] basic =
         {
@@ -125,6 +212,7 @@ namespace ShareInvest.OpenAPI
         };
         protected internal readonly string key;
         protected internal const string format = "yyMMdd";
+        protected internal const string market = "거래소";
         const string collection = "백테스팅에 필요한 자료를 수집합니다.";
         const string exists = "Information that already Exists";
         const string lookUp = "모의투자 조회가 완료되었습니다";
@@ -134,6 +222,7 @@ namespace ShareInvest.OpenAPI
         const string password = "비밀번호 설정을 하시겠습니까?\n\n자동로그인 기능을 사용하시면 편리합니다.";
         const string goblin = "GoblinBat";
         const string response = "응답이 지연되고 있습니다";
+        const string end = "장종료되었습니다";
     }
     enum RealType
     {
@@ -158,5 +247,31 @@ namespace ShareInvest.OpenAPI
         주식시간외호가 = 18,
         파생실시간상하한 = 19,
         시간외종목정보 = 20
+    }
+    enum OrderType
+    {
+        신규매수 = 1,
+        신규매도 = 2,
+        매수취소 = 3,
+        매도취소 = 4,
+        매수정정 = 5,
+        매도정정 = 6
+    }
+    enum HogaGb
+    {
+        지정가 = 00,
+        시장가 = 03,
+        조건부지정가 = 05,
+        최유리지정가 = 06,
+        최우선지정가 = 07,
+        지정가IOC = 10,
+        시장가IOC = 13,
+        최유리IOC = 16,
+        지정가FOK = 20,
+        시장가FOK = 23,
+        최유리FOK = 26,
+        장전시간외종가 = 61,
+        시간외단일가매매 = 62,
+        장후시간외종가 = 81
     }
 }

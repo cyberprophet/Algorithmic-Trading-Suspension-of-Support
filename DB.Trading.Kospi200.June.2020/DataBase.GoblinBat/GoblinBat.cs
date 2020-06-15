@@ -18,16 +18,16 @@ namespace ShareInvest
 {
     partial class GoblinBat : Form
     {
-        internal GoblinBat(char initial, Secret secret, string key, CancellationTokenSource cts)
+        internal GoblinBat(char initial, Secret secret, string key, CancellationTokenSource cts, Strategy.Retrieve retrieve)
         {
             var collect = ((char)Port.Collecting).Equals(initial);
             this.key = key;
             this.initial = initial;
             this.secret = secret;
             this.cts = cts;
+            this.retrieve = retrieve;
             InitializeComponent();
             Opacity = 0;
-            retrieve = new Strategy.Retrieve(key, initial);
 
             if (collect)
             {
@@ -548,7 +548,7 @@ namespace ShareInvest
                     ((IMessage<NotifyIconText>)ctor).SendMessage += OnReceiveNotifyIcon;
                     ((IStates<State>)ctor).SendState += Quotes.OnReceiveState;
                 }
-                if (initial.Equals(trading) && Array.Exists(Specify, o => o.Strategy.Length > 2))
+                if (initial.Equals(collecting) == false)
                     Parallel.ForEach(Specify, new Action<Catalog.XingAPI.Specify>((param) =>
                     {
                         switch (param.Strategy)
@@ -576,12 +576,14 @@ namespace ShareInvest
                             case heavy:
                                 new Strategy.XingAPI.Heavy(param);
                                 break;
+
+                            default:
+                                if (param.Time > 0)
+                                    new Strategy.XingAPI.Consecutive(param);
+
+                                break;
                         }
                     }));
-                else
-                    foreach (var specify in Specify)
-                        if (specify.Time > 0)
-                            new Strategy.XingAPI.Consecutive(specify);
             }
             WindowState = Xing.SendNotifyIconText((int)Math.Pow((initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code).Length, 4));
 
