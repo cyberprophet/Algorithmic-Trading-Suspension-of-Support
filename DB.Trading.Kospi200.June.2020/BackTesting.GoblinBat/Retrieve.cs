@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,6 +17,7 @@ namespace ShareInvest.Strategy
     {
         public Retrieve(string key, char initial) : base(key)
         {
+            random = new Random();
             secret = new Secret();
             Initial = initial;
         }
@@ -440,14 +442,29 @@ namespace ShareInvest.Strategy
         }
         void SetInitialzeTheCode()
         {
-            if (Chart == null && Quotes == null && QuotesEnumerable == null && Charts == null && Code != null)
+            do
             {
-                Charts = GetChart(new Dictionary<long, Queue<Chart>>(1048576), Code).OrderBy(o => o.Key);
-                Chart = GetChart(Code, new Queue<Chart>(1048576), new System.IO.DirectoryInfo(Path));
-                Quotes = GetQuotes(Code, new Queue<Quotes>(1048576));
-                QuotesEnumerable = GetQuotes(new Dictionary<long, Queue<Quotes>>(1048576), Code);
+                if (Code == null)
+                    Code = GetStrategy();
+
+                if (Charts == null)
+                    Charts = GetChart(new Dictionary<long, Queue<Chart>>(1048576), Code).OrderBy(o => o.Key);
+
+                if (Chart == null)
+                    Chart = GetChart(Code, new Queue<Chart>(1048576), new System.IO.DirectoryInfo(Path));
+
+                if (Quotes == null)
+                    Quotes = GetQuotes(Code, new Queue<Quotes>(1048576));
+
+                if (QuotesEnumerable == null)
+                    QuotesEnumerable = GetQuotes(new Dictionary<long, Queue<Quotes>>(1048576), Code);
+
+                if (Code == null || Charts == null || Chart == null || Quotes == null || QuotesEnumerable == null)
+                    Thread.Sleep(random.Next(0x2BF20));
             }
+            while (Code == null || Charts == null || Chart == null || Quotes == null || QuotesEnumerable == null);
         }
+        readonly Random random;
         readonly Secret secret;
         const string format = "yyMMddHHmmss";
     }

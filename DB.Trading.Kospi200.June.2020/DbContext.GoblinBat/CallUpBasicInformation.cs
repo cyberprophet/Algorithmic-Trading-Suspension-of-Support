@@ -14,6 +14,55 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpBasicInformation
     {
+        protected (string, Queue<Catalog.OpenAPI.Chart>) GetBasicChart(string code)
+        {
+            string path = Path.Combine(Application.StartupPath, chart, code), date = string.Empty;
+            var charts = new Queue<Catalog.OpenAPI.Chart>();
+            var directory = new DirectoryInfo(path);
+
+            try
+            {
+                if (directory.Exists)
+                    using (var sr = new StreamReader(string.Concat(path, basic)))
+                    {
+                        if (sr != null)
+                            while (sr.EndOfStream == false)
+                            {
+                                var str = sr.ReadLine().Split(',');
+                                date = str[0].Substring(2);
+
+                                if (long.TryParse(str[0], out long time) && int.TryParse(str[1], out int price))
+                                    charts.Enqueue(new Catalog.OpenAPI.Chart
+                                    {
+                                        Date = time,
+                                        Price = price
+                                    });
+                            }
+                    }
+                else
+                {
+                    using (var db = new GoblinBatDbContext(key))
+                        foreach (var dp in db.Days.Where(o => o.Code.Equals(code)).AsNoTracking().OrderBy(o => o.Date).Select(o => new { o.Date, o.Price }))
+                        {
+                            charts.Enqueue(new Catalog.OpenAPI.Chart
+                            {
+                                Date = dp.Date,
+                                Price = dp.Price
+                            });
+                            date = dp.Date.ToString().Substring(2);
+                        }
+                    directory.Create();
+                    using (var sw = new StreamWriter(string.Concat(path, basic), true))
+                        foreach (var str in charts)
+                            sw.WriteLine(string.Concat(str.Date, ',', str.Price));
+                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace, code);
+            }
+            return (date, charts);
+        }
         protected Stack<double> GetBasicChart(string check, DateTime now, Specify specify, int period, Stack<double> stack)
         {
             if (specify.Time == 1440)
@@ -156,5 +205,6 @@ namespace ShareInvest.GoblinBatContext
         const string chart = "Chart";
         const string rDate = "200403";
         const string rTime = "2004031545";
+        const string basic = @"\Basic.res";
     }
 }

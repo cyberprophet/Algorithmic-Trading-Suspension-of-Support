@@ -20,6 +20,7 @@ namespace ShareInvest.OpenAPI
 {
     public class ConnectAPI : AuxiliaryFunction
     {
+        public static ConnectAPI GetInstance() => OpenAPI;
         public static ConnectAPI GetInstance(string key, int delay)
         {
             if (OpenAPI == null)
@@ -176,6 +177,7 @@ namespace ShareInvest.OpenAPI
             SendMemorize?.Invoke(this, new Memorize("Clear"));
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
+        public void OnReceiveOrder(CollectedInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
         public void OnReceiveOrder(PurchaseInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo))));
         void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
@@ -278,7 +280,7 @@ namespace ShareInvest.OpenAPI
 
             switch (index)
             {
-                case 1:
+                case 0b1:
                     if (e.sRealKey.Equals(Code))
                     {
                         SendDatum?.Invoke(this, new Datum(param));
@@ -286,7 +288,7 @@ namespace ShareInvest.OpenAPI
                     }
                     return;
 
-                case 2:
+                case 0b10:
                     if (e.sRealKey.Equals(Code))
                         SendQuotes?.Invoke(this, new Quotes(new string[]
                         {
@@ -327,13 +329,13 @@ namespace ShareInvest.OpenAPI
                         }, param[0], SellOrder, BuyOrder, string.Concat(param[44], ";", param[47])));
                     return;
 
-                case 8:
+                case 0b1000:
                     if (e.sRealKey.Equals(Code))
-                        SendCurrent?.Invoke(this, new Current(Quantity, sb.ToString().Split(';')));
+                        SendCurrent?.Invoke(this, new Current(Quantity, param));
 
                     return;
 
-                case 9:
+                case 0b1001:
                     if (param[0].Equals("e") && DeadLine)
                     {
                         DeadLine = false;
@@ -350,8 +352,15 @@ namespace ShareInvest.OpenAPI
                     {
                         DeadLine = true;
                         Delay.Milliseconds = 205;
+
+                        if (SendStocksDatum != null)
+                            OnReceiveBalance = true;
                     }
                     break;
+
+                case 0b1010:
+                    SendStocksDatum?.Invoke(this, new Stocks(e.sRealKey, param));
+                    return;
             }
         }
         void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
@@ -514,7 +523,21 @@ namespace ShareInvest.OpenAPI
                     break;
 
                 case 0b1100:
-                    new ExceptionMessage(SetCollectionConditions(0, str.ToString().Split('*')).ToString("N0"));
+                    var count = SetCollectionConditions(0, str.ToString().Split('*')).ToString("N0");
+                    var cs = CallUpStorage;
+                    str.Clear();
+
+                    if (cs != null && str.Length == 0)
+                    {
+                        foreach (var cn in cs.Item2.Split(';'))
+                            str.Append(API.GetMasterCodeName(cn)).Append(';');
+
+                        var param = str.Remove(str.Length - 1, 1).ToString();
+                        var tuple = new Tuple<string, string>(cs.Item2, param);
+                        SendCount?.Invoke(this, new NotifyIconText(tuple));
+                        new ExceptionMessage(tuple.Item2.Replace(';', '\n'), count);
+                        RemainingDay(cs);
+                    }
                     break;
 
                 case 0b1101:
@@ -527,6 +550,11 @@ namespace ShareInvest.OpenAPI
         }
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
+            if (secret.IsCollector(key, API.GetLoginInfo("ACCLIST"), API.GetLoginInfo("USER_ID")) && string.IsNullOrEmpty(secret.Account) == false)
+            {
+                LookUpTheBalance(secret.Account);
+                return;
+            }
             SendErrorMessage(e.nErrCode);
             var code = API.GetFutureCodeByIndex(e.nErrCode);
             Code = OnReceiveRemainingDay(code).Equals(DateTime.Now.ToString(format)) ? API.GetFutureCodeByIndex(1) : code;
@@ -739,7 +767,7 @@ namespace ShareInvest.OpenAPI
         }
         void RemainingDay(string code)
         {
-            if (code.Length < 9 && code.Length > 6)
+            if (code.Length == 0b1000)
             {
                 request.RequestTrData(new Task(() => InputValueRqData(new Opt50001
                 {
@@ -756,9 +784,18 @@ namespace ShareInvest.OpenAPI
                     Value = code,
                     PrevNext = 0
                 };
-                SendErrorMessage(API.CommKwRqData(tr.Value, 0, 100, tr.PrevNext, tr.RQName, tr.ScreenNo));
+                SendErrorMessage(API.CommKwRqData(tr.Value, 0, 0x64, tr.PrevNext, tr.RQName, tr.ScreenNo));
             }));
         }
+        void RemainingDay(Tuple<int, string> param) => request.RequestTrData(new Task(() =>
+        {
+            ITRs tr = new OPTKWFID
+            {
+                Value = param.Item2,
+                PrevNext = 0
+            };
+            SendErrorMessage(API.CommKwRqData(tr.Value, 0, param.Item1, tr.PrevNext, tr.RQName, tr.ScreenNo));
+        }));
         void InputValueRqData(ITRs param)
         {
             string[] count = param.ID.Split(';'), value = param.Value.Split(';');
@@ -817,7 +854,6 @@ namespace ShareInvest.OpenAPI
                 PrevNext = 0
             });
         }));
-        void OnReceiveOrder(CollectedInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
         uint SetCollectionConditions(uint count, string[] param)
         {
             if (long.TryParse(param[0].Split(';')[7], out long cash))
@@ -848,7 +884,7 @@ namespace ShareInvest.OpenAPI
                                 });
                             sPrice += GetQuoteUnit(sPrice, stock);
                         }
-                        while ((bPrice < upper || bPrice < buy) && cash > bPrice * 1.00015)
+                        while (bPrice < upper && bPrice < buy && cash > bPrice * 1.00015)
                         {
                             OnReceiveOrder(new CollectedInformation
                             {
@@ -865,6 +901,7 @@ namespace ShareInvest.OpenAPI
                             bPrice += GetQuoteUnit(bPrice, stock);
                             cash -= (long)(bPrice * 1.00015);
                         }
+                        SetCodeStorage(co.Code);
                     }
                 }
             return count;
@@ -904,5 +941,6 @@ namespace ShareInvest.OpenAPI
         public event EventHandler<Current> SendCurrent;
         public event EventHandler<State> SendState;
         public event EventHandler<Trends> SendTrend;
+        public event EventHandler<Stocks> SendStocksDatum;
     }
 }

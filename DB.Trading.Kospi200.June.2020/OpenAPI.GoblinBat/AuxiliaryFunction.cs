@@ -18,6 +18,10 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
+        static StringBuilder CodeStorage
+        {
+            get; set;
+        }
         protected internal string GetDistinctDate(int usWeekNumber)
         {
             DayOfWeek dt = DateTime.Now.AddDays(1 - DateTime.Now.Day).DayOfWeek;
@@ -64,6 +68,14 @@ namespace ShareInvest.OpenAPI
             inven.Add(sb.Remove(sb.Length - 1, 1).ToString());
 
             return inven;
+        }
+        protected internal void SetCodeStorage(string code)
+        {
+            if (CodeStorage != null && CodeStorage.Length > 0)
+                CodeStorage.Append(code).Append(';');
+
+            else
+                CodeStorage = new StringBuilder(code).Append(';');
         }
         protected internal int GetStartingPrice(int price, bool info)
         {
@@ -126,6 +138,19 @@ namespace ShareInvest.OpenAPI
                 ScreenNumber = 0;
 
             return ScreenNumber;
+        }
+        protected internal Tuple<int, string> CallUpStorage
+        {
+            get
+            {
+                if (CodeStorage != null && CodeStorage.Length > 0)
+                {
+                    var str = CodeStorage.Remove(CodeStorage.Length - 1, 1).ToString();
+
+                    return new Tuple<int, string>(str.Split(';').Length, str);
+                }
+                return null;
+            }
         }
         protected internal string SetPassword => password;
         protected internal string OnReceiveData => data;

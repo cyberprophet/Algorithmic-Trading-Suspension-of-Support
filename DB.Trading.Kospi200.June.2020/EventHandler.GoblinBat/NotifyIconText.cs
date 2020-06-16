@@ -23,5 +23,6 @@ namespace ShareInvest.EventHandler
         public NotifyIconText(string code) => NotifyIcon = code.Trim();
         public NotifyIconText(string account, string id, string name, string server) => NotifyIcon = new StringBuilder(account).Append(id).Append(';').Append(name).Append(';').Append(server);
         public NotifyIconText(bool boolean) => NotifyIcon = boolean;
+        public NotifyIconText(Tuple<string, string> tuple) => NotifyIcon = tuple;
     }
 }

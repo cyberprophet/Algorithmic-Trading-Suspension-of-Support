@@ -270,6 +270,11 @@ namespace ShareInvest
         {
             switch (e.NotifyIcon.GetType().Name)
             {
+                case tuple:
+                    new Strategy.OpenAPI.Consecutive(key, ((Tuple<string, string>)e.NotifyIcon).Item1.Split(';'));
+                    notifyIcon.Text = ((Tuple<string, string>)e.NotifyIcon).Item2.Replace(';', '\n');
+                    return;
+
                 case dic:
                     var temp = (Dictionary<int, string>)e.NotifyIcon;
 

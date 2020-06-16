@@ -168,7 +168,7 @@ namespace ShareInvest
                 }
             }
         }
-        static readonly Random ran = new Random(Guid.NewGuid().GetHashCode());
+        static readonly Random ran = new Random(new Random().Next(int.MaxValue));
         static readonly Secret secret = new Secret();
         static readonly string str = KeyDecoder.GetWindowsProductKeyFromRegistry();
         [DllImport("kernel32.dll")]
