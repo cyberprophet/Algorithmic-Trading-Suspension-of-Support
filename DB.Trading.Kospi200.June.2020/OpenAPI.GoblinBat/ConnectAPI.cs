@@ -205,10 +205,10 @@ namespace ShareInvest.OpenAPI
             if (e.sMsg.Contains(Response) && TimerBox.Show(string.Concat(Response, "."), GoblinBat, MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 1375).Equals(DialogResult.OK))
                 return;
 
-            if (e.sMsg.Substring(9).Equals(LookUp) || e.sMsg.Substring(9).Equals(End))
+            if (Array.Exists(message, o => o.Equals(e.sMsg.Substring(9))))
                 return;
 
-            new ExceptionMessage(e.sMsg);
+            new ExceptionMessage(e.sMsg, e.sRQName);
         }
         void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {
@@ -454,30 +454,30 @@ namespace ShareInvest.OpenAPI
             var str = new StringBuilder(512);
             int i, cnt = API.GetRepeatCnt(e.sTrCode, e.sRQName);
 
-            for (i = 0; i < (cnt > 0 && index < 12 ? cnt : cnt + 1); i++)
+            for (i = 0; i < (cnt > 0 && index != 0xC ? cnt : cnt + 1); i++)
             {
-                Opw00005.Switch = index == 12 && i == 0;
+                Opw00005.Switch = index == 0b1100 && i == 0;
 
                 foreach (string item in Array.Find(catalogTR, o => o.ToString().Contains(e.sTrCode.Substring(1))))
-                    str.Append(API.GetCommData(e.sTrCode, e.sRQName, Opw00005.Switch == false && index == 12 ? i - 1 : i, item).Trim()).Append(';');
+                    str.Append(API.GetCommData(e.sTrCode, e.sRQName, Opw00005.Switch == false && index == 0xC ? i - 1 : i, item).Trim()).Append(';');
 
                 if (cnt > 0)
                     str.Append("*");
             }
-            switch (Array.FindIndex(catalogTR, o => o.ToString().Contains(e.sTrCode.Substring(1))))
+            switch (index)
             {
-                case 5:
+                case 0b101:
                     FixUp(str.ToString().Split(';'), e.sRQName);
                     return;
 
-                case 6:
+                case 0b110:
                     foreach (string info in str.ToString().Split('*'))
                         FixUp(info.Split(';'));
 
                     return;
 
-                case 7:
-                case 8:
+                case 0b111:
+                case 0b1000:
                     if (str.Length > 1 && e.sRQName.Equals("DoNotRollOver") == false)
                     {
                         if (e.sScrNo.Substring(0, 1).Equals("1"))
@@ -489,15 +489,15 @@ namespace ShareInvest.OpenAPI
                     SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     return;
 
-                case 9:
+                case 0b1001:
                     SendState?.Invoke(this, new State(OnReceiveBalance, SellOrder.Count, Quantity, BuyOrder.Count, ScreenNumber));
                     return;
 
-                case 10:
+                case 0b1010:
                     SendDeposit?.Invoke(this, new Deposit(str.ToString().Split(';')));
                     break;
 
-                case 11:
+                case 0b1011:
                     new Task(() =>
                     {
                         var temporary = str.ToString().Split('*');
@@ -513,13 +513,15 @@ namespace ShareInvest.OpenAPI
                     }).Start();
                     break;
 
-                case 12:
+                case 0b1100:
                     new ExceptionMessage(SetCollectionConditions(0, str.ToString().Split('*')).ToString("N0"));
                     break;
 
-                case 13:
-                case 14:
-                    secret.SetStorage(string.Concat(str.ToString().Split(';')[0], ";", e.sRQName));
+                case 0b1101:
+                case 0b1110:
+                case 0b1111:
+                case 0b10000:
+                    secret.SetStorage(string.Concat(str, e.sRQName));
                     break;
             }
         }
@@ -815,31 +817,53 @@ namespace ShareInvest.OpenAPI
                 PrevNext = 0
             });
         }));
+        void OnReceiveOrder(CollectedInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
         uint SetCollectionConditions(uint count, string[] param)
         {
             if (long.TryParse(param[0].Split(';')[7], out long cash))
                 for (int i = 1; i < param.Length - 1; i++)
                 {
-                    var o = FixUp(param[i]);
-                    var quantity = o.Amount;
+                    var co = FixUp(param[i]);
+                    uint quantity = co.Amount, price = uint.TryParse(API.GetMasterLastPrice(co.Code), out uint before) ? before : 0;
 
-                    if (o.Price > 0)
+                    if (co.Price > 0 && price > 0 && quantity > 0)
                     {
-                        var stock = API.KOA_Functions("GetMasterStockInfo", o.Code).Split(';')[0].Contains(market);
-                        int sell = (int)(o.Purchase * 1.05), buy = (int)(o.Purchase * 0.95), upper = (int)(o.Price * 1.3), lower = (int)(o.Price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
+                        var stock = API.KOA_Functions("GetMasterStockInfo", co.Code).Split(';')[0].Contains(market);
+                        int sell = (int)(co.Purchase * 1.05), buy = (int)(co.Purchase * 0.95), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
 
-                        while (quantity-- > 0 && sPrice < upper)
+                        while (sPrice < upper)
                         {
-                            request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(string.Concat(o.Name, ';', sPrice), string.Concat((int)OrderType.신규매도, GetScreenNumber().ToString("D2"), i), secret.Account, (int)OrderType.신규매도, o.Code, 1, sPrice, ((int)HogaGb.지정가).ToString("D2"), string.Empty))));
+                            if (sPrice > lower && quantity-- > 0)
+                                OnReceiveOrder(new CollectedInformation
+                                {
+                                    RQName = string.Concat(co.Name, ';', sPrice, ';', count++),
+                                    ScreenNo = string.Concat((int)OrderType.신규매도, GetScreenNumber().ToString("D2"), i % 10),
+                                    AccNo = secret.Account,
+                                    OrderType = (int)OrderType.신규매도,
+                                    Code = co.Code,
+                                    Qty = 1,
+                                    Price = sPrice,
+                                    HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                    OrgOrderNo = string.Empty
+                                });
                             sPrice += GetQuoteUnit(sPrice, stock);
-                            count++;
                         }
-                        while (bPrice < buy && cash > buy * 1.00015)
+                        while ((bPrice < upper || bPrice < buy) && cash > bPrice * 1.00015)
                         {
-                            request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(string.Concat(o.Name, ';', bPrice), string.Concat((int)OrderType.신규매수, GetScreenNumber().ToString("D2"), i), secret.Account, (int)OrderType.신규매수, o.Code, 1, bPrice, ((int)HogaGb.지정가).ToString("D2"), string.Empty))));
+                            OnReceiveOrder(new CollectedInformation
+                            {
+                                RQName = string.Concat(co.Name, ';', bPrice, ';', count++),
+                                ScreenNo = string.Concat((int)OrderType.신규매수, GetScreenNumber().ToString("D2"), i % 10),
+                                AccNo = secret.Account,
+                                OrderType = (int)OrderType.신규매수,
+                                Code = co.Code,
+                                Qty = 1,
+                                Price = bPrice,
+                                HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                OrgOrderNo = string.Empty
+                            });
                             bPrice += GetQuoteUnit(bPrice, stock);
-                            cash -= (long)(buy * 1.00015);
-                            count++;
+                            cash -= (long)(bPrice * 1.00015);
                         }
                     }
                 }

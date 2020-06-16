@@ -4,6 +4,10 @@ namespace ShareInvest.Catalog
 {
     public class Opw00005 : ScreenNumber, ITRs, IEnumerable
     {
+        public static bool Switch
+        {
+            get; set;
+        }
         public string ID => id;
         public string Value
         {
@@ -23,10 +27,6 @@ namespace ShareInvest.Catalog
             get; set;
         }
         public string ScreenNo => GetScreenNumber();
-        public static bool Switch
-        {
-            get; set;
-        }
         public IEnumerator GetEnumerator()
         {
             int i, l = (Switch ? opSingle : opMultiple).Length;

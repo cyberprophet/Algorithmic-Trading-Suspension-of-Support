@@ -34,7 +34,7 @@ namespace ShareInvest.OpenAPI
                 Code = info[3].Substring(1),
                 Name = info[4],
                 Amount = uint.TryParse(info[6], out uint amount) ? amount : 0,
-                Price = uint.TryParse(info[7], out uint price) ? price : 0,
+                Price = int.TryParse(info[7], out int price) ? price : 0,
                 Purchase = uint.TryParse(info[8], out uint purchase) ? purchase : 0
             };
         }
@@ -131,11 +131,9 @@ namespace ShareInvest.OpenAPI
         protected internal string OnReceiveData => data;
         protected internal string TR => tr;
         protected internal string Failure => failure;
-        protected internal string LookUp => lookUp;
         protected internal string GoblinBat => goblin;
         protected internal string Collection => collection;
         protected internal string Response => response;
-        protected internal string End => end;
         protected internal StringBuilder Exists => new StringBuilder(exists);
         protected internal AuxiliaryFunction(string key) : base(key) => this.key = key;
         protected internal readonly IEnumerable[] catalogReal =
@@ -189,7 +187,9 @@ namespace ShareInvest.OpenAPI
             new OPW20007(),
             new Opw00005(),
             new KOA_NORMAL_BUY_KP_ORD(),
-            new KOA_NORMAL_SELL_KP_ORD()
+            new KOA_NORMAL_BUY_KQ_ORD(),
+            new KOA_NORMAL_SELL_KP_ORD(),
+            new KOA_NORMAL_SELL_KQ_ORD()
         };
         protected internal readonly string[] basic =
         {
@@ -210,6 +210,7 @@ namespace ShareInvest.OpenAPI
             "001880",
             "072770"
         };
+        protected internal readonly string[] message = { lookUp, end, bOrderComplete };
         protected internal readonly string key;
         protected internal const string format = "yyMMdd";
         protected internal const string market = "거래소";
@@ -223,6 +224,7 @@ namespace ShareInvest.OpenAPI
         const string goblin = "GoblinBat";
         const string response = "응답이 지연되고 있습니다";
         const string end = "장종료되었습니다";
+        const string bOrderComplete = "매수주문이 완료되었습니다.";
     }
     enum RealType
     {
