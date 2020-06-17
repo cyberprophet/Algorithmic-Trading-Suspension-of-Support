@@ -17,18 +17,15 @@ namespace ShareInvest.Message
             {
                 var path = Path.Combine(Application.StartupPath, ExceptionMessage.message);
                 var di = new DirectoryInfo(path);
-                var date = int.Parse(DateTime.Now.AddDays(-30).ToString(format));
+                var benchmark = DateTime.Now.AddDays(-30);
 
                 if (di.Exists)
                     foreach (var file in Directory.GetFiles(path))
                     {
-                        string[] recent = file.Split('\\');
-                        recent = recent[recent.Length - 1].Split('.');
+                        var exists = new FileInfo(file);
 
-                        if (date < int.Parse(recent[recent.Length - 2]))
-                            continue;
-
-                        new FileInfo(file).Delete();
+                        if (DateTime.Compare(exists.CreationTime, benchmark) < 0)
+                            exists.Delete();
                     }
                 else
                     di.Create();

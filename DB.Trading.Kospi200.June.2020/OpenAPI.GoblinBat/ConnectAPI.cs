@@ -177,7 +177,22 @@ namespace ShareInvest.OpenAPI
             SendMemorize?.Invoke(this, new Memorize("Clear"));
             Request(GetRandomCode(new Random().Next(0, CodeList.Count)));
         }
-        public void OnReceiveOrder(CollectedInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
+        public int OnReceiveOrder(string code, int price)
+        {
+            OnReceiveOrder(new CollectedInformation
+            {
+                RQName = string.Concat(API.GetMasterCodeName(code), ';', price, ';', ScreenNumber++),
+                ScreenNo = string.Concat((int)OrderType.신규매수, GetScreenNumber().ToString("D3")),
+                AccNo = secret.Account,
+                OrderType = (int)OrderType.신규매수,
+                Code = code,
+                Qty = 1,
+                Price = price,
+                HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                OrgOrderNo = string.Empty
+            });
+            return price - GetQuoteUnit(price, API.KOA_Functions("GetMasterStockInfo", code).Split(';')[0].Contains(market));
+        }
         public void OnReceiveOrder(PurchaseInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo))));
         void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
         {
@@ -354,12 +369,19 @@ namespace ShareInvest.OpenAPI
                         Delay.Milliseconds = 205;
 
                         if (SendStocksDatum != null)
+                        {
                             OnReceiveBalance = true;
+                            SetScreenNumber(0x3E8, 0x834);
+                        }
                     }
                     break;
 
-                case 0b1010:
+                case 0xA:
                     SendStocksDatum?.Invoke(this, new Stocks(e.sRealKey, param));
+                    return;
+
+                case 0xB:
+                    SendQuotes?.Invoke(this, new Quotes(e.sRealKey, param[0b100]));
                     return;
             }
         }
@@ -544,7 +566,7 @@ namespace ShareInvest.OpenAPI
                 case 0b1110:
                 case 0b1111:
                 case 0b10000:
-                    secret.SetStorage(string.Concat(str, e.sRQName));
+                    SendCount?.Invoke(this, new NotifyIconText(str.Remove(str.Length - 1, 1).ToString(), e.sRQName.Split(';')));
                     break;
             }
         }
@@ -855,6 +877,7 @@ namespace ShareInvest.OpenAPI
                 PrevNext = 0
             });
         }));
+        void OnReceiveOrder(CollectedInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
         uint SetCollectionConditions(uint count, string[] param)
         {
             if (long.TryParse(param[0].Split(';')[7], out long cash))

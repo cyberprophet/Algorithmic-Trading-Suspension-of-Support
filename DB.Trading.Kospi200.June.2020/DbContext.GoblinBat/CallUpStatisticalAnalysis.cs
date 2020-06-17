@@ -45,7 +45,7 @@ namespace ShareInvest.GoblinBatContext
                         contents.Enqueue(string.Concat(str.Date, ',', str.Unrealized, ',', str.Revenue, ',', str.Fees, ',', str.Cumulative, ',', str.Statistic));
 
                         if (string.IsNullOrEmpty(file))
-                            file = string.Concat(str.BaseShort, '-', str.BaseLong, '-', str.MonoTime, '-', str.MonoShort, '-', str.MonoLong, '-', str.Primary, csv);
+                            file = string.Concat(str.BaseShort, '-', str.BaseLong, '-', str.MonoTime, '-', str.MonoShort, '-', str.MonoLong, '-', str.Strategy, '-', str.Primary, csv);
                     }
                 if (string.IsNullOrEmpty(file) == false && contents.Count > 0)
                 {

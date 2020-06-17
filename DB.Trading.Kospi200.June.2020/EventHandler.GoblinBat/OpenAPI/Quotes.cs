@@ -9,11 +9,19 @@ namespace ShareInvest.EventHandler.OpenAPI
         {
             get; private set;
         }
+        public int BuyPrice
+        {
+            get; private set;
+        }
         public int[] Quantity
         {
             get; private set;
         }
         public int[] Number
+        {
+            get; private set;
+        }
+        public string Code
         {
             get; private set;
         }
@@ -49,6 +57,11 @@ namespace ShareInvest.EventHandler.OpenAPI
             SellOrder = sell;
             BuyOrder = buy;
             Total = total;
+        }
+        public Quotes(string code, string param)
+        {
+            Code = code;
+            BuyPrice = int.TryParse(param, out int buy) ? buy : 0;
         }
     }
 }

@@ -17,6 +17,7 @@ namespace ShareInvest.EventHandler
                 code
             }
         };
+        public NotifyIconText(string orgOrderNo, string[] param) => NotifyIcon = new string[] { string.Concat("Co.", param[param.Length - 1], "\n", param[0]), string.Concat(".", orgOrderNo) };
         public NotifyIconText(byte start) => NotifyIcon = start;
         public NotifyIconText(int xing) => NotifyIcon = xing;
         public NotifyIconText(char initial) => NotifyIcon = initial;

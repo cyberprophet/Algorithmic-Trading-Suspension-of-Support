@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -14,6 +15,97 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpBasicInformation
     {
+        protected (IOrderedEnumerable<KeyValuePair<string, Queue<Catalog.OpenAPI.Chart>>>, int) GetBasicChart(string code, string date)
+        {
+            try
+            {
+                string path = Path.Combine(Application.StartupPath, chart, code), procedure = string.Empty;
+                var check = long.MinValue;
+                var result = int.MaxValue;
+                var charts = new Queue<Catalog.OpenAPI.Chart>();
+                var directory = new DirectoryInfo(path);
+                var temp = new Dictionary<string, Queue<Catalog.OpenAPI.Chart>>();
+
+                if (directory.Exists)
+                {
+                    foreach (var file in Directory.GetFiles(path, "*.res", SearchOption.TopDirectoryOnly))
+                        if (file.Contains(basic) == false)
+                            using (var sr = new StreamReader(file))
+                            {
+                                if (sr != null)
+                                    while (sr.EndOfStream == false)
+                                    {
+                                        var str = sr.ReadLine().Split(',');
+
+                                        if (long.TryParse(str[0], out long time) && int.TryParse(str[1], out int price))
+                                        {
+                                            charts.Enqueue(new Catalog.OpenAPI.Chart
+                                            {
+                                                Date = time,
+                                                Price = price
+                                            });
+                                            check = time;
+                                        }
+                                        if (string.IsNullOrEmpty(procedure))
+                                            procedure = str[0].Substring(0, 6);
+                                    }
+                                temp[procedure] = new Queue<Catalog.OpenAPI.Chart>(charts);
+                                charts.Clear();
+                                procedure = string.Empty;
+                            }
+                    using (var db = new GoblinBatDbContext(key))
+                        foreach (var stock in db.Stocks.Where(o => o.Code.Equals(code) && o.Date > check).AsNoTracking().OrderBy(o => o.Date))
+                        {
+                            charts.Enqueue(new Catalog.OpenAPI.Chart
+                            {
+                                Date = stock.Date,
+                                Price = stock.Price
+                            });
+                            if (string.IsNullOrEmpty(procedure))
+                                procedure = stock.Date.ToString().Substring(0, 6);
+                        }
+                    if (string.IsNullOrEmpty(procedure) == false)
+                    {
+                        temp[procedure] = new Queue<Catalog.OpenAPI.Chart>(charts);
+                        result = string.Compare(procedure, date);
+                        using (var sw = new StreamWriter(string.Concat(path, @"\", procedure.Substring(0, 2), res), true))
+                            while (charts.Count > 0)
+                            {
+                                var str = charts.Dequeue();
+                                sw.WriteLine(string.Concat(str.Date, ',', str.Price));
+                            }
+                        if (result <= 0)
+                        {
+                            var copy = new Queue<string>();
+                            using (var sr = new StreamReader(string.Concat(path, basic)))
+                                if (sr != null)
+                                    while (sr.EndOfStream == false)
+                                    {
+                                        var str = sr.ReadLine();
+
+                                        if (str.Split(',')[0].Substring(2).Equals(procedure))
+                                            break;
+
+                                        copy.Enqueue(str);
+                                    }
+                            using (var sw = new StreamWriter(string.Concat(path, basic)))
+                                while (copy.Count > 0)
+                                    sw.WriteLine(copy.Dequeue());
+                        }
+                    }
+                }
+                return (temp.OrderBy(o => o.Key), result);
+            }
+            catch (Exception ex)
+            {
+                if (DateTime.TryParseExact(date, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime infoDate))
+                    new ExceptionMessage(ex.StackTrace, string.Concat(code, " ", infoDate.ToShortDateString()));
+
+                else
+                    new ExceptionMessage(ex.StackTrace);
+            }
+            return (null, int.MinValue);
+        }
         protected (string, Queue<Catalog.OpenAPI.Chart>) GetBasicChart(string code)
         {
             string path = Path.Combine(Application.StartupPath, chart, code), date = string.Empty;

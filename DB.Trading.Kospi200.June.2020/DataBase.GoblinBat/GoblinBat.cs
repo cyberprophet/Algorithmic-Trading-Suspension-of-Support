@@ -270,6 +270,11 @@ namespace ShareInvest
         {
             switch (e.NotifyIcon.GetType().Name)
             {
+                case GoblinBat.array:
+                    var array = (string[])e.NotifyIcon;
+                    notifyIcon.Text = string.Concat(array[0], array[1]);
+                    return;
+
                 case tuple:
                     new Strategy.OpenAPI.Consecutive(key, ((Tuple<string, string>)e.NotifyIcon).Item1.Split(';'));
                     notifyIcon.Text = ((Tuple<string, string>)e.NotifyIcon).Item2.Replace(';', '\n');

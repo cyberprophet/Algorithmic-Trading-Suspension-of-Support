@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
 using ShareInvest.GoblinBatContext;
 using ShareInvest.OpenAPI;
@@ -11,22 +14,52 @@ namespace ShareInvest.Strategy.OpenAPI
         {
             get; private set;
         }
+        internal int BuyPrice
+        {
+            private get; set;
+        }
         internal Stocks(string key, string code) : base(key)
         {
-            var chart = GetBasicChart(code);
-            Code = code;
-            OnTime = true;
+            while (string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0)
+            {
+                if (string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0)
+                    chart = GetBasicChart(code);
+
+                if (Chart == null && string.IsNullOrEmpty(chart.Item1) == false)
+                {
+                    var temp = GetBasicChart(code, chart.Item1);
+                    Chart = temp.Item1;
+
+                    if (temp.Item2 <= 0)
+                        chart.Item2.Clear();
+                }
+                if ((specify.Trend > 0 && specify.Long > 0 && specify.Short > 0) == false)
+                    specify = new Catalog.OpenAPI.Specify
+                    {
+                        Short = 5,
+                        Long = 70,
+                        Trend = 720
+                    };
+                if (Chart == null || string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0)
+                    Thread.Sleep(random.Next(0x2BF20));
+            }
             Short = new Stack<double>();
             Long = new Stack<double>();
             Trend = new Stack<double>();
-            specify = new Catalog.OpenAPI.Specify
+
+            while (chart.Item2.Count > 0)
             {
-                Short = 5,
-                Long = 60,
-                Trend = 720
-            };
-            foreach (var dp in chart.Item2)
+                var dp = chart.Item2.Dequeue();
                 DrawChart(dp.Date, dp.Price);
+            }
+            foreach (var chart in Chart)
+                while (chart.Value.Count > 0)
+                {
+                    var dp = chart.Value.Dequeue();
+                    DrawChart(dp.Date, dp.Price);
+                }
+            Code = code;
+            OnTime = true;
         }
         internal void DrawChart(string time, int price)
         {
@@ -42,6 +75,9 @@ namespace ShareInvest.Strategy.OpenAPI
             double popShort = Short.Pop(), popLong = Long.Pop(), gap = popShort - popLong - (Short.Peek() - Long.Peek());
             Short.Push(popShort);
             Long.Push(popLong);
+
+            if (price < Trend.Peek() && gap > 0 && (price <= Price || Price == 0) && price <= BuyPrice)
+                Price = API.OnReceiveOrder(Code, price);
         }
         void DrawChart(long date, dynamic price)
         {
@@ -57,15 +93,28 @@ namespace ShareInvest.Strategy.OpenAPI
         }
         bool GetCheckOnTimeByAPI(string time)
         {
-            if (OnTime && time.Equals(start))
+            if (OnTime)
                 return OnTime = false;
 
             if (time.Length > 8)
-                return time.Substring(6).Equals(onTime) == false;
+            {
+                var date = time.Substring(0, 6);
+                var change = string.IsNullOrEmpty(DateChange) == false && date.Equals(DateChange);
+                DateChange = date;
 
+                return change;
+            }
             return time.Length == 6;
         }
+        string DateChange
+        {
+            get; set;
+        }
         bool OnTime
+        {
+            get; set;
+        }
+        int Price
         {
             get; set;
         }
@@ -85,9 +134,13 @@ namespace ShareInvest.Strategy.OpenAPI
         {
             get;
         }
+        IOrderedEnumerable<KeyValuePair<string, Queue<Catalog.OpenAPI.Chart>>> Chart
+        {
+            get;
+        }
         ConnectAPI API => ConnectAPI.GetInstance();
+        readonly Random random = new Random();
         readonly Catalog.OpenAPI.Specify specify;
-        const string start = "090000";
-        const string onTime = "090000000";
+        readonly (string, Queue<Catalog.OpenAPI.Chart>) chart;
     }
 }
