@@ -20,23 +20,28 @@ namespace ShareInvest.Strategy.XingAPI
             this.specify = specify;
             this.judge = specify.Strategy.Length == 2 && int.TryParse(specify.Strategy, out int judge) ? judge : int.MaxValue;
             var recent = Retrieve.Charts.Last().Value.Last().Date.ToString().Substring(0, 6);
-            Short = GetBasicChart(recent, DateTime.Now, specify, specify.Short, new Stack<double>(256));
-            Long = GetBasicChart(recent, DateTime.Now, specify, specify.Long, new Stack<double>(256));
+            var now = DateTime.Now;
+            Short = GetBasicChart(recent, now, specify, specify.Short, new Stack<double>(256));
+            Long = GetBasicChart(recent, now, specify, specify.Long, new Stack<double>(256));
 
-            if (Short.Count == 0 || Long.Count == 0)
+            if (Short == null || Short.Count == 0 || Long == null || Long.Count == 0)
+            {
+                Short = new Stack<double>(256);
+                Long = new Stack<double>(256);
+
                 foreach (var kv in Retrieve.Charts)
                     foreach (var chart in kv.Value)
                         Analysize(chart);
-
+            }
             if (specify.Time == 1440)
             {
-                RollOver = specify.RollOver == false || Array.Exists(Information.RemainingDay, o => o.Equals(DateTime.Now.ToString(remaining)));
+                RollOver = specify.RollOver == false || Array.Exists(Information.RemainingDay, o => o.Equals(now.ToString(remaining)));
                 ran = new Random();
                 OnTime = true;
                 API.OnReceiveBalance = false;
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
 
-                if (DateTime.Now.Hour < 5 || DateTime.Now.Hour > 16)
+                if (now.Hour < 5 || now.Hour > 16)
                     this.judge /= 10;
             }
             else

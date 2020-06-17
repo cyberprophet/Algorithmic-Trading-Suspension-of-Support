@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -46,6 +47,30 @@ namespace ShareInvest.Message
                 Record(ex.TargetSite.Name);
             }
         }
+        void Record(Queue<string> contects)
+        {
+            if (string.IsNullOrEmpty(file) == false)
+                try
+                {
+                    using (var sw = new StreamWriter(file, true))
+                        while (contects.Count > 0)
+                        {
+                            var str = contects.Dequeue();
+
+                            if (string.IsNullOrEmpty(str) == false)
+                                sw.WriteLine(str);
+                        }
+                }
+                catch (Exception ex)
+                {
+                    Record(ex.TargetSite.Name);
+                }
+        }
+        public ExceptionMessage(string file, Queue<string> contents)
+        {
+            this.file = string.Concat(Path.Combine(Application.StartupPath, message), file);
+            Record(contents);
+        }
         public ExceptionMessage(string message, string code)
         {
             this.code = code;
@@ -58,6 +83,7 @@ namespace ShareInvest.Message
         }
         public ExceptionMessage(Simulations games) => Record(new StringBuilder(where).Append(games.Assets).Append(nCode).Append(games.Code).Append(commission).Append(games.Commission).Append(rate).Append(games.MarginRate).Append(strategy).Append(games.Strategy).Append(over).Append(games.RollOver ? 1 : 0).Append(bs).Append(games.BaseShort).Append(bl).Append(games.BaseLong).Append(nt).Append(games.NonaTime).Append(ns).Append(games.NonaShort).Append(nl).Append(games.NonaLong).Append(ot).Append(games.OctaTime).Append(os).Append(games.OctaShort).Append(ol).Append(games.OctaLong).Append(ht).Append(games.HeptaTime).Append(hs).Append(games.HeptaShort).Append(hl).Append(games.HeptaLong).Append(xt).Append(games.HexaTime).Append(xs).Append(games.HexaShort).Append(xl).Append(games.HexaLong).Append(pt).Append(games.PentaTime).Append(ps).Append(games.PentaShort).Append(pl).Append(games.PentaLong).Append(qt).Append(games.QuadTime).Append(qs).Append(games.QuadShort).Append(ql).Append(games.QuadLong).Append(tt).Append(games.TriTime).Append(ts).Append(games.TriShort).Append(tl).Append(games.TriLong).Append(dt).Append(games.DuoTime).Append(ds).Append(games.DuoShort).Append(dl).Append(games.DuoLong).Append(mt).Append(games.MonoTime).Append(ms).Append(games.MonoShort).Append(ml).Append(games.MonoLong).Append(date).ToString());
         public ExceptionMessage(string message) => new Task(() => Record(message)).Start();
+        readonly string file;
         readonly string code;
         const string message = @"Message\";
         const string txt = ".txt";

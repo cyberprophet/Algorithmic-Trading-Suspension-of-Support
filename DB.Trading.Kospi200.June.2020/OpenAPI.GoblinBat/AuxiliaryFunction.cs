@@ -235,7 +235,7 @@ namespace ShareInvest.OpenAPI
             "001880",
             "072770"
         };
-        protected internal readonly string[] message = { lookUp, end, bOrderComplete };
+        protected internal readonly string[] message = { lookUp, end, bOrderComplete, sOrderComplete, look };
         protected internal readonly string key;
         protected internal const string format = "yyMMdd";
         protected internal const string market = "거래소";
@@ -250,6 +250,8 @@ namespace ShareInvest.OpenAPI
         const string response = "응답이 지연되고 있습니다";
         const string end = "장종료되었습니다";
         const string bOrderComplete = "매수주문이 완료되었습니다.";
+        const string sOrderComplete = "매도주문이 완료되었습니다.";
+        const string look = "조회가 완료되었습니다";
     }
     enum RealType
     {

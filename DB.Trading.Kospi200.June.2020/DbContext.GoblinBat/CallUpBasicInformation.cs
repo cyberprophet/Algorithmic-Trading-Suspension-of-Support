@@ -76,7 +76,7 @@ namespace ShareInvest.GoblinBatContext
                         if (check.Equals(date))
                             using (var db = new GoblinBatDbContext(key))
                             {
-                                switch (DateTime.Now.Hour)
+                                switch (now.Hour)
                                 {
                                     case 6:
                                     case 7:
@@ -108,7 +108,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace, specify.Code);
                 }
-            return stack;
+            return null;
         }
         protected Stack<double> GetBasicChart(Stack<double> stack, Specify specify, int period)
         {

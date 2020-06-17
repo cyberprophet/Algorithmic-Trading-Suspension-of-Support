@@ -550,11 +550,6 @@ namespace ShareInvest.OpenAPI
         }
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
-            if (secret.IsCollector(key, API.GetLoginInfo("ACCLIST"), API.GetLoginInfo("USER_ID")) && string.IsNullOrEmpty(secret.Account) == false)
-            {
-                LookUpTheBalance(secret.Account);
-                return;
-            }
             SendErrorMessage(e.nErrCode);
             var code = API.GetFutureCodeByIndex(e.nErrCode);
             Code = OnReceiveRemainingDay(code).Equals(DateTime.Now.ToString(format)) ? API.GetFutureCodeByIndex(1) : code;
@@ -787,15 +782,21 @@ namespace ShareInvest.OpenAPI
                 SendErrorMessage(API.CommKwRqData(tr.Value, 0, 0x64, tr.PrevNext, tr.RQName, tr.ScreenNo));
             }));
         }
-        void RemainingDay(Tuple<int, string> param) => request.RequestTrData(new Task(() =>
+        void RemainingDay(Tuple<int, string> param)
         {
-            ITRs tr = new OPTKWFID
-            {
-                Value = param.Item2,
-                PrevNext = 0
-            };
-            SendErrorMessage(API.CommKwRqData(tr.Value, 0, param.Item1, tr.PrevNext, tr.RQName, tr.ScreenNo));
-        }));
+            if (param.Item1 < 0x65)
+                request.RequestTrData(new Task(() =>
+                {
+                    ITRs tr = new OPTKWFID
+                    {
+                        Value = param.Item2,
+                        PrevNext = 0
+                    };
+                    SendErrorMessage(API.CommKwRqData(tr.Value, 0, param.Item1, tr.PrevNext, tr.RQName, tr.ScreenNo));
+                }));
+            else if (TimerBox.Show(secret.LookUp, secret.GetNumberOfStocks(param.Item1), MessageBoxButtons.RetryCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, (uint)Math.Pow(param.Item1, 0b10)).Equals(DialogResult.Retry))
+                new ExceptionMessage(secret.LookUp, secret.GetNumberOfStocks(param.Item1));
+        }
         void InputValueRqData(ITRs param)
         {
             string[] count = param.ID.Split(';'), value = param.Value.Split(';');
