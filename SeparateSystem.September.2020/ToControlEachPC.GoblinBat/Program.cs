@@ -8,6 +8,7 @@ namespace ShareInvest
         [STAThread]
         static void Main()
         {
+            Secrecy.Upload();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new GoblinBat());
