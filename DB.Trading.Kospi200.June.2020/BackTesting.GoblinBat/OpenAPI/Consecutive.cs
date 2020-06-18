@@ -14,7 +14,7 @@ namespace ShareInvest.Strategy.OpenAPI
                 stocks.Add(new Stocks(key, code));
 
             API.SendStocksDatum += OnReceiveStocksDatum;
-            API.SendQuotes += OnReceiveQuotes;
+            API.SendStocksQuotes += OnReceiveQuotes;
             API.OnReceiveBalance = false;
         }
         void OnReceiveStocksDatum(object sender, EventHandler.OpenAPI.Stocks e)
@@ -22,7 +22,11 @@ namespace ShareInvest.Strategy.OpenAPI
             if (API.OnReceiveBalance)
                 new Task(() => stocks.First(o => o.Code.Equals(e.Code)).DrawChart(e.Time, e.Price)).Start();
         }
-        void OnReceiveQuotes(object sender, EventHandler.OpenAPI.Quotes e) => stocks.First(o => o.Code.Equals(e.Code)).BuyPrice = e.BuyPrice;
+        void OnReceiveQuotes(object sender, EventHandler.OpenAPI.StocksQuotes e)
+        {
+            if (string.IsNullOrEmpty(e.Code) == false && e.Price > 0)
+                stocks.First(o => o.Code.Equals(e.Code)).BuyPrice = e.Price;
+        }
         ConnectAPI API => ConnectAPI.GetInstance();
         readonly HashSet<Stocks> stocks = new HashSet<Stocks>();
     }

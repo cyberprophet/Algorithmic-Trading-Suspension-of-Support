@@ -76,7 +76,7 @@ namespace ShareInvest.Strategy.OpenAPI
             Short.Push(popShort);
             Long.Push(popLong);
 
-            if (price < Trend.Peek() && gap > 0 && (price <= Price || Price == 0) && price <= BuyPrice)
+            if (specify.Short < Short.Count && specify.Long < Long.Count && specify.Trend < Trend.Count && price < Trend.Peek() && gap > 0 && (price <= Price || Price == 0) && price <= BuyPrice)
                 Price = API.OnReceiveOrder(Code, price);
         }
         void DrawChart(long date, dynamic price)

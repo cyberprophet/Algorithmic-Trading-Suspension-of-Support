@@ -179,18 +179,22 @@ namespace ShareInvest.OpenAPI
         }
         public int OnReceiveOrder(string code, int price)
         {
-            OnReceiveOrder(new CollectedInformation
+            if (Cash > price * 1.00015)
             {
-                RQName = string.Concat(API.GetMasterCodeName(code), ';', price, ';', ScreenNumber++),
-                ScreenNo = string.Concat((int)OrderType.신규매수, GetScreenNumber().ToString("D3")),
-                AccNo = secret.Account,
-                OrderType = (int)OrderType.신규매수,
-                Code = code,
-                Qty = 1,
-                Price = price,
-                HogaGb = ((int)HogaGb.지정가).ToString("D2"),
-                OrgOrderNo = string.Empty
-            });
+                Cash -= (long)(price * 1.00015);
+                OnReceiveOrder(new CollectedInformation
+                {
+                    RQName = string.Concat(API.GetMasterCodeName(code), ';', price, ';', Cash),
+                    ScreenNo = string.Concat((int)OrderType.신규매수, GetScreenNumber().ToString("D3")),
+                    AccNo = secret.Account,
+                    OrderType = (int)OrderType.신규매수,
+                    Code = code,
+                    Qty = 1,
+                    Price = price,
+                    HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                    OrgOrderNo = string.Empty
+                });
+            }
             return price - GetQuoteUnit(price, API.KOA_Functions("GetMasterStockInfo", code).Split(';')[0].Contains(market));
         }
         public void OnReceiveOrder(PurchaseInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrderFO(o.RQName, o.ScreenNo, o.AccNo, o.Code, o.OrdKind, o.SlbyTP, o.OrdTp, o.Qty, o.Price, o.OrgOrdNo))));
@@ -381,7 +385,7 @@ namespace ShareInvest.OpenAPI
                     return;
 
                 case 0xB:
-                    SendQuotes?.Invoke(this, new Quotes(e.sRealKey, param[0b100]));
+                    SendStocksQuotes?.Invoke(this, new StocksQuotes(e.sRealKey, param[0b100]));
                     return;
             }
         }
@@ -545,7 +549,7 @@ namespace ShareInvest.OpenAPI
                     break;
 
                 case 0b1100:
-                    var count = SetCollectionConditions(0, str.ToString().Split('*')).ToString("N0");
+                    SetCollectionConditions(str.ToString().Split('*'));
                     var cs = CallUpStorage;
                     str.Clear();
 
@@ -557,7 +561,7 @@ namespace ShareInvest.OpenAPI
                         var param = str.Remove(str.Length - 1, 1).ToString();
                         var tuple = new Tuple<string, string>(cs.Item2, param);
                         SendCount?.Invoke(this, new NotifyIconText(tuple));
-                        new ExceptionMessage(tuple.Item2.Replace(';', '\n'), count);
+                        new ExceptionMessage(tuple.Item2.Replace(';', '\n'), Cash.ToString("C0"));
                         RemainingDay(cs);
                     }
                     break;
@@ -878,9 +882,12 @@ namespace ShareInvest.OpenAPI
             });
         }));
         void OnReceiveOrder(CollectedInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
-        uint SetCollectionConditions(uint count, string[] param)
+        void SetCollectionConditions(string[] param)
         {
             if (long.TryParse(param[0].Split(';')[7], out long cash))
+            {
+                Cash = cash;
+
                 for (int i = 1; i < param.Length - 1; i++)
                 {
                     var co = FixUp(param[i]);
@@ -896,7 +903,7 @@ namespace ShareInvest.OpenAPI
                             if (sPrice > lower && quantity-- > 0)
                                 OnReceiveOrder(new CollectedInformation
                                 {
-                                    RQName = string.Concat(co.Name, ';', sPrice, ';', count++),
+                                    RQName = string.Concat(co.Name, ';', sPrice, ';', Cash),
                                     ScreenNo = string.Concat((int)OrderType.신규매도, GetScreenNumber().ToString("D2"), i % 10),
                                     AccNo = secret.Account,
                                     OrderType = (int)OrderType.신규매도,
@@ -908,11 +915,11 @@ namespace ShareInvest.OpenAPI
                                 });
                             sPrice += GetQuoteUnit(sPrice, stock);
                         }
-                        while (bPrice < upper && bPrice < buy && cash > bPrice * 1.00015)
+                        while (bPrice < upper && bPrice < buy && Cash > bPrice * 1.00015)
                         {
                             OnReceiveOrder(new CollectedInformation
                             {
-                                RQName = string.Concat(co.Name, ';', bPrice, ';', count++),
+                                RQName = string.Concat(co.Name, ';', bPrice, ';', Cash),
                                 ScreenNo = string.Concat((int)OrderType.신규매수, GetScreenNumber().ToString("D2"), i % 10),
                                 AccNo = secret.Account,
                                 OrderType = (int)OrderType.신규매수,
@@ -923,14 +930,18 @@ namespace ShareInvest.OpenAPI
                                 OrgOrderNo = string.Empty
                             });
                             bPrice += GetQuoteUnit(bPrice, stock);
-                            cash -= (long)(bPrice * 1.00015);
+                            Cash -= (long)(bPrice * 1.00015);
                         }
                         SetCodeStorage(co.Code);
                     }
                 }
-            return count;
+            }
         }
         bool DeadLine
+        {
+            get; set;
+        }
+        long Cash
         {
             get; set;
         }
@@ -966,5 +977,6 @@ namespace ShareInvest.OpenAPI
         public event EventHandler<State> SendState;
         public event EventHandler<Trends> SendTrend;
         public event EventHandler<Stocks> SendStocksDatum;
+        public event EventHandler<StocksQuotes> SendStocksQuotes;
     }
 }

@@ -9,19 +9,11 @@ namespace ShareInvest.EventHandler.OpenAPI
         {
             get; private set;
         }
-        public int BuyPrice
-        {
-            get; private set;
-        }
         public int[] Quantity
         {
             get; private set;
         }
         public int[] Number
-        {
-            get; private set;
-        }
-        public string Code
         {
             get; private set;
         }
@@ -48,20 +40,16 @@ namespace ShareInvest.EventHandler.OpenAPI
             Number = new int[number.Length];
 
             for (int i = 0; i < 10; i++)
-            {
-                Price[i] = price[i].Length == 6 ? double.Parse(price[i]) : double.Parse(price[i].Substring(1));
-                Quantity[i] = int.Parse(quantity[i]);
-                Number[i] = int.Parse(number[i]);
-            }
+                if (int.TryParse(number[i], out int qNum) && int.TryParse(quantity[i], out int qQuantity) && double.TryParse(price[i].Length == 6 ? price[i] : price[i].Substring(1), out double qPrice))
+                {
+                    Price[i] = qPrice;
+                    Quantity[i] = qQuantity;
+                    Number[i] = qNum;
+                }
             Time = time;
             SellOrder = sell;
             BuyOrder = buy;
             Total = total;
-        }
-        public Quotes(string code, string param)
-        {
-            Code = code;
-            BuyPrice = int.TryParse(param, out int buy) ? buy : 0;
         }
     }
 }
