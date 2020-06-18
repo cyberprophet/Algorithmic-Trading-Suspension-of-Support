@@ -2,9 +2,9 @@
 
 namespace ShareInvest
 {
-    partial class Strategics : Form
+    partial class API : Form
     {
-        internal Strategics()
+        internal API()
         {
             InitializeComponent();
         }

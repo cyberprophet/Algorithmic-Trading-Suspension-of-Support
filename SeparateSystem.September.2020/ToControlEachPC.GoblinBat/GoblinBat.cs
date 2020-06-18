@@ -3,9 +3,9 @@ using System.Windows.Forms;
 
 namespace ShareInvest
 {
-    public partial class GoblinBat : Form
+    partial class GoblinBat : Form
     {
-        public GoblinBat()
+        internal GoblinBat()
         {
             InitializeComponent();
             WindowState = FormWindowState.Minimized;
