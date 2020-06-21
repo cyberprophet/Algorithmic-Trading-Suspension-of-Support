@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace ShareInvest
@@ -8,9 +9,13 @@ namespace ShareInvest
         [STAThread]
         static void Main()
         {
-            StartProgess();
+            var secrecy = new Secrecy(Verify.KeyDecoder.GetKey());
+            secrecy.PublishTheDebuggedProgram();
+            secrecy.CheckAndUpdateTheProgramVersion();
+            StartProgess(secrecy.GetUserInformation());
+            Process.GetCurrentProcess().Kill();
         }
-        static void StartProgess()
+        static void StartProgess(dynamic param)
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
