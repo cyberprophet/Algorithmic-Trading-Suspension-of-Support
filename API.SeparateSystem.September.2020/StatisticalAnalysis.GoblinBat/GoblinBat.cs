@@ -1,10 +1,10 @@
 ﻿using System.Windows.Forms;
 
-namespace ShareInvest
+namespace ShareInvest.Strategics
 {
-    partial class Strategics : Form
+    public partial class GoblinBat : Form
     {
-        internal Strategics()
+        public GoblinBat()
         {
             InitializeComponent();
         }
