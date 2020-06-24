@@ -6,7 +6,7 @@ using ShareInvest.Strategics.Controls;
 
 namespace ShareInvest.Strategics
 {
-    public partial class GoblinBat : Form
+    public sealed partial class GoblinBat : Form
     {
         public GoblinBat()
         {
