@@ -1,6 +1,7 @@
 ﻿using System.Windows.Forms;
 
 using ShareInvest.Catalog;
+using ShareInvest.Catalog.XingAPI;
 
 namespace ShareInvest.XingAPI
 {
@@ -10,9 +11,23 @@ namespace ShareInvest.XingAPI
         {
             InitializeComponent();
         }
-        public char API
+        public dynamic API
         {
-            get;
+            get; private set;
+        }
+        void ButtonStartProgressClick(object sender, System.EventArgs e)
+        {
+            API = Connect.GetInstance(new Privacy
+            {
+                Identity = textIdentity.Text,
+                Password = textPassword.Text,
+                Certificate = textCertificate.Text
+            },
+            new LoadServer
+            {
+                Server = checkDemo.Checked ? demo : hts,
+                Date = labelMessage.Text
+            });
         }
     }
 }

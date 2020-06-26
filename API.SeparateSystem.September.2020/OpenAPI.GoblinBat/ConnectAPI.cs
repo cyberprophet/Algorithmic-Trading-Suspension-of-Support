@@ -10,9 +10,9 @@ namespace ShareInvest.OpenAPI
         {
             InitializeComponent();
         }
-        public char API
+        public dynamic API
         {
-            get;
+            get; private set;
         }
     }
 }

@@ -4,11 +4,11 @@
     {
         public string Server
         {
-            get; private set;
+            get; set;
         }
         public string Date
         {
-            get; private set;
+            get; set;
         }
     }
 }

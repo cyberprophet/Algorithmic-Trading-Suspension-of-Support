@@ -4,15 +4,15 @@
     {
         public string Identity
         {
-            get; private set;
+            get; set;
         }
         public string Password
         {
-            get; private set;
+            get; set;
         }
         public string Certificate
         {
-            get; private set;
+            get; set;
         }
     }
 }

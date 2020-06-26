@@ -2,7 +2,7 @@
 {
     public interface ISecuritiesAPI
     {
-        char API
+        dynamic API
         {
             get;
         }
