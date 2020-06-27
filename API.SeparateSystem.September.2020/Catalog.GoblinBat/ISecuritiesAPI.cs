@@ -1,4 +1,8 @@
-﻿namespace ShareInvest.Catalog
+﻿using System;
+
+using ShareInvest.EventHandler;
+
+namespace ShareInvest.Catalog
 {
     public interface ISecuritiesAPI
     {
@@ -6,5 +10,6 @@
         {
             get;
         }
+        event EventHandler<SendSecuritiesAPI> Send;
     }
 }
