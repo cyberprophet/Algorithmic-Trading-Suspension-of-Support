@@ -4,6 +4,7 @@ using System.Windows.Forms;
 
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
+using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
 
@@ -11,21 +12,28 @@ namespace ShareInvest.XingAPI
 {
     public sealed partial class ConnectAPI : UserControl, ISecuritiesAPI
     {
-        void ButtonStartProgressClick(object sender, EventArgs e) => BeginInvoke(new Action(() =>
+        void ButtonStartProgressClick(object sender, EventArgs e)
         {
-            API = Connect.GetInstance(new Privacy
-            {
-                Identity = textIdentity.Text,
-                Password = textPassword.Text,
-                Certificate = textCertificate.Text
-            },
-            new LoadServer
-            {
-                Server = checkDemo.Checked ? demo : hts,
-                Date = labelMessage.Text
-            });
-            Send?.Invoke(this, new SendSecuritiesAPI(FormWindowState.Minimized));
-        }));
+            if (textCertificate.Text.Length > 9 && textIdentity.Text.Length < 9 && textPassword.Text.Length < 9)
+                BeginInvoke(new Action(() =>
+                {
+                    API = Connect.GetInstance(new Privacy
+                    {
+                        Identity = textIdentity.Text,
+                        Password = textPassword.Text,
+                        Certificate = textCertificate.Text
+                    },
+                    new LoadServer
+                    {
+                        Server = checkDemo.Checked ? demo : hts,
+                        Date = labelMessage.Text
+                    });
+                    if (API is Connect api)
+                        Send?.Invoke(this, new SendSecuritiesAPI(FormWindowState.Minimized, new Accounts(api.Accounts)));
+                }));
+            else
+                buttonStartProgress.Text = error;
+        }
         void OnReceiveControls(object sender, EventArgs e)
         {
             if (sender is TextBox text && text.ForeColor.Equals(Color.DarkGray))
@@ -38,6 +46,9 @@ namespace ShareInvest.XingAPI
 
                 if (e is MouseEventArgs || text.UseSystemPasswordChar)
                     text.Text = string.Empty;
+
+                text.MouseDown -= OnReceiveControls;
+                text.PreviewKeyDown -= OnReceiveControls;
             }
         }
         void FindControlRecursive(Control control)

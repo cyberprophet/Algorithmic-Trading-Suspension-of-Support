@@ -9,6 +9,14 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public SendSecuritiesAPI(FormWindowState state) => Convey = state;
+        public Control Accounts
+        {
+            get; private set;
+        }
+        public SendSecuritiesAPI(FormWindowState state, Control accounts)
+        {
+            Convey = state;
+            Accounts = accounts;
+        }
     }
 }

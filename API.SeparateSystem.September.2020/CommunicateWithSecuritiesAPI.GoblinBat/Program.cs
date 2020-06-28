@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace ShareInvest
@@ -11,6 +12,7 @@ namespace ShareInvest
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new SecuritiesAPI(new Secrecy().GetAPI((char)SecuritiesCOM.XingAPI)));
+            Process.GetCurrentProcess().Kill();
         }
     }
 }

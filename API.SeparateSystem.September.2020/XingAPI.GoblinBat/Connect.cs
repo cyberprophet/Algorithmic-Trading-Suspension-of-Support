@@ -22,9 +22,10 @@ namespace ShareInvest.XingAPI
         {
             get; private set;
         }
-        void Dispose()
+        internal void Dispose()
         {
-
+            DisconnectServer();
+            API = null;
         }
         void OnEventConnect(string szCode, string szMsg)
         {
@@ -49,10 +50,7 @@ namespace ShareInvest.XingAPI
                         return;
             }
             else
-            {
-                DisconnectServer();
                 Dispose();
-            }
         }
         static Connect API
         {

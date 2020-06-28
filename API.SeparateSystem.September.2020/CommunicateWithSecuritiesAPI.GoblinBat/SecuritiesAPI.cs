@@ -28,6 +28,7 @@ namespace ShareInvest
             BackColor = Color.FromArgb(0x79, 0x85, 0x82);
             FormBorderStyle = FormBorderStyle.None;
             CenterToScreen();
+            strategy.Text = balance;
             com.Send += OnReceiveSecuritiesAPI;
         }
         void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e)
@@ -36,6 +37,16 @@ namespace ShareInvest
             {
                 WindowState = state;
                 com.Send -= OnReceiveSecuritiesAPI;
+                ((Control)com).Hide();
+                Controls.Add(e.Accounts);
+                e.Accounts.Dock = DockStyle.Fill;
+                e.Accounts.Show();
+                Size = new Size(0x13B, 0x7D);
+                Visible = true;
+                ShowIcon = true;
+                notifyIcon.Visible = false;
+                WindowState = FormWindowState.Normal;
+                CenterToScreen();
             }
         }
         void GoblinBatResize(object sender, EventArgs e)
@@ -49,18 +60,15 @@ namespace ShareInvest
         }
         void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
-            var result = MessageBox.Show(rExit, notifyIcon.Text, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning);
-
-            if (result.Equals(DialogResult.Cancel))
+            switch (MessageBox.Show(rExit, notifyIcon.Text, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning))
             {
-                e.Cancel = true;
-                WindowState = FormWindowState.Minimized;
+                case DialogResult.Cancel:
+                    e.Cancel = true;
+                    WindowState = FormWindowState.Minimized;
+                    return;
 
-                return;
-            }
-            if (result.Equals(DialogResult.Yes))
-            {
-
+                case DialogResult.Yes:
+                    break;
             }
             timer.Stop();
             strip.ItemClicked -= OnItemClick;
