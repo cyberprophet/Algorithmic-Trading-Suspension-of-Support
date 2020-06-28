@@ -14,5 +14,13 @@
         {
             get; set;
         }
+        public string Account
+        {
+            get; set;
+        }
+        public string AccountPassword
+        {
+            get; set;
+        }
     }
 }

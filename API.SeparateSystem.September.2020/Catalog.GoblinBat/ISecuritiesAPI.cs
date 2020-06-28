@@ -12,4 +12,9 @@ namespace ShareInvest.Catalog
         }
         event EventHandler<SendSecuritiesAPI> Send;
     }
+    public enum SecuritiesCOM
+    {
+        OpenAPI = 'O',
+        XingAPI = 'X'
+    }
 }

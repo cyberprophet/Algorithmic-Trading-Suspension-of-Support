@@ -1,9 +1,15 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 
 namespace ShareInvest.Controls
 {
     public partial class Accounts : UserControl
     {
+        void ButtonStartProgressClick(object sender, EventArgs e)
+        {
+            if (textPassword.TextLength == 4 && comboAccounts.SelectedItem is string str)
+                Send?.Invoke(this, new EventHandler.SendSecuritiesAPI(this, str, textPassword.Text));
+        }
         public Accounts(string[] accounts)
         {
             InitializeComponent();
@@ -19,5 +25,6 @@ namespace ShareInvest.Controls
             foreach (var str in accounts.Split(';'))
                 comboAccounts.Items.Add(str.Insert(4, "-").Insert(9, "-"));
         }
+        public event EventHandler<EventHandler.SendSecuritiesAPI> Send;
     }
 }

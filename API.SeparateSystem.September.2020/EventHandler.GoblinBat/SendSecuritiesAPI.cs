@@ -18,5 +18,11 @@ namespace ShareInvest.EventHandler
             Convey = state;
             Accounts = accounts;
         }
+        public SendSecuritiesAPI(Control control, string account, string password)
+        {
+            Accounts = control;
+            Convey = string.Concat(account.Replace("-", string.Empty), ";", password);
+        }
+        public SendSecuritiesAPI(string message) => Convey = message;
     }
 }

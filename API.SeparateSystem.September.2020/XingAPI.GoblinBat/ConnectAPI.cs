@@ -7,6 +7,7 @@ using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
+using ShareInvest.XingAPI.Catalog;
 
 namespace ShareInvest.XingAPI
 {
@@ -63,6 +64,32 @@ namespace ShareInvest.XingAPI
                 else if (sub.Controls.Count > 0)
                     FindControlRecursive(sub);
         }
+        public AccountInformation SetPrivacy(Privacy privacy)
+        {
+            if (checkPrivacy.Checked)
+                new Models.Privacy
+                {
+                    SecuritiesAPI = (char)SecuritiesCOM.XingAPI,
+                    Identity = textIdentity.Text,
+                    Password = textPassword.Text,
+                    Certificate = textCertificate.Text,
+                    Account = privacy.Account,
+                    AccountPassword = privacy.AccountPassword,
+                    Server = checkDemo.Checked,
+                    Date = labelMessage.Text
+                };
+            var ai = new AccountInformation
+            {
+                Identity = textIdentity.Text,
+                Account = privacy.Account,
+                Server = checkDemo.Checked
+            };
+            if (API is Connect api)
+                ai.Name = api.SetAccountName(privacy.Account, privacy.AccountPassword).Item2;
+
+            return ai;
+        }
+        public void SetForeColor(Color color) => labelXingAPI.ForeColor = color;
         public dynamic API
         {
             get; private set;
@@ -74,6 +101,7 @@ namespace ShareInvest.XingAPI
             foreach (Control control in Controls)
                 FindControlRecursive(control);
         }
+        public readonly IQuerys<SendSecuritiesAPI>[] querys = (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
         public event EventHandler<SendSecuritiesAPI> Send;
     }
 }

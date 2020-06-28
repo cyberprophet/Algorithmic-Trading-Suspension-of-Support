@@ -9,18 +9,28 @@ namespace ShareInvest.XingAPI
 {
     public class Connect : XASessionClass
     {
-        internal (string, string, string) SetAccountName(string account) => (GetAccountName(account), GetAcctDetailName(account), GetAcctNickname(account));
+        internal static Connect GetInstance() => API;
         internal static Connect GetInstance(Privacy privacy, LoadServer load)
         {
             if (API == null)
-            {
                 API = new Connect(privacy, load);
-            }
+
             return API;
+        }
+        internal (string, string, string) SetAccountName(string account, string password)
+        {
+            Secrecy.Account = account;
+            Secrecy.Password = password;
+
+            return (GetAccountName(account), GetAcctDetailName(account), GetAcctNickname(account));
         }
         internal string[] Accounts
         {
             get; private set;
+        }
+        internal bool OnReceiveBalance
+        {
+            get; set;
         }
         internal void Dispose()
         {
