@@ -23,6 +23,11 @@ namespace ShareInvest.EventHandler
             Accounts = control;
             Convey = string.Concat(account.Replace("-", string.Empty), ";", password);
         }
+        public SendSecuritiesAPI(string sDeposit, string sAvailable)
+        {
+            if (long.TryParse(sDeposit, out long deposit) && long.TryParse(sAvailable, out long available))
+                Convey = new Tuple<long, long>(deposit, available);
+        }
         public SendSecuritiesAPI(string message) => Convey = message;
     }
 }

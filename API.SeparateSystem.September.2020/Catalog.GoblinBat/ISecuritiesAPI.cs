@@ -1,6 +1,5 @@
 ﻿using System;
-
-using ShareInvest.EventHandler;
+using System.Drawing;
 
 namespace ShareInvest.Catalog
 {
@@ -10,7 +9,9 @@ namespace ShareInvest.Catalog
         {
             get;
         }
-        event EventHandler<SendSecuritiesAPI> Send;
+        void SetForeColor(Color color);
+        AccountInformation SetPrivacy(Privacy privacy);
+        event EventHandler<EventHandler.SendSecuritiesAPI> Send;
     }
     public enum SecuritiesCOM
     {

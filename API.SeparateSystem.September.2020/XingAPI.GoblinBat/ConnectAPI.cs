@@ -66,18 +66,6 @@ namespace ShareInvest.XingAPI
         }
         public AccountInformation SetPrivacy(Privacy privacy)
         {
-            if (checkPrivacy.Checked)
-                new Models.Privacy
-                {
-                    SecuritiesAPI = (char)SecuritiesCOM.XingAPI,
-                    Identity = textIdentity.Text,
-                    Password = textPassword.Text,
-                    Certificate = textCertificate.Text,
-                    Account = privacy.Account,
-                    AccountPassword = privacy.AccountPassword,
-                    Server = checkDemo.Checked,
-                    Date = labelMessage.Text
-                };
             var ai = new AccountInformation
             {
                 Identity = textIdentity.Text,
@@ -85,8 +73,25 @@ namespace ShareInvest.XingAPI
                 Server = checkDemo.Checked
             };
             if (API is Connect api)
-                ai.Name = api.SetAccountName(privacy.Account, privacy.AccountPassword).Item2;
+            {
+                var name = api.SetAccountName(privacy.Account, privacy.AccountPassword);
+                ai.Name = name.Item2;
+                ai.Nick = name.Item3;
 
+                if (checkPrivacy.Checked)
+                    new Models.Privacy
+                    {
+                        SecuritiesAPI = (char)SecuritiesCOM.XingAPI,
+                        Identity = textIdentity.Text,
+                        Password = textPassword.Text,
+                        Certificate = textCertificate.Text,
+                        Account = privacy.Account,
+                        AccountPassword = privacy.AccountPassword,
+                        Server = checkDemo.Checked,
+                        Date = labelMessage.Text,
+                        IP = api.GetClientIP()
+                    };
+            }
             return ai;
         }
         public void SetForeColor(Color color) => labelXingAPI.ForeColor = color;

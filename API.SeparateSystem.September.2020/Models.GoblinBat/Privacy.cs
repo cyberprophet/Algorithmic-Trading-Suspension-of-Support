@@ -5,6 +5,11 @@ namespace ShareInvest.Models
 {
     public struct Privacy
     {
+        [Key, StringLength(15)]
+        public string IP
+        {
+            get; set;
+        }
         [Required, StringLength(1)]
         public char SecuritiesAPI
         {
@@ -25,7 +30,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Required, StringLength(11), Column(Order = 3)]
+        [StringLength(11), Column(Order = 3)]
         public string Account
         {
             get; set;
@@ -45,5 +50,5 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-    }    
+    }
 }

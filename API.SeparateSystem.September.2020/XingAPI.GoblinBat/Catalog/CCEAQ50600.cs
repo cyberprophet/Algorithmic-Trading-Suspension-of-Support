@@ -32,24 +32,24 @@ namespace ShareInvest.XingAPI.Catalog
                         temp[i] = temp[i].Append(GetFieldData(param.Block, param.Field, i)).Append(';');
                     }
             }
-            /*
+            
             foreach (var sb in temp)
                 if (sb != null)
                 {
                     var param = sb.ToString().Split(';');
-                    str += string.Concat(param[0], ';', API.CodeList[param[0]], ';', param[2], ';', param[4], ';', param[5], ';', param[6], ';', param[8], '*');
+                   // str += string.Concat(param[0], ';', API.CodeList[param[0]], ';', param[2], ';', param[4], ';', param[5], ';', param[6], ';', param[8], '*');
 
                     if (param[0].Length == 8 && param[0].Substring(0, 3).Equals("101"))
                     {
-                        API.Quantity = param[2].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
-                        API.AvgPurchase = param[5].Substring(0, 6);
+                 //       API.Quantity = param[2].Equals("1") ? -int.Parse(param[4]) : int.Parse(param[4]);
+                 //       API.AvgPurchase = param[5].Substring(0, 6);
                     }
                 }
-                else if (API.Quantity == 0)
-                    API.AvgPurchase = "000.00";
+               // else if (API.Quantity == 0)
+              //      API.AvgPurchase = "000.00";
 
-            Send?.Invoke(this, new Balance(str.Split('*')));
-            */
+            //Send?.Invoke(this, new Balance(str.Split('*')));
+            
         }
         public void QueryExcute()
         {

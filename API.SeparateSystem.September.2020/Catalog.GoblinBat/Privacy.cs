@@ -1,4 +1,4 @@
-﻿namespace ShareInvest.Catalog.XingAPI
+﻿namespace ShareInvest.Catalog
 {
     public struct Privacy
     {

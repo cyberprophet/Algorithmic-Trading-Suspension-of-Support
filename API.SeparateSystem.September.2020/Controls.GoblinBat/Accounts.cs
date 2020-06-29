@@ -20,10 +20,12 @@ namespace ShareInvest.Controls
         public Accounts(string accounts)
         {
             InitializeComponent();
+            textPassword.Text = open;
             textPassword.ReadOnly = true;
 
             foreach (var str in accounts.Split(';'))
-                comboAccounts.Items.Add(str.Insert(4, "-").Insert(9, "-"));
+                if (str.Length > 0)
+                    comboAccounts.Items.Add(str.Insert(4, "-").Insert(9, "-"));
         }
         public event EventHandler<EventHandler.SendSecuritiesAPI> Send;
     }

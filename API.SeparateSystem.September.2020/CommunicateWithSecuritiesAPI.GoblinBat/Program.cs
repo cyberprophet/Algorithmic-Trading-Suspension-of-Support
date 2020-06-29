@@ -11,7 +11,7 @@ namespace ShareInvest
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new SecuritiesAPI(new Secrecy().GetAPI((char)SecuritiesCOM.XingAPI)));
+            Application.Run(new SecuritiesAPI(new Secrecy().GetAPI((char)SecuritiesCOM.OpenAPI)));
             Process.GetCurrentProcess().Kill();
         }
     }

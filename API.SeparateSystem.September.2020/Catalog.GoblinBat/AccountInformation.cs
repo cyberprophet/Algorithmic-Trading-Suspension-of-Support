@@ -14,6 +14,10 @@
         {
             get; set;
         }
+        public string Nick
+        {
+            get; set;
+        }
         public bool Server
         {
             get; set;
