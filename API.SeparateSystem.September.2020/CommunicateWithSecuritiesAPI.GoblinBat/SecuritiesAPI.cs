@@ -94,8 +94,14 @@ namespace ShareInvest
                 {
                     Balance.Hide();
 
-                    if (com is XingAPI.ConnectAPI api)
-                        foreach (var ctor in api.querys)
+                    if (com is OpenAPI.ConnectAPI openAPI)
+                    {
+                        openAPI.OnConnectErrorMessage.Send -= OnReceiveSecuritiesAPI;
+                        openAPI.Send -= OnReceiveSecuritiesAPI;
+                        openAPI.InputValueRqData(false, opw00005).Send -= OnReceiveSecuritiesAPI;
+                    }
+                    else if (com is XingAPI.ConnectAPI xing)
+                        foreach (var ctor in xing.querys)
                             ctor.Send -= OnReceiveSecuritiesAPI;
                 }
             }
@@ -139,12 +145,18 @@ namespace ShareInvest
                     Balance.Show();
                     Size = new Size(0x3B8, 0x63 + 0x28);
 
-                    if (com is XingAPI.ConnectAPI api)
-                        foreach (var ctor in api.querys)
+                    if (com is XingAPI.ConnectAPI xingAPI)
+                        foreach (var ctor in xingAPI.querys)
                         {
                             ctor.Send += OnReceiveSecuritiesAPI;
                             ctor.QueryExcute();
                         }
+                    else if (com is OpenAPI.ConnectAPI openAPI)
+                    {
+                        openAPI.OnConnectErrorMessage.Send += OnReceiveSecuritiesAPI;
+                        openAPI.Send += OnReceiveSecuritiesAPI;
+                        openAPI.InputValueRqData(true, opw00005).Send += OnReceiveSecuritiesAPI;
+                    }
                 }
                 Visible = true;
                 ShowIcon = true;
