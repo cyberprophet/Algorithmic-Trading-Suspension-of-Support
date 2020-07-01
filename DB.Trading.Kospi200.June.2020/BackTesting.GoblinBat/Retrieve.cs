@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -17,7 +16,6 @@ namespace ShareInvest.Strategy
     {
         public Retrieve(string key, char initial) : base(key)
         {
-            random = new Random();
             secret = new Secret();
             Initial = initial;
         }
@@ -32,7 +30,7 @@ namespace ShareInvest.Strategy
             var recommend = GetBestStrategyRecommend(Information.Statistics, game);
             var rank = secret.GetRank(recommend.Item3);
 
-            if (recommend.Item5 == null || TimerBox.Show(secret.GetMessage(recommend.Item4, recommend.Item1, recommend.Item4 / (double)recommend.Item1), rank, MessageBoxButtons.YesNo, MessageBoxIcon.Question, (recommend.Item2.MarginRate + 0.5713) * recommend.Item1 > recommend.Item4 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 13975U).Equals(DialogResult.Yes))
+            if (recommend.Item5 == null || TimerBox.Show(secret.GetMessage(recommend.Item4, recommend.Item1, recommend.Item4 / (double)recommend.Item1), rank, MessageBoxButtons.YesNo, MessageBoxIcon.Question, 0 > recommend.Item4 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 13975U).Equals(DialogResult.Yes))
                 game = recommend.Item2;
 
             else
@@ -90,11 +88,16 @@ namespace ShareInvest.Strategy
                 Chart.Clear();
                 Chart = null;
             }
+            if (Charts != null)
+                Charts = null;
+
             if (Quotes != null)
             {
                 Quotes.Clear();
                 Quotes = null;
             }
+            if (QuotesEnumerable != null)
+                QuotesEnumerable = null;
         }
         public bool GetDuplicateResults(Models.Simulations game)
         {
@@ -452,19 +455,9 @@ namespace ShareInvest.Strategy
 
                 if (Chart == null)
                     Chart = GetChart(Code, new Queue<Chart>(1048576), new System.IO.DirectoryInfo(Path));
-
-                if (Quotes == null)
-                    Quotes = GetQuotes(Code, new Queue<Quotes>(1048576));
-
-                if (QuotesEnumerable == null)
-                    QuotesEnumerable = GetQuotes(new Dictionary<long, Queue<Quotes>>(1048576), Code);
-
-                if (Code == null || Charts == null || Chart == null || Quotes == null || QuotesEnumerable == null)
-                    Thread.Sleep(random.Next(0x2BF20));
             }
-            while (Code == null || Charts == null || Chart == null || Quotes == null || QuotesEnumerable == null);
+            while (Code == null || Charts == null || Chart == null);
         }
-        readonly Random random;
         readonly Secret secret;
         const string format = "yyMMddHHmmss";
     }

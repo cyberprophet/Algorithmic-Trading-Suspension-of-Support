@@ -42,7 +42,7 @@ namespace ShareInvest
                 case (char)83:
                     if (Statistical == null)
                     {
-                        Statistical = initial.Equals((char)83) ? new StatisticalControl(Strategy.Retrieve.Code, secret.rate, secret.commission) : new StatisticalControl(Strategy.Retrieve.Code, secret.strategy, secret.rate, secret.commission);
+                        Statistical = initial.Equals((char)Port.Trading) ? new StatisticalControl(Strategy.Retrieve.Code, secret.strategy, secret.rate, secret.commission) : new StatisticalControl(Strategy.Retrieve.Code, secret.rate, secret.commission);
                         panel.Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
                         Statistical.Show();
@@ -276,7 +276,7 @@ namespace ShareInvest
                     return;
 
                 case tuple:
-                    new Strategy.OpenAPI.Consecutive(key, ((Tuple<string, string>)e.NotifyIcon).Item1.Split(';'));
+                    BeginInvoke(new Action(() => new Strategy.OpenAPI.Consecutive(key, ((Tuple<string, string>)e.NotifyIcon).Item1.Split(';'))));
                     notifyIcon.Text = ((Tuple<string, string>)e.NotifyIcon).Item2.Replace(';', '\n');
                     return;
 
@@ -405,6 +405,9 @@ namespace ShareInvest
                             OnEventConnect();
                             OnClickMinimized = quo;
                             Application.DoEvents();
+
+                            if (secret.GetIsSever(key))
+                                retrieve.SetInitializeTheChart();
                         }));
                     else
                     {

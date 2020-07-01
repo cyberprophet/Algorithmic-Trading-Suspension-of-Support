@@ -37,36 +37,46 @@ namespace ShareInvest.GoblinBatContext
                 var file = string.Empty;
                 var info = new Dictionary<DateTime, string>(32);
                 var temp = new Dictionary<string, long>(32);
-                var contents = new Queue<string>(128);
+                var contents = new Dictionary<string, string>(32);
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var str in db.Virtual.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking().OrderBy(o => o.Date))
+                    foreach (var str in db.Virtual.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking())
                     {
                         temp[str.Date] = str.Cumulative + str.Unrealized;
-                        contents.Enqueue(string.Concat(str.Date, ',', str.Unrealized, ',', str.Revenue, ',', str.Fees, ',', str.Cumulative, ',', str.Statistic));
+                        contents[str.Date] = string.Concat(',', str.Unrealized, ',', str.Revenue, ',', str.Fees, ',', str.Cumulative, ',', str.Statistic);
 
                         if (string.IsNullOrEmpty(file))
                             file = string.Concat(str.BaseShort, '-', str.BaseLong, '-', str.MonoTime, '-', str.MonoShort, '-', str.MonoLong, '-', str.Strategy, '-', str.Primary, csv);
                     }
                 if (string.IsNullOrEmpty(file) == false && contents.Count > 0)
                 {
-                    new ExceptionMessage(file, contents);
+                    var queue = new Queue<string>(32);
+
+                    foreach (var kv in contents.OrderBy(o => o.Key))
+                        queue.Enqueue(string.Concat(kv.Key, kv.Value));
+
+                    new ExceptionMessage(file, queue);
                     contents.Clear();
                 }
+                var dicPrice = new Dictionary<long, double>(128);
+                var dicShort = new Dictionary<string, double>(128);
+                var dicLong = new Dictionary<string, double>(128);
+                using (var db = new GoblinBatDbContext(key))
+                    foreach (var dt in db.Futures.Where(o => o.Date % 0x3B9ACA00 == 0x9357BA0 && o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5))).AsNoTracking().Select(o => new { o.Date, o.Price }))
+                        dicPrice[dt.Date / 0x3B9ACA00] = dt.Price;
+
+                using (var db = new GoblinBatDbContext(key))
+                    foreach (var chart in db.Charts.Where(o => (o.Base == game.BaseShort || o.Base == game.BaseLong) && o.Code.Equals(code) && o.Time == 405).AsNoTracking().Select(o => new { o.Date, o.Base, o.Value }))
+                    {
+                        if (chart.Base == game.BaseShort)
+                            dicShort[chart.Date] = chart.Value;
+
+                        if (chart.Base == game.BaseLong)
+                            dicLong[chart.Date] = chart.Value;
+                    }
                 foreach (var kv in temp.OrderBy(o => o.Key))
-                    if (DateTime.TryParseExact(string.Concat(kv.Key, "154500"), date, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime infoDate) && long.TryParse(string.Concat(kv.Key, "154500000"), out long find))
-                        using (var db = new GoblinBatDbContext(key))
-                        {
-                            var recent = db.Futures.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date == find).AsNoTracking();
-                            var value = db.Charts.Where(o => o.Code.Equals(code) && o.Date.Equals(kv.Key) && o.Time == 405).AsNoTracking();
-                            var bs = value.First(o => o.Base == game.BaseShort).Value;
-                            var bl = value.First(o => o.Base == game.BaseLong).Value;
+                    if (dicShort.TryGetValue(kv.Key, out double bs) && dicLong.TryGetValue(kv.Key, out double bl) && long.TryParse(kv.Key, out long dp) && dicPrice.TryGetValue(dp, out double price) && DateTime.TryParseExact(string.Concat(kv.Key, "154500"), date, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime infoDate))
+                        info[infoDate] = string.Concat(kv.Value, ';', price, ';', bs, ';', bl);
 
-                            if (recent.Any())
-                                info[infoDate] = string.Concat(kv.Value, ';', recent.FirstOrDefault().Price, ';', bs, ';', bl);
-
-                            else
-                                info[infoDate] = string.Concat(kv.Value, ';', db.Datums.Where(o => o.Code.Contains(code.Substring(0, 3)) && o.Code.Contains(code.Substring(5)) && o.Date.Equals(find.ToString())).AsNoTracking().FirstOrDefault().Price, ';', bs, ';', bl);
-                        }
                 return info;
             }
             catch (Exception ex)
@@ -485,24 +495,15 @@ namespace ShareInvest.GoblinBatContext
         }
         protected bool GetDuplicateResults(Simulations game, string date)
         {
-            using (var db = new GoblinBatDbContext(key))
-                try
-                {
-                    var check = db.Virtual.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking();
-
-                    if (check.Any())
-                    {
-                        if (check.Any(o => o.Date.Equals(date)))
-                            return true;
-
-                        foreach (var cs in check.OrderByDescending(o => o.Date).Select(o => new { o.Cumulative, o.Statistic }).AsNoTracking())
-                            return cs.Statistic < 0 || cs.Cumulative < 0;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(ex.StackTrace);
-                }
+            try
+            {
+                using (var db = new GoblinBatDbContext(key))
+                    return db.Virtual.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking().Any(o => o.Date.Equals(date));
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.TargetSite.Name, game.Strategy);
+            }
             return false;
         }
         void SetQuotesFile(Queue<Quotes> quotes)

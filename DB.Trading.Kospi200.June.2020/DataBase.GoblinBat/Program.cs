@@ -58,7 +58,7 @@ namespace ShareInvest
                                 retrieve.GetRecentDate(DateTime.Now);
                                 retrieve.GetInitialzeTheCode();
                                 info.GetUserIdentity(initial);
-                                catalog = count == 0.75 ? info.GetStatistics(secret.GetExternal(str), secret.rate, secret.commission) : info.GetStatistics(count);
+                                catalog = info.GetStatistics(secret.GetExternal(str), secret.rate, secret.commission);
 
                                 if (initial.Equals((char)Port.Collecting) == false)
                                 {
@@ -73,9 +73,7 @@ namespace ShareInvest
                                 {
                                     count = 0.25;
                                     info.SetInsertBaseStrategy(secret.strategy, secret.rate, secret.commission);
-
-                                    foreach (var best in info.GetBestStrategy())
-                                        catalog.Push(best);
+                                    catalog.Clear();
                                 }
                                 var po = new ParallelOptions
                                 {
@@ -84,17 +82,18 @@ namespace ShareInvest
                                 };
                                 try
                                 {
-                                    Parallel.ForEach(catalog, po, new Action<Models.Simulations>((number) =>
-                                    {
-                                        if (cts.IsCancellationRequested)
-                                            po.CancellationToken.ThrowIfCancellationRequested();
-
-                                        if (retrieve.GetDuplicateResults(number) == false)
+                                    if (catalog.Count > 0)
+                                        Parallel.ForEach(catalog, po, new Action<Models.Simulations>((number) =>
                                         {
-                                            new BackTesting(initial, number, str);
-                                            Count++;
-                                        }
-                                    }));
+                                            if (cts.IsCancellationRequested)
+                                                po.CancellationToken.ThrowIfCancellationRequested();
+
+                                            if (retrieve.GetDuplicateResults(number) == false)
+                                            {
+                                                new BackTesting(initial, number, str);
+                                                Count++;
+                                            }
+                                        }));
                                 }
                                 catch (OperationCanceledException ex)
                                 {
@@ -103,24 +102,6 @@ namespace ShareInvest
                                 }
                                 catch (Exception ex)
                                 {
-                                    if (Array.Exists(Information.RemainingDay, o => o.Equals(DateTime.Now.ToString(format))) == false && secret.GetIsSever(str) == false && (DateTime.Now.Hour > 4 && DateTime.Now.Hour < 9 || DateTime.Now.Hour > 15 && DateTime.Now.Hour < 18))
-                                        Process.Start("shutdown.exe", "-r");
-
-                                    else
-                                    {
-                                        new ExceptionMessage(ex.TargetSite.Name);
-
-                                        while (catalog.Count > 0)
-                                        {
-                                            var pop = catalog.Pop();
-
-                                            if (retrieve.GetDuplicateResults(pop) == false)
-                                            {
-                                                new BackTesting(initial, pop, str);
-                                                Count++;
-                                            }
-                                        }
-                                    }
                                     cts.Dispose();
                                     new ExceptionMessage(ex.StackTrace, ex.TargetSite.Name);
                                 }
@@ -137,7 +118,7 @@ namespace ShareInvest
                         }
                     if (initial.Equals((char)126) == false)
                     {
-                        if (initial.Equals((char)Port.Collecting) == false && cts.IsCancellationRequested == false && DateTime.Now.Hour == 8)
+                        if (cts.IsCancellationRequested == false && DateTime.Now.Hour == 8)
                             try
                             {
                                 cts.Cancel();
@@ -179,6 +160,5 @@ namespace ShareInvest
         {
             get; set;
         }
-        const string format = "yyMMdd";
     }
 }

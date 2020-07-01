@@ -359,7 +359,7 @@ namespace ShareInvest.OpenAPI
                     {
                         DeadLine = false;
 
-                        if (Temporary != null && CodeList.Count == 1)
+                        if (Temporary != null)
                         {
                             Temporary.SetStorage(Code);
                             SendCount?.Invoke(this, new NotifyIconText(-106));
@@ -372,11 +372,8 @@ namespace ShareInvest.OpenAPI
                         DeadLine = true;
                         Delay.Milliseconds = 205;
 
-                        if (SendStocksDatum != null)
-                        {
+                        if (Temporary == null)
                             OnReceiveBalance = true;
-                            SetScreenNumber(0x3E8, 0x834);
-                        }
                     }
                     break;
 

@@ -614,11 +614,11 @@ namespace ShareInvest.GoblinBatContext
             uint count = 1;
             int temp = int.MinValue, eTemp = int.MinValue;
             var exist = new Simulations();
+            var identify = new Secret().GetIdentify(key);
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
                     var max = db.Virtual.Max(o => o.Date);
-                    var identify = new Secret().GetIdentify(key);
                     var identity = db.Identifies.Any(o => o.Identity.Equals(identify)) ? db.Identifies.Where(o => o.Identity.Equals(identify)).AsNoTracking().OrderByDescending(o => o.Date).Select(o => new
                     {
                         o.Assets,
@@ -849,6 +849,46 @@ namespace ShareInvest.GoblinBatContext
                 catch (Exception ex)
                 {
                     new ExceptionMessage(ex.StackTrace);
+                    var existent = db.Identifies.Where(o => o.Identity.Equals(identify)).AsNoTracking().OrderByDescending(o => o.Date).Take(1).First();
+                    game = new Simulations
+                    {
+                        Assets = existent.Assets,
+                        Code = existent.Code,
+                        Commission = existent.Commission,
+                        MarginRate = marginRate,
+                        Strategy = existent.Strategy,
+                        RollOver = existent.RollOver.Equals(CheckState.Checked),
+                        BaseTime = 1440,
+                        BaseShort = existent.BaseShort,
+                        BaseLong = existent.BaseLong,
+                        NonaTime = existent.NonaTime,
+                        NonaShort = existent.NonaShort,
+                        NonaLong = existent.NonaLong,
+                        OctaTime = existent.OctaTime,
+                        OctaShort = existent.OctaShort,
+                        OctaLong = existent.OctaLong,
+                        HeptaTime = existent.HeptaTime,
+                        HeptaShort = existent.HeptaShort,
+                        HeptaLong = existent.HeptaLong,
+                        HexaTime = existent.HexaTime,
+                        HexaShort = existent.HexaShort,
+                        HexaLong = existent.HexaLong,
+                        PentaTime = existent.PentaTime,
+                        PentaShort = existent.PentaShort,
+                        PentaLong = existent.PentaLong,
+                        QuadTime = existent.QuadTime,
+                        QuadShort = existent.QuadShort,
+                        QuadLong = existent.QuadLong,
+                        TriTime = existent.TriTime,
+                        TriShort = existent.TriShort,
+                        TriLong = existent.TriLong,
+                        DuoTime = existent.DuoTime,
+                        DuoShort = existent.DuoShort,
+                        DuoLong = existent.DuoLong,
+                        MonoTime = existent.MonoTime,
+                        MonoShort = existent.MonoShort,
+                        MonoLong = existent.MonoLong
+                    };
                 }
             return (temp, game, count, eTemp == int.MinValue ? 0 : eTemp, exist ?? null);
         }

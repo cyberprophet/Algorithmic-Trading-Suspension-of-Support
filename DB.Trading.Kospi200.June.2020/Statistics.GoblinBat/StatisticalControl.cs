@@ -261,7 +261,7 @@ namespace ShareInvest.GoblinBatControls
                     {
                         var time = i > 0 ? string.Concat(numeric, i).FindByName<NumericUpDown>(this).Value : 1440;
 
-                        if (strategy == null && i > 0 && i < 9 && time == 0)
+                        if (strategy == null && i > 0 && i < 9)
                         {
                             for (int j = 1; j < 9; j++)
                             {
