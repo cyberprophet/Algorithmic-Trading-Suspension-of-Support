@@ -19,8 +19,6 @@ namespace ShareInvest.OpenAPI
         {
             axAPI.OnEventConnect += OnEventConnect;
             axAPI.OnReceiveMsg += OnReceiveMsg;
-            axAPI.OnReceiveRealData += OnReceiveRealData;
-            axAPI.OnReceiveChejanData += OnReceiveChejanData;
             API = Connect.GetInstance(axAPI);
         }));
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e) => BeginInvoke(new Action(() =>
@@ -33,24 +31,23 @@ namespace ShareInvest.OpenAPI
 
             }
         }));
-        void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e) => BeginInvoke(new Action(() =>
+        void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
         {
             if (Connect.Chejan.TryGetValue(e.sGubun, out Chejan chejan))
                 chejan.OnReceiveChejanData(e);
-        }));
-        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => BeginInvoke(new Action(() => Connect.Real.First(o => o.GetType().Name.Equals(e.sRealType)).OnReceiveRealData(e)));
+        }
+        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => GetRequestTR(string.Concat(e.sTrCode.Substring(0, 1).ToUpper(), e.sTrCode.Substring(1)))?.OnReceiveTrData(e);
+        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => Connect.Real.FirstOrDefault(o => o.GetType().Name.Replace('_', ' ').Equals(e.sRealType))?.OnReceiveRealData(e);
         void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.Invoke(this, new SendSecuritiesAPI(e.sMsg.Substring(9)));
+        TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name));
         public AccountInformation SetPrivacy(Privacy privacy)
         {
-            var tr = new Opw00005
+            if (Connect.TR.Add(new OPT50010 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opt50001 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opw00005 { Value = string.Concat(privacy.Account, password), PrevNext = 0, API = axAPI }))
             {
-                Value = string.Concat(privacy.Account, password),
-                PrevNext = 0,
-                API = axAPI
-            };
-            if (Connect.TR.Add(tr))
-                axAPI.OnReceiveTrData += tr.OnReceiveTrData;
-
+                axAPI.OnReceiveTrData += OnReceiveTrData;
+                axAPI.OnReceiveRealData += OnReceiveRealData;
+                axAPI.OnReceiveChejanData += OnReceiveChejanData;
+            }
             return new AccountInformation
             {
                 Identity = axAPI.GetLoginInfo(user),
@@ -60,9 +57,24 @@ namespace ShareInvest.OpenAPI
                 Nick = axAPI.GetLoginInfo(name)
             };
         }
+        public ISendSecuritiesAPI InputValueRqData(bool input, string name, string param)
+        {
+            var ctor = GetRequestTR(name);
+
+            if (input)
+                BeginInvoke(new Action(() =>
+                {
+                    ctor.Value = param;
+                    ctor.RQName = param.Split(';')[0];
+
+                    if (API is Connect api)
+                        api.InputValueRqData(ctor);
+                }));
+            return ctor;
+        }
         public ISendSecuritiesAPI InputValueRqData(bool input, string name)
         {
-            var ctor = Connect.TR.First(o => o.GetType().Name.Equals(name));
+            var ctor = GetRequestTR(name);
 
             if (input)
                 BeginInvoke(new Action(() =>

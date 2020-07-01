@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 using AxKHOpenAPILib;
 
+using ShareInvest.Catalog;
 using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
@@ -55,7 +56,7 @@ namespace ShareInvest.OpenAPI
             if (API == null && axAPI.CommConnect() == 0)
             {
                 API = new Connect(axAPI);
-                TR = new HashSet<TR>();
+                TR = new HashSet<TR>() { new KOA_CREATE_FO_ORD { API = axAPI } };
                 Real = new HashSet<Real>() { new 주식체결 { API = axAPI } };
                 Chejan = new Dictionary<string, Chejan>() { { ((int)ChejanType.주문체결).ToString(), new 주문체결 { API = axAPI } }, { ((int)ChejanType.잔고).ToString(), new 잔고 { API = axAPI } }, { ((int)ChejanType.파생잔고).ToString(), new 파생잔고 { API = axAPI } } };
             }

@@ -9,24 +9,16 @@ namespace ShareInvest.OpenAPI.Catalog
 {
     class Opw00005 : TR, ISendSecuritiesAPI
     {
-        internal override void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
+        internal override void OnReceiveTrData(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
-            int i, j;
+            var temp = base.OnReceiveTrData(opSingle, opMultiple, e);
 
-            for (i = 0; i < API.GetRepeatCnt(e.sTrCode, e.sRQName) + 1; i++)
-            {
-                if (i == 0)
-                {
-                    var param = new string[opSingle.Length];
+            if (temp.Item1 != null)
+                Send?.Invoke(this, new SendSecuritiesAPI(temp.Item1[0], temp.Item1[7]));
 
-                    for (j = 0; j < opSingle.Length; j++)
-                        param[j] = API.GetCommData(e.sTrCode, e.sRQName, i, opSingle[j]);
-
-                    Send?.Invoke(this, new SendSecuritiesAPI(param[0], param[7]));
-                }
-                foreach (var str in opMultiple)
-                    Console.WriteLine(API.GetCommData(e.sTrCode, e.sRQName, i, str));
-            }
+            while (temp.Item2?.Count > 0)
+                foreach (var str in temp.Item2.Pop())
+                    Console.WriteLine(str);
         }
         internal override string ID => id;
         internal override string Value
@@ -35,11 +27,11 @@ namespace ShareInvest.OpenAPI.Catalog
         }
         internal override string RQName
         {
-            get => name;
             set
             {
 
             }
+            get => name;
         }
         internal override string TrCode => code;
         internal override int PrevNext

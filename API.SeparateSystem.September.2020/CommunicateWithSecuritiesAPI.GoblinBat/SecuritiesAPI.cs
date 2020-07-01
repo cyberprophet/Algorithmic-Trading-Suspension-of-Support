@@ -156,6 +156,8 @@ namespace ShareInvest
                         openAPI.OnConnectErrorMessage.Send += OnReceiveSecuritiesAPI;
                         openAPI.Send += OnReceiveSecuritiesAPI;
                         openAPI.InputValueRqData(true, opw00005).Send += OnReceiveSecuritiesAPI;
+
+                        
                     }
                 }
                 Visible = true;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using AxKHOpenAPILib;
 
@@ -9,6 +10,14 @@ namespace ShareInvest.OpenAPI
 {
     abstract class TR : ISendSecuritiesAPI
     {
+        protected internal static uint Screen
+        {
+            get; set;
+        }
+        protected internal static uint Count
+        {
+            get; set;
+        }
         protected internal virtual string LookupScreenNo
         {
             get
@@ -19,7 +28,33 @@ namespace ShareInvest.OpenAPI
                 return (0xBB8 + count).ToString("D4");
             }
         }
-        internal abstract void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e);
+        protected internal virtual (string[], Stack<string[]>) OnReceiveTrData(string[] single, string[] multi, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
+        {
+            int i;
+            var sTemp = single != null ? new string[single.Length] : null;
+
+            if (single != null)
+                for (i = 0; i < single.Length; i++)
+                    sTemp[i] = API.GetCommData(e.sTrCode, e.sRQName, 0, single[i]);
+
+            if (multi != null)
+            {
+                var catalog = new Stack<string[]>();
+
+                for (int j = 0; j < API.GetRepeatCnt(e.sTrCode, e.sRQName); j++)
+                {
+                    var temp = new string[multi.Length];
+
+                    for (i = 0; i < multi.Length; i++)
+                        temp[i] = API.GetCommData(e.sTrCode, e.sRQName, j, multi[i]);
+
+                    catalog.Push(temp);
+                }
+                return (sTemp, catalog);
+            }
+            return (sTemp, null);
+        }
+        internal abstract void OnReceiveTrData(_DKHOpenAPIEvents_OnReceiveTrDataEvent e);
         internal abstract string ID
         {
             get;
