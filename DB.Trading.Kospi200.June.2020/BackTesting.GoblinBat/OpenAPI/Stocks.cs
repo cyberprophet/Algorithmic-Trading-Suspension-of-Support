@@ -20,12 +20,12 @@ namespace ShareInvest.Strategy.OpenAPI
         }
         internal Stocks(string key, string code) : base(key)
         {
-            while ((string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0) && TimerBox.Show(new Secret().Response, code, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 0x1BD5).Equals(DialogResult.OK))
+            while (string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0)
             {
                 if (string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0)
                     chart = GetBasicChart(code);
 
-                if (Chart == null && string.IsNullOrEmpty(chart.Item1) == false)
+                if (Chart == null && string.IsNullOrEmpty(chart.Item1) == false && TimerBox.Show(new Secret().Response, code, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 0x1BD5).Equals(DialogResult.OK))
                 {
                     var temp = GetBasicChart(code, chart.Item1);
                     Chart = temp.Item1;
@@ -45,18 +45,20 @@ namespace ShareInvest.Strategy.OpenAPI
             Long = new Stack<double>();
             Trend = new Stack<double>();
 
-            while (chart.Item2 != null && chart.Item2.Count > 0)
+            if (chart.Item2 != null && Chart != null)
             {
-                var dp = chart.Item2.Dequeue();
-                DrawChart(dp.Date, dp.Price);
-            }
-            if (Chart != null)
+                while (chart.Item2.Count > 0)
+                {
+                    var dp = chart.Item2.Dequeue();
+                    DrawChart(dp.Date, dp.Price);
+                }
                 foreach (var chart in Chart)
                     while (chart.Value.Count > 0)
                     {
                         var dp = chart.Value.Dequeue();
                         DrawChart(dp.Date, dp.Price);
                     }
+            }
             Code = code;
             OnTime = true;
         }

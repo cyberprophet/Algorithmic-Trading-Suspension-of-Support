@@ -372,7 +372,7 @@ namespace ShareInvest.OpenAPI
                         DeadLine = true;
                         Delay.Milliseconds = 205;
 
-                        if (Temporary == null)
+                        if (Temporary == null || Collector)
                             OnReceiveBalance = true;
                     }
                     break;
@@ -589,7 +589,7 @@ namespace ShareInvest.OpenAPI
                 DeadLine = DateTime.Now.Hour >= 9;
 
                 if (secret.IsCollector(key, API.GetLoginInfo("ACCLIST"), API.GetLoginInfo("USER_ID")) && string.IsNullOrEmpty(secret.Account) == false)
-                    LookUpTheBalance(secret.Account);
+                    Collector = LookUpTheBalance(secret.Account);
             }
             else if (Temporary != null)
             {
@@ -870,14 +870,15 @@ namespace ShareInvest.OpenAPI
             new Task(() => SendCount?.Invoke(this, new NotifyIconText((char)69))).Start();
             Dispose(true);
         }
-        void LookUpTheBalance(string account) => request.RequestTrData(new Task(() =>
+        bool LookUpTheBalance(string account)
         {
-            InputValueRqData(new Opw00005
+            request.RequestTrData(new Task(() => InputValueRqData(new Opw00005
             {
                 Value = string.Concat(account, ";;00"),
                 PrevNext = 0
-            });
-        }));
+            })));
+            return true;
+        }
         void OnReceiveOrder(CollectedInformation o) => request.RequestTrData(new Task(() => SendErrorMessage(API.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
         void SetCollectionConditions(string[] param)
         {
@@ -894,8 +895,6 @@ namespace ShareInvest.OpenAPI
                     {
                         var stock = API.KOA_Functions("GetMasterStockInfo", co.Code).Split(';')[0].Contains(market);
                         int sell = (int)(co.Purchase * 1.05), buy = (int)(co.Purchase * 0.95), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
-
-                        //Samsung int sell = (int)(co.Purchase * 1.21), buy = (int)(co.Purchase * 0.97), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
 
                         while (sPrice < upper)
                         {
@@ -937,6 +936,10 @@ namespace ShareInvest.OpenAPI
             }
         }
         bool DeadLine
+        {
+            get; set;
+        }
+        bool Collector
         {
             get; set;
         }
