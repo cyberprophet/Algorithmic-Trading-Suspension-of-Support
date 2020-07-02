@@ -16,12 +16,12 @@ namespace ShareInvest.XingAPI
 {
     public class ConnectAPI : XASessionClass, IEvents<NotifyIconText>
     {
-        public static ConnectAPI GetInstance(char initial, string code, string date)
+        public static ConnectAPI GetInstance(string code, string date)
         {
             if (XingAPI == null)
             {
                 Date = date;
-                XingAPI = new ConnectAPI(initial);
+                XingAPI = new ConnectAPI();
                 Code = code;
                 new T9943().QueryExcute();
             }
@@ -97,9 +97,9 @@ namespace ShareInvest.XingAPI
             get; set;
         }
         public void OnReceiveOperatingState(object sender, EventHandler.XingAPI.OnReceiveOperatingState e) => OnReceiveBalance = e.State;
-        public string AccountName => GetAccountName(secret.ShowAccount.Replace("-", string.Empty));
+        public string AccountName => GetAccountName(secret.ShowAccount?.Replace("-", string.Empty));
         public string Account => secret.ShowAccount;
-        public string DetailName => GetAcctDetailName(secret.ShowAccount.Replace("-", string.Empty));
+        public string DetailName => GetAcctDetailName(secret.ShowAccount?.Replace("-", string.Empty));
         public void Dispose()
         {
             var message = GetErrorMessage(GetLastError());
@@ -192,52 +192,22 @@ namespace ShareInvest.XingAPI
                 for (int i = 0; i < Accounts.Length; i++)
                 {
                     Accounts[i] = GetAccountList(i);
-                    var futures = GetAcctDetailName(Accounts[i]);
+                    var account = GetAcctDetailName(Accounts[i]);
+                    detail[account] = Accounts[i];
 
-                    if (detail.ContainsKey(futures))
-                    {
-                        Multiple = true;
-
-                        continue;
-                    }
-                    detail[futures] = Accounts[i];
+                    if (detail.ContainsKey(account) && account.Equals(secret.Futures))
+                        list.Add(Accounts[i]);
                 }
-                if (Multiple)
-                {
-                    foreach (var str in Accounts)
-                        if (GetAcctDetailName(str).Equals(secret.Futures))
-                            list.Add(str);
+                if (list.Count > 1)
+                    secret.GetAccount(list.OrderBy(o => o), list.Count);
 
-                    if (list.Count > 1)
-                    {
-                        int index = 0;
-
-                        foreach (var str in list.OrderBy(o => o))
-                            switch (initial)
-                            {
-                                case (char)83:
-                                    secret.GetAccount(str);
-                                    break;
-
-                                case (char)84:
-                                    if (index++ == 1)
-                                    {
-                                        secret.GetAccount(str);
-
-                                        return;
-                                    }
-                                    break;
-                            }
-                        return;
-                    }
-                }
-                secret.GetAccount(detail);
+                else
+                    secret.GetAccount(detail);
             }
         }
-        ConnectAPI(char initial)
+        ConnectAPI()
         {
             secret = new Secret();
-            this.initial = initial;
             var str = KeyDecoder.GetWindowsProductKeyFromRegistry();
 
             if (str.Length > 0 && secret.InfoToConnect.TryGetValue(str, out string[] connect) && secret.Server.TryGetValue(str, out string server) && ConnectServer(server, secret.Port) && Login(connect[0], connect[1], connect[2], 0, true) && IsLoadAPI())
@@ -268,11 +238,6 @@ namespace ShareInvest.XingAPI
         {
             get; set;
         }
-        bool Multiple
-        {
-            get; set;
-        }
-        readonly char initial;
         readonly Secret secret;
         const string buy = "2";
         const string sell = "1";

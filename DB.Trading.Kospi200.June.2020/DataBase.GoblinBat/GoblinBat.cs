@@ -63,7 +63,7 @@ namespace ShareInvest
                     else
                     {
                         Specify = Statistical.Statistics(retrieve.GetUserStrategy());
-                        Xing = XingAPI.ConnectAPI.GetInstance(initial, Strategy.Retrieve.Code, Strategy.Retrieve.Date);
+                        Xing = XingAPI.ConnectAPI.GetInstance(Strategy.Retrieve.Code, Strategy.Retrieve.Date);
                         Xing.Send += OnReceiveNotifyIcon;
                         notifyIcon.Text = string.Concat("Trading Code_", Strategy.Retrieve.Code);
                         Text = Xing.Account;
@@ -399,7 +399,7 @@ namespace ShareInvest
                     if (Array.Exists(XingConnect, o => o.Equals(initial)))
                         BeginInvoke(new Action(() =>
                         {
-                            Xing = XingAPI.ConnectAPI.GetInstance(initial, initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code, Strategy.Retrieve.Date);
+                            Xing = XingAPI.ConnectAPI.GetInstance(initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code, Strategy.Retrieve.Date);
                             Xing.Send += OnReceiveNotifyIcon;
                             notifyIcon.Text = string.Concat("Trading Code_", initial.Equals(collecting) ? Open.Code : Strategy.Retrieve.Code);
                             OnEventConnect();
