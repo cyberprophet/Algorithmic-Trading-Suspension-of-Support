@@ -895,6 +895,8 @@ namespace ShareInvest.OpenAPI
                         var stock = API.KOA_Functions("GetMasterStockInfo", co.Code).Split(';')[0].Contains(market);
                         int sell = (int)(co.Purchase * 1.05), buy = (int)(co.Purchase * 0.95), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
 
+                        //Samsung int sell = (int)(co.Purchase * 1.21), buy = (int)(co.Purchase * 0.97), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
+
                         while (sPrice < upper)
                         {
                             if (sPrice > lower && quantity-- > 0)

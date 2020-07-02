@@ -276,7 +276,7 @@ namespace ShareInvest
                     return;
 
                 case tuple:
-                    BeginInvoke(new Action(() => new Strategy.OpenAPI.Consecutive(key, ((Tuple<string, string>)e.NotifyIcon).Item1.Split(';'))));
+                    new Strategy.OpenAPI.Consecutive(key, ((Tuple<string, string>)e.NotifyIcon).Item1.Split(';'));
                     notifyIcon.Text = ((Tuple<string, string>)e.NotifyIcon).Item2.Replace(';', '\n');
                     return;
 

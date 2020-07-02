@@ -53,17 +53,21 @@ namespace ShareInvest.GoblinBatContext
                                 charts.Clear();
                                 procedure = string.Empty;
                             }
+                    var sTemp = new Dictionary<long, int>(32);
                     using (var db = new GoblinBatDbContext(key))
-                        foreach (var stock in db.Stocks.Where(o => o.Code.Equals(code) && o.Date > check).AsNoTracking().OrderBy(o => o.Date))
+                        foreach (var stock in db.Stocks.Where(o => o.Code.Equals(code) && o.Date > check).AsNoTracking().Select(o => new { o.Date, o.Price }))
+                            sTemp[stock.Date] = stock.Price;
+
+                    foreach (var kv in sTemp.OrderBy(o => o.Key))
+                    {
+                        charts.Enqueue(new Catalog.OpenAPI.Chart
                         {
-                            charts.Enqueue(new Catalog.OpenAPI.Chart
-                            {
-                                Date = stock.Date,
-                                Price = stock.Price
-                            });
-                            if (string.IsNullOrEmpty(procedure))
-                                procedure = stock.Date.ToString().Substring(0, 6);
-                        }
+                            Date = kv.Key,
+                            Price = kv.Value
+                        });
+                        if (string.IsNullOrEmpty(procedure))
+                            procedure = kv.Key.ToString().Substring(0, 6);
+                    }
                     if (string.IsNullOrEmpty(procedure) == false)
                     {
                         temp[procedure] = new Queue<Catalog.OpenAPI.Chart>(charts);
