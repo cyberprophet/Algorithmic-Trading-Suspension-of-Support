@@ -42,11 +42,11 @@ namespace ShareInvest.Strategy
     public partial class Information : CallUpGoblinBat
     {
         public Information(string key) : base(key) => ran = new Random();
-        Models.Simulations Imitation
+        Models.Strategics Imitation
         {
             get
             {
-                var mi = new Models.Simulations
+                var mi = new Models.Strategics
                 {
                     BaseTime = 1440,
                     BaseShort = ran.Next(2, 21),
@@ -83,9 +83,9 @@ namespace ShareInvest.Strategy
                 return mi;
             }
         }
-        public IEnumerable<Models.Simulations> GetStatistics(Models.Simulations strategy, double rate)
+        public IEnumerable<Models.Strategics> GetStatistics(Models.Strategics strategy, double rate)
         {
-            var list = new List<Models.Simulations>();
+            var list = new List<Models.Strategics>();
             int i, ms, ml, bs, bl;
 
             if (strategy.Strategy.Length == 2 && int.TryParse(strategy.Strategy, out int st))
@@ -95,7 +95,7 @@ namespace ShareInvest.Strategy
                             for (bs = strategy.BaseShort - 3 > minShort ? strategy.BaseShort - 3 : minShort; bs < (strategy.BaseShort + 3 > maxShort ? maxShort + 1 : strategy.BaseShort + 3); bs++)
                                 for (bl = strategy.BaseLong / 5 - 3 > minLong / 5 ? strategy.BaseLong - 15 : minLong; bl < (strategy.BaseLong / 5 + 3 > maxLong / 5 ? maxLong + 1 : strategy.BaseLong + 15 + 1); bl += 5)
                                     if (ms < ml && bs < bl)
-                                        list.Add(new Models.Simulations
+                                        list.Add(new Models.Strategics
                                         {
                                             Assets = strategy.Assets,
                                             Code = Retrieve.Code,
@@ -136,10 +136,10 @@ namespace ShareInvest.Strategy
                                         });
             return strategy.Strategy.Length == 2 ? list.Distinct() : list;
         }
-        public Stack<Models.Simulations> GetStatistics(double count)
+        public Stack<Models.Strategics> GetStatistics(double count)
         {
-            var stack = new Stack<Models.Simulations>();
-            var strategy = GetStrategy(new List<Models.Simulations>(), Retrieve.Code);
+            var stack = new Stack<Models.Strategics>();
+            var strategy = GetStrategy(new List<Models.Strategics>(), Retrieve.Code);
 
             while (stack.Count < 375000 * count)
             {
@@ -147,7 +147,7 @@ namespace ShareInvest.Strategy
 
                 if (mi.BaseShort < mi.BaseLong && mi.NonaShort < mi.NonaLong && mi.OctaShort < mi.OctaLong && mi.HeptaShort < mi.HeptaLong && mi.HexaShort < mi.HexaLong && mi.PentaShort < mi.PentaLong && mi.QuadShort < mi.QuadLong && mi.TriShort < mi.TriLong && mi.DuoShort < mi.DuoLong && mi.MonoShort < mi.MonoLong && mi.NonaTime > mi.OctaTime && mi.OctaTime > mi.HeptaTime && mi.HeptaTime > mi.HexaTime && mi.HexaTime > mi.PentaTime && mi.PentaTime > mi.QuadTime && mi.QuadTime > mi.TriTime && mi.TriTime > mi.DuoTime && mi.DuoTime > mi.MonoTime)
                     foreach (var st in strategy)
-                        stack.Push(new Models.Simulations
+                        stack.Push(new Models.Strategics
                         {
                             Assets = st.Assets,
                             Code = st.Code,
@@ -189,9 +189,9 @@ namespace ShareInvest.Strategy
             }
             return stack;
         }
-        public Stack<Models.Simulations> GetStatistics(bool external, double[] rate, double[] commission)
+        public Stack<Models.Strategics> GetStatistics(bool external, double[] rate, double[] commission)
         {
-            var stack = new Stack<Models.Simulations>(256);
+            var stack = new Stack<Models.Strategics>(256);
             var assets = GetUserAssets(new List<long>());
             var roll = new bool[] { true, false };
 
@@ -208,7 +208,7 @@ namespace ShareInvest.Strategy
 
                         if (ms < ml && bs < bl && minLong < bl && ml <= maxLong && bl <= maxLong)
                             foreach (var over in roll)
-                                stack.Push(new Models.Simulations
+                                stack.Push(new Models.Strategics
                                 {
                                     Assets = asset,
                                     Code = Retrieve.Code,
@@ -287,10 +287,10 @@ namespace ShareInvest.Strategy
                         }
             SetInsertBaseStrategy(queue);
         }
-        public Stack<Models.Simulations> SeekingBetterAround()
+        public Stack<Models.Strategics> SeekingBetterAround()
         {
-            var games = new Stack<Models.Simulations>();
-            var game = Preheat(new Models.Simulations());
+            var games = new Stack<Models.Strategics>();
+            var game = Preheat(new Models.Strategics());
 
             if (game != null)
                 foreach (int ns in new int[] { game.NonaShort, ran.Next(0, 2) == 0 ? game.NonaShort - 1 : game.NonaShort + 1 })
@@ -326,7 +326,7 @@ namespace ShareInvest.Strategy
                                                                                                                                         foreach (var model in Statistics.Select(o => new { o.Strategy }).Distinct())
                                                                                                                                             if (model.Strategy.Length > 2)
                                                                                                                                             {
-                                                                                                                                                games.Push(new Models.Simulations
+                                                                                                                                                games.Push(new Models.Strategics
                                                                                                                                                 {
                                                                                                                                                     Assets = game.Assets,
                                                                                                                                                     Code = game.Code,
@@ -375,8 +375,8 @@ namespace ShareInvest.Strategy
             Statistics = GetBasicStrategy(initial, Retrieve.Code);
             RemainingDay = GetRemainingDay(Retrieve.Code);
         }
-        public List<Models.Simulations> GetBestStrategy(bool external) => external ? GetBestExternalRecommend(new List<Models.Simulations>(128)) : GetBestStrategyRecommend(new List<Models.Simulations>(128));
-        public IEnumerable<Models.Simulations> GetBestStrategy() => Preheat(new List<Models.Simulations>(256), Retrieve.Code);
+        public List<Models.Strategics> GetBestStrategy(bool external) => external ? GetBestExternalRecommend(new List<Models.Strategics>(128)) : GetBestStrategyRecommend(new List<Models.Strategics>(128));
+        public IEnumerable<Models.Strategics> GetBestStrategy() => Preheat(new List<Models.Strategics>(256), Retrieve.Code);
         public static string[] RemainingDay
         {
             get; private set;

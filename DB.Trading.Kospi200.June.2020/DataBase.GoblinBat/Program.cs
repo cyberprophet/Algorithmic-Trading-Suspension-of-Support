@@ -30,7 +30,7 @@ namespace ShareInvest
                 var retrieve = new Strategy.Retrieve(str, initial);
                 var count = secret.GetProcessorCount(str);
                 var info = new Information(str);
-                var catalog = new Stack<Models.Simulations>();
+                var catalog = new Stack<Models.Strategics>();
 
                 if (secret.GetDirectoryInfoExists(path))
                 {
@@ -83,7 +83,7 @@ namespace ShareInvest
                                 try
                                 {
                                     if (catalog.Count > 0)
-                                        Parallel.ForEach(catalog, po, new Action<Models.Simulations>((number) =>
+                                        Parallel.ForEach(catalog, po, new Action<Models.Strategics>((number) =>
                                         {
                                             if (cts.IsCancellationRequested)
                                                 po.CancellationToken.ThrowIfCancellationRequested();
@@ -110,7 +110,7 @@ namespace ShareInvest
                     while (TimerBox.Show(secret.StartProgress, string.Concat("N0.", Count.ToString("N0")), MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2, 30000U).Equals(DialogResult.Cancel))
                         if (secret.GetHoliday(DateTime.Now) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) == false)
                         {
-                            if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 39 && ran.Next(0, 10) == 9)
+                            if (initial.Equals((char)Port.Collecting) && (DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && DateTime.Now.Minute > 29 && ran.Next(0, 5) == 3)
                                 break;
 
                             if ((DateTime.Now.Hour == 8 || DateTime.Now.Hour == 17) && (DateTime.Now.Minute > 54 || DateTime.Now.Minute > 49 && ran.Next(0, 5) == 3))

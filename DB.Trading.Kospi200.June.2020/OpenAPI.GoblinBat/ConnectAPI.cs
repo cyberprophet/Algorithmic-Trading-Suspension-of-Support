@@ -898,7 +898,7 @@ namespace ShareInvest.OpenAPI
 
                         while (sPrice < upper)
                         {
-                            if (sPrice > lower && quantity-- > 0)
+                            if (quantity-- > 0 && sPrice > lower)
                                 OnReceiveOrder(new CollectedInformation
                                 {
                                     RQName = string.Concat(co.Name, ';', sPrice, ';', Cash),

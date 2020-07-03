@@ -194,7 +194,7 @@ namespace ShareInvest.GoblinBatContext
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    db.Virtual.BulkDelete(db.Virtual.Where(o => o.Date.Equals(code)), o => o.BatchSize = 1000000);
+                    db.Material.BulkDelete(db.Material.Where(o => o.Date.Equals(code)), o => o.BatchSize = 1000000);
                 }
                 catch (Exception ex)
                 {

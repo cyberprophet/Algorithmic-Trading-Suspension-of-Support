@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -22,43 +23,47 @@ namespace ShareInvest.Strategy.OpenAPI
         {
             while (string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0)
             {
-                if (string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0)
-                    chart = GetBasicChart(code);
+                var result = TimerBox.Show(new Secret(DateTime.Now.Minute).Response, code, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 0x1BD5);
 
-                if (Chart == null && string.IsNullOrEmpty(chart.Item1) == false && TimerBox.Show(new Secret().Response, code, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1, 0x1BD5).Equals(DialogResult.OK))
+                if (result.Equals(DialogResult.OK) && DateTime.Now.Minute > 0x32)
                 {
-                    var temp = GetBasicChart(code, chart.Item1);
-                    Chart = temp.Item1;
+                    if (string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0)
+                        chart = GetBasicChart(code);
 
-                    if (temp.Item2 <= 0)
-                        chart.Item2.Clear();
-                }
-                if ((specify.Trend > 0 && specify.Long > 0 && specify.Short > 0) == false)
-                    specify = new Catalog.OpenAPI.Specify
+                    if (Chart == null && string.IsNullOrEmpty(chart.Item1) == false)
                     {
-                        Short = 5,
-                        Long = 70,
-                        Trend = 720
-                    };
+                        var temp = GetBasicChart(code, chart.Item1);
+                        Chart = temp.Item1;
+
+                        if (temp.Item2 <= 0)
+                            chart.Item2.Clear();
+                    }
+                    if ((specify.Trend > 0 && specify.Long > 0 && specify.Short > 0) == false)
+                        specify = new Catalog.OpenAPI.Specify
+                        {
+                            Short = 5,
+                            Long = 70,
+                            Trend = 720
+                        };
+                }
+                else if (result.Equals(DialogResult.Cancel))
+                    break;
             }
             Short = new Stack<double>();
             Long = new Stack<double>();
             Trend = new Stack<double>();
 
-            if (chart.Item2 != null && Chart != null)
+            while (chart.Item2.Count > 0)
             {
-                while (chart.Item2.Count > 0)
+                var dp = chart.Item2.Dequeue();
+                DrawChart(dp.Date, dp.Price);
+            }
+            foreach (var chart in Chart)
+                while (chart.Value.Count > 0)
                 {
-                    var dp = chart.Item2.Dequeue();
+                    var dp = chart.Value.Dequeue();
                     DrawChart(dp.Date, dp.Price);
                 }
-                foreach (var chart in Chart)
-                    while (chart.Value.Count > 0)
-                    {
-                        var dp = chart.Value.Dequeue();
-                        DrawChart(dp.Date, dp.Price);
-                    }
-            }
             Code = code;
             OnTime = true;
         }

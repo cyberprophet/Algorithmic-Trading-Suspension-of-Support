@@ -115,9 +115,13 @@ namespace ShareInvest.GoblinBatContext
             string path = Path.Combine(Application.StartupPath, chart, code), date = string.Empty;
             var charts = new Queue<Catalog.OpenAPI.Chart>();
             var directory = new DirectoryInfo(path);
+            var check = preferred.Equals(code);
 
             try
             {
+                if (check)
+                    directory.Delete(check);
+
                 if (directory.Exists)
                     using (var sr = new StreamReader(string.Concat(path, basic)))
                     {
@@ -302,5 +306,6 @@ namespace ShareInvest.GoblinBatContext
         const string rDate = "200403";
         const string rTime = "2004031545";
         const string basic = @"\Basic.res";
+        const string preferred = "005935";
     }
 }

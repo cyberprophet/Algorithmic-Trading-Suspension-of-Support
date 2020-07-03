@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
@@ -41,10 +40,5 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        public virtual ICollection<Simulations> Games
-        {
-            get; set;
-        }
-        public Statistics() => Games = new HashSet<Simulations>();
     }
 }

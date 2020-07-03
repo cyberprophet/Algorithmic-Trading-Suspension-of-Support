@@ -276,7 +276,7 @@ namespace ShareInvest
                     return;
 
                 case tuple:
-                    new Strategy.OpenAPI.Consecutive(key, ((Tuple<string, string>)e.NotifyIcon).Item1.Split(';'));
+                    new Task(() => new Strategy.OpenAPI.Consecutive(key, ((Tuple<string, string>)e.NotifyIcon).Item1.Split(';'))).Start();
                     notifyIcon.Text = ((Tuple<string, string>)e.NotifyIcon).Item2.Replace(';', '\n');
                     return;
 
@@ -288,7 +288,7 @@ namespace ShareInvest
                         if (secret.GetIsSever(key))
                         {
                             notifyIcon.Text = checkDataBase;
-                            Open.StartProgress(3605);
+                            Open.StartProgress(0xE15);
                         }
                         notifyIcon.Text = secret.GetIdentify();
 
@@ -330,7 +330,7 @@ namespace ShareInvest
                             Statistical.Dock = DockStyle.Fill;
                         }
                         var chart = Retrieve.GetInstance(key, Open.Code).Chart;
-                        var check = e.NotifyIcon.ToString().Split((char)59);
+                        var check = e.NotifyIcon.ToString().Split((char)0x3B);
                         Acc = new string[check.Length - 3];
                         Server = check[check.Length - 1].Equals(secret.Mock);
 
@@ -351,7 +351,7 @@ namespace ShareInvest
                             var specify = new Specify
                             {
                                 Account = Acc,
-                                Assets = 17500000,
+                                Assets = 0x10B0760,
                                 Code = Open.Code,
                                 Strategy = "TF",
                                 Time = 30,
@@ -365,7 +365,7 @@ namespace ShareInvest
                             var liquidate = new Specify
                             {
                                 Account = Acc,
-                                Assets = 17500000,
+                                Assets = 0x10B0760,
                                 Code = Open.Code,
                                 Strategy = "WU",
                                 Time = 15,
@@ -377,10 +377,10 @@ namespace ShareInvest
                         new Task(() => new Strategy.OpenAPI.Trading(Open, new Specify
                         {
                             Account = Acc,
-                            Assets = 17500000,
+                            Assets = 0x10B0760,
                             Code = Open.Code,
                             Strategy = "DL",
-                            Time = 1440,
+                            Time = 0x5A0,
                             Short = 4,
                             Long = 60,
                             Reaction = 531

@@ -21,12 +21,12 @@ namespace ShareInvest.Strategy
         }
         public Dictionary<DateTime, string> OnReceiveInformation(Catalog.DataBase.ImitationGame number) => GetInformation(number, Code);
         public bool OnReceiveRepositoryID(Catalog.DataBase.ImitationGame specifies) => GetRepositoryID(specifies, RecentDate);
-        public Models.Simulations GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
-        public Models.Simulations OnReceiveMyStrategy() => GetMyStrategy();
+        public Models.Strategics GetBestStrategy() => GetBestStrategyRecommend(Information.Statistics);
+        public Models.Strategics OnReceiveMyStrategy() => GetMyStrategy();
         public void SetIsMirror() => SetInitialzeTheCode();
         public Catalog.XingAPI.Specify[] GetUserStrategy()
         {
-            var game = new Models.Simulations();
+            var game = new Models.Strategics();
             var recommend = GetBestStrategyRecommend(Information.Statistics, game);
             var rank = secret.GetRank(recommend.Item3);
 
@@ -99,7 +99,7 @@ namespace ShareInvest.Strategy
             if (QuotesEnumerable != null)
                 QuotesEnumerable = null;
         }
-        public bool GetDuplicateResults(Models.Simulations game)
+        public bool GetDuplicateResults(Models.Strategics game)
         {
             if (string.IsNullOrEmpty(RecentDate))
                 GetRecentDate(DateTime.Now);
@@ -113,7 +113,7 @@ namespace ShareInvest.Strategy
 
             return string.Empty;
         }
-        public Models.Simulations GetImitationModel(Catalog.DataBase.ImitationGame game) => new Models.Simulations
+        public Models.Strategics GetImitationModel(Catalog.DataBase.ImitationGame game) => new Models.Strategics
         {
             Assets = game.Assets,
             Code = game.Code,
@@ -259,7 +259,7 @@ namespace ShareInvest.Strategy
                     return string.Empty;
             }
         }
-        internal static Catalog.XingAPI.Specify[] GetCatalog(Models.Simulations find)
+        internal static Catalog.XingAPI.Specify[] GetCatalog(Models.Strategics find)
         {
             var temp = new Catalog.XingAPI.Specify[10];
             int i = 0;

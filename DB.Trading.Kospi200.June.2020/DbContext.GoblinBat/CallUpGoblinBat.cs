@@ -47,7 +47,7 @@ namespace ShareInvest.GoblinBatContext
                 }
             return null;
         }
-        protected IEnumerable<Simulations> GetStrategy(List<Simulations> strategy, string code)
+        protected IEnumerable<Strategics> GetStrategy(List<Strategics> strategy, string code)
         {
             using (var db = new GoblinBatDbContext(key))
                 try
@@ -61,7 +61,7 @@ namespace ShareInvest.GoblinBatContext
                         o.RollOver
                     }).AsNoTracking())
                         if (st.Strategy.Length > 2 && st.Code.Equals(code))
-                            strategy.Add(new Simulations
+                            strategy.Add(new Strategics
                             {
                                 Assets = st.Assets,
                                 Code = st.Code,
@@ -236,7 +236,7 @@ namespace ShareInvest.GoblinBatContext
                     db.Configuration.AutoDetectChangesEnabled = true;
                 }
         }
-        protected Simulations Preheat(Simulations imitation)
+        protected Strategics Preheat(Strategics imitation)
         {
             var index = new Secret().GetIdentityIndex(key);
 
@@ -251,8 +251,8 @@ namespace ShareInvest.GoblinBatContext
                         var strategy = identify.Strategy;
                         var over = identify.RollOver.Equals(CheckState.Checked);
 
-                        foreach (var game in db.Virtual.Where(o => o.Strategy.Equals(strategy) && o.Date.Equals(max) && o.RollOver.Equals(over) && o.Cumulative > 0 && o.Statistic > 0 && o.MarginRate == marginRate).AsNoTracking().OrderByDescending(o => o.Statistic).Take(index))
-                            imitation = new Simulations
+                        foreach (var game in db.Material.Where(o => o.Strategy.Equals(strategy) && o.Date.Equals(max) && o.RollOver.Equals(over) && o.Cumulative > 0 && o.Statistic > 0 && o.MarginRate == marginRate).AsNoTracking().OrderByDescending(o => o.Statistic).Take(index))
+                            imitation = new Strategics
                             {
                                 Assets = game.Assets,
                                 Code = game.Code,
@@ -299,14 +299,14 @@ namespace ShareInvest.GoblinBatContext
             }
             return null;
         }
-        protected IEnumerable<Simulations> Preheat(List<Simulations> games, string code)
+        protected IEnumerable<Strategics> Preheat(List<Strategics> games, string code)
         {
             string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    foreach (var game in db.Virtual.Where(o => o.Strategy.Length > 2 && o.RollOver.Equals(false) && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
-                        games.Add(new Simulations
+                    foreach (var game in db.Material.Where(o => o.Strategy.Length > 2 && o.RollOver.Equals(false) && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
+                        games.Add(new Strategics
                         {
                             Assets = game.Assets,
                             Code = code,
@@ -352,15 +352,15 @@ namespace ShareInvest.GoblinBatContext
                 }
             return games;
         }
-        protected Stack<Simulations> GetBestStrategy(Stack<Simulations> stack, IEnumerable<long> list, string code)
+        protected Stack<Strategics> GetBestStrategy(Stack<Strategics> stack, IEnumerable<long> list, string code)
         {
             string max = MostRecentDate;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
                     foreach (var assets in list)
-                        foreach (var game in db.Virtual.Where(o => o.MonoTime == 1 && o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
-                            stack.Push(new Simulations
+                        foreach (var game in db.Material.Where(o => o.MonoTime == 1 && o.Assets == assets && o.Strategy.Length == 2 && o.Date.Equals(max) && o.MarginRate == marginRate && o.Statistic > 0 && o.Cumulative > 0).AsNoTracking().OrderBy(o => o.Statistic))
+                            stack.Push(new Strategics
                             {
                                 Assets = game.Assets,
                                 Code = code,
@@ -406,17 +406,17 @@ namespace ShareInvest.GoblinBatContext
                 }
             return stack;
         }
-        protected List<Simulations> GetBestExternalRecommend(List<Simulations> games)
+        protected List<Strategics> GetBestExternalRecommend(List<Strategics> games)
         {
             try
             {
                 string date;
                 using (var db = new GoblinBatDbContext(key))
-                    date = db.Virtual.Max(o => o.Date);
+                    date = db.Material.Max(o => o.Date);
 
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var game in db.Virtual.Where(o => o.Date.Equals(date) && o.MarginRate == marginRate).OrderByDescending(o => o.Cumulative).AsNoTracking().Take(3750))
-                        games.Add(new Simulations
+                    foreach (var game in db.Material.Where(o => o.Date.Equals(date) && o.MarginRate == marginRate).OrderByDescending(o => o.Cumulative).AsNoTracking().Take(3750))
+                        games.Add(new Strategics
                         {
                             Assets = game.Assets,
                             Code = game.Code,
@@ -462,17 +462,17 @@ namespace ShareInvest.GoblinBatContext
             }
             return games;
         }
-        protected List<Simulations> GetBestStrategyRecommend(List<Simulations> games)
+        protected List<Strategics> GetBestStrategyRecommend(List<Strategics> games)
         {
             try
             {
                 string date;
                 using (var db = new GoblinBatDbContext(key))
-                    date = db.Virtual.Max(o => o.Date);
+                    date = db.Material.Max(o => o.Date);
 
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var game in db.Virtual.Where(o => o.MarginRate == marginRate && o.Date.Equals(date)).OrderByDescending(o => o.Statistic).AsNoTracking().Take(3750))
-                        games.Add(new Simulations
+                    foreach (var game in db.Material.Where(o => o.MarginRate == marginRate && o.Date.Equals(date)).OrderByDescending(o => o.Statistic).AsNoTracking().Take(3750))
+                        games.Add(new Strategics
                         {
                             Assets = game.Assets,
                             Code = game.Code,
@@ -518,7 +518,7 @@ namespace ShareInvest.GoblinBatContext
             }
             return games;
         }
-        protected Simulations GetMyStrategy()
+        protected Strategics GetMyStrategy()
         {
             using (var db = new GoblinBatDbContext(key))
                 try
@@ -563,7 +563,7 @@ namespace ShareInvest.GoblinBatContext
                     }).Take(1).First() : null;
 
                     if (identity != null)
-                        return new Simulations
+                        return new Strategics
                         {
                             Assets = identity.Assets,
                             Code = identity.Code,
@@ -609,16 +609,16 @@ namespace ShareInvest.GoblinBatContext
                 }
             return null;
         }
-        protected (int, Simulations, uint, int, Simulations) GetBestStrategyRecommend(List<Statistics> list, Simulations game)
+        protected (int, Strategics, uint, int, Strategics) GetBestStrategyRecommend(List<Statistics> list, Strategics game)
         {
             uint count = 1;
             int temp = int.MinValue, eTemp = int.MinValue;
-            var exist = new Simulations();
+            var exist = new Strategics();
             var identify = new Secret().GetIdentify(key);
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    var max = db.Virtual.Max(o => o.Date);
+                    var max = db.Material.Max(o => o.Date);
                     var identity = db.Identifies.Any(o => o.Identity.Equals(identify)) ? db.Identifies.Where(o => o.Identity.Equals(identify)).AsNoTracking().OrderByDescending(o => o.Date).Select(o => new
                     {
                         o.Assets,
@@ -656,11 +656,11 @@ namespace ShareInvest.GoblinBatContext
                         o.MonoLong
                     }).Take(1).First() : null;
                     if (list.Count == 1 && list.First().Strategy.Length == 2)
-                        foreach (var select in db.Virtual.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == identity.Assets && o.Code.Equals(identity.Code) && o.Commission == identity.Commission && o.MarginRate == marginRate).AsNoTracking().OrderByDescending(o => o.Statistic))
+                        foreach (var select in db.Material.Where(o => o.Cumulative > 0 && o.Statistic > 0 && o.Strategy.Length == 2 && o.Date.Equals(max) && o.Assets == identity.Assets && o.Code.Equals(identity.Code) && o.Commission == identity.Commission && o.MarginRate == marginRate).AsNoTracking().OrderByDescending(o => o.Statistic))
                         {
                             if (temp < select.Statistic)
                             {
-                                game = new Simulations
+                                game = new Strategics
                                 {
                                     Assets = select.Assets,
                                     Code = select.Code,
@@ -703,7 +703,7 @@ namespace ShareInvest.GoblinBatContext
                             }
                             if (identity != null && identity.Strategy.Length == 2 && select.Assets == identity.Assets && select.Code.Equals(identity.Code) && select.Strategy.Length == identity.Strategy.Length && select.Commission == identity.Commission && select.MarginRate == marginRate && select.BaseShort == identity.BaseShort && select.BaseLong == identity.BaseLong && select.NonaTime == identity.NonaTime && select.NonaShort == identity.NonaShort && select.NonaLong == identity.NonaLong && select.OctaTime == identity.OctaTime && select.OctaShort == identity.OctaShort && select.OctaLong == identity.OctaLong && select.HeptaTime == identity.HeptaTime && select.HeptaShort == identity.HeptaShort && select.HeptaLong == identity.HeptaLong && select.HexaTime == identity.HexaTime && select.HexaShort == identity.HexaShort && select.HexaLong == identity.HexaLong && select.PentaTime == identity.PentaTime && select.PentaShort == identity.PentaShort && select.PentaLong == identity.PentaLong && select.QuadTime == identity.QuadTime && select.QuadShort == identity.QuadShort && select.QuadLong == identity.QuadLong && select.TriTime == identity.TriTime && select.TriShort == identity.TriShort && select.TriLong == identity.TriLong && select.DuoTime == identity.DuoTime && select.DuoShort == identity.DuoShort && select.DuoLong == identity.DuoLong && select.MonoTime == identity.MonoTime && select.MonoShort == identity.MonoShort && select.MonoLong == identity.MonoLong)
                             {
-                                exist = new Simulations
+                                exist = new Strategics
                                 {
                                     Assets = select.Assets,
                                     Code = select.Code,
@@ -753,11 +753,11 @@ namespace ShareInvest.GoblinBatContext
                             count = 1;
 
                             if (ch.Strategy.Length > 2)
-                                foreach (var choice in db.Virtual.Where(o => o.Date.Equals(max) && o.Assets == identity.Assets && o.Code.Equals(identity.Code) && o.Commission == identity.Commission && o.MarginRate == marginRate && o.Strategy.Length > 2 && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic))
+                                foreach (var choice in db.Material.Where(o => o.Date.Equals(max) && o.Assets == identity.Assets && o.Code.Equals(identity.Code) && o.Commission == identity.Commission && o.MarginRate == marginRate && o.Strategy.Length > 2 && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking().OrderByDescending(o => o.Statistic))
                                 {
                                     if (temp < choice.Statistic && choice.Revenue < 0)
                                     {
-                                        game = new Simulations
+                                        game = new Strategics
                                         {
                                             Assets = choice.Assets,
                                             Code = choice.Code,
@@ -800,7 +800,7 @@ namespace ShareInvest.GoblinBatContext
                                     }
                                     if (identity != null && identity.Strategy.Length > 2 && choice.Assets == identity.Assets && choice.Code.Equals(identity.Code) && choice.Strategy.Length == identity.Strategy.Length && choice.Commission == identity.Commission && choice.MarginRate == marginRate && choice.BaseShort == identity.BaseShort && choice.BaseLong == identity.BaseLong && choice.NonaTime == identity.NonaTime && choice.NonaShort == identity.NonaShort && choice.NonaLong == identity.NonaLong && choice.OctaTime == identity.OctaTime && choice.OctaShort == identity.OctaShort && choice.OctaLong == identity.OctaLong && choice.HeptaTime == identity.HeptaTime && choice.HeptaShort == identity.HeptaShort && choice.HeptaLong == identity.HeptaLong && choice.HexaTime == identity.HexaTime && choice.HexaShort == identity.HexaShort && choice.HexaLong == identity.HexaLong && choice.PentaTime == identity.PentaTime && choice.PentaShort == identity.PentaShort && choice.PentaLong == identity.PentaLong && choice.QuadTime == identity.QuadTime && choice.QuadShort == identity.QuadShort && choice.QuadLong == identity.QuadLong && choice.TriTime == identity.TriTime && choice.TriShort == identity.TriShort && choice.TriLong == identity.TriLong && choice.DuoTime == identity.DuoTime && choice.DuoShort == identity.DuoShort && choice.DuoLong == identity.DuoLong && choice.MonoTime == identity.MonoTime && choice.MonoShort == identity.MonoShort && choice.MonoLong == identity.MonoLong)
                                     {
-                                        exist = new Simulations
+                                        exist = new Strategics
                                         {
                                             Assets = choice.Assets,
                                             Code = choice.Code,
@@ -850,7 +850,7 @@ namespace ShareInvest.GoblinBatContext
                 {
                     new ExceptionMessage(ex.StackTrace);
                     var existent = db.Identifies.Where(o => o.Identity.Equals(identify)).AsNoTracking().OrderByDescending(o => o.Date).Take(1).First();
-                    game = new Simulations
+                    game = new Strategics
                     {
                         Assets = existent.Assets,
                         Code = existent.Code,
@@ -892,18 +892,18 @@ namespace ShareInvest.GoblinBatContext
                 }
             return (temp, game, count, eTemp == int.MinValue ? 0 : eTemp, exist ?? null);
         }
-        protected Simulations GetBestStrategyRecommend(List<Statistics> list)
+        protected Strategics GetBestStrategyRecommend(List<Statistics> list)
         {
-            var game = new Simulations();
+            var game = new Strategics();
             var temp = double.MinValue;
             using (var db = new GoblinBatDbContext(key))
                 try
                 {
-                    var date = db.Virtual.Max(o => o.Date);
+                    var date = db.Material.Max(o => o.Date);
 
                     foreach (var choice in list)
                     {
-                        var select = db.Virtual.Where(o => o.Strategy.Length > 2 && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver) && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking();
+                        var select = db.Material.Where(o => o.Strategy.Length > 2 && o.Assets == choice.Assets && o.Code.Equals(choice.Code) && o.Commission == choice.Commission && o.MarginRate == choice.MarginRate && o.Strategy.Equals(choice.Strategy) && o.RollOver.Equals(choice.RollOver) && o.Cumulative > 0 && o.Statistic > 0).AsNoTracking();
 
                         foreach (var cu in select.Where(o => o.Date.Equals(date)).OrderByDescending(o => o.Statistic * (o.Unrealized + o.Cumulative)).AsNoTracking().Take(25))
                         {
@@ -929,7 +929,7 @@ namespace ShareInvest.GoblinBatContext
                             if (temp < avg)
                             {
                                 temp = avg;
-                                game = new Simulations
+                                game = new Strategics
                                 {
                                     Assets = cu.Assets,
                                     Code = cu.Code,
@@ -1286,7 +1286,7 @@ namespace ShareInvest.GoblinBatContext
                     using (var db = new GoblinBatDbContext(key))
                         try
                         {
-                            if (db.Virtual.Any(o => o.Date.Equals(max)))
+                            if (db.Material.Any(o => o.Date.Equals(max)))
                                 return max;
                         }
                         catch (Exception ex)
@@ -1308,7 +1308,7 @@ namespace ShareInvest.GoblinBatContext
         protected internal const string recent = "yyMMdd";
         protected internal const string res = ".res";
         protected internal const string charts = "Charts";
-        const double marginRate = 0.1395;
+        const double marginRate = 0.1335;
         const string basic = "Base.res";
         const string chart = "ChartOf101000";
         const string remaining = "1545";
