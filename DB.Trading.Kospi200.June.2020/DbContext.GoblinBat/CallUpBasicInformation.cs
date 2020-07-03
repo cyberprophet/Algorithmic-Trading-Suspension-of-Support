@@ -298,6 +298,20 @@ namespace ShareInvest.GoblinBatContext
                 }
             return result;
         }
+        protected long GetUserAssets(long assets)
+        {
+            var identity = new Secret().GetIdentify(key);
+            using (var db = new GoblinBatDbContext(key))
+                try
+                {
+                    return db.Identifies.Where(o => o.Identity.Equals(identity)).AsNoTracking().OrderByDescending(o => o.Date).First().Assets - assets;
+                }
+                catch (Exception ex)
+                {
+                    new ExceptionMessage(assets.ToString("N0"), ex.TargetSite.Name);
+                }
+            return 0;
+        }
         protected CallUpBasicInformation(string key) => this.key = key;
         readonly string key;
         const string format = "yyMMdd";

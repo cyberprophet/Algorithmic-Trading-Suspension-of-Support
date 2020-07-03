@@ -186,7 +186,48 @@ namespace ShareInvest.Strategy.XingAPI
             {
                 RollOver = false;
                 SendLiquidationOrder();
+                SendLiquidationOrder(GetUserAssets((long)specify.Assets));
             }
+        }
+        void SendLiquidationOrder(long arbitrage)
+        {
+            var price = specify.Assets / (Const.TransactionMultiplier * specify.MarginRate * Math.Abs(API.MaxAmount));
+            var current = arbitrage / (price * Const.TransactionMultiplier * specify.MarginRate);
+            int amount = 0;
+
+            switch (current)
+            {
+                case 0:
+                    return;
+
+                case double c when c > 0:
+                    API.orders[0].QueryExcute(new Order
+                    {
+                        FnoIsuNo = ConnectAPI.Code,
+                        BnsTpCode = API.MaxAmount < 0 ? sell : buy,
+                        FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.시장가).ToString("D2"),
+                        OrdPrc = price.ToString("F2"),
+                        OrdQty = Math.Abs((int)current).ToString()
+                    });
+                    return;
+
+                case double c when c < 0:
+                    if (Math.Abs(API.Quantity) - current > 0)
+                        amount = (int)Math.Ceiling(current);
+
+                    else
+                        amount = Math.Abs(API.Quantity);
+
+                    break;
+            }
+            API.orders[0].QueryExcute(new Order
+            {
+                FnoIsuNo = ConnectAPI.Code,
+                BnsTpCode = API.MaxAmount > 0 ? sell : buy,
+                FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.시장가).ToString("D2"),
+                OrdPrc = price.ToString("F2"),
+                OrdQty = amount.ToString()
+            });
         }
         void SendLiquidationOrder()
         {
