@@ -22,7 +22,7 @@ namespace ShareInvest.OpenAPI
         {
             get
             {
-                if (count++ == 179)
+                if (count++ == 0x95)
                     count = 0;
 
                 return (0xBB8 + count).ToString("D4");

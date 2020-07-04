@@ -38,11 +38,36 @@ namespace ShareInvest
             if (e.Accounts == null && Balance != null)
                 BeginInvoke(new Action(() =>
                 {
-                    if (e.Convey is string message)
-                        Balance.OnReceiveMessage(message);
+                    switch (e.Convey)
+                    {
+                        case string message:
+                            Balance.OnReceiveMessage(message);
+                            return;
 
-                    else if (e.Convey is Tuple<long, long> tuple)
-                        Balance.OnReceiveDeposit(tuple);
+                        case Tuple<string, string, int, dynamic, dynamic, long, double> balance:
+                            SuspendLayout();
+                            Size = new Size(0x3B8, 0x63 + 0x28 + Balance.OnReceiveBalance(balance));
+                            ResumeLayout();
+                            break;
+
+                        case Tuple<long, long> tuple:
+                            Balance.OnReceiveDeposit(tuple);
+                            return;
+
+                        case Tuple<int, string> kw:
+                            if (com is OpenAPI.ConnectAPI open)
+                            {
+                                var connect = open.InputValueRqData(optkwFID, kw.Item2, kw.Item1);
+
+                                if (connect != null)
+                                    connect.Send += OnReceiveSecuritiesAPI;
+                            }
+                            else if (com is XingAPI.ConnectAPI xing)
+                            {
+
+                            }
+                            return;
+                    }
                 }));
             else if (e.Convey is FormWindowState state)
             {
@@ -64,6 +89,7 @@ namespace ShareInvest
             }
             else if (e.Convey is string str && e.Accounts is Accounts accounts)
             {
+                Opacity = 0;
                 FormBorderStyle = FormBorderStyle.FixedSingle;
                 WindowState = FormWindowState.Minimized;
                 strategy.Text = balance;
@@ -80,12 +106,14 @@ namespace ShareInvest
                 Balance.Dock = DockStyle.Fill;
                 Text = info.Nick;
                 notifyIcon.Text = info.Nick;
+                Opacity = 0.79315;
             }
         }
         void GoblinBatResize(object sender, EventArgs e)
         {
             if (WindowState.Equals(FormWindowState.Minimized))
             {
+                SuspendLayout();
                 Visible = false;
                 ShowIcon = false;
                 notifyIcon.Visible = true;
@@ -99,11 +127,20 @@ namespace ShareInvest
                         openAPI.OnConnectErrorMessage.Send -= OnReceiveSecuritiesAPI;
                         openAPI.Send -= OnReceiveSecuritiesAPI;
                         openAPI.InputValueRqData(false, opw00005).Send -= OnReceiveSecuritiesAPI;
+
+                        var connect = openAPI.InputValueRqData(optkwFID, null, 0);
+
+                        if (connect != null)
+                            connect.Send -= OnReceiveSecuritiesAPI;
+
+                        foreach (var ctor in openAPI.HoldingStocks)
+                            Balance.SetDisconnectHoldingStock(ctor);
                     }
                     else if (com is XingAPI.ConnectAPI xing)
                         foreach (var ctor in xing.querys)
                             ctor.Send -= OnReceiveSecuritiesAPI;
                 }
+                ResumeLayout();
             }
         }
         void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
@@ -142,9 +179,6 @@ namespace ShareInvest
             {
                 if (strategy.Text.Equals(balance) && Balance != null)
                 {
-                    Balance.Show();
-                    Size = new Size(0x3B8, 0x63 + 0x28);
-
                     if (com is XingAPI.ConnectAPI xingAPI)
                         foreach (var ctor in xingAPI.querys)
                         {
@@ -157,8 +191,11 @@ namespace ShareInvest
                         openAPI.Send += OnReceiveSecuritiesAPI;
                         openAPI.InputValueRqData(true, opw00005).Send += OnReceiveSecuritiesAPI;
 
-                        
+                        foreach (var ctor in openAPI.HoldingStocks)
+                            Balance.SetConnectHoldingStock(ctor);
                     }
+                    Size = new Size(0x3B8, 0x63 + 0x28);
+                    Balance.Show();
                 }
                 Visible = true;
                 ShowIcon = true;
