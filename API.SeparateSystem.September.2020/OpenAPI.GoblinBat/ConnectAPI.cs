@@ -37,7 +37,7 @@ namespace ShareInvest.OpenAPI
         }
         void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => GetRequestTR(string.Concat(e.sTrCode.Substring(0, 1).ToUpper(), e.sTrCode.Substring(1)))?.OnReceiveTrData(e);
         void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => Connect.Real.FirstOrDefault(o => o.GetType().Name.Replace('_', ' ').Equals(e.sRealType))?.OnReceiveRealData(e);
-        void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.Invoke(this, new SendSecuritiesAPI(e.sMsg.Substring(9)));
+        void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg.Substring(9), "(", e.sScrNo, ")")));
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
         public AccountInformation SetPrivacy(Privacy privacy)
         {
@@ -91,7 +91,7 @@ namespace ShareInvest.OpenAPI
         }
         public void SetForeColor(Color color) => labelOpenAPI.ForeColor = color;
         public ISendSecuritiesAPI OnConnectErrorMessage => API as Connect ?? null;
-        public IEnumerable<HoldingStocks> HoldingStocks
+        public IEnumerable<Holding> HoldingStocks
         {
             get
             {

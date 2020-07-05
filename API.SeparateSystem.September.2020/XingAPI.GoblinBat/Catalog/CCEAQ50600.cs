@@ -17,7 +17,6 @@ namespace ShareInvest.XingAPI.Catalog
         {
             var enumerable = GetOutBlocks();
             var temp = new StringBuilder[enumerable.Count];
-            string str = string.Empty;
 
             while (enumerable.Count > 0)
             {

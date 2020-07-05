@@ -16,7 +16,7 @@ namespace ShareInvest.OpenAPI.Catalog
         {
             var param = base.OnReceiveRealData(e, fid);
 
-            if (Connect.HoldingStock.TryGetValue(e.sRealKey, out HoldingStocks hs))
+            if (Connect.HoldingStock.TryGetValue(e.sRealKey, out Holding hs))
                 new Task(() => hs.OnReceiveEvent(param)).Start();
         }
         readonly int[] fid = new int[] { 20, 10, 11, 12, 27, 28, 15, 13, 14, 16, 17, 18, 25, 26, 29, 30, 31, 32, 228, 311, 290, 691, 567, 568 };

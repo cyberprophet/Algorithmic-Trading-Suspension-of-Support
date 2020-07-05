@@ -38,6 +38,11 @@ namespace ShareInvest.Controls
             textAssets.ForeColor = param.Item1 == 0 ? Color.Snow : param.Item1 > 0 ? Color.Maroon : Color.Navy;
             textAvailable.ForeColor = param.Item2 == 0 ? Color.Snow : param.Item2 > 0 ? Color.Maroon : Color.Navy;
         }
+        public void OnReceiveDeposit(long available)
+        {
+            textAvailable.Text = available.ToString("C0")?.Replace("-", string.Empty);
+            textAvailable.ForeColor = available == 0 ? Color.Snow : available > 0 ? Color.Maroon : Color.Navy;
+        }
         public int OnReceiveBalance(Tuple<string, string, int, dynamic, dynamic, long, double> balance)
         {
             if (balance.Item3 == 0 && dIndex.TryGetValue(balance.Item1, out int rIndex) && dIndex.Remove(balance.Item1))
@@ -62,15 +67,15 @@ namespace ShareInvest.Controls
             return data.Rows.GetRowsHeight(DataGridViewElementStates.None) + (data.Rows.Count == 0 ? 0 : 0x19);
         }
         public void OnReceiveMessage(string message) => labelMessage.Text = string.Concat(DateTime.Now.ToLongTimeString(), " ", message);
-        public void SetConnectHoldingStock(HoldingStocks hs)
+        public void SetConnectHoldingStock(Holding stocks)
         {
-            if (hs != null)
-                hs.Send += OnReceiveHoldingStocks;
+            if (stocks != null)
+                stocks.SendStocks += OnReceiveHoldingStocks;
         }
-        public void SetDisconnectHoldingStock(HoldingStocks hs)
+        public void SetDisconnectHoldingStock(Holding stocks)
         {
-            if (hs != null)
-                hs.Send -= OnReceiveHoldingStocks;
+            if (stocks != null)
+                stocks.SendStocks -= OnReceiveHoldingStocks;
         }
         void ChangeToCurrent(string code, bool hasRows, dynamic current, long revenue, double rate, int quantity, dynamic purchase)
         {

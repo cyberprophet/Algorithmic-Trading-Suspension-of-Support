@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-    public struct Privacy
+    public class Privacy
     {
         [Key, StringLength(15)]
         public string IP

@@ -11,6 +11,10 @@ namespace ShareInvest
 {
     partial class SecuritiesAPI : Form
     {
+        internal SecuritiesAPI(Models.Privacy privacy, ISecuritiesAPI com)
+        {
+
+        }
         internal SecuritiesAPI(ISecuritiesAPI com)
         {
             this.com = com;
@@ -48,6 +52,10 @@ namespace ShareInvest
                             SuspendLayout();
                             Size = new Size(0x3B8, 0x63 + 0x28 + Balance.OnReceiveBalance(balance));
                             ResumeLayout();
+                            break;
+
+                        case long available:
+                            Balance.OnReceiveDeposit(available);
                             break;
 
                         case Tuple<long, long> tuple:
@@ -134,7 +142,10 @@ namespace ShareInvest
                             connect.Send -= OnReceiveSecuritiesAPI;
 
                         foreach (var ctor in openAPI.HoldingStocks)
+                        {
                             Balance.SetDisconnectHoldingStock(ctor);
+                            ctor.SendBalance -= OnReceiveSecuritiesAPI;
+                        }
                     }
                     else if (com is XingAPI.ConnectAPI xing)
                         foreach (var ctor in xing.querys)
@@ -161,7 +172,13 @@ namespace ShareInvest
         }
         void TimerTick(object sender, EventArgs e)
         {
-            if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) == false)
+            if (com == null)
+            {
+                timer.Stop();
+                strip.ItemClicked -= OnItemClick;
+                Dispose();
+            }
+            else if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) == false)
                 WindowState = FormWindowState.Minimized;
 
             else if (Controls.Contains((Control)com) == false && WindowState.Equals(FormWindowState.Minimized))
@@ -192,7 +209,10 @@ namespace ShareInvest
                         openAPI.InputValueRqData(true, opw00005).Send += OnReceiveSecuritiesAPI;
 
                         foreach (var ctor in openAPI.HoldingStocks)
+                        {
                             Balance.SetConnectHoldingStock(ctor);
+                            ctor.SendBalance += OnReceiveSecuritiesAPI;
+                        }
                     }
                     Size = new Size(0x3B8, 0x63 + 0x28);
                     Balance.Show();

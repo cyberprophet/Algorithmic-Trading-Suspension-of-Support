@@ -52,7 +52,7 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
-        internal static Dictionary<string, HoldingStocks> HoldingStock
+        internal static Dictionary<string, Holding> HoldingStock
         {
             get; private set;
         }
@@ -61,7 +61,7 @@ namespace ShareInvest.OpenAPI
             if (API == null && axAPI.CommConnect() == 0)
             {
                 API = new Connect(axAPI);
-                HoldingStock = new Dictionary<string, HoldingStocks>();
+                HoldingStock = new Dictionary<string, Holding>();
                 TR = new HashSet<TR>() { new KOA_CREATE_FO_ORD { API = axAPI } };
                 Real = new HashSet<Real>() { new 주식체결 { API = axAPI }, new 장시작시간 { API = axAPI } };
                 Chejan = new Dictionary<string, Chejan>() { { ((int)ChejanType.주문체결).ToString(), new 주문체결 { API = axAPI } }, { ((int)ChejanType.잔고).ToString(), new 잔고 { API = axAPI } }, { ((int)ChejanType.파생잔고).ToString(), new 파생잔고 { API = axAPI } } };
