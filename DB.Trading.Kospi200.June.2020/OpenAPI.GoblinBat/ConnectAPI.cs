@@ -895,22 +895,22 @@ namespace ShareInvest.OpenAPI
                     {
                         var stock = API.KOA_Functions("GetMasterStockInfo", co.Code).Split(';')[0].Contains(market);
                         int sell = (int)(co.Purchase * 1.05), buy = (int)(co.Purchase * 0.95), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
+                        sPrice = sPrice < lower ? lower + GetQuoteUnit(sPrice, stock) : sPrice;
 
-                        while (sPrice < upper)
+                        while (sPrice < upper && quantity-- > 0)
                         {
-                            if (quantity-- > 0 && sPrice > lower)
-                                OnReceiveOrder(new CollectedInformation
-                                {
-                                    RQName = string.Concat(co.Name, ';', sPrice, ';', Cash),
-                                    ScreenNo = string.Concat((int)OrderType.신규매도, GetScreenNumber().ToString("D2"), i % 10),
-                                    AccNo = secret.Account,
-                                    OrderType = (int)OrderType.신규매도,
-                                    Code = co.Code,
-                                    Qty = 1,
-                                    Price = sPrice,
-                                    HogaGb = ((int)HogaGb.지정가).ToString("D2"),
-                                    OrgOrderNo = string.Empty
-                                });
+                            OnReceiveOrder(new CollectedInformation
+                            {
+                                RQName = string.Concat(co.Name, ';', sPrice, ';', Cash),
+                                ScreenNo = string.Concat((int)OrderType.신규매도, GetScreenNumber().ToString("D2"), i % 10),
+                                AccNo = secret.Account,
+                                OrderType = (int)OrderType.신규매도,
+                                Code = co.Code,
+                                Qty = 1,
+                                Price = sPrice,
+                                HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                OrgOrderNo = string.Empty
+                            });
                             sPrice += GetQuoteUnit(sPrice, stock);
                         }
                         while (bPrice < upper && bPrice < buy && Cash > bPrice * 1.00015)

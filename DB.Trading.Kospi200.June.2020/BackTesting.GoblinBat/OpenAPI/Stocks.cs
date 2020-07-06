@@ -27,9 +27,20 @@ namespace ShareInvest.Strategy.OpenAPI
 
                 if (result.Equals(DialogResult.OK) && DateTime.Now.Minute > 0x32)
                 {
+                    if ((specify.Trend > 0 && specify.Long > 0 && specify.Short > 0) == false)
+                        specify = new Catalog.OpenAPI.Specify
+                        {
+                            Short = 5,
+                            Long = 70,
+                            Trend = 720
+                        };
                     if (string.IsNullOrEmpty(chart.Item1) || chart.Item2 == null || chart.Item2.Count == 0)
+                    {
                         chart = GetBasicChart(code);
 
+                        if (code.Equals(exception))
+                            break;
+                    }
                     if (Chart == null && string.IsNullOrEmpty(chart.Item1) == false)
                     {
                         var temp = GetBasicChart(code, chart.Item1);
@@ -38,13 +49,6 @@ namespace ShareInvest.Strategy.OpenAPI
                         if (temp.Item2 <= 0)
                             chart.Item2.Clear();
                     }
-                    if ((specify.Trend > 0 && specify.Long > 0 && specify.Short > 0) == false)
-                        specify = new Catalog.OpenAPI.Specify
-                        {
-                            Short = 5,
-                            Long = 70,
-                            Trend = 720
-                        };
                 }
                 else if (result.Equals(DialogResult.Cancel))
                     break;
@@ -58,12 +62,13 @@ namespace ShareInvest.Strategy.OpenAPI
                 var dp = chart.Item2.Dequeue();
                 DrawChart(dp.Date, dp.Price);
             }
-            foreach (var chart in Chart)
-                while (chart.Value.Count > 0)
-                {
-                    var dp = chart.Value.Dequeue();
-                    DrawChart(dp.Date, dp.Price);
-                }
+            if (code.Equals(exception) == false)
+                foreach (var chart in Chart)
+                    while (chart.Value.Count > 0)
+                    {
+                        var dp = chart.Value.Dequeue();
+                        DrawChart(dp.Date, dp.Price);
+                    }
             Code = code;
             OnTime = true;
         }
@@ -147,5 +152,6 @@ namespace ShareInvest.Strategy.OpenAPI
         ConnectAPI API => ConnectAPI.GetInstance();
         readonly Catalog.OpenAPI.Specify specify;
         readonly (string, Queue<Catalog.OpenAPI.Chart>) chart;
+        const string exception = "005935";
     }
 }

@@ -38,6 +38,7 @@ namespace ShareInvest.Strategy.XingAPI
                 RollOver = specify.RollOver == false || Array.Exists(Information.RemainingDay, o => o.Equals(now.ToString(remaining)));
                 ran = new Random();
                 OnTime = true;
+                Assets = specify.Assets;
                 API.OnReceiveBalance = false;
                 ((IEvents<EventHandler.XingAPI.Quotes>)API.reals[0]).Send += OnReceiveQuotes;
 
@@ -182,15 +183,17 @@ namespace ShareInvest.Strategy.XingAPI
                     if (Array.Exists(sp, o => o == kv.Value) == false && API.OnReceiveBalance && API.SellOrder.ContainsKey(kv.Key) && SendClearingOrder(kv.Key))
                         return;
             }
-            else if (time > 153559 && time < 154459 && RollOver)
+            else if (time > 153559 && time < 153959 && RollOver)
             {
                 RollOver = false;
                 SendLiquidationOrder();
-                SendLiquidationOrder(GetUserAssets((long)specify.Assets));
             }
+            else if (time > 153959 && time < 154459 && Assets > 0)
+                SendLiquidationOrder(GetUserAssets((long)specify.Assets));
         }
         void SendLiquidationOrder(long arbitrage)
         {
+            Assets = 0;
             var price = specify.Assets / (Const.TransactionMultiplier * specify.MarginRate * Math.Abs(API.MaxAmount));
             var current = arbitrage / (price * Const.TransactionMultiplier * specify.MarginRate);
             int amount = 0;
@@ -357,6 +360,10 @@ namespace ShareInvest.Strategy.XingAPI
             get; set;
         }
         bool OnTime
+        {
+            get; set;
+        }
+        ulong Assets
         {
             get; set;
         }

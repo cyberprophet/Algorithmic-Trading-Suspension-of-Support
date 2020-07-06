@@ -119,7 +119,7 @@ namespace ShareInvest.GoblinBatContext
 
             try
             {
-                if (check)
+                if (check && directory.Exists)
                     directory.Delete(check);
 
                 if (directory.Exists)
@@ -300,16 +300,16 @@ namespace ShareInvest.GoblinBatContext
         }
         protected long GetUserAssets(long assets)
         {
-            var identity = new Secret().GetIdentify(key);
-            using (var db = new GoblinBatDbContext(key))
-                try
-                {
+            try
+            {
+                var identity = new Secret().GetIdentify(key);
+                using (var db = new GoblinBatDbContext(key))
                     return db.Identifies.Where(o => o.Identity.Equals(identity)).AsNoTracking().OrderByDescending(o => o.Date).First().Assets - assets;
-                }
-                catch (Exception ex)
-                {
-                    new ExceptionMessage(assets.ToString("N0"), ex.TargetSite.Name);
-                }
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(assets.ToString("N0"), ex.TargetSite.Name);
+            }
             return 0;
         }
         protected CallUpBasicInformation(string key) => this.key = key;
