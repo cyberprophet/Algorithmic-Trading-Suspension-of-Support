@@ -1,7 +1,11 @@
 ﻿namespace ShareInvest.Catalog
 {
-    public struct Privacy
+    public struct Privacies : IParameters
     {
+        public string Security
+        {
+            get; set;
+        }
         public string Identity
         {
             get; set;

@@ -10,7 +10,7 @@ namespace ShareInvest.XingAPI
     class Connect : XASessionClass
     {
         internal static Connect GetInstance() => API;
-        internal static Connect GetInstance(Privacy privacy, ShareInvest.Catalog.XingAPI.LoadServer load)
+        internal static Connect GetInstance(Privacies privacy, ShareInvest.Catalog.XingAPI.LoadServer load)
         {
             if (API == null)
                 API = new Connect(privacy, load);
@@ -47,7 +47,7 @@ namespace ShareInvest.XingAPI
                     Accounts[i] = GetAccountList(i);
             }
         }
-        Connect(Privacy privacy, ShareInvest.Catalog.XingAPI.LoadServer load)
+        Connect(Privacies privacy, ShareInvest.Catalog.XingAPI.LoadServer load)
         {
             if (ConnectServer(load.Server, 0x4E21) && Login(privacy.Identity, privacy.Password, privacy.Certificate, 0, string.IsNullOrEmpty(privacy.Certificate) == false) && IsLoadAPI())
             {

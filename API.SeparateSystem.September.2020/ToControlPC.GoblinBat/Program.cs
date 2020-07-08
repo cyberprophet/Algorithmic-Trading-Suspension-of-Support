@@ -9,17 +9,17 @@ namespace ShareInvest
         [STAThread]
         static void Main()
         {
-            var secrecy = new Secrecy(Verify.KeyDecoder.GetKey());
             secrecy.PublishTheDebuggedProgram();
             secrecy.CheckAndUpdateTheProgramVersion();
-            StartProgess(secrecy.GetUserInformation());
+            StartProgess(secrecy.Key);
             Process.GetCurrentProcess().Kill();
         }
         static void StartProgess(dynamic param)
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Strategics.GoblinBat());
+            Application.Run(new Strategics.GoblinBat(param));
         }
+        static readonly Secrecy secrecy = new Secrecy(Verify.KeyDecoder.GetKey());
     }
 }

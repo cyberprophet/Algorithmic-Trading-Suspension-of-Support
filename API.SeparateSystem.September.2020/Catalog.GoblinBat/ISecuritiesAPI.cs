@@ -10,7 +10,7 @@ namespace ShareInvest.Catalog
             get;
         }
         void SetForeColor(Color color);
-        AccountInformation SetPrivacy(Privacy privacy);
+        AccountInformation SetPrivacy(Privacies privacy);
         event EventHandler<EventHandler.SendSecuritiesAPI> Send;
     }
     public enum SecuritiesCOM

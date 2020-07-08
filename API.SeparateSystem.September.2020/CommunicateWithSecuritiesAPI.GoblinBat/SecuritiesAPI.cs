@@ -104,7 +104,7 @@ namespace ShareInvest
                 accounts.Hide();
                 accounts.Send -= OnReceiveSecuritiesAPI;
                 var param = str.Split(';');
-                var info = com.SetPrivacy(com is OpenAPI.ConnectAPI ? new Privacy { Account = param[0] } : new Privacy
+                var info = com.SetPrivacy(com is OpenAPI.ConnectAPI ? new Privacies { Account = param[0] } : new Privacies
                 {
                     Account = param[0],
                     AccountPassword = param[1]

@@ -18,7 +18,7 @@ namespace ShareInvest.XingAPI
             if (textCertificate.Text.Length > 9 && textIdentity.Text.Length < 9 && textPassword.Text.Length < 9)
                 BeginInvoke(new Action(() =>
                 {
-                    API = Connect.GetInstance(new Privacy
+                    API = Connect.GetInstance(new Privacies
                     {
                         Identity = textIdentity.Text,
                         Password = textPassword.Text,
@@ -64,7 +64,7 @@ namespace ShareInvest.XingAPI
                 else if (sub.Controls.Count > 0)
                     FindControlRecursive(sub);
         }
-        public AccountInformation SetPrivacy(Privacy privacy)
+        public AccountInformation SetPrivacy(Privacies privacy)
         {
             var ai = new AccountInformation
             {

@@ -2,14 +2,16 @@
 using System.Drawing;
 using System.Windows.Forms;
 
+using ShareInvest.Catalog;
 using ShareInvest.Strategics.Controls;
 
 namespace ShareInvest.Strategics
 {
     public sealed partial class GoblinBat : Form
     {
-        public GoblinBat()
+        public GoblinBat(dynamic cookie)
         {
+            Privacy = new Privacies { Security = cookie };
             InitializeComponent();
             OnReceiveItem(st);
             strip.ItemClicked += OnItemClick;
@@ -82,6 +84,10 @@ namespace ShareInvest.Strategics
             get; set;
         }
         string OnClickMinimized
+        {
+            get; set;
+        }
+        Privacies Privacy
         {
             get; set;
         }
