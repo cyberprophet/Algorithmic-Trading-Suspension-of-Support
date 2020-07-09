@@ -6,6 +6,14 @@
         {
             get; set;
         }
+        public string SecuritiesAPI
+        {
+            get; set;
+        }
+        public string SecurityAPI
+        {
+            get; set;
+        }
         public string Identity
         {
             get; set;

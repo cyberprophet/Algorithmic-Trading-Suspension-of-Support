@@ -10,5 +10,15 @@ namespace ShareInvest.Models
         {
             get; set;
         }
+        [Column(Order = 2), MaxLength(1)]
+        public string SecuritiesAPI
+        {
+            get; set;
+        }
+        [Column(Order =3)]
+        public string SecurityAPI
+        {
+            get; set;
+        }
     }
 }

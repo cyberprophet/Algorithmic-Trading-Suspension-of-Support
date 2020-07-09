@@ -11,11 +11,7 @@ namespace ShareInvest
 {
     partial class SecuritiesAPI : Form
     {
-        internal SecuritiesAPI(Models.Privacy privacy, ISecuritiesAPI com)
-        {
-
-        }
-        internal SecuritiesAPI(ISecuritiesAPI com)
+        internal SecuritiesAPI(Privacies privacy, ISecuritiesAPI com)
         {
             this.com = com;
             InitializeComponent();

@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
+using ShareInvest.Client;
 using ShareInvest.Strategics.Controls;
 
 namespace ShareInvest.Strategics
@@ -11,46 +12,54 @@ namespace ShareInvest.Strategics
     {
         public GoblinBat(dynamic cookie)
         {
-            Privacy = new Privacies { Security = cookie };
             InitializeComponent();
-            OnReceiveItem(st);
             strip.ItemClicked += OnItemClick;
+            StartProgress(new Privacies { Security = cookie });
         }
-        void OnReceiveItem(string item)
+        void StartProgress(IParameters param)
         {
-            if (item.Equals(st))
+            switch (GoblinBatClient.PostContext<Privacies>(param))
             {
-                if (Statistical == null)
-                {
-                    Statistical = new StatisticalControl();
-                    Controls.Add(Statistical);
-                    Statistical.Dock = DockStyle.Fill;
-                }
-                Size = new Size(1350, 255);
-                Visible = true;
-                ShowIcon = true;
-                notifyIcon.Visible = false;
-                Statistical.Show();
-                WindowState = FormWindowState.Normal;
-                timer.Stop();
-                CenterToScreen();
-            }
-            else
-                Close();
+                case 0xCA:
+                    if (Statistical == null)
+                    {
+                        Statistical = new StatisticalControl();
+                        Controls.Add(Statistical);
+                        Statistical.Dock = DockStyle.Fill;
+                    }
+                    Result = DialogResult.OK;
+                    break;
 
-            OnClickMinimized = item;
+                case 0xC8:
+                    Result = MessageBox.Show("", "", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+                    break;
+
+                default:
+                    Result = DialogResult.Cancel;
+                    break;
+            }
+            if (Result.Equals(DialogResult.OK) && IsApplicationAlreadyRunning(param.Security))
+            {
+                Opacity = 0;
+                timer.Start();
+            }
+            else if (Result.Equals(DialogResult.Cancel))
+            {
+                strip.ItemClicked -= OnItemClick;
+                Dispose();
+            }
         }
         void GoblinBatResize(object sender, EventArgs e)
         {
             if (WindowState.Equals(FormWindowState.Minimized))
             {
-                if (OnClickMinimized.Equals(st))
+                if (string.IsNullOrEmpty(OnClickMinimized) == false && OnClickMinimized.Equals(st))
                 {
                     Statistical.Hide();
                     timer.Start();
                 }
                 Opacity = 0.8135;
-                BackColor = Color.FromArgb(121, 133, 130);
+                BackColor = Color.FromArgb(0x79, 0x85, 0x82);
                 Visible = false;
                 ShowIcon = false;
                 notifyIcon.Visible = true;
@@ -71,10 +80,41 @@ namespace ShareInvest.Strategics
         }
         void TimerTick(object sender, EventArgs e)
         {
-            notifyIcon.Icon = (Icon)resources.GetObject(Change ? upload : download);
-            Change = !Change;
+            if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) == false && Result.Equals(DialogResult.OK))
+            {
+                FormBorderStyle = FormBorderStyle.FixedSingle;
+                WindowState = FormWindowState.Minimized;
+            }
+            else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
+            {
+                notifyIcon.Icon = (Icon)resources.GetObject(Change ? upload : download);
+                Change = !Change;
+            }
         }
-        void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => OnReceiveItem(e.ClickedItem.Name);
+        void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(() =>
+        {
+            if (e.ClickedItem.Name.Equals(st))
+            {
+                if (Statistical == null)
+                {
+                    Statistical = new StatisticalControl();
+                    Controls.Add(Statistical);
+                    Statistical.Dock = DockStyle.Fill;
+                }
+                Size = new Size(1350, 255);
+                Visible = true;
+                ShowIcon = true;
+                notifyIcon.Visible = false;
+                Statistical.Show();
+                WindowState = FormWindowState.Normal;
+                timer.Stop();
+                CenterToScreen();
+            }
+            else
+                Close();
+
+            OnClickMinimized = e.ClickedItem.Name;
+        }));
         bool Change
         {
             get; set;
@@ -84,6 +124,10 @@ namespace ShareInvest.Strategics
             get; set;
         }
         string OnClickMinimized
+        {
+            get; set;
+        }
+        DialogResult Result
         {
             get; set;
         }

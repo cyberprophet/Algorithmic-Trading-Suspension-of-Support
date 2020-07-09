@@ -10,7 +10,7 @@ using ShareInvest.Models;
 namespace ShareInvest.Controllers
 {
     [ApiController, Route(route), Produces(produces)]
-    public class PrivaciesController : ControllerBase, IControllers<Privacy>
+    public class PrivaciesController : ControllerBase
     {
         [HttpGet(security), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetContext(string security)

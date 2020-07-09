@@ -30,7 +30,7 @@ namespace ShareInvest.XingAPI
                         Date = labelMessage.Text
                     });
                     if (API is Connect api)
-                        Send?.Invoke(this, new SendSecuritiesAPI(FormWindowState.Minimized, new Accounts(api.Accounts)));
+                        Send?.Invoke(this, new SendSecuritiesAPI(FormWindowState.Minimized, string.IsNullOrEmpty(privacy.SecurityAPI) ? new Accounts(api.Accounts) : new Accounts(securites[1], securites[4])));
                 }));
             else
                 buttonStartProgress.Text = error;
@@ -77,20 +77,10 @@ namespace ShareInvest.XingAPI
                 var name = api.SetAccountName(privacy.Account, privacy.AccountPassword);
                 ai.Name = name.Item2;
                 ai.Nick = name.Item3;
+                checkPrivacy.CheckState = ai.Server && checkPrivacy.Checked ? CheckState.Unchecked : checkPrivacy.CheckState;
 
-                if (checkPrivacy.Checked)
-                    new Models.Privacy
-                    {
-                        SecuritiesAPI = (char)SecuritiesCOM.XingAPI,
-                        Identity = textIdentity.Text,
-                        Password = textPassword.Text,
-                        Certificate = textCertificate.Text,
-                        Account = privacy.Account,
-                        AccountPassword = privacy.AccountPassword,
-                        Server = checkDemo.Checked,
-                        Date = labelMessage.Text,
-                        IP = api.GetClientIP()
-                    };
+                if (checkPrivacy.Checked && 0xC8 == new Secrecy().Encrypt(this.privacy.Security, this.privacy.SecuritiesAPI, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.Account, privacy.AccountPassword, checkDemo.Checked))
+                    Console.WriteLine(ai.Nick);
             }
             return ai;
         }
@@ -99,13 +89,28 @@ namespace ShareInvest.XingAPI
         {
             get; private set;
         }
-        public ConnectAPI()
+        public ConnectAPI(Privacies privacy)
         {
+            int index = 0;
+            this.privacy = privacy;
             InitializeComponent();
 
             foreach (Control control in Controls)
                 FindControlRecursive(control);
+
+            if (string.IsNullOrEmpty(privacy.SecurityAPI) == false)
+            {
+                securites = new Secrecy().Decipher(privacy.Security, privacy.SecurityAPI);
+                textCertificate.Text = securites[index++];
+                textPassword.Text = securites[++index];
+                textIdentity.Text = securites[++index];
+                checkPrivacy.CheckState = CheckState.Checked;
+                textPassword.UseSystemPasswordChar = true;
+                textCertificate.UseSystemPasswordChar = true;
+            }
         }
+        readonly string[] securites;
+        readonly Privacies privacy;
         public readonly IQuerys<SendSecuritiesAPI>[] querys = (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
         public event EventHandler<SendSecuritiesAPI> Send;
     }
