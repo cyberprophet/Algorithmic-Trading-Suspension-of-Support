@@ -9,6 +9,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
+using Z.EntityFramework.Extensions;
+
 namespace ShareInvest
 {
     public class Startup
@@ -17,10 +19,13 @@ namespace ShareInvest
         {
             get;
         }
-        public void ConfigureServices(IServiceCollection services) => services.AddDbContext<CoreAPI.CoreApiDbContext>(o => o.UseSqlServer(Configuration[connection])).AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddDbContext<CoreAPI.CoreApiDbContext>(o => o.UseSqlServer(Configuration[new Security().Connection])).AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
+            EntityFrameworkManager.ContextFactory = context => new CoreAPI.CoreApiDbContext(new DbContextOptionsBuilder<CoreAPI.CoreApiDbContext>().UseSqlServer(Configuration[new Security().Connection]).Options);
+        }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) => app.UseMvc();
         public Startup(IConfiguration configuration) => Configuration = configuration;
         static NewtonsoftJsonInputFormatter GetJsonPatchInputformatter() => new ServiceCollection().AddLogging().AddMvc().AddNewtonsoftJson().Services.BuildServiceProvider().GetRequiredService<IOptions<MvcOptions>>().Value.InputFormatters.OfType<NewtonsoftJsonPatchInputFormatter>().First();
-        const string connection = "Data:CommandAPIConnection:ConnectionString";
     }
 }

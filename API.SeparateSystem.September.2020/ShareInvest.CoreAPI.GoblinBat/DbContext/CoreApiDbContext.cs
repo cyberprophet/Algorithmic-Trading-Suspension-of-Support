@@ -1,4 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
+
+using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Models;
 
@@ -6,10 +10,7 @@ namespace ShareInvest.CoreAPI
 {
     public class CoreApiDbContext : DbContext
     {
-        public CoreApiDbContext(DbContextOptions<CoreApiDbContext> options) : base(options)
-        {
-
-        }
+        public CoreApiDbContext(DbContextOptions<CoreApiDbContext> options) : base(options) => IsDebugging(options.ContextType);
         public DbSet<Privacy> Privacies
         {
             get; set;
@@ -34,5 +35,11 @@ namespace ShareInvest.CoreAPI
         {
             get; set;
         }
+        static ulong Count
+        {
+            get; set;
+        }
+        [Conditional("DEBUG")]
+        void IsDebugging(Type context) => new Task(() => Console.WriteLine(Count++ + "\t" + DateTime.Now + "\t" + context.Name)).Start();
     }
 }

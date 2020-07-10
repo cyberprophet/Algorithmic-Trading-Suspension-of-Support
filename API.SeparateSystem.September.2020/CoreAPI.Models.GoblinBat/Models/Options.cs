@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-    public class Options : ICharts<double>
+    public class Options
     {
         [Required, Column(Order = 1), StringLength(8)]
         public string Code
@@ -15,13 +15,13 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Column(Order = 2)]
-        public long Date
+        [Key, Column(Order = 2), StringLength(15)]
+        public string Date
         {
             get; set;
         }
         [Required, Column(Order = 3)]
-        public double Price
+        public string Price
         {
             get; set;
         }

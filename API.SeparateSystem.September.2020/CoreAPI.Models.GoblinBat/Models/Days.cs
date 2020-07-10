@@ -3,20 +3,20 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-    public class Days : ICharts<double>
+    public class Days
     {
         [Required, Column(Order = 1), MinLength(6), MaxLength(8)]
         public string Code
         {
             get; set;
         }
-        [Key, Column(Order = 2)]
-        public long Date
+        [Key, Column(Order = 2), StringLength(8)]
+        public string Date
         {
             get; set;
         }
         [Required, Column(Order = 3)]
-        public double Price
+        public string Price
         {
             get; set;
         }

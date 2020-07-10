@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.Models
 {
-    public interface ICharts<T>
+    public interface ICharts
     {
         string Code
         {
@@ -14,7 +14,7 @@
         {
             get; set;
         }
-        T Price
+        string Price
         {
             get; set;
         }

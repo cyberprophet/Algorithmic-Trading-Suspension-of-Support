@@ -30,13 +30,10 @@ namespace ShareInvest.Controllers
             if (await context.Privacies.AnyAsync(o => o.Security.Equals(privacy.Security)))
                 return Accepted();
 
-            else
-            {
-                context.Privacies.Add(privacy);
-                await context.BulkSaveChangesAsync();
+            context.Privacies.Add(privacy);
+            await context.BulkSaveChangesAsync();
 
-                return Ok();
-            }
+            return Ok();
         }
         [HttpPut(security), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PutContext(string security, [FromBody] Privacy privacy)
@@ -48,8 +45,7 @@ namespace ShareInvest.Controllers
 
                 return Ok();
             }
-            else
-                return BadRequest();
+            return BadRequest();
         }
         [HttpDelete(security), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteContext(string security)
