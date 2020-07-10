@@ -14,5 +14,25 @@ namespace ShareInvest.CoreAPI
         {
             get; set;
         }
+        public DbSet<Codes> Codes
+        {
+            get; set;
+        }
+        public DbSet<Days> Days
+        {
+            get; set;
+        }
+        public DbSet<Stocks> Stocks
+        {
+            get; set;
+        }
+        public DbSet<Futures> Futures
+        {
+            get; set;
+        }
+        public DbSet<Options> Options
+        {
+            get; set;
+        }
     }
 }
