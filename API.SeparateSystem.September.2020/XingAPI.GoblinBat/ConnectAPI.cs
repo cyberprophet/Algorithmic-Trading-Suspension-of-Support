@@ -15,6 +15,8 @@ namespace ShareInvest.XingAPI
     {
         void ButtonStartProgressClick(object sender, EventArgs e)
         {
+            Start = true;
+
             if (textCertificate.Text.Length > 9 && textIdentity.Text.Length < 9 && textPassword.Text.Length < 9)
                 BeginInvoke(new Action(() =>
                 {
@@ -84,8 +86,18 @@ namespace ShareInvest.XingAPI
             }
             return ai;
         }
-        public void SetForeColor(Color color) => labelXingAPI.ForeColor = color;
+        public void StartProgress() => buttonStartProgress.PerformClick();
+        public void SetForeColor(Color color, string remain)
+        {
+            labelXingAPI.ForeColor = color;
+            labelMessage.Text = remain;
+        }
+        public IQuerys<SendSecuritiesAPI> ConvertTheCodeToName() => new T9943();
         public dynamic API
+        {
+            get; private set;
+        }
+        public bool Start
         {
             get; private set;
         }

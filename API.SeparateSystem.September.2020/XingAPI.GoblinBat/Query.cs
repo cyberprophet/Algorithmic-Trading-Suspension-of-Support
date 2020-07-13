@@ -112,7 +112,7 @@ namespace ShareInvest.XingAPI
             if (error < 0)
             {
                 var param = GetErrorMessage(error);
-                //  new ExceptionMessage(param, name);
+                Console.WriteLine(name + "\t" + param);
 
                 if (Secrecy.ErrorMessage.Equals(param))
                     API.Dispose();
@@ -120,19 +120,10 @@ namespace ShareInvest.XingAPI
         }
         protected internal virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
-            if (bIsSystemError)
-            {
-                //  new ExceptionMessage(szMessage, nMessageCode);
+            if (bIsSystemError == false && int.TryParse(nMessageCode, out int code) && code > 999 && nMessageCode.Equals(rCancel))
+                API.OnReceiveBalance = true;
 
-                return;
-            }
-            if (int.TryParse(nMessageCode, out int code) && code > 999)
-            {
-                if (nMessageCode.Equals(rCancel))
-                    API.OnReceiveBalance = true;
-
-                // new ExceptionMessage(szMessage, nMessageCode);
-            }
+            Console.WriteLine(nMessageCode + "\t" + szMessage);
         }
         protected internal virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
         protected internal Connect API => Connect.GetInstance();

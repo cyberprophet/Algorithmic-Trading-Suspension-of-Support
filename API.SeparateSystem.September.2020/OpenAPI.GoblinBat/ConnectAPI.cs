@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 
 using AxKHOpenAPILib;
@@ -18,14 +19,15 @@ namespace ShareInvest.OpenAPI
     {
         void ButtonStartProgressClick(object sender, EventArgs e) => BeginInvoke(new Action(() =>
         {
+            Start = true;
             axAPI.OnEventConnect += OnEventConnect;
             axAPI.OnReceiveMsg += OnReceiveMsg;
             API = Connect.GetInstance(axAPI);
         }));
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e) => BeginInvoke(new Action(() =>
         {
-            if (e.nErrCode == 0 && string.IsNullOrEmpty(axAPI.KOA_Functions(showAccountWindow, string.Empty)))
-                Send?.Invoke(this, new SendSecuritiesAPI(FormWindowState.Minimized, new Accounts(axAPI.GetLoginInfo(account))));
+            if (e.nErrCode == 0 && (string.IsNullOrEmpty(privacy.SecurityAPI) == false || string.IsNullOrEmpty(axAPI.KOA_Functions(showAccountWindow, string.Empty))))
+                Send?.Invoke(this, new SendSecuritiesAPI(FormWindowState.Minimized, securites != null && securites.Length == 0xA ? new Accounts(securites) : new Accounts(axAPI.GetLoginInfo(account))));
 
             else
                 (API as Connect)?.SendErrorMessage(e.nErrCode);
@@ -47,12 +49,18 @@ namespace ShareInvest.OpenAPI
                 axAPI.OnReceiveRealData += OnReceiveRealData;
                 axAPI.OnReceiveChejanData += OnReceiveChejanData;
             }
+            var mServer = axAPI.GetLoginInfo(server);
+            checkAccount.CheckState = mServer.Equals(mock) && checkAccount.Checked ? CheckState.Unchecked : CheckState.Checked;
+
+            if (checkAccount.Checked && new Security().Encrypt(this.privacy.Security, this.privacy.SecuritiesAPI, privacy.Account, checkAccount.Checked) == 0xC8)
+                Console.WriteLine(checkAccount.CheckState);
+
             return new AccountInformation
             {
                 Identity = axAPI.GetLoginInfo(user),
                 Account = privacy.Account,
                 Name = string.Empty,
-                Server = axAPI.GetLoginInfo(server) == mock,
+                Server = mServer.Equals(mock),
                 Nick = axAPI.GetLoginInfo(name)
             };
         }
@@ -89,7 +97,12 @@ namespace ShareInvest.OpenAPI
 
             return ctor ?? null;
         }
-        public void SetForeColor(Color color) => labelOpenAPI.ForeColor = color;
+        public void StartProgress() => buttonStartProgress.PerformClick();
+        public void SetForeColor(Color color, string remain)
+        {
+            labelOpenAPI.ForeColor = color;
+            labelMessage.Text = remain;
+        }
         public ISendSecuritiesAPI OnConnectErrorMessage => API as Connect ?? null;
         public IEnumerable<Holding> HoldingStocks
         {
@@ -103,7 +116,23 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
-        public ConnectAPI() => InitializeComponent();
+        public bool Start
+        {
+            get; private set;
+        }
+        public ConnectAPI(Privacies privacy)
+        {
+            this.privacy = privacy;
+            InitializeComponent();
+
+            if (string.IsNullOrEmpty(privacy.SecurityAPI) == false)
+            {
+                securites = new Security().Decipher(privacy.Security, privacy.SecuritiesAPI, privacy.SecurityAPI);
+                checkAccount.CheckState = CheckState.Checked;
+            }
+        }
+        readonly StringBuilder securites;
+        readonly Privacies privacy;
         public event EventHandler<SendSecuritiesAPI> Send;
     }
 }

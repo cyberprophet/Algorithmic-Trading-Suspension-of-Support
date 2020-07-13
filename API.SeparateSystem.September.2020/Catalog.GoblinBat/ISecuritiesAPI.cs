@@ -9,7 +9,12 @@ namespace ShareInvest.Catalog
         {
             get;
         }
-        void SetForeColor(Color color);
+        bool Start
+        {
+            get;
+        }
+        void StartProgress();
+        void SetForeColor(Color color, string remain);
         AccountInformation SetPrivacy(Privacies privacy);
         event EventHandler<EventHandler.SendSecuritiesAPI> Send;
     }

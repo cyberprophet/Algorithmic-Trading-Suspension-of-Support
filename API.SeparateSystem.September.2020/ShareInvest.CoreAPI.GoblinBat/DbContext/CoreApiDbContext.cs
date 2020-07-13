@@ -40,6 +40,13 @@ namespace ShareInvest.CoreAPI
             get; set;
         }
         [Conditional("DEBUG")]
-        void IsDebugging(Type context) => new Task(() => Console.WriteLine(Count++ + "\t" + DateTime.Now + "\t" + context.Name)).Start();
+        void IsDebugging(Type context) => new Task(() =>
+        {
+            Console.WriteLine(Count++ + "\t" + DateTime.Now + "\t" + context.Name);
+            var now = DateTime.Now;
+
+            if ((now.Hour == 9 && now.Minute == 0 && now.Second == 0) || Count == ulong.MaxValue)
+                Count = ulong.MinValue;
+        }).Start();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Windows.Forms;
 
 namespace ShareInvest.Controls
@@ -22,6 +23,15 @@ namespace ShareInvest.Controls
         {
             if (comboAccounts.SelectedItem is string str && str.Length > 0 && textPassword.ReadOnly)
                 buttonStartProgress.PerformClick();
+        }
+        public Accounts(StringBuilder account)
+        {
+            InitializeComponent();
+            textPassword.Text = open;
+            textPassword.ReadOnly = true;
+            comboAccounts.Items.Add(account.ToString().Insert(4, "-").Insert(9, "-"));
+            comboAccounts.SelectedIndex = 0;
+            timer.Start();
         }
         public Accounts(string[] accounts)
         {

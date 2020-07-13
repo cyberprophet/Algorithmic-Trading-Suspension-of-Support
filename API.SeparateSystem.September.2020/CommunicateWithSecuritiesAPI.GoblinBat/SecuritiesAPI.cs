@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
+using ShareInvest.Client;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 
@@ -14,6 +15,8 @@ namespace ShareInvest
         internal SecuritiesAPI(Privacies privacy, ISecuritiesAPI com)
         {
             this.com = com;
+            this.privacy = privacy;
+            random = new Random();
             InitializeComponent();
             icon = new string[] { mono, duo, tri, quad };
             colors = new Color[] { Color.Maroon, Color.Ivory, Color.DeepSkyBlue };
@@ -111,6 +114,14 @@ namespace ShareInvest
                 Text = info.Nick;
                 notifyIcon.Text = info.Nick;
                 Opacity = 0.79315;
+
+                if (com is XingAPI.ConnectAPI connect)
+                {
+                    var ctor = connect.ConvertTheCodeToName();
+                    ctor.Send += OnReceiveSecuritiesAPI;
+                    ctor.QueryExcute();
+                    Connect = int.MaxValue;
+                }
             }
         }
         void GoblinBatResize(object sender, EventArgs e)
@@ -160,6 +171,16 @@ namespace ShareInvest
                     return;
 
                 case DialogResult.Yes:
+                    var code = GoblinBatClient.DeleteContext<Privacies>(privacy);
+
+                    if (code > 0xC8)
+                    {
+                        notifyIcon.Text = OnReceiveErrorMessage(code);
+                        e.Cancel = true;
+                        WindowState = FormWindowState.Minimized;
+
+                        return;
+                    }
                     break;
             }
             timer.Stop();
@@ -180,11 +201,37 @@ namespace ShareInvest
             else if (Controls.Contains((Control)com) == false && WindowState.Equals(FormWindowState.Minimized))
                 strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
 
+            else if (Visible && ShowIcon && notifyIcon.Visible == false && FormBorderStyle.Equals(FormBorderStyle.None) && WindowState.Equals(FormWindowState.Normal) && (com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI))
+            {
+                var now = DateTime.Now;
+                var day = 0;
+
+                switch (now.DayOfWeek)
+                {
+                    case DayOfWeek.Sunday:
+                        day = now.AddDays(1).Day;
+                        break;
+
+                    case DayOfWeek.Saturday:
+                        day = now.AddDays(2).Day;
+                        break;
+
+                    case DayOfWeek weeks when weeks.Equals(DayOfWeek.Friday) && now.Hour > 8:
+                        day = now.AddDays(3).Day;
+                        break;
+
+                    default:
+                        day = (now.Hour > 8 || Array.Exists(holidays, o => o.Equals(now.ToString(dFormat))) ? now.AddDays(1) : now).Day;
+                        break;
+                }
+                var remain = new DateTime(now.Year, now.Month, day, 9, 0, 0) - DateTime.Now;
+                com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
+
+                if (remain.TotalMinutes < 0x1F && com.Start == false && DateTime.Now.Hour == 8 && DateTime.Now.Minute > 0x1E && (Connect > 0x4B0 || random.Next(Connect++, 0x4B1) == 0x4B0))
+                    com.StartProgress();
+            }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
                 notifyIcon.Icon = (Icon)resources.GetObject(icon[DateTime.Now.Second % 4]);
-
-            else if (Visible && ShowIcon && notifyIcon.Visible == false && FormBorderStyle.Equals(FormBorderStyle.None) && WindowState.Equals(FormWindowState.Normal) && (com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI))
-                com.SetForeColor(colors[DateTime.Now.Second % 3]);
         }
         void OnItemClick(object sender, ToolStripItemClickedEventArgs e)
         {
@@ -193,11 +240,18 @@ namespace ShareInvest
                 if (strategy.Text.Equals(balance) && Balance != null)
                 {
                     if (com is XingAPI.ConnectAPI xingAPI)
+                    {
                         foreach (var ctor in xingAPI.querys)
                         {
                             ctor.Send += OnReceiveSecuritiesAPI;
                             ctor.QueryExcute();
                         }
+                        if (Connect == int.MaxValue)
+                        {
+                            xingAPI.ConvertTheCodeToName().Send -= OnReceiveSecuritiesAPI;
+                            Connect = int.MinValue;
+                        }
+                    }
                     else if (com is OpenAPI.ConnectAPI openAPI)
                     {
                         openAPI.OnConnectErrorMessage.Send += OnReceiveSecuritiesAPI;
@@ -228,6 +282,12 @@ namespace ShareInvest
         {
             get; set;
         }
+        int Connect
+        {
+            get; set;
+        }
+        readonly Random random;
+        readonly Privacies privacy;
         readonly ISecuritiesAPI com;
         readonly Color[] colors;
         readonly string[] icon;

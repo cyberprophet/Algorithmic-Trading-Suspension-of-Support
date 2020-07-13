@@ -40,6 +40,10 @@ namespace ShareInvest.Strategics
             }
             if (Result.Equals(DialogResult.OK) && IsApplicationAlreadyRunning(param.Security))
             {
+                Privacy = new Privacies
+                {
+                    Security = param.Security
+                };
                 Opacity = 0;
                 timer.Start();
             }
@@ -89,6 +93,11 @@ namespace ShareInvest.Strategics
             {
                 notifyIcon.Icon = (Icon)resources.GetObject(Change ? upload : download);
                 Change = !Change;
+
+                if (IsApplicationAlreadyRunning(Privacy.Security))
+                {
+
+                }
             }
         }
         void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(() =>
@@ -131,11 +140,11 @@ namespace ShareInvest.Strategics
         {
             get; set;
         }
-        Privacies Privacy
+        StatisticalControl Statistical
         {
             get; set;
         }
-        StatisticalControl Statistical
+        Privacies Privacy
         {
             get; set;
         }
