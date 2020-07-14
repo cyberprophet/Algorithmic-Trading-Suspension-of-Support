@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using ShareInvest.EventHandler;
 
@@ -33,6 +34,10 @@ namespace ShareInvest.Catalog.OpenAPI
         public override bool WaitOrder
         {
             get; set;
+        }
+        public override Dictionary<string, dynamic> OrderNumber
+        {
+            get;
         }
         public override void OnReceiveEvent(string[] param)
         {
@@ -81,6 +86,7 @@ namespace ShareInvest.Catalog.OpenAPI
                 Current = current;
             }
         }
+        public HoldingStocks() => OrderNumber = new Dictionary<string, dynamic>();
         public override event EventHandler<SendSecuritiesAPI> SendBalance;
         public override event EventHandler<SendHoldingStocks> SendStocks;
     }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 using XA_DATASETLib;
 
@@ -112,7 +114,7 @@ namespace ShareInvest.XingAPI
             if (error < 0)
             {
                 var param = GetErrorMessage(error);
-                Console.WriteLine(name + "\t" + param);
+                SendMessage(name, param);
 
                 if (Secrecy.ErrorMessage.Equals(param))
                     API.Dispose();
@@ -121,12 +123,15 @@ namespace ShareInvest.XingAPI
         protected internal virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             if (bIsSystemError == false && int.TryParse(nMessageCode, out int code) && code > 999 && nMessageCode.Equals(rCancel))
-                API.OnReceiveBalance = true;
+            {
 
-            Console.WriteLine(nMessageCode + "\t" + szMessage);
+            }
+            SendMessage(nMessageCode, szMessage);
         }
         protected internal virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
         protected internal Connect API => Connect.GetInstance();
+        [Conditional("DEBUG")]
+        void SendMessage(string code, string message) => new Task(() => Console.WriteLine(code + "\t" + message)).Start();
         readonly string[] exclusion = { margin, rCancel, accept, cancel, correction, impossible };
         const string record = "레코드명:";
         const string separator = "No,한글명,필드명,영문명,";

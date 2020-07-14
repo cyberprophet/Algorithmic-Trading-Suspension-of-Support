@@ -1,4 +1,8 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
 using ShareInvest.Catalog;
 using ShareInvest.Message;
@@ -9,12 +13,18 @@ namespace ShareInvest.XingAPI
 {
     class Connect : XASessionClass
     {
+        internal static Dictionary<string, Holding> HoldingStock
+        {
+            get; private set;
+        }
         internal static Connect GetInstance() => API;
         internal static Connect GetInstance(Privacies privacy, ShareInvest.Catalog.XingAPI.LoadServer load)
         {
             if (API == null)
+            {
+                HoldingStock = new Dictionary<string, Holding>();
                 API = new Connect(privacy, load);
-
+            }
             return API;
         }
         internal (string, string, string) SetAccountName(string account, string password)
@@ -28,14 +38,15 @@ namespace ShareInvest.XingAPI
         {
             get; private set;
         }
-        internal bool OnReceiveBalance
-        {
-            get; set;
-        }
         internal void Dispose()
         {
             DisconnectServer();
             API = null;
+        }
+        internal void OnReceiveChapterOperatingInformation(string jangubun, string jstatus)
+        {
+            Console.WriteLine(jangubun + "\t" + jstatus);
+            SendMessage(Enum.GetName(typeof(Attribute), jangubun), Enum.GetName(typeof(Attribute), jstatus));
         }
         void OnEventConnect(string szCode, string szMsg)
         {
@@ -47,6 +58,8 @@ namespace ShareInvest.XingAPI
                     Accounts[i] = GetAccountList(i);
             }
         }
+        [Conditional("DEBUG")]
+        void SendMessage(string code, string message) => new Task(() => Console.WriteLine(code + "\t" + message)).Start();
         Connect(Privacies privacy, ShareInvest.Catalog.XingAPI.LoadServer load)
         {
             if (ConnectServer(load.Server, 0x4E21) && Login(privacy.Identity, privacy.Password, privacy.Certificate, 0, string.IsNullOrEmpty(privacy.Certificate) == false) && IsLoadAPI())

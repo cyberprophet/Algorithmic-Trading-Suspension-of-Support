@@ -45,7 +45,14 @@ namespace ShareInvest.EventHandler
                 Convey = new Tuple<string, string, int, dynamic, dynamic, long, double>(param[3].Substring(1).Trim(), param[4].Trim(), reserve, purchase, current, valuation, ratio);
         }
         public SendSecuritiesAPI(long available) => Convey = available;
-        public SendSecuritiesAPI(Tuple<string, string, int, dynamic, dynamic, long, double> tuple) => Convey = tuple;
+        public SendSecuritiesAPI(Tuple<string, string, int, dynamic, dynamic, long, double> tuple)
+        {
+            if (tuple.Item1.Equals(tuple.Item2))
+                Convey = new Tuple<string, string, int, dynamic, dynamic, long, double>(tuple.Item1, convert[tuple.Item1], tuple.Item3, tuple.Item4, tuple.Item5, tuple.Item6, tuple.Item7);
+
+            else
+                Convey = tuple;
+        }
         public SendSecuritiesAPI(int nCodeCount, StringBuilder sArrCode) => Convey = new Tuple<int, string>(nCodeCount, sArrCode.ToString());
         public SendSecuritiesAPI(string message) => Convey = message;
         static readonly Dictionary<string, string> convert = new Dictionary<string, string>();

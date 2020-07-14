@@ -32,7 +32,7 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public SendHoldingStocks(string code, int quantity, int purchase, int current, long revenue, double rate)
+        public SendHoldingStocks(string code, int quantity, dynamic purchase, dynamic current, long revenue, double rate)
         {
             Code = code;
             Quantity = quantity;

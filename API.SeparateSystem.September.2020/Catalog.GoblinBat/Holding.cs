@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using ShareInvest.EventHandler;
 
@@ -34,6 +35,10 @@ namespace ShareInvest.Catalog
         {
             get; set;
         }
+        public abstract Dictionary<string, dynamic> OrderNumber
+        {
+            get;
+        }
         public abstract void OnReceiveEvent(string[] param);
         public abstract void OnReceiveBalance(string[] param);
         public abstract void OnReceiveConclusion(string[] param);
@@ -44,5 +49,14 @@ namespace ShareInvest.Catalog
         protected internal const string confirmation = "확인";
         protected internal const string cancellantion = "취소";
         protected internal const string correction = "정정";
+    }
+    enum TR
+    {
+        SONBT001 = 0,
+        SONBT002 = 1,
+        SONBT003 = 2,
+        CONET801 = 3,
+        CONET002 = 4,
+        CONET003 = 5
     }
 }

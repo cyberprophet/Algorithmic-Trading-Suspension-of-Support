@@ -117,10 +117,17 @@ namespace ShareInvest
 
                 if (com is XingAPI.ConnectAPI connect)
                 {
-                    var ctor = connect.ConvertTheCodeToName();
+                    var ctor = connect.ConvertTheCodeToName;
                     ctor.Send += OnReceiveSecuritiesAPI;
                     ctor.QueryExcute();
                     Connect = int.MaxValue;
+                    connect.JIF.OnReceiveRealTime(string.Empty);
+
+                    foreach (var real in connect.Reals)
+                        real.OnReceiveRealTime("101Q9000");
+
+                    foreach (var conclusion in connect.Conclusion)
+                        conclusion.OnReceiveRealTime(string.Empty);
                 }
             }
         }
@@ -155,8 +162,15 @@ namespace ShareInvest
                         }
                     }
                     else if (com is XingAPI.ConnectAPI xing)
+                    {
+                        foreach (var ctor in xing.HoldingStocks)
+                        {
+                            Balance.SetDisconnectHoldingStock(ctor);
+                            ctor.SendBalance -= OnReceiveSecuritiesAPI;
+                        }
                         foreach (var ctor in xing.querys)
                             ctor.Send -= OnReceiveSecuritiesAPI;
+                    }
                 }
                 ResumeLayout();
             }
@@ -248,8 +262,13 @@ namespace ShareInvest
                         }
                         if (Connect == int.MaxValue)
                         {
-                            xingAPI.ConvertTheCodeToName().Send -= OnReceiveSecuritiesAPI;
+                            xingAPI.ConvertTheCodeToName.Send -= OnReceiveSecuritiesAPI;
                             Connect = int.MinValue;
+                        }
+                        foreach (var ctor in xingAPI.HoldingStocks)
+                        {
+                            Balance.SetConnectHoldingStock(ctor);
+                            ctor.SendBalance += OnReceiveSecuritiesAPI;
                         }
                     }
                     else if (com is OpenAPI.ConnectAPI openAPI)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -92,7 +93,34 @@ namespace ShareInvest.XingAPI
             labelXingAPI.ForeColor = color;
             labelMessage.Text = remain;
         }
-        public IQuerys<SendSecuritiesAPI> ConvertTheCodeToName() => new T9943();
+        public IEnumerable<Holding> HoldingStocks
+        {
+            get
+            {
+                foreach (var ctor in Connect.HoldingStock)
+                    yield return ctor.Value ?? null;
+            }
+        }
+        public IQuerys<SendSecuritiesAPI> ConvertTheCodeToName => new T9943();
+        public IReals JIF => new JIF();
+        public IReals[] Conclusion
+        {
+            get
+            {
+                var now = DateTime.Now;
+
+                return (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IReals[] { new C01(), new H01(), new O01() } : new IReals[] { new CM0(), new CM1(), new CM2() };
+            }
+        }
+        public IReals[] Reals
+        {
+            get
+            {
+                var now = DateTime.Now;
+
+                return (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IReals[] { new FC0(), new FH0() } : new IReals[] { new NC0(), new NH0() };
+            }
+        }
         public dynamic API
         {
             get; private set;
@@ -120,10 +148,12 @@ namespace ShareInvest.XingAPI
                 textPassword.UseSystemPasswordChar = true;
                 textCertificate.UseSystemPasswordChar = true;
             }
+            var now = DateTime.Now;
+            querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
         }
         readonly string[] securites;
         readonly Privacies privacy;
-        public readonly IQuerys<SendSecuritiesAPI>[] querys = (DateTime.Now.Hour == 15 && DateTime.Now.Minute < 45 || DateTime.Now.Hour < 15) && DateTime.Now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
+        public readonly IQuerys<SendSecuritiesAPI>[] querys;
         public event EventHandler<SendSecuritiesAPI> Send;
     }
 }
