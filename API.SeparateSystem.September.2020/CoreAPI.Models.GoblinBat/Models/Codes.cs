@@ -21,19 +21,28 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        public virtual ICollection<Days> Days
+        [Column(Order = 4)]
+        public double MarginRate
         {
             get; set;
         }
+        [ForeignKey("Code")]
         public virtual ICollection<Futures> Futures
         {
             get; set;
         }
+        [ForeignKey("Code")]
         public virtual ICollection<Options> Options
         {
             get; set;
         }
+        [ForeignKey("Code")]
         public virtual ICollection<Stocks> Stocks
+        {
+            get; set;
+        }
+        [ForeignKey("Code")]
+        public virtual ICollection<Days> Days
         {
             get; set;
         }

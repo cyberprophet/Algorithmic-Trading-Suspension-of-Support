@@ -43,7 +43,7 @@ namespace ShareInvest.OpenAPI
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
         public AccountInformation SetPrivacy(Privacies privacy)
         {
-            if (Connect.TR.Add(new OPT50010 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opt50001 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opw00005 { Value = string.Concat(privacy.Account, password), PrevNext = 0, API = axAPI }))
+            if (Connect.TR.Add(new OPT50010 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opt50001 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opw00005 { Value = string.Concat(privacy.AccountNumber, password), PrevNext = 0, API = axAPI }))
             {
                 axAPI.OnReceiveTrData += OnReceiveTrData;
                 axAPI.OnReceiveRealData += OnReceiveRealData;
@@ -51,15 +51,27 @@ namespace ShareInvest.OpenAPI
             }
             var mServer = axAPI.GetLoginInfo(server);
             checkAccount.CheckState = mServer.Equals(mock) && checkAccount.Checked ? CheckState.Unchecked : CheckState.Checked;
+            string strAccount;
 
-            if (checkAccount.Checked && new Security().Encrypt(this.privacy.Security, this.privacy.SecuritiesAPI, privacy.Account, checkAccount.Checked) == 0xC8)
-                Console.WriteLine(checkAccount.CheckState);
+            if (checkAccount.Checked && new Security().Encrypt(this.privacy.Security, this.privacy.SecuritiesAPI, privacy.AccountNumber, checkAccount.Checked) == 0xC8)
+                switch (privacy.AccountNumber.Substring(privacy.AccountNumber.Length - 2))
+                {
+                    case "31":
+                        strAccount = "선물옵션";
+                        break;
+
+                    default:
+                        strAccount = "위탁종합";
+                        break;
+                }
+            else
+                strAccount = string.Empty;
 
             return new AccountInformation
             {
                 Identity = axAPI.GetLoginInfo(user),
-                Account = privacy.Account,
-                Name = string.Empty,
+                Account = privacy.AccountNumber,
+                Name = strAccount,
                 Server = mServer.Equals(mock),
                 Nick = axAPI.GetLoginInfo(name)
             };

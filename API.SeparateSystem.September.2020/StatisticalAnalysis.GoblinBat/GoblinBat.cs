@@ -4,7 +4,6 @@ using System.Windows.Forms;
 
 using ShareInvest.Catalog;
 using ShareInvest.Client;
-using ShareInvest.Strategics.Controls;
 
 namespace ShareInvest.Strategics
 {
@@ -23,7 +22,7 @@ namespace ShareInvest.Strategics
                 case 0xCA:
                     if (Statistical == null)
                     {
-                        Statistical = new StatisticalControl();
+                        Statistical = new Controls.Strategics();
                         Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
                     }
@@ -106,18 +105,20 @@ namespace ShareInvest.Strategics
             {
                 if (Statistical == null)
                 {
-                    Statistical = new StatisticalControl();
+                    Statistical = new Controls.Strategics();
                     Controls.Add(Statistical);
                     Statistical.Dock = DockStyle.Fill;
                 }
-                Size = new Size(1350, 255);
+                if (GoblinBatClient.GetContext<Privacies>(Privacy) is Privacies privacy)
+                    Statistical.SetPrivacy(privacy);
+
+                Size = new Size(1350, 720);
                 Visible = true;
                 ShowIcon = true;
                 notifyIcon.Visible = false;
                 Statistical.Show();
                 WindowState = FormWindowState.Normal;
                 timer.Stop();
-                CenterToScreen();
             }
             else
                 Close();
@@ -140,7 +141,7 @@ namespace ShareInvest.Strategics
         {
             get; set;
         }
-        StatisticalControl Statistical
+        Controls.Strategics Statistical
         {
             get; set;
         }

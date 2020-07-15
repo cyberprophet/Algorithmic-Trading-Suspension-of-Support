@@ -5,12 +5,12 @@ namespace ShareInvest.Models
 {
     public class Days
     {
-        [Required, Column(Order = 1), MinLength(6), MaxLength(8)]
+        [ForeignKey("Codes"), Column(Order = 1), MinLength(6), MaxLength(8)]
         public string Code
         {
             get; set;
         }
-        [Key, Column(Order = 2), StringLength(8)]
+        [Column(Order = 2), StringLength(8)]
         public string Date
         {
             get; set;
@@ -20,16 +20,10 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [ForeignKey(code)]
-        public virtual Codes Codes
-        {
-            get; set;
-        }
         [NotMapped]
         public string Retention
         {
             get; set;
         }
-        const string code = "Code";
     }
 }

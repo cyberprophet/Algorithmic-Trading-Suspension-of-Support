@@ -14,6 +14,10 @@
         {
             get; set;
         }
+        public string Account
+        {
+            get; set;
+        }
         public string Identity
         {
             get; set;
@@ -26,7 +30,7 @@
         {
             get; set;
         }
-        public string Account
+        public string AccountNumber
         {
             get; set;
         }

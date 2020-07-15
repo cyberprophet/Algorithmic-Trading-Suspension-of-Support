@@ -38,8 +38,6 @@ namespace ShareInvest.Catalog.XingAPI
         }
         public override void OnReceiveEvent(string[] param)
         {
-            Console.WriteLine(param[0]);
-
             if (double.TryParse(param[4], out double current))
             {
                 Current = current;

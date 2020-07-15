@@ -45,8 +45,11 @@ namespace ShareInvest.XingAPI
         }
         internal void OnReceiveChapterOperatingInformation(string jangubun, string jstatus)
         {
-            Console.WriteLine(jangubun + "\t" + jstatus);
-            SendMessage(Enum.GetName(typeof(Attribute), jangubun), Enum.GetName(typeof(Attribute), jstatus));
+            if (int.TryParse(jangubun, out int gubun) && int.TryParse(jstatus, out int status) && TimerBox.Show(Enum.GetName(typeof(Attribute), status), Enum.GetName(typeof(Attribute), gubun), MessageBoxButtons.YesNo, MessageBoxIcon.Information, gubun == 5 && status == 41 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 0x3B7).Equals(DialogResult.Yes))
+            {
+
+            }
+            SendMessage(jangubun, jstatus);
         }
         void OnEventConnect(string szCode, string szMsg)
         {
@@ -68,7 +71,7 @@ namespace ShareInvest.XingAPI
                 Disconnect += Dispose;
                 secrecy = new Secrecy();
 
-                while (TimerBox.Show(secrecy.Connection, load.Date, MessageBoxButtons.OK, MessageBoxIcon.Information, 3159).Equals(DialogResult.OK))
+                while (TimerBox.Show(secrecy.Connection, load.Date, MessageBoxButtons.OK, MessageBoxIcon.Information, 0xC57).Equals(DialogResult.OK))
                     if (Accounts != null)
                         return;
             }

@@ -10,6 +10,13 @@ namespace ShareInvest.CoreAPI
 {
     public class CoreApiDbContext : DbContext
     {
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Days>().HasKey(o => new { o.Code, o.Date });
+            modelBuilder.Entity<Futures>().HasKey(o => new { o.Code, o.Date });
+            modelBuilder.Entity<Options>().HasKey(o => new { o.Code, o.Date });
+            modelBuilder.Entity<Stocks>().HasKey(o => new { o.Code, o.Date });
+        }
         public CoreApiDbContext(DbContextOptions<CoreApiDbContext> options) : base(options) => IsDebugging(options.ContextType);
         public DbSet<Privacy> Privacies
         {

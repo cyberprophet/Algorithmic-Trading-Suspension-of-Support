@@ -72,17 +72,17 @@ namespace ShareInvest.XingAPI
             var ai = new AccountInformation
             {
                 Identity = textIdentity.Text,
-                Account = privacy.Account,
+                Account = privacy.AccountNumber,
                 Server = checkDemo.Checked
             };
             if (API is Connect api)
             {
-                var name = api.SetAccountName(privacy.Account, privacy.AccountPassword);
+                var name = api.SetAccountName(privacy.AccountNumber, privacy.AccountPassword);
                 ai.Name = name.Item2;
                 ai.Nick = name.Item3;
                 checkPrivacy.CheckState = ai.Server && checkPrivacy.Checked ? CheckState.Unchecked : checkPrivacy.CheckState;
 
-                if (checkPrivacy.Checked && 0xC8 == new Secrecy().Encrypt(this.privacy.Security, this.privacy.SecuritiesAPI, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.Account, privacy.AccountPassword, checkDemo.Checked))
+                if (checkPrivacy.Checked && 0xC8 == new Secrecy().Encrypt(this.privacy.Security, this.privacy.SecuritiesAPI, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.AccountNumber, privacy.AccountPassword, checkDemo.Checked))
                     Console.WriteLine(ai.Nick);
             }
             return ai;

@@ -42,7 +42,7 @@ namespace ShareInvest.Controllers
                     case int length when param.Length == 0x63 && (length == 6 || length == 8):
                         await context.BulkDeleteAsync(context.Codes.Where(o => o.Code.Equals(code)));
                         break;
-                 
+
                     default:
                         return NotFound();
                 }
@@ -63,7 +63,7 @@ namespace ShareInvest.Controllers
         {
             if (Registry.Codes != null && Registry.Codes.Count > 0)
                 return Ok(Registry.CodesDictionary.Values);
-            
+
             var context = await this.context.Codes.AsNoTracking().ToArrayAsync();
 
             if (context != null)

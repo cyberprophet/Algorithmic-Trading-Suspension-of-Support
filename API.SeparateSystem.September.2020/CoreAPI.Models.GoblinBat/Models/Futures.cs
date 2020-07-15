@@ -5,7 +5,7 @@ namespace ShareInvest.Models
 {
     public class Futures
     {
-        [Required, Column(Order = 1), StringLength(8)]
+        [ForeignKey("Codes"), Column(Order = 1), StringLength(8)]
         public string Code
         {
             get; set;
@@ -15,7 +15,7 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Key, Column(Order = 2), StringLength(15)]
+        [Column(Order = 2), StringLength(15)]
         public string Date
         {
             get; set;
@@ -30,11 +30,5 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [ForeignKey(code)]
-        public virtual Codes Codes
-        {
-            get; set;
-        }
-        const string code = "Code";
     }
 }
