@@ -46,7 +46,7 @@ namespace ShareInvest.Strategics
                 Opacity = 0;
                 timer.Start();
             }
-            else if (Result.Equals(DialogResult.Cancel))
+            else
             {
                 strip.ItemClicked -= OnItemClick;
                 Dispose();
@@ -110,9 +110,9 @@ namespace ShareInvest.Strategics
                     Statistical.Dock = DockStyle.Fill;
                 }
                 if (GoblinBatClient.GetContext<Privacies>(Privacy) is Privacies privacy)
-                    Statistical.SetPrivacy(privacy);
+                    Text = Statistical.SetPrivacy(privacy);
 
-                Size = new Size(1350, 720);
+                Size = new Size(581, 720);
                 Visible = true;
                 ShowIcon = true;
                 notifyIcon.Visible = false;
