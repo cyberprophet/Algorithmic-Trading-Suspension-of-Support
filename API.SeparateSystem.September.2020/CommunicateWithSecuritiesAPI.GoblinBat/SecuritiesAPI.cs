@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -20,6 +21,7 @@ namespace ShareInvest
             InitializeComponent();
             icon = new string[] { mono, duo, tri, quad };
             colors = new Color[] { Color.Maroon, Color.Ivory, Color.DeepSkyBlue };
+            infoCodes = new Dictionary<string, Charts>();
             strip.ItemClicked += OnItemClick;
             timer.Start();
         }
@@ -74,6 +76,29 @@ namespace ShareInvest
 
                             }
                             return;
+
+                        case Tuple<string, string, string> code:
+                            infoCodes[code.Item1] = new Charts
+                            {
+                                Code = code.Item1,
+                                Name = code.Item2,
+                                Price = code.Item3
+                            };
+                            return;
+
+                        case Dictionary<string, Tuple<string, string>> dictionary:
+                            foreach (var kv in dictionary)
+                                if (infoCodes.TryGetValue(kv.Key, out Charts info) && double.TryParse(kv.Value.Item2, out double rate))
+                                {
+                                    info.MarginRate = rate * 1e-2;
+                                    info.Name = kv.Value.Item1;
+                                    infoCodes[kv.Key] = info;
+                                }
+                            if ((bool)GoblinBatClient.PostContext(infoCodes.Values.Distinct()))
+                            {
+
+                            }
+                            return;
                     }
                 }));
             else if (e.Convey is FormWindowState state)
@@ -117,17 +142,19 @@ namespace ShareInvest
 
                 if (com is XingAPI.ConnectAPI connect)
                 {
-                    var ctor = connect.ConvertTheCodeToName;
-                    ctor.Send += OnReceiveSecuritiesAPI;
-                    ctor.QueryExcute();
-                    Connect = int.MaxValue;
-                    connect.JIF.OnReceiveRealTime(string.Empty);
-
+                    foreach (var ctor in connect.ConvertTheCodeToName)
+                    {
+                        ctor.Send += OnReceiveSecuritiesAPI;
+                        ctor.QueryExcute();
+                        Connect = int.MaxValue;
+                    }
                     foreach (var real in connect.Reals)
                         real.OnReceiveRealTime("101Q9000");
 
                     foreach (var conclusion in connect.Conclusion)
                         conclusion.OnReceiveRealTime(string.Empty);
+
+                    connect.JIF.OnReceiveRealTime(string.Empty);
                 }
             }
         }
@@ -261,10 +288,11 @@ namespace ShareInvest
                             ctor.QueryExcute();
                         }
                         if (Connect == int.MaxValue)
-                        {
-                            xingAPI.ConvertTheCodeToName.Send -= OnReceiveSecuritiesAPI;
-                            Connect = int.MinValue;
-                        }
+                            foreach (var convert in xingAPI.ConvertTheCodeToName)
+                            {
+                                convert.Send -= OnReceiveSecuritiesAPI;
+                                Connect = int.MinValue;
+                            }
                         foreach (var ctor in xingAPI.HoldingStocks)
                         {
                             Balance.SetConnectHoldingStock(ctor);
@@ -306,6 +334,7 @@ namespace ShareInvest
             get; set;
         }
         readonly Random random;
+        readonly Dictionary<string, Charts> infoCodes;
         readonly Privacies privacy;
         readonly ISecuritiesAPI com;
         readonly Color[] colors;

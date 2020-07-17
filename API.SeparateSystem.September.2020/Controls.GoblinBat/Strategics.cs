@@ -58,12 +58,13 @@ namespace ShareInvest.Controls
             {
                 var url = "https://youtu.be/CIfSIsozG_E";
 
-                switch (comboStrategics.SelectedItem.ToString())
-                {
-                    case tf:
-                        url = "https://youtu.be/CIfSIsozG_E";
-                        break;
-                }
+                if (comboStrategics.SelectedItem is string str)
+                    switch (str)
+                    {
+                        case tf:
+                            url = "https://youtu.be/CIfSIsozG_E";
+                            break;
+                    }
                 Process.Start(url);
                 link.LinkVisited = true;
             }

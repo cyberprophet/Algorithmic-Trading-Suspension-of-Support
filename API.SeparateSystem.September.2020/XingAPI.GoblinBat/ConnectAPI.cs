@@ -101,7 +101,7 @@ namespace ShareInvest.XingAPI
                     yield return ctor.Value ?? null;
             }
         }
-        public IQuerys<SendSecuritiesAPI> ConvertTheCodeToName => new T9943();
+        public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T9943(), new T8401(), new T8432(), new MMDAQ91200() };
         public IReals JIF => new JIF();
         public IReals[] Conclusion
         {

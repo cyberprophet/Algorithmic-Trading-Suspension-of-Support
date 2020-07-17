@@ -17,7 +17,7 @@ namespace ShareInvest.Strategics
         }
         void StartProgress(IParameters param)
         {
-            switch (GoblinBatClient.PostContext<Privacies>(param))
+            switch ((int)GoblinBatClient.PostContext<Privacies>(param))
             {
                 case 0xCA:
                     if (Statistical == null)

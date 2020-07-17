@@ -152,6 +152,25 @@ namespace ShareInvest.Controllers
 
             return Ok(new Tuple<string, string>(code, Registry.Retentions[code]));
         }
+        [HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PostContext([FromBody] IEnumerable<Codes> chart)
+        {
+            try
+            {
+                await context.BulkInsertAsync(chart, o =>
+                {
+                    o.InsertIfNotExists = true;
+                    o.BatchSize = 0x1C1B;
+                    o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                    o.AutoMapOutputDirection = false;
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+            return Ok();
+        }
         public ChartsController(CoreApiDbContext context) => this.context = context;
         readonly CoreApiDbContext context;
         const string route = "coreapi/[controller]";

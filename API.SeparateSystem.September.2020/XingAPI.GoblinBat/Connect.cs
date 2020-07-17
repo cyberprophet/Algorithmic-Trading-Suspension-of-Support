@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
+using ShareInvest.DelayRequest;
 using ShareInvest.Message;
 
 using XA_SESSIONLib;
@@ -13,6 +14,10 @@ namespace ShareInvest.XingAPI
 {
     class Connect : XASessionClass
     {
+        internal Delay Request
+        {
+            get; private set;
+        }
         internal static Dictionary<string, Holding> HoldingStock
         {
             get; private set;
@@ -70,10 +75,15 @@ namespace ShareInvest.XingAPI
                 _IXASessionEvents_Event_Login += OnEventConnect;
                 Disconnect += Dispose;
                 secrecy = new Secrecy();
+                Request = Delay.GetInstance(0xCD);
 
                 while (TimerBox.Show(secrecy.Connection, load.Date, MessageBoxButtons.OK, MessageBoxIcon.Information, 0xC57).Equals(DialogResult.OK))
                     if (Accounts != null)
+                    {
+                        Request.Run();
+
                         return;
+                    }
             }
             else
                 Dispose();

@@ -16,13 +16,18 @@ namespace ShareInvest.Models
         {
             get; set;
         }
-        [Required, Column(Order = 3)]
+        [Column(Order = 3)]
         public string MaturityMarketCap
         {
             get; set;
         }
         [Column(Order = 4)]
         public double MarginRate
+        {
+            get; set;
+        }
+        [Column(Order = 5)]
+        public string Price
         {
             get; set;
         }
