@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.Catalog
 {
-    public struct Charts 
+    public struct Codes 
     {
         public string Name
         {

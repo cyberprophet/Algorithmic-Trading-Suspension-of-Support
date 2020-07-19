@@ -9,7 +9,7 @@ using ShareInvest.Models;
 
 namespace ShareInvest.Controllers
 {
-    [ApiController, Route(route), Produces(produces)]
+    [ApiController, Route(Security.route), Produces(Security.produces)]
     public class PrivaciesController : ControllerBase
     {
         [HttpGet(security), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -64,7 +64,5 @@ namespace ShareInvest.Controllers
         public PrivaciesController(CoreApiDbContext context) => this.context = context;
         readonly CoreApiDbContext context;
         const string security = "{security}";
-        const string route = "coreapi/[controller]";
-        const string produces = "application/json";
     }
 }

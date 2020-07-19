@@ -18,6 +18,14 @@
         {
             get; set;
         }
+        public string CodeStrategics
+        {
+            get; set;
+        }
+        public double Commission
+        {
+            get; set;
+        }
         public string Identity
         {
             get; set;

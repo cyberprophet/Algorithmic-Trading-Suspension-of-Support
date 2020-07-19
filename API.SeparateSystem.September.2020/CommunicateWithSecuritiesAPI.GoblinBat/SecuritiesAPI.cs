@@ -21,7 +21,7 @@ namespace ShareInvest
             InitializeComponent();
             icon = new string[] { mono, duo, tri, quad };
             colors = new Color[] { Color.Maroon, Color.Ivory, Color.DeepSkyBlue };
-            infoCodes = new Dictionary<string, Charts>();
+            infoCodes = new Dictionary<string, Codes>();
             strip.ItemClicked += OnItemClick;
             timer.Start();
         }
@@ -71,14 +71,10 @@ namespace ShareInvest
                                 if (connect != null)
                                     connect.Send += OnReceiveSecuritiesAPI;
                             }
-                            else if (com is XingAPI.ConnectAPI xing)
-                            {
-
-                            }
                             return;
 
                         case Tuple<string, string, string> code:
-                            infoCodes[code.Item1] = new Charts
+                            infoCodes[code.Item1] = new Codes
                             {
                                 Code = code.Item1,
                                 Name = code.Item2,
@@ -88,16 +84,13 @@ namespace ShareInvest
 
                         case Dictionary<string, Tuple<string, string>> dictionary:
                             foreach (var kv in dictionary)
-                                if (infoCodes.TryGetValue(kv.Key, out Charts info) && double.TryParse(kv.Value.Item2, out double rate))
+                                if (infoCodes.TryGetValue(kv.Key, out Codes info) && double.TryParse(kv.Value.Item2, out double rate) && com is XingAPI.ConnectAPI xing)
                                 {
                                     info.MarginRate = rate * 1e-2;
                                     info.Name = kv.Value.Item1;
                                     infoCodes[kv.Key] = info;
+                                    xing.StartProgress(info);
                                 }
-                            if ((bool)GoblinBatClient.PostContext(infoCodes.Values.Distinct()))
-                            {
-
-                            }
                             return;
                     }
                 }));
@@ -334,7 +327,7 @@ namespace ShareInvest
             get; set;
         }
         readonly Random random;
-        readonly Dictionary<string, Charts> infoCodes;
+        readonly Dictionary<string, Codes> infoCodes;
         readonly Privacies privacy;
         readonly ISecuritiesAPI com;
         readonly Color[] colors;

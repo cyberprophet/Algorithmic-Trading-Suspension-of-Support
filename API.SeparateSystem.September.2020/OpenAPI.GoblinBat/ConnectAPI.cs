@@ -53,7 +53,7 @@ namespace ShareInvest.OpenAPI
             checkAccount.CheckState = mServer.Equals(mock) && checkAccount.Checked ? CheckState.Unchecked : CheckState.Checked;
             string strAccount;
 
-            if (checkAccount.Checked && new Security().Encrypt(this.privacy.Security, this.privacy.SecuritiesAPI, privacy.AccountNumber, checkAccount.Checked) == 0xC8)
+            if (checkAccount.Checked && new Security().Encrypt(this.privacy, privacy.AccountNumber, checkAccount.Checked) == 0xC8)
                 switch (privacy.AccountNumber.Substring(privacy.AccountNumber.Length - 2))
                 {
                     case "31":

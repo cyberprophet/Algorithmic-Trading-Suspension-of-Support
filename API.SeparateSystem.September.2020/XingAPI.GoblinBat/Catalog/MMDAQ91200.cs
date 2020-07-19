@@ -57,7 +57,7 @@ namespace ShareInvest.XingAPI.Catalog
 
             if (IsNext)
             {
-                Delay.Milliseconds = GetTRCountPerSec(szTrCode) * 0x3E8;
+                Delay.Milliseconds = 0x3E8 / GetTRCountPerSec(szTrCode);
                 Connect.GetInstance().Request.RequestTrData(new Task(() =>
                 {
                     SetFieldData(InBlock.Block, InBlock.Field, InBlock.Occurs, InBlock.Data);

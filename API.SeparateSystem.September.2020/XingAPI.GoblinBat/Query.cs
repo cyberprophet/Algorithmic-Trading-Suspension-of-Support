@@ -74,9 +74,9 @@ namespace ShareInvest.XingAPI
                     Block = block,
                     Field = temp[2],
                     Occurs = 0,
-                    Data = secret[i++]
+                    Data = secret?[i++]
                 });
-                if (secret.Length == i)
+                if (secret == null || secret.Length == i)
                     break;
             }
             return queue;
@@ -122,17 +122,23 @@ namespace ShareInvest.XingAPI
         }
         protected internal virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
-            if (bIsSystemError == false && int.TryParse(nMessageCode, out int code) && code > 999 && nMessageCode.Equals(rCancel))
+            if (bIsSystemError == false && int.TryParse(nMessageCode, out int code) && code > 999)
             {
+                if (nMessageCode.Equals(rCancel))
+                {
 
+                }
+                else if (Array.Exists(exclusion, o => o.Equals(code)))
+                    SendMessage(nMessageCode, szMessage);
             }
-            SendMessage(nMessageCode, szMessage);
+            else
+                SendMessage(nMessageCode, szMessage);
         }
         protected internal virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
         protected internal Connect API => Connect.GetInstance();
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => new Task(() => Console.WriteLine(code + "\t" + message)).Start();
-        readonly string[] exclusion = { margin, rCancel, accept, cancel, correction, impossible };
+        readonly string[] exclusion = { margin, accept, cancel, correction, impossible };
         const string record = "레코드명:";
         const string separator = "No,한글명,필드명,영문명,";
         const string cancel = "02661";

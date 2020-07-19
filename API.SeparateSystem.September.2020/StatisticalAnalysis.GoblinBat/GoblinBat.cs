@@ -15,6 +15,15 @@ namespace ShareInvest.Strategics
             strip.ItemClicked += OnItemClick;
             StartProgress(new Privacies { Security = cookie });
         }
+        void OnReceiveTheChangedSize(object sender, Size size)
+        {
+            if (sender is Controls.Strategics)
+            {
+                SuspendLayout();
+                Console.WriteLine(Size.Height + "\t" + Size.Width + "\t" + size.Height + "\t" + size.Width);
+                ResumeLayout();
+            }
+        }
         void StartProgress(IParameters param)
         {
             switch ((int)GoblinBatClient.PostContext<Privacies>(param))
@@ -25,6 +34,7 @@ namespace ShareInvest.Strategics
                         Statistical = new Controls.Strategics();
                         Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
+                        Statistical.SendSize += OnReceiveTheChangedSize;
                     }
                     Result = DialogResult.OK;
                     break;
@@ -112,7 +122,7 @@ namespace ShareInvest.Strategics
                 if (GoblinBatClient.GetContext<Privacies>(Privacy) is Privacies privacy)
                     Text = Statistical.SetPrivacy(privacy);
 
-                Size = new Size(581, 720);
+                Size = new Size(0x245, 0x208);
                 Visible = true;
                 ShowIcon = true;
                 notifyIcon.Visible = false;

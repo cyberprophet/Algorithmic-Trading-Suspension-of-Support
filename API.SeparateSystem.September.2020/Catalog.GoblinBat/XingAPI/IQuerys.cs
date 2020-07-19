@@ -7,4 +7,8 @@ namespace ShareInvest.Catalog.XingAPI
         void QueryExcute();
         event EventHandler<T> Send;
     }
+    public interface IQuerys
+    {
+        void QueryExcute(string code);
+    }
 }

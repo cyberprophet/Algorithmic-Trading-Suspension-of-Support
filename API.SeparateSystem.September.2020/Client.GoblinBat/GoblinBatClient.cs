@@ -26,6 +26,7 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public static object GetContext(Codes param, int length) => JsonConvert.DeserializeObject<List<Codes>>(client.Execute(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", length), Method.GET)).Content);
         public static object PostContext<T>(IParameters param)
         {
             var temp = client.Execute(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType));
@@ -43,11 +44,12 @@ namespace ShareInvest.Client
 
             switch (param)
             {
-                case IEnumerable<Charts> _:
+                case IEnumerable<Codes> _:
                     return temp.IsSuccessful;
             }
             return null;
         }
+        public static int PutContext<T>(Codes param) => (int)client.Execute<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT).AddJsonBody(param, security.ContentType)).StatusCode;
         public static int PutContext<T>(IParameters param) => (int)client.Execute<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.PUT).AddJsonBody(param, security.ContentType)).StatusCode;
         public static int DeleteContext<T>(IParameters param) => (int)client.Execute<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.DELETE)).StatusCode;
     }

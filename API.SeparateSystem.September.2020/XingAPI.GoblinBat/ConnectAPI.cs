@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
@@ -82,10 +83,15 @@ namespace ShareInvest.XingAPI
                 ai.Nick = name.Item3;
                 checkPrivacy.CheckState = ai.Server && checkPrivacy.Checked ? CheckState.Unchecked : checkPrivacy.CheckState;
 
-                if (checkPrivacy.Checked && 0xC8 == new Secrecy().Encrypt(this.privacy.Security, this.privacy.SecuritiesAPI, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.AccountNumber, privacy.AccountPassword, checkDemo.Checked))
+                if (checkPrivacy.Checked && 0xC8 == new Secrecy().Encrypt(this.privacy, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.AccountNumber, privacy.AccountPassword, checkDemo.Checked))
                     Console.WriteLine(ai.Nick);
             }
             return ai;
+        }
+        public void StartProgress(Codes codes)
+        {
+            if (codes.Code.Length == 8 && Codes.Add(codes) && API is Connect api)
+                api.Request.RequestTrData(new Task(() => (codes.Code.Substring(1, 1).Equals("0") ? new T2101() as IQuerys : new T8402())?.QueryExcute(codes.Code)));
         }
         public void StartProgress() => buttonStartProgress.PerformClick();
         public void SetForeColor(Color color, string remain)
@@ -149,7 +155,12 @@ namespace ShareInvest.XingAPI
                 textCertificate.UseSystemPasswordChar = true;
             }
             var now = DateTime.Now;
+            Codes = new HashSet<Codes>();
             querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
+        }
+        public static HashSet<Codes> Codes
+        {
+            get; private set;
         }
         readonly string[] securites;
         readonly Privacies privacy;
