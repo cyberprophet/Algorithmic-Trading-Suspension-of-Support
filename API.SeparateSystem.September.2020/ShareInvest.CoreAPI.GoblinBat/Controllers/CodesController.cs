@@ -43,17 +43,39 @@ namespace ShareInvest.Controllers
             });
             return Ok();
         }
-        [HttpPut("{code}"), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPut("{code}"), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> PutContext(string code, [FromBody] Codes param)
         {
-            if (await context.Codes.AnyAsync(o => o.Code.Equals(code)))
-                context.Entry(param).State = EntityState.Modified;
+            if (Registry.Retentions.ContainsKey(code) == false)
+            {
+                if (await context.Codes.AnyAsync(o => o.Code.Equals(code)))
+                    context.Entry(param).State = EntityState.Modified;
 
-            else
-                context.Codes.Add(param);
+                else
+                    context.Codes.Add(param);
 
-            await context.BulkSaveChangesAsync();
+                string retentions = string.Empty, classify = code.Substring(0, 1);
+                await context.BulkSaveChangesAsync();
 
+                switch (code.Length)
+                {
+                    case 6:
+                        retentions = await context.Stocks.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
+                        break;
+
+                    case int length when length == 8 && classify.Equals("1"):
+                        retentions = await context.Futures.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
+                        break;
+
+                    case int length when length == 8 && (classify.Equals("2") || classify.Equals("3")):
+                        retentions = await context.Options.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
+                        break;
+
+                    default:
+                        return BadRequest(code);
+                }
+                Registry.Retentions[code] = retentions;
+            }
             return Ok(code);
         }
         public CodesController(CoreApiDbContext context) => this.context = context;

@@ -43,11 +43,11 @@ namespace ShareInvest.Controls
             textAvailable.Text = available.ToString("C0")?.Replace("-", string.Empty);
             textAvailable.ForeColor = available == 0 ? Color.Snow : available > 0 ? Color.Maroon : Color.Navy;
         }
-        public int OnReceiveBalance(Tuple<string, string, int, dynamic, dynamic, long, double> balance)
+        public int OnReceiveBalance(Tuple<string, string, int, dynamic, dynamic, long, double> balance, string strategics)
         {
-            if (balance.Item3 == 0 && dIndex.TryGetValue(balance.Item1, out int rIndex) && dIndex.Remove(balance.Item1))
+            if (balance.Item3 == 0 && dIndex.TryGetValue(balance.Item1, out int index) && dIndex.Remove(balance.Item1))
             {
-                data.Rows.RemoveAt(rIndex);
+                data.Rows.RemoveAt(index);
 
                 return data.Rows.GetRowsHeight(DataGridViewElementStates.None) + (data.Rows.Count == 0 ? 0 : 0x19);
             }
@@ -55,7 +55,13 @@ namespace ShareInvest.Controls
 
             if (hasRows == false)
             {
-                dIndex[balance.Item1] = data.Rows.Add(new string[] { balance.Item1, balance.Item2.Trim(), balance.Item3.ToString("N0"), balance.Item4.ToString("N0"), balance.Item5.ToString("N0"), balance.Item6.ToString("C0"), balance.Item7.ToString("P2"), "AXISCODE" });
+                switch (strategics)
+                {
+                    case "TrendFollowingBasicFutures":
+                        strategics = "TF";
+                        break;
+                }
+                dIndex[balance.Item1] = data.Rows.Add(new string[] { balance.Item1, balance.Item2.Trim(), balance.Item3.ToString("N0"), balance.Item4.ToString("N0"), balance.Item5.ToString("N0"), balance.Item6.ToString("C0"), balance.Item7.ToString("P2"), strategics });
                 data.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
                 data.RowsDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
                 data.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;

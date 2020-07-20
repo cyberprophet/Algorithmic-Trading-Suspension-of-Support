@@ -52,7 +52,10 @@ namespace ShareInvest.XingAPI
         {
             if (int.TryParse(jangubun, out int gubun) && int.TryParse(jstatus, out int status) && TimerBox.Show(Enum.GetName(typeof(Attribute), status), Enum.GetName(typeof(Attribute), gubun), MessageBoxButtons.YesNo, MessageBoxIcon.Information, gubun == 5 && status == 41 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 0x3B7).Equals(DialogResult.Yes))
             {
+                if (gubun == 5 && status == 41)
+                {
 
+                }
             }
             SendMessage(jangubun, jstatus);
         }

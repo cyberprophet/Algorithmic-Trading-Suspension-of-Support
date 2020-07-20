@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 
+using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.EventHandler;
 
@@ -33,7 +34,21 @@ namespace ShareInvest.XingAPI.Catalog
             }
             foreach (var sb in temp)
                 if (sb != null)
-                    Send?.Invoke(this, new SendSecuritiesAPI(sb.ToString().Split(';')));
+                {
+                    var param = sb.ToString().Split(';');
+                    var sAPI = new SendSecuritiesAPI(new string[] { param[0], param[1], param[2], string.Empty, param[4], param[5], param[6], string.Empty, param[8], param[9] });
+
+                    if (sAPI.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs))
+                    {
+                        hs.Quantity = balance.Item3;
+                        hs.Purchase = (double)balance.Item4;
+                        hs.Current = (double)balance.Item5;
+                        hs.Revenue = balance.Item6;
+                        hs.Rate = balance.Item7;
+                        Connect.HoldingStock[balance.Item1] = hs;
+                    }
+                    Send?.Invoke(this, sAPI);
+                }
         }
         public void QueryExcute()
         {

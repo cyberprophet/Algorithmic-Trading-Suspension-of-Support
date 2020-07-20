@@ -99,6 +99,14 @@ namespace ShareInvest.XingAPI
             labelXingAPI.ForeColor = color;
             labelMessage.Text = remain;
         }
+        public int SetStrategics(IStrategics strategics)
+        {
+            Connect.HoldingStock[strategics.Code] = new HoldingStocks
+            {
+                Code = strategics.Code
+            };
+            return Connect.HoldingStock.Count;
+        }
         public IEnumerable<Holding> HoldingStocks
         {
             get
@@ -156,7 +164,12 @@ namespace ShareInvest.XingAPI
             }
             var now = DateTime.Now;
             Codes = new HashSet<Codes>();
+            Strategics = new HashSet<IStrategics>();
             querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
+        }
+        public HashSet<IStrategics> Strategics
+        {
+            get; private set;
         }
         public static HashSet<Codes> Codes
         {

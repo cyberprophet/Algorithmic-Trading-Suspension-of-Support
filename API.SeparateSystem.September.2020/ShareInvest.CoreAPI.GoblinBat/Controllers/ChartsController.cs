@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.CoreAPI;
 using ShareInvest.Models;
@@ -51,35 +50,9 @@ namespace ShareInvest.Controllers
             return BadRequest();
         }
         [HttpGet("{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetContext()
-        {
-            if (Registry.Codes != null && Registry.Codes.Count > 0)
-                return Ok(Registry.Codes.Dequeue());
-
-            return StatusCode(0xCD);
-        }
+        public IActionResult GetContext() => StatusCode(0xCD);
         [HttpGet, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetContexts()
-        {
-            if (Registry.Codes != null && Registry.Codes.Count > 0)
-                return Ok(Registry.CodesDictionary.Values);
-
-            var context = await this.context.Codes.AsNoTracking().ToArrayAsync();
-
-            if (context != null)
-            {
-                Registry.Codes.Clear();
-                Registry.CodesDictionary.Clear();
-
-                foreach (var ct in context.OrderByDescending(o => o.MaturityMarketCap))
-                {
-                    Registry.Codes.Enqueue(ct.Code);
-                    Registry.CodesDictionary[ct.Code] = new Tuple<string, string>(ct.Name, ct.MaturityMarketCap);
-                }
-                return Ok(Registry.CodesDictionary);
-            }
-            return NotFound();
-        }
+        public IActionResult GetContexts() => NotFound();
         [HttpPost("days/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext(string code, [FromBody] IEnumerable<Days> chart)
         {
@@ -90,9 +63,6 @@ namespace ShareInvest.Controllers
                 o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                 o.AutoMapOutputDirection = false;
             });
-            Registry.Retentions[code] = chart.FirstOrDefault(o => string.IsNullOrEmpty(o.Retention) == false).Retention;
-            code = Registry.Codes.Count > 0 ? Registry.Codes.Dequeue() : string.Empty;
-
             if (string.IsNullOrEmpty(code))
                 return StatusCode(0xCD);
 
@@ -108,9 +78,6 @@ namespace ShareInvest.Controllers
                 o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                 o.AutoMapOutputDirection = false;
             });
-            Registry.Retentions[code] = chart.FirstOrDefault(o => string.IsNullOrEmpty(o.Retention) == false).Retention;
-            code = Registry.Codes.Count > 0 ? Registry.Codes.Dequeue() : string.Empty;
-
             if (string.IsNullOrEmpty(code))
                 return StatusCode(0xCD);
 
@@ -126,9 +93,6 @@ namespace ShareInvest.Controllers
                 o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                 o.AutoMapOutputDirection = false;
             });
-            Registry.Retentions[code] = chart.FirstOrDefault(o => string.IsNullOrEmpty(o.Retention) == false).Retention;
-            code = Registry.Codes.Count > 0 ? Registry.Codes.Dequeue() : string.Empty;
-
             if (string.IsNullOrEmpty(code))
                 return StatusCode(0xCD);
 
@@ -144,9 +108,6 @@ namespace ShareInvest.Controllers
                 o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                 o.AutoMapOutputDirection = false;
             });
-            Registry.Retentions[code] = chart.FirstOrDefault(o => string.IsNullOrEmpty(o.Retention) == false).Retention;
-            code = Registry.Codes.Count > 0 ? Registry.Codes.Dequeue() : string.Empty;
-
             if (string.IsNullOrEmpty(code))
                 return StatusCode(0xCD);
 

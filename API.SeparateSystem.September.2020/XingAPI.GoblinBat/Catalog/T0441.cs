@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 
+using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.EventHandler;
 
@@ -37,16 +38,15 @@ namespace ShareInvest.XingAPI.Catalog
                     var param = sb.ToString().Split(';');
                     var sAPI = new SendSecuritiesAPI(new string[] { param[0], param[0], param[6], string.Empty, param[2], param[4], param[9], string.Empty, param[11], param[12] });
 
-                    if (sAPI.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.ContainsKey(balance.Item1) == false)
-                        Connect.HoldingStock[balance.Item1] = new HoldingStocks
-                        {
-                            Code = balance.Item1,
-                            Quantity = balance.Item3,
-                            Purchase = (double)balance.Item4,
-                            Current = (double)balance.Item5,
-                            Revenue = balance.Item6,
-                            Rate = balance.Item7
-                        };
+                    if (sAPI.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs))
+                    {
+                        hs.Quantity = balance.Item3;
+                        hs.Purchase = (double)balance.Item4;
+                        hs.Current = (double)balance.Item5;
+                        hs.Revenue = balance.Item6;
+                        hs.Rate = balance.Item7;
+                        Connect.HoldingStock[balance.Item1] = hs;
+                    }
                     Send?.Invoke(this, sAPI);
                 }
         }

@@ -51,7 +51,18 @@ namespace ShareInvest
 
                         case Tuple<string, string, int, dynamic, dynamic, long, double> balance:
                             SuspendLayout();
-                            Size = new Size(0x3B8, 0x63 + 0x28 + Balance.OnReceiveBalance(balance));
+                            var strategics = string.Empty;
+
+                            switch (com)
+                            {
+                                case XingAPI.ConnectAPI x:
+                                    strategics = x.Strategics.First(o => o.Code.Equals(balance.Item1)).GetType().Name;
+                                    break;
+
+                                case OpenAPI.ConnectAPI o:
+                                    break;
+                            }
+                            Size = new Size(0x3B8, 0x63 + 0x28 + Balance.OnReceiveBalance(balance, strategics));
                             ResumeLayout();
                             break;
 
@@ -141,9 +152,42 @@ namespace ShareInvest
                         ctor.QueryExcute();
                         Connect = int.MaxValue;
                     }
-                    foreach (var real in connect.Reals)
-                        real.OnReceiveRealTime("101Q9000");
+                    foreach (var strategics in privacy.CodeStrategics.Split(';'))
+                    {
+                        IStrategics temp = null;
+                        var stParam = strategics.Split('.');
 
+                        if (stParam[0].Length > 0xC)
+                        {
+                            switch (strategics.Substring(0, 2))
+                            {
+                                case "TF":
+                                    if (int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
+                                        temp = new TrendFollowingBasicFutures
+                                        {
+                                            Code = strategics.Substring(2, 8),
+                                            RollOver = stParam[0].Substring(0xA, 1).Equals("1"),
+                                            DayShort = ds,
+                                            DayLong = dl,
+                                            Minute = m,
+                                            MinuteShort = ms,
+                                            MinuteLong = ml,
+                                            ReactionShort = rs,
+                                            ReactionLong = rl,
+                                            QuantityShort = qs,
+                                            QuantityLong = ql
+                                        };
+                                    break;
+                            }
+                            if (temp != null && connect.Strategics.Add(temp) && connect.SetStrategics(temp) > 0)
+                                foreach (var real in connect.Reals)
+                                    real.OnReceiveRealTime(temp.Code);
+                        }
+                        else
+                        {
+
+                        }
+                    }
                     foreach (var conclusion in connect.Conclusion)
                         conclusion.OnReceiveRealTime(string.Empty);
 

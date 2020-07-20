@@ -5,7 +5,7 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.Catalog
 {
-    public abstract class Holding
+    public abstract class Holding 
     {
         public abstract string Code
         {
