@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -11,12 +12,13 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest
 {
-    partial class SecuritiesAPI : Form
+    sealed partial class SecuritiesAPI : Form
     {
-        internal SecuritiesAPI(Privacies privacy, ISecuritiesAPI com)
+        internal SecuritiesAPI(GoblinBatClient client, Privacies privacy, ISecuritiesAPI com)
         {
             this.com = com;
             this.privacy = privacy;
+            this.client = client;
             random = new Random();
             InitializeComponent();
             icon = new string[] { mono, duo, tri, quad };
@@ -43,6 +45,8 @@ namespace ShareInvest
             if (e.Accounts == null && Balance != null)
                 BeginInvoke(new Action(() =>
                 {
+                    Retention retention;
+
                     switch (e.Convey)
                     {
                         case string message:
@@ -64,11 +68,11 @@ namespace ShareInvest
                             }
                             Size = new Size(0x3B8, 0x63 + 0x28 + Balance.OnReceiveBalance(balance, strategics));
                             ResumeLayout();
-                            break;
+                            return;
 
                         case long available:
                             Balance.OnReceiveDeposit(available);
-                            break;
+                            return;
 
                         case Tuple<long, long> tuple:
                             Balance.OnReceiveDeposit(tuple);
@@ -104,6 +108,22 @@ namespace ShareInvest
                                 }
                             return;
 
+                        case Tuple<string[], string[], string[], string[]> tuple:
+                            for (int i = 0; i < tuple.Item1.Length; i++)
+                                if (int.TryParse(tuple.Item3[i], out int gubun))
+                                {
+                                    var statusCode = client.PutContext<Codes>(new Codes
+                                    {
+                                        Code = tuple.Item1[i],
+                                        Name = tuple.Item2[i],
+                                        MaturityMarketCap = string.Empty,
+                                        MarginRate = gubun,
+                                        Price = tuple.Item4[i]
+                                    });
+                                    SendMessage(statusCode);
+                                }
+                            return;
+
                         case Tuple<byte, byte> tuple:
                             switch (tuple)
                             {
@@ -111,12 +131,10 @@ namespace ShareInvest
                                     if (WindowState.Equals(FormWindowState.Minimized))
                                         strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
 
-                                    break;
+                                    return;
 
-                                case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 5:
-                                    var chart = (com as XingAPI.ConnectAPI)?.Charts[0];
-                                    chart.Send += OnReceiveSecuritiesAPI;
-                                    chart?.QueryExcute(GoblinBatClient.GetContext(new Futures()));
+                                case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 1:
+                                    retention = client.GetContext(new Stocks());
                                     break;
                             }
                             break;
@@ -125,13 +143,20 @@ namespace ShareInvest
                             switch (charts.Item1.Length)
                             {
                                 case 6:
+                                    retention = client.PostContext(new Catalog.Convert().ToStoreInStocks(charts.Item1, charts.Item2));
                                     break;
 
                                 case int length when length == 8 && charts.Item1.StartsWith("1"):
-                                    var content = GoblinBatClient.PostContext(new Catalog.Convert().ToStoreInFutures(charts.Item1, charts.Item2));
+                                    retention = client.PostContext(new Catalog.Convert().ToStoreInFutures(charts.Item1, charts.Item2));
                                     break;
                             }
                             break;
+                    }
+                    if (com is XingAPI.ConnectAPI xAPI)
+                    {
+                        var chart = xAPI.Charts;
+                        chart.Send += OnReceiveSecuritiesAPI;
+                        chart?.QueryExcute(retention);
                     }
                 }));
             else if (e.Convey is FormWindowState state)
@@ -223,6 +248,10 @@ namespace ShareInvest
                     var alarm = connect.JIF;
                     alarm.Send += OnReceiveSecuritiesAPI;
                     alarm.QueryExcute();
+
+                    var chart = connect.Charts;
+                    chart.Send += OnReceiveSecuritiesAPI;
+                    chart?.QueryExcute(client.GetContext(new Stocks()));
                 }
             }
         }
@@ -280,7 +309,7 @@ namespace ShareInvest
                     return;
 
                 case DialogResult.Yes:
-                    var code = GoblinBatClient.DeleteContext<Privacies>(privacy);
+                    var code = client.DeleteContext<Privacies>(privacy);
 
                     if (code > 0xC8)
                     {
@@ -393,6 +422,12 @@ namespace ShareInvest
             else
                 Close();
         }
+        [Conditional("DEBUG")]
+        void SendMessage(int code)
+        {
+            if (code > 200)
+                Console.WriteLine(code);
+        }
         Balance Balance
         {
             get; set;
@@ -401,11 +436,12 @@ namespace ShareInvest
         {
             get; set;
         }
+        readonly GoblinBatClient client;
         readonly Random random;
         readonly Dictionary<string, Codes> infoCodes;
+        readonly Color[] colors;
         readonly Privacies privacy;
         readonly ISecuritiesAPI com;
-        readonly Color[] colors;
         readonly string[] icon;
     }
 }

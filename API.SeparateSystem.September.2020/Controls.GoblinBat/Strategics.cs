@@ -18,13 +18,14 @@ namespace ShareInvest.Controls
         {
             get; set;
         }
-        public Strategics()
+        public Strategics(dynamic client)
         {
             InitializeComponent();
             buttonChart.Click += OnReceiveClickItem;
             buttonSave.Click += OnReceiveClickItem;
             textCode.Leave += OnReceiveClickItem;
             Codes = new HashSet<Codes>();
+            this.client = client;
         }
         public event EventHandler<Size> SendSize;
         public string SetPrivacy(Privacies privacy)
@@ -53,7 +54,7 @@ namespace ShareInvest.Controls
                         Length = 6;
                         break;
                 }
-                if (GoblinBatClient.GetContext(new Codes { }, Length) is List<Codes> list)
+                if (client.GetContext(new Codes { }, Length) is List<Codes> list)
                 {
                     string[] codes = new string[list.Count], names = new string[list.Count];
                     var source = new AutoCompleteStringCollection();
@@ -163,7 +164,7 @@ namespace ShareInvest.Controls
                             }
                         sb.Append(';');
                     }
-                    if (0xC8 == GoblinBatClient.PutContext<Privacies>(new Privacies
+                    if (0xC8 == client.PutContext<Privacies>(new Privacies
                     {
                         Security = Privacy.Security,
                         SecuritiesAPI = Privacy.SecuritiesAPI,
@@ -245,6 +246,7 @@ namespace ShareInvest.Controls
         {
             get;
         }
+        readonly GoblinBatClient client;
         readonly double[] commissionFutures = { 3e-5, 25e-6, 2e-5, 18e-6, 15e-6 };
     }
 }

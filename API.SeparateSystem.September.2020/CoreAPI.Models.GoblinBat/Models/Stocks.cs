@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-    public class Stocks
+    public class Stocks : ICharts
     {
         [ForeignKey("Codes"), Column(Order = 1), MinLength(6), MaxLength(8)]
         public string Code

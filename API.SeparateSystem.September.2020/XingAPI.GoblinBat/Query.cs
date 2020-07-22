@@ -7,7 +7,7 @@ using XA_DATASETLib;
 
 namespace ShareInvest.XingAPI
 {
-    class Query : XAQueryClass
+    abstract class Query : XAQueryClass
     {
         protected internal Query()
         {
@@ -135,7 +135,7 @@ namespace ShareInvest.XingAPI
             else
                 SendMessage(nMessageCode, szMessage);
         }
-        protected internal virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
+        protected internal abstract void OnReceiveData(string szTrCode);
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => new Task(() => Console.WriteLine(code + "\t" + message)).Start();
         readonly string[] exclusion = { margin, accept, cancel, correction, impossible };
@@ -147,5 +147,29 @@ namespace ShareInvest.XingAPI
         const string accept = "08683";
         const string margin = "02752";
         const string rCancel = "03416";
+    }
+    enum JongCHK
+    {
+        권리락 = 1,
+        배당락 = 2,
+        액면분할 = 4,
+        액면병합 = 8,
+        주식병합 = 0x10,
+        기업분할 = 0x20,
+        관리 = 0x80,
+        투자경고 = 0x100,
+        거래정지 = 0x200,
+        기준가조정 = 0x1000,
+        우선주 = 0x4000,
+        CB발동예고 = 0x8000,
+        중간배당락 = 0x10000,
+        권리중간배당락 = 0x20000,
+        시간범위연장_Random_end = 0x40000,
+        종가범위연장_Random_end = 0x80000,
+        증거금100Percent = 0x200000,
+        ETF종목 = 0x800000,
+        정리매매종목 = 0x1000000,
+        뮤추얼펀드 = 0x8000000,
+        불성실공시종목 = 0x7FFFFFFF
     }
 }

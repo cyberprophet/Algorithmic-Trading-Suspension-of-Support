@@ -112,6 +112,24 @@ namespace ShareInvest.XingAPI
             };
             return Connect.HoldingStock.Count;
         }
+        public ICharts<SendSecuritiesAPI> GetCharts(string code)
+        {
+            switch (code.Length)
+            {
+                case 6:
+                    return null;
+
+                case int length when length == 8 && code.StartsWith("4") == false && code.Substring(1, 1).Equals("0"):
+                    return charts[0];
+
+                case int length when length == 8 && code.StartsWith("1") && code.Substring(1, 1).Equals("0") == false:
+                    return charts[1];
+
+                default:
+                    return null;
+            }
+        }
+        public ICharts<SendSecuritiesAPI> Charts => charts[0];
         public IEnumerable<Holding> HoldingStocks
         {
             get
@@ -120,9 +138,8 @@ namespace ShareInvest.XingAPI
                     yield return ctor.Value ?? null;
             }
         }
-        public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T9943(), new T8401(), new T8432(), new MMDAQ91200() };
+        public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T8430(), new T9943(), new T8401(), new T8432(), new MMDAQ91200() };
         public IQuerys<SendSecuritiesAPI> JIF => new JIF();
-        public ICharts<SendSecuritiesAPI>[] Charts => new ICharts<SendSecuritiesAPI>[] { new T8414() };
         public IReals[] Conclusion
         {
             get
@@ -172,6 +189,7 @@ namespace ShareInvest.XingAPI
             Codes = new HashSet<Codes>();
             Strategics = new HashSet<IStrategics>();
             querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
+            charts = new ICharts<SendSecuritiesAPI>[] { new T8411(), new T8414(), new T8404() };
         }
         public HashSet<IStrategics> Strategics
         {
@@ -183,6 +201,7 @@ namespace ShareInvest.XingAPI
         }
         readonly string[] securites;
         readonly Privacies privacy;
+        readonly ICharts<SendSecuritiesAPI>[] charts;
         public readonly IQuerys<SendSecuritiesAPI>[] querys;
         public event EventHandler<SendSecuritiesAPI> Send;
     }

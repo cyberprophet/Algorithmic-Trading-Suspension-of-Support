@@ -10,12 +10,13 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    class T8414 : Query, ICharts<SendSecuritiesAPI>
+    class T8411 : Query, ICharts<SendSecuritiesAPI>
     {
         public void QueryExcute(ShareInvest.Catalog.Retention retention)
         {
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {
+                Delay.Milliseconds = 0xE83;
                 InBlock = new HashSet<InBlock>();
 
                 foreach (var param in GetInBlocks(GetType().Name))
@@ -27,11 +28,11 @@ namespace ShareInvest.XingAPI.Catalog
                         Data = param.Data ?? retention.Code
                     }))
                         SetFieldData(param.Block, param.Field, param.Occurs, param.Data ?? retention.Code);
-
-                SendErrorMessage(GetType().Name, Request(false));
+                                
+                Connect.GetInstance().Request.RequestTrData(new Task(() => SendErrorMessage(GetType().Name, Request(false))));
             }
             Charts = new Stack<string>();
-            Retention = retention.LastDate;
+            Retention = retention.LastDate?.Substring(0, 12);
         }
         protected internal override void OnReceiveData(string szTrCode)
         {
@@ -46,12 +47,12 @@ namespace ShareInvest.XingAPI.Catalog
 
                 switch (enumerable.Count)
                 {
-                    case int count when count > 0x1C:
+                    case int count when count > 0x1E:
                         var block = InBlock.First(o => o.Field.Equals(param.Field));
                         SetFieldData(block.Block, block.Field, block.Occurs, block.Data);
                         continue;
 
-                    case int count when count < 7 || count == 7 && Decompress(param.Block) > 0:
+                    case int count when count < 9 || count == 9 && Decompress(param.Block) > 0:
                         var bCount = GetBlockCount(param.Block);
                         var array = new string[bCount];
 
@@ -61,22 +62,22 @@ namespace ShareInvest.XingAPI.Catalog
                         list.Add(array);
                         break;
 
-                    case int count when count == 0xD || count == 0xC:
+                    case int count when count == 0xF || count == 0xE:
                         var data = GetFieldData(param.Block, param.Field, 0);
                         var refresh = InBlock.First(o => o.Field.Equals(param.Field));
                         SetFieldData(refresh.Block, refresh.Field, refresh.Occurs, data);
                         continue;
 
-                    case 0x1A:
+                    case 0x1C:
                         var temp = InBlock.First(o => o.Field.Equals(param.Field));
                         SetFieldData(temp.Block, temp.Field, temp.Occurs, temp.Data);
                         continue;
 
-                    case 0x19:
+                    case 0x1B:
                         code = GetFieldData(param.Block, param.Field, 0);
                         continue;
 
-                    case 8:
+                    case 0xA:
                         if (int.TryParse(GetFieldData(param.Block, param.Field, 0), out int rCount))
                             index = rCount;
 
@@ -93,19 +94,21 @@ namespace ShareInvest.XingAPI.Catalog
                 Delay.Milliseconds = 0x3E8 / GetTRCountPerSec(szTrCode);
 
             for (int i = index - 1; i >= 0; i--)
-            {
-                var temp = string.Concat(list[0][i].Substring(2), list[1][i].Substring(0, 6));
-
-                if (string.IsNullOrEmpty(Retention) || string.Compare(temp, Retention) > 0)
-                    Charts.Push(string.Concat(temp, ";", list[5][i], ";", list[6][i]));
-
-                else
+                if (uint.TryParse(list[1][i].Substring(0, 4), out uint time) && time > 0x35B && time < 0x604)
                 {
-                    Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
+                    var temp = string.Concat(list[0][i].Substring(2), list[1][i].Substring(0, 6));
 
-                    return;
+                    if (string.IsNullOrEmpty(Retention) || string.Compare(temp, Retention) > 0)
+                        Charts.Push(string.Concat(temp, ";", list[5][i], ";", list[6][i]));
+
+                    else
+                    {
+                        Delay.Milliseconds = 0xE83;
+                        Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
+
+                        return;
+                    }
                 }
-            }
             if (IsNext)
                 Connect.GetInstance().Request.RequestTrData(new Task(() => SendErrorMessage(GetType().Name, Request(IsNext))));
 

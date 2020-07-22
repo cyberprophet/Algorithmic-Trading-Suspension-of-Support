@@ -1,10 +1,8 @@
-﻿using System;
-
-using XA_DATASETLib;
+﻿using XA_DATASETLib;
 
 namespace ShareInvest.XingAPI
 {
-    class Real : XARealClass
+    abstract class Real : XARealClass
     {
         protected internal InBlock GetInBlock(string code) => new InBlock
         {
@@ -12,7 +10,7 @@ namespace ShareInvest.XingAPI
             Field = field,
             Data = code
         };
-        protected internal virtual void OnReceiveRealData(string szTrCode) => Console.WriteLine(szTrCode);
+        protected internal abstract void OnReceiveRealData(string szTrCode);
         protected internal string GetInBlock() => inBlock;
         protected internal string OutBlock => outBlock;
         protected internal Real() => ReceiveRealData += OnReceiveRealData;
@@ -325,5 +323,5 @@ namespace ShareInvest.XingAPI
         unsttqty_2 = 116,
         lqdtableqty_2 = 117,
         avrprc_2 = 118
-    } 
+    }
 }

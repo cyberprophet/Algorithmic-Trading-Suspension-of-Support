@@ -27,7 +27,7 @@ namespace ShareInvest.Controllers
                     return Ok(await context.Codes.Where(o => o.Code.Length == length).Select(o => new { o.Code, o.Name, o.MarginRate, o.MaturityMarketCap, o.Price }).AsNoTracking().ToListAsync());
 
                 default:
-                    return NotFound(length);
+                    return NotFound(Registry.Retentions.Count);
             }
             return BadRequest(length);
         }

@@ -13,6 +13,7 @@ namespace ShareInvest.Strategics
         public GoblinBat(dynamic cookie)
         {
             InitializeComponent();
+            client = GoblinBatClient.GetInstance(cookie);
             strip.ItemClicked += OnItemClick;
             StartProgress(new Privacies { Security = cookie });
         }
@@ -27,12 +28,12 @@ namespace ShareInvest.Strategics
         }
         void StartProgress(IParameters param)
         {
-            switch ((int)GoblinBatClient.PostContext<Privacies>(param))
+            switch ((int)client.PostContext<Privacies>(param))
             {
                 case 0xCA:
                     if (Statistical == null)
                     {
-                        Statistical = new Controls.Strategics();
+                        Statistical = new Controls.Strategics(client);
                         Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
                         Statistical.SendSize += OnReceiveTheChangedSize;
@@ -116,11 +117,11 @@ namespace ShareInvest.Strategics
             {
                 if (Statistical == null)
                 {
-                    Statistical = new Controls.Strategics();
+                    Statistical = new Controls.Strategics(client);
                     Controls.Add(Statistical);
                     Statistical.Dock = DockStyle.Fill;
                 }
-                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && GoblinBatClient.GetContext<Privacies>(Privacy) is Privacies privacy)
+                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && client.GetContext<Privacies>(Privacy) is Privacies privacy)
                     Text = Statistical.SetPrivacy(privacy);
 
                 Size = new Size(0x245, 0x208);
@@ -160,5 +161,6 @@ namespace ShareInvest.Strategics
         {
             get; set;
         }
+        readonly GoblinBatClient client;
     }
 }
