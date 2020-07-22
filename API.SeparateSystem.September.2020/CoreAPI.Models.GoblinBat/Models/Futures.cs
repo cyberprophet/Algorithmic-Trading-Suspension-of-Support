@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-    public class Futures
+    public class Futures : ICharts
     {
         [ForeignKey("Codes"), Column(Order = 1), StringLength(8)]
         public string Code

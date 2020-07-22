@@ -11,4 +11,9 @@ namespace ShareInvest.Catalog.XingAPI
     {
         void QueryExcute(string code);
     }
+    public interface ICharts<T>
+    {
+        void QueryExcute(Retention retention);
+        event EventHandler<T> Send;
+    }
 }

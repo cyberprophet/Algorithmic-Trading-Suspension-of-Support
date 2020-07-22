@@ -117,9 +117,10 @@ namespace ShareInvest.XingAPI
                 SendMessage(name, param);
 
                 if (Secrecy.ErrorMessage.Equals(param))
-                    API.Dispose();
+                    Connect.GetInstance().Dispose();
             }
         }
+        protected internal TimeSpan WaitForTheLimitTime(int limit) => TimeSpan.FromSeconds(limit);
         protected internal virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             if (bIsSystemError == false && int.TryParse(nMessageCode, out int code) && code > 999)
@@ -135,7 +136,6 @@ namespace ShareInvest.XingAPI
                 SendMessage(nMessageCode, szMessage);
         }
         protected internal virtual void OnReceiveData(string szTrCode) => Console.WriteLine(szTrCode);
-        protected internal Connect API => Connect.GetInstance();
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => new Task(() => Console.WriteLine(code + "\t" + message)).Start();
         readonly string[] exclusion = { margin, accept, cancel, correction, impossible };

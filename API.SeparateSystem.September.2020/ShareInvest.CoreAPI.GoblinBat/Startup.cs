@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,7 +23,7 @@ namespace ShareInvest
         }
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<CoreAPI.CoreApiDbContext>(o => o.UseSqlServer(Configuration[new Security().Connection])).AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
+            services.Configure<KestrelServerOptions>(o => o.Limits.MaxRequestBodySize = int.MaxValue).AddDbContext<CoreAPI.CoreApiDbContext>(o => o.UseSqlServer(Configuration[new Security().Connection])).AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
             EntityFrameworkManager.ContextFactory = context => new CoreAPI.CoreApiDbContext(new DbContextOptionsBuilder<CoreAPI.CoreApiDbContext>().UseSqlServer(Configuration[new Security().Connection]).Options);
         }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

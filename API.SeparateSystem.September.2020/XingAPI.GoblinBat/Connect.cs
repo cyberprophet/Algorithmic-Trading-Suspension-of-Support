@@ -48,16 +48,12 @@ namespace ShareInvest.XingAPI
             DisconnectServer();
             API = null;
         }
-        internal void OnReceiveChapterOperatingInformation(string jangubun, string jstatus)
+        internal void OnReceiveChapterOperatingInformation(int gubun, int status)
         {
-            if (int.TryParse(jangubun, out int gubun) && int.TryParse(jstatus, out int status) && TimerBox.Show(Enum.GetName(typeof(Attribute), status), Enum.GetName(typeof(Attribute), gubun), MessageBoxButtons.YesNo, MessageBoxIcon.Information, gubun == 5 && status == 41 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 0x3B7).Equals(DialogResult.Yes))
-            {
-                if (gubun == 5 && status == 41)
-                {
+            string jangubun = Enum.GetName(typeof(Attribute), gubun), jstatus = Enum.GetName(typeof(Attribute), status);
 
-                }
-            }
-            SendMessage(jangubun, jstatus);
+            if (TimerBox.Show(jstatus, jangubun, MessageBoxButtons.YesNo, MessageBoxIcon.Information, gubun == 5 && status == 41 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 0x3B7).Equals(DialogResult.Yes))
+                SendMessage(jangubun, jstatus);
         }
         void OnEventConnect(string szCode, string szMsg)
         {

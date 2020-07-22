@@ -103,7 +103,12 @@ namespace ShareInvest.XingAPI
         {
             Connect.HoldingStock[strategics.Code] = new HoldingStocks
             {
-                Code = strategics.Code
+                Code = strategics.Code,
+                Current = 0,
+                Purchase = 0,
+                Quantity = 0,
+                Rate = 0,
+                Revenue = 0
             };
             return Connect.HoldingStock.Count;
         }
@@ -116,7 +121,8 @@ namespace ShareInvest.XingAPI
             }
         }
         public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T9943(), new T8401(), new T8432(), new MMDAQ91200() };
-        public IReals JIF => new JIF();
+        public IQuerys<SendSecuritiesAPI> JIF => new JIF();
+        public ICharts<SendSecuritiesAPI>[] Charts => new ICharts<SendSecuritiesAPI>[] { new T8414() };
         public IReals[] Conclusion
         {
             get

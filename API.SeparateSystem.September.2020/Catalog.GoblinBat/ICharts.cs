@@ -1,4 +1,4 @@
-﻿namespace ShareInvest.Models
+﻿namespace ShareInvest.Catalog
 {
     public interface ICharts
     {

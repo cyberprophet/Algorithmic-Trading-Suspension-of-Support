@@ -1,24 +1,24 @@
-﻿namespace ShareInvest.Models
+﻿namespace ShareInvest.Catalog
 {
-    public interface ICharts
+    public struct Futures : ICharts
     {
-        string Code
+        public string Code
         {
             get; set;
         }
-        string Retention
+        public string Retention
         {
             get; set;
         }
-        string Date
+        public string Date
         {
             get; set;
         }
-        string Price
+        public string Price
         {
             get; set;
         }
-        int Volume
+        public int Volume
         {
             get; set;
         }

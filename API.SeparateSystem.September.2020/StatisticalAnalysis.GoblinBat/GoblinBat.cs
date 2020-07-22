@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
@@ -119,7 +120,7 @@ namespace ShareInvest.Strategics
                     Controls.Add(Statistical);
                     Statistical.Dock = DockStyle.Fill;
                 }
-                if (GoblinBatClient.GetContext<Privacies>(Privacy) is Privacies privacy)
+                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && GoblinBatClient.GetContext<Privacies>(Privacy) is Privacies privacy)
                     Text = Statistical.SetPrivacy(privacy);
 
                 Size = new Size(0x245, 0x208);

@@ -1,12 +1,13 @@
 ﻿using System;
 
 using ShareInvest.Catalog.XingAPI;
+using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
 {
-    class JIF : Real, IReals
+    class JIF : Real, IQuerys<SendSecuritiesAPI>
     {
-        public void OnReceiveRealTime(string code)
+        public void QueryExcute()
         {
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {
@@ -14,6 +15,16 @@ namespace ShareInvest.XingAPI.Catalog
                 AdviseRealData();
             }
         }
-        protected internal override void OnReceiveRealData(string szTrCode) => Connect.GetInstance().OnReceiveChapterOperatingInformation(GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jangubun)), GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jstatus)));
+        protected internal override void OnReceiveRealData(string szTrCode)
+        {
+            string jangubun = GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jangubun)), jstatus = GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jstatus));
+
+            if (int.TryParse(jangubun, out int gubun) && int.TryParse(jstatus, out int status))
+            {
+                Send?.Invoke(this, new SendSecuritiesAPI(gubun, status));
+                Connect.GetInstance().OnReceiveChapterOperatingInformation(gubun, status);
+            }
+        }
+        public event EventHandler<SendSecuritiesAPI> Send;
     }
 }

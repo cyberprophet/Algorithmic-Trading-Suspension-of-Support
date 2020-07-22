@@ -103,6 +103,35 @@ namespace ShareInvest
                                     xing.StartProgress(info);
                                 }
                             return;
+
+                        case Tuple<byte, byte> tuple:
+                            switch (tuple)
+                            {
+                                case Tuple<byte, byte> tp when tp.Item2 == 21:
+                                    if (WindowState.Equals(FormWindowState.Minimized))
+                                        strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
+
+                                    break;
+
+                                case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 5:
+                                    var chart = (com as XingAPI.ConnectAPI)?.Charts[0];
+                                    chart.Send += OnReceiveSecuritiesAPI;
+                                    chart?.QueryExcute(GoblinBatClient.GetContext(new Futures()));
+                                    break;
+                            }
+                            break;
+
+                        case Tuple<string, Stack<string>> charts:
+                            switch (charts.Item1.Length)
+                            {
+                                case 6:
+                                    break;
+
+                                case int length when length == 8 && charts.Item1.StartsWith("1"):
+                                    var content = GoblinBatClient.PostContext(new Catalog.Convert().ToStoreInFutures(charts.Item1, charts.Item2));
+                                    break;
+                            }
+                            break;
                     }
                 }));
             else if (e.Convey is FormWindowState state)
@@ -191,7 +220,9 @@ namespace ShareInvest
                     foreach (var conclusion in connect.Conclusion)
                         conclusion.OnReceiveRealTime(string.Empty);
 
-                    connect.JIF.OnReceiveRealTime(string.Empty);
+                    var alarm = connect.JIF;
+                    alarm.Send += OnReceiveSecuritiesAPI;
+                    alarm.QueryExcute();
                 }
             }
         }
