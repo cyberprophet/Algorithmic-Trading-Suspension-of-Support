@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
@@ -18,9 +20,9 @@ namespace ShareInvest.Client
 
             return Client;
         }
-        public object GetContext<T>(IParameters param)
+        public async Task<object> GetContext<T>(IParameters param)
         {
-            var temp = client.Execute<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.GET));
+            var temp = await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.GET), source.Token);
 
             switch (param)
             {
@@ -29,12 +31,12 @@ namespace ShareInvest.Client
             }
             return null;
         }
-        public object GetContext(Codes param, int length) => JsonConvert.DeserializeObject<List<Codes>>(client.Execute(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", length), Method.GET)).Content);
-        public Retention GetContext<T>(T param) where T : struct, ICharts => JsonConvert.DeserializeObject<Retention>(client.Execute(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.GET)).Content);
-        public Retention PostContext<T>(Queue<T> param) where T : struct, ICharts => JsonConvert.DeserializeObject<Retention>(client.Execute(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody)).Content);
-        public object PostContext<T>(IParameters param)
+        public async Task<object> GetContext(Codes param, int length) => JsonConvert.DeserializeObject<List<Codes>>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", length), Method.GET), source.Token)).Content);
+        public async Task<Retention> GetContext<T>(T param) where T : struct, ICharts => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.GET), source.Token)).Content);
+        public async Task<Retention> PostContext<T>(Queue<T> param) where T : struct, ICharts => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token)).Content);
+        public async Task<object> PostContext<T>(IParameters param)
         {
-            var temp = client.Execute(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType));
+            var temp = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
 
             switch (param)
             {
@@ -43,9 +45,9 @@ namespace ShareInvest.Client
             }
             return null;
         }
-        public object PostContext<T>(IEnumerable<T> param)
+        public async Task<object> PostContext<T>(IEnumerable<T> param)
         {
-            var temp = client.Execute(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody));
+            var temp = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
             switch (param)
             {
@@ -54,9 +56,9 @@ namespace ShareInvest.Client
             }
             return null;
         }
-        public int PutContext<T>(Codes param) => (int)client.Execute<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT).AddJsonBody(param, security.ContentType)).StatusCode;
-        public int PutContext<T>(IParameters param) => (int)client.Execute<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.PUT).AddJsonBody(param, security.ContentType)).StatusCode;
-        public int DeleteContext<T>(IParameters param) => (int)client.Execute<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.DELETE)).StatusCode;
+        public async Task<int> PutContext<T>(Codes param) => (int)(await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT).AddJsonBody(param, security.ContentType), source.Token)).StatusCode;
+        public async Task<int> PutContext<T>(IParameters param) => (int)(await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.PUT, DataFormat.Json).AddJsonBody(param, security.ContentType), source.Token)).StatusCode;
+        public async Task<int> DeleteContext<T>(IParameters param) => (int)(await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.DELETE), source.Token)).StatusCode;
         static GoblinBatClient Client
         {
             get; set;
@@ -68,8 +70,10 @@ namespace ShareInvest.Client
             {
                 Timeout = -1
             };
+            source = new CancellationTokenSource();
         }
+        readonly CancellationTokenSource source;
         readonly Security security;
-        readonly RestClient client;
+        readonly IRestClient client;
     }
 }

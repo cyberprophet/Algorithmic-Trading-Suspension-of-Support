@@ -15,23 +15,18 @@ namespace ShareInvest.Controllers
     [ApiController, Route(Security.route), Produces(Security.produces)]
     public class CodesController : ControllerBase
     {
-        [HttpGet("{length}"), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("{length}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetContexts(int length)
         {
-            switch (length)
-            {
-                case 6:
-                    break;
+            if (length == 6 || length == 8)
+                return Ok(await context.Codes.Where(o => o.Code.Length == length).Select(o => new { o.Code, o.Name, o.MarginRate, o.MaturityMarketCap, o.Price }).AsNoTracking().ToListAsync());
 
-                case 8:
-                    return Ok(await context.Codes.Where(o => o.Code.Length == length).Select(o => new { o.Code, o.Name, o.MarginRate, o.MaturityMarketCap, o.Price }).AsNoTracking().ToListAsync());
-
-                default:
-                    return NotFound(Registry.Retentions.Count);
-            }
-            return BadRequest(length);
+            else
+                return NotFound(Registry.Retentions.Count);
         }
-        [HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpGet, ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult GetContexts() => Ok(Registry.Retentions);
+        [HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext([FromBody] IEnumerable<Codes> chart)
         {
             await context.BulkInsertAsync(chart, o =>

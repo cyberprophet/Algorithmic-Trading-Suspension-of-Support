@@ -51,22 +51,23 @@ namespace ShareInvest.OpenAPI
             }
             var mServer = axAPI.GetLoginInfo(server);
             checkAccount.CheckState = mServer.Equals(mock) && checkAccount.Checked ? CheckState.Unchecked : CheckState.Checked;
-            string strAccount;
+            var strAccount = string.Empty;
+            Invoke(new Action(async () =>
+            {
+                if (checkAccount.Checked && await new Security().Encrypt(this.privacy, privacy.AccountNumber, checkAccount.Checked) == 0xC8)
+                    switch (privacy.AccountNumber.Substring(privacy.AccountNumber.Length - 2))
+                    {
+                        case "31":
+                            strAccount = "선물옵션";
+                            break;
 
-            if (checkAccount.Checked && new Security().Encrypt(this.privacy, privacy.AccountNumber, checkAccount.Checked) == 0xC8)
-                switch (privacy.AccountNumber.Substring(privacy.AccountNumber.Length - 2))
-                {
-                    case "31":
-                        strAccount = "선물옵션";
-                        break;
-
-                    default:
-                        strAccount = "위탁종합";
-                        break;
-                }
-            else
-                strAccount = string.Empty;
-
+                        default:
+                            strAccount = "위탁종합";
+                            break;
+                    }
+                else
+                    strAccount = string.Empty;
+            }));
             return new AccountInformation
             {
                 Identity = axAPI.GetLoginInfo(user),

@@ -43,7 +43,7 @@ namespace ShareInvest
         void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e)
         {
             if (e.Accounts == null && Balance != null)
-                BeginInvoke(new Action(() =>
+                BeginInvoke(new Action(async () =>
                 {
                     Retention retention;
 
@@ -59,7 +59,7 @@ namespace ShareInvest
 
                             switch (com)
                             {
-                                case XingAPI.ConnectAPI x:
+                                case XingAPI.ConnectAPI x when x.Strategics.Count > 0:
                                     strategics = x.Strategics.First(o => o.Code.Equals(balance.Item1)).GetType().Name;
                                     break;
 
@@ -112,7 +112,7 @@ namespace ShareInvest
                             for (int i = 0; i < tuple.Item1.Length; i++)
                                 if (int.TryParse(tuple.Item3[i], out int gubun))
                                 {
-                                    var statusCode = client.PutContext<Codes>(new Codes
+                                    var statusCode = await client.PutContext<Codes>(new Codes
                                     {
                                         Code = tuple.Item1[i],
                                         Name = tuple.Item2[i],
@@ -134,7 +134,7 @@ namespace ShareInvest
                                     return;
 
                                 case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 1:
-                                    retention = client.GetContext(new Stocks());
+                                    retention = await client.GetContext(new Stocks());
                                     break;
                             }
                             break;
@@ -143,16 +143,17 @@ namespace ShareInvest
                             switch (charts.Item1.Length)
                             {
                                 case 6:
-                                    retention = client.PostContext(new Catalog.Convert().ToStoreInStocks(charts.Item1, charts.Item2));
+                                    retention = await client.PostContext(new Catalog.Convert().ToStoreInStocks(charts.Item1, charts.Item2));
                                     break;
 
                                 case int length when length == 8 && charts.Item1.StartsWith("1"):
-                                    retention = client.PostContext(new Catalog.Convert().ToStoreInFutures(charts.Item1, charts.Item2));
+                                    retention = await client.PostContext(new Catalog.Convert().ToStoreInFutures(charts.Item1, charts.Item2));
                                     break;
                             }
+                            ((com as XingAPI.ConnectAPI)?.Charts).Send -= OnReceiveSecuritiesAPI;
                             break;
                     }
-                    if (com is XingAPI.ConnectAPI xAPI)
+                    if (string.IsNullOrEmpty(retention.Code) == false && com is XingAPI.ConnectAPI xAPI)
                     {
                         var chart = xAPI.Charts;
                         chart.Send += OnReceiveSecuritiesAPI;
@@ -197,19 +198,24 @@ namespace ShareInvest
                 Text = info.Nick;
                 notifyIcon.Text = info.Nick;
                 Opacity = 0.79315;
-
-                if (com is XingAPI.ConnectAPI connect)
+                backgroundWorker.RunWorkerAsync();
+            }
+        }
+        void BackgroundWorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            if (com is XingAPI.ConnectAPI connect)
+            {
+                foreach (var ctor in connect.ConvertTheCodeToName)
                 {
-                    foreach (var ctor in connect.ConvertTheCodeToName)
-                    {
-                        ctor.Send += OnReceiveSecuritiesAPI;
-                        ctor.QueryExcute();
-                        Connect = int.MaxValue;
-                    }
-                    foreach (var strategics in privacy.CodeStrategics.Split(';'))
+                    ctor.Send += OnReceiveSecuritiesAPI;
+                    ctor.QueryExcute();
+                    Connect = int.MaxValue;
+                }
+                if (privacy.CodeStrategics is string cStrategics)
+                    foreach (var strategics in cStrategics?.Split(';'))
                     {
                         IStrategics temp = null;
-                        var stParam = strategics.Split('.');
+                        var stParam = strategics?.Split('.');
 
                         if (stParam[0].Length > 0xC)
                         {
@@ -242,17 +248,12 @@ namespace ShareInvest
 
                         }
                     }
-                    foreach (var conclusion in connect.Conclusion)
-                        conclusion.OnReceiveRealTime(string.Empty);
+                foreach (var conclusion in connect.Conclusion)
+                    conclusion.OnReceiveRealTime(string.Empty);
 
-                    var alarm = connect.JIF;
-                    alarm.Send += OnReceiveSecuritiesAPI;
-                    alarm.QueryExcute();
-
-                    var chart = connect.Charts;
-                    chart.Send += OnReceiveSecuritiesAPI;
-                    chart?.QueryExcute(client.GetContext(new Stocks()));
-                }
+                var alarm = connect.JIF;
+                alarm.Send += OnReceiveSecuritiesAPI;
+                alarm.QueryExcute();
             }
         }
         void GoblinBatResize(object sender, EventArgs e)
@@ -299,7 +300,7 @@ namespace ShareInvest
                 ResumeLayout();
             }
         }
-        void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
+        void GoblinBatFormClosing(object sender, FormClosingEventArgs e) => BeginInvoke(new Action(async () =>
         {
             switch (MessageBox.Show(rExit, notifyIcon.Text, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3))
             {
@@ -309,7 +310,7 @@ namespace ShareInvest
                     return;
 
                 case DialogResult.Yes:
-                    var code = client.DeleteContext<Privacies>(privacy);
+                    var code = await client.DeleteContext<Privacies>(privacy);
 
                     if (code > 0xC8)
                     {
@@ -324,7 +325,7 @@ namespace ShareInvest
             timer.Stop();
             strip.ItemClicked -= OnItemClick;
             Dispose();
-        }
+        }));
         void TimerTick(object sender, EventArgs e)
         {
             if (com == null)

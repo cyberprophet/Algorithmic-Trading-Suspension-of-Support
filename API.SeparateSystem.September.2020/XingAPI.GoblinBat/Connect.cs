@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.ExceptionServices;
+using System.Security;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -43,10 +45,19 @@ namespace ShareInvest.XingAPI
         {
             get; private set;
         }
+        [HandleProcessCorruptedStateExceptions, SecurityCritical]
         internal void Dispose()
         {
-            DisconnectServer();
-            API = null;
+            try
+            {
+                GC.Collect();
+                DisconnectServer();
+                API = null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.TargetSite.Name + "\n" + ex.StackTrace);
+            }
         }
         internal void OnReceiveChapterOperatingInformation(int gubun, int status)
         {

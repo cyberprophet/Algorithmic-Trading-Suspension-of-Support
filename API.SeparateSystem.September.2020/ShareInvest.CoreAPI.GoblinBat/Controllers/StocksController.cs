@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -33,16 +35,25 @@ namespace ShareInvest.Controllers
         [HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PostContext([FromBody] Queue<Stocks> chart)
         {
-            await context.BulkInsertAsync<Queue<Stocks>>(chart, o =>
+            try
             {
-                o.InsertIfNotExists = true;
-                o.BatchSize = 0x43AD;
-                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                o.AutoMapOutputDirection = false;
-            });
+                await context.BulkInsertAsync<Queue<Stocks>>(chart, o =>
+                {
+                    o.InsertIfNotExists = true;
+                    o.BatchSize = 0x43AD;
+                    o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                    o.AutoMapOutputDirection = false;
+                });
+            }
+            catch (Exception ex)
+            {
+                SendExceptionMessage(ex.Message);
+            }
             return GetContexts();
         }
         public StocksController(CoreApiDbContext context) => this.context = context;
+        [Conditional("DEBUG")]
+        void SendExceptionMessage(string message) => Console.WriteLine(message);
         readonly CoreApiDbContext context;
     }
 }

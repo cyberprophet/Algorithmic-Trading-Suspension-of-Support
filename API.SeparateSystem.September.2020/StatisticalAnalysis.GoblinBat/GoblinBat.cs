@@ -26,9 +26,9 @@ namespace ShareInvest.Strategics
                 ResumeLayout();
             }
         }
-        void StartProgress(IParameters param)
+        async void StartProgress(IParameters param)
         {
-            switch ((int)client.PostContext<Privacies>(param))
+            switch ((int)await client.PostContext<Privacies>(param))
             {
                 case 0xCA:
                     if (Statistical == null)
@@ -111,7 +111,7 @@ namespace ShareInvest.Strategics
                 }
             }
         }
-        void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(() =>
+        void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(async () =>
         {
             if (e.ClickedItem.Name.Equals(st))
             {
@@ -121,7 +121,7 @@ namespace ShareInvest.Strategics
                     Controls.Add(Statistical);
                     Statistical.Dock = DockStyle.Fill;
                 }
-                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && client.GetContext<Privacies>(Privacy) is Privacies privacy)
+                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && await client.GetContext<Privacies>(Privacy) is Privacies privacy)
                     Text = Statistical.SetPrivacy(privacy);
 
                 Size = new Size(0x245, 0x208);

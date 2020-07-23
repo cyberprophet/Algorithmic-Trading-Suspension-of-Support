@@ -79,12 +79,15 @@ namespace ShareInvest.XingAPI
             if (API is Connect api)
             {
                 var name = api.SetAccountName(privacy.AccountNumber, privacy.AccountPassword);
-                ai.Name = name.Item2;
-                ai.Nick = name.Item3;
-                checkPrivacy.CheckState = ai.Server && checkPrivacy.Checked ? CheckState.Unchecked : checkPrivacy.CheckState;
+                Invoke(new Action(async () =>
+                {
+                    ai.Name = name.Item2;
+                    ai.Nick = name.Item3;
+                    checkPrivacy.CheckState = ai.Server && checkPrivacy.Checked ? CheckState.Unchecked : checkPrivacy.CheckState;
 
-                if (checkPrivacy.Checked && 0xC8 == new Secrecy().Encrypt(this.privacy, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.AccountNumber, privacy.AccountPassword, checkDemo.Checked))
-                    Console.WriteLine(ai.Nick);
+                    if (checkPrivacy.Checked && 0xC8 == await new Secrecy().Encrypt(this.privacy, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.AccountNumber, privacy.AccountPassword, checkDemo.Checked))
+                        Console.WriteLine(ai.Nick);
+                }));
             }
             return ai;
         }
@@ -112,24 +115,7 @@ namespace ShareInvest.XingAPI
             };
             return Connect.HoldingStock.Count;
         }
-        public ICharts<SendSecuritiesAPI> GetCharts(string code)
-        {
-            switch (code.Length)
-            {
-                case 6:
-                    return null;
-
-                case int length when length == 8 && code.StartsWith("4") == false && code.Substring(1, 1).Equals("0"):
-                    return charts[0];
-
-                case int length when length == 8 && code.StartsWith("1") && code.Substring(1, 1).Equals("0") == false:
-                    return charts[1];
-
-                default:
-                    return null;
-            }
-        }
-        public ICharts<SendSecuritiesAPI> Charts => charts[0];
+        public ICharts<SendSecuritiesAPI> Charts => charts;
         public IEnumerable<Holding> HoldingStocks
         {
             get
@@ -189,7 +175,7 @@ namespace ShareInvest.XingAPI
             Codes = new HashSet<Codes>();
             Strategics = new HashSet<IStrategics>();
             querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
-            charts = new ICharts<SendSecuritiesAPI>[] { new T8411(), new T8414(), new T8404() };
+            charts = new T8411();
         }
         public HashSet<IStrategics> Strategics
         {
@@ -201,7 +187,7 @@ namespace ShareInvest.XingAPI
         }
         readonly string[] securites;
         readonly Privacies privacy;
-        readonly ICharts<SendSecuritiesAPI>[] charts;
+        readonly ICharts<SendSecuritiesAPI> charts;
         public readonly IQuerys<SendSecuritiesAPI>[] querys;
         public event EventHandler<SendSecuritiesAPI> Send;
     }

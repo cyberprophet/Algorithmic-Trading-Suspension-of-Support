@@ -32,94 +32,96 @@ namespace ShareInvest.Controls
         {
             Privacy = privacy;
             string str = "도깨비방망이";
-
-            if (string.IsNullOrEmpty(privacy.Account) == false)
+            BeginInvoke(new Action(async () =>
             {
-                switch (privacy.Account)
+                if (string.IsNullOrEmpty(privacy.Account) == false)
                 {
-                    case "F":
-                        if (comboCommission.Items.Count == 0 && comboStrategics.Items.Count == 0)
-                        {
-                            foreach (var commission in commissionFutures)
-                                comboCommission.Items.Add(commission.ToString("P4"));
-
-                            comboStrategics.Items.AddRange(new object[] { tf });
-                        }
-                        str = "선물옵션";
-                        Length = 8;
-                        break;
-
-                    case "S":
-                        str = "위탁종합";
-                        Length = 6;
-                        break;
-                }
-                if (client.GetContext(new Codes { }, Length) is List<Codes> list)
-                {
-                    string[] codes = new string[list.Count], names = new string[list.Count];
-                    var source = new AutoCompleteStringCollection();
-
-                    for (int i = 0; i < codes.Length; i++)
-                        if (Codes.Add(list[i]))
-                        {
-                            codes[i] = list[i].Code;
-                            names[i] = list[i].Name;
-                        }
-                    source.AddRange(codes);
-                    source.AddRange(names);
-                    textCode.AutoCompleteCustomSource = source;
-                    textCode.AutoCompleteMode = AutoCompleteMode.Append;
-                    textCode.AutoCompleteSource = AutoCompleteSource.CustomSource;
-                }
-                if (string.IsNullOrEmpty(privacy.CodeStrategics) == false)
-                {
-                    SuspendLayout();
-
-                    foreach (var strategics in privacy.CodeStrategics.Split(';'))
+                    switch (privacy.Account)
                     {
-                        var color = Color.FromArgb(0x79, 0x85, 0x82);
-                        tab.Controls.Add(new TabPage
-                        {
-                            BackColor = Color.Transparent,
-                            BorderStyle = BorderStyle.FixedSingle,
-                            ForeColor = Color.Black,
-                            Location = new Point(4, 0x22),
-                            Margin = new Padding(0),
-                            Name = strategics.Substring(2, 8),
-                            TabIndex = Index++,
-                            Text = strategics.Substring(2, 8),
-                        });
-                        if (Length == 8)
-                            switch (strategics.Substring(0, 2))
+                        case "F":
+                            if (comboCommission.Items.Count == 0 && comboStrategics.Items.Count == 0)
                             {
-                                case "TF":
-                                    var select = Codes.FirstOrDefault(o => o.Code.Equals(strategics.Substring(2, 8)));
+                                foreach (var commission in commissionFutures)
+                                    comboCommission.Items.Add(commission.ToString("P4"));
 
-                                    if (select.MarginRate > 0 && string.IsNullOrEmpty(select.Price) == false)
-                                    {
-                                        var view = new TrendFollowingBasicFutures(select);
-                                        tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
-                                        view.Dock = DockStyle.Fill;
-                                        tab.TabPages[tab.TabPages.Count - 1].Size = new Size(0x223, 0x7C);
-                                        view.TransmuteStrategics(strategics.Substring(10, 1).Equals("1"), strategics.Substring(11).Split('.'));
-                                    }
-                                    break;
+                                comboStrategics.Items.AddRange(new object[] { tf });
                             }
-                        else if (Length == 6)
-                        {
+                            str = "선물옵션";
+                            Length = 8;
+                            break;
 
-                        }
-                        var lasttabrect = tab.GetTabRect(tab.TabPages.Count - 1);
-                        tab.TabPages[tab.TabPages.Count - 1].BackColor = color;
-                        tab.SelectTab(tab.TabPages.Count - 1);
-                        tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
+                        case "S":
+                            str = "위탁종합";
+                            Length = 6;
+                            break;
                     }
-                    ResumeLayout();
+                    if (await client.GetContext(new Codes { }, Length) is List<Codes> list)
+                    {
+                        string[] codes = new string[list.Count], names = new string[list.Count];
+                        var source = new AutoCompleteStringCollection();
+
+                        for (int i = 0; i < codes.Length; i++)
+                            if (Codes.Add(list[i]))
+                            {
+                                codes[i] = list[i].Code;
+                                names[i] = list[i].Name;
+                            }
+                        source.AddRange(codes);
+                        source.AddRange(names);
+                        textCode.AutoCompleteCustomSource = source;
+                        textCode.AutoCompleteMode = AutoCompleteMode.Append;
+                        textCode.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                    }
+                    if (string.IsNullOrEmpty(privacy.CodeStrategics) == false)
+                    {
+                        SuspendLayout();
+
+                        foreach (var strategics in privacy.CodeStrategics.Split(';'))
+                        {
+                            var color = Color.FromArgb(0x79, 0x85, 0x82);
+                            tab.Controls.Add(new TabPage
+                            {
+                                BackColor = Color.Transparent,
+                                BorderStyle = BorderStyle.FixedSingle,
+                                ForeColor = Color.Black,
+                                Location = new Point(4, 0x22),
+                                Margin = new Padding(0),
+                                Name = strategics.Substring(2, 8),
+                                TabIndex = Index++,
+                                Text = strategics.Substring(2, 8),
+                            });
+                            if (Length == 8)
+                                switch (strategics.Substring(0, 2))
+                                {
+                                    case "TF":
+                                        var select = Codes.FirstOrDefault(o => o.Code.Equals(strategics.Substring(2, 8)));
+
+                                        if (select.MarginRate > 0 && string.IsNullOrEmpty(select.Price) == false)
+                                        {
+                                            var view = new TrendFollowingBasicFutures(select);
+                                            tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                                            view.Dock = DockStyle.Fill;
+                                            tab.TabPages[tab.TabPages.Count - 1].Size = new Size(0x223, 0x7C);
+                                            view.TransmuteStrategics(strategics.Substring(10, 1).Equals("1"), strategics.Substring(11).Split('.'));
+                                        }
+                                        break;
+                                }
+                            else if (Length == 6)
+                            {
+
+                            }
+                            var lasttabrect = tab.GetTabRect(tab.TabPages.Count - 1);
+                            tab.TabPages[tab.TabPages.Count - 1].BackColor = color;
+                            tab.SelectTab(tab.TabPages.Count - 1);
+                            tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
+                        }
+                        ResumeLayout();
+                    }
                 }
-            }
+            }));
             return str;
         }
-        void OnReceiveClickItem(object sender, EventArgs e)
+        void OnReceiveClickItem(object sender, EventArgs e) => BeginInvoke(new Action(async () =>
         {
             if (sender is TextBox)
             {
@@ -164,7 +166,7 @@ namespace ShareInvest.Controls
                             }
                         sb.Append(';');
                     }
-                    if (0xC8 == client.PutContext<Privacies>(new Privacies
+                    if (0xC8 == await client.PutContext<Privacies>(new Privacies
                     {
                         Security = Privacy.Security,
                         SecuritiesAPI = Privacy.SecuritiesAPI,
@@ -212,7 +214,7 @@ namespace ShareInvest.Controls
                 tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
                 ResumeLayout();
             }
-        }
+        }));
         void RemoveThePage(object sender, KeyEventArgs e)
         {
             if (e.KeyData.Equals(Keys.Delete) && sender is TabControl tab)
