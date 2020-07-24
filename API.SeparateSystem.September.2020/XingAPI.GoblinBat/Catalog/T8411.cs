@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using ShareInvest.Catalog.XingAPI;
-using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
@@ -18,8 +16,8 @@ namespace ShareInvest.XingAPI.Catalog
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {
                 InBlock = new HashSet<InBlock>();
-                Delay.Milliseconds = 0x703;
-                SendMessage(retention.Code, retention.LastDate);
+                Milliseconds = 0x3ED;
+                SendMessage(retention.Code, retention.LastDate, string.Empty);
 
                 foreach (var param in GetInBlocks(GetType().Name))
                     if (InBlock.Add(new InBlock
@@ -31,7 +29,11 @@ namespace ShareInvest.XingAPI.Catalog
                     }))
                         SetFieldData(param.Block, param.Field, param.Occurs, param.Data ?? retention.Code);
 
-                Connect.GetInstance().Request.RequestTrData(new Task(() => SendErrorMessage(GetType().Name, Request(false))));
+                new Task(() =>
+                {
+                    Thread.Sleep(Milliseconds);
+                    SendErrorMessage(GetType().Name, Request(false));
+                }).Start();
             }
             Charts = new Stack<string>();
             Retention = retention.LastDate?.Substring(0, 12);
@@ -90,10 +92,10 @@ namespace ShareInvest.XingAPI.Catalog
             SendMessage(span);
 
             if (span.TotalSeconds > 0xC4 && span.TotalSeconds < 0xC7)
-                Delay.Milliseconds = (int)span.TotalMilliseconds;
+                Milliseconds = (int)span.TotalMilliseconds;
 
             else
-                Delay.Milliseconds = 0x45B / GetTRCountPerSec(szTrCode);
+                Milliseconds = 0x3ED / GetTRCountPerSec(szTrCode);
 
             for (int i = index - 1; i >= 0; i--)
                 if (uint.TryParse(list[1][i].Substring(0, 4), out uint time) && time > 0x35B && time < 0x604)
@@ -112,8 +114,11 @@ namespace ShareInvest.XingAPI.Catalog
                     }
                 }
             if (IsNext)
-                Connect.GetInstance().Request.RequestTrData(new Task(() => SendErrorMessage(GetType().Name, Request(IsNext))));
-
+                new Task(() =>
+                {
+                    Thread.Sleep(Milliseconds);
+                    SendErrorMessage(GetType().Name, Request(IsNext));
+                }).Start();
             else
                 Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
         }
@@ -130,20 +135,10 @@ namespace ShareInvest.XingAPI.Catalog
         {
             get; set;
         }
-        public event EventHandler<SendSecuritiesAPI> Send;
-        [Conditional("DEBUG")]
-        void SendMessage(TimeSpan span) => Console.WriteLine(span.TotalSeconds);
-        [Conditional("DEBUG")]
-        void SendMessage(string code, string retention) => Console.WriteLine("Code_" + code + "\t" + ConvertDateTime(retention));
-
-        [Conditional("DEBUG")]
-        void SendMessage(string code, string temp, string retention) => Console.WriteLine("Code_" + code + "\t" + ConvertDateTime(temp) + "\t" + ConvertDateTime(retention));
-        string ConvertDateTime(string date)
+        int Milliseconds
         {
-            if (string.IsNullOrEmpty(date) == false && date.Length >= 0xC && DateTime.TryParseExact(date.Substring(0, 0xC), "yyMMddHHmmss", CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
-                return string.Concat(time.ToLongDateString(), " ", time.ToLongTimeString());
-
-            return string.Empty;
+            get; set;
         }
+        public event EventHandler<SendSecuritiesAPI> Send;
     }
 }

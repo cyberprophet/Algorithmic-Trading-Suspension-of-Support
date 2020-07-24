@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using AxKHOpenAPILib;
 
@@ -10,6 +11,8 @@ namespace ShareInvest.OpenAPI
 {
     abstract class TR : ISendSecuritiesAPI
     {
+        [Conditional("DEBUG")]
+        protected internal void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         protected internal static uint Screen
         {
             get; set;

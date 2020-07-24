@@ -138,6 +138,17 @@ namespace ShareInvest
                                 }
                             return;
 
+                        case Tuple<string, string, string, string> tuple:
+                            var statusOptionsCode = await client.PutContext<Codes>(new Codes
+                            {
+                                Code = tuple.Item1,
+                                Name = tuple.Item2,
+                                MaturityMarketCap = tuple.Item3,
+                                Price = tuple.Item4
+                            });
+                            SendMessage(statusOptionsCode);
+                            return;
+
                         case Tuple<byte, byte> tuple:
                             switch (tuple)
                             {
@@ -223,15 +234,32 @@ namespace ShareInvest
                 backgroundWorker.RunWorkerAsync();
             }
         }
-        void BackgroundWorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        async void BackgroundWorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            if (com is XingAPI.ConnectAPI connect)
+            if (com is OpenAPI.ConnectAPI api)
+            {
+                Stack = new Stack<string>();
+                double basePrice = double.MinValue;
+
+                foreach (var code in api.InputValueRqData())
+                    if (code.Length == 8 && (code.StartsWith("1") || (code.StartsWith("2") || code.StartsWith("3")) && double.TryParse(code.Substring(code.Length - 3), out double oPrice) && oPrice < basePrice + 0x41 && oPrice > basePrice - 0x41))
+                    {
+                        if (code.StartsWith("101") && double.TryParse((await client.GetContext(new Codes { Code = code })).Price, out double price))
+                            basePrice = price;
+
+                        else
+                        {
+                            Stack.Push(code);
+                            api.InputValueRqData(string.Concat(instance, opt50001), code).Send += OnReceiveSecuritiesAPI;
+                        }
+                    }
+            }
+            else if (com is XingAPI.ConnectAPI connect)
             {
                 foreach (var ctor in connect.ConvertTheCodeToName)
                 {
                     ctor.Send += OnReceiveSecuritiesAPI;
                     ctor.QueryExcute();
-                    Connect = int.MaxValue;
                 }
                 if (privacy.CodeStrategics is string cStrategics)
                     foreach (var strategics in cStrategics?.Split(';'))
@@ -277,6 +305,7 @@ namespace ShareInvest
                 alarm.Send += OnReceiveSecuritiesAPI;
                 alarm.QueryExcute();
             }
+            Connect = int.MaxValue;
         }
         void GoblinBatResize(object sender, EventArgs e)
         {
@@ -397,10 +426,12 @@ namespace ShareInvest
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
                 notifyIcon.Icon = (Icon)resources.GetObject(icon[DateTime.Now.Second % 4]);
         }
-        void OnItemClick(object sender, ToolStripItemClickedEventArgs e)
+        void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(() =>
         {
             if (e.ClickedItem.Name.Equals(st))
             {
+                SuspendLayout();
+
                 if (strategy.Text.Equals(balance) && Balance != null)
                 {
                     if (com is XingAPI.ConnectAPI xingAPI)
@@ -410,17 +441,14 @@ namespace ShareInvest
                             ctor.Send += OnReceiveSecuritiesAPI;
                             ctor.QueryExcute();
                         }
-                        if (Connect == int.MaxValue)
-                            foreach (var convert in xingAPI.ConvertTheCodeToName)
-                            {
-                                convert.Send -= OnReceiveSecuritiesAPI;
-                                Connect = int.MinValue;
-                            }
                         foreach (var ctor in xingAPI.HoldingStocks)
                         {
                             Balance.SetConnectHoldingStock(ctor);
                             ctor.SendBalance += OnReceiveSecuritiesAPI;
                         }
+                        if (Connect == int.MaxValue)
+                            foreach (var convert in xingAPI.ConvertTheCodeToName)
+                                convert.Send -= OnReceiveSecuritiesAPI;
                     }
                     else if (com is OpenAPI.ConnectAPI openAPI)
                     {
@@ -433,7 +461,13 @@ namespace ShareInvest
                             Balance.SetConnectHoldingStock(ctor);
                             ctor.SendBalance += OnReceiveSecuritiesAPI;
                         }
+                        if (Connect == int.MaxValue)
+                        {
+                            while (Stack.Count > 0)
+                                openAPI.InputValueRqData(opt50001, Stack.Pop()).Send -= OnReceiveSecuritiesAPI;
+                        }
                     }
+                    Connect = int.MinValue;
                     Size = new Size(0x3B8, 0x63 + 0x28);
                     Balance.Show();
                 }
@@ -441,13 +475,14 @@ namespace ShareInvest
                 ShowIcon = true;
                 notifyIcon.Visible = false;
                 WindowState = FormWindowState.Normal;
+                ResumeLayout();
 
                 if (com is XingAPI.ConnectAPI xing && xing.API == null || com is OpenAPI.ConnectAPI open && open.API == null)
                     StartProgress();
             }
             else
                 Close();
-        }
+        }));
         [Conditional("DEBUG")]
         void SendMessage(int code)
         {
@@ -455,6 +490,10 @@ namespace ShareInvest
                 Console.WriteLine(code);
         }
         Balance Balance
+        {
+            get; set;
+        }
+        Stack<string> Stack
         {
             get; set;
         }

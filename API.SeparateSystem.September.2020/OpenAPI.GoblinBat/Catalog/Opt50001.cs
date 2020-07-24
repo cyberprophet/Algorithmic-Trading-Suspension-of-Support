@@ -10,15 +10,14 @@ namespace ShareInvest.OpenAPI.Catalog
     {
         internal override void OnReceiveTrData(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
-            var temp = base.OnReceiveTrData(single, e.sRQName.Equals(name) ? multi : null, e);
+            var temp = base.OnReceiveTrData(single, e.sRQName.Contains(name) ? multi : null, e);
 
             if (temp.Item1 != null)
-                foreach (var str in temp.Item1)
-                    Send?.Invoke(this, new SendSecuritiesAPI(string.Empty));
+                Send?.Invoke(this, new SendSecuritiesAPI(e.sRQName.Split(';')[1], temp.Item1[0x48].Trim(), temp.Item1[0x3F].Trim().Substring(2), temp.Item1[0x33].Trim()));
 
             while (temp.Item2?.Count > 0)
                 foreach (var pop in temp.Item2.Pop())
-                    Console.WriteLine(pop);
+                    SendMessage(e.sRQName, pop);
         }
         protected internal override string LookupScreenNo
         {
@@ -37,8 +36,15 @@ namespace ShareInvest.OpenAPI.Catalog
         }
         internal override string RQName
         {
-            set; get;
-        } = name;
+            set
+            {
+                temp = value;
+            }
+            get
+            {
+                return string.Concat(name, ';', temp);
+            }
+        }
         internal override string TrCode => code;
         internal override int PrevNext
         {
@@ -48,7 +54,8 @@ namespace ShareInvest.OpenAPI.Catalog
         internal override AxKHOpenAPI API
         {
             get; set;
-        }     
+        }
+        string temp;
         const string name = "선옵현재가정보요청";
         const string code = "opt50001";
         const string id = "종목코드";

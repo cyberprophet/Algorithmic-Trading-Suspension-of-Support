@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Security;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
@@ -50,13 +49,14 @@ namespace ShareInvest.XingAPI
         {
             try
             {
+                Request.Dispose();
                 GC.Collect();
                 DisconnectServer();
                 API = null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.TargetSite.Name + "\n" + ex.StackTrace);
+                SendMessage(ex.TargetSite.Name, ex.StackTrace);
             }
         }
         internal void OnReceiveChapterOperatingInformation(int gubun, int status)
@@ -77,7 +77,7 @@ namespace ShareInvest.XingAPI
             }
         }
         [Conditional("DEBUG")]
-        void SendMessage(string code, string message) => new Task(() => Console.WriteLine(code + "\t" + message)).Start();
+        void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         Connect(Privacies privacy, ShareInvest.Catalog.XingAPI.LoadServer load)
         {
             if (ConnectServer(load.Server, 0x4E21) && Login(privacy.Identity, privacy.Password, privacy.Certificate, 0, string.IsNullOrEmpty(privacy.Certificate) == false) && IsLoadAPI())

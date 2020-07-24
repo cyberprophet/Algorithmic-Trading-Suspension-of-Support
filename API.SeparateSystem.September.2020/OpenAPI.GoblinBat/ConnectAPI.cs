@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
@@ -37,45 +39,52 @@ namespace ShareInvest.OpenAPI
             if (Connect.Chejan.TryGetValue(e.sGubun, out Chejan chejan))
                 chejan.OnReceiveChejanData(e);
         }
-        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => GetRequestTR(string.Concat(e.sTrCode.Substring(0, 1).ToUpper(), e.sTrCode.Substring(1)))?.OnReceiveTrData(e);
+        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => Connect.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name.Substring(1).Equals(e.sTrCode.Substring(1)))?.OnReceiveTrData(e);
         void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => Connect.Real.FirstOrDefault(o => o.GetType().Name.Replace('_', ' ').Equals(e.sRealType))?.OnReceiveRealData(e);
-        void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg.Substring(9), "(", e.sScrNo, ")")));
+        void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.BeginInvoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg.Substring(9), "(", e.sScrNo, ")")), null, null);
+        [Conditional("DEBUG")]
+        void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
         public AccountInformation SetPrivacy(Privacies privacy)
         {
-            if (Connect.TR.Add(new OPT50010 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opt50001 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opw00005 { Value = string.Concat(privacy.AccountNumber, password), PrevNext = 0, API = axAPI }))
+            if (Connect.TR.Add(new OPT50010 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opw00005 { Value = string.Concat(privacy.AccountNumber, password), PrevNext = 0, API = axAPI }))
             {
                 axAPI.OnReceiveTrData += OnReceiveTrData;
                 axAPI.OnReceiveRealData += OnReceiveRealData;
                 axAPI.OnReceiveChejanData += OnReceiveChejanData;
             }
-            var mServer = axAPI.GetLoginInfo(server);
+            string mServer = axAPI.GetLoginInfo(server), log = axAPI.GetLoginInfo(name);
             checkAccount.CheckState = mServer.Equals(mock) && checkAccount.Checked ? CheckState.Unchecked : CheckState.Checked;
-            var strAccount = string.Empty;
             Invoke(new Action(async () =>
             {
                 if (checkAccount.Checked && await new Security().Encrypt(this.privacy, privacy.AccountNumber, checkAccount.Checked) == 0xC8)
-                    switch (privacy.AccountNumber.Substring(privacy.AccountNumber.Length - 2))
-                    {
-                        case "31":
-                            strAccount = "선물옵션";
-                            break;
-
-                        default:
-                            strAccount = "위탁종합";
-                            break;
-                    }
-                else
-                    strAccount = string.Empty;
+                    Console.WriteLine(log);
             }));
-            return new AccountInformation
+            var aInfo = new AccountInformation
             {
                 Identity = axAPI.GetLoginInfo(user),
                 Account = privacy.AccountNumber,
-                Name = strAccount,
+                Name = string.Empty,
                 Server = mServer.Equals(mock),
-                Nick = axAPI.GetLoginInfo(name)
+                Nick = log
             };
+            switch (privacy.AccountNumber.Substring(privacy.AccountNumber.Length - 2))
+            {
+                case "31":
+                    aInfo.Name = "선물옵션";
+                    break;
+
+                default:
+                    aInfo.Name = "위탁종합";
+                    break;
+            }
+            return aInfo;
+        }
+        public IEnumerable<string> InputValueRqData()
+        {
+            if (Connect.TR.Add(new OPTKWFID { PrevNext = 0, API = axAPI }) && API is Connect api)
+                foreach (var code in api.GetInformationOfCode(new List<string> { axAPI.GetFutureCodeByIndex(0) }, axAPI.GetCodeListByMarket(string.Empty).Split(';')))
+                    yield return code;
         }
         public ISendSecuritiesAPI InputValueRqData(string name, string sArrCode, int nCodeCount)
         {
@@ -90,15 +99,27 @@ namespace ShareInvest.OpenAPI
         }
         public ISendSecuritiesAPI InputValueRqData(string name, string param)
         {
-            var ctor = GetRequestTR(name);
+            TR ctor;
 
-            if (string.IsNullOrEmpty(param) == false)
-                BeginInvoke(new Action(() =>
+            if (name.Length > 0x1F)
+            {
+                ctor = Assembly.GetExecutingAssembly().CreateInstance(name) as TR;
+
+                if (Connect.TR.Add(ctor))
                 {
                     ctor.Value = param;
-                    ctor.RQName = param.Split(';')[0];
+                    ctor.RQName = param;
+                    ctor.API = axAPI;
                     (API as Connect)?.InputValueRqData(ctor);
-                }));
+                }
+            }
+            else
+            {
+                ctor = Connect.TR.FirstOrDefault(o => o.GetType().Name.Substring(1).Equals(name.Substring(1)) && o.RQName.Contains(param));
+
+                if (Connect.TR.Remove(ctor))
+                    SendMessage(param, name);
+            }
             return ctor ?? null;
         }
         public ISendSecuritiesAPI InputValueRqData(bool input, string name)

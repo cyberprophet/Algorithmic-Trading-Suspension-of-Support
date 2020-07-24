@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 using AxKHOpenAPILib;
 
@@ -22,37 +21,18 @@ namespace ShareInvest.OpenAPI.Catalog
             {
                 var param = new SendSecuritiesAPI(temp.Item2.Pop());
 
-                if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.ContainsKey(balance.Item1) == false && API.GetMasterStockState(balance.Item1).Contains(transactionSuspension) == false)
-                    Connect.HoldingStock[balance.Item1] = new HoldingStocks
-                    {
-                        Code = balance.Item1,
-                        Quantity = balance.Item3,
-                        Purchase = (int)balance.Item4,
-                        Current = (int)balance.Item5,
-                        Revenue = balance.Item6,
-                        Rate = balance.Item7
-                    };
+                if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs) && API.GetMasterStockState(balance.Item1).Contains(transactionSuspension) == false)
+                {
+                    hs.Code = balance.Item1;
+                    hs.Quantity = balance.Item3;
+                    hs.Purchase = (int)balance.Item4;
+                    hs.Current = (int)balance.Item5;
+                    hs.Revenue = balance.Item6;
+                    hs.Rate = balance.Item7;
+                    Connect.HoldingStock[balance.Item1] = hs;
+                }
                 Send?.Invoke(this, param);
             }
-            if (OnTime == false && DateTime.Now.Hour == 8 && DateTime.Now.Minute > 29 && Connect.TR.Add(new OPTKWFID { PrevNext = 0, API = API }))
-            {
-                var sCodes = new StringBuilder();
-                var nCodeCount = 0;
-
-                foreach (var kv in Connect.HoldingStock)
-                {
-                    sCodes.Append(kv.Key).Append(';');
-
-                    if (++nCodeCount == 0x64)
-                    {
-                        Send?.Invoke(this, new SendSecuritiesAPI(nCodeCount, sCodes.Remove(sCodes.Length - 1, 1)));
-                        nCodeCount = 0;
-                        sCodes = new StringBuilder();
-                    }
-                }
-                Send?.Invoke(this, new SendSecuritiesAPI(nCodeCount, sCodes.Remove(sCodes.Length - 1, 1)));
-            }
-            OnTime = true;
         }
         internal override string ID => id;
         internal override string Value
@@ -74,10 +54,6 @@ namespace ShareInvest.OpenAPI.Catalog
         }
         internal override string ScreenNo => LookupScreenNo;
         internal override AxKHOpenAPI API
-        {
-            get; set;
-        }
-        bool OnTime
         {
             get; set;
         }

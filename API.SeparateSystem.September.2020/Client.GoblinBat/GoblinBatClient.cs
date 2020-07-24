@@ -31,6 +31,7 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<Codes> GetContext(Codes codes) => JsonConvert.DeserializeObject<Codes>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, codes.GetType().Name, "/", codes.Code), Method.GET), source.Token)).Content);
         public async Task<object> GetContext(Codes param, int length) => JsonConvert.DeserializeObject<List<Codes>>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", length), Method.GET), source.Token)).Content);
         public async Task<Retention> GetContext<T>(T param) where T : struct, ICharts => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.GET), source.Token)).Content);
         public async Task<Retention> PostContext<T>(Queue<T> param) where T : struct, ICharts => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token)).Content);

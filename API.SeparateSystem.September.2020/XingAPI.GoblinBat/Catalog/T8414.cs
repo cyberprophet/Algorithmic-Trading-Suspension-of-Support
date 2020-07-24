@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 using ShareInvest.Catalog.XingAPI;
-using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest.XingAPI.Catalog
@@ -17,6 +16,8 @@ namespace ShareInvest.XingAPI.Catalog
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {
                 InBlock = new HashSet<InBlock>();
+                Milliseconds = 0x3ED;
+                SendMessage(retention.Code, retention.LastDate, string.Empty);
 
                 foreach (var param in GetInBlocks(GetType().Name))
                     if (InBlock.Add(new InBlock
@@ -28,7 +29,11 @@ namespace ShareInvest.XingAPI.Catalog
                     }))
                         SetFieldData(param.Block, param.Field, param.Occurs, param.Data ?? retention.Code);
 
-                Connect.GetInstance().Request.RequestTrData(new Task(() => SendErrorMessage(GetType().Name, Request(false))));
+                new Task(() =>
+                {
+                    Thread.Sleep(Milliseconds);
+                    SendErrorMessage(GetType().Name, Request(false));
+                }).Start();
             }
             Charts = new Stack<string>();
             Retention = retention.LastDate?.Substring(0, 0xC);
@@ -87,10 +92,10 @@ namespace ShareInvest.XingAPI.Catalog
             SendMessage(span);
 
             if (span.TotalSeconds > 0xC5 && span.TotalSeconds < 0xC8)
-                Delay.Milliseconds = (int)span.TotalMilliseconds;
+                Milliseconds = (int)span.TotalMilliseconds;
 
             else
-                Delay.Milliseconds = 0x3E8 / GetTRCountPerSec(szTrCode);
+                Milliseconds = 0x3EB / GetTRCountPerSec(szTrCode);
 
             for (int i = index - 1; i >= 0; i--)
             {
@@ -107,8 +112,11 @@ namespace ShareInvest.XingAPI.Catalog
                 }
             }
             if (IsNext)
-                Connect.GetInstance().Request.RequestTrData(new Task(() => SendErrorMessage(GetType().Name, Request(IsNext))));
-
+                new Task(() =>
+                {
+                    Thread.Sleep(Milliseconds);
+                    SendErrorMessage(GetType().Name, Request(IsNext));
+                }).Start();
             else
                 Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
         }
@@ -125,8 +133,10 @@ namespace ShareInvest.XingAPI.Catalog
         {
             get; set;
         }
+        int Milliseconds
+        {
+            get; set;
+        }
         public event EventHandler<SendSecuritiesAPI> Send;
-        [Conditional("DEBUG")]
-        void SendMessage(TimeSpan span) => Console.WriteLine(span.TotalSeconds);
     }
 }

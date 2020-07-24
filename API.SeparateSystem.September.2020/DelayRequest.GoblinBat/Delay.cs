@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -20,29 +21,34 @@ namespace ShareInvest.DelayRequest
         {
             get; set;
         }
-        public int QueueCount => requestTaskQueue.Count;
         public void Run() => taskWorker.Start();
         public void Dispose() => requestTaskQueue.Clear();
         public void RequestTrData(Task task) => requestTaskQueue.Enqueue(task);
-        Delay() => taskWorker = new Thread(delegate ()
+        Delay()
         {
-            while (true)
-                try
-                {
-                    while (requestTaskQueue.Count > 0)
+            requestTaskQueue = new Queue<Task>();
+            taskWorker = new Thread(delegate ()
+            {
+                while (true)
+                    try
                     {
-                        requestTaskQueue.Dequeue().RunSynchronously();
-                        Thread.Sleep(Milliseconds);
+                        while (requestTaskQueue.Count > 0)
+                        {
+                            requestTaskQueue.Dequeue().RunSynchronously();
+                            Thread.Sleep(Milliseconds);
+                        }
+                        Thread.Sleep(0xC);
                     }
-                    Thread.Sleep(0xF);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.TargetSite.Name);
-                }
-        });
+                    catch (Exception ex)
+                    {
+                        SendMessage(ex.StackTrace, ex.TargetSite.Name);
+                    }
+            });
+        }
         static Delay request;
         readonly Thread taskWorker;
-        readonly Queue<Task> requestTaskQueue = new Queue<Task>();
+        readonly Queue<Task> requestTaskQueue;
+        [Conditional("DEBUG")]
+        void SendMessage(string message, string name) => Console.WriteLine(name + "\n" + message);
     }
 }

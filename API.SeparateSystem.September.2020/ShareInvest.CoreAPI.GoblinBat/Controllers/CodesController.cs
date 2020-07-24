@@ -15,6 +15,16 @@ namespace ShareInvest.Controllers
     [ApiController, Route(Security.route), Produces(Security.produces)]
     public class CodesController : ControllerBase
     {
+        [HttpGet("{code}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetContext(string code)
+        {
+            var context = await this.context.Codes.FindAsync(code);
+
+            if (context != null)
+                return Ok(context);
+
+            return NotFound(code);
+        }
         [HttpGet("{length}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetContexts(int length)
         {

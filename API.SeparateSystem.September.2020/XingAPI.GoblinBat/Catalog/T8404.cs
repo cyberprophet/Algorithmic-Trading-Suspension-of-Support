@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -113,7 +112,5 @@ namespace ShareInvest.XingAPI.Catalog
             get; set;
         }
         public event EventHandler<SendSecuritiesAPI> Send;
-        [Conditional("DEBUG")]
-        void SendMessage(TimeSpan span) => Console.WriteLine(span.TotalSeconds);
     }
 }

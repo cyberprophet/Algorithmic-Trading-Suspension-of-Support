@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
+using System.Globalization;
 
 using XA_DATASETLib;
 
@@ -137,7 +137,19 @@ namespace ShareInvest.XingAPI
         }
         protected internal abstract void OnReceiveData(string szTrCode);
         [Conditional("DEBUG")]
-        void SendMessage(string code, string message) => new Task(() => Console.WriteLine(code + "\t" + message)).Start();
+        protected internal void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
+        [Conditional("DEBUG")]
+        protected internal void SendMessage(TimeSpan span) => Console.WriteLine(span.TotalSeconds);
+
+        [Conditional("DEBUG")]
+        protected internal void SendMessage(string code, string temp, string retention) => Console.WriteLine("Code_" + code + "\t" + ConvertDateTime(temp) + "\t" + ConvertDateTime(retention));
+        string ConvertDateTime(string date)
+        {
+            if (string.IsNullOrEmpty(date) == false && date.Length >= 0xC && DateTime.TryParseExact(date.Substring(0, 0xC), "yyMMddHHmmss", CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
+                return string.Concat(time.ToLongDateString(), " ", time.ToLongTimeString());
+
+            return string.Empty;
+        }
         readonly string[] exclusion = { margin, accept, cancel, correction, impossible };
         const string record = "레코드명:";
         const string separator = "No,한글명,필드명,영문명,";
