@@ -36,7 +36,7 @@ namespace ShareInvest.XingAPI.Catalog
             var refresh = new Codes
             {
                 Code = temp[0x3C],
-                Name = temp[0].Split('F')[0].Trim(),
+                Name = codes.Code.StartsWith("1") ? temp[0].Split('F')[0].Trim() : temp[0].Remove(temp[0].Length - 2, 2),
                 MarginRate = codes.MarginRate,
                 MaturityMarketCap = temp[0x17].Substring(2),
                 Price = temp[1]

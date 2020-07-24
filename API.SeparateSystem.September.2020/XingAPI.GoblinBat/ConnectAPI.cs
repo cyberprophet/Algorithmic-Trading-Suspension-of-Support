@@ -115,7 +115,14 @@ namespace ShareInvest.XingAPI
             };
             return Connect.HoldingStock.Count;
         }
-        public ICharts<SendSecuritiesAPI> Charts => charts;
+        public ICharts<SendSecuritiesAPI> Stocks
+        {
+            get;
+        }
+        public ICharts<SendSecuritiesAPI> Options
+        {
+            get;
+        }
         public IEnumerable<Holding> HoldingStocks
         {
             get
@@ -124,7 +131,7 @@ namespace ShareInvest.XingAPI
                     yield return ctor.Value ?? null;
             }
         }
-        public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T8430(), new T9943(), new T8401(), new T8432(), new MMDAQ91200() };
+        public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T8430(), new T9943(), new T8401(), new T8432(), new T8433(), new MMDAQ91200() };
         public IQuerys<SendSecuritiesAPI> JIF => new JIF();
         public IReals[] Conclusion
         {
@@ -175,7 +182,8 @@ namespace ShareInvest.XingAPI
             Codes = new HashSet<Codes>();
             Strategics = new HashSet<IStrategics>();
             querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
-            charts = new T8411();
+            Stocks = new T8411();
+            Options = new T8414();
         }
         public HashSet<IStrategics> Strategics
         {
@@ -187,7 +195,6 @@ namespace ShareInvest.XingAPI
         }
         readonly string[] securites;
         readonly Privacies privacy;
-        readonly ICharts<SendSecuritiesAPI> charts;
         public readonly IQuerys<SendSecuritiesAPI>[] querys;
         public event EventHandler<SendSecuritiesAPI> Send;
     }

@@ -46,6 +46,7 @@ namespace ShareInvest
                 BeginInvoke(new Action(async () =>
                 {
                     Retention retention;
+                    Catalog.XingAPI.ICharts<SendSecuritiesAPI> chart = null;
 
                     switch (e.Convey)
                     {
@@ -98,6 +99,9 @@ namespace ShareInvest
                             return;
 
                         case Dictionary<string, Tuple<string, string>> dictionary:
+                            var futures = double.MinValue;
+                            int index = 0;
+
                             foreach (var kv in dictionary)
                                 if (infoCodes.TryGetValue(kv.Key, out Codes info) && double.TryParse(kv.Value.Item2, out double rate) && com is XingAPI.ConnectAPI xing)
                                 {
@@ -105,6 +109,16 @@ namespace ShareInvest
                                     info.Name = kv.Value.Item1;
                                     infoCodes[kv.Key] = info;
                                     xing.StartProgress(info);
+
+                                    if (kv.Key.Substring(1, 1).Equals("0") && double.TryParse(info.Price, out double price))
+                                        futures = price;
+                                }
+                            foreach (var kv in infoCodes)
+                                if (futures > double.MinValue && kv.Key.StartsWith("2") && double.TryParse(kv.Key.Substring(kv.Key.Length - 3), out double oPrice) && oPrice < futures + 0x14 && oPrice > futures - 0x14 && index++ < 0xF && infoCodes.TryGetValue(string.Concat("3", kv.Key.Substring(1)), out Codes codes))
+                                {
+                                    var option = com as XingAPI.ConnectAPI;
+                                    option?.StartProgress(kv.Value);
+                                    option?.StartProgress(codes);
                                 }
                             return;
 
@@ -135,6 +149,12 @@ namespace ShareInvest
 
                                 case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 1:
                                     retention = await client.GetContext(new Stocks());
+                                    chart = (com as XingAPI.ConnectAPI)?.Stocks;
+                                    break;
+
+                                case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 5:
+                                    retention = await client.GetContext(new Options());
+                                    chart = (com as XingAPI.ConnectAPI)?.Options;
                                     break;
                             }
                             break;
@@ -143,19 +163,21 @@ namespace ShareInvest
                             switch (charts.Item1.Length)
                             {
                                 case 6:
+                                    chart = (com as XingAPI.ConnectAPI)?.Stocks;
+                                    chart.Send -= OnReceiveSecuritiesAPI;
                                     retention = await client.PostContext(new Catalog.Convert().ToStoreInStocks(charts.Item1, charts.Item2));
                                     break;
 
-                                case int length when length == 8 && charts.Item1.StartsWith("1"):
-                                    retention = await client.PostContext(new Catalog.Convert().ToStoreInFutures(charts.Item1, charts.Item2));
+                                case 8:
+                                    chart = (com as XingAPI.ConnectAPI)?.Options;
+                                    chart.Send -= OnReceiveSecuritiesAPI;
+                                    retention = await client.PostContext(new Catalog.Convert().ToStoreInOptions(charts.Item1, charts.Item2));
                                     break;
                             }
-                            ((com as XingAPI.ConnectAPI)?.Charts).Send -= OnReceiveSecuritiesAPI;
                             break;
                     }
-                    if (string.IsNullOrEmpty(retention.Code) == false && com is XingAPI.ConnectAPI xAPI)
+                    if (string.IsNullOrEmpty(retention.Code) == false && chart != null)
                     {
-                        var chart = xAPI.Charts;
                         chart.Send += OnReceiveSecuritiesAPI;
                         chart?.QueryExcute(retention);
                     }
@@ -300,7 +322,7 @@ namespace ShareInvest
                 ResumeLayout();
             }
         }
-        void GoblinBatFormClosing(object sender, FormClosingEventArgs e) => BeginInvoke(new Action(async () =>
+        void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
             switch (MessageBox.Show(rExit, notifyIcon.Text, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3))
             {
@@ -310,22 +332,25 @@ namespace ShareInvest
                     return;
 
                 case DialogResult.Yes:
-                    var code = await client.DeleteContext<Privacies>(privacy);
-
-                    if (code > 0xC8)
+                    Invoke(new Action(async () =>
                     {
-                        notifyIcon.Text = OnReceiveErrorMessage(code);
-                        e.Cancel = true;
-                        WindowState = FormWindowState.Minimized;
+                        var code = await client.DeleteContext<Privacies>(privacy);
 
-                        return;
-                    }
+                        if (code > 0xC8)
+                        {
+                            notifyIcon.Text = OnReceiveErrorMessage(code);
+                            e.Cancel = true;
+                            WindowState = FormWindowState.Minimized;
+
+                            return;
+                        }
+                    }));
                     break;
             }
             timer.Stop();
             strip.ItemClicked -= OnItemClick;
             Dispose();
-        }));
+        }
         void TimerTick(object sender, EventArgs e)
         {
             if (com == null)

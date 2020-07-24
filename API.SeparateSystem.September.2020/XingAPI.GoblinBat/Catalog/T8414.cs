@@ -28,10 +28,10 @@ namespace ShareInvest.XingAPI.Catalog
                     }))
                         SetFieldData(param.Block, param.Field, param.Occurs, param.Data ?? retention.Code);
 
-                SendErrorMessage(GetType().Name, Request(false));
+                Connect.GetInstance().Request.RequestTrData(new Task(() => SendErrorMessage(GetType().Name, Request(false))));
             }
             Charts = new Stack<string>();
-            Retention = retention.LastDate;
+            Retention = retention.LastDate?.Substring(0, 0xC);
         }
         protected internal override void OnReceiveData(string szTrCode)
         {
