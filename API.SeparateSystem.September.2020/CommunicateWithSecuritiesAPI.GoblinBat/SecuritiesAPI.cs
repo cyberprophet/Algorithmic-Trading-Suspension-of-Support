@@ -45,6 +45,8 @@ namespace ShareInvest
             if (e.Accounts == null && Balance != null)
                 BeginInvoke(new Action(async () =>
                 {
+                    int empty = 0;
+                    var param = string.Empty;
                     Retention retention;
                     Catalog.XingAPI.ICharts<SendSecuritiesAPI> chart = null;
 
@@ -80,13 +82,7 @@ namespace ShareInvest
                             return;
 
                         case Tuple<int, string> kw:
-                            if (com is OpenAPI.ConnectAPI open)
-                            {
-                                var connect = open.InputValueRqData(optkwFID, kw.Item2, kw.Item1);
 
-                                if (connect != null)
-                                    connect.Send += OnReceiveSecuritiesAPI;
-                            }
                             return;
 
                         case Tuple<string, string, string> code:
@@ -130,7 +126,6 @@ namespace ShareInvest
                                     {
                                         Code = tuple.Item1[i],
                                         Name = tuple.Item2[i],
-                                        MaturityMarketCap = string.Empty,
                                         MarginRate = gubun,
                                         Price = tuple.Item4[i]
                                     });
@@ -174,24 +169,100 @@ namespace ShareInvest
                             switch (charts.Item1.Length)
                             {
                                 case 6:
-                                    chart = (com as XingAPI.ConnectAPI)?.Stocks;
-                                    chart.Send -= OnReceiveSecuritiesAPI;
+                                    if (com is XingAPI.ConnectAPI xs)
+                                    {
+                                        chart = xs?.Stocks;
+                                        chart.Send -= OnReceiveSecuritiesAPI;
+                                    }
+                                    else if (com is OpenAPI.ConnectAPI os)
+                                    {
+                                        os.InputValueRqData(opt10079, charts.Item1).Send -= OnReceiveSecuritiesAPI;
+                                        param = opt10079;
+                                    }
                                     retention = await client.PostContext(new Catalog.Convert().ToStoreInStocks(charts.Item1, charts.Item2));
                                     break;
 
-                                case 8:
-                                    chart = (com as XingAPI.ConnectAPI)?.Options;
-                                    chart.Send -= OnReceiveSecuritiesAPI;
+                                case int length when length == 8 && (charts.Item1.StartsWith("101") || charts.Item1.StartsWith("106")):
+                                    (com as OpenAPI.ConnectAPI).InputValueRqData(opt50028, charts.Item1).Send -= OnReceiveSecuritiesAPI;
+                                    param = opt50028;
+                                    retention = await client.PostContext(new Catalog.Convert().ToStoreInFutures(charts.Item1, charts.Item2));
+                                    break;
+
+                                case int length when length == 8 && (charts.Item1.StartsWith("2") || charts.Item1.StartsWith("3")):
+                                    if (com is XingAPI.ConnectAPI xo)
+                                    {
+                                        chart = xo?.Options;
+                                        chart.Send -= OnReceiveSecuritiesAPI;
+                                    }
+                                    else if (com is OpenAPI.ConnectAPI o)
+                                    {
+                                        o.InputValueRqData(opt50066, charts.Item1).Send -= OnReceiveSecuritiesAPI;
+                                        param = opt50066;
+                                    }
                                     retention = await client.PostContext(new Catalog.Convert().ToStoreInOptions(charts.Item1, charts.Item2));
+                                    break;
+                            }
+                            while (retention.Code.Equals(noMatch))
+                            {
+                                switch (empty)
+                                {
+                                    case 0:
+                                        if (com is OpenAPI.ConnectAPI)
+                                            param = opt10079;
+
+                                        else if (com is XingAPI.ConnectAPI xs)
+                                            chart = xs?.Stocks;
+
+                                        retention = await client.GetContext(new Stocks());
+                                        break;
+
+                                    case 1:
+                                        if (com is OpenAPI.ConnectAPI)
+                                        {
+                                            retention = await client.GetContext(new Futures());
+                                            param = opt50028;
+                                        }
+                                        break;
+
+                                    case 2:
+                                        if (com is OpenAPI.ConnectAPI)
+                                            param = opt50066;
+
+                                        else if (com is XingAPI.ConnectAPI xo)
+                                            chart = xo?.Options;
+
+                                        retention = await client.GetContext(new Options());
+                                        break;
+
+                                    case 3:
+                                        if (WindowState.Equals(FormWindowState.Minimized) == false)
+                                            WindowState = FormWindowState.Minimized;
+
+                                        timer.Stop();
+                                        strip.ItemClicked -= OnItemClick;
+                                        Dispose();
+                                        return;
+                                }
+                                if (retention.Code.Equals(noMatch))
+                                    empty++;
+
+                                else
                                     break;
                             }
                             break;
                     }
-                    if (string.IsNullOrEmpty(retention.Code) == false && chart != null)
-                    {
-                        chart.Send += OnReceiveSecuritiesAPI;
-                        chart?.QueryExcute(retention);
-                    }
+                    if (string.IsNullOrEmpty(retention.Code) == false && retention.Code.Equals(noMatch) == false)
+                        switch (com)
+                        {
+                            case OpenAPI.ConnectAPI o when string.IsNullOrEmpty(param) == false:
+                                o.InputValueRqData(string.Concat(instance, param), string.Concat(retention.Code, ";", retention.LastDate)).Send += OnReceiveSecuritiesAPI;
+                                return;
+
+                            case XingAPI.ConnectAPI _ when chart != null:
+                                chart.Send += OnReceiveSecuritiesAPI;
+                                chart?.QueryExcute(retention);
+                                return;
+                        }
                 }));
             else if (e.Convey is FormWindowState state)
             {
@@ -242,17 +313,19 @@ namespace ShareInvest
                 double basePrice = double.MinValue;
 
                 foreach (var code in api.InputValueRqData())
-                    if (code.Length == 8 && (code.StartsWith("1") || (code.StartsWith("2") || code.StartsWith("3")) && double.TryParse(code.Substring(code.Length - 3), out double oPrice) && oPrice < basePrice + 0x41 && oPrice > basePrice - 0x41))
+                    if ((code.Length == 8 && (code.StartsWith("2") || code.StartsWith("3")) && double.TryParse(code.Substring(code.Length - 3), out double oPrice) && (oPrice > basePrice + 0x41 || oPrice < basePrice - 0x41)) == false)
                     {
-                        if (code.StartsWith("101") && double.TryParse((await client.GetContext(new Codes { Code = code })).Price, out double price))
+                        if (code.Length == 8 && code.StartsWith("101") && double.TryParse((await client.GetContext(new Codes { Code = code })).Price, out double price))
                             basePrice = price;
 
-                        else
-                        {
-                            Stack.Push(code);
-                            api.InputValueRqData(string.Concat(instance, opt50001), code).Send += OnReceiveSecuritiesAPI;
-                        }
+                        Stack.Push(code);
+                        api.InputValueRqData(string.Concat(instance, code.Length == 8 ? opt50001 : optkwFID), code).Send += OnReceiveSecuritiesAPI;
                     }
+
+                //test
+                MessageBox.Show("test");
+                var r = await client.GetContext(new Futures());
+                api.InputValueRqData(string.Concat(instance, opt50028), string.Concat(r.Code, ";", r.LastDate)).Send += OnReceiveSecuritiesAPI;
             }
             else if (com is XingAPI.ConnectAPI connect)
             {
@@ -326,11 +399,6 @@ namespace ShareInvest
                         openAPI.Send -= OnReceiveSecuritiesAPI;
                         openAPI.InputValueRqData(false, opw00005).Send -= OnReceiveSecuritiesAPI;
 
-                        var connect = openAPI.InputValueRqData(optkwFID, null, 0);
-
-                        if (connect != null)
-                            connect.Send -= OnReceiveSecuritiesAPI;
-
                         foreach (var ctor in openAPI.HoldingStocks)
                         {
                             Balance.SetDisconnectHoldingStock(ctor);
@@ -361,19 +429,12 @@ namespace ShareInvest
                     return;
 
                 case DialogResult.Yes:
-                    Invoke(new Action(async () =>
-                    {
-                        var code = await client.DeleteContext<Privacies>(privacy);
+                    int code = 0;
+                    Invoke(new Action(async () => code = await client.DeleteContext<Privacies>(privacy)));
 
-                        if (code > 0xC8)
-                        {
-                            notifyIcon.Text = OnReceiveErrorMessage(code);
-                            e.Cancel = true;
-                            WindowState = FormWindowState.Minimized;
+                    if (code > 0xC8)
+                        SendMessage(OnReceiveErrorMessage(code));
 
-                            return;
-                        }
-                    }));
                     break;
             }
             timer.Stop();
@@ -462,10 +523,11 @@ namespace ShareInvest
                             ctor.SendBalance += OnReceiveSecuritiesAPI;
                         }
                         if (Connect == int.MaxValue)
-                        {
                             while (Stack.Count > 0)
-                                openAPI.InputValueRqData(opt50001, Stack.Pop()).Send -= OnReceiveSecuritiesAPI;
-                        }
+                            {
+                                var pop = Stack.Pop();
+                                openAPI.InputValueRqData(pop.Length == 8 ? opt50001 : optkwFID, pop).Send -= OnReceiveSecuritiesAPI;
+                            }
                     }
                     Connect = int.MinValue;
                     Size = new Size(0x3B8, 0x63 + 0x28);
@@ -484,10 +546,13 @@ namespace ShareInvest
                 Close();
         }));
         [Conditional("DEBUG")]
-        void SendMessage(int code)
+        void SendMessage(object code)
         {
-            if (code > 200)
-                Console.WriteLine(code);
+            if (code is int response && response > 200)
+                Console.WriteLine(response);
+
+            else if (code is string str)
+                Console.WriteLine(str);
         }
         Balance Balance
         {

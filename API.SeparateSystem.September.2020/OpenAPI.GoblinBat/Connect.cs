@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using AxKHOpenAPILib;
@@ -28,7 +30,7 @@ namespace ShareInvest.OpenAPI
         internal IEnumerable<string> GetInformationOfCode(List<string> list, string[] market)
         {
             string exclusion, date = DistinctDate;
-            Delay.Milliseconds = 0xC9;
+            Delay.Milliseconds = 0x259;
 
             for (int i = 2; i < 4; i++)
                 foreach (var om in axAPI.GetActPriceList().Split(';'))
@@ -40,7 +42,36 @@ namespace ShareInvest.OpenAPI
 
                     list.Add(exclusion);
                 }
+            Parallel.ForEach(Enum.GetNames(typeof(Market)), new ParallelOptions { MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.5) }, new Action<string>((sMarket) =>
+            {
+                if (Enum.TryParse(sMarket, out Market param))
+                    switch (param)
+                    {
+                        case Market.장내:
+                        case Market.코스닥:
+                        case Market.ETF:
+                            for (int i = 0; i < market.Length; i++)
+                                if (axAPI.GetMasterStockState(market[i]).Contains("거래정지"))
+                                    market[i] = string.Empty;
+
+                            break;
+
+                        default:
+                            foreach (var str in axAPI.GetCodeListByMarket(((int)param).ToString()).Split(';'))
+                            {
+                                var index = Array.FindIndex(market, o => o.Equals(str));
+
+                                if (index > -1)
+                                    market[index] = string.Empty;
+                            }
+                            break;
+                    }
+            }));
+            var stack = CatalogStocksCode(market.OrderByDescending(o => o));
             list[1] = axAPI.GetFutureCodeByIndex(0x18);
+
+            while (stack.Count > 0)
+                yield return stack.Pop();
 
             foreach (var code in list)
                 yield return code;
@@ -50,6 +81,26 @@ namespace ShareInvest.OpenAPI
         {
             if (error < 0 && new Error().Message.TryGetValue(error, out string param))
                 Send?.Invoke(this, new SendSecuritiesAPI(param));
+        }
+        Stack<string> CatalogStocksCode(IEnumerable<string> market)
+        {
+            int index = 0;
+            var sb = new StringBuilder(0x100);
+            var stack = new Stack<string>(0x10);
+
+            foreach (var str in market)
+                if (string.IsNullOrEmpty(str) == false)
+                {
+                    if (index++ % 0x63 == 0x62)
+                    {
+                        stack.Push(sb.Append(str).ToString());
+                        sb = new StringBuilder();
+                    }
+                    sb.Append(str).Append(';');
+                }
+            stack.Push(sb.Remove(sb.Length - 1, 1).ToString());
+
+            return stack;
         }
         string DistinctDate
         {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,18 +18,31 @@ namespace ShareInvest.Controllers
         [HttpGet, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetContexts()
         {
-            if (Registry.Retentions != null && Registry.Retentions.Count > 0)
+            Retention param;
+
+            try
             {
-                var registry = Registry.Retentions.First(o => o.Key.Length == 8 && o.Key.StartsWith("1"));
-                var param = new Retention
+                if (Registry.Retentions != null && Registry.Retentions.Count > 0)
                 {
-                    Code = registry.Key,
-                    LastDate = registry.Value
-                };
-                if (Registry.Retentions.Remove(registry.Key))
-                    return Ok(param);
+                    var registry = Registry.Retentions.First(o => o.Key.Length == 8 && o.Key.StartsWith("1"));
+                    param = new Retention
+                    {
+                        Code = registry.Key,
+                        LastDate = registry.Value
+                    };
+                    if (Registry.Retentions.Remove(registry.Key))
+                        return Ok(param);
+                }
             }
-            return NotFound();
+            catch (Exception ex)
+            {
+                param = new Retention
+                {
+                    Code = ex.TargetSite.Name,
+                    LastDate = ex.StackTrace
+                };
+            }
+            return NotFound(param);
         }
         [HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PostContext([FromBody] Queue<Futures> chart)

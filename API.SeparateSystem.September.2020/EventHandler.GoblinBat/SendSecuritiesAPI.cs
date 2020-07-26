@@ -109,7 +109,6 @@ namespace ShareInvest.EventHandler
             else if (param[3].Substring(0, 1).Equals("A") && double.TryParse(param[12]?.Insert(6, "."), out double ratio) && long.TryParse(param[11], out long valuation) && int.TryParse(param[6], out int reserve) && uint.TryParse(param[8], out uint purchase) && uint.TryParse(param[7], out uint current))
                 Convey = new Tuple<string, string, int, dynamic, dynamic, long, double>(param[3].Substring(1).Trim(), param[4].Trim(), reserve, purchase, current, valuation, ratio);
         }
-        public SendSecuritiesAPI(int nCodeCount, StringBuilder sArrCode) => Convey = new Tuple<int, string>(nCodeCount, sArrCode.ToString());
         public SendSecuritiesAPI(string message) => Convey = message;
         public SendSecuritiesAPI(int gubun, int status) => Convey = new Tuple<byte, byte>((byte)gubun, (byte)status);
         public SendSecuritiesAPI(long available) => Convey = available;

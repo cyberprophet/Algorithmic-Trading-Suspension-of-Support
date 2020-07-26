@@ -17,8 +17,8 @@ namespace ShareInvest.OpenAPI.Catalog
                     Send?.Invoke(this, new SendSecuritiesAPI(str));
 
             while (temp.Item2?.Count > 0)
-                foreach (var pop in temp.Item2.Pop())
-                    Console.WriteLine(pop);
+                foreach (var pop in temp.Item2.Dequeue())
+                    SendMessage(code, pop);
         }
         protected internal override string LookupScreenNo
         {

@@ -82,20 +82,8 @@ namespace ShareInvest.OpenAPI
         }
         public IEnumerable<string> InputValueRqData()
         {
-            if (Connect.TR.Add(new OPTKWFID { PrevNext = 0, API = axAPI }) && API is Connect api)
-                foreach (var code in api.GetInformationOfCode(new List<string> { axAPI.GetFutureCodeByIndex(0) }, axAPI.GetCodeListByMarket(string.Empty).Split(';')))
-                    yield return code;
-        }
-        public ISendSecuritiesAPI InputValueRqData(string name, string sArrCode, int nCodeCount)
-        {
-            var ctor = GetRequestTR(name);
-
-            if (string.IsNullOrEmpty(sArrCode) == false && nCodeCount > 0 && API is Connect api)
-            {
-                ctor.Value = sArrCode;
-                api.InputValueRqData(nCodeCount, ctor);
-            }
-            return ctor ?? null;
+            foreach (var code in (API as Connect)?.GetInformationOfCode(new List<string> { axAPI.GetFutureCodeByIndex(0) }, axAPI.GetCodeListByMarket(string.Empty).Split(';')))
+                yield return code;
         }
         public ISendSecuritiesAPI InputValueRqData(string name, string param)
         {
@@ -104,18 +92,33 @@ namespace ShareInvest.OpenAPI
             if (name.Length > 0x1F)
             {
                 ctor = Assembly.GetExecutingAssembly().CreateInstance(name) as TR;
+                ctor.API = axAPI;
+                var api = API as Connect;
 
-                if (Connect.TR.Add(ctor))
-                {
-                    ctor.Value = param;
-                    ctor.RQName = param;
-                    ctor.API = axAPI;
-                    (API as Connect)?.InputValueRqData(ctor);
-                }
+                if (Connect.TR.Add(ctor) && Enum.TryParse(name.Substring(28), out CatalogTR tr))
+                    switch (tr)
+                    {
+                        case CatalogTR.Opt50001:
+                            ctor.Value = param;
+                            ctor.RQName = param;
+                            api.InputValueRqData(ctor);
+                            break;
+
+                        case CatalogTR.Opt50028:
+                            ctor.Value = param.Substring(0, 8);
+                            ctor.RQName = param.Substring(9);
+                            api.InputValueRqData(ctor);
+                            break;
+
+                        case CatalogTR.OPTKWFID:
+                            ctor.Value = param;
+                            api.InputValueRqData(param.Split(';').Length, ctor);
+                            break;
+                    }
             }
             else
             {
-                ctor = Connect.TR.FirstOrDefault(o => o.GetType().Name.Substring(1).Equals(name.Substring(1)) && o.RQName.Contains(param));
+                ctor = Connect.TR.FirstOrDefault(o => o.GetType().Name.Substring(1).Equals(name.Substring(1)) && (o.RQName.Contains(param) || o.Value.Contains(param)));
 
                 if (Connect.TR.Remove(ctor))
                     SendMessage(param, name);

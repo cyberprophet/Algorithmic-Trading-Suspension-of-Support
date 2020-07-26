@@ -51,7 +51,7 @@ namespace ShareInvest.Controllers
         [HttpPut("{code}"), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> PutContext(string code, [FromBody] Codes param)
         {
-            if (Registry.Retentions.ContainsKey(code) == false)
+            if (Registry.Retentions.ContainsKey(code) == false && string.IsNullOrEmpty(param.MaturityMarketCap) == false)
             {
                 if (await context.Codes.AnyAsync(o => o.Code.Equals(code)))
                     context.Entry(param).State = EntityState.Modified;
@@ -59,7 +59,7 @@ namespace ShareInvest.Controllers
                 else
                     context.Codes.Add(param);
 
-                string retentions = string.Empty, classify = code.Substring(0, 1);
+                string retentions = string.Empty;
                 await context.BulkSaveChangesAsync();
 
                 switch (code.Length)
@@ -68,13 +68,16 @@ namespace ShareInvest.Controllers
                         retentions = await context.Stocks.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
                         break;
 
-                    case int length when length == 8 && classify.Equals("1"):
+                    case int length when length == 8 && (code.StartsWith("101") || code.StartsWith("106")):
                         retentions = await context.Futures.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
                         break;
 
-                    case int length when length == 8 && (classify.Equals("2") || classify.Equals("3")):
+                    case int length when length == 8 && (code.StartsWith("2") || code.StartsWith("3")):
                         retentions = await context.Options.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
                         break;
+
+                    case int length when length == 8 && code.StartsWith("1"):
+                        return Ok(code);
 
                     default:
                         return BadRequest(code);

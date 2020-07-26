@@ -2,19 +2,22 @@
 
 using AxKHOpenAPILib;
 
+using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
-    class OPTKWFID : TR
+    class OPTKWFID : TR, ISendSecuritiesAPI
     {
         internal override void OnReceiveTrData(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
-            var stack = base.OnReceiveTrData(null, multi, e).Item2;
+            var param = base.OnReceiveTrData(null, multi, e).Item2;
 
-            while (stack.Count > 0)
-                foreach (var str in stack.Pop())
-                    Send?.Invoke(this, new SendSecuritiesAPI(str));
+            while (param.Count > 0)
+            {
+                var str = param.Dequeue();
+                Send?.Invoke(this, new SendSecuritiesAPI(str[0].Trim(), str[1].Trim(), API.GetMasterStockState(str[0].Trim()), str[3].Trim()));
+            }
         }
         protected internal override string LookupScreenNo => (Count++ + 0x1B58).ToString("D4");
         internal override string ID

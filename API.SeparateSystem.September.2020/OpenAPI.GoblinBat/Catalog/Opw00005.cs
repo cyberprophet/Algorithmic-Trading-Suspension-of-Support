@@ -19,7 +19,7 @@ namespace ShareInvest.OpenAPI.Catalog
 
             while (temp.Item2?.Count > 0)
             {
-                var param = new SendSecuritiesAPI(temp.Item2.Pop());
+                var param = new SendSecuritiesAPI(temp.Item2.Dequeue());
 
                 if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs) && API.GetMasterStockState(balance.Item1).Contains(transactionSuspension) == false)
                 {

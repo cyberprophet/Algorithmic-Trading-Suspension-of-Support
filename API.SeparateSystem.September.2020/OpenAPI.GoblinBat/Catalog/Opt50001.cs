@@ -2,21 +2,23 @@
 
 using AxKHOpenAPILib;
 
+using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
-    class Opt50001 : TR
+    class Opt50001 : TR, ISendSecuritiesAPI
     {
         internal override void OnReceiveTrData(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
-            var temp = base.OnReceiveTrData(single, e.sRQName.Contains(name) ? multi : null, e);
+            var temp = base.OnReceiveTrData(single, e.sRQName.Equals(name) ? multi : null, e);
+            var code = e.sRQName.Split(';')[1];
 
-            if (temp.Item1 != null)
-                Send?.Invoke(this, new SendSecuritiesAPI(e.sRQName.Split(';')[1], temp.Item1[0x48].Trim(), temp.Item1[0x3F].Trim().Substring(2), temp.Item1[0x33].Trim()));
+            if (temp.Item1 != null && (code.StartsWith("2") || code.StartsWith("3")))
+                Send?.Invoke(this, new SendSecuritiesAPI(code, temp.Item1[0x48].Trim(), temp.Item1[0x3F].Trim().Substring(2), temp.Item1[0x33].Trim()));
 
             while (temp.Item2?.Count > 0)
-                foreach (var pop in temp.Item2.Pop())
+                foreach (var pop in temp.Item2.Dequeue())
                     SendMessage(e.sRQName, pop);
         }
         protected internal override string LookupScreenNo
@@ -38,11 +40,11 @@ namespace ShareInvest.OpenAPI.Catalog
         {
             set
             {
-                temp = value;
+                Code = value;
             }
             get
             {
-                return string.Concat(name, ';', temp);
+                return string.Concat(name, ';', Code);
             }
         }
         internal override string TrCode => code;
@@ -55,7 +57,10 @@ namespace ShareInvest.OpenAPI.Catalog
         {
             get; set;
         }
-        string temp;
+        string Code
+        {
+            get; set;
+        }
         const string name = "선옵현재가정보요청";
         const string code = "opt50001";
         const string id = "종목코드";
