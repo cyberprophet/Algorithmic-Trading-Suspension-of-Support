@@ -57,8 +57,12 @@ namespace ShareInvest.Controls
             {
                 switch (strategics)
                 {
-                    case "TrendFollowingBasicFutures":
-                        strategics = "TF";
+                    case following:
+                        strategics = tf;
+                        break;
+
+                    case stockPrices:
+                        strategics = ts;
                         break;
                 }
                 dIndex[balance.Item1] = data.Rows.Add(new string[] { balance.Item1, balance.Item2.Trim(), balance.Item3.ToString("N0"), balance.Item4.ToString("N0"), balance.Item5.ToString("N0"), balance.Item6.ToString("C0"), balance.Item7.ToString("P2"), strategics });

@@ -72,7 +72,9 @@ namespace ShareInvest
                                     securities = o;
                                     break;
                             }
-                            strategics = securities?.Strategics?.First(x => x.Code.Equals(balance.Item1)).GetType().Name;
+                            if (securities != null && securities.Strategics.Count > 0 && securities.Strategics.Any(o => o.Code.Equals(balance.Item1)))
+                                strategics = securities?.Strategics?.First(x => x.Code.Equals(balance.Item1)).GetType().Name;
+
                             Size = new Size(0x3B8, 0x63 + 0x28 + Balance.OnReceiveBalance(balance, strategics));
                             ResumeLayout();
                             return;
@@ -157,7 +159,7 @@ namespace ShareInvest
 
                                     return;
 
-                                case Tuple<byte, byte> tp when tp.Item2 == 0x29 && tp.Item1 == 1 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && tp.Item1 == 8 && tp.Item2 == 0xF:
+                                case Tuple<byte, byte> tp when tp.Item2 == 0x29 && tp.Item1 == 1 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && tp.Item1 == 8 && tp.Item2 == 0x58:
                                     retention = await client.GetContext(new Stocks());
                                     chart = (com as XingAPI.ConnectAPI)?.Stocks;
                                     param = opt10079;
@@ -168,7 +170,7 @@ namespace ShareInvest
                                     chart = (com as XingAPI.ConnectAPI)?.Options;
                                     break;
 
-                                case Tuple<byte, byte> tp when tp.Item1 == 'e' && tp.Item2 == 0xF && com is OpenAPI.ConnectAPI:
+                                case Tuple<byte, byte> tp when tp.Item1 == 0x65 && tp.Item2 == 0xF && com is OpenAPI.ConnectAPI:
                                     retention = await client.GetContext(new Futures());
                                     param = opt50028;
                                     break;
@@ -335,26 +337,45 @@ namespace ShareInvest
                 {
                     var stParam = strategics?.Split('.');
 
-                    switch (strategics.Substring(0, 2))
-                    {
-                        case "TF":
-                            if (int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
-                                catalog[strategics.Substring(2, 8)] = new TrendFollowingBasicFutures
-                                {
-                                    Code = strategics.Substring(2, 8),
-                                    RollOver = stParam[0].Substring(0xA, 1).Equals("1"),
-                                    DayShort = ds,
-                                    DayLong = dl,
-                                    Minute = m,
-                                    MinuteShort = ms,
-                                    MinuteLong = ml,
-                                    ReactionShort = rs,
-                                    ReactionLong = rl,
-                                    QuantityShort = qs,
-                                    QuantityLong = ql
-                                };
-                            break;
-                    }
+                    if (Enum.TryParse(strategics.Substring(0, 2), out Strategics initial))
+                        switch (initial)
+                        {
+                            case Strategics.TF:
+                                if (int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
+                                    catalog[strategics.Substring(2, 8)] = new TrendFollowingBasicFutures
+                                    {
+                                        Code = strategics.Substring(2, 8),
+                                        RollOver = stParam[0].Substring(0xA, 1).Equals("1"),
+                                        DayShort = ds,
+                                        DayLong = dl,
+                                        Minute = m,
+                                        MinuteShort = ms,
+                                        MinuteLong = ml,
+                                        ReactionShort = rs,
+                                        ReactionLong = rl,
+                                        QuantityShort = qs,
+                                        QuantityLong = ql
+                                    };
+                                break;
+
+                            case Strategics.TS:
+                                if (char.TryParse(stParam[stParam.Length - 1], out char setting) && char.TryParse(stParam[8], out char tTrend) && char.TryParse(stParam[7], out char longShort) && int.TryParse(stParam[6], out int quoteUnit) && int.TryParse(stParam[5], out int quantity) && double.TryParse(stParam[4].Insert(stParam[4].Length - 2, "."), out double additionalPurchase) && double.TryParse(stParam[3].Insert(stParam[3].Length - 2, "."), out double realizeProfit) && int.TryParse(stParam[2], out int trend) && int.TryParse(stParam[1], out int l) && int.TryParse(stParam[0].Substring(8), out int s))
+                                    catalog[strategics.Substring(2, 6)] = new TrendsInStockPrices
+                                    {
+                                        Code = strategics.Substring(2, 6),
+                                        Short = s,
+                                        Long = l,
+                                        Trend = trend,
+                                        RealizeProfit = realizeProfit,
+                                        AdditionalPurchase = additionalPurchase,
+                                        Quantity = quantity,
+                                        QuoteUnit = quoteUnit,
+                                        LongShort = (LongShort)longShort,
+                                        TrendType = (Trend)tTrend,
+                                        Setting = (Setting)setting
+                                    };
+                                break;
+                        }
                 }
             switch (com)
             {
@@ -392,16 +413,15 @@ namespace ShareInvest
                     break;
             }
             foreach (var kv in catalog)
-                switch (kv.Key.Length)
-                {
-                    case int length when length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("106")):
-                        if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0)
-                        {
+                if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0)
+                    switch (kv.Key.Length)
+                    {
+                        case int length when length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("106")):
                             foreach (var real in (connect as XingAPI.ConnectAPI)?.Reals)
                                 real.OnReceiveRealTime(kv.Key);
-                        }
-                        break;
-                }
+
+                            break;
+                    }
             Connect = int.MaxValue;
         }
         void GoblinBatResize(object sender, EventArgs e)
