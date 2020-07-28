@@ -122,7 +122,7 @@ namespace ShareInvest.Strategics
                     Statistical.Dock = DockStyle.Fill;
                 }
                 if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && await client.GetContext<Privacies>(Privacy) is Privacies privacy)
-                    Text = Statistical.SetPrivacy(privacy);
+                    Text = await Statistical.SetPrivacy(privacy);
 
                 Size = new Size(0x245, 0x208);
                 Visible = true;

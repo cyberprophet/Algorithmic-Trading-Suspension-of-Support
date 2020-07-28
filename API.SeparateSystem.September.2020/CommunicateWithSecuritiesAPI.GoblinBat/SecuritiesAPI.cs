@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -48,6 +49,7 @@ namespace ShareInvest
                     int empty = 0;
                     var param = string.Empty;
                     Retention retention;
+                    ISecuritiesAPI securities = null;
                     Catalog.XingAPI.ICharts<SendSecuritiesAPI> chart = null;
 
                     switch (e.Convey)
@@ -63,12 +65,14 @@ namespace ShareInvest
                             switch (com)
                             {
                                 case XingAPI.ConnectAPI x when x.Strategics.Count > 0:
-                                    strategics = x.Strategics.First(o => o.Code.Equals(balance.Item1)).GetType().Name;
+                                    securities = x;
                                     break;
 
-                                case OpenAPI.ConnectAPI o:
+                                case OpenAPI.ConnectAPI o when o.Strategics.Count > 0:
+                                    securities = o;
                                     break;
                             }
+                            strategics = securities?.Strategics?.First(x => x.Code.Equals(balance.Item1)).GetType().Name;
                             Size = new Size(0x3B8, 0x63 + 0x28 + Balance.OnReceiveBalance(balance, strategics));
                             ResumeLayout();
                             return;
@@ -147,20 +151,26 @@ namespace ShareInvest
                         case Tuple<byte, byte> tuple:
                             switch (tuple)
                             {
-                                case Tuple<byte, byte> tp when tp.Item2 == 21:
+                                case Tuple<byte, byte> tp when tp.Item1 == 1 && tp.Item2 == 0x15 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && tp.Item1 == 3 && tp.Item2 == 9:
                                     if (WindowState.Equals(FormWindowState.Minimized))
                                         strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
 
                                     return;
 
-                                case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 1:
+                                case Tuple<byte, byte> tp when tp.Item2 == 0x29 && tp.Item1 == 1 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && tp.Item1 == 8 && tp.Item2 == 0xF:
                                     retention = await client.GetContext(new Stocks());
                                     chart = (com as XingAPI.ConnectAPI)?.Stocks;
+                                    param = opt10079;
                                     break;
 
-                                case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 5:
+                                case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 5 && com is XingAPI.ConnectAPI:
                                     retention = await client.GetContext(new Options());
                                     chart = (com as XingAPI.ConnectAPI)?.Options;
+                                    break;
+
+                                case Tuple<byte, byte> tp when tp.Item1 == 'e' && tp.Item2 == 0xF && com is OpenAPI.ConnectAPI:
+                                    retention = await client.GetContext(new Futures());
+                                    param = opt50028;
                                     break;
                             }
                             break;
@@ -238,6 +248,16 @@ namespace ShareInvest
                                         if (WindowState.Equals(FormWindowState.Minimized) == false)
                                             WindowState = FormWindowState.Minimized;
 
+                                        switch (com)
+                                        {
+                                            case OpenAPI.ConnectAPI o:
+                                                o.ConnectChapterOperation.Send -= OnReceiveSecuritiesAPI;
+                                                break;
+
+                                            case XingAPI.ConnectAPI x:
+                                                x.JIF.Send -= OnReceiveSecuritiesAPI;
+                                                break;
+                                        }
                                         timer.Stop();
                                         strip.ItemClicked -= OnItemClick;
                                         Dispose();
@@ -305,79 +325,83 @@ namespace ShareInvest
                 backgroundWorker.RunWorkerAsync();
             }
         }
-        async void BackgroundWorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        async void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
         {
-            if (com is OpenAPI.ConnectAPI api)
-            {
-                Stack = new Stack<string>();
-                double basePrice = double.MinValue;
+            ISecuritiesAPI connect = null;
+            var catalog = new Dictionary<string, IStrategics>();
 
-                foreach (var code in api.InputValueRqData())
-                    if ((code.Length == 8 && (code.StartsWith("2") || code.StartsWith("3")) && double.TryParse(code.Substring(code.Length - 3), out double oPrice) && (oPrice > basePrice + 0x41 || oPrice < basePrice - 0x41)) == false)
-                    {
-                        if (code.Length == 8 && code.StartsWith("101") && double.TryParse((await client.GetContext(new Codes { Code = code })).Price, out double price))
-                            basePrice = price;
-
-                        Stack.Push(code);
-                        api.InputValueRqData(string.Concat(instance, code.Length == 8 ? opt50001 : optkwFID), code).Send += OnReceiveSecuritiesAPI;
-                    }
-
-                //test
-                MessageBox.Show("test");
-                var r = await client.GetContext(new Futures());
-                api.InputValueRqData(string.Concat(instance, opt50028), string.Concat(r.Code, ";", r.LastDate)).Send += OnReceiveSecuritiesAPI;
-            }
-            else if (com is XingAPI.ConnectAPI connect)
-            {
-                foreach (var ctor in connect.ConvertTheCodeToName)
+            if (privacy.CodeStrategics is string cStrategics)
+                foreach (var strategics in cStrategics?.Split(';'))
                 {
-                    ctor.Send += OnReceiveSecuritiesAPI;
-                    ctor.QueryExcute();
-                }
-                if (privacy.CodeStrategics is string cStrategics)
-                    foreach (var strategics in cStrategics?.Split(';'))
+                    var stParam = strategics?.Split('.');
+
+                    switch (strategics.Substring(0, 2))
                     {
-                        IStrategics temp = null;
-                        var stParam = strategics?.Split('.');
-
-                        if (stParam[0].Length > 0xC)
-                        {
-                            switch (strategics.Substring(0, 2))
-                            {
-                                case "TF":
-                                    if (int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
-                                        temp = new TrendFollowingBasicFutures
-                                        {
-                                            Code = strategics.Substring(2, 8),
-                                            RollOver = stParam[0].Substring(0xA, 1).Equals("1"),
-                                            DayShort = ds,
-                                            DayLong = dl,
-                                            Minute = m,
-                                            MinuteShort = ms,
-                                            MinuteLong = ml,
-                                            ReactionShort = rs,
-                                            ReactionLong = rl,
-                                            QuantityShort = qs,
-                                            QuantityLong = ql
-                                        };
-                                    break;
-                            }
-                            if (temp != null && connect.Strategics.Add(temp) && connect.SetStrategics(temp) > 0)
-                                foreach (var real in connect.Reals)
-                                    real.OnReceiveRealTime(temp.Code);
-                        }
-                        else
-                        {
-
-                        }
+                        case "TF":
+                            if (int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
+                                catalog[strategics.Substring(2, 8)] = new TrendFollowingBasicFutures
+                                {
+                                    Code = strategics.Substring(2, 8),
+                                    RollOver = stParam[0].Substring(0xA, 1).Equals("1"),
+                                    DayShort = ds,
+                                    DayLong = dl,
+                                    Minute = m,
+                                    MinuteShort = ms,
+                                    MinuteLong = ml,
+                                    ReactionShort = rs,
+                                    ReactionLong = rl,
+                                    QuantityShort = qs,
+                                    QuantityLong = ql
+                                };
+                            break;
                     }
-                foreach (var conclusion in connect.Conclusion)
-                    conclusion.OnReceiveRealTime(string.Empty);
+                }
+            switch (com)
+            {
+                case OpenAPI.ConnectAPI o:
+                    Stack = new Stack<string>();
+                    double basePrice = double.MinValue;
 
-                var alarm = connect.JIF;
-                alarm.Send += OnReceiveSecuritiesAPI;
-                alarm.QueryExcute();
+                    foreach (var code in o.InputValueRqData())
+                        if ((code.Length == 8 && (code.StartsWith("2") || code.StartsWith("3")) && double.TryParse(code.Substring(code.Length - 3), out double oPrice) && (oPrice > basePrice + 0x41 || oPrice < basePrice - 0x41)) == false)
+                        {
+                            if (code.Length == 8 && code.StartsWith("101") && double.TryParse((await client.GetContext(new Codes { Code = code })).Price, out double price))
+                                basePrice = price;
+
+                            Stack.Push(code);
+                            o.InputValueRqData(string.Concat(instance, code.Length == 8 ? opt50001 : optkwFID), code).Send += OnReceiveSecuritiesAPI;
+                        }
+                    o.ConnectChapterOperation.Send += OnReceiveSecuritiesAPI;
+                    connect = o;
+                    break;
+
+                case XingAPI.ConnectAPI x:
+                    foreach (var ctor in x.ConvertTheCodeToName)
+                    {
+                        ctor.Send += OnReceiveSecuritiesAPI;
+                        ctor.QueryExcute();
+                    }
+                    if (catalog.Any(o => o.Key.Length == 8))
+                        foreach (var conclusion in (connect as XingAPI.ConnectAPI)?.Conclusion)
+                            conclusion.OnReceiveRealTime(string.Empty);
+
+                    var alarm = x.JIF;
+                    alarm.Send += OnReceiveSecuritiesAPI;
+                    alarm.QueryExcute();
+                    connect = x;
+                    break;
             }
+            foreach (var kv in catalog)
+                switch (kv.Key.Length)
+                {
+                    case int length when length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("106")):
+                        if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0)
+                        {
+                            foreach (var real in (connect as XingAPI.ConnectAPI)?.Reals)
+                                real.OnReceiveRealTime(kv.Key);
+                        }
+                        break;
+                }
             Connect = int.MaxValue;
         }
         void GoblinBatResize(object sender, EventArgs e)

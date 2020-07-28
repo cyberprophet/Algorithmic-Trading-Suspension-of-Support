@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace ShareInvest.Catalog
@@ -13,6 +14,11 @@ namespace ShareInvest.Catalog
         {
             get;
         }
+        HashSet<IStrategics> Strategics
+        {
+            get;
+        }
+        int SetStrategics(IStrategics strategics);
         void StartProgress();
         void SetForeColor(Color color, string remain);
         AccountInformation SetPrivacy(Privacies privacy);

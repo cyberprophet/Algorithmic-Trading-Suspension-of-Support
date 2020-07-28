@@ -15,7 +15,7 @@ namespace ShareInvest.Controllers
     [ApiController, Route(Security.route), Produces(Security.produces)]
     public class CodesController : ControllerBase
     {
-        [HttpGet("{code}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("{code:Minlength(6)}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetContext(string code)
         {
             var context = await this.context.Codes.FindAsync(code);
@@ -25,14 +25,14 @@ namespace ShareInvest.Controllers
 
             return NotFound(code);
         }
-        [HttpGet("{length}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("{length:int}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetContexts(int length)
         {
             if (length == 6 || length == 8)
                 return Ok(await context.Codes.Where(o => o.Code.Length == length).Select(o => new { o.Code, o.Name, o.MarginRate, o.MaturityMarketCap, o.Price }).AsNoTracking().ToListAsync());
 
             else
-                return NotFound(Registry.Retentions.Count);
+                return NotFound(length);
         }
         [HttpGet, ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetContexts() => Ok(Registry.Retentions);

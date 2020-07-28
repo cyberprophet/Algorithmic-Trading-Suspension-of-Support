@@ -9,7 +9,7 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
-    class Opt50028 : TR, ISendSecuritiesAPI
+    class Opt10079 : TR, ISendSecuritiesAPI
     {
         protected internal override (string[], Queue<string[]>) OnReceiveTrData(string[] single, string[] multi, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
@@ -35,7 +35,7 @@ namespace ShareInvest.OpenAPI.Catalog
                         for (y = 0; y <= ly; y++)
                             str[y] = (string)((object[,])temp)[x, y];
 
-                        if (string.IsNullOrEmpty(e.sRQName) == false && (string.Compare(str[2].Substring(2), e.sRQName) > 0 || e.sRQName.Equals(rqName)))
+                        if (string.IsNullOrEmpty(e.sRQName) == false && (e.sRQName.Equals(rqName) || string.Compare(str[2].Substring(2), e.sRQName) > 0))
                             catalog.Enqueue(str);
 
                         else
@@ -94,11 +94,11 @@ namespace ShareInvest.OpenAPI.Catalog
         }
         readonly Stack<string> storage = new Stack<string>();
         readonly string[] opSingle = { "종목코드", "마지막틱갯수" };
-        readonly string[] opMutiple = { "현재가", "거래량", "체결시간", "시가", "고가", "저가", "전일종가" };
-        const string code = "opt50028";
-        const string id = "종목코드;시간단위";
-        const string tick = ";1";
-        const string rqName = "선물틱차트요청";
+        readonly string[] opMutiple = { "현재가", "거래량", "체결시간", "시가", "고가", "저가", "수정주가구분", "수정비율", "대업종구분", "소업종구분", "종목정보", "수정주가이벤트", "전일종가" };
+        const string code = "opt10079";
+        const string id = "종목코드;틱범위;수정주가구분";
+        const string tick = ";1;1";
+        const string rqName = "주식틱차트조회요청";
         public override event EventHandler<SendSecuritiesAPI> Send;
     }
 }

@@ -117,6 +117,7 @@ namespace ShareInvest.OpenAPI
             this.axAPI = axAPI;
             request = Delay.GetInstance(0xCD);
             request.Run();
+            Chapter = new 장시작시간 { API = axAPI };
         }
         static Connect API
         {
@@ -151,7 +152,7 @@ namespace ShareInvest.OpenAPI
                 Real = new HashSet<Real>()
                 {
                     new 주식체결 { API = axAPI },
-                    new 장시작시간 { API = axAPI }
+                    Chapter
                 };
                 Chejan = new Dictionary<string, Chejan>()
                 {
@@ -169,6 +170,10 @@ namespace ShareInvest.OpenAPI
                 };
             }
             return API;
+        }
+        internal static 장시작시간 Chapter
+        {
+            get; set;
         }
         const string distinctDate = "yyyyMM";
         readonly Delay request;

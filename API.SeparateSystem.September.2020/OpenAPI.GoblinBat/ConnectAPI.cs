@@ -98,6 +98,14 @@ namespace ShareInvest.OpenAPI
                 if (Connect.TR.Add(ctor) && Enum.TryParse(name.Substring(28), out CatalogTR tr))
                     switch (tr)
                     {
+                        case CatalogTR.Opt10079:
+                            if (param.Length == 0x16)
+                                ctor.RQName = param.Substring(7, 12);
+
+                            ctor.Value = param.Substring(0, 6);
+                            api.InputValueRqData(ctor);
+                            break;
+
                         case CatalogTR.Opt50001:
                             ctor.Value = param;
                             ctor.RQName = param;
@@ -105,8 +113,11 @@ namespace ShareInvest.OpenAPI
                             break;
 
                         case CatalogTR.Opt50028:
+                        case CatalogTR.Opt50066:
+                            if (param.Length == 0x18)
+                                ctor.RQName = param.Substring(9, 12);
+
                             ctor.Value = param.Substring(0, 8);
-                            ctor.RQName = param.Substring(9);
                             api.InputValueRqData(ctor);
                             break;
 
@@ -140,6 +151,20 @@ namespace ShareInvest.OpenAPI
             labelOpenAPI.ForeColor = color;
             labelMessage.Text = remain;
         }
+        public int SetStrategics(IStrategics strategics)
+        {
+            Connect.HoldingStock[strategics.Code] = new HoldingStocks
+            {
+                Code = strategics.Code,
+                Current = 0,
+                Purchase = 0,
+                Quantity = 0,
+                Rate = 0,
+                Revenue = 0
+            };
+            return Connect.HoldingStock.Count;
+        }
+        public ISendSecuritiesAPI ConnectChapterOperation => Connect.Chapter;
         public ISendSecuritiesAPI OnConnectErrorMessage => API as Connect ?? null;
         public IEnumerable<Holding> HoldingStocks
         {
@@ -157,6 +182,10 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
+        public HashSet<IStrategics> Strategics
+        {
+            get; private set;
+        }
         public ConnectAPI(Privacies privacy)
         {
             this.privacy = privacy;
@@ -167,6 +196,7 @@ namespace ShareInvest.OpenAPI
                 securites = new Security().Decipher(privacy.Security, privacy.SecuritiesAPI, privacy.SecurityAPI);
                 checkAccount.CheckState = CheckState.Checked;
             }
+            Strategics = new HashSet<IStrategics>();
         }
         readonly StringBuilder securites;
         readonly Privacies privacy;

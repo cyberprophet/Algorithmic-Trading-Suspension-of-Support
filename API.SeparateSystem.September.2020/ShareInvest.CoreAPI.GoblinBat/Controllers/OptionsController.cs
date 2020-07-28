@@ -19,16 +19,29 @@ namespace ShareInvest.Controllers
         [HttpGet, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetContexts()
         {
-            if (Registry.Retentions != null && Registry.Retentions.Count > 0)
+            Retention param;
+
+            try
             {
-                var registry = Registry.Retentions.First(o => o.Key.Length == 8 && (o.Key.StartsWith("2") || o.Key.StartsWith("3")));
-                var param = new Retention
+                if (Registry.Retentions != null && Registry.Retentions.Count > 0)
                 {
-                    Code = registry.Key,
-                    LastDate = registry.Value
+                    var registry = Registry.Retentions.First(o => o.Key.Length == 8 && (o.Key.StartsWith("2") || o.Key.StartsWith("3")));
+                    param = new Retention
+                    {
+                        Code = registry.Key,
+                        LastDate = registry.Value
+                    };
+                    if (Registry.Retentions.Remove(registry.Key))
+                        return Ok(param);
+                }
+            }
+            catch (Exception ex)
+            {
+                param = new Retention
+                {
+                    Code = ex.TargetSite.Name,
+                    LastDate = ex.StackTrace
                 };
-                if (Registry.Retentions.Remove(registry.Key))
-                    return Ok(param);
             }
             return NotFound();
         }

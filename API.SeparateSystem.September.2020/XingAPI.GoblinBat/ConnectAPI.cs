@@ -132,7 +132,10 @@ namespace ShareInvest.XingAPI
             }
         }
         public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T8430(), new T9943(), new T8401(), new T8432(), new T8433(), new MMDAQ91200() };
-        public IQuerys<SendSecuritiesAPI> JIF => new JIF();
+        public IQuerys<SendSecuritiesAPI> JIF
+        {
+            get;
+        }
         public IReals[] Conclusion
         {
             get
@@ -184,6 +187,7 @@ namespace ShareInvest.XingAPI
             querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
             Stocks = new T8411();
             Options = new T8414();
+            JIF = new JIF();
         }
         public HashSet<IStrategics> Strategics
         {

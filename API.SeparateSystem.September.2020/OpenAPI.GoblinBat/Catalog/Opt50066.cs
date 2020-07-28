@@ -9,7 +9,7 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
-    class Opt50028 : TR, ISendSecuritiesAPI
+    class Opt50066 : TR, ISendSecuritiesAPI
     {
         protected internal override (string[], Queue<string[]>) OnReceiveTrData(string[] single, string[] multi, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {
@@ -95,10 +95,10 @@ namespace ShareInvest.OpenAPI.Catalog
         readonly Stack<string> storage = new Stack<string>();
         readonly string[] opSingle = { "종목코드", "마지막틱갯수" };
         readonly string[] opMutiple = { "현재가", "거래량", "체결시간", "시가", "고가", "저가", "전일종가" };
-        const string code = "opt50028";
+        const string code = "opt50066";
         const string id = "종목코드;시간단위";
         const string tick = ";1";
-        const string rqName = "선물틱차트요청";
+        const string rqName = "옵션틱차트요청";
         public override event EventHandler<SendSecuritiesAPI> Send;
     }
 }
