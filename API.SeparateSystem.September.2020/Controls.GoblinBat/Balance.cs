@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-using ShareInvest.Catalog;
+using ShareInvest.Analysis;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface;
 
 namespace ShareInvest.Controls
 {
     public partial class Balance : UserControl
     {
-        public Balance(AccountInformation info)
+        public Balance(IAccountInformation info)
         {
             InitializeComponent();
             textIdentity.Text = info.Identity;

@@ -2,7 +2,7 @@
 
 using AxKHOpenAPILib;
 
-using ShareInvest.Catalog;
+using ShareInvest.Analysis;
 
 namespace ShareInvest.OpenAPI.Catalog
 {

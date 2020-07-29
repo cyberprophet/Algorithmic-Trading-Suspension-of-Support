@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using ShareInvest.Catalog;
-using ShareInvest.Catalog.XingAPI;
+using ShareInvest.Analysis;
+using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {

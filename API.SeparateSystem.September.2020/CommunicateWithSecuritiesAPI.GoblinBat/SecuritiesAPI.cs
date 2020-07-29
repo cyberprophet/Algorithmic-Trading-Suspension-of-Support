@@ -10,12 +10,14 @@ using ShareInvest.Catalog;
 using ShareInvest.Client;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface;
+using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest
 {
     sealed partial class SecuritiesAPI : Form
     {
-        internal SecuritiesAPI(GoblinBatClient client, Privacies privacy, ISecuritiesAPI com)
+        internal SecuritiesAPI(GoblinBatClient client, Privacies privacy, ISecuritiesAPI<SendSecuritiesAPI> com)
         {
             this.com = com;
             this.privacy = privacy;
@@ -49,8 +51,8 @@ namespace ShareInvest
                     int empty = 0;
                     var param = string.Empty;
                     Retention retention;
-                    ISecuritiesAPI securities = null;
-                    Catalog.XingAPI.ICharts<SendSecuritiesAPI> chart = null;
+                    ISecuritiesAPI<SendSecuritiesAPI> securities = null;
+                    ICharts<SendSecuritiesAPI> chart = null;
 
                     switch (e.Convey)
                     {
@@ -329,7 +331,7 @@ namespace ShareInvest
         }
         async void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
         {
-            ISecuritiesAPI connect = null;
+            ISecuritiesAPI<SendSecuritiesAPI> connect = null;
             var catalog = new Dictionary<string, IStrategics>();
 
             if (privacy.CodeStrategics is string cStrategics)
@@ -615,7 +617,7 @@ namespace ShareInvest
         readonly Dictionary<string, Codes> infoCodes;
         readonly Color[] colors;
         readonly Privacies privacy;
-        readonly ISecuritiesAPI com;
+        readonly ISecuritiesAPI<SendSecuritiesAPI> com;
         readonly string[] icon;
     }
 }

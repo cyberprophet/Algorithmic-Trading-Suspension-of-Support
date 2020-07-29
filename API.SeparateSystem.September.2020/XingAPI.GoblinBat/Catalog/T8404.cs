@@ -4,15 +4,16 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using ShareInvest.Catalog;
-using ShareInvest.Catalog.XingAPI;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface;
+using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {
     class T8404 : Query, ICharts<SendSecuritiesAPI>
     {
-        public void QueryExcute(Retention retention)
+        public void QueryExcute(IRetention retention)
         {
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {
@@ -31,7 +32,9 @@ namespace ShareInvest.XingAPI.Catalog
                 SendErrorMessage(GetType().Name, Request(false));
             }
             Charts = new Stack<string>();
-            Retention = retention;
+
+            if (retention is Retention tention)
+                Retention = tention;
         }
         protected internal override void OnReceiveData(string szTrCode)
         {

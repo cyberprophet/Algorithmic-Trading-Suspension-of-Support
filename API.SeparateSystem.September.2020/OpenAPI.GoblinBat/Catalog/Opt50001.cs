@@ -2,12 +2,12 @@
 
 using AxKHOpenAPILib;
 
-using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface.OpenAPI;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
-    class Opt50001 : TR, ISendSecuritiesAPI
+    class Opt50001 : TR, ISendSecuritiesAPI<SendSecuritiesAPI>
     {
         internal override void OnReceiveTrData(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
         {

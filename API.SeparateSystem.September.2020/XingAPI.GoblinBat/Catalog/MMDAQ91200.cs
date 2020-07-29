@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-using ShareInvest.Catalog.XingAPI;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {

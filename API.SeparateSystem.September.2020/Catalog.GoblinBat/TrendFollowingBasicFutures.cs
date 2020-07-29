@@ -1,7 +1,48 @@
-﻿namespace ShareInvest.Catalog
+﻿using ShareInvest.Interface;
+
+namespace ShareInvest.Catalog
 {
     public struct TrendFollowingBasicFutures : IStrategics
     {
+        public TrendFollowingBasicFutures[] SetCatalog(TrendFollowingBasicFutures tf) => new TrendFollowingBasicFutures[2]
+        {
+            new TrendFollowingBasicFutures
+            {
+                Code = tf.Code,
+                Commission = tf.Commission,
+                MarginRate = tf.MarginRate,
+                ReactionShort = tf.ReactionShort,
+                ReactionLong = tf.ReactionLong,
+                RollOver = tf.RollOver,
+                Minute = 0x5A0,
+                DayShort = tf.DayShort,
+                DayLong = tf.DayLong,
+                QuantityShort = tf.QuantityShort,
+                QuantityLong = tf.QuantityLong
+            },
+            new TrendFollowingBasicFutures
+            {
+                Code = tf.Code,
+                Commission = tf.Commission,
+                MarginRate = tf.MarginRate,
+                ReactionShort = tf.ReactionShort,
+                ReactionLong = tf.ReactionLong,
+                RollOver = tf.RollOver,
+                Minute = tf.Minute,
+                MinuteShort = tf.MinuteShort,
+                MinuteLong = tf.MinuteLong,
+                QuantityShort = tf.QuantityShort,
+                QuantityLong = tf.QuantityLong
+            }
+        };
+        public double MarginRate
+        {
+            get; set;
+        }
+        public double Commission
+        {
+            get; set;
+        }
         public string Code
         {
             get; set;

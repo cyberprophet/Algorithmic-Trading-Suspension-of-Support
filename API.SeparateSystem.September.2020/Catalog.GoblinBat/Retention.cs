@@ -1,6 +1,8 @@
-﻿namespace ShareInvest.Catalog
+﻿using ShareInvest.Interface;
+
+namespace ShareInvest.Catalog
 {
-    public struct Retention
+    public struct Retention : IRetention
     {
         public string Code
         {

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 
-using ShareInvest.Catalog;
-using ShareInvest.Catalog.XingAPI;
+using ShareInvest.Analysis;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {

@@ -4,14 +4,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using ShareInvest.Catalog.XingAPI;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface;
+using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {
     class T8411 : Query, ICharts<SendSecuritiesAPI>
     {
-        public void QueryExcute(ShareInvest.Catalog.Retention retention)
+        public void QueryExcute(IRetention retention)
         {
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {

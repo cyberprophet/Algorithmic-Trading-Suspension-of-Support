@@ -1,6 +1,6 @@
 ﻿using System;
 
-using ShareInvest.Catalog.XingAPI;
+using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {

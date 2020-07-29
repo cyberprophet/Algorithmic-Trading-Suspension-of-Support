@@ -1,9 +1,9 @@
 ﻿using System.Linq;
 
 using ShareInvest.Catalog;
-using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Client;
 using ShareInvest.DelayRequest;
+using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {

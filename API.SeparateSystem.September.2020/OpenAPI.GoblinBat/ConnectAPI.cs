@@ -9,15 +9,18 @@ using System.Windows.Forms;
 
 using AxKHOpenAPILib;
 
+using ShareInvest.Analysis;
+using ShareInvest.Analysis.OpenAPI;
 using ShareInvest.Catalog;
-using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface;
+using ShareInvest.Interface.OpenAPI;
 using ShareInvest.OpenAPI.Catalog;
 
 namespace ShareInvest.OpenAPI
 {
-    public sealed partial class ConnectAPI : UserControl, ISecuritiesAPI
+    public sealed partial class ConnectAPI : UserControl, ISecuritiesAPI<SendSecuritiesAPI>
     {
         void ButtonStartProgressClick(object sender, EventArgs e) => BeginInvoke(new Action(() =>
         {
@@ -45,7 +48,7 @@ namespace ShareInvest.OpenAPI
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
-        public AccountInformation SetPrivacy(Privacies privacy)
+        public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
             if (Connect.TR.Add(new OPT50010 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opw00005 { Value = string.Concat(privacy.AccountNumber, password), PrevNext = 0, API = axAPI }))
             {
@@ -85,7 +88,7 @@ namespace ShareInvest.OpenAPI
             foreach (var code in (API as Connect)?.GetInformationOfCode(new List<string> { axAPI.GetFutureCodeByIndex(0) }, axAPI.GetCodeListByMarket(string.Empty).Split(';')))
                 yield return code;
         }
-        public ISendSecuritiesAPI InputValueRqData(string name, string param)
+        public ISendSecuritiesAPI<SendSecuritiesAPI> InputValueRqData(string name, string param)
         {
             TR ctor;
 
@@ -136,7 +139,7 @@ namespace ShareInvest.OpenAPI
             }
             return ctor ?? null;
         }
-        public ISendSecuritiesAPI InputValueRqData(bool input, string name)
+        public ISendSecuritiesAPI<SendSecuritiesAPI> InputValueRqData(bool input, string name)
         {
             var ctor = GetRequestTR(name);
 
@@ -153,19 +156,24 @@ namespace ShareInvest.OpenAPI
         }
         public int SetStrategics(IStrategics strategics)
         {
-            Connect.HoldingStock[strategics.Code] = new HoldingStocks
+            switch (strategics)
             {
-                Code = strategics.Code,
-                Current = 0,
-                Purchase = 0,
-                Quantity = 0,
-                Rate = 0,
-                Revenue = 0
-            };
+                case TrendFollowingBasicFutures tf:
+                    Connect.HoldingStock[strategics.Code] = new HoldingStocks(tf)
+                    {
+                        Code = strategics.Code,
+                        Current = 0,
+                        Purchase = 0,
+                        Quantity = 0,
+                        Rate = 0,
+                        Revenue = 0
+                    };
+                    break;
+            }
             return Connect.HoldingStock.Count;
         }
-        public ISendSecuritiesAPI ConnectChapterOperation => Connect.Chapter;
-        public ISendSecuritiesAPI OnConnectErrorMessage => API as Connect ?? null;
+        public ISendSecuritiesAPI<SendSecuritiesAPI> ConnectChapterOperation => Connect.Chapter;
+        public ISendSecuritiesAPI<SendSecuritiesAPI> OnConnectErrorMessage => API as Connect ?? null;
         public IEnumerable<Holding> HoldingStocks
         {
             get

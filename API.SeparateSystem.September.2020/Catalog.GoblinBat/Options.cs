@@ -1,4 +1,6 @@
-﻿namespace ShareInvest.Catalog
+﻿using ShareInvest.Interface;
+
+namespace ShareInvest.Catalog
 {
     public struct Options : ICharts
     {

@@ -5,6 +5,7 @@ using System.Runtime.ExceptionServices;
 using System.Security;
 using System.Windows.Forms;
 
+using ShareInvest.Analysis;
 using ShareInvest.Catalog;
 using ShareInvest.DelayRequest;
 using ShareInvest.Message;

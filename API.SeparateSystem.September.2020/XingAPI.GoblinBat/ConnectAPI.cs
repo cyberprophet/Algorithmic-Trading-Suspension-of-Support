@@ -4,16 +4,20 @@ using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using ShareInvest.Analysis;
+using ShareInvest.Analysis.XingAPI;
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.XingAPI;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
+using ShareInvest.Interface;
+using ShareInvest.Interface.XingAPI;
 using ShareInvest.XingAPI.Catalog;
 
 namespace ShareInvest.XingAPI
 {
-    public sealed partial class ConnectAPI : UserControl, ISecuritiesAPI
+    public sealed partial class ConnectAPI : UserControl, ISecuritiesAPI<SendSecuritiesAPI>
     {
         void ButtonStartProgressClick(object sender, EventArgs e)
         {
@@ -68,7 +72,7 @@ namespace ShareInvest.XingAPI
                 else if (sub.Controls.Count > 0)
                     FindControlRecursive(sub);
         }
-        public AccountInformation SetPrivacy(Privacies privacy)
+        public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
             var ai = new AccountInformation
             {
@@ -104,15 +108,20 @@ namespace ShareInvest.XingAPI
         }
         public int SetStrategics(IStrategics strategics)
         {
-            Connect.HoldingStock[strategics.Code] = new HoldingStocks
+            switch (strategics)
             {
-                Code = strategics.Code,
-                Current = 0,
-                Purchase = 0,
-                Quantity = 0,
-                Rate = 0,
-                Revenue = 0
-            };
+                case TrendFollowingBasicFutures tf:
+                    Connect.HoldingStock[strategics.Code] = new HoldingStocks(tf)
+                    {
+                        Code = strategics.Code,
+                        Current = 0,
+                        Purchase = 0,
+                        Quantity = 0,
+                        Rate = 0,
+                        Revenue = 0
+                    };
+                    break;
+            }
             return Connect.HoldingStock.Count;
         }
         public ICharts<SendSecuritiesAPI> Stocks

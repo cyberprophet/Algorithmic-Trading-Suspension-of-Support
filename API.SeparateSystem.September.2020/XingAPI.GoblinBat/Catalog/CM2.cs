@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using ShareInvest.Catalog;
-using ShareInvest.Catalog.XingAPI;
+using ShareInvest.Analysis;
+using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
 {
@@ -16,7 +16,7 @@ namespace ShareInvest.XingAPI.Catalog
                 temp[i] = GetFieldData(OutBlock, arr[i]);
 
             if (Connect.HoldingStock.TryGetValue(temp[0x33], out Holding hs))
-                new Task(() => hs.OnReceiveConclusion(temp)).Start();          
+                new Task(() => hs.OnReceiveConclusion(temp)).Start();
         }
         public void OnReceiveRealTime(string code)
         {

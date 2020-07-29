@@ -2,13 +2,13 @@
 
 using AxKHOpenAPILib;
 
-using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface.OpenAPI;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
-    class 장시작시간 : Real, ISendSecuritiesAPI
+    class 장시작시간 : Real, ISendSecuritiesAPI<SendSecuritiesAPI>
     {
         public event EventHandler<SendSecuritiesAPI> Send;
         internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)

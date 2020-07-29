@@ -4,12 +4,12 @@ using System.Diagnostics;
 
 using AxKHOpenAPILib;
 
-using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface.OpenAPI;
 
 namespace ShareInvest.OpenAPI
 {
-    abstract class TR : ISendSecuritiesAPI
+    abstract class TR : ISendSecuritiesAPI<SendSecuritiesAPI>
     {
         [Conditional("DEBUG")]
         protected internal void SendMessage(string code, string message) => Console.WriteLine(string.Concat(code, "_", message));

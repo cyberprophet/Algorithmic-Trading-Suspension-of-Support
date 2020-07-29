@@ -7,15 +7,16 @@ using System.Threading.Tasks;
 
 using AxKHOpenAPILib;
 
+using ShareInvest.Analysis;
 using ShareInvest.Catalog;
-using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface.OpenAPI;
 using ShareInvest.OpenAPI.Catalog;
 
 namespace ShareInvest.OpenAPI
 {
-    class Connect : ISendSecuritiesAPI
+    class Connect : ISendSecuritiesAPI<SendSecuritiesAPI>
     {
         internal void InputValueRqData(TR param) => request.RequestTrData(new Task(() =>
         {

@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using RestSharp;
 
 using ShareInvest.Catalog;
+using ShareInvest.Interface;
 
 namespace ShareInvest.Client
 {
@@ -35,6 +36,7 @@ namespace ShareInvest.Client
         public async Task<object> GetContext(Codes param, int length) => JsonConvert.DeserializeObject<List<Codes>>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", length), Method.GET), source.Token)).Content);
         public async Task<Retention> GetContext<T>(T param) where T : struct, ICharts => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.GET), source.Token)).Content);
         public async Task<Retention> PostContext<T>(Queue<T> param) where T : struct, ICharts => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token)).Content);
+        public async Task<Retention> EmergencyContext<T>(Queue<T> param) where T : struct => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token)).Content);
         public async Task<object> PostContext<T>(IParameters param)
         {
             var temp = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
@@ -57,6 +59,7 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<int> EmergencyContext<T>(Codes param) => (int)(await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT).AddJsonBody(param, security.ContentType), source.Token)).StatusCode;
         public async Task<int> PutContext<T>(Codes param) => (int)(await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT).AddJsonBody(param, security.ContentType), source.Token)).StatusCode;
         public async Task<int> PutContext<T>(IParameters param) => (int)(await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.PUT, DataFormat.Json).AddJsonBody(param, security.ContentType), source.Token)).StatusCode;
         public async Task<int> DeleteContext<T>(IParameters param) => (int)(await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.DELETE), source.Token)).StatusCode;

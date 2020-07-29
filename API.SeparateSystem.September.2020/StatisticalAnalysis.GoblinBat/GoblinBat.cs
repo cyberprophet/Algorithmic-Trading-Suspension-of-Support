@@ -5,6 +5,7 @@ using System.Windows.Forms;
 
 using ShareInvest.Catalog;
 using ShareInvest.Client;
+using ShareInvest.Interface;
 
 namespace ShareInvest.Strategics
 {
@@ -107,7 +108,7 @@ namespace ShareInvest.Strategics
 
                 if (IsApplicationAlreadyRunning(Privacy.Security))
                 {
-
+                    
                 }
             }
         }

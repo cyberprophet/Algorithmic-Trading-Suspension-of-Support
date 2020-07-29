@@ -1,6 +1,8 @@
-﻿namespace ShareInvest.Catalog
+﻿using ShareInvest.Interface;
+
+namespace ShareInvest.Catalog
 {
-    public struct Privacies : IParameters
+    public struct Privacies : IParameters, IAccountInformation
     {
         public string Security
         {
@@ -43,6 +45,18 @@
             get; set;
         }
         public string AccountPassword
+        {
+            get; set;
+        }
+        public string Name
+        {
+            get; set;
+        }
+        public string Nick
+        {
+            get; set;
+        }
+        public bool Server
         {
             get; set;
         }
