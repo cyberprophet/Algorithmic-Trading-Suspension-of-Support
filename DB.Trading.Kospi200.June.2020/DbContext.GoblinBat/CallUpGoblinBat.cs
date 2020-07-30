@@ -15,6 +15,59 @@ namespace ShareInvest.GoblinBatContext
 {
     public class CallUpGoblinBat : CallUpBasicInformation
     {
+        protected Strategics GetUserStrategics()
+        {
+            try
+            {
+                var identify = new Secret().GetIdentify(key);
+                using (var db = new GoblinBatDbContext(key))
+                    foreach (var str in db.Identifies.Where(o => o.Identity.Equals(identify)).AsNoTracking().OrderByDescending(o => o.Date))
+                        return new Strategics
+                        {
+                            Assets = str.Assets,
+                            Code = str.Code,
+                            Commission = str.Commission,
+                            MarginRate = marginRate,
+                            Strategy = str.Strategy,
+                            RollOver = true,
+                            BaseTime = 1440,
+                            BaseShort = str.BaseShort,
+                            BaseLong = str.BaseLong,
+                            NonaTime = str.NonaTime,
+                            NonaShort = str.NonaShort,
+                            NonaLong = str.NonaLong,
+                            OctaTime = str.OctaTime,
+                            OctaShort = str.OctaShort,
+                            OctaLong = str.OctaLong,
+                            HeptaTime = str.HeptaTime,
+                            HeptaShort = str.HeptaShort,
+                            HeptaLong = str.HeptaLong,
+                            HexaTime = str.HexaTime,
+                            HexaShort = str.HexaShort,
+                            HexaLong = str.HexaLong,
+                            PentaTime = str.PentaTime,
+                            PentaShort = str.PentaShort,
+                            PentaLong = str.PentaLong,
+                            QuadTime = str.QuadTime,
+                            QuadShort = str.QuadShort,
+                            QuadLong = str.QuadLong,
+                            TriTime = str.TriTime,
+                            TriShort = str.TriShort,
+                            TriLong = str.TriLong,
+                            DuoTime = str.DuoTime,
+                            DuoShort = str.DuoShort,
+                            DuoLong = str.DuoLong,
+                            MonoTime = str.MonoTime,
+                            MonoShort = str.MonoShort,
+                            MonoLong = str.MonoLong
+                        };
+            }
+            catch (Exception ex)
+            {
+                new ExceptionMessage(ex.StackTrace);
+            }
+            return null;
+        }
         protected string[] GetClosestDueDate()
         {
             using (var db = new GoblinBatDbContext(key))
@@ -1308,7 +1361,7 @@ namespace ShareInvest.GoblinBatContext
         protected internal const string recent = "yyMMdd";
         protected internal const string res = ".res";
         protected internal const string charts = "Charts";
-        const double marginRate = 0.1335;
+        const double marginRate = 0.123;
         const string basic = "Base.res";
         const string chart = "ChartOf101000";
         const string remaining = "1545";

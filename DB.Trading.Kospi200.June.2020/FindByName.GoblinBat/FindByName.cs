@@ -17,5 +17,7 @@ namespace ShareInvest.FindByName
         public static NumericUpDown Is_NumericUpDown_From(this string name, object targetClass) => FindByName<NumericUpDown>(targetClass, name);
         public static CheckBox CheckBox(this string name, object targetClass) => FindByName<CheckBox>(targetClass, name);
         public static CheckBox Is_CheckBox_From(this string name, object targetClass) => FindByName<CheckBox>(targetClass, name);
+        public static GroupBox GroupBox(this string name, object targetClass) => FindByName<GroupBox>(targetClass, name);
+        public static GroupBox Is_GroupBox_From(this string name, object targetClass) => FindByName<GroupBox>(targetClass, name);
     }
 }

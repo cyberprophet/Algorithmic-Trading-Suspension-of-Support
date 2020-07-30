@@ -141,9 +141,12 @@ namespace ShareInvest.XingAPI
             }
             if (int.TryParse(nMessageCode, out int code) && code > 999)
             {
-                if (Array.Exists(exclusion, o => o.Equals(nMessageCode)) && TimerBox.Show(string.Concat(szMessage, new Secret().Message), nMessageCode, MessageBoxButtons.YesNo, MessageBoxIcon.Question, nMessageCode.Equals(rCancel) ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 5175).Equals(DialogResult.Yes))
+                if (Array.Exists(exclusion, o => o.Equals(nMessageCode)) && TimerBox.Show(string.Concat(szMessage, new Secret().Message), nMessageCode, MessageBoxButtons.YesNo, MessageBoxIcon.Question, nMessageCode.Equals(rCancel) ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 0xC67).Equals(DialogResult.Yes))
+                {
+                    API.BuyOrder.Clear();
+                    API.SellOrder.Clear();
                     API.OnReceiveBalance = true;
-
+                }
                 new ExceptionMessage(szMessage, nMessageCode);
             }
         }

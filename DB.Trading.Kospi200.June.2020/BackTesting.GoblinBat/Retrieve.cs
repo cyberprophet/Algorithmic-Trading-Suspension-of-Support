@@ -33,6 +33,16 @@ namespace ShareInvest.Strategy
             if (recommend.Item5 == null || TimerBox.Show(secret.GetMessage(recommend.Item4, recommend.Item1, recommend.Item4 / (double)recommend.Item1), rank, MessageBoxButtons.YesNo, MessageBoxIcon.Question, 0 > recommend.Item4 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 13975U).Equals(DialogResult.Yes))
                 game = recommend.Item2;
 
+            else if (recommend.Item1 == int.MinValue)
+            {
+                var user = GetUserStrategics();
+
+                if (user != null)
+                    return GetCatalog(user);
+
+                else
+                    GetUserStrategy();
+            }
             else
                 game = recommend.Item5;
 

@@ -62,7 +62,7 @@ namespace ShareInvest.XingAPI
             ((IEvents<Datum>)datum).Send -= OnReceiveMemorize;
             sb.Clear();
         }
-        public void MoveStorageSpace() => MoveStorageSpace(initial);
+        public void MoveStorageSpace() => MoveStorageSpace(initial).Wait();
         public void SetStorage(string code) => SetStorage(code, sb);
         void OnReceiveMemorize(object sender, Datum e)
         {

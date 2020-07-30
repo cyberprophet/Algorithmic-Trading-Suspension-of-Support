@@ -15,7 +15,7 @@ using ShareInvest.Models;
 namespace ShareInvest.GoblinBatContext
 {
     public class CallUpStatisticalAnalysis : CallUpGoblinBat
-    {
+    {       
         protected string GetRecentDate(string max)
         {
             using (var db = new GoblinBatDbContext(key))
@@ -38,15 +38,29 @@ namespace ShareInvest.GoblinBatContext
                 var info = new Dictionary<DateTime, string>(32);
                 var temp = new Dictionary<string, long>(32);
                 var contents = new Dictionary<string, string>(32);
+                var now = DateTime.Now;
                 using (var db = new GoblinBatDbContext(key))
-                    foreach (var str in db.Material.Where(o => o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong).AsNoTracking())
-                    {
-                        temp[str.Date] = str.Cumulative + str.Unrealized;
-                        contents[str.Date] = string.Concat(',', str.Unrealized, ',', str.Revenue, ',', str.Fees, ',', str.Cumulative, ',', str.Statistic);
+                {
+                    var count = 1;
 
-                        if (string.IsNullOrEmpty(file))
-                            file = string.Concat(str.BaseShort, '-', str.BaseLong, '-', str.MonoTime, '-', str.MonoShort, '-', str.MonoLong, '-', str.Strategy, '-', str.Primary, csv);
+                    while (count-- <= 1)
+                    {
+                        var find = (count == 0 ? now : now.AddDays(count)).ToString("yyMMdd");
+                        var exists = db.Material.Where(o => o.Date.Equals(find) && o.Assets == game.Assets && o.Code.Equals(game.Code) && o.Commission == game.Commission && o.MarginRate == game.MarginRate && o.Strategy.Equals(game.Strategy) && o.RollOver.Equals(game.RollOver) && o.BaseTime == game.BaseTime && o.BaseShort == game.BaseShort && o.BaseLong == game.BaseLong && o.NonaTime == game.NonaTime && o.NonaShort == game.NonaShort && o.NonaLong == game.NonaLong && o.OctaTime == game.OctaTime && o.OctaShort == game.OctaShort && o.OctaLong == game.OctaLong && o.HeptaTime == game.HeptaTime && o.HeptaShort == game.HeptaShort && o.HeptaLong == game.HeptaLong && o.HexaTime == game.HexaTime && o.HexaShort == game.HexaShort && o.HexaLong == game.HexaLong && o.PentaTime == game.PentaTime && o.PentaShort == game.PentaShort && o.PentaLong == game.PentaLong && o.QuadTime == game.QuadTime && o.QuadShort == game.QuadShort && o.QuadLong == game.QuadLong && o.TriTime == game.TriTime && o.TriShort == game.TriShort && o.TriLong == game.TriLong && o.DuoTime == game.DuoTime && o.DuoShort == game.DuoShort && o.DuoLong == game.DuoLong && o.MonoTime == game.MonoTime && o.MonoShort == game.MonoShort && o.MonoLong == game.MonoLong);
+
+                        if (exists.Any())
+                        {
+                            var str = exists.First();
+                            temp[str.Date] = str.Cumulative + str.Unrealized;
+                            contents[str.Date] = string.Concat(',', str.Unrealized, ',', str.Revenue, ',', str.Fees, ',', str.Cumulative, ',', str.Statistic);
+
+                            if (string.IsNullOrEmpty(file))
+                                file = string.Concat(str.BaseShort, '-', str.BaseLong, '-', str.MonoTime, '-', str.MonoShort, '-', str.MonoLong, '-', str.Strategy, '-', str.Primary, csv);
+                        }
+                        else if (find.Equals("190721"))
+                            break;
                     }
+                }
                 if (string.IsNullOrEmpty(file) == false && contents.Count > 0)
                 {
                     var queue = new Queue<string>(32);

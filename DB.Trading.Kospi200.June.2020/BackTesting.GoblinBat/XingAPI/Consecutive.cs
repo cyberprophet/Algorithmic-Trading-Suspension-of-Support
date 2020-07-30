@@ -188,7 +188,7 @@ namespace ShareInvest.Strategy.XingAPI
                 RollOver = false;
                 SendLiquidationOrder();
             }
-            else if (time > 153959 && time < 154459 && Assets > 0)
+            else if (specify.Time == 1440 && time > 153959 && time < 154459 && Assets > 0 && Math.Abs(API.MaxAmount) > 0)
                 SendLiquidationOrder(GetUserAssets((long)specify.Assets));
         }
         void SendLiquidationOrder(long arbitrage)
@@ -207,7 +207,7 @@ namespace ShareInvest.Strategy.XingAPI
                     API.orders[0].QueryExcute(new Order
                     {
                         FnoIsuNo = ConnectAPI.Code,
-                        BnsTpCode = API.MaxAmount < 0 ? sell : buy,
+                        BnsTpCode = API.Quantity < 0 ? sell : buy,
                         FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.시장가).ToString("D2"),
                         OrdPrc = price.ToString("F2"),
                         OrdQty = Math.Abs((int)current).ToString()
@@ -215,8 +215,8 @@ namespace ShareInvest.Strategy.XingAPI
                     return;
 
                 case double c when c < 0:
-                    if (Math.Abs(API.Quantity) - current > 0)
-                        amount = (int)Math.Ceiling(current);
+                    if (Math.Abs(API.Quantity) + current > 0)
+                        amount = Math.Abs((int)Math.Ceiling(current));
 
                     else
                         amount = Math.Abs(API.Quantity);
@@ -226,7 +226,7 @@ namespace ShareInvest.Strategy.XingAPI
             API.orders[0].QueryExcute(new Order
             {
                 FnoIsuNo = ConnectAPI.Code,
-                BnsTpCode = API.MaxAmount > 0 ? sell : buy,
+                BnsTpCode = API.Quantity > 0 ? sell : buy,
                 FnoOrdprcPtnCode = ((int)FnoOrdprcPtnCode.시장가).ToString("D2"),
                 OrdPrc = price.ToString("F2"),
                 OrdQty = amount.ToString()

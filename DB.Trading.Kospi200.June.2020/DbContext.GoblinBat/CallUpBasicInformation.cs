@@ -302,9 +302,14 @@ namespace ShareInvest.GoblinBatContext
         {
             try
             {
+                var date = DateTime.Now.ToString(format);
                 var identity = new Secret().GetIdentify(key);
+                var current = long.MinValue;
                 using (var db = new GoblinBatDbContext(key))
-                    return db.Identifies.Where(o => o.Identity.Equals(identity)).AsNoTracking().OrderByDescending(o => o.Date).First().Assets - assets;
+                    current = db.Identifies.First(o => o.Identity.Equals(identity) && o.Date.Equals(date)).Assets;
+
+                if (current != long.MinValue && current != 0)
+                    return current - assets;
             }
             catch (Exception ex)
             {
