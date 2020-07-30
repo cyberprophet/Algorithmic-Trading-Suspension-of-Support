@@ -169,6 +169,18 @@ namespace ShareInvest.OpenAPI
                         Revenue = 0
                     };
                     break;
+
+                case TrendsInStockPrices ts:
+                    Connect.HoldingStock[strategics.Code] = new HoldingStocks(ts)
+                    {
+                        Code = strategics.Code,
+                        Current = 0,
+                        Purchase = 0,
+                        Quantity = 0,
+                        Rate = 0,
+                        Revenue = 0
+                    };
+                    break;
             }
             return Connect.HoldingStock.Count;
         }

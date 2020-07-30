@@ -12,11 +12,13 @@ namespace ShareInvest.Analysis
         public Holding(TrendFollowingBasicFutures strategics)
         {
             TF = strategics;
-            Parallel.ForEach(strategics.SetCatalog(strategics), new Action<TrendFollowingBasicFutures>(catalog => new Consecutive(catalog)));
+            Short = new Stack<double>();
+            Long = new Stack<double>();
+            Parallel.ForEach(strategics.SetCatalog(strategics), new Action<TrendFollowingBasicFutures>(catalog => new Consecutive(catalog, this)));
         }
-        public abstract Queue<Charts> Chart
+        public Holding(TrendsInStockPrices strategics)
         {
-            get; set;
+            TS = strategics;
         }
         public abstract string Code
         {
@@ -56,6 +58,18 @@ namespace ShareInvest.Analysis
         public abstract event EventHandler<SendSecuritiesAPI> SendBalance;
         public abstract event EventHandler<SendHoldingStocks> SendStocks;
         protected internal TrendFollowingBasicFutures TF
+        {
+            get;
+        }
+        protected internal TrendsInStockPrices TS
+        {
+            get;
+        }
+        internal Stack<double> Short
+        {
+            get;
+        }
+        internal Stack<double> Long
         {
             get;
         }

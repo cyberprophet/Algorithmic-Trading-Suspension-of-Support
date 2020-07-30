@@ -19,7 +19,13 @@ namespace ShareInvest.EventHandler
         public SendSecuritiesAPI(string code, string name, string retention, string price) => Convey = new Tuple<string, string, string, string>(code, name, retention, price);
         public SendSecuritiesAPI(Tuple<string[], string[], string[], string[]> tuple) => Convey = tuple;
         public SendSecuritiesAPI(string code, Stack<string> stack) => Convey = new Tuple<string, Stack<string>>(code, stack);
-        public SendSecuritiesAPI(Tuple<string, string, string> tuple) => Convey = tuple;
+        public SendSecuritiesAPI(Tuple<string, string, string> tuple)
+        {
+            if (tuple.Item1.StartsWith("106") && tuple.Item1.Length == 8)
+                convert[tuple.Item1] = tuple.Item2;
+
+            Convey = tuple;
+        }
         public SendSecuritiesAPI(Tuple<string, string> tuple)
         {
             var temp = tuple.Item2.Split('F')[0].Trim();
@@ -71,7 +77,10 @@ namespace ShareInvest.EventHandler
                             dic[key] = new Tuple<string, string>(name[name.Length - 1], temp[5]);
 
                         else if (temp[4].Equals("KOSPI200"))
-                            dic[convert.First().Key] = new Tuple<string, string>(temp[4], temp[5]);
+                            dic[convert.First(o => o.Key.StartsWith("101") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
+
+                        else if (temp[4].Equals("코스닥150"))
+                            dic[convert.First(o => o.Key.StartsWith("106") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
 
                         else
                         {

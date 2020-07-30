@@ -64,15 +64,25 @@ namespace ShareInvest.Controls
                 }
                 if (await client.GetContext(new Codes { }, Length) is List<Codes> list)
                 {
-                    string[] codes = new string[list.Count], names = new string[list.Count];
-                    var source = new AutoCompleteStringCollection();
+                    var stack = new Stack<Codes>();
 
-                    for (int i = 0; i < codes.Length; i++)
-                        if (Codes.Add(list[i]))
+                    foreach (var item in list)
+                        if (FilteringItems(item))
+                            stack.Push(item);
+
+                    string[] codes = new string[stack.Count], names = new string[stack.Count];
+
+                    while (stack.Count > 0)
+                    {
+                        var temp = stack.Pop();
+
+                        if (Codes.Add(temp))
                         {
-                            codes[i] = list[i].Code;
-                            names[i] = list[i].Name;
+                            codes[stack.Count] = temp.Code;
+                            names[stack.Count] = temp.Name;
                         }
+                    }
+                    var source = new AutoCompleteStringCollection();
                     source.AddRange(codes);
                     source.AddRange(names);
                     textCode.AutoCompleteCustomSource = source;
@@ -131,6 +141,18 @@ namespace ShareInvest.Controls
                 }
             }
             return str;
+        }
+        bool FilteringItems(Codes codes)
+        {
+            switch (codes.Code.Length)
+            {
+                case 6:
+                    return codes.MaturityMarketCap.StartsWith("증거금");
+
+                case 8:
+                    return codes.MaturityMarketCap.Length == 6 && string.Compare(DateTime.Now.ToString(format), codes.MaturityMarketCap) <= 0;
+            }
+            return false;
         }
         void OnReceiveClickItem(object sender, EventArgs e) => BeginInvoke(new Action(async () =>
         {

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -62,27 +63,34 @@ namespace ShareInvest.Controllers
                 string retentions = string.Empty;
                 await context.BulkSaveChangesAsync();
 
-                switch (code.Length)
+                try
                 {
-                    case 6:
-                        retentions = await context.Stocks.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
-                        break;
+                    switch (code.Length)
+                    {
+                        case 6:
+                            retentions = await context.Stocks.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
+                            break;
 
-                    case int length when length == 8 && (code.StartsWith("101") || code.StartsWith("106")):
-                        retentions = await context.Futures.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
-                        break;
+                        case int length when length == 8 && (code.StartsWith("101") || code.StartsWith("106")):
+                            retentions = await context.Futures.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
+                            break;
 
-                    case int length when length == 8 && (code.StartsWith("2") || code.StartsWith("3")):
-                        retentions = await context.Options.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
-                        break;
+                        case int length when length == 8 && (code.StartsWith("2") || code.StartsWith("3")):
+                            retentions = await context.Options.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
+                            break;
 
-                    case int length when length == 8 && code.StartsWith("1"):
-                        return Ok(code);
+                        case int length when length == 8 && code.StartsWith("1"):
+                            return Ok(code);
 
-                    default:
-                        return BadRequest(code);
+                        default:
+                            return BadRequest(code);
+                    }
+                    Registry.Retentions[code] = retentions;
                 }
-                Registry.Retentions[code] = retentions;
+                catch (Exception ex)
+                {
+                    code = ex.TargetSite.Name;
+                }
             }
             return Ok(code);
         }

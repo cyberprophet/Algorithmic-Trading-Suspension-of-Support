@@ -40,10 +40,6 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             get;
         }
-        public override Queue<Charts> Chart
-        {
-            get; set;
-        }
         public override void OnReceiveEvent(string[] param)
         {
             if (int.TryParse(param[1], out int current))
@@ -90,6 +86,10 @@ namespace ShareInvest.Analysis.OpenAPI
                 }
                 Current = current;
             }
+        }
+        public HoldingStocks(TrendsInStockPrices strategics) : base(strategics)
+        {
+            OrderNumber = new Dictionary<string, dynamic>();
         }
         public HoldingStocks(TrendFollowingBasicFutures strategics) : base(strategics)
         {

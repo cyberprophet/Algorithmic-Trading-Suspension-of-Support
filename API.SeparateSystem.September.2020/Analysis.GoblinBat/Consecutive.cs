@@ -5,18 +5,11 @@ using ShareInvest.Catalog;
 namespace ShareInvest.Analysis
 {
     class Consecutive
-    {
-        protected internal Stack<double> Short
-        {
-            get;
-        }
-        protected internal Stack<double> Long
-        {
-            get;
-        }
-        protected internal Consecutive(TrendFollowingBasicFutures strategics)
+    {     
+        internal Consecutive(TrendFollowingBasicFutures strategics, Holding ho)
         {
             tf = strategics;
+            this.ho = ho;
         }
         void DrawChart(Charts chart)
         {
@@ -31,5 +24,6 @@ namespace ShareInvest.Analysis
             return false;
         }
         readonly TrendFollowingBasicFutures tf;
+        readonly Holding ho;
     }
 }

@@ -121,6 +121,18 @@ namespace ShareInvest.XingAPI
                         Revenue = 0
                     };
                     break;
+
+                case TrendsInStockPrices ts:
+                    Connect.HoldingStock[strategics.Code] = new HoldingStocks(ts)
+                    {
+                        Code = strategics.Code,
+                        Current = 0,
+                        Purchase = 0,
+                        Quantity = 0,
+                        Rate = 0,
+                        Revenue = 0
+                    };
+                    break;
             }
             return Connect.HoldingStock.Count;
         }
@@ -140,7 +152,7 @@ namespace ShareInvest.XingAPI
                     yield return ctor.Value ?? null;
             }
         }
-        public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T8430(), new T9943(), new T8401(), new T8432(), new T8433(), new MMDAQ91200() };
+        public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T8430(), new T8435(), new T9943(), new T8401(), new T8432(), new T8433(), new MMDAQ91200() };
         public IQuerys<SendSecuritiesAPI> JIF
         {
             get;

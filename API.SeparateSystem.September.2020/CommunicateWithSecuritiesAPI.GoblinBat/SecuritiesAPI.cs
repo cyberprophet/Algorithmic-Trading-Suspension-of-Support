@@ -114,7 +114,7 @@ namespace ShareInvest
                                     infoCodes[kv.Key] = info;
                                     xing.StartProgress(info);
 
-                                    if (kv.Key.Substring(1, 1).Equals("0") && double.TryParse(info.Price, out double price))
+                                    if (kv.Key.StartsWith("101") && kv.Key.Length == 8 && kv.Key.EndsWith("000") && double.TryParse(info.Price, out double price))
                                         futures = price;
                                 }
                             foreach (var kv in infoCodes)
@@ -214,8 +214,18 @@ namespace ShareInvest
                                         param = opt50066;
                                     }
                                     retention = await client.PostContext(new Catalog.Convert().ToStoreInOptions(charts.Item1, charts.Item2));
+
+                                    if (com is XingAPI.ConnectAPI && retention.Code.Equals(noMatch))
+                                        return;
+
                                     break;
                             }
+                            if (retention.Code.Equals(string.Empty) && retention.LastDate.Equals(string.Empty))
+                                retention = new Retention
+                                {
+                                    Code = noMatch,
+                                    LastDate = null
+                                };
                             while (retention.Code.Equals(noMatch))
                             {
                                 switch (empty)
@@ -405,7 +415,7 @@ namespace ShareInvest
                         ctor.QueryExcute();
                     }
                     if (catalog.Any(o => o.Key.Length == 8))
-                        foreach (var conclusion in (connect as XingAPI.ConnectAPI)?.Conclusion)
+                        foreach (var conclusion in x.Conclusion)
                             conclusion.OnReceiveRealTime(string.Empty);
 
                     var alarm = x.JIF;

@@ -79,11 +79,11 @@ namespace ShareInvest.Analysis.XingAPI
         {
             get;
         }
-        public override Queue<Charts> Chart
-        {
-            get; set;
-        }
         public HoldingStocks(TrendFollowingBasicFutures strategics) : base(strategics)
+        {
+            OrderNumber = new Dictionary<string, dynamic>();
+        }
+        public HoldingStocks(TrendsInStockPrices strategics) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();
         }

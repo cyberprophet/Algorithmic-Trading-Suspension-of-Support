@@ -57,6 +57,7 @@ namespace ShareInvest.Controllers
                     o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
                     o.AutoMapOutputDirection = false;
                 });
+                Registry.Catalog.Remove(chart.First().Code);
             }
             catch (Exception ex)
             {
