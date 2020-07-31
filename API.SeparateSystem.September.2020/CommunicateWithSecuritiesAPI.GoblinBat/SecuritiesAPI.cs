@@ -215,12 +215,12 @@ namespace ShareInvest
                                     }
                                     retention = await client.PostContext(new Catalog.Convert().ToStoreInOptions(charts.Item1, charts.Item2));
 
-                                    if (com is XingAPI.ConnectAPI && retention.Code.Equals(noMatch))
+                                    if (com is XingAPI.ConnectAPI && (string.IsNullOrEmpty(retention.Code) || retention.Code.Equals(noMatch)))
                                         return;
 
                                     break;
                             }
-                            if (retention.Code.Equals(string.Empty) && retention.LastDate.Equals(string.Empty))
+                            if (string.IsNullOrEmpty(retention.Code) && string.IsNullOrEmpty(retention.LastDate))
                                 retention = new Retention
                                 {
                                     Code = noMatch,
@@ -514,7 +514,7 @@ namespace ShareInvest
             else if (Visible && ShowIcon && notifyIcon.Visible == false && FormBorderStyle.Equals(FormBorderStyle.None) && WindowState.Equals(FormWindowState.Normal) && (com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI))
             {
                 var now = DateTime.Now;
-                var day = 0;
+                int day = 0, today = DateTime.DaysInMonth(now.Year, now.Month);
 
                 switch (now.DayOfWeek)
                 {
@@ -534,7 +534,7 @@ namespace ShareInvest
                         day = (now.Hour > 8 || Array.Exists(holidays, o => o.Equals(now.ToString(dFormat))) ? now.AddDays(1) : now).Day;
                         break;
                 }
-                var remain = new DateTime(now.Year, now.Month, day, 9, 0, 0) - DateTime.Now;
+                var remain = new DateTime(now.Year, now.Day == today ? now.AddMonths(1).Month : now.Month, day, 9, 0, 0) - DateTime.Now;
                 com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
 
                 if (remain.TotalMinutes < 0x1F && com.Start == false && DateTime.Now.Hour == 8 && DateTime.Now.Minute > 0x1E && (Connect > 0x4B0 || random.Next(Connect++, 0x4B1) == 0x4B0))

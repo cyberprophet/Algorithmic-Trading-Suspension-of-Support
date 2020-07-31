@@ -22,7 +22,7 @@ namespace ShareInvest.Controllers
         IEnumerable<Charts> ForQuickResponse(string code, string start, string end)
         {
             if (Registry.Catalog.TryGetValue(code, out Stack<Charts> hash))
-                return hash.Where(o => o.Date.CompareTo(string.Concat(start, sRemain)) > 0 && o.Date.CompareTo(string.Concat(end, eRemain)) < 0);
+                return hash.Where(o => o.Date.CompareTo(string.Concat(start, remain)) > 0 && o.Date.CompareTo(string.Concat(end, remain)) < 0);
 
             else
                 return null;
@@ -171,7 +171,7 @@ namespace ShareInvest.Controllers
         [HttpGet, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetContexts() => NotFound();
         [HttpPost("days/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> PostContext(string code, [FromBody] IEnumerable<Days> chart)
+        public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Days> chart) where T : struct
         {
             await context.BulkInsertAsync(chart, o =>
             {
@@ -186,7 +186,7 @@ namespace ShareInvest.Controllers
             return Ok(new Tuple<string, string>(code, Registry.Retentions[code]));
         }
         [HttpPost("futures/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> PostContext(string code, [FromBody] IEnumerable<Futures> chart)
+        public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Futures> chart) where T : struct
         {
             await context.BulkInsertAsync(chart, o =>
             {
@@ -201,7 +201,7 @@ namespace ShareInvest.Controllers
             return Ok(new Tuple<string, string>(code, Registry.Retentions[code]));
         }
         [HttpPost("options/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> PostContext(string code, [FromBody] IEnumerable<Options> chart)
+        public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Options> chart) where T : struct
         {
             await context.BulkInsertAsync(chart, o =>
             {
@@ -216,7 +216,7 @@ namespace ShareInvest.Controllers
             return Ok(new Tuple<string, string>(code, Registry.Retentions[code]));
         }
         [HttpPost("stocks/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> PostContext(string code, [FromBody] IEnumerable<Stocks> chart)
+        public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Stocks> chart) where T : struct
         {
             await context.BulkInsertAsync(chart, o =>
             {
@@ -235,7 +235,6 @@ namespace ShareInvest.Controllers
         const string futures = "1";
         const string call = "2";
         const string put = "3";
-        const string sRemain = "000000000";
-        const string eRemain = "999999999";
+        const string remain = "000000000";
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.Linq;
 
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
@@ -9,12 +9,66 @@ namespace ShareInvest.Analysis
 {
     public abstract class Holding
     {
+        Queue<Charts> Days
+        {
+            get; set;
+        }
+        IEnumerable<Queue<Charts>> FindTheOldestDueDate(string code)
+        {
+            var temporary = new Temporary(code.Length);
+
+            if (code.Length == 8 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))))
+            {
+                var stack = new Stack<Codes>();
+                var days = temporary.CallUpTheChartAsync(code);
+
+                foreach (var arg in Temporary.CodeStorage.Where(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderByDescending(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap))
+                    stack.Push(arg);
+
+                Days = days.Result;
+
+                while (stack.Count > 0)
+                    yield return temporary.CallUpTheChartAsync(stack.Pop()).Result;
+            }
+            else if (code.Length == 6)
+            {
+
+            }
+        }
+        long StartProgress(string code)
+        {
+            foreach (var queue in FindTheOldestDueDate(code))
+            {
+                var enumerable = queue.OrderBy(o => o.Date);
+
+                if (Days.Count > 0)
+                {
+                    var before = enumerable.First().Date.Substring(0, 6);
+
+                    foreach (var day in Days.OrderBy(o => o.Date))
+                        if (string.Compare(day.Date.Substring(2), before) < 0)
+                            Send?.Invoke(this, new SendConsecutive(day));
+
+                    Days.Clear();
+                }
+                foreach (var consecutive in enumerable)
+                    Send?.Invoke(this, new SendConsecutive(consecutive));
+            }
+            return GC.GetTotalMemory(true);
+        }
+        public event EventHandler<SendConsecutive> Send;
         public Holding(TrendFollowingBasicFutures strategics)
         {
             TF = strategics;
-            Short = new Stack<double>();
-            Long = new Stack<double>();
-            Parallel.ForEach(strategics.SetCatalog(strategics), new Action<TrendFollowingBasicFutures>(catalog => new Consecutive(catalog, this)));
+            var catalog = strategics.SetCatalog(strategics);
+            Consecutive = new Consecutive[catalog.Length];
+
+            for (int i = 0; i < catalog.Length; i++)
+                Consecutive[i] = new Consecutive(catalog[i], this);
+
+            if (StartProgress(strategics.Code) > 0)
+                foreach (var con in Consecutive)
+                    con.Dispose();
         }
         public Holding(TrendsInStockPrices strategics)
         {
@@ -57,19 +111,15 @@ namespace ShareInvest.Analysis
         public abstract void OnReceiveConclusion(string[] param);
         public abstract event EventHandler<SendSecuritiesAPI> SendBalance;
         public abstract event EventHandler<SendHoldingStocks> SendStocks;
+        internal Consecutive[] Consecutive
+        {
+            get;
+        }
         protected internal TrendFollowingBasicFutures TF
         {
             get;
         }
         protected internal TrendsInStockPrices TS
-        {
-            get;
-        }
-        internal Stack<double> Short
-        {
-            get;
-        }
-        internal Stack<double> Long
         {
             get;
         }

@@ -82,11 +82,18 @@ namespace ShareInvest.Analysis.XingAPI
         public HoldingStocks(TrendFollowingBasicFutures strategics) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();
+
+            foreach (var con in Consecutive)
+                con.Connect(this);
         }
         public HoldingStocks(TrendsInStockPrices strategics) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();
+
+            foreach (var con in Consecutive)
+                con.Connect(this);
         }
+        public new event EventHandler<SendConsecutive> Send;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;
         public override event EventHandler<SendHoldingStocks> SendStocks;
     }
