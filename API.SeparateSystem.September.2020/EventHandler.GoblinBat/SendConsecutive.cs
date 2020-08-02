@@ -10,7 +10,7 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public string Price
+        public dynamic Price
         {
             get; private set;
         }
@@ -20,8 +20,13 @@ namespace ShareInvest.EventHandler
         }
         public SendConsecutive(Charts chart)
         {
+            if (chart.Price.Contains(".") && double.TryParse(chart.Price, out double fPrice))
+                Price = fPrice;
+
+            else if (int.TryParse(chart.Price, out int sPrice))
+                Price = sPrice;
+
             Date = chart.Date;
-            Price = chart.Price;
             Volume = chart.Volume;
         }
     }

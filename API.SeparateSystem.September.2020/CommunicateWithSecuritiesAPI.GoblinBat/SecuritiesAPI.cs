@@ -226,7 +226,7 @@ namespace ShareInvest
                                     Code = noMatch,
                                     LastDate = null
                                 };
-                            while (retention.Code.Equals(noMatch))
+                            while (string.IsNullOrEmpty(retention.Code) && string.IsNullOrEmpty(retention.LastDate) || retention.Code.Equals(noMatch))
                             {
                                 switch (empty)
                                 {
@@ -277,7 +277,7 @@ namespace ShareInvest
                                         Dispose();
                                         return;
                                 }
-                                if (retention.Code.Equals(noMatch))
+                                if (string.IsNullOrEmpty(retention.Code) && string.IsNullOrEmpty(retention.LastDate) || retention.Code.Equals(noMatch))
                                     empty++;
 
                                 else
@@ -337,6 +337,7 @@ namespace ShareInvest
                 notifyIcon.Text = info.Nick;
                 Opacity = 0.79315;
                 backgroundWorker.RunWorkerAsync();
+                OnReceiveData(MessageBox.Show("This is a Temporary Code.", "Emergency", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
             }
         }
         async void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
@@ -610,6 +611,25 @@ namespace ShareInvest
             else if (code is string str)
                 Console.WriteLine(str);
         }
+        [Conditional("DEBUG")]
+        void OnReceiveData(DialogResult result) => BeginInvoke(new Action(async () =>
+        {
+            if (result.Equals(DialogResult.OK))
+                switch (com)
+                {
+                    case OpenAPI.ConnectAPI o:
+                        var param = opt50028;
+                        var retention = await client.GetContext(new Futures());
+                        o.InputValueRqData(string.Concat(instance, param), string.Concat(retention.Code, ";", retention.LastDate)).Send += OnReceiveSecuritiesAPI;
+                        return;
+
+                    case XingAPI.ConnectAPI x:
+                        var chart = x?.Stocks;
+                        chart.Send += OnReceiveSecuritiesAPI;
+                        chart?.QueryExcute(await client.GetContext(new Stocks()));
+                        return;
+                }
+        }));
         Balance Balance
         {
             get; set;

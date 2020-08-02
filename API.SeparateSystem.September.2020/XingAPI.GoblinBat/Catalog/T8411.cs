@@ -17,7 +17,7 @@ namespace ShareInvest.XingAPI.Catalog
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {
                 InBlock = new HashSet<InBlock>();
-                Milliseconds = 0x3ED;
+                Milliseconds = 0xBB9;
                 SendMessage(retention.Code, retention.LastDate, string.Empty);
 
                 foreach (var param in GetInBlocks(GetType().Name))
@@ -92,28 +92,29 @@ namespace ShareInvest.XingAPI.Catalog
             var span = WaitForTheLimitTime(GetTRCountRequest(szTrCode));
             SendMessage(span);
 
-            if (span.TotalSeconds > 0xC4 && span.TotalSeconds < 0xC7)
+            if (span.TotalSeconds > 0xC3 && span.TotalSeconds < 0xC7)
                 Milliseconds = (int)span.TotalMilliseconds;
 
             else
                 Milliseconds = 0x3ED / GetTRCountPerSec(szTrCode);
 
-            for (int i = index - 1; i >= 0; i--)
-                if (uint.TryParse(list[1][i].Substring(0, 4), out uint time) && time > 0x35B && time < 0x604)
-                {
-                    var temp = string.Concat(list[0][i].Substring(2), list[1][i].Substring(0, 6));
-
-                    if (string.IsNullOrEmpty(Retention) || string.Compare(temp, Retention) > 0)
-                        Charts.Push(string.Concat(temp, ";", list[5][i], ";", list[6][i]));
-
-                    else
+            if (index > 0)
+                for (int i = index - 1; i >= 0; i--)
+                    if (uint.TryParse(list[1][i].Substring(0, 4), out uint time) && time > 0x35B && time < 0x604)
                     {
-                        SendMessage(code, temp, Retention);
-                        Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
+                        var temp = string.Concat(list[0][i].Substring(2), list[1][i].Substring(0, 6));
 
-                        return;
+                        if (string.IsNullOrEmpty(Retention) || string.Compare(temp, Retention) > 0)
+                            Charts.Push(string.Concat(temp, ";", list[5][i], ";", list[6][i]));
+
+                        else
+                        {
+                            SendMessage(code, temp, Retention);
+                            Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
+
+                            return;
+                        }
                     }
-                }
             if (IsNext)
                 new Task(() =>
                 {

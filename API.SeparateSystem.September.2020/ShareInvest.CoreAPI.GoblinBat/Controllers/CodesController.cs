@@ -36,7 +36,13 @@ namespace ShareInvest.Controllers
                 return NotFound(length);
         }
         [HttpGet, ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetContexts() => Ok(Registry.Retentions);
+        public IActionResult GetContexts()
+        {
+            if (Registry.Retentions.Any(o => string.IsNullOrEmpty(o.Key)))
+                Registry.RemoveRetentions();
+
+            return Ok(Registry.Retentions);
+        }
         [HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext([FromBody] IEnumerable<Codes> chart)
         {
@@ -52,7 +58,7 @@ namespace ShareInvest.Controllers
         [HttpPut("{code}"), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> PutContext(string code, [FromBody] Codes param)
         {
-            if (Registry.Retentions.ContainsKey(code) == false && string.IsNullOrEmpty(param.MaturityMarketCap) == false)
+            if (string.IsNullOrEmpty(code) == false && Registry.Retentions.ContainsKey(code) == false && string.IsNullOrEmpty(param.MaturityMarketCap) == false)
             {
                 if (await context.Codes.AnyAsync(o => o.Code.Equals(code)))
                     context.Entry(param).State = EntityState.Modified;
@@ -85,7 +91,8 @@ namespace ShareInvest.Controllers
                         default:
                             return BadRequest(code);
                     }
-                    Registry.Retentions[code] = retentions;
+                    if (retentions != null && (retentions.Equals(string.Empty) || retentions.Length > 6 && string.Compare(retentions.Substring(0, 6), DateTime.Now.ToString("yyMMdd")) < 0))
+                        Registry.Retentions[code] = retentions;
                 }
                 catch (Exception ex)
                 {

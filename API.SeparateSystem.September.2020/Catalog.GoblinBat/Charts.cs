@@ -6,7 +6,7 @@
         {
             get; set;
         }
-        public dynamic Price
+        public string Price
         {
             get; set;
         }

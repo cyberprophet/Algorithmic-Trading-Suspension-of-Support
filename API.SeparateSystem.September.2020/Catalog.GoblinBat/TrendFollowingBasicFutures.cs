@@ -4,6 +4,14 @@ namespace ShareInvest.Catalog
 {
     public struct TrendFollowingBasicFutures : IStrategics
     {
+        public int Short
+        {
+            get; set;
+        }
+        public int Long
+        {
+            get; set;
+        }
         public TrendFollowingBasicFutures[] SetCatalog(TrendFollowingBasicFutures tf) => new TrendFollowingBasicFutures[2]
         {
             new TrendFollowingBasicFutures
@@ -15,8 +23,8 @@ namespace ShareInvest.Catalog
                 ReactionLong = tf.ReactionLong,
                 RollOver = tf.RollOver,
                 Minute = 0x5A0,
-                DayShort = tf.DayShort,
-                DayLong = tf.DayLong,
+                Short = tf.DayShort,
+                Long = tf.DayLong,
                 QuantityShort = tf.QuantityShort,
                 QuantityLong = tf.QuantityLong
             },
@@ -29,8 +37,8 @@ namespace ShareInvest.Catalog
                 ReactionLong = tf.ReactionLong,
                 RollOver = tf.RollOver,
                 Minute = tf.Minute,
-                MinuteShort = tf.MinuteShort,
-                MinuteLong = tf.MinuteLong,
+                Short = tf.MinuteShort,
+                Long = tf.MinuteLong,
                 QuantityShort = tf.QuantityShort,
                 QuantityLong = tf.QuantityLong
             }

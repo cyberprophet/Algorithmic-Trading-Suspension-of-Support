@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -14,6 +15,7 @@ namespace ShareInvest.Strategics
         public GoblinBat(dynamic cookie)
         {
             InitializeComponent();
+            cultureInfo = CultureInfo.GetCultureInfo("en-US");
             client = GoblinBatClient.GetInstance(cookie);
             strip.ItemClicked += OnItemClick;
             StartProgress(new Privacies { Security = cookie });
@@ -108,9 +110,10 @@ namespace ShareInvest.Strategics
 
                 if (IsApplicationAlreadyRunning(Privacy.Security))
                 {
-                    
+
                 }
             }
+            notifyIcon.Text = GoblinBatClient.Coin.ToString("C0", cultureInfo);
         }
         void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(async () =>
         {
@@ -163,5 +166,6 @@ namespace ShareInvest.Strategics
             get; set;
         }
         readonly GoblinBatClient client;
+        readonly CultureInfo cultureInfo;
     }
 }

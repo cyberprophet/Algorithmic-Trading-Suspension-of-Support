@@ -43,7 +43,7 @@ namespace ShareInvest.Controllers
                     LastDate = ex.StackTrace
                 };
             }
-            return NotFound();
+            return NotFound(param);
         }
         [HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PostContext([FromBody] Queue<Stocks> chart)
