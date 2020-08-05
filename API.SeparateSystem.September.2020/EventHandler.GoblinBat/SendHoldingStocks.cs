@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 
 namespace ShareInvest.EventHandler
 {
@@ -32,7 +33,19 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public SendHoldingStocks(string code, int quantity, dynamic purchase, dynamic current, long revenue, double rate)
+        public double Base
+        {
+            get; private set;
+        }
+        public double Secondary
+        {
+            get; private set;
+        }
+        public Color Color
+        {
+            get; private set;
+        }
+        public SendHoldingStocks(string code, int quantity, dynamic purchase, dynamic current, long revenue, double rate, double basic, double secondary, Color color)
         {
             Code = code;
             Quantity = quantity;
@@ -40,6 +53,9 @@ namespace ShareInvest.EventHandler
             Current = current;
             Revenue = revenue;
             Rate = rate;
+            Base = basic;
+            Secondary = secondary;
+            Color = color;
         }
     }
 }

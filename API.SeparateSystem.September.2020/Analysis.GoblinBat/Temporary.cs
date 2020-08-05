@@ -23,38 +23,46 @@ namespace ShareInvest.Analysis
             if (string.IsNullOrEmpty(start) && DateTime.TryParseExact(codes.MaturityMarketCap, ConvertDateTime(codes.MaturityMarketCap.Length), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
                 start = date.AddYears(-3).ToString(ConvertDateTime(6));
 
-            var enumerable = await client.GetContext(new Catalog.Request.Charts
+            if (await client.GetContext(new Catalog.Request.Charts
             {
                 Code = codes.Code,
                 Start = start.Length == 8 ? start.Substring(2) : start,
                 End = codes.MaturityMarketCap.Length == 8 ? codes.MaturityMarketCap.Substring(2) : codes.MaturityMarketCap
-            });
-            if (enumerable != null)
-                foreach (var arg in enumerable)
-                    queue.Enqueue(arg);
-            
-            return queue;
-        }
-        internal async Task<Queue<Charts>> CallUpTheChartAsync(string code)
-        {
-            if (code.Length == 8 && (code.StartsWith("106") || code.StartsWith("101")) && code.EndsWith("000"))
-            {
-                var first = CodeStorage.Where(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderBy(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap).First().MaturityMarketCap;
-                code = CodeStorage.First(o => o.MaturityMarketCap.Equals(first) && o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).Code;
-            }
-            var queue = new Queue<Charts>();
-            var enumerable = await client.GetContext(new Catalog.Request.Charts
-            {
-                Code = code,
-                Start = string.Empty,
-                End = string.Empty
-            });
-            if (enumerable != null)
+            }) is IEnumerable<Charts> enumerable)
                 foreach (var arg in enumerable)
                     queue.Enqueue(arg);
 
             return queue;
         }
+        internal async Task<Queue<Charts>> CallUpTheChartAsync(string code)
+        {
+            if (code.Length == 8 && (code.StartsWith("106") || code.StartsWith("101")) && code.EndsWith("000"))
+                code = CodeStorage.First(f => f.MaturityMarketCap.Equals(CodeStorage.Where(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderBy(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap).First().MaturityMarketCap) && f.Code.StartsWith(code.Substring(0, 3)) && f.Code.EndsWith(code.Substring(5))).Code;
+
+            var queue = new Queue<Charts>();
+
+            if (await client.GetContext(new Catalog.Request.Charts
+            {
+                Code = code,
+                Start = string.Empty,
+                End = string.Empty
+            }) is IEnumerable<Charts> enumerable)
+                foreach (var arg in enumerable)
+                    queue.Enqueue(arg);
+
+            return queue;
+        }
+        internal async Task<Queue<Charts>> CallUpTheChartAsync(Catalog.Request.Charts charts)
+        {
+            var queue = new Queue<Charts>();
+
+            if (await client.GetContext(charts) is IEnumerable<Charts> enumerable)
+                foreach (var arg in enumerable)
+                    queue.Enqueue(arg);
+
+            return queue;
+        }
+        internal async Task<string> FindTheChartStartsAsync(string code) => await client.GetContext(new Catalog.Request.Charts { Code = code, Start = empty, End = empty }) as string;
         internal Temporary(int length)
         {
             client = GoblinBatClient.GetInstance();
@@ -78,5 +86,6 @@ namespace ShareInvest.Analysis
         readonly GoblinBatClient client;
         const string sFormat = "yyMMdd";
         const string lFormat = "yyyyMMdd";
+        const string empty = "empty";
     }
 }

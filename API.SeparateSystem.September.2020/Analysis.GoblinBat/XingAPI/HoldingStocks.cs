@@ -8,6 +8,14 @@ namespace ShareInvest.Analysis.XingAPI
 {
     public class HoldingStocks : Holding
     {
+        internal void OnReceiveTrendFollowingBasicFutures(double gap, int minute)
+        {
+            if (minute == 0x5A0)
+                Base = gap;
+
+            else
+                Secondary = gap;
+        }
         public override void OnReceiveBalance(string[] param)
         {
             var cme = param.Length > 0x1C;
@@ -39,13 +47,20 @@ namespace ShareInvest.Analysis.XingAPI
         }
         public override void OnReceiveEvent(string[] param)
         {
+            if (int.TryParse(string.Concat(param[8], param[9]), out int volume))
+                SendConsecutive?.Invoke(this, new SendConsecutive(new Charts
+                {
+                    Date = param[0],
+                    Price = param[4],
+                    Volume = volume
+                }));
             if (double.TryParse(param[4], out double current))
             {
                 Current = current;
                 Revenue = (long)((current - Purchase) * Quantity * transactionMutiplier);
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
             }
-            SendStocks?.Invoke(this, new SendHoldingStocks(Code, Quantity, Purchase, Current, Revenue, Rate));
+            SendStocks?.Invoke(this, new SendHoldingStocks(Code, Quantity, Purchase, Current, Revenue, Rate, Base, Secondary, AdjustTheColorAccordingToTheCurrentSituation(WaitOrder, OrderNumber.Count)));
         }
         public override string Code
         {
@@ -71,6 +86,14 @@ namespace ShareInvest.Analysis.XingAPI
         {
             get; set;
         }
+        public override double Base
+        {
+            get; protected internal set;
+        }
+        public override double Secondary
+        {
+            get; protected internal set;
+        }
         public override bool WaitOrder
         {
             get; set;
@@ -93,7 +116,7 @@ namespace ShareInvest.Analysis.XingAPI
             foreach (var con in Consecutive)
                 con.Connect(this);
         }
-        public new event EventHandler<SendConsecutive> Send;
+        public event EventHandler<SendConsecutive> SendConsecutive;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;
         public override event EventHandler<SendHoldingStocks> SendStocks;
     }

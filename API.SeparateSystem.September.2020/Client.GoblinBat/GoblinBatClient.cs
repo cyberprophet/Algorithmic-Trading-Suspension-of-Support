@@ -31,7 +31,7 @@ namespace ShareInvest.Client
         }
         public async Task<int> EmergencyContext<T>(Codes param) => (int)(await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT).AddJsonBody(param, security.ContentType), source.Token)).StatusCode;
         public async Task<Retention> EmergencyContext<T>(Queue<T> param) where T : struct => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token)).Content);
-        public async Task<IEnumerable<Charts>> GetContext(Catalog.Request.Charts chart)
+        public async Task<object> GetContext(Catalog.Request.Charts chart)
         {
             var response = await client.ExecuteAsync(new RestRequest(security.RequestCharts(chart), Method.GET), source.Token);
 
@@ -39,7 +39,11 @@ namespace ShareInvest.Client
             {
                 Coin--;
 
-                return JsonConvert.DeserializeObject<IEnumerable<Charts>>(response.Content);
+                if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
+                    return JsonConvert.DeserializeObject<string>(response.Content);
+
+                else
+                    return JsonConvert.DeserializeObject<IEnumerable<Charts>>(response.Content);
             }
             catch (Exception ex)
             {
@@ -124,26 +128,42 @@ namespace ShareInvest.Client
                 LastDate = string.Empty
             };
         }
-        public async Task<Retention> PostContext<T>(Queue<T> param) where T : struct, ICharts
+        public async Task<Retention> GetContext(string code)
         {
-            var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
-
             try
             {
-                Coin--;
+                if (string.IsNullOrEmpty(code) == false)
+                {
+                    var response = await client.ExecuteAsync(new RestRequest(security.RequestCode(code), Method.GET), source.Token);
+                    Coin--;
+                    SendMessage((int)response.StatusCode);
 
-                return JsonConvert.DeserializeObject<Retention>(response.Content);
+                    return JsonConvert.DeserializeObject<Retention>(response.Content);
+                }
             }
             catch (Exception ex)
             {
                 SendMessage(ex.StackTrace);
-                SendMessage((int)response.StatusCode);
             }
             return new Retention
             {
-                Code = string.Empty,
-                LastDate = string.Empty
+                Code = null,
+                LastDate = null
             };
+        }
+        public async Task<Retention> PostContext<T>(string code, Queue<T> param) where T : struct, ICharts
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+                Coin--;
+                SendMessage((int)response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return await GetContext(code);
         }
         public async Task<object> PostContext<T>(IParameters param)
         {

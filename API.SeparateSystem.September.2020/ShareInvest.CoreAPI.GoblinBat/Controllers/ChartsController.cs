@@ -19,14 +19,6 @@ namespace ShareInvest.Controllers
     {
         [Conditional("DEBUG")]
         void SendExceptionMessage(string message) => Console.WriteLine(message);
-        IEnumerable<Charts> ForQuickResponse(string code, string start, string end)
-        {
-            if (Registry.Catalog.TryGetValue(code, out Stack<Charts> hash))
-                return hash.Where(o => o.Date.CompareTo(string.Concat(start, remain)) > 0 && o.Date.CompareTo(string.Concat(end, remain)) < 0);
-
-            else
-                return null;
-        }
         [HttpDelete("{code}"), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteContext(string code, [FromBody] Security param)
         {
@@ -77,90 +69,80 @@ namespace ShareInvest.Controllers
         [HttpGet(Security.routeGetChart), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetContext(string code, string start, string end)
         {
-            var quick = ForQuickResponse(code, start, end);
-
-            if (quick != null)
-                return Ok(quick);
-
-            else if (Registry.Catalog.ContainsKey(code) == false)
-                Registry.Catalog[code] = new Stack<Charts>();
-
             try
             {
-                if (Registry.Catalog.TryGetValue(code, out Stack<Charts> charts))
-                    switch (code.Length)
-                    {
-                        case 6:
-                            var stocks = context.Stocks.Where(o => o.Code.Equals(code)).AsNoTracking();
+                var charts = new Stack<Charts>();
 
-                            if (start.Length < 6 || end.Length < 6)
-                                return Ok(await stocks.MinAsync(o => o.Date));
+                switch (code.Length)
+                {
+                    case 6:
+                        var stocks = context.Stocks.Where(o => o.Code.Equals(code)).AsNoTracking();
 
-                            else
-                                foreach (var chart in stocks.Select(o => new { o.Date, o.Price, o.Volume }).OrderBy(o => o.Date))
-                                    charts.Push(new Charts
-                                    {
-                                        Date = chart.Date,
-                                        Price = chart.Price,
-                                        Volume = chart.Volume
-                                    });
-                            break;
+                        if (start.Length < 6 || end.Length < 6)
+                            return Ok(await stocks.MinAsync(o => o.Date));
 
-                        case int length when length == 8 && code.EndsWith("000") && (code.StartsWith("101") || code.StartsWith("106")):
-                            var futures = context.Futures.Where(o => o.Code.Equals(code)).AsNoTracking();
+                        else
+                            foreach (var chart in stocks.Where(o => o.Date.CompareTo(string.Concat(start, remain)) > 0 && o.Date.CompareTo(string.Concat(end, remain)) < 0).AsNoTracking().Select(o => new { o.Date, o.Price, o.Volume }).OrderBy(o => o.Date))
+                                charts.Push(new Charts
+                                {
+                                    Date = chart.Date,
+                                    Price = chart.Price,
+                                    Volume = chart.Volume
+                                });
+                        break;
 
-                            if (start.Length < 6 || end.Length < 6)
-                                return Ok(await futures.MinAsync(o => o.Date));
+                    case int length when length == 8 && code.EndsWith("000") && (code.StartsWith("101") || code.StartsWith("106")):
+                        var futures = context.Futures.Where(o => o.Code.Equals(code)).AsNoTracking();
 
-                            else
-                                foreach (var chart in futures.Select(o => new { o.Date, o.Price, o.Volume }).OrderBy(o => o.Date))
-                                    charts.Push(new Charts
-                                    {
-                                        Date = chart.Date,
-                                        Price = chart.Price,
-                                        Volume = chart.Volume
-                                    });
-                            break;
+                        if (start.Length < 6 || end.Length < 6)
+                            return Ok(await futures.MinAsync(o => o.Date));
 
-                        case int length when length == 8 && (code.StartsWith("2") || code.StartsWith("3")):
-                            var options = context.Options.Where(o => o.Code.Equals(code)).AsNoTracking();
+                        else
+                            foreach (var chart in futures.Where(o => o.Date.CompareTo(string.Concat(start, remain)) > 0 && o.Date.CompareTo(string.Concat(end, remain)) < 0).AsNoTracking().Select(o => new { o.Date, o.Price, o.Volume }).OrderBy(o => o.Date))
+                                charts.Push(new Charts
+                                {
+                                    Date = chart.Date,
+                                    Price = chart.Price,
+                                    Volume = chart.Volume
+                                });
+                        break;
 
-                            if (start.Length < 6 || end.Length < 6)
-                                return Ok(await options.MinAsync(o => o.Date));
+                    case int length when length == 8 && (code.StartsWith("2") || code.StartsWith("3")):
+                        var options = context.Options.Where(o => o.Code.Equals(code)).AsNoTracking();
 
-                            else
-                                foreach (var chart in options.Select(o => new { o.Date, o.Price, o.Volume }).OrderBy(o => o.Date))
-                                    charts.Push(new Charts
-                                    {
-                                        Date = chart.Date,
-                                        Price = chart.Price,
-                                        Volume = chart.Volume
-                                    });
-                            break;
+                        if (start.Length < 6 || end.Length < 6)
+                            return Ok(await options.MinAsync(o => o.Date));
 
-                        case int length when length == 8 && code.EndsWith("000") && code.Substring(1, 1).Equals("0") == false:
-                            var name = (await context.Codes.FirstAsync(o => o.Code.Equals(code))).Name;
-                            var convert = (await context.Codes.FirstAsync(o => o.Name.StartsWith(name) && o.Code.Length == 6)).Code;
-                            var sFutures = context.Stocks.Where(o => o.Code.Equals(convert)).AsNoTracking();
+                        else
+                            foreach (var chart in options.Where(o => o.Date.CompareTo(string.Concat(start, remain)) > 0 && o.Date.CompareTo(string.Concat(end, remain)) < 0).AsNoTracking().Select(o => new { o.Date, o.Price, o.Volume }).OrderBy(o => o.Date))
+                                charts.Push(new Charts
+                                {
+                                    Date = chart.Date,
+                                    Price = chart.Price,
+                                    Volume = chart.Volume
+                                });
+                        break;
 
-                            if (start.Length < 6 || end.Length < 6)
-                                return Ok(await sFutures.MinAsync(o => o.Date));
+                    case int length when length == 8 && code.EndsWith("000") && code.Substring(1, 1).Equals("0") == false:
+                        var name = (await context.Codes.FirstAsync(o => o.Code.Equals(code))).Name;
+                        var convert = (await context.Codes.FirstAsync(o => o.Name.StartsWith(name) && o.Code.Length == 6)).Code;
+                        var sFutures = context.Stocks.Where(o => o.Code.Equals(convert)).AsNoTracking();
 
-                            else if (Registry.Catalog.ContainsKey(convert) == false)
-                                foreach (var chart in sFutures.Select(o => new { o.Date, o.Price, o.Volume }).OrderBy(o => o.Date))
-                                    charts.Push(new Charts
-                                    {
-                                        Date = chart.Date,
-                                        Price = chart.Price,
-                                        Volume = chart.Volume
-                                    });
-                            break;
-                    }
-                Registry.Catalog[code] = charts;
-                quick = ForQuickResponse(code, start, end);
+                        if (start.Length < 6 || end.Length < 6)
+                            return Ok(await sFutures.MinAsync(o => o.Date));
 
-                if (quick != null)
-                    return Ok(quick);
+                        else
+                            foreach (var chart in sFutures.Where(o => o.Date.CompareTo(string.Concat(start, remain)) > 0 && o.Date.CompareTo(string.Concat(end, remain)) < 0).AsNoTracking().Select(o => new { o.Date, o.Price, o.Volume }).OrderBy(o => o.Date))
+                                charts.Push(new Charts
+                                {
+                                    Date = chart.Date,
+                                    Price = chart.Price,
+                                    Volume = chart.Volume
+                                });
+                        break;
+                }
+                if (charts.Count > 0)
+                    return Ok(charts);
             }
             catch (Exception ex)
             {
@@ -183,7 +165,7 @@ namespace ShareInvest.Controllers
             if (string.IsNullOrEmpty(code))
                 return StatusCode(0xCD);
 
-            return Ok(new Tuple<string, string>(code, Registry.Retentions[code]));
+            return Ok(code);
         }
         [HttpPost("futures/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Futures> chart) where T : struct
@@ -198,7 +180,7 @@ namespace ShareInvest.Controllers
             if (string.IsNullOrEmpty(code))
                 return StatusCode(0xCD);
 
-            return Ok(new Tuple<string, string>(code, Registry.Retentions[code]));
+            return Ok(code);
         }
         [HttpPost("options/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Options> chart) where T : struct
@@ -213,7 +195,7 @@ namespace ShareInvest.Controllers
             if (string.IsNullOrEmpty(code))
                 return StatusCode(0xCD);
 
-            return Ok(new Tuple<string, string>(code, Registry.Retentions[code]));
+            return Ok(code);
         }
         [HttpPost("stocks/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Stocks> chart) where T : struct
@@ -228,7 +210,7 @@ namespace ShareInvest.Controllers
             if (string.IsNullOrEmpty(code))
                 return StatusCode(0xCD);
 
-            return Ok(new Tuple<string, string>(code, Registry.Retentions[code]));
+            return Ok(code);
         }
         public ChartsController(CoreApiDbContext context) => this.context = context;
         readonly CoreApiDbContext context;

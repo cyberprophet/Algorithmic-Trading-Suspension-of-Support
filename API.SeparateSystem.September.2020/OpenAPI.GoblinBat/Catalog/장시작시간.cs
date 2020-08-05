@@ -21,6 +21,9 @@ namespace ShareInvest.OpenAPI.Catalog
                 switch (param[0])
                 {
                     case "3":
+                        foreach (var holding in Connect.HoldingStock)
+                            holding.Value.WaitOrder = true;
+
                         arg = (int)Operation.장시작;
                         DeadLine = true;
                         Delay.Milliseconds = 0xC9;

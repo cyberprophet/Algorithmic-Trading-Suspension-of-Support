@@ -34,12 +34,12 @@ namespace ShareInvest.XingAPI
             }
             return API;
         }
-        internal (string, string, string) SetAccountName(string account, string password)
+        internal (string, string) SetAccountName(string account, string password)
         {
             Secrecy.Account = account;
             Secrecy.Password = password;
 
-            return (GetAccountName(account), GetAcctDetailName(account), GetAcctNickname(account));
+            return (GetAccountName(account), GetAcctDetailName(account));
         }
         internal string[] Accounts
         {

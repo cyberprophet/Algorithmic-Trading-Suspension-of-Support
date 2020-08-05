@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.CoreAPI;
 using ShareInvest.Models;
@@ -16,58 +15,27 @@ namespace ShareInvest.Controllers
     [ApiController, Route(Security.route), Produces(Security.produces)]
     public class OptionsController : ControllerBase
     {
-        [HttpGet, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetContexts()
+        [HttpGet, ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetContexts() => Ok(await context.Options.LongCountAsync());
+        [HttpGet(Security.routeRetention), ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetContext(string code) => Ok(new Retention
         {
-            Retention param;
-
-            try
-            {
-                if (Registry.Retentions != null && Registry.Retentions.Count > 0)
-                {
-                    var registry = Registry.Retentions.First(o => o.Key.Length == 8 && (o.Key.StartsWith("2") || o.Key.StartsWith("3")));
-                    param = new Retention
-                    {
-                        Code = registry.Key,
-                        LastDate = registry.Value
-                    };
-                    if (Registry.Retentions.Remove(registry.Key))
-                        return Ok(param);
-                }
-            }
-            catch (Exception ex)
-            {
-                param = new Retention
-                {
-                    Code = ex.TargetSite.Name,
-                    LastDate = ex.StackTrace
-                };
-            }
-            return NotFound(param);
-        }
-        [HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
+            Code = code,
+            LastDate = await context.Options.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date)
+        });
+        [HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext([FromBody] Queue<Options> chart)
         {
-            try
+            await context.BulkInsertAsync<Queue<Options>>(chart, o =>
             {
-                await context.BulkInsertAsync<Queue<Options>>(chart, o =>
-                {
-                    o.InsertIfNotExists = true;
-                    o.BatchSize = 0x43AD;
-                    o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-                    o.AutoMapOutputDirection = false;
-                });
-                Registry.Catalog.Remove(chart.First().Code);
-            }
-            catch (Exception ex)
-            {
-                SendExceptionMessage(ex.Message);
-            }
-            return GetContexts();
+                o.InsertIfNotExists = true;
+                o.BatchSize = 0x43AD;
+                o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+                o.AutoMapOutputDirection = false;
+            });
+            return Ok();
         }
         public OptionsController(CoreApiDbContext context) => this.context = context;
-        [Conditional("DEBUG")]
-        void SendExceptionMessage(string message) => Console.WriteLine(message);
         readonly CoreApiDbContext context;
     }
 }

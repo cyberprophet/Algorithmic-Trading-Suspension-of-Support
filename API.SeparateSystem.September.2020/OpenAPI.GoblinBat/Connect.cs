@@ -9,6 +9,8 @@ using AxKHOpenAPILib;
 
 using ShareInvest.Analysis;
 using ShareInvest.Catalog;
+using ShareInvest.Catalog.OpenAPI;
+using ShareInvest.Client;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface.OpenAPI;
@@ -18,6 +20,7 @@ namespace ShareInvest.OpenAPI
 {
     class Connect : ISendSecuritiesAPI<SendSecuritiesAPI>
     {
+        internal void SendOrder(SendOrder o) => request.RequestTrData(new Task(() => SendErrorMessage(axAPI.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
         internal void InputValueRqData(TR param) => request.RequestTrData(new Task(() =>
         {
             string[] count = param.ID.Split(';'), value = param.Value.Split(';');
@@ -43,7 +46,7 @@ namespace ShareInvest.OpenAPI
 
                     list.Add(exclusion);
                 }
-            Parallel.ForEach(Enum.GetNames(typeof(Market)), new ParallelOptions { MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.5) }, new Action<string>((sMarket) =>
+            Parallel.ForEach(Enum.GetNames(typeof(Market)), new ParallelOptions { MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.5) }, new Action<string>(async (sMarket) =>
             {
                 if (Enum.TryParse(sMarket, out Market param))
                     switch (param)
@@ -52,9 +55,18 @@ namespace ShareInvest.OpenAPI
                         case Market.코스닥:
                         case Market.ETF:
                             for (int i = 0; i < market.Length; i++)
-                                if (axAPI.GetMasterStockState(market[i]).Contains("거래정지"))
-                                    market[i] = string.Empty;
+                            {
+                                var state = axAPI.GetMasterStockState(market[i]);
 
+                                if (state.Contains("거래정지") && await GoblinBatClient.GetInstance().PutContext<Codes>(new Codes
+                                {
+                                    Code = market[i],
+                                    Name = axAPI.GetMasterCodeName(market[i]),
+                                    MaturityMarketCap = state,
+                                    Price = axAPI.GetMasterLastPrice(market[i])
+                                }) < int.MaxValue)
+                                    market[i] = string.Empty;
+                            }
                             break;
 
                         default:
@@ -90,7 +102,7 @@ namespace ShareInvest.OpenAPI
             var stack = new Stack<string>(0x10);
 
             foreach (var str in market)
-                if (string.IsNullOrEmpty(str) == false)
+                if (string.IsNullOrEmpty(str) == false && axAPI.GetMasterStockState(str).Contains("거래정지") == false)
                 {
                     if (index++ % 0x63 == 0x62)
                     {
@@ -180,5 +192,22 @@ namespace ShareInvest.OpenAPI
         readonly Delay request;
         readonly AxKHOpenAPI axAPI;
         public event EventHandler<SendSecuritiesAPI> Send;
+    }
+    enum HogaGb
+    {
+        지정가 = 00,
+        시장가 = 03,
+        조건부지정가 = 05,
+        최유리지정가 = 06,
+        최우선지정가 = 07,
+        지정가IOC = 10,
+        시장가IOC = 13,
+        최유리IOC = 16,
+        지정가FOK = 20,
+        시장가FOK = 23,
+        최유리FOK = 26,
+        장전시간외종가 = 61,
+        시간외단일가매매 = 62,
+        장후시간외종가 = 81
     }
 }

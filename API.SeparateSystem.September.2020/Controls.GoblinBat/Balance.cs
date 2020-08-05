@@ -19,7 +19,7 @@ namespace ShareInvest.Controls
             textName.Text = info.Name;
             textServer.Text = info.Server.ToString();
             textServer.ForeColor = info.Server ? Color.Navy : Color.Maroon;
-            data.ColumnCount = 8;
+            data.ColumnCount = 0xA;
             data.BackgroundColor = Color.FromArgb(0x79, 0x85, 0x82);
             dIndex = new Dictionary<string, int>();
 
@@ -66,12 +66,12 @@ namespace ShareInvest.Controls
                         strategics = ts;
                         break;
                 }
-                dIndex[balance.Item1] = data.Rows.Add(new string[] { balance.Item1, balance.Item2.Trim(), balance.Item3.ToString("N0"), balance.Item4.ToString("N0"), balance.Item5.ToString("N0"), balance.Item6.ToString("C0"), balance.Item7.ToString("P2"), strategics });
+                dIndex[balance.Item1] = data.Rows.Add(new string[] { balance.Item1, balance.Item2.Trim(), balance.Item3.ToString("N0"), balance.Item4.ToString("N0"), balance.Item5.ToString("N0"), balance.Item6.ToString("C0"), balance.Item7.ToString("P2"), string.Empty, string.Empty, strategics });
                 data.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
                 data.RowsDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
                 data.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                 data.AutoResizeRows();
-                data.AutoResizeColumns();
+                data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
             }
             ChangeToCurrent(balance.Item1, hasRows, balance.Item5, balance.Item6, balance.Item7, balance.Item3, balance.Item4);
 
@@ -122,9 +122,22 @@ namespace ShareInvest.Controls
                 data.Rows[index].Cells[2].Value = Math.Abs(quantity).ToString("N0");
                 data.Rows[index].Cells[4].Value = current.ToString(current is double ? "N2" : "N0");
             }
-            data.CurrentCell = data.Rows.Count > 1 && dIndex.ContainsKey(code) ? data.Rows[dIndex[code]].Cells[7] : null;
+            data.CurrentCell = data.Rows.Count > 1 && dIndex.ContainsKey(code) ? data.Rows[dIndex[code]].Cells[1] : null;
         }
-        void OnReceiveHoldingStocks(object sender, SendHoldingStocks e) => BeginInvoke(new Action(() => ChangeToCurrent(e.Code, dIndex.ContainsKey(e.Code), e.Current, e.Revenue, e.Rate, e.Quantity, e.Purchase)));
+        void OnReceiveHoldingStocks(object sender, SendHoldingStocks e) => BeginInvoke(new Action(() =>
+        {
+            if (dIndex.TryGetValue(e.Code, out int index))
+            {
+                data.Rows[index].Cells[7].Value = Math.Abs(e.Base).ToString(e.Code.Length == 6 ? "N0" : "N2");
+                data.Rows[index].Cells[8].Value = Math.Abs(e.Secondary).ToString("N2");
+                data.Rows[index].Cells[7].Style.ForeColor = e.Code.Length == 6 ? (e.Base > e.Current ? Color.Maroon : Color.Navy) : (e.Base > 0 ? Color.Maroon : Color.Navy);
+                data.Rows[index].Cells[7].Style.SelectionForeColor = e.Code.Length == 6 ? (e.Base < e.Current ? Color.DeepSkyBlue : Color.FromArgb(0xB9062F)) : (e.Base < 0 ? Color.DeepSkyBlue : Color.FromArgb(0xB9062F));
+                data.Rows[index].Cells[8].Style.ForeColor = e.Secondary > 0 ? Color.Maroon : Color.Navy;
+                data.Rows[index].Cells[8].Style.SelectionForeColor = e.Secondary < 0 ? Color.DeepSkyBlue : Color.FromArgb(0xB9062F);
+            }
+            ChangeToCurrent(e.Code, dIndex.ContainsKey(e.Code), e.Current, e.Revenue, e.Rate, e.Quantity, e.Purchase);
+            labelMessage.ForeColor = e.Color;
+        }));
         void OnResponseToMouse(object sender, EventArgs e)
         {
             if (sender is TextBox box)

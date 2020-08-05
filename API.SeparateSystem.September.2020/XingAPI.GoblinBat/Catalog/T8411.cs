@@ -17,7 +17,6 @@ namespace ShareInvest.XingAPI.Catalog
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {
                 InBlock = new HashSet<InBlock>();
-                Milliseconds = 0xBB9;
                 SendMessage(retention.Code, retention.LastDate, string.Empty);
 
                 foreach (var param in GetInBlocks(GetType().Name))
@@ -32,7 +31,7 @@ namespace ShareInvest.XingAPI.Catalog
 
                 new Task(() =>
                 {
-                    Thread.Sleep(Milliseconds);
+                    Thread.Sleep(0xBB9);
                     SendErrorMessage(GetType().Name, Request(false));
                 }).Start();
             }
@@ -109,20 +108,25 @@ namespace ShareInvest.XingAPI.Catalog
 
                         else
                         {
-                            SendMessage(code, temp, Retention);
-                            Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
-
+                            new Task(() =>
+                            {
+                                Thread.Sleep(Milliseconds);
+                                Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
+                                SendMessage(code, temp, Retention);
+                            }).Start();
                             return;
                         }
                     }
-            if (IsNext)
-                new Task(() =>
-                {
-                    Thread.Sleep(Milliseconds);
+            new Task(() =>
+            {
+                Thread.Sleep(Milliseconds);
+
+                if (IsNext && Array.Exists(Retention.ToCharArray(), o => char.IsLetter(o)) == false)
                     SendErrorMessage(GetType().Name, Request(IsNext));
-                }).Start();
-            else
-                Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
+
+                else
+                    Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
+            }).Start();
         }
         protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
         HashSet<InBlock> InBlock

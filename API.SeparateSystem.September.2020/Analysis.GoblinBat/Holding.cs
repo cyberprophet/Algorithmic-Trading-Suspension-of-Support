@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 
 using ShareInvest.Catalog;
@@ -30,9 +31,28 @@ namespace ShareInvest.Analysis
                 while (stack.Count > 0)
                     yield return temporary.CallUpTheChartAsync(stack.Pop()).Result;
             }
-            else if (code.Length == 6)
+            else if (code.Length == 6 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.Equals(code)))
             {
+                string sDate = temporary.FindTheChartStartsAsync(code).Result, date = sDate.Substring(0, 6);
+                Days = new Queue<Charts>();
 
+                foreach (var day in temporary.CallUpTheChartAsync(code).Result)
+                    if (string.Compare(day.Date.Substring(2), date) < 0)
+                        Days.Enqueue(day);
+
+                if (int.TryParse(date, out int start))
+                {
+                    var end = string.Empty;
+                    var count = 0;
+
+                    while (string.IsNullOrEmpty(end) || string.Compare(end, DateTime.Now.ToString("yyMMdd")) <= 0)
+                        yield return temporary.CallUpTheChartAsync(new Catalog.Request.Charts
+                        {
+                            Code = code,
+                            Start = (start - 1 + 0x12C * count++).ToString("D6"),
+                            End = end = (start - 1 + 0x12C * count).ToString("D6")
+                        }).Result;
+                }
             }
         }
         long StartProgress(string code)
@@ -73,6 +93,10 @@ namespace ShareInvest.Analysis
         public Holding(TrendsInStockPrices strategics)
         {
             TS = strategics;
+            consecutive = new Consecutive(strategics, this);
+
+            if (StartProgress(strategics.Code) > 0)
+                consecutive.Dispose();
         }
         public abstract string Code
         {
@@ -97,6 +121,14 @@ namespace ShareInvest.Analysis
         public abstract double Rate
         {
             get; set;
+        }
+        public abstract double Base
+        {
+            get; protected internal set;
+        }
+        public abstract double Secondary
+        {
+            get; protected internal set;
         }
         public abstract bool WaitOrder
         {
@@ -123,6 +155,19 @@ namespace ShareInvest.Analysis
         {
             get;
         }
+        protected internal Color AdjustTheColorAccordingToTheCurrentSituation(bool wait, int count)
+        {
+            if (wait)
+            {
+                if (count > 0)
+                    return Color.Gold;
+
+                return Color.Snow;
+            }
+            else
+                return Color.Maroon;
+        }
+        internal readonly Consecutive consecutive;
         protected internal const string conclusion = "체결";
         protected internal const string acceptance = "접수";
         protected internal const string confirmation = "확인";
@@ -138,5 +183,14 @@ namespace ShareInvest.Analysis
         CONET801 = 3,
         CONET002 = 4,
         CONET003 = 5
+    }
+    public enum OpenOrderType
+    {
+        신규매수 = 1,
+        신규매도 = 2,
+        매수취소 = 3,
+        매도취소 = 4,
+        매수정정 = 5,
+        매도정정 = 6
     }
 }

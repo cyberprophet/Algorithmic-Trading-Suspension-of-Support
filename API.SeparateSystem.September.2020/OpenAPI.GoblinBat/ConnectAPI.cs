@@ -12,6 +12,7 @@ using AxKHOpenAPILib;
 using ShareInvest.Analysis;
 using ShareInvest.Analysis.OpenAPI;
 using ShareInvest.Catalog;
+using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
@@ -22,6 +23,20 @@ namespace ShareInvest.OpenAPI
 {
     public sealed partial class ConnectAPI : UserControl, ISecuritiesAPI<SendSecuritiesAPI>
     {
+        uint Count
+        {
+            get; set;
+        }
+        string LookupScreenNo
+        {
+            get
+            {
+                if (Count++ == 0x95)
+                    Count = 0;
+
+                return (0xBB8 + Count).ToString("D4");
+            }
+        }
         void ButtonStartProgressClick(object sender, EventArgs e) => BeginInvoke(new Action(() =>
         {
             Start = true;
@@ -184,6 +199,18 @@ namespace ShareInvest.OpenAPI
             }
             return Connect.HoldingStock.Count;
         }
+        public void SendOrder(IAccountInformation info, Tuple<int, string, int, int, string> order) => (API as Connect)?.SendOrder(new SendOrder
+        {
+            RQName = axAPI.GetMasterCodeName(order.Item2),
+            ScreenNo = LookupScreenNo,
+            AccNo = info.AccountNumber,
+            OrderType = order.Item1,
+            Code = order.Item2,
+            Qty = order.Item3,
+            Price = order.Item4,
+            HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+            OrgOrderNo = order.Item5
+        });
         public ISendSecuritiesAPI<SendSecuritiesAPI> ConnectChapterOperation => Connect.Chapter;
         public ISendSecuritiesAPI<SendSecuritiesAPI> OnConnectErrorMessage => API as Connect ?? null;
         public IEnumerable<Holding> HoldingStocks

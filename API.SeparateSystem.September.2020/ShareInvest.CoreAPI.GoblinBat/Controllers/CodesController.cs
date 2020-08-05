@@ -36,12 +36,31 @@ namespace ShareInvest.Controllers
                 return NotFound(length);
         }
         [HttpGet, ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult GetContexts()
+        public async Task<IActionResult> GetContexts()
         {
-            if (Registry.Retentions.Any(o => string.IsNullOrEmpty(o.Key)))
-                Registry.RemoveRetentions();
+            var date = string.Empty;
+            var dic = new Dictionary<string, string>();
 
-            return Ok(Registry.Retentions);
+            foreach (var arg in context.Codes.AsNoTracking().Select(o => new { o.Code }))
+            {
+                switch (arg.Code.Length)
+                {
+                    case 6:
+                        date = await context.Stocks.Where(o => o.Code.Equals(arg.Code)).AsNoTracking().MaxAsync(o => o.Date);
+                        break;
+
+                    case int length when length == 8 && (arg.Code.StartsWith("106") || arg.Code.StartsWith("101")) && arg.Code.EndsWith("000"):
+                        date = await context.Futures.Where(o => o.Code.Equals(arg.Code)).AsNoTracking().MaxAsync(o => o.Date);
+                        break;
+
+                    case int length when length == 8 && (arg.Code.StartsWith("2") || arg.Code.StartsWith("3")):
+                        date = await context.Options.Where(o => o.Code.Equals(arg.Code)).AsNoTracking().MaxAsync(o => o.Date);
+                        break;
+                }
+                if (string.IsNullOrEmpty(date) == false && string.Compare(date.Substring(0, 6), DateTime.Now.ToString("yyMMdd")) < 0)
+                    dic[arg.Code] = date;
+            }
+            return Ok(dic);
         }
         [HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext([FromBody] IEnumerable<Codes> chart)
@@ -58,7 +77,7 @@ namespace ShareInvest.Controllers
         [HttpPut("{code}"), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> PutContext(string code, [FromBody] Codes param)
         {
-            if (string.IsNullOrEmpty(code) == false && Registry.Retentions.ContainsKey(code) == false && string.IsNullOrEmpty(param.MaturityMarketCap) == false)
+            if (string.IsNullOrEmpty(code) == false && string.IsNullOrEmpty(param.MaturityMarketCap) == false)
             {
                 if (await context.Codes.AnyAsync(o => o.Code.Equals(code)))
                     context.Entry(param).State = EntityState.Modified;
@@ -68,36 +87,6 @@ namespace ShareInvest.Controllers
 
                 string retentions = string.Empty;
                 await context.BulkSaveChangesAsync();
-
-                try
-                {
-                    switch (code.Length)
-                    {
-                        case 6:
-                            retentions = await context.Stocks.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
-                            break;
-
-                        case int length when length == 8 && (code.StartsWith("101") || code.StartsWith("106")):
-                            retentions = await context.Futures.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
-                            break;
-
-                        case int length when length == 8 && (code.StartsWith("2") || code.StartsWith("3")):
-                            retentions = await context.Options.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date);
-                            break;
-
-                        case int length when length == 8 && code.StartsWith("1"):
-                            return Ok(code);
-
-                        default:
-                            return BadRequest(code);
-                    }
-                    if (retentions != null && (retentions.Equals(string.Empty) || retentions.Length > 6 && string.Compare(retentions.Substring(0, 6), DateTime.Now.ToString("yyMMdd")) < 0))
-                        Registry.Retentions[code] = retentions;
-                }
-                catch (Exception ex)
-                {
-                    code = ex.TargetSite.Name;
-                }
             }
             return Ok(code);
         }
