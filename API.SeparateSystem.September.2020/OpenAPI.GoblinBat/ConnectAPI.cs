@@ -23,20 +23,6 @@ namespace ShareInvest.OpenAPI
 {
     public sealed partial class ConnectAPI : UserControl, ISecuritiesAPI<SendSecuritiesAPI>
     {
-        uint Count
-        {
-            get; set;
-        }
-        string LookupScreenNo
-        {
-            get
-            {
-                if (Count++ == 0x95)
-                    Count = 0;
-
-                return (0xBB8 + Count).ToString("D4");
-            }
-        }
         void ButtonStartProgressClick(object sender, EventArgs e) => BeginInvoke(new Action(() =>
         {
             Start = true;
@@ -202,7 +188,7 @@ namespace ShareInvest.OpenAPI
         public void SendOrder(IAccountInformation info, Tuple<int, string, int, int, string> order) => (API as Connect)?.SendOrder(new SendOrder
         {
             RQName = axAPI.GetMasterCodeName(order.Item2),
-            ScreenNo = LookupScreenNo,
+            ScreenNo = (API as Connect)?.LookupScreenNo,
             AccNo = info.AccountNumber,
             OrderType = order.Item1,
             Code = order.Item2,

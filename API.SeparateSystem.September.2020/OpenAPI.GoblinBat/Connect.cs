@@ -93,7 +93,26 @@ namespace ShareInvest.OpenAPI
         internal void SendErrorMessage(int error)
         {
             if (error < 0 && new Error().Message.TryGetValue(error, out string param))
+            {
                 Send?.Invoke(this, new SendSecuritiesAPI(param));
+
+                switch (error)
+                {
+                    case -106:
+                        Send?.Invoke(this, new SendSecuritiesAPI((short)error));
+                        break;
+                }
+            }
+        }
+        internal string LookupScreenNo
+        {
+            get
+            {
+                if (Count++ == 0x95)
+                    Count = 0;
+
+                return (0xBB8 + Count).ToString("D4");
+            }
         }
         Stack<string> CatalogStocksCode(IEnumerable<string> market)
         {
@@ -124,6 +143,10 @@ namespace ShareInvest.OpenAPI
 
                 return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString(distinctDate) : DateTime.Now.ToString(distinctDate);
             }
+        }
+        uint Count
+        {
+            get; set;
         }
         Connect(AxKHOpenAPI axAPI)
         {
@@ -160,7 +183,13 @@ namespace ShareInvest.OpenAPI
                 HoldingStock = new Dictionary<string, Holding>();
                 TR = new HashSet<TR>()
                 {
-                    new KOA_CREATE_FO_ORD { API = axAPI }
+                    new KOA_CREATE_FO_ORD { API = axAPI },
+                    new KOA_NORMAL_FO_CANCEL { API = axAPI },
+                    new KOA_NORMAL_FO_MOD { API = axAPI },
+                    new KOA_NORMAL_SELL_KP_ORD { API = axAPI },
+                    new KOA_NORMAL_SELL_KQ_ORD { API = axAPI },
+                    new KOA_NORMAL_BUY_KP_ORD { API = axAPI },
+                    new KOA_NORMAL_BUY_KQ_ORD { API = axAPI }
                 };
                 Real = new HashSet<Real>()
                 {

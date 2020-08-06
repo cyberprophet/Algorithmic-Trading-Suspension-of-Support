@@ -90,7 +90,7 @@ namespace ShareInvest.Controls
         }
         void ChangeToCurrent(string code, bool hasRows, dynamic current, long revenue, double rate, int quantity, dynamic purchase)
         {
-            if (dIndex.TryGetValue(code, out int index) && (hasRows && current.ToString("N0").Equals(data.Rows[index].Cells[4].Value.ToString())) == false)
+            if (dIndex.TryGetValue(code, out int index) && (Math.Abs(quantity).ToString("N0").Equals(data.Rows[index].Cells[2].Value.ToString()) && current.ToString("N0").Equals(data.Rows[index].Cells[4].Value.ToString()) && hasRows) == false)
             {
                 if (revenue > 0)
                 {

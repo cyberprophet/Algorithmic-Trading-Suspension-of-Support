@@ -175,10 +175,19 @@ namespace ShareInvest
                             SendMessage(statusOptionsCode);
                             return;
 
+                        case short error:
+                            switch (error)
+                            {
+                                case -106:
+                                    Dispose(WindowState);
+                                    return;
+                            }
+                            return;
+
                         case Tuple<byte, byte> tuple:
                             switch (tuple)
                             {
-                                case Tuple<byte, byte> tp when tp.Item1 == 1 && tp.Item2 == 0x15 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && tp.Item1 == 3 && tp.Item2 == 9:
+                                case Tuple<byte, byte> tp when tp.Item1 == 1 && tp.Item2 == 0x15 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && (tp.Item1 == 0 && tp.Item2 == 8 || tp.Item1 == 3 && tp.Item2 == 9):
                                     if (WindowState.Equals(FormWindowState.Minimized))
                                         strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
 
@@ -406,8 +415,8 @@ namespace ShareInvest
                                         Short = s,
                                         Long = l,
                                         Trend = trend,
-                                        RealizeProfit = realizeProfit,
-                                        AdditionalPurchase = additionalPurchase,
+                                        RealizeProfit = realizeProfit * 0.01,
+                                        AdditionalPurchase = additionalPurchase * 0.01,
                                         Quantity = quantity,
                                         QuoteUnit = quoteUnit,
                                         LongShort = (LongShort)longShort,

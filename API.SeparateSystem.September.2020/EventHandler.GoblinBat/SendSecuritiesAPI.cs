@@ -122,6 +122,7 @@ namespace ShareInvest.EventHandler
         public SendSecuritiesAPI(string message) => Convey = message;
         public SendSecuritiesAPI(int gubun, int status) => Convey = new Tuple<byte, byte>((byte)gubun, (byte)status);
         public SendSecuritiesAPI(long available) => Convey = available;
+        public SendSecuritiesAPI(short error) => Convey = error;
         public SendSecuritiesAPI(Tuple<string, string, int, dynamic, dynamic, long, double> tuple)
         {
             if (tuple.Item1.Equals(tuple.Item2))

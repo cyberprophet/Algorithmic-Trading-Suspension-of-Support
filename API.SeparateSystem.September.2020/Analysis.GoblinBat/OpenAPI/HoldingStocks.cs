@@ -87,7 +87,7 @@ namespace ShareInvest.Analysis.OpenAPI
         }
         public override void OnReceiveBalance(string[] param)
         {
-            if (long.TryParse(param[9], out long available) && Code.Equals(param[1]) && int.TryParse(param[7], out int purchase) && int.TryParse(param[5], out int current) && int.TryParse(param[6], out int quantity))
+            if (long.TryParse(param[9], out long available) && int.TryParse(param[7], out int purchase) && int.TryParse(param[5], out int current) && int.TryParse(param[6], out int quantity))
             {
                 Current = current;
                 Quantity = quantity;
@@ -97,43 +97,51 @@ namespace ShareInvest.Analysis.OpenAPI
                 WaitOrder = true;
                 SendBalance?.Invoke(this, new SendSecuritiesAPI(available * current));
             }
-            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, int, dynamic, dynamic, long, double>(param[1], param[4], Quantity, Purchase, Current, Revenue, Rate)));
+            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, int, dynamic, dynamic, long, double>(param[1].StartsWith("A") ? param[1].Substring(1) : param[1], param[4], Quantity, Purchase, Current, Revenue, Rate)));
         }
         public override void OnReceiveConclusion(string[] param)
         {
-            if (Code.Equals(param[3]))
+            switch (param[5])
             {
-                switch (param[5])
-                {
-                    case conclusion:
-                        if (OrderNumber.Remove(param[1]))
-                            WaitOrder = false;
+                case conclusion:
+                    if (OrderNumber.Remove(param[1]))
+                        WaitOrder = false;
 
-                        break;
+                    break;
 
-                    case acceptance:
-                        if (param[8].Contains(".") == false && int.TryParse(param[8], out int sPrice))
-                            OrderNumber[param[1]] = sPrice;
+                case acceptance:
+                    if (param[8].Contains(".") == false && int.TryParse(param[8], out int sPrice))
+                        OrderNumber[param[1]] = sPrice;
 
-                        else if (param[8].Contains(".") && double.TryParse(param[8], out double fPrice))
-                            OrderNumber[param[1]] = fPrice;
+                    else if (param[8].Contains(".") && double.TryParse(param[8], out double fPrice))
+                        OrderNumber[param[1]] = fPrice;
 
-                        WaitOrder = true;
-                        break;
+                    WaitOrder = true;
+                    break;
 
-                    case confirmation:
-                        if ((param[12].Substring(3).Equals(cancellantion) || param[12].Substring(3).Equals(correction)) && OrderNumber.Remove(param[11]))
-                            WaitOrder = true;
+                case confirmation when param[12].Substring(3).Equals(cancellantion):
+                    WaitOrder = OrderNumber.Remove(param[11]);
+                    break;
 
-                        break;
-                }
-                if (param[19].Contains(".") == false && int.TryParse(param[19], out int sCurrent))
-                    Current = sCurrent;
+                case confirmation when param[12].Substring(3).Equals(correction):
+                    if (param[8].Contains(".") == false && int.TryParse(param[8], out int sp))
+                        OrderNumber[param[1]] = sp;
 
-                else if (param[19].Contains(".") && double.TryParse(param[19], out double fCurrent))
-                    Current = fCurrent;
+                    else if (param[8].Contains(".") && double.TryParse(param[8], out double fp))
+                        OrderNumber[param[1]] = fp;
+
+                    WaitOrder = OrderNumber.Remove(param[11]);
+                    break;
             }
+            if (param[19].Contains(".") == false && int.TryParse(param[19], out int sCurrent))
+                Current = sCurrent;
+
+            else if (param[19].Contains(".") && double.TryParse(param[19], out double fCurrent))
+                Current = fCurrent;
         }
+        public override int GetQuoteUnit(int price, bool info) => base.GetQuoteUnit(price, info);
+        public override int GetStartingPrice(int price, bool info) => base.GetStartingPrice(price, info);
+        public override dynamic FindStrategics => strategics;
         public HoldingStocks(TrendsInStockPrices strategics) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();

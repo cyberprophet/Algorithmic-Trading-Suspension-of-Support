@@ -3,7 +3,10 @@
 using AxKHOpenAPILib;
 
 using ShareInvest.Analysis;
+using ShareInvest.Catalog;
+using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.EventHandler;
+using ShareInvest.Interface;
 using ShareInvest.Interface.OpenAPI;
 
 namespace ShareInvest.OpenAPI.Catalog
@@ -17,21 +20,81 @@ namespace ShareInvest.OpenAPI.Catalog
             if (temp.Item1 != null)
                 Send?.Invoke(this, new SendSecuritiesAPI(temp.Item1[15], temp.Item1[2], temp.Item1[7]));
 
-            while (temp.Item2?.Count > 0)
+            if (long.TryParse(temp.Item1[7], out long available))
             {
-                var param = new SendSecuritiesAPI(temp.Item2.Dequeue());
+                var cash = available;
+                var now = DateTime.Now;
 
-                if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs) && API.GetMasterStockState(balance.Item1).Contains(transactionSuspension) == false)
+                while (temp.Item2?.Count > 0)
                 {
-                    hs.Code = balance.Item1;
-                    hs.Quantity = balance.Item3;
-                    hs.Purchase = (int)balance.Item4;
-                    hs.Current = (int)balance.Item5;
-                    hs.Revenue = balance.Item6;
-                    hs.Rate = balance.Item7;
-                    Connect.HoldingStock[balance.Item1] = hs;
+                    var param = new SendSecuritiesAPI(temp.Item2.Dequeue());
+
+                    if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs) && API.GetMasterStockState(balance.Item1).Contains(transactionSuspension) == false)
+                    {
+                        if (hs.Quantity == 0 && hs.Purchase == 0 && hs.Current == 0 && hs.Revenue == 0 && hs.Rate == 0 && cash > 0 && now.Hour == 8 && now.Minute > 0x32)
+                        {
+                            uint quantity = (uint)balance.Item3, price = uint.TryParse(API.GetMasterLastPrice(hs.Code), out uint before) ? before : 0;
+                            var stock = API.KOA_Functions(info, hs.Code).Split(';')[0].Contains(market);
+
+                            switch (hs.FindStrategics)
+                            {
+                                case TrendsInStockPrices ts when ts.Setting.Equals(Setting.Reservation):
+                                    int sell = (int)(balance.Item4 * (1 + ts.RealizeProfit)), buy = (int)(balance.Item4 * (1 - ts.AdditionalPurchase)), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = hs.GetStartingPrice(lower, stock), sPrice = hs.GetStartingPrice(sell, stock);
+                                    var connect = Connect.GetInstance(API);
+                                    var account = Value.Split(';')[0];
+                                    sPrice = sPrice < lower ? lower + hs.GetQuoteUnit(sPrice, stock) : sPrice;
+
+                                    while (sPrice < upper && quantity-- > 0)
+                                    {
+                                        SendMessage(sPrice.ToString("C0"), string.Empty);
+                                        connect.SendOrder(new SendOrder
+                                        {
+                                            RQName = balance.Item2,
+                                            ScreenNo = connect.LookupScreenNo,
+                                            AccNo = account,
+                                            OrderType = 2,
+                                            Code = hs.Code,
+                                            Qty = ts.Quantity,
+                                            Price = sPrice,
+                                            HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                            OrgOrderNo = string.Empty
+                                        });
+                                        for (int i = 0; i < ts.QuoteUnit; i++)
+                                            sPrice += hs.GetQuoteUnit(sPrice, stock);
+                                    }
+                                    while (bPrice < upper && bPrice < buy && cash > bPrice * (1.5e-4 + 1))
+                                    {
+                                        connect.SendOrder(new SendOrder
+                                        {
+                                            RQName = balance.Item2,
+                                            ScreenNo = connect.LookupScreenNo,
+                                            AccNo = account,
+                                            OrderType = 1,
+                                            Code = hs.Code,
+                                            Qty = ts.Quantity,
+                                            Price = bPrice,
+                                            HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                            OrgOrderNo = string.Empty
+                                        });
+                                        for (int i = 0; i < ts.QuoteUnit; i++)
+                                            bPrice += hs.GetQuoteUnit(bPrice, stock);
+
+                                        cash -= (long)(bPrice * (1.5e-4 + 1));
+                                        SendMessage(bPrice.ToString("C0"), cash.ToString("C0"));
+                                    }
+                                    break;
+                            }
+                        }
+                        hs.Code = balance.Item1;
+                        hs.Quantity = balance.Item3;
+                        hs.Purchase = (int)balance.Item4;
+                        hs.Current = (int)balance.Item5;
+                        hs.Revenue = balance.Item6;
+                        hs.Rate = balance.Item7;
+                        Connect.HoldingStock[balance.Item1] = hs;
+                    }
+                    Send?.Invoke(this, param);
                 }
-                Send?.Invoke(this, param);
             }
         }
         internal override string ID => id;
@@ -57,6 +120,8 @@ namespace ShareInvest.OpenAPI.Catalog
         {
             get; set;
         }
+        const string market = "거래소";
+        const string info = "GetMasterStockInfo";
         const string code = "opw00005";
         const string name = "체결잔고요청";
         const string id = "계좌번호;비밀번호;비밀번호입력매체구분";

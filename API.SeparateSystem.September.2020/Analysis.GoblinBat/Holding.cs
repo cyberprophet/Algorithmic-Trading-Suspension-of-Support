@@ -134,6 +134,10 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        public abstract dynamic FindStrategics
+        {
+            get;
+        }
         public abstract Dictionary<string, dynamic> OrderNumber
         {
             get;
@@ -141,6 +145,58 @@ namespace ShareInvest.Analysis
         public abstract void OnReceiveEvent(string[] param);
         public abstract void OnReceiveBalance(string[] param);
         public abstract void OnReceiveConclusion(string[] param);
+        public virtual int GetStartingPrice(int price, bool info)
+        {
+            switch (price)
+            {
+                case int n when n >= 0 && n < 0x3E8:
+                    return price;
+
+                case int n when n >= 0x3E8 && n < 0x1388:
+                    return (price / 5 + 1) * 5;
+
+                case int n when n >= 0x1388 && n < 0x2710:
+                    return (price / 10 + 1) * 10;
+
+                case int n when n >= 0x2710 && n < 0xC350:
+                    return (price / 0x32 + 1) * 0x32;
+
+                case int n when n >= 0x186A0 && n < 0x7A120 && info:
+                    return (price / 0x1F4 + 1) * 0x1F4;
+
+                case int n when n >= 0x7A120 && info:
+                    return (price / 0x3E8 + 1) * 0x3E8;
+
+                default:
+                    return (price / 0x64 + 1) * 0x64;
+            }
+        }
+        public virtual int GetQuoteUnit(int price, bool info)
+        {
+            switch (price)
+            {
+                case int n when n >= 0 && n < 0x3E8:
+                    return 1;
+
+                case int n when n >= 0x3E8 && n < 0x1388:
+                    return 5;
+
+                case int n when n >= 0x1388 && n < 0x2710:
+                    return 0xA;
+
+                case int n when n >= 0x2710 && n < 0xC350:
+                    return 50;
+
+                case int n when n >= 0x186A0 && n < 0x7A120 && info:
+                    return 0x1F4;
+
+                case int n when n >= 0x7A120 && info:
+                    return 0x3E8;
+
+                default:
+                    return 0x64;
+            }
+        }
         public abstract event EventHandler<SendSecuritiesAPI> SendBalance;
         public abstract event EventHandler<SendHoldingStocks> SendStocks;
         internal Consecutive[] Consecutive

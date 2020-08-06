@@ -62,6 +62,8 @@ namespace ShareInvest.Analysis.XingAPI
             }
             SendStocks?.Invoke(this, new SendHoldingStocks(Code, Quantity, Purchase, Current, Revenue, Rate, Base, Secondary, AdjustTheColorAccordingToTheCurrentSituation(WaitOrder, OrderNumber.Count)));
         }
+        public override int GetQuoteUnit(int price, bool info) => base.GetQuoteUnit(price, info);
+        public override int GetStartingPrice(int price, bool info) => base.GetStartingPrice(price, info);
         public override string Code
         {
             get; set;
@@ -102,9 +104,11 @@ namespace ShareInvest.Analysis.XingAPI
         {
             get;
         }
+        public override dynamic FindStrategics => strategics;
         public HoldingStocks(TrendFollowingBasicFutures strategics) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();
+            this.strategics = strategics;
 
             foreach (var con in Consecutive)
                 con.Connect(this);
@@ -112,10 +116,12 @@ namespace ShareInvest.Analysis.XingAPI
         public HoldingStocks(TrendsInStockPrices strategics) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();
+            this.strategics = strategics;
 
             foreach (var con in Consecutive)
                 con.Connect(this);
         }
+        readonly dynamic strategics;
         public event EventHandler<SendConsecutive> SendConsecutive;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;
         public override event EventHandler<SendHoldingStocks> SendStocks;

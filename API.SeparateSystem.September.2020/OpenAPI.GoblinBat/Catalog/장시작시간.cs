@@ -20,6 +20,14 @@ namespace ShareInvest.OpenAPI.Catalog
             {
                 switch (param[0])
                 {
+                    case "0":
+                        if (param[1].Equals(reservation))
+                        {
+                            arg = (int)Operation.장시작전;
+                            Delay.Milliseconds = 0xE7;
+                        }
+                        break;
+
                     case "3":
                         foreach (var holding in Connect.HoldingStock)
                             holding.Value.WaitOrder = true;
@@ -41,7 +49,7 @@ namespace ShareInvest.OpenAPI.Catalog
                         Delay.Milliseconds = 0xE12;
                         break;
                 }
-                if (arg > 0)
+                if (arg > int.MinValue)
                     Send?.Invoke(this, new SendSecuritiesAPI(arg, conclusion));
             }
             SendMessage(string.Concat(DeadLine, '_', param[0], '_', param[1], '_', param[2]));
@@ -54,6 +62,7 @@ namespace ShareInvest.OpenAPI.Catalog
         {
             get; set;
         }
+        const string reservation = "085500";
         readonly int[] fid = new int[] { 215, 20, 214 };
     }
 }

@@ -9,7 +9,12 @@ namespace ShareInvest.Catalog
 {
     class KOA_CREATE_FO_ORD : TR
     {
-        internal override void OnReceiveTrData(_DKHOpenAPIEvents_OnReceiveTrDataEvent e) => Send?.Invoke(this, new SendSecuritiesAPI(API.GetCommData(e.sTrCode, e.sRQName, 0, ordNo)));
+        internal override void OnReceiveTrData(_DKHOpenAPIEvents_OnReceiveTrDataEvent e)
+        {
+            var order = API.GetCommData(e.sTrCode, e.sRQName, 0, ordNo);
+            Send?.Invoke(this, new SendSecuritiesAPI(order));
+            SendMessage(order, e.sScrNo);
+        }
         internal override string ID
         {
             get;
