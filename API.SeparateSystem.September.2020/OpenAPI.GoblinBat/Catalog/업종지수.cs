@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace ShareInvest.Catalog
+namespace ShareInvest.OpenAPI.Catalog
 {
     public struct 업종지수 : IEnumerable
     {

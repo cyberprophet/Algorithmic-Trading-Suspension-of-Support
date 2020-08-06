@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace ShareInvest.Catalog
+namespace ShareInvest.OpenAPI.Catalog
 {
     public struct 파생실시간상하한 : IEnumerable
     {

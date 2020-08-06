@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace ShareInvest.Catalog
+namespace ShareInvest.OpenAPI.Catalog
 {
     public struct 선물이론가 : IEnumerable
     {

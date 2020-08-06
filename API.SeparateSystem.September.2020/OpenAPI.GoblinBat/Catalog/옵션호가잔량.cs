@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace ShareInvest.Catalog
+namespace ShareInvest.OpenAPI.Catalog
 {
     public struct 옵션호가잔량 : IEnumerable
     {

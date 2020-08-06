@@ -15,7 +15,7 @@ namespace ShareInvest.OpenAPI.Catalog
             var code = e.sRQName.Split(';')[1];
 
             if (temp.Item1 != null && (code.StartsWith("2") || code.StartsWith("3")))
-                Send?.Invoke(this, new SendSecuritiesAPI(code, temp.Item1[0x48].Trim(), temp.Item1[0x3F].Trim().Substring(2), temp.Item1[0x33].Trim()));
+                Send?.Invoke(this, new SendSecuritiesAPI(code, temp.Item1[0x48].Trim(), temp.Item1[0x3F].Trim().Substring(2), temp.Item1[0x33].Trim(), 0));
 
             while (temp.Item2?.Count > 0)
                 foreach (var pop in temp.Item2.Dequeue())

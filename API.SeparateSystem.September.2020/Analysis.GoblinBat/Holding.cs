@@ -114,6 +114,14 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        public abstract dynamic Bid
+        {
+            get; set;
+        }
+        public abstract dynamic Offer
+        {
+            get; set;
+        }
         public abstract long Revenue
         {
             get; set;
@@ -156,7 +164,7 @@ namespace ShareInvest.Analysis
                     return (price / 5 + 1) * 5;
 
                 case int n when n >= 0x1388 && n < 0x2710:
-                    return (price / 10 + 1) * 10;
+                    return (price / 0xA + 1) * 0xA;
 
                 case int n when n >= 0x2710 && n < 0xC350:
                     return (price / 0x32 + 1) * 0x32;
@@ -185,7 +193,7 @@ namespace ShareInvest.Analysis
                     return 0xA;
 
                 case int n when n >= 0x2710 && n < 0xC350:
-                    return 50;
+                    return 0x32;
 
                 case int n when n >= 0x186A0 && n < 0x7A120 && info:
                     return 0x1F4;

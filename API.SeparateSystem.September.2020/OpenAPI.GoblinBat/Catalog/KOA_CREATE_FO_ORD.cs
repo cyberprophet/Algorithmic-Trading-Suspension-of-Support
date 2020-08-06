@@ -3,9 +3,8 @@
 using AxKHOpenAPILib;
 
 using ShareInvest.EventHandler;
-using ShareInvest.OpenAPI;
 
-namespace ShareInvest.Catalog
+namespace ShareInvest.OpenAPI.Catalog
 {
     class KOA_CREATE_FO_ORD : TR
     {

@@ -17,7 +17,7 @@ namespace ShareInvest.EventHandler
             get; private set;
         }
         public SendSecuritiesAPI(Tuple<int, string, int, int, string> order) => Convey = order;
-        public SendSecuritiesAPI(string code, string name, string retention, string price) => Convey = new Tuple<string, string, string, string>(code, name, retention, price);
+        public SendSecuritiesAPI(string code, string name, string retention, string price, int market) => Convey = new Tuple<string, string, string, string, int>(code, name, retention, price, market);
         public SendSecuritiesAPI(Tuple<string[], string[], string[], string[]> tuple) => Convey = tuple;
         public SendSecuritiesAPI(string code, Stack<string> stack) => Convey = new Tuple<string, Stack<string>>(code, stack);
         public SendSecuritiesAPI(Tuple<string, string, string> tuple)

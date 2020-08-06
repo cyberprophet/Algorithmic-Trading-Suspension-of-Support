@@ -16,7 +16,8 @@ namespace ShareInvest.OpenAPI.Catalog
             while (param.Count > 0)
             {
                 var str = param.Dequeue();
-                Send?.Invoke(this, new SendSecuritiesAPI(str[0].Trim(), str[1].Trim(), API.GetMasterStockState(str[0].Trim()), str[3].Trim()));
+                var code = str[0].Trim();
+                Send?.Invoke(this, new SendSecuritiesAPI(code, str[1].Trim(), API.GetMasterStockState(str[0].Trim()), str[3].Trim(), API.KOA_Functions(info, code).Split(';')[0].Contains(market) ? 1 : 2));
             }
         }
         protected internal override string LookupScreenNo => (Count++ + 0x1B58).ToString("D4");

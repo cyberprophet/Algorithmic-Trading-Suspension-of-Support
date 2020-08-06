@@ -158,13 +158,14 @@ namespace ShareInvest
                                 }
                             return;
 
-                        case Tuple<string, string, string, string> tuple:
+                        case Tuple<string, string, string, string, int> tuple:
                             var statusOptionsCode = await client.PutContext<Codes>(new Codes
                             {
                                 Code = tuple.Item1,
                                 Name = tuple.Item2,
                                 MaturityMarketCap = tuple.Item3,
-                                Price = tuple.Item4
+                                Price = tuple.Item4,
+                                MarginRate = tuple.Item5
                             });
                             if (tuple.Item1.Length == 6)
                                 stocks.Add(tuple.Item1);

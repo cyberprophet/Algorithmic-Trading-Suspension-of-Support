@@ -11,6 +11,8 @@ namespace ShareInvest.OpenAPI
 {
     abstract class TR : ISendSecuritiesAPI<SendSecuritiesAPI>
     {
+        protected internal const string market = "거래소";
+        protected internal const string info = "GetMasterStockInfo";
         [Conditional("DEBUG")]
         protected internal void SendMessage(string code, string message) => Console.WriteLine(string.Concat(code, "_", message));
         protected internal static uint Screen

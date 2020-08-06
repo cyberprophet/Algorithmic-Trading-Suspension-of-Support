@@ -13,14 +13,14 @@ namespace ShareInvest.Analysis.OpenAPI
             switch (strategics)
             {
                 case TrendsInStockPrices ts:
-                    if (ts.Setting.Equals(Interface.Setting.Short) == false && Current < peek * (1 - ts.AdditionalPurchase) && gap > 0 && OrderNumber.ContainsValue(Current) == false && WaitOrder)
+                    if (ts.Setting.Equals(Interface.Setting.Short) == false && Bid < peek * (1 - ts.AdditionalPurchase) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder)
                     {
-                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, ts.Code, ts.Quantity, Current, string.Empty)));
+                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, ts.Code, ts.Quantity, Bid, string.Empty)));
                         WaitOrder = false;
                     }
-                    else if (ts.Setting.Equals(Interface.Setting.Long) == false && Current > peek * ts.RealizeProfit && gap < 0 && OrderNumber.ContainsValue(Current) == false && WaitOrder)
+                    else if (ts.Setting.Equals(Interface.Setting.Long) == false && Offer > peek * (1 + ts.RealizeProfit) && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder)
                     {
-                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, ts.Code, ts.Quantity, Current, string.Empty)));
+                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, ts.Code, ts.Quantity, Offer, string.Empty)));
                         WaitOrder = false;
                     }
                     break;
@@ -142,6 +142,14 @@ namespace ShareInvest.Analysis.OpenAPI
         public override int GetQuoteUnit(int price, bool info) => base.GetQuoteUnit(price, info);
         public override int GetStartingPrice(int price, bool info) => base.GetStartingPrice(price, info);
         public override dynamic FindStrategics => strategics;
+        public override dynamic Bid
+        {
+            get; set;
+        }
+        public override dynamic Offer
+        {
+            get; set;
+        }
         public HoldingStocks(TrendsInStockPrices strategics) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();

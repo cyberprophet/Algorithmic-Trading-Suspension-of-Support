@@ -119,9 +119,7 @@ namespace ShareInvest.OpenAPI.Catalog
         internal override AxKHOpenAPI API
         {
             get; set;
-        }
-        const string market = "거래소";
-        const string info = "GetMasterStockInfo";
+        }       
         const string code = "opw00005";
         const string name = "체결잔고요청";
         const string id = "계좌번호;비밀번호;비밀번호입력매체구분";

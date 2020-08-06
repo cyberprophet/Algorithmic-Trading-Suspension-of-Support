@@ -105,6 +105,14 @@ namespace ShareInvest.Analysis.XingAPI
             get;
         }
         public override dynamic FindStrategics => strategics;
+        public override dynamic Bid
+        {
+            get; set;
+        }
+        public override dynamic Offer
+        {
+            get; set;
+        }
         public HoldingStocks(TrendFollowingBasicFutures strategics) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();

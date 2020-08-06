@@ -194,6 +194,9 @@ namespace ShareInvest.OpenAPI
                 Real = new HashSet<Real>()
                 {
                     new 주식체결 { API = axAPI },
+                    new 주식호가잔량 { API = axAPI },
+                    new 주식시세 { API = axAPI },
+                    new 주식우선호가 { API = axAPI },
                     Chapter
                 };
                 Chejan = new Dictionary<string, Chejan>()
