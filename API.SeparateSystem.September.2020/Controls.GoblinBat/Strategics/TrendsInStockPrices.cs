@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 
@@ -29,6 +30,22 @@ namespace ShareInvest.Controls
                 }
                 else if (char.TryParse(strategics[i], out char param))
                     ConvertToFindTheVariable(i, Enum.GetName(typeof(StrategicsCode), param)).FindByName<RadioButton>(this).Checked = true;
+        }
+        internal bool TransmuteStrategics()
+        {
+            if (numericShort.Value < numericLong.Value && numericRealizeProfit.Value >= 1 && numericAdditionalPurchase.Value >= 1 && numericQuantity.Value > 0 && numericQuoteUnit.Value > 0)
+            {
+                var stack = new Stack<StrategicsCode>();
+
+                for (int i = 7; i < strategics.Length; i++)
+                    foreach (Control control in ConvertToFindTheVariable(i, strategics[i]).Replace(radio, group).FindByName<GroupBox>(this).Controls)
+                        if (control is RadioButton radio && radio.Checked && Enum.TryParse(radio.Name.Substring(5), out StrategicsCode sc))
+                            stack.Push(sc);
+
+                return stack.Count == 3;
+            }
+            else
+                return false;
         }
         internal string TransmuteStrategics(string code)
         {

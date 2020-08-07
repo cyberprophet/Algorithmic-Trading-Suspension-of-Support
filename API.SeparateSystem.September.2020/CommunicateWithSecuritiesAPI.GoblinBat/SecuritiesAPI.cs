@@ -213,7 +213,7 @@ namespace ShareInvest
                                 default:
                                     return;
                             }
-                            if (WindowState.Equals(FormWindowState.Minimized) == false && Info.Account.Equals("S"))
+                            if (WindowState.Equals(FormWindowState.Minimized) == false && ((tuple.Item1 == 0x65 && tuple.Item2 == 0xF || tuple.Item1 == 5 && tuple.Item2 == 0x29) && Info.Name.Equals("선물옵션") || Info.Name.Equals("위탁종합") && (tuple.Item1 == 8 && tuple.Item2 == 0x58 || tuple.Item1 == 1 && tuple.Item2 == 0x29)))
                                 WindowState = FormWindowState.Minimized;
 
                             break;

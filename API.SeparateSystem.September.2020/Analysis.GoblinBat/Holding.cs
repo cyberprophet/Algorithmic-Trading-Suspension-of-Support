@@ -55,7 +55,7 @@ namespace ShareInvest.Analysis
                 }
             }
         }
-        long StartProgress(string code)
+        protected internal long StartProgress(string code)
         {
             foreach (var queue in FindTheOldestDueDate(code))
             {
@@ -85,18 +85,11 @@ namespace ShareInvest.Analysis
 
             for (int i = 0; i < catalog.Length; i++)
                 Consecutive[i] = new Consecutive(catalog[i], this);
-
-            if (StartProgress(strategics.Code) > 0)
-                foreach (var con in Consecutive)
-                    con.Dispose();
         }
         public Holding(TrendsInStockPrices strategics)
         {
             TS = strategics;
             consecutive = new Consecutive(strategics, this);
-
-            if (StartProgress(strategics.Code) > 0)
-                consecutive.Dispose();
         }
         public abstract string Code
         {
@@ -150,6 +143,7 @@ namespace ShareInvest.Analysis
         {
             get;
         }
+        public virtual string FindStrategicsCode(string code) => Temporary.CodeStorage.First(o => o.Code.Equals(code)).Name;
         public abstract void OnReceiveEvent(string[] param);
         public abstract void OnReceiveBalance(string[] param);
         public abstract void OnReceiveConclusion(string[] param);

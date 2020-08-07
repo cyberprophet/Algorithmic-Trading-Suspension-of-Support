@@ -2,10 +2,11 @@
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using ShareInvest.Catalog;
 using ShareInvest.Client;
+using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 
 namespace ShareInvest.Strategics
@@ -18,20 +19,43 @@ namespace ShareInvest.Strategics
             cultureInfo = CultureInfo.GetCultureInfo("en-US");
             client = GoblinBatClient.GetInstance(cookie);
             strip.ItemClicked += OnItemClick;
-            StartProgress(new Privacies { Security = cookie });
+            StartProgress(new Catalog.Privacies { Security = cookie });
         }
-        void OnReceiveTheChangedSize(object sender, Size size)
+        void OnReceiveTheChangedSize(object sender, SendHoldingStocks e)
         {
             if (sender is Controls.Strategics)
             {
-                SuspendLayout();
-                Console.WriteLine(Size.Height + "\t" + Size.Width + "\t" + size.Height + "\t" + size.Width);
-                ResumeLayout();
+                Form form = null;
+
+                switch (e.Strategics)
+                {
+                    case Size size:
+                        SuspendLayout();
+                        Console.WriteLine(Size.Height + "\t" + Size.Width + "\t" + size.Height + "\t" + size.Width);
+                        ResumeLayout();
+                        return;
+
+                    case Catalog.TrendFollowingBasicFutures tf:
+                        var hfs = new Analysis.SecondaryIndicators.HoldingStocks(tf);
+                        form = new TrendFollowingBasicFutures(hfs);
+                        new Task(() => hfs.StartProgress()).Start();
+                        break;
+
+                    case Catalog.TrendsInStockPrices ts:
+                        var hts = new Analysis.SecondaryIndicators.HoldingStocks(ts);
+                        form = new TrendsInStockPrices(ts.Code, hts);
+                        new Task(() => hts.StartProgress()).Start();
+                        break;
+                }
+                WindowState = FormWindowState.Minimized;
+
+                if (form.ShowDialog().Equals(DialogResult.Cancel))
+                    strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
             }
         }
         async void StartProgress(IParameters param)
         {
-            switch ((int)await client.PostContext<Privacies>(param))
+            switch ((int)await client.PostContext<Catalog.Privacies>(param))
             {
                 case 0xCA:
                     if (Statistical == null)
@@ -54,17 +78,23 @@ namespace ShareInvest.Strategics
             }
             if (Result.Equals(DialogResult.OK) && IsApplicationAlreadyRunning(param.Security))
             {
-                Privacy = new Privacies
+                Privacy = new Catalog.Privacies
                 {
                     Security = param.Security
                 };
                 Opacity = 0;
                 timer.Start();
             }
-            else
+            else if (Result.Equals(DialogResult.Cancel))
             {
                 strip.ItemClicked -= OnItemClick;
                 Dispose();
+            }
+            else
+            {
+                Opacity = 0;
+                notifyIcon.Text = text;
+                WindowState = FormWindowState.Minimized;
             }
         }
         void GoblinBatResize(object sender, EventArgs e)
@@ -85,7 +115,7 @@ namespace ShareInvest.Strategics
         }
         void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
-            if (MessageBox.Show(rExit, notifyIcon.Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
+            if (MessageBox.Show(notifyIcon.Text.Equals(text) ? nExit : rExit, notifyIcon.Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
             {
                 e.Cancel = true;
                 WindowState = FormWindowState.Minimized;
@@ -117,7 +147,7 @@ namespace ShareInvest.Strategics
         }
         void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(async () =>
         {
-            if (e.ClickedItem.Name.Equals(st))
+            if (e.ClickedItem.Name.Equals(st) && notifyIcon.Text.Equals(text) == false)
             {
                 if (Statistical == null)
                 {
@@ -125,7 +155,7 @@ namespace ShareInvest.Strategics
                     Controls.Add(Statistical);
                     Statistical.Dock = DockStyle.Fill;
                 }
-                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && await client.GetContext<Privacies>(Privacy) is Privacies privacy)
+                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && await client.GetContext<Catalog.Privacies>(Privacy) is Catalog.Privacies privacy)
                     Text = await Statistical.SetPrivacy(privacy);
 
                 Size = new Size(0x245, 0x208);
@@ -161,7 +191,7 @@ namespace ShareInvest.Strategics
         {
             get; set;
         }
-        Privacies Privacy
+        Catalog.Privacies Privacy
         {
             get; set;
         }

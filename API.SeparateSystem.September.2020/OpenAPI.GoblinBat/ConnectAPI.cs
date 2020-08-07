@@ -26,9 +26,9 @@ namespace ShareInvest.OpenAPI
         void ButtonStartProgressClick(object sender, EventArgs e) => BeginInvoke(new Action(() =>
         {
             Start = true;
+            API = Connect.GetInstance(axAPI);
             axAPI.OnEventConnect += OnEventConnect;
             axAPI.OnReceiveMsg += OnReceiveMsg;
-            API = Connect.GetInstance(axAPI);
         }));
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e) => BeginInvoke(new Action(() =>
         {

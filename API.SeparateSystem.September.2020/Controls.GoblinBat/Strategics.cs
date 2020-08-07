@@ -9,7 +9,9 @@ using System.Windows.Forms;
 
 using ShareInvest.Catalog;
 using ShareInvest.Client;
+using ShareInvest.EventHandler;
 using ShareInvest.FindByName;
+using ShareInvest.Interface;
 
 namespace ShareInvest.Controls
 {
@@ -28,7 +30,7 @@ namespace ShareInvest.Controls
             Codes = new HashSet<Codes>();
             this.client = client;
         }
-        public event EventHandler<Size> SendSize;
+        public event EventHandler<SendHoldingStocks> SendSize;
         public async Task<string> SetPrivacy(Privacies privacy)
         {
             Privacy = privacy;
@@ -48,6 +50,7 @@ namespace ShareInvest.Controls
                         }
                         str = "선물옵션";
                         Length = 8;
+                        comboCommission.SelectedIndex = Array.FindIndex(commissionFutures, o => o == privacy.Commission);
                         break;
 
                     case "S":
@@ -60,6 +63,7 @@ namespace ShareInvest.Controls
                         }
                         str = "위탁종합";
                         Length = 6;
+                        comboCommission.SelectedIndex = Array.FindIndex(commissionStocks, o => o == privacy.Commission);
                         break;
                 }
                 if (await client.GetContext(new Codes { }, Length) is List<Codes> list)
@@ -147,7 +151,9 @@ namespace ShareInvest.Controls
             switch (codes.Code.Length)
             {
                 case 6:
-                    return codes.MaturityMarketCap.StartsWith("증거금");
+                    var market = codes.MaturityMarketCap;
+
+                    return market.StartsWith("증거금") && market.Contains("거래정지") == false;
 
                 case 8:
                     return codes.MaturityMarketCap.Length == 6 && string.Compare(DateTime.Now.ToString(format), codes.MaturityMarketCap) <= 0;
@@ -186,9 +192,65 @@ namespace ShareInvest.Controls
 
                 if (buttonChart.Name.Equals(bfn.Name))
                 {
-                    buttonSave.ForeColor = Color.Ivory;
+                    var check = buttonChart.ForeColor.Equals(Color.Ivory);
+                    var tabPage = Controls.Find(tab.SelectedTab.Name, true).First();
+                    string[] stParam;
+                    SendHoldingStocks verify = null;
+
+                    foreach (var con in tabPage.Controls)
+                        switch (con)
+                        {
+                            case TrendFollowingBasicFutures tf:
+                                check = tf.TransmuteStrategics();
+                                stParam = tf.TransmuteStrategics(tabPage.Text).Split('.');
+
+                                if (check && int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
+                                    verify = new SendHoldingStocks(new Catalog.TrendFollowingBasicFutures
+                                    {
+                                        Code = stParam[0].Substring(2, 8),
+                                        RollOver = stParam[0].Substring(0xA, 1).Equals("1"),
+                                        DayShort = ds,
+                                        DayLong = dl,
+                                        Minute = m,
+                                        MinuteShort = ms,
+                                        MinuteLong = ml,
+                                        ReactionShort = rs,
+                                        ReactionLong = rl,
+                                        QuantityShort = qs,
+                                        QuantityLong = ql
+                                    });
+                                break;
+
+                            case TrendsInStockPrices ts:
+                                check = ts.TransmuteStrategics();
+                                stParam = ts.TransmuteStrategics(tabPage.Text).Split('.');
+
+                                if (check && char.TryParse(stParam[stParam.Length - 1], out char setting) && char.TryParse(stParam[8], out char tTrend) && char.TryParse(stParam[7], out char longShort) && int.TryParse(stParam[6], out int quoteUnit) && int.TryParse(stParam[5], out int quantity) && double.TryParse(stParam[4].Insert(stParam[4].Length - 2, "."), out double additionalPurchase) && double.TryParse(stParam[3].Insert(stParam[3].Length - 2, "."), out double realizeProfit) && int.TryParse(stParam[2], out int trend) && int.TryParse(stParam[1], out int l) && int.TryParse(stParam[0].Substring(8), out int s))
+                                    verify = new SendHoldingStocks(new Catalog.TrendsInStockPrices
+                                    {
+                                        Code = stParam[0].Substring(2, 6),
+                                        Short = s,
+                                        Long = l,
+                                        Trend = trend,
+                                        RealizeProfit = realizeProfit * 0.01,
+                                        AdditionalPurchase = additionalPurchase * 0.01,
+                                        Quantity = quantity,
+                                        QuoteUnit = quoteUnit,
+                                        LongShort = (LongShort)longShort,
+                                        TrendType = (Trend)tTrend,
+                                        Setting = (Setting)setting
+                                    });
+                                break;
+                        }
+                    if (check && verify != null)
+                    {
+                        buttonSave.ForeColor = Color.Ivory;
+                        SendSize?.Invoke(this, verify);
+                    }
+                    else
+                        buttonChart.ForeColor = Color.Maroon;
                 }
-                else if (buttonSave.Name.Equals(bfn.Name) && bfn.ForeColor.Equals(Color.Maroon) == false && double.TryParse(str.Remove(str.Length - 1, 1), out double commission))
+                else if (buttonSave.Name.Equals(bfn.Name) && bfn.ForeColor.Equals(Color.Ivory) && double.TryParse(str.Remove(str.Length - 1, 1), out double commission))
                 {
                     var sb = new StringBuilder();
 
@@ -219,7 +281,7 @@ namespace ShareInvest.Controls
                         bfn.ForeColor = Color.Maroon;
                 }
             }
-            else if (sender is ComboBox box && comboStrategics.Name.Equals(box.Name) && textCode.TextLength == Length && tab.TabPages.ContainsKey(textCode.Text) == false)
+            else if (sender is ComboBox box && buttonSave.ForeColor.Equals(Color.Ivory) && comboStrategics.Name.Equals(box.Name) && textCode.TextLength == Length && tab.TabPages.ContainsKey(textCode.Text) == false)
             {
                 SuspendLayout();
                 var color = Color.FromArgb(0x79, 0x85, 0x82);
@@ -262,6 +324,7 @@ namespace ShareInvest.Controls
                 tab.TabPages[tab.TabPages.Count - 1].BackColor = color;
                 tab.SelectTab(tab.TabPages.Count - 1);
                 tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
+                buttonSave.ForeColor = Color.Maroon;
                 ResumeLayout();
             }
         }));
@@ -284,7 +347,7 @@ namespace ShareInvest.Controls
         void TabSelecting(object sender, EventArgs e)
         {
             if (sender is TabControl && e is TabControlCancelEventArgs tc && tc.TabPage != null)
-                SendSize?.Invoke(this, tc.TabPage.Size);
+                SendSize?.Invoke(this, new SendHoldingStocks(tc.TabPage.Size));
         }
         int Length
         {

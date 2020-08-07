@@ -27,6 +27,14 @@ namespace ShareInvest.Controls
                 if (int.TryParse(strategics[i], out int value))
                     string.Concat("numeric", str[i]).FindByName<NumericUpDown>(this).Value = value;
         }
+        internal bool TransmuteStrategics()
+        {
+            if (numericBaseShort.Value < numericBaseLong.Value && numericMinute.Value < 0x2D1 && numericMinuteShort.Value < numericMinuteLong.Value && numericReactionShort.Value < 0x65 && numericReactionLong.Value < 0x65)
+                return true;
+
+            else
+                return false;
+        }
         internal string TransmuteStrategics(string code) => string.Concat("TF", code, checkRollover.Checked ? 1 : 0, numericBaseShort.Value, '.', numericBaseLong.Value, '.', numericMinute.Value, '.', numericMinuteShort.Value, '.', numericMinuteLong.Value, '.', numericReactionShort.Value, '.', numericReactionLong.Value, '.', numericQuantityShort.Value, '.', numericQuantityLong.Value);
         void OutOfFocusNumericQuantity(object sender, EventArgs e)
         {

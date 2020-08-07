@@ -52,7 +52,7 @@ namespace ShareInvest.OpenAPI.Catalog
                                             RQName = balance.Item2,
                                             ScreenNo = connect.LookupScreenNo,
                                             AccNo = account,
-                                            OrderType = 2,
+                                            OrderType = (int)OpenOrderType.신규매도,
                                             Code = hs.Code,
                                             Qty = ts.Quantity,
                                             Price = sPrice,
@@ -69,7 +69,7 @@ namespace ShareInvest.OpenAPI.Catalog
                                             RQName = balance.Item2,
                                             ScreenNo = connect.LookupScreenNo,
                                             AccNo = account,
-                                            OrderType = 1,
+                                            OrderType = (int)OpenOrderType.신규매수,
                                             Code = hs.Code,
                                             Qty = ts.Quantity,
                                             Price = bPrice,
@@ -119,7 +119,7 @@ namespace ShareInvest.OpenAPI.Catalog
         internal override AxKHOpenAPI API
         {
             get; set;
-        }       
+        }
         const string code = "opw00005";
         const string name = "체결잔고요청";
         const string id = "계좌번호;비밀번호;비밀번호입력매체구분";

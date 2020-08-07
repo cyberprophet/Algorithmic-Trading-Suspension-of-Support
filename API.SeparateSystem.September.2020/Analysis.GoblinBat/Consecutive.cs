@@ -137,6 +137,10 @@ namespace ShareInvest.Analysis
                     case XingAPI.HoldingStocks xs when strategics is TrendFollowingBasicFutures:
                         xs.OnReceiveTrendFollowingBasicFutures(gap, tMinute);
                         break;
+
+                    case HoldingStocks hs when strategics is TrendsInStockPrices:
+                        hs.OnReceiveTrendsInStockPrices(e.Date, e.Price, Short.Peek(), Long.Peek());
+                        break;
                 }
             }
         }

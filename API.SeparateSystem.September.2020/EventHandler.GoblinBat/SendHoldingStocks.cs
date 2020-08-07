@@ -45,6 +45,17 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
+        public object Strategics
+        {
+            get; private set;
+        }
+        public SendHoldingStocks(string date, int price, double sShort, double sLong)
+        {
+            Time = date.Substring(0, 10);
+            Current = price;
+            Base = sShort;
+            Secondary = sLong;
+        }
         public SendHoldingStocks(string code, int quantity, dynamic purchase, dynamic current, long revenue, double rate, double basic, double secondary, Color color)
         {
             Code = code;
@@ -57,5 +68,8 @@ namespace ShareInvest.EventHandler
             Secondary = secondary;
             Color = color;
         }
+        public SendHoldingStocks(Catalog.TrendFollowingBasicFutures tf) => Strategics = tf;
+        public SendHoldingStocks(Catalog.TrendsInStockPrices ts) => Strategics = ts;
+        public SendHoldingStocks(Size size) => Strategics = size;
     }
 }

@@ -36,17 +36,16 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
-                        return JsonConvert.DeserializeObject<string>(response.Content);
-
-                    else
-                        return JsonConvert.DeserializeObject<IEnumerable<Charts>>(response.Content);
                 }
+                if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
+                    return JsonConvert.DeserializeObject<string>(response.Content);
+
+                else
+                    return JsonConvert.DeserializeObject<IEnumerable<Charts>>(response.Content);
             }
             catch (Exception ex)
             {
@@ -61,13 +60,12 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    return JsonConvert.DeserializeObject<Codes>(response.Content);
                 }
+                return JsonConvert.DeserializeObject<Codes>(response.Content);
             }
             catch (Exception ex)
             {
@@ -82,13 +80,12 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    return JsonConvert.DeserializeObject<List<Codes>>(response.Content);
                 }
+                return JsonConvert.DeserializeObject<List<Codes>>(response.Content);
             }
             catch (Exception ex)
             {
@@ -103,16 +100,15 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    switch (param)
-                    {
-                        case Privacies _:
-                            return JsonConvert.DeserializeObject<Privacies>(response.Content);
-                    }
+                }
+                switch (param)
+                {
+                    case Privacies _:
+                        return JsonConvert.DeserializeObject<Privacies>(response.Content);
                 }
             }
             catch (Exception ex)
@@ -128,13 +124,12 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    return JsonConvert.DeserializeObject<Retention>(response.Content);
                 }
+                return JsonConvert.DeserializeObject<Retention>(response.Content);
             }
             catch (Exception ex)
             {
@@ -155,13 +150,12 @@ namespace ShareInvest.Client
                 {
                     var response = await client.ExecuteAsync(new RestRequest(security.RequestCode(code), Method.GET), source.Token);
 
-                    if (response != null)
+                    if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                     {
                         Coin += security.GetSettleTheFare(response.RawBytes.Length);
                         SendMessage(Coin);
-
-                        return JsonConvert.DeserializeObject<Retention>(response.Content);
                     }
+                    return JsonConvert.DeserializeObject<Retention>(response.Content);
                 }
             }
             catch (Exception ex)
@@ -180,7 +174,7 @@ namespace ShareInvest.Client
             {
                 var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
@@ -198,16 +192,15 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    switch (param)
-                    {
-                        case Privacies _:
-                            return (int)response.StatusCode;
-                    }
+                }
+                switch (param)
+                {
+                    case Privacies _:
+                        return (int)response.StatusCode;
                 }
             }
             catch (Exception ex)
@@ -223,16 +216,15 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    switch (param)
-                    {
-                        case IEnumerable<Codes> _:
-                            return response.IsSuccessful;
-                    }
+                }
+                switch (param)
+                {
+                    case IEnumerable<Codes> _:
+                        return response.IsSuccessful;
                 }
             }
             catch (Exception ex)
@@ -248,13 +240,12 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    return (int)response.StatusCode;
                 }
+                return (int)response.StatusCode;
             }
             catch (Exception ex)
             {
@@ -269,13 +260,12 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    return (int)response.StatusCode;
                 }
+                return (int)response.StatusCode;
             }
             catch (Exception ex)
             {
@@ -290,13 +280,12 @@ namespace ShareInvest.Client
 
             try
             {
-                if (response != null)
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
-
-                    return (int)response.StatusCode;
                 }
+                return (int)response.StatusCode;
             }
             catch (Exception ex)
             {

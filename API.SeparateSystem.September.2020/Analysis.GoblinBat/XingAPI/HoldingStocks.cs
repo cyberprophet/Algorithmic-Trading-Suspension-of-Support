@@ -115,6 +115,10 @@ namespace ShareInvest.Analysis.XingAPI
         }
         public HoldingStocks(TrendFollowingBasicFutures strategics) : base(strategics)
         {
+            if (StartProgress(strategics.Code) > 0)
+                foreach (var con in Consecutive)
+                    con.Dispose();
+
             OrderNumber = new Dictionary<string, dynamic>();
             this.strategics = strategics;
 
@@ -123,11 +127,12 @@ namespace ShareInvest.Analysis.XingAPI
         }
         public HoldingStocks(TrendsInStockPrices strategics) : base(strategics)
         {
+            if (StartProgress(strategics.Code) > 0)
+                consecutive.Dispose();
+
             OrderNumber = new Dictionary<string, dynamic>();
             this.strategics = strategics;
-
-            foreach (var con in Consecutive)
-                con.Connect(this);
+            consecutive.Connect(this);
         }
         readonly dynamic strategics;
         public event EventHandler<SendConsecutive> SendConsecutive;
