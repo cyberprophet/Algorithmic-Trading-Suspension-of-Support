@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+using ShareInvest.Analysis.SecondaryIndicators;
 using ShareInvest.Client;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
@@ -21,11 +22,16 @@ namespace ShareInvest.Strategics
             strip.ItemClicked += OnItemClick;
             StartProgress(new Catalog.Privacies { Security = cookie });
         }
+        void OnReceiveAnalysisData(object sender, SendSecuritiesAPI e)
+        {
+
+        }
         void OnReceiveTheChangedSize(object sender, SendHoldingStocks e)
         {
             if (sender is Controls.Strategics)
             {
                 Form form = null;
+                HoldingStocks hs = null;
 
                 switch (e.Strategics)
                 {
@@ -36,21 +42,32 @@ namespace ShareInvest.Strategics
                         return;
 
                     case Catalog.TrendFollowingBasicFutures tf:
-                        var hfs = new Analysis.SecondaryIndicators.HoldingStocks(tf);
-                        form = new TrendFollowingBasicFutures(hfs);
-                        new Task(() => hfs.StartProgress()).Start();
+                        hs = new HoldingStocks(tf)
+                        {
+                            Code = tf.Code
+                        };
+                        form = new TrendFollowingBasicFutures(hs);
+                        hs.SendBalance += OnReceiveAnalysisData;
+                        new Task(() => hs.StartProgress(Privacy.Commission)).Start();
                         break;
 
                     case Catalog.TrendsInStockPrices ts:
-                        var hts = new Analysis.SecondaryIndicators.HoldingStocks(ts);
-                        form = new TrendsInStockPrices(ts.Code, hts);
-                        new Task(() => hts.StartProgress()).Start();
+                        hs = new HoldingStocks(ts)
+                        {
+                            Code = ts.Code
+                        };
+                        form = new TrendsInStockPrices(hs);
+                        hs.SendBalance += OnReceiveAnalysisData;
+                        new Task(() => hs.StartProgress(Privacy.Commission)).Start();
                         break;
                 }
                 WindowState = FormWindowState.Minimized;
 
                 if (form.ShowDialog().Equals(DialogResult.Cancel))
+                {
+                    hs.SendBalance -= OnReceiveAnalysisData;
                     strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
+                }
             }
         }
         async void StartProgress(IParameters param)
@@ -119,6 +136,7 @@ namespace ShareInvest.Strategics
             {
                 e.Cancel = true;
                 WindowState = FormWindowState.Minimized;
+                Application.DoEvents();
 
                 return;
             }

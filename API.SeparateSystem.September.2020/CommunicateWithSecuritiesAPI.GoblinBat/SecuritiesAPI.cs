@@ -525,6 +525,8 @@ namespace ShareInvest
                 case DialogResult.Cancel:
                     e.Cancel = true;
                     WindowState = FormWindowState.Minimized;
+                    Application.DoEvents();
+
                     return;
 
                 case DialogResult.Yes:

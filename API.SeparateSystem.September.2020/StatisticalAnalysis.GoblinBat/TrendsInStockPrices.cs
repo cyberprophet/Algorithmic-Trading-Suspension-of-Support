@@ -10,18 +10,21 @@ namespace ShareInvest.Strategics
 {
     partial class TrendsInStockPrices : Form
     {
-        internal TrendsInStockPrices(string code, Holding holding)
+        internal TrendsInStockPrices(Holding holding)
         {
             InitializeComponent();
             price = chart.Series[priceChart];
             revenue = chart.Series[revenueChart];
             sShort = chart.Series[shortChart];
             sLong = chart.Series[longChart];
+            trend = chart.Series[trendChart];
+            profit = chart.Series[profitChart];
             holding.SendStocks += OnReceiveChart;
             this.holding = holding;
-            this.code = code;
             CenterToScreen();
+            code = holding.Code;
             Text = string.Empty;
+            WindowState = FormWindowState.Maximized;
         }
         void OnReceiveChart(object sender, SendHoldingStocks e) => BeginInvoke(new Action(() =>
         {
@@ -31,16 +34,35 @@ namespace ShareInvest.Strategics
                 revenue.Points.AddXY(date, e.Revenue);
                 sShort.Points.AddXY(date, e.Base);
                 sLong.Points.AddXY(date, e.Secondary);
+                trend.Points.AddXY(date, e.Rate);
+                profit.Points.AddXY(date, e.Quantity);
+
+                if (string.IsNullOrEmpty(Text))
+                    Text = holding.FindStrategicsCode(code);
+
+                else
+                    Cursor = Cursors.Default;
             }
-            if (string.IsNullOrEmpty(Text))
-                Text = holding.FindStrategicsCode(code);
         }));
-        void TrendsInStockPricesFormClosing(object sender, FormClosingEventArgs e) => Dispose();
+        void TrendsInStockPricesFormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (MessageBox.Show(exit, Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
+            {
+                e.Cancel = true;
+                WindowState = FormWindowState.Minimized;
+                Application.DoEvents();
+
+                return;
+            }
+            Dispose();
+        }
         readonly string code;
         readonly Series price;
         readonly Series revenue;
         readonly Series sShort;
         readonly Series sLong;
+        readonly Series trend;
+        readonly Series profit;
         readonly Holding holding;
     }
 }

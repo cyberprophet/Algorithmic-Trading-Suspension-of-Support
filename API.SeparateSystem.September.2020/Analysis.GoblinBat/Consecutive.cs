@@ -139,7 +139,7 @@ namespace ShareInvest.Analysis
                         break;
 
                     case HoldingStocks hs when strategics is TrendsInStockPrices:
-                        hs.OnReceiveTrendsInStockPrices(e.Date, e.Price, Short.Peek(), Long.Peek());
+                        hs.OnReceiveTrendsInStockPrices(e, gap, Short.Peek(), Long.Peek(), Trend.Peek());
                         break;
                 }
             }

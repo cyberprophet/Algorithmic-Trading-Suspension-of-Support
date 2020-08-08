@@ -35,6 +35,7 @@ namespace ShareInvest.Analysis
             {
                 string sDate = temporary.FindTheChartStartsAsync(code).Result, date = sDate.Substring(0, 6);
                 Days = new Queue<Charts>();
+                Market = Temporary.CodeStorage.First(o => o.Code.Equals(code)).MarginRate == 1;
 
                 foreach (var day in temporary.CallUpTheChartAsync(code).Result)
                     if (string.Compare(day.Date.Substring(2), date) < 0)
@@ -75,6 +76,10 @@ namespace ShareInvest.Analysis
                     Send?.Invoke(this, new SendConsecutive(consecutive));
             }
             return GC.GetTotalMemory(true);
+        }
+        protected internal abstract bool Market
+        {
+            get; set;
         }
         public event EventHandler<SendConsecutive> Send;
         public Holding(TrendFollowingBasicFutures strategics)

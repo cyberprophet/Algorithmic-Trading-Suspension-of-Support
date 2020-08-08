@@ -140,6 +140,10 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             get; set;
         }
+        protected internal override bool Market
+        {
+            get; set;
+        }
         public HoldingStocks(TrendsInStockPrices strategics) : base(strategics)
         {
             if (StartProgress(strategics.Code) > 0)

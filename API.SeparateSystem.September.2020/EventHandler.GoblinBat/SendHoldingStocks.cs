@@ -49,12 +49,15 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public SendHoldingStocks(string date, int price, double sShort, double sLong)
+        public SendHoldingStocks(string date, int price, double sShort, double sLong, double trend, long revenue, int quantity)
         {
             Time = date.Substring(0, 10);
             Current = price;
             Base = sShort;
             Secondary = sLong;
+            Rate = trend;
+            Revenue = revenue;
+            Quantity = quantity;
         }
         public SendHoldingStocks(string code, int quantity, dynamic purchase, dynamic current, long revenue, double rate, double basic, double secondary, Color color)
         {
