@@ -24,7 +24,16 @@ namespace ShareInvest.Strategics
         }
         void OnReceiveAnalysisData(object sender, SendSecuritiesAPI e)
         {
+            if (e.Convey is Tuple<dynamic, Catalog.Statistics> tuple)
+                switch (tuple.Item1)
+                {
+                    case Catalog.TrendFollowingBasicFutures tf:
+                        break;
 
+                    case Catalog.TrendsInStockPrices ts:
+                        Console.WriteLine(ts.Code + "\t" + tuple.Item2.Date + "\t" + (tuple.Item2.Cumulative / tuple.Item2.Base).ToString("P2") + "\t" + (tuple.Item2.Statistic / tuple.Item2.Base).ToString("P2"));
+                        break;
+                }
         }
         void OnReceiveTheChangedSize(object sender, SendHoldingStocks e)
         {

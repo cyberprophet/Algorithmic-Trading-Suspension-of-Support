@@ -10,6 +10,10 @@
         {
             get; set;
         }
+        public double Base
+        {
+            get; set;
+        }
         public int Statistic
         {
             get; set;

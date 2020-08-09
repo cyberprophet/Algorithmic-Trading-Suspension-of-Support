@@ -28,14 +28,14 @@ namespace ShareInvest.Strategics
         }
         void OnReceiveChart(object sender, SendHoldingStocks e) => BeginInvoke(new Action(() =>
         {
-            if (DateTime.TryParseExact(e.Time, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
+            if (DateTime.TryParseExact(e.Time, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) && e.Strategics is long max)
             {
                 price.Points.AddXY(date, e.Current);
                 revenue.Points.AddXY(date, e.Revenue);
                 sShort.Points.AddXY(date, e.Base);
                 sLong.Points.AddXY(date, e.Secondary);
                 trend.Points.AddXY(date, e.Rate);
-                profit.Points.AddXY(date, e.Quantity);
+                profit.Points.AddXY(date, max);
 
                 if (string.IsNullOrEmpty(Text))
                     Text = holding.FindStrategicsCode(code);

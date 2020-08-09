@@ -12,7 +12,9 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 {
     public class HoldingStocks : Holding
     {
-        public override void OnReceiveConclusion(string[] param) => Console.WriteLine(param[0] + " Q_" + param[1] + " P_" + param[2] + " C_" + param[3] + " R_" + param[4]);
+        public override void OnReceiveConclusion(string[] param) => Console.WriteLine(param[0] + " Q_" + param[1] + " P_" + param[2] + " C_" + param[3] + " R_" + param[4] + " N_" + param[5]);
+        public override void OnReceiveBalance(string[] param) => Console.WriteLine(param[0] + " N_" + param[1] + " P_" + param[2]);
+        public override void OnReceiveEvent(string[] param) => Console.WriteLine(param[0] + " B_" + param[1] + " S_" + param[2]);
         internal void OnReceiveTrendsInStockPrices(SendConsecutive e, double gap, double sShort, double sLong, double trend)
         {
             var date = e.Date.Substring(6, 4);
@@ -22,51 +24,87 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                 case TrendsInStockPrices ts:
                     if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0)
                     {
-                        if (OrderNumber.ContainsValue(e.Price) == false && e.Price < trend * (1 - ts.AdditionalPurchase) && gap > 0)
-                        {
-                            OrderNumber[GetOrderNumber((int)OpenOrderType.신규매수)] = e.Price;
-
-                            if (Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
-                                OnReceiveConclusion(new string[]
-                                {
-                                    string.Concat(dt.ToShortDateString()," ",dt.ToLongTimeString()),
-                                    Quantity.ToString("N0"),
-                                    (Purchase ?? 0D).ToString("N2"),
-                                    e.Price.ToString("N0"),
-                                    (Revenue - CumulativeFee).ToString("C0")
-                                });
-                        }
-                        else if (OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + ts.RealizeProfit) && Quantity > 0 && e.Price > (Purchase ?? 0D) && gap < 0)
-                        {
-                            OrderNumber[GetOrderNumber((int)OpenOrderType.신규매도)] = e.Price;
-
-                            if (Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
-                                OnReceiveConclusion(new string[]
-                                {
-                                    string.Concat(dt.ToShortDateString()," ",dt.ToLongTimeString()),
-                                    Quantity.ToString("N0"),
-                                    (Purchase ?? 0D).ToString("N2"),
-                                    e.Price.ToString("N0"),
-                                    (Revenue - CumulativeFee).ToString("C0")
-                                });
-                        }
-                        else if (OrderNumber.Any(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
-                        {
-                            CumulativeFee += (uint)(e.Price * Commission * ts.Quantity);
-                            Purchase = (e.Price * ts.Quantity + (Purchase ?? 0D) * Quantity) / (Quantity + ts.Quantity);
-                            Quantity += ts.Quantity;
-
-                            if (OrderNumber.Remove(OrderNumber.First(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)).Key) && Verify)
-                                OnReceiveBalance(new string[] { });
-                        }
-                        else if (OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
+                        if (OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
                         {
                             CumulativeFee += (uint)(e.Price * ts.Quantity * (Commission + tax));
                             Revenue += (long)((e.Price - (Purchase ?? 0D)) * ts.Quantity);
                             Quantity -= ts.Quantity;
+                            var profit = OrderNumber.First(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market));
 
-                            if (OrderNumber.Remove(OrderNumber.First(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)).Key) && Verify)
-                                OnReceiveBalance(new string[] { });
+                            if (OrderNumber.Remove(profit.Key) && Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            {
+                                OnReceiveBalance(new string[]
+                                {
+                                    string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()),
+                                    profit.Key,
+                                    profit.Value.ToString("N0")
+                                });
+                                Base -= profit.Value * ts.Quantity;
+                            }
+                        }
+                        else if (OrderNumber.Any(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
+                        {
+                            CumulativeFee += (uint)(e.Price * Commission * ts.Quantity);
+                            Purchase = (double)((e.Price * ts.Quantity + (Purchase ?? 0D) * Quantity) / (Quantity + ts.Quantity));
+                            Quantity += ts.Quantity;
+                            var profit = OrderNumber.First(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market));
+
+                            if (OrderNumber.Remove(profit.Key) && Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            {
+                                OnReceiveBalance(new string[]
+                                {
+                                    string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()),
+                                    profit.Key,
+                                    profit.Value.ToString("N0")
+                                });
+                                Base += profit.Value * ts.Quantity;
+                            }
+                        }
+                        else if (OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + ts.RealizeProfit) && Quantity > 0 && e.Price > (Purchase ?? 0D) && gap < 0)
+                        {
+                            var quote = 0;
+
+                            for (int i = 0; i < ts.QuoteUnit; i++)
+                                quote += GetQuoteUnit(e.Price, Market);
+
+                            if (Verify && VerifyAmount > Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            {
+                                OnReceiveConclusion(new string[]
+                                {
+                                    string.Concat(OpenOrderType.신규매도, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString()),
+                                    Quantity.ToString("N0"),
+                                    (Purchase ?? 0D).ToString("N2"),
+                                    (e.Price + quote).ToString("N0"),
+                                    (Revenue - CumulativeFee).ToString("C0"),
+                                    OrderNumber.Max(o => o.Key)
+                                });
+                                VerifyAmount = Quantity;
+                            }
+                            if (OrderNumber.ContainsValue(e.Price + quote) == false)
+                                OrderNumber[GetOrderNumber((int)OpenOrderType.신규매도)] = e.Price + quote;
+                        }
+                        else if (OrderNumber.ContainsValue(e.Price) == false && e.Price < trend * (1 - ts.AdditionalPurchase) && gap > 0)
+                        {
+                            var quote = 0;
+
+                            for (int i = 0; i < ts.QuoteUnit; i++)
+                                quote += GetQuoteUnit(e.Price, Market);
+
+                            if (Verify && VerifyAmount < Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            {
+                                OnReceiveConclusion(new string[]
+                                {
+                                    string.Concat(OpenOrderType.신규매수, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString()),
+                                    Quantity.ToString("N0"),
+                                    (Purchase ?? 0D).ToString("N2"),
+                                    (e.Price - quote).ToString("N0"),
+                                    (Revenue - CumulativeFee).ToString("C0"),
+                                    OrderNumber.Where(o=> o.Key.StartsWith("1")).Max(o => o.Key)
+                                });
+                                VerifyAmount = Quantity;
+                            }
+                            if (OrderNumber.ContainsValue(e.Price - quote) == false)
+                                OrderNumber[GetOrderNumber((int)OpenOrderType.신규매수)] = e.Price - quote;
                         }
                     }
                     else if (date.CompareTo(transmit) > 0)
@@ -74,22 +112,47 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                         OrderNumber.Clear();
                         Count = 0;
                         long revenue = Revenue - CumulativeFee, unrealize = (long)((e.Price - (Purchase ?? 0D)) * Quantity);
-                        var avg = EMA.Make(++Accumulative, revenue - TodayRevenue + unrealize - TodayUnRealize, Before);
+                        var avg = EMA.Make(++Accumulative, revenue - TodayRevenue + unrealize - TodayUnrealize, Before);
 
                         if (ts.Setting.Equals(Setting.Reservation) && Quantity > 0)
                         {
+                            var stock = Market;
+                            int quantity = Quantity, price = e.Price, sell = (int)((Purchase ?? 0D) * (1 + ts.RealizeProfit)), buy = (int)((Purchase ?? 0D) * (1 - ts.AdditionalPurchase)), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
+                            sPrice = sPrice < lower ? lower + GetQuoteUnit(sPrice, stock) : sPrice;
 
+                            while (sPrice < upper && quantity-- > 0)
+                            {
+                                OrderNumber[GetOrderNumber((int)OpenOrderType.신규매도)] = sPrice;
+
+                                for (int i = 0; i < ts.QuoteUnit; i++)
+                                    sPrice += GetQuoteUnit(sPrice, stock);
+                            }
+                            while (bPrice < upper && bPrice < buy)
+                            {
+                                OrderNumber[GetOrderNumber((int)OpenOrderType.신규매수)] = bPrice;
+
+                                for (int i = 0; i < ts.QuoteUnit; i++)
+                                    bPrice += GetQuoteUnit(bPrice, stock);
+                            }
+                            if (Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                                OnReceiveEvent(new string[]
+                                {
+                                    string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()),
+                                    OrderNumber.Where(o=> o.Key.StartsWith("1")).Max(o=> o.Key),
+                                    OrderNumber.Where(o=> o.Key.StartsWith("2")).Max(o=> o.Key)
+                                });
                         }
                         SendMessage = new Statistics
                         {
                             Date = e.Date.Substring(0, 6),
-                            Cumulative = (revenue + unrealize - TodayUnRealize) / ts.Quantity,
+                            Cumulative = (revenue + unrealize) / ts.Quantity,
+                            Base = SendMessage.Base > Base / ts.Quantity ? SendMessage.Base : Base / ts.Quantity,
                             Statistic = (int)(avg / ts.Quantity)
                         };
-                        SendStocks?.Invoke(this, new SendHoldingStocks(e.Date, e.Price, sShort, sLong, trend, revenue + unrealize, Quantity));
+                        SendStocks?.Invoke(this, new SendHoldingStocks(e.Date, e.Price, sShort, sLong, trend, revenue + unrealize, (long)(Base > 0 ? Base : 0)));
                         Before = avg;
                         TodayRevenue = revenue;
-                        TodayUnRealize = unrealize;
+                        TodayUnrealize = unrealize;
                     }
                     break;
 
@@ -123,15 +186,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                 default:
                     return;
             }
-            SendBalance?.Invoke(this, new SendSecuritiesAPI(SendMessage));
-        }
-        public override void OnReceiveBalance(string[] param)
-        {
-
-        }
-        public override void OnReceiveEvent(string[] param)
-        {
-
+            SendBalance?.Invoke(this, new SendSecuritiesAPI(strategics, SendMessage));
         }
         public override string FindStrategicsCode(string code) => base.FindStrategicsCode(code);
         public HoldingStocks(TrendFollowingBasicFutures strategics) : base(strategics)
@@ -215,6 +270,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         {
             get; set;
         }
+        int VerifyAmount
+        {
+            get; set;
+        }
         uint Count
         {
             get; set;
@@ -227,7 +286,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         {
             get; set;
         }
-        long TodayUnRealize
+        long TodayUnrealize
         {
             get; set;
         }
