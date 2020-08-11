@@ -23,7 +23,7 @@ namespace ShareInvest.Controllers
             return Ok(context);
         }
         [HttpGet, ProducesResponseType(StatusCodes.Status204NoContent)]
-        public IActionResult GetContexts() => NoContent();
+        public async Task<IActionResult> GetContext() => Ok(await context.Privacies.LongCountAsync());
         [HttpPost, ProducesResponseType(StatusCodes.Status202Accepted), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext([FromBody] Privacy privacy)
         {

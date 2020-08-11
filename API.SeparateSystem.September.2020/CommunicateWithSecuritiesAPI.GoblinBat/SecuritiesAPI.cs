@@ -211,6 +211,7 @@ namespace ShareInvest
                                     break;
 
                                 default:
+                                    GetSettleTheFare();
                                     return;
                             }
                             if (WindowState.Equals(FormWindowState.Minimized) == false && ((tuple.Item1 == 0x65 && tuple.Item2 == 0xF || tuple.Item1 == 5 && tuple.Item2 == 0x29) && Info.Name.Equals("선물옵션") || Info.Name.Equals("위탁종합") && (tuple.Item1 == 8 && tuple.Item2 == 0x58 || tuple.Item1 == 1 && tuple.Item2 == 0x29)))
@@ -520,6 +521,8 @@ namespace ShareInvest
         }
         void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
+            GetSettleTheFare();
+
             switch (MessageBox.Show(rExit, notifyIcon.Text, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button3))
             {
                 case DialogResult.Cancel:
@@ -709,6 +712,8 @@ namespace ShareInvest
         }
         void Dispose(FormWindowState state)
         {
+            GetSettleTheFare();
+
             if (state.Equals(FormWindowState.Minimized) == false)
                 WindowState = FormWindowState.Minimized;
 

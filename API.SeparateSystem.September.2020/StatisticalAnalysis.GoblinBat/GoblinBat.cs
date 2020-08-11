@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
@@ -10,6 +11,7 @@ using ShareInvest.Catalog.Request;
 using ShareInvest.Client;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
+using ShareInvest.Message;
 
 namespace ShareInvest.Strategics
 {
@@ -17,11 +19,13 @@ namespace ShareInvest.Strategics
     {
         public GoblinBat(dynamic cookie)
         {
+            this.cookie = cookie;
             InitializeComponent();
             random = new Random();
             cultureInfo = CultureInfo.GetCultureInfo("en-US");
             client = GoblinBatClient.GetInstance(cookie);
             strip.ItemClicked += OnItemClick;
+            CenterToScreen();
             StartProgress(new Catalog.Privacies { Security = cookie });
         }
         async void OnReceiveAnalysisData(object sender, SendSecuritiesAPI e)
@@ -64,7 +68,17 @@ namespace ShareInvest.Strategics
                     });
                     if (remain < 0)
                     {
-                        Console.WriteLine(remain);
+                        if (ChooseBox.Show(bill, money, charge, fExit).Equals(DialogResult.Yes))
+                        {
+
+                        }
+                        else
+                        {
+                            System.Threading.Thread.Sleep((int)Math.Pow(await client.DeleteContext<Catalog.Privacies>(Privacy), charge.Length));
+                            ClosingForm = true;
+                            strip.ItemClicked -= OnItemClick;
+                            Dispose();
+                        }
                     }
                     else
                         notifyIcon.Text = remain.ToString("C0", cultureInfo);
@@ -131,18 +145,21 @@ namespace ShareInvest.Strategics
                         Statistical.Dock = DockStyle.Fill;
                         Statistical.SendSize += OnReceiveTheChangedSize;
                     }
-                    Result = DialogResult.OK;
+                    Result = DialogResult.Yes;
                     break;
 
                 case 0xC8:
-                    Result = MessageBox.Show("", "", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1);
+                    foreach (var url in TermsOfUse)
+                        Process.Start(url);
+
+                    Result = ChooseBox.Show(string.Concat(welcomeTo, (await client.GetContext()).ToString("N0"), theGoblinBat), welcome, agree, fExit);
                     break;
 
                 default:
-                    Result = DialogResult.Cancel;
+                    Result = DialogResult.No;
                     break;
             }
-            if (Result.Equals(DialogResult.OK) && IsApplicationAlreadyRunning(param.Security))
+            if (Result.Equals(DialogResult.Yes) && IsApplicationAlreadyRunning(param.Security))
             {
                 Privacy = new Catalog.Privacies
                 {
@@ -151,7 +168,7 @@ namespace ShareInvest.Strategics
                 Opacity = 0;
                 timer.Start();
             }
-            else if (Result.Equals(DialogResult.Cancel))
+            else if (Result.Equals(DialogResult.No))
             {
                 strip.ItemClicked -= OnItemClick;
                 Dispose();
@@ -181,6 +198,8 @@ namespace ShareInvest.Strategics
         }
         void GoblinBatFormClosing(object sender, FormClosingEventArgs e)
         {
+            GetSettleTheFare();
+
             if (MessageBox.Show(notifyIcon.Text.Equals(text) ? nExit : rExit, notifyIcon.Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
             {
                 e.Cancel = true;
@@ -206,7 +225,7 @@ namespace ShareInvest.Strategics
                 Change = !Change;
 
                 if (IsApplicationAlreadyRunning(Privacy.Security))
-                    notifyIcon.Text = Text;
+                    GetSettleTheFare();
             }
         }
         void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(async () =>
@@ -262,6 +281,7 @@ namespace ShareInvest.Strategics
         {
             get; set;
         }
+        readonly dynamic cookie;
         readonly Random random;
         readonly GoblinBatClient client;
         readonly CultureInfo cultureInfo;

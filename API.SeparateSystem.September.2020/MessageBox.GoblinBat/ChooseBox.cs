@@ -24,7 +24,11 @@ namespace ShareInvest.Message
 
             g_hHook = SetWindowsHookEx(5, new HookProc(HookWndProc), IntPtr.Zero, GetCurrentThreadId());
 
-            return MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (admin.Equals(caption))
+                return MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            else
+                return MessageBox.Show(text, caption, MessageBoxButtons.YesNo, MessageBoxIcon.Question, caption.Equals(welcome) ? MessageBoxDefaultButton.Button2 : MessageBoxDefaultButton.Button1);
         }
         [DllImport("user32.dll", SetLastError = true)]
         static extern IntPtr SetWindowsHookEx(int hook, HookProc callback, IntPtr hMod, uint dwThreadId);
@@ -62,5 +66,7 @@ namespace ShareInvest.Message
         static string yes;
         static string cancel;
         static string no;
+        const string admin = "GoblinBat";
+        const string welcome = "Welcome to the GoblinBat";
     }
 }

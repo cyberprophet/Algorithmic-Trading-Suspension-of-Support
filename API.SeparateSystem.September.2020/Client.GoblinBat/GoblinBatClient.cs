@@ -94,6 +94,25 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<long> GetContext()
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestCount(), Method.GET), source.Token);
+
+                if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                return JsonConvert.DeserializeObject<long>(response.Content);
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return long.MinValue;
+        }
         public async Task<object> GetContext<T>(IParameters param)
         {
             var response = await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.GET), source.Token);
