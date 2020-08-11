@@ -32,15 +32,13 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             var profit = OrderNumber.First(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market));
 
                             if (OrderNumber.Remove(profit.Key) && Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
-                            {
                                 OnReceiveBalance(new string[]
                                 {
                                     string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()),
                                     profit.Key,
                                     profit.Value.ToString("N0")
                                 });
-                                Base -= profit.Value * ts.Quantity;
-                            }
+                            Base -= profit.Value * ts.Quantity;
                         }
                         else if (OrderNumber.Any(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
                         {
@@ -50,15 +48,13 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             var profit = OrderNumber.First(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market));
 
                             if (OrderNumber.Remove(profit.Key) && Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
-                            {
                                 OnReceiveBalance(new string[]
                                 {
                                     string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()),
                                     profit.Key,
                                     profit.Value.ToString("N0")
                                 });
-                                Base += profit.Value * ts.Quantity;
-                            }
+                            Base += profit.Value * ts.Quantity;
                         }
                         else if (OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + ts.RealizeProfit) && Quantity > 0 && e.Price > (Purchase ?? 0D) && gap < 0)
                         {

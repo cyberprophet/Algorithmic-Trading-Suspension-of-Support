@@ -12,7 +12,7 @@ namespace ShareInvest.Controllers
     [ApiController, Route(Security.route), Produces(Security.produces)]
     public class PrivaciesController : ControllerBase
     {
-        [HttpGet(security), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpGet(Security.security), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetContext(string security)
         {
             var context = await this.context.Privacies.FindAsync(security);
@@ -28,14 +28,14 @@ namespace ShareInvest.Controllers
         public async Task<IActionResult> PostContext([FromBody] Privacy privacy)
         {
             if (await context.Privacies.AnyAsync(o => o.Security.Equals(privacy.Security)))
-                return Accepted();
+                return Accepted((await context.Privacies.FirstAsync(o => o.Security.Equals(privacy.Security))).Coin);
 
             context.Privacies.Add(privacy);
             await context.BulkSaveChangesAsync();
 
-            return Ok();
+            return Ok((await context.Privacies.FirstAsync(o => o.Security.Equals(privacy.Security))).Coin);
         }
-        [HttpPut(security), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPut(Security.security), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PutContext(string security, [FromBody] Privacy privacy)
         {
             if (privacy.Security.Equals(security))
@@ -43,11 +43,11 @@ namespace ShareInvest.Controllers
                 context.Entry(privacy).State = EntityState.Modified;
                 await context.BulkSaveChangesAsync();
 
-                return Ok();
+                return Ok((await context.Privacies.FirstAsync(o => o.Security.Equals(security))).Coin);
             }
             return BadRequest();
         }
-        [HttpDelete(security), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpDelete(Security.security), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteContext(string security)
         {
             var context = await this.context.Privacies.FindAsync(security);
@@ -63,6 +63,5 @@ namespace ShareInvest.Controllers
         }
         public PrivaciesController(CoreApiDbContext context) => this.context = context;
         readonly CoreApiDbContext context;
-        const string security = "{security}";
     }
 }

@@ -269,14 +269,15 @@ namespace ShareInvest.Controls
                             }
                         sb.Append(';');
                     }
-                    if (0xC8 == await client.PutContext<Privacies>(new Privacies
+                    if (0 < await client.PutContext(new Privacies
                     {
                         Security = Privacy.Security,
                         SecuritiesAPI = Privacy.SecuritiesAPI,
                         SecurityAPI = Privacy.SecurityAPI,
                         Account = Privacy.Account,
                         CodeStrategics = sb.Remove(sb.Length - 1, 1).ToString(),
-                        Commission = commission / 0x64
+                        Commission = commission / 0x64,
+                        Coin = Privacy.Coin - GoblinBatClient.Coin
                     }))
                         bfn.ForeColor = Color.Maroon;
                 }

@@ -186,7 +186,7 @@ namespace ShareInvest.Client
             }
             return await GetContext(code);
         }
-        public async Task<object> PostContext<T>(IParameters param)
+        public async Task<Tuple<int, double>> PostContext<T>(IParameters param)
         {
             var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
 
@@ -200,7 +200,7 @@ namespace ShareInvest.Client
                 switch (param)
                 {
                     case Privacies _:
-                        return (int)response.StatusCode;
+                        return new Tuple<int, double>((int)response.StatusCode, JsonConvert.DeserializeObject<double>(response.Content));
                 }
             }
             catch (Exception ex)
@@ -208,7 +208,7 @@ namespace ShareInvest.Client
                 SendMessage(ex.StackTrace);
                 SendMessage((int)response.StatusCode);
             }
-            return null;
+            return new Tuple<int, double>((int)response.StatusCode, Coin);
         }
         public async Task<object> PostContext<T>(IEnumerable<T> param)
         {
@@ -234,6 +234,27 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<double> PutContext(Catalog.Request.StocksStrategics param)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestStrategics(param), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                SendMessage((int)response.StatusCode);
+
+                return JsonConvert.DeserializeObject<double>(response.Content) - Coin;
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return Coin;
+        }
         public async Task<int> PutContext<T>(Codes param)
         {
             var response = await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
@@ -254,25 +275,25 @@ namespace ShareInvest.Client
             }
             return int.MinValue;
         }
-        public async Task<int> PutContext<T>(IParameters param)
+        public async Task<double> PutContext(Privacies param)
         {
-            var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.PUT, DataFormat.Json).AddJsonBody(param, security.ContentType), source.Token);
-
             try
             {
+                Coin = 0;
+                var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.PUT, DataFormat.Json).AddJsonBody(param, security.ContentType), source.Token);
+
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
                 }
-                return (int)response.StatusCode;
+                return JsonConvert.DeserializeObject<double>(response.Content) - Coin;
             }
             catch (Exception ex)
             {
                 SendMessage(ex.StackTrace);
-                SendMessage((int)response.StatusCode);
             }
-            return int.MinValue;
+            return Coin;
         }
         public async Task<int> DeleteContext<T>(IParameters param)
         {

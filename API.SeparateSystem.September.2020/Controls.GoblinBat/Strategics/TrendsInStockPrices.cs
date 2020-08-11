@@ -13,8 +13,9 @@ namespace ShareInvest.Controls
         internal TrendsInStockPrices(Codes codes)
         {
             code = codes.Code;
-            price = codes.Price;
+            name = codes.Name;
             InitializeComponent();
+            label.Text = name;
         }
         internal void TransmuteStrategics(string[] strategics)
         {
@@ -74,6 +75,6 @@ namespace ShareInvest.Controls
         }
         string ConvertToFindTheVariable(int index, string param) => string.Concat(index > 6 ? radio : numeric, param);
         readonly string code;
-        readonly string price;
+        readonly string name;
     }
 }

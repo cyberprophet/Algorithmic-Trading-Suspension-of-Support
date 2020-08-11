@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-    public class Privacy 
+    public class Privacy
     {
         [Key, Column(Order = 1)]
         public string Security
@@ -32,6 +32,11 @@ namespace ShareInvest.Models
         }
         [Column(Order = 6)]
         public string CodeStrategics
+        {
+            get; set;
+        }
+        [Column(Order = 7)]
+        public double Coin
         {
             get; set;
         }

@@ -28,6 +28,10 @@ namespace ShareInvest.Catalog
         {
             get; set;
         }
+        public double Coin
+        {
+            get; set;
+        }
         public string Identity
         {
             get; set;

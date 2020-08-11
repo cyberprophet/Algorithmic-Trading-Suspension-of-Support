@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Analysis.SecondaryIndicators;
+using ShareInvest.Catalog.Request;
 using ShareInvest.Client;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
@@ -17,23 +18,60 @@ namespace ShareInvest.Strategics
         public GoblinBat(dynamic cookie)
         {
             InitializeComponent();
+            random = new Random();
             cultureInfo = CultureInfo.GetCultureInfo("en-US");
             client = GoblinBatClient.GetInstance(cookie);
             strip.ItemClicked += OnItemClick;
             StartProgress(new Catalog.Privacies { Security = cookie });
         }
-        void OnReceiveAnalysisData(object sender, SendSecuritiesAPI e)
+        async void OnReceiveAnalysisData(object sender, SendSecuritiesAPI e)
         {
             if (e.Convey is Tuple<dynamic, Catalog.Statistics> tuple)
+            {
+                var coin = double.NaN;
+
                 switch (tuple.Item1)
                 {
                     case Catalog.TrendFollowingBasicFutures tf:
                         break;
 
                     case Catalog.TrendsInStockPrices ts:
-                        Console.WriteLine(ts.Code + "\t" + tuple.Item2.Date + "\t" + (tuple.Item2.Cumulative / tuple.Item2.Base).ToString("P2") + "\t" + (tuple.Item2.Statistic / tuple.Item2.Base).ToString("P2"));
+                        if (tuple.Item2.Base > 0 && (ts.Setting.Equals(Setting.Both) || ts.Setting.Equals(Setting.Reservation)))
+                        {
+                            coin = await client.PutContext(new StocksStrategics
+                            {
+                                Code = ts.Code,
+                                Strategics = string.Concat("TS.", ts.Short, '.', ts.Long, '.', ts.Trend, '.', (int)(ts.RealizeProfit * 0x2710), '.', (int)(ts.AdditionalPurchase * 0x2710), '.', ts.QuoteUnit, '.', (char)ts.LongShort, '.', (char)ts.TrendType, '.', (char)ts.Setting),
+                                Date = tuple.Item2.Date,
+                                MaximumInvestment = (long)tuple.Item2.Base,
+                                CumulativeReturn = tuple.Item2.Cumulative / tuple.Item2.Base,
+                                WeightedAverageDailyReturn = tuple.Item2.Statistic / tuple.Item2.Base
+                            });
+                        }
                         break;
                 }
+                if (double.IsNaN(coin) == false)
+                {
+                    var remain = await client.PutContext(new Catalog.Privacies
+                    {
+                        Security = Privacy.Security,
+                        SecuritiesAPI = Privacy.SecuritiesAPI,
+                        SecurityAPI = Privacy.SecurityAPI,
+                        Account = Privacy.Account,
+                        Commission = Privacy.Commission,
+                        CodeStrategics = Privacy.CodeStrategics,
+                        Coin = coin - GoblinBatClient.Coin
+                    });
+                    if (remain < 0)
+                    {
+                        Console.WriteLine(remain);
+                    }
+                    else
+                        notifyIcon.Text = remain.ToString("C0", cultureInfo);
+                }
+                else
+                    Console.WriteLine((tuple.Item1 as IStrategics).Code);
+            }
         }
         void OnReceiveTheChangedSize(object sender, SendHoldingStocks e)
         {
@@ -70,18 +108,20 @@ namespace ShareInvest.Strategics
                         new Task(() => hs.StartProgress(Privacy.Commission)).Start();
                         break;
                 }
+                Cursor = Cursors.AppStarting;
                 WindowState = FormWindowState.Minimized;
 
                 if (form.ShowDialog().Equals(DialogResult.Cancel))
                 {
                     hs.SendBalance -= OnReceiveAnalysisData;
+                    Cursor = Cursors.Default;
                     strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
                 }
             }
         }
         async void StartProgress(IParameters param)
         {
-            switch ((int)await client.PostContext<Catalog.Privacies>(param))
+            switch ((await client.PostContext<Catalog.Privacies>(param)).Item1)
             {
                 case 0xCA:
                     if (Statistical == null)
@@ -166,11 +206,8 @@ namespace ShareInvest.Strategics
                 Change = !Change;
 
                 if (IsApplicationAlreadyRunning(Privacy.Security))
-                {
-
-                }
+                    notifyIcon.Text = Text;
             }
-            notifyIcon.Text = GoblinBatClient.Coin.ToString("C0", cultureInfo);
         }
         void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(async () =>
         {
@@ -182,9 +219,12 @@ namespace ShareInvest.Strategics
                     Controls.Add(Statistical);
                     Statistical.Dock = DockStyle.Fill;
                 }
-                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && await client.GetContext<Catalog.Privacies>(Privacy) is Catalog.Privacies privacy)
+                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && await client.GetContext<Catalog.Privacies>(Privacy) is Catalog.Privacies privacy && privacy.Coin > 0)
+                {
+                    Privacy = privacy;
                     Text = await Statistical.SetPrivacy(privacy);
-
+                    notifyIcon.Text = privacy.Coin.ToString("C0", cultureInfo);
+                }
                 Size = new Size(0x245, 0x208);
                 Visible = true;
                 ShowIcon = true;
@@ -222,6 +262,7 @@ namespace ShareInvest.Strategics
         {
             get; set;
         }
+        readonly Random random;
         readonly GoblinBatClient client;
         readonly CultureInfo cultureInfo;
     }

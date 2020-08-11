@@ -16,6 +16,7 @@ namespace ShareInvest.CoreAPI
             modelBuilder.Entity<Futures>().HasKey(o => new { o.Code, o.Date });
             modelBuilder.Entity<Options>().HasKey(o => new { o.Code, o.Date });
             modelBuilder.Entity<Stocks>().HasKey(o => new { o.Code, o.Date });
+            modelBuilder.Entity<StocksStrategics>().HasKey(o => new { o.Code, o.Strategics });
         }
         public CoreApiDbContext(DbContextOptions<CoreApiDbContext> options) : base(options) => IsDebugging(options.ContextType);
         public DbSet<Privacy> Privacies
@@ -39,6 +40,14 @@ namespace ShareInvest.CoreAPI
             get; set;
         }
         public DbSet<Options> Options
+        {
+            get; set;
+        }
+        public DbSet<CatalogStrategics> Catalog
+        {
+            get; set;
+        }
+        public DbSet<StocksStrategics> StocksStrategics
         {
             get; set;
         }
