@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -50,6 +51,42 @@ namespace ShareInvest.Controllers
                 await context.BulkSaveChangesAsync();
 
                 return Ok((await context.Privacies.FirstAsync(o => o.Security.Equals(security))).Coin);
+            }
+            catch (Exception ex)
+            {
+                SendExceptionMessage(ex.Message);
+            }
+            return BadRequest();
+        }
+        [HttpPost(Security.strategics), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> PostContext(string strategics, [FromBody] ConfirmStrategics confirm) => strategics switch
+        {
+            "TS" => Ok(await context.StocksStrategics.AnyAsync(o => o.Strategics.Equals(confirm.Strategics) && o.Code.Equals(confirm.Code) && o.Date.Equals(confirm.Date))),
+            _ => BadRequest()
+        };
+        [HttpGet(Security.strategics), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetContext(string strategics)
+        {
+            try
+            {
+                switch (strategics)
+                {
+                    case "TS":
+                        return Ok(await context.Catalog.Where(o => o.Strategics.StartsWith(strategics)).AsNoTracking().Select(o => new
+                        {
+                            o.Short,
+                            o.Long,
+                            o.Trend,
+                            o.RealizeProfit,
+                            o.AdditionalPurchase,
+                            o.QuoteUnit,
+                            o.LongShort,
+                            o.TrendType,
+                            o.Setting
+                        }).ToListAsync());
+                    default:
+                        break;
+                }
             }
             catch (Exception ex)
             {

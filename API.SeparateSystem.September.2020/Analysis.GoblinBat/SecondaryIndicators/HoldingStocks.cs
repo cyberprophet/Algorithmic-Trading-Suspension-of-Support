@@ -24,7 +24,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                 case TrendsInStockPrices ts:
                     if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0)
                     {
-                        if (OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
+                        if (Quantity > ts.Quantity - 1 && OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
                         {
                             CumulativeFee += (uint)(e.Price * ts.Quantity * (Commission + tax));
                             Revenue += (long)((e.Price - (Purchase ?? 0D)) * ts.Quantity);
@@ -56,7 +56,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                 });
                             Base += profit.Value * ts.Quantity;
                         }
-                        else if (OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + ts.RealizeProfit) && Quantity > 0 && e.Price > (Purchase ?? 0D) && gap < 0)
+                        else if (Quantity > ts.Quantity - 1 && OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + ts.RealizeProfit) && e.Price > (Purchase ?? 0D) && gap < 0)
                         {
                             var quote = 0;
 
@@ -110,10 +110,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                         long revenue = Revenue - CumulativeFee, unrealize = (long)((e.Price - (Purchase ?? 0D)) * Quantity);
                         var avg = EMA.Make(++Accumulative, revenue - TodayRevenue + unrealize - TodayUnrealize, Before);
 
-                        if (ts.Setting.Equals(Setting.Reservation) && Quantity > 0)
+                        if (ts.Setting.Equals(Setting.Reservation) && Quantity > ts.Quantity - 1)
                         {
                             var stock = Market;
-                            int quantity = Quantity, price = e.Price, sell = (int)((Purchase ?? 0D) * (1 + ts.RealizeProfit)), buy = (int)((Purchase ?? 0D) * (1 - ts.AdditionalPurchase)), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
+                            int quantity = Quantity / ts.Quantity, price = e.Price, sell = (int)((Purchase ?? 0D) * (1 + ts.RealizeProfit)), buy = (int)((Purchase ?? 0D) * (1 - ts.AdditionalPurchase)), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
                             sPrice = sPrice < lower ? lower + GetQuoteUnit(sPrice, stock) : sPrice;
 
                             while (sPrice < upper && quantity-- > 0)
@@ -162,7 +162,6 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             {
                 case TrendsInStockPrices _:
                     Commission = commission > 0 ? commission : 1.5e-4;
-                    IsDebugging();
 
                     if (StartProgress(strategics.Code) > 0)
                         consecutive.Dispose();

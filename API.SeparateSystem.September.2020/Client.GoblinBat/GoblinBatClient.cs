@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using RestSharp;
 
@@ -51,6 +53,7 @@ namespace ShareInvest.Client
             {
                 SendMessage(ex.StackTrace);
                 SendMessage((int)response.StatusCode);
+                SendMessage(chart);
             }
             return null;
         }
@@ -186,6 +189,70 @@ namespace ShareInvest.Client
                 Code = null,
                 LastDate = null
             };
+        }
+        public async Task<IEnumerable<IStrategics>> GetContext(IStrategics strategics)
+        {
+            var stack = new Stack<IStrategics>();
+
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestStrategics(strategics), Method.GET), source.Token);
+
+                if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                switch (strategics)
+                {
+                    case TrendsInStockPrices _:
+                        foreach (var content in JArray.Parse(response.Content))
+                        {
+                            var param = content.Values().ToArray();
+
+                            if (int.TryParse(param[5].ToString(), out int unit) && double.TryParse(param[4].ToString(), out double purchase) && double.TryParse(param[3].ToString(), out double profit) && int.TryParse(param[2].ToString(), out int trend) && int.TryParse(param[1].ToString(), out int jLong) && int.TryParse(param[0].ToString(), out int jShort) && char.TryParse(param[8].ToString(), out char setting) && char.TryParse(param[6].ToString(), out char ls) && char.TryParse(param[7].ToString(), out char type))
+                                stack.Push(new TrendsInStockPrices
+                                {
+                                    Code = string.Empty,
+                                    Short = jShort,
+                                    Long = jLong,
+                                    Trend = trend,
+                                    RealizeProfit = profit,
+                                    AdditionalPurchase = purchase,
+                                    Quantity = 1,
+                                    QuoteUnit = unit,
+                                    LongShort = (LongShort)ls,
+                                    TrendType = (Trend)type,
+                                    Setting = (Setting)setting
+                                });
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return stack.OrderBy(o => random.Next(stack.Count));
+        }
+        public async Task<bool> PostContext(ConfirmStrategics confirm)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestConfirm(confirm), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(confirm), ParameterType.RequestBody), source.Token);
+
+                if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                return JsonConvert.DeserializeObject<bool>(response.Content);
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return false;
         }
         public async Task<Retention> PostContext<T>(string code, Queue<T> param) where T : struct, ICharts
         {
@@ -346,6 +413,9 @@ namespace ShareInvest.Client
                 Temp = (int)(Coin + 1);
                 Console.WriteLine(((double)Coin).ToString("C0"));
             }
+            else if (code is Catalog.Request.Charts chart)
+                Console.WriteLine("Code_" + chart.Code + " Start_" + chart.Start + " End_" + chart.End);
+
             else if (code is int response && response > 200)
                 Console.WriteLine(response);
 
@@ -360,6 +430,7 @@ namespace ShareInvest.Client
                 Timeout = -1
             };
             source = new CancellationTokenSource();
+            random = new Random();
         }
         int Temp
         {
@@ -367,6 +438,7 @@ namespace ShareInvest.Client
         }
         readonly CancellationTokenSource source;
         readonly Security security;
+        readonly Random random;
         readonly IRestClient client;
     }
 }

@@ -26,11 +26,27 @@ namespace ShareInvest.Controls
             InitializeComponent();
             buttonChart.Click += OnReceiveClickItem;
             buttonSave.Click += OnReceiveClickItem;
+            buttonProgress.Click += OnReceiveClickItem;
             textCode.Leave += OnReceiveClickItem;
             Codes = new HashSet<Codes>();
             this.client = client;
         }
         public event EventHandler<SendHoldingStocks> SendSize;
+        public void SetProgressRate(int rate) => progressBar.Value = rate + 1;
+        public void SetProgressRate(Color color) => buttonProgress.ForeColor = color;
+        public void SetProgressRate(bool state)
+        {
+            if (state)
+            {
+                buttonProgress.Text = start;
+                progressBar.Value = 0;
+            }
+        }
+        public void SetProgressRate()
+        {
+            buttonProgress.Text = cancel;
+            buttonProgress.ForeColor = Color.Maroon;
+        }
         public async Task<string> SetPrivacy(Privacies privacy)
         {
             Privacy = privacy;
@@ -280,6 +296,26 @@ namespace ShareInvest.Controls
                         Coin = Privacy.Coin - GoblinBatClient.Coin
                     }))
                         bfn.ForeColor = Color.Maroon;
+                }
+                else if (buttonProgress.Name.Equals(bfn.Name))
+                {
+                    switch (buttonProgress.Text)
+                    {
+                        case start when buttonProgress.ForeColor.Equals(Color.Ivory):
+                            progressBar.Value = 0;
+                            buttonProgress.Text = cancel;
+                            break;
+
+                        case cancel when buttonProgress.ForeColor.Equals(Color.Gold):
+                            progressBar.Value = progressBar.Maximum;
+                            buttonProgress.Text = start;
+                            break;
+                    }
+                    if (buttonProgress.ForeColor.Equals(Color.Maroon) == false)
+                    {
+                        buttonProgress.ForeColor = Color.Maroon;
+                        SendSize?.Invoke(this, new SendHoldingStocks(progressBar.Value, Privacy));
+                    }
                 }
             }
             else if (sender is ComboBox box && buttonSave.ForeColor.Equals(Color.Ivory) && comboStrategics.Name.Equals(box.Name) && textCode.TextLength == Length && tab.TabPages.ContainsKey(textCode.Text) == false)

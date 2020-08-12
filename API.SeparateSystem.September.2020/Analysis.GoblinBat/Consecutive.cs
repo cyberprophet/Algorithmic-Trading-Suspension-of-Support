@@ -122,7 +122,7 @@ namespace ShareInvest.Analysis
             Short.Push(Short.Count > 0 ? EMA.Make(tShort, Short.Count, e.Price, Short.Peek()) : EMA.Make(e.Price));
             Long.Push(Long.Count > 0 ? EMA.Make(tLong, Long.Count, e.Price, Long.Peek()) : EMA.Make(e.Price));
 
-            if (e.Volume != 0 && e.Date.Length != 8)
+            if (e.Volume != 0 && e.Date.Length != 8 && Short.Count > 1 && Long.Count > 1)
             {
                 double popShort = Short.Pop(), popLong = Long.Pop(), gap = popShort - popLong - (Short.Peek() - Long.Peek());
                 Short.Push(popShort);

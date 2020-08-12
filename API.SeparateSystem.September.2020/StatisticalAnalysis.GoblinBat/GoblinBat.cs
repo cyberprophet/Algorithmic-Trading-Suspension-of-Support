@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -25,8 +28,114 @@ namespace ShareInvest.Strategics
             cultureInfo = CultureInfo.GetCultureInfo("en-US");
             client = GoblinBatClient.GetInstance(cookie);
             strip.ItemClicked += OnItemClick;
-            CenterToScreen();
             StartProgress(new Catalog.Privacies { Security = cookie });
+        }
+        bool IsTheCorrectInformation(Catalog.Codes param)
+        {
+            switch (param.Code.Length)
+            {
+                case int length when length == 6 && int.TryParse(param.Price, out int price) && param.MaturityMarketCap.StartsWith("증거금"):
+                    return (param.MarginRate == 1 || param.MarginRate == 2) && price > 0 && (param.MaturityMarketCap.Contains("거래정지") || string.IsNullOrEmpty(param.Price)) == false;
+
+                default:
+                    return false;
+            }
+        }
+        void BackgroundWorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null)
+            {
+                Statistical.SetProgressRate(Color.Maroon);
+                Console.WriteLine(e.Error.StackTrace);
+            }
+            if (e.Cancelled)
+            {
+                Statistical.SetProgressRate(e.Cancelled);
+                Statistical.SetProgressRate(Color.Ivory);
+            }
+            if (e.Result is bool state)
+            {
+                Statistical.SetProgressRate(state);
+                Statistical.SetProgressRate(Color.Ivory);
+            }
+            Cancel.Dispose();
+        }
+        void BackgroundWorkerProgressChanged(object sender, ProgressChangedEventArgs e) => Statistical.SetProgressRate(e.ProgressPercentage);
+        void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
+        {
+            var list = client.GetContext(new Catalog.Codes(), 6).Result as List<Catalog.Codes>;
+            var stack = new Stack<IStrategics>();
+            var array = new IStrategics[]
+            {
+                new Catalog.TrendsInStockPrices()
+            };
+            foreach (var strategics in array.OrderBy(o => random.Next(array.Length)))
+                foreach (var enumerable in client.GetContext(strategics).Result)
+                    stack.Push(enumerable);
+
+            var maximum = list.Count * array.Length * stack.Count;
+            var rate = 0;
+            var po = new ParallelOptions
+            {
+                CancellationToken = Cancel.Token,
+                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 2.5e-1)
+            };
+            while (stack.Count > 0)
+                try
+                {
+                    var strategics = stack.Pop();
+                    Parallel.ForEach(list, po, new Action<Catalog.Codes>((w) =>
+                    {
+                        if (backgroundWorker.CancellationPending)
+                        {
+                            e.Cancel = true;
+
+                            if (Cancel.IsCancellationRequested)
+                                po.CancellationToken.ThrowIfCancellationRequested();
+                        }
+                        else if (IsTheCorrectInformation(w))
+                        {
+                            var now = DateTime.Now;
+                            HoldingStocks hs = null;
+
+                            switch (strategics)
+                            {
+                                case Catalog.TrendsInStockPrices ts:
+                                    if (client.PostContext(new ConfirmStrategics
+                                    {
+                                        Code = w.Code,
+                                        Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
+                                        Strategics = string.Concat("TS.", ts.Short, '.', ts.Long, '.', ts.Trend, '.', (int)(ts.RealizeProfit * 0x2710), '.', (int)(ts.AdditionalPurchase * 0x2710), '.', ts.QuoteUnit, '.', (char)ts.LongShort, '.', (char)ts.TrendType, '.', (char)ts.Setting)
+                                    }).Result == false)
+                                    {
+                                        ts.Code = w.Code;
+                                        hs = new HoldingStocks(ts)
+                                        {
+                                            Code = ts.Code
+                                        };
+                                        hs.SendBalance += OnReceiveAnalysisData;
+                                        hs.StartProgress(0D);
+                                    }
+                                    break;
+                            }
+                            if (hs != null)
+                                hs.SendBalance -= OnReceiveAnalysisData;
+                        }
+                        Statistical.SetProgressRate(Color.Gold);
+                        backgroundWorker.ReportProgress((int)(rate++ * 0x64 / (double)maximum));
+                    }));
+                }
+                catch (OperationCanceledException ex)
+                {
+                    Statistical.SetProgressRate(Color.Ivory);
+                    Console.WriteLine("Count_" + rate + "\t" + ex.TargetSite.Name);
+                }
+                catch (Exception ex)
+                {
+                    e.Cancel = true;
+                    Console.WriteLine(ex.StackTrace);
+                }
+            e.Result = rate == maximum || rate - 1 == maximum;
         }
         async void OnReceiveAnalysisData(object sender, SendSecuritiesAPI e)
         {
@@ -74,7 +183,7 @@ namespace ShareInvest.Strategics
                         }
                         else
                         {
-                            System.Threading.Thread.Sleep((int)Math.Pow(await client.DeleteContext<Catalog.Privacies>(Privacy), charge.Length));
+                            Thread.Sleep((int)Math.Pow(await client.DeleteContext<Catalog.Privacies>(Privacy), charge.Length));
                             ClosingForm = true;
                             strip.ItemClicked -= OnItemClick;
                             Dispose();
@@ -100,6 +209,19 @@ namespace ShareInvest.Strategics
                         SuspendLayout();
                         Console.WriteLine(Size.Height + "\t" + Size.Width + "\t" + size.Height + "\t" + size.Width);
                         ResumeLayout();
+                        return;
+
+                    case Tuple<int, Catalog.Privacies> tuple when tuple.Item2 is Catalog.Privacies privacy && (string.IsNullOrEmpty(privacy.Account) || string.IsNullOrEmpty(privacy.SecuritiesAPI) || string.IsNullOrEmpty(privacy.SecurityAPI)) == false:
+                        if (tuple.Item1 == 0)
+                        {
+                            Cancel = new CancellationTokenSource();
+                            backgroundWorker.RunWorkerAsync();
+                        }
+                        else if (tuple.Item1 > 0)
+                        {
+                            Cancel.Cancel();
+                            backgroundWorker.CancelAsync();
+                        }
                         return;
 
                     case Catalog.TrendFollowingBasicFutures tf:
@@ -161,6 +283,12 @@ namespace ShareInvest.Strategics
             }
             if (Result.Equals(DialogResult.Yes) && IsApplicationAlreadyRunning(param.Security))
             {
+                if (backgroundWorker.IsBusy == false)
+                {
+                    Cancel = new CancellationTokenSource();
+                    backgroundWorker.RunWorkerAsync();
+                    Statistical.SetProgressRate();
+                }
                 Privacy = new Catalog.Privacies
                 {
                     Security = param.Security
@@ -214,7 +342,7 @@ namespace ShareInvest.Strategics
         }
         void TimerTick(object sender, EventArgs e)
         {
-            if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) == false && Result.Equals(DialogResult.OK))
+            if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) == false && Result.Equals(DialogResult.Yes))
             {
                 FormBorderStyle = FormBorderStyle.FixedSingle;
                 WindowState = FormWindowState.Minimized;
@@ -224,8 +352,13 @@ namespace ShareInvest.Strategics
                 notifyIcon.Icon = (Icon)resources.GetObject(Change ? upload : download);
                 Change = !Change;
 
-                if (IsApplicationAlreadyRunning(Privacy.Security))
+                if (IsApplicationAlreadyRunning(Privacy.Security) && backgroundWorker.IsBusy == false)
+                {
+                    Cancel = new CancellationTokenSource();
                     GetSettleTheFare();
+                    backgroundWorker.RunWorkerAsync();
+                    Statistical.SetProgressRate();
+                }
             }
         }
         void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(async () =>
@@ -278,6 +411,10 @@ namespace ShareInvest.Strategics
             get; set;
         }
         Catalog.Privacies Privacy
+        {
+            get; set;
+        }
+        CancellationTokenSource Cancel
         {
             get; set;
         }

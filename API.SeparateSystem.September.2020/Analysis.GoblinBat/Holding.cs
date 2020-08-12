@@ -46,13 +46,19 @@ namespace ShareInvest.Analysis
                     var end = string.Empty;
                     var count = 0;
 
-                    while (string.IsNullOrEmpty(end) || string.Compare(end, DateTime.Now.ToString("yyMMdd")) <= 0)
+                    while (string.IsNullOrEmpty(end) || string.Compare(end, DateTime.Now.ToString(format)) <= 0)
+                    {
+                        if (end.CompareTo(excluding) > 0 && end.CompareTo(theDate) < 0)
+                            for (int i = 0; i < 0x1C; i++)
+                                count++;
+
                         yield return temporary.CallUpTheChartAsync(new Catalog.Request.Charts
                         {
                             Code = code,
-                            Start = (start - 1 + 0x12C * count++).ToString("D6"),
-                            End = end = (start - 1 + 0x12C * count).ToString("D6")
+                            Start = (start - 1 + 0x12C * count++).ToString(nFormat),
+                            End = end = (start - 1 + 0x12C * count).ToString(nFormat)
                         }).Result;
+                    }
                 }
             }
         }
@@ -230,6 +236,10 @@ namespace ShareInvest.Analysis
             else
                 return Color.Maroon;
         }
+        const string excluding = "191230";
+        const string theDate = "192001";
+        const string nFormat = "D6";
+        const string format = "yyMMdd";
         internal readonly Consecutive consecutive;
         protected internal const string conclusion = "체결";
         protected internal const string acceptance = "접수";

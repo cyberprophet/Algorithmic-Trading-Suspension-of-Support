@@ -71,6 +71,7 @@ namespace ShareInvest.EventHandler
             Secondary = secondary;
             Color = color;
         }
+        public SendHoldingStocks(int rate, Catalog.Privacies privacy) => Strategics = new Tuple<int, Catalog.Privacies>(rate, privacy);
         public SendHoldingStocks(Catalog.TrendFollowingBasicFutures tf) => Strategics = tf;
         public SendHoldingStocks(Catalog.TrendsInStockPrices ts) => Strategics = ts;
         public SendHoldingStocks(Size size) => Strategics = size;
