@@ -107,6 +107,7 @@ namespace ShareInvest.OpenAPI
     enum CatalogTR
     {
         Opt10079,
+        Opt10081,
         Opt50001,
         OPT50010,
         Opt50028,

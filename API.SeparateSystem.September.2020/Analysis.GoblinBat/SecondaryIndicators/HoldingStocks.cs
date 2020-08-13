@@ -163,7 +163,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                 case TrendsInStockPrices _:
                     Commission = commission > 0 ? commission : 1.5e-4;
 
-                    if (StartProgress(strategics.Code) > 0)
+                    if (StartProgress(strategics.Code as string) > 0)
                         consecutive.Dispose();
 
                     break;
@@ -172,7 +172,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     Commission = commission > 0 ? commission : 3e-5;
                     IsDebugging();
 
-                    if (StartProgress(strategics.Code) > 0)
+                    if (StartProgress(strategics.Code as string) > 0)
                         foreach (var con in Consecutive)
                             con.Dispose();
 

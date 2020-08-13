@@ -129,6 +129,13 @@ namespace ShareInvest.OpenAPI
                             ctor.Value = param;
                             api.InputValueRqData(param.Split(';').Length, ctor);
                             break;
+
+                        case CatalogTR.Opt10081:
+                            var str = string.Concat("20", param.Substring(7));
+                            ctor.RQName = str;
+                            ctor.Value = string.Concat(param.Substring(0, 6), ';', str);
+                            api.InputValueRqData(ctor);
+                            break;
                     }
             }
             else

@@ -176,6 +176,16 @@ namespace ShareInvest
                             SendMessage(statusOptionsCode);
                             return;
 
+                        case Stack<Catalog.OpenAPI.Days> stack:
+                            if (await client.PostContext(stack) == 0xC8)
+                            {
+                                var o = com as OpenAPI.ConnectAPI;
+                                o.InputValueRqData(opt10081, stack.First().Code).Send -= OnReceiveSecuritiesAPI;
+                                retention = await SelectDaysCodeAsync();
+                                o.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate)).Send += OnReceiveSecuritiesAPI;
+                            }
+                            return;
+
                         case short error:
                             switch (error)
                             {
@@ -375,7 +385,7 @@ namespace ShareInvest
                 notifyIcon.Text = Info.Nick;
                 Opacity = 0.79315;
                 backgroundWorker.RunWorkerAsync();
-                OnReceiveData(MessageBox.Show("This is a Temporary Code.", "Emergency", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
+                OnReceiveData(MessageBox.Show("This is a Temporary Code.", "Emergency", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
             }
         }
         async void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
@@ -710,6 +720,39 @@ namespace ShareInvest
             else
                 return new Retention { Code = null, LastDate = null };
         }
+        async Task<Retention> SelectDaysCodeAsync()
+        {
+            SendMessage(stocks.Count);
+
+            if (stocks.Count > 0)
+            {
+                var code = stocks[random.Next(0, stocks.Count)];
+                var retention = await client.GetContext(code);
+
+                if (stocks.Remove(retention.Code) && string.IsNullOrEmpty(retention.FirstDate) == false)
+                {
+                    if (Array.Exists(new string[] { "356540", "343510", "357250", "347890", "359210", "353070", string.Empty }, o => o.Equals(code)) || retention.FirstDate.Substring(0, 6).CompareTo("200717") > 0)
+                        return await SelectDaysCodeAsync();
+
+                    var day = await client.GetContext(new Retention { Code = code });
+                    SendMessage(string.Concat(code, ';', retention.FirstDate, ';', day.LastDate));
+
+                    if (string.IsNullOrEmpty(day.Code) == false && string.IsNullOrEmpty(day.LastDate) == false && int.TryParse(day.LastDate.Substring(2), out int dayLast) && int.TryParse(retention.FirstDate.Substring(0, 6), out int last) && last - 1 <= dayLast)
+                        return await SelectDaysCodeAsync();
+
+                    else
+                        return new Retention
+                        {
+                            Code = code,
+                            LastDate = retention.FirstDate.Substring(0, 6)
+                        };
+                }
+                else
+                    return await SelectDaysCodeAsync();
+            }
+            else
+                return new Retention();
+        }
         void Dispose(FormWindowState state)
         {
             GetSettleTheFare();
@@ -736,7 +779,7 @@ namespace ShareInvest
         [Conditional("DEBUG")]
         void SendMessage(object code)
         {
-            if (code is int response && response > 200)
+            if (code is int response && response > 0xC8)
                 Console.WriteLine(response);
 
             else if (code is string str)
@@ -745,13 +788,12 @@ namespace ShareInvest
         [Conditional("DEBUG")]
         void OnReceiveData(DialogResult result) => BeginInvoke(new Action(async () =>
         {
-            if (result.Equals(DialogResult.OK))
+            if (result.Equals(DialogResult.Yes))
                 switch (com)
                 {
                     case OpenAPI.ConnectAPI o:
-                        var param = opt50028;
                         var retention = await client.GetContext(SelectFuturesCode);
-                        o.InputValueRqData(string.Concat(instance, param), string.Concat(retention.Code, ";", retention.LastDate)).Send += OnReceiveSecuritiesAPI;
+                        o.InputValueRqData(string.Concat(instance, opt50028), string.Concat(retention.Code, ";", retention.LastDate)).Send += OnReceiveSecuritiesAPI;
                         return;
 
                     case XingAPI.ConnectAPI x:
@@ -760,6 +802,11 @@ namespace ShareInvest
                         chart?.QueryExcute(await SelectStocksCodeAsync());
                         return;
                 }
+            else if (result.Equals(DialogResult.Cancel))
+            {
+                var retention = await SelectDaysCodeAsync();
+                ((com as OpenAPI.ConnectAPI)?.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate))).Send += OnReceiveSecuritiesAPI;
+            }
         }));
         Balance Balance
         {

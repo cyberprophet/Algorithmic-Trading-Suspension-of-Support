@@ -1,16 +1,16 @@
-﻿namespace ShareInvest.Models
+﻿namespace ShareInvest.Catalog.OpenAPI
 {
-    public struct Retention
+    public struct Days
     {
         public string Code
         {
             get; set;
         }
-        public string LastDate
+        public string Date
         {
             get; set;
         }
-        public string FirstDate
+        public string Price
         {
             get; set;
         }

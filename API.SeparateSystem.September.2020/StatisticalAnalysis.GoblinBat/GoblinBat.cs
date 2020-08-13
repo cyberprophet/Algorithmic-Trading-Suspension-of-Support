@@ -84,7 +84,7 @@ namespace ShareInvest.Strategics
                 try
                 {
                     var strategics = stack.Pop();
-                    Parallel.ForEach(list, po, new Action<Catalog.Codes>((w) =>
+                    Parallel.ForEach(list.OrderBy(o => Guid.NewGuid()), po, new Action<Catalog.Codes>((w) =>
                     {
                         if (backgroundWorker.CancellationPending)
                         {
@@ -150,7 +150,6 @@ namespace ShareInvest.Strategics
 
                     case Catalog.TrendsInStockPrices ts:
                         if (tuple.Item2.Base > 0 && (ts.Setting.Equals(Setting.Both) || ts.Setting.Equals(Setting.Reservation)))
-                        {
                             coin = await client.PutContext(new StocksStrategics
                             {
                                 Code = ts.Code,
@@ -160,7 +159,6 @@ namespace ShareInvest.Strategics
                                 CumulativeReturn = tuple.Item2.Cumulative / tuple.Item2.Base,
                                 WeightedAverageDailyReturn = tuple.Item2.Statistic / tuple.Item2.Base
                             });
-                        }
                         break;
                 }
                 if (double.IsNaN(coin) == false)
@@ -283,12 +281,6 @@ namespace ShareInvest.Strategics
             }
             if (Result.Equals(DialogResult.Yes) && IsApplicationAlreadyRunning(param.Security))
             {
-                if (backgroundWorker.IsBusy == false)
-                {
-                    Cancel = new CancellationTokenSource();
-                    backgroundWorker.RunWorkerAsync();
-                    Statistical.SetProgressRate();
-                }
                 Privacy = new Catalog.Privacies
                 {
                     Security = param.Security
@@ -352,7 +344,7 @@ namespace ShareInvest.Strategics
                 notifyIcon.Icon = (Icon)resources.GetObject(Change ? upload : download);
                 Change = !Change;
 
-                if (IsApplicationAlreadyRunning(Privacy.Security) && backgroundWorker.IsBusy == false)
+                if (IsApplicationAlreadyRunning(Privacy.Security) && backgroundWorker.IsBusy == false && (string.IsNullOrEmpty(Privacy.Account) || string.IsNullOrEmpty(Privacy.SecuritiesAPI) || string.IsNullOrEmpty(Privacy.SecurityAPI)) == false)
                 {
                     Cancel = new CancellationTokenSource();
                     GetSettleTheFare();
@@ -376,6 +368,13 @@ namespace ShareInvest.Strategics
                     Privacy = privacy;
                     Text = await Statistical.SetPrivacy(privacy);
                     notifyIcon.Text = privacy.Coin.ToString("C0", cultureInfo);
+
+                    if (backgroundWorker.IsBusy == false)
+                    {
+                        Cancel = new CancellationTokenSource();
+                        backgroundWorker.RunWorkerAsync();
+                        Statistical.SetProgressRate();
+                    }
                 }
                 Size = new Size(0x245, 0x208);
                 Visible = true;

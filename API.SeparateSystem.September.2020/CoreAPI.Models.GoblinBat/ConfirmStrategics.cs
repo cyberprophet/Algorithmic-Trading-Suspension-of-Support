@@ -1,16 +1,16 @@
 ﻿namespace ShareInvest.Models
 {
-    public struct Retention
+    public struct ConfirmStrategics
     {
+        public string Strategics
+        {
+            get; set;
+        }
         public string Code
         {
             get; set;
         }
-        public string LastDate
-        {
-            get; set;
-        }
-        public string FirstDate
+        public string Date
         {
             get; set;
         }

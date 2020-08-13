@@ -16,6 +16,7 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
+        public SendSecuritiesAPI(Stack<Catalog.OpenAPI.Days> days) => Convey = days;
         public SendSecuritiesAPI(Tuple<int, string, int, int, string> order) => Convey = order;
         public SendSecuritiesAPI(string code, string name, string retention, string price, int market) => Convey = new Tuple<string, string, string, string, int>(code, name, retention, price, market);
         public SendSecuritiesAPI(Tuple<string[], string[], string[], string[]> tuple) => Convey = tuple;

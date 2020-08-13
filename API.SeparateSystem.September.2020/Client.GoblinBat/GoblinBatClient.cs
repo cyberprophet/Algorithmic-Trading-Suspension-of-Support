@@ -164,6 +164,32 @@ namespace ShareInvest.Client
                 LastDate = string.Empty
             };
         }
+        public async Task<Retention> GetContext(Retention retention)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(retention.Code) == false)
+                {
+                    var response = await client.ExecuteAsync(new RestRequest(security.RequestCode(retention), Method.GET), source.Token);
+
+                    if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                    {
+                        Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                        SendMessage(Coin);
+                    }
+                    return JsonConvert.DeserializeObject<Retention>(response.Content);
+                }
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return new Retention
+            {
+                Code = null,
+                LastDate = null
+            };
+        }
         public async Task<Retention> GetContext(string code)
         {
             try
@@ -253,6 +279,27 @@ namespace ShareInvest.Client
                 SendMessage(ex.StackTrace);
             }
             return false;
+        }
+        public async Task<int> PostContext(Stack<Catalog.OpenAPI.Days> param)
+        {
+            int code = int.MinValue;
+
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestCode(), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                code = (int)response.StatusCode;
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return code;
         }
         public async Task<Retention> PostContext<T>(string code, Queue<T> param) where T : struct, ICharts
         {

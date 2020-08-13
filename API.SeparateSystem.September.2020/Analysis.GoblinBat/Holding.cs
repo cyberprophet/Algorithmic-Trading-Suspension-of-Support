@@ -33,9 +33,9 @@ namespace ShareInvest.Analysis
             }
             else if (code.Length == 6 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.Equals(code)))
             {
-                string sDate = temporary.FindTheChartStartsAsync(code).Result, date = sDate.Substring(0, 6);
-                Days = new Queue<Charts>();
                 Market = Temporary.CodeStorage.First(o => o.Code.Equals(code)).MarginRate == 1;
+                string sDate = temporary.FindTheChartStartsAsync(code).Result, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(format) : sDate.Substring(0, 6);
+                Days = new Queue<Charts>();
 
                 foreach (var day in temporary.CallUpTheChartAsync(code).Result)
                     if (string.Compare(day.Date.Substring(2), date) < 0)
@@ -64,23 +64,25 @@ namespace ShareInvest.Analysis
         }
         protected internal long StartProgress(string code)
         {
-            foreach (var queue in FindTheOldestDueDate(code))
-            {
-                var enumerable = queue.OrderBy(o => o.Date);
+            if (string.IsNullOrEmpty(code) == false)
+                foreach (var queue in FindTheOldestDueDate(code))
+                    if (queue != null && queue.Count > 0)
+                    {
+                        var enumerable = queue.OrderBy(o => o.Date);
 
-                if (Days.Count > 0)
-                {
-                    var before = enumerable.First().Date.Substring(0, 6);
+                        if (Days.Count > 0)
+                        {
+                            var before = enumerable.First().Date.Substring(0, 6);
 
-                    foreach (var day in Days.OrderBy(o => o.Date))
-                        if (string.Compare(day.Date.Substring(2), before) < 0)
-                            Send?.Invoke(this, new SendConsecutive(day));
+                            foreach (var day in Days.OrderBy(o => o.Date))
+                                if (string.Compare(day.Date.Substring(2), before) < 0)
+                                    Send?.Invoke(this, new SendConsecutive(day));
 
-                    Days.Clear();
-                }
-                foreach (var consecutive in enumerable)
-                    Send?.Invoke(this, new SendConsecutive(consecutive));
-            }
+                            Days.Clear();
+                        }
+                        foreach (var consecutive in enumerable)
+                            Send?.Invoke(this, new SendConsecutive(consecutive));
+                    }
             return GC.GetTotalMemory(true);
         }
         protected internal abstract bool Market

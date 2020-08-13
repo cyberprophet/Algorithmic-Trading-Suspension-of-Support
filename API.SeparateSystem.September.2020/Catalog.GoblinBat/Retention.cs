@@ -12,5 +12,9 @@ namespace ShareInvest.Catalog
         {
             get; set;
         }
+        public string FirstDate
+        {
+            get; set;
+        }
     }
 }
