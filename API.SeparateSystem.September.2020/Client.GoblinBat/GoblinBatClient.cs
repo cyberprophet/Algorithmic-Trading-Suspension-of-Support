@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -190,6 +191,26 @@ namespace ShareInvest.Client
                 LastDate = null
             };
         }
+        public async Task<HashSet<Catalog.Request.ConfirmRevisedStockPrice>> GetContext(Catalog.OpenAPI.RevisedStockPrice param)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestCode(param), Method.GET), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    return JsonConvert.DeserializeObject<HashSet<Catalog.Request.ConfirmRevisedStockPrice>>(response.Content);
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return null;
+        }
         public async Task<Retention> GetContext(string code)
         {
             try
@@ -366,6 +387,27 @@ namespace ShareInvest.Client
                 SendMessage((int)response.StatusCode);
             }
             return null;
+        }
+        public async Task<int> PostContext(Catalog.OpenAPI.RevisedStockPrice param)
+        {
+            int code = int.MinValue;
+
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                code = (int)response.StatusCode;
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return code;
         }
         public async Task<double> PutContext(Catalog.Request.StocksStrategics param)
         {

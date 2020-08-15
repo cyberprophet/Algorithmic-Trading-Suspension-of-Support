@@ -4,7 +4,7 @@ using System.Linq;
 
 using AxKHOpenAPILib;
 
-using ShareInvest.Catalog.OpenAPI;
+using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface.OpenAPI;
 
@@ -48,20 +48,26 @@ namespace ShareInvest.OpenAPI.Catalog
         {
             if (int.TryParse(e.sPrevNext, out int next))
             {
-                var temp = OnReceiveTrData(opSingle, opMutiple, e);
+                var temp = base.OnReceiveTrData(opSingle, opMutiple, e);
                 var tr = Connect.TR.First(o => o.GetType().Name.Substring(1).Equals(e.sTrCode.Substring(1)) && o.RQName.Equals(e.sRQName));
 
                 while (temp.Item2?.Count > 0)
                 {
                     var param = temp.Item2.Dequeue();
-                    storage.Push(new Days
-                    {
-                        Code = temp.Item1[0],
-                        Date = param[4],
-                        Price = param[1]
-                    });
-                    if (string.IsNullOrEmpty(param[8]) == false && param[9].Equals("0.00") == false)
-                        SendMessage(API.GetMasterCodeName(temp.Item1[0]), string.Concat(param[4], ';', param[8], ';', param[9], ';', param[param.Length - 2]));
+                    var date = DateTime.Now.AddYears(-1).ToString(format);
+
+                    if (string.IsNullOrEmpty(param[8]) == false && param[4].CompareTo(date) > 0 && int.TryParse(param[8], out int revise) && param[9].Equals("0.00") == false)
+                        storage.Push(new ShareInvest.Catalog.OpenAPI.RevisedStockPrice
+                        {
+                            Code = temp.Item1[0],
+                            Name = API.GetMasterCodeName(temp.Item1[0]),
+                            Revise = Enum.GetName(typeof(RevisedStockPrice), revise),
+                            Rate = param[9],
+                            Date = param[4].Substring(2),
+                            Price = param[1]
+                        });
+                    else if (param[4].CompareTo(date) < 0)
+                        next = 0;
                 }
                 if (next > 0)
                 {
@@ -70,7 +76,7 @@ namespace ShareInvest.OpenAPI.Catalog
                     Connect.GetInstance(API).InputValueRqData(tr);
                 }
                 else
-                    Send?.Invoke(this, new SendSecuritiesAPI(storage));
+                    Send?.Invoke(this, new SendSecuritiesAPI(storage, temp.Item1[0]));
             }
         }
         internal override string ID => id;
@@ -93,12 +99,13 @@ namespace ShareInvest.OpenAPI.Catalog
         {
             get; set;
         }
-        readonly Stack<Days> storage = new Stack<Days>();
+        readonly Stack<ShareInvest.Catalog.OpenAPI.RevisedStockPrice> storage = new Stack<ShareInvest.Catalog.OpenAPI.RevisedStockPrice>();
         readonly string[] opSingle = { "종목코드" };
         readonly string[] opMutiple = { "종목코드", "현재가", "거래량", "거래대금", "일자", "시가", "고가", "저가", "수정주가구분", "수정비율", "대업종구분", "소업종구분", "종목정보", "수정주가이벤트", "전일종가" };
         const string code = "opt10081";
         const string id = "종목코드;기준일자;수정주가구분";
         const string rqName = "주식일봉차트조회요청";
+        const string format = "yyyyMMdd";
         string Code
         {
             get; set;

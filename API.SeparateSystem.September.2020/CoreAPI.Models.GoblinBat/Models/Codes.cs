@@ -52,6 +52,11 @@ namespace ShareInvest.Models
             get; set;
         }
         [ForeignKey("Code")]
+        public virtual ICollection<RevisedStockPrice> RevisedStockPrices
+        {
+            get; set;
+        }
+        [ForeignKey("Code")]
         public virtual ICollection<StocksStrategics> StocksStrategics
         {
             get; set;
@@ -62,6 +67,7 @@ namespace ShareInvest.Models
             Futures = new HashSet<Futures>();
             Options = new HashSet<Options>();
             Stocks = new HashSet<Stocks>();
+            RevisedStockPrices = new HashSet<RevisedStockPrice>();
             StocksStrategics = new HashSet<StocksStrategics>();
         }
     }

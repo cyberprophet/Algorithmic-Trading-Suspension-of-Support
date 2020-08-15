@@ -18,11 +18,17 @@ namespace ShareInvest.Controllers
         [HttpGet, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetContexts() => Ok(await context.Stocks.LongCountAsync());
         [HttpGet(Security.routeStocks), ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetContext(string code) => Ok(new Retention
+        public async Task<IActionResult> GetContext(string code)
         {
-            Code = code,
-            LastDate = await context.Stocks.Where(o => o.Code.Equals(code)).AsNoTracking().MaxAsync(o => o.Date)
-        });
+            var date = context.Stocks.Where(o => o.Code.Equals(code)).AsNoTracking();
+
+            return Ok(new Retention
+            {
+                Code = code,
+                LastDate = await date.MaxAsync(o => o.Date),
+                FirstDate = await date.MinAsync(o => o.Date)
+            });
+        }
         [HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext([FromBody] Queue<Stocks> chart)
         {

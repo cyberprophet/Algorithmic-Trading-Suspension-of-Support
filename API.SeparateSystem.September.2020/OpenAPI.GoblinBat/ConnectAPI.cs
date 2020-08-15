@@ -114,6 +114,7 @@ namespace ShareInvest.OpenAPI
                             ctor.Value = param;
                             ctor.RQName = param;
                             api.InputValueRqData(ctor);
+                            Count++;
                             break;
 
                         case CatalogTR.Opt50028:
@@ -128,13 +129,15 @@ namespace ShareInvest.OpenAPI
                         case CatalogTR.OPTKWFID:
                             ctor.Value = param;
                             api.InputValueRqData(param.Split(';').Length, ctor);
+                            Count++;
                             break;
 
                         case CatalogTR.Opt10081:
-                            var str = string.Concat("20", param.Substring(7));
+                            var str = param.Substring(7);
                             ctor.RQName = str;
                             ctor.Value = string.Concat(param.Substring(0, 6), ';', str);
                             api.InputValueRqData(ctor);
+                            Count++;
                             break;
                     }
             }
@@ -217,6 +220,10 @@ namespace ShareInvest.OpenAPI
         public dynamic API
         {
             get; private set;
+        }
+        public uint Count
+        {
+            get; set;
         }
         public bool Start
         {

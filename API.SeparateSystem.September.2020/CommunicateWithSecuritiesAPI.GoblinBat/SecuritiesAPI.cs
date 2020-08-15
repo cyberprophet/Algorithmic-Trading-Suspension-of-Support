@@ -13,6 +13,7 @@ using ShareInvest.Controls;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 using ShareInvest.Interface.XingAPI;
+using ShareInvest.Message;
 
 namespace ShareInvest
 {
@@ -176,20 +177,33 @@ namespace ShareInvest
                             SendMessage(statusOptionsCode);
                             return;
 
-                        case Stack<Catalog.OpenAPI.Days> stack:
-                            if (await client.PostContext(stack) == 0xC8)
+                        case Tuple<string, Stack<Catalog.OpenAPI.RevisedStockPrice>> tuple:
+                            while (tuple.Item2 != null && tuple.Item2.Count > 0)
                             {
-                                var o = com as OpenAPI.ConnectAPI;
-                                o.InputValueRqData(opt10081, stack.First().Code).Send -= OnReceiveSecuritiesAPI;
+                                var info = tuple.Item2.Pop();
+
+                                if (await client.PostContext(info) == 0xC8)
+                                    SendMessage(string.Concat(info.Name, " ", info.Date, " ", info.Revise, " ", info.Price, " ", info.Rate));
+                            }
+                            var axAPI = com as OpenAPI.ConnectAPI;
+                            axAPI.InputValueRqData(opt10081, tuple.Item1).Send -= OnReceiveSecuritiesAPI;
+
+                            if (axAPI.Count < 0x3B7 && DateTime.Now.Minute < 0x36)
+                            {
                                 retention = await SelectDaysCodeAsync();
-                                o.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate)).Send += OnReceiveSecuritiesAPI;
+                                axAPI.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate)).Send += OnReceiveSecuritiesAPI;
+                            }
+                            else
+                            {
+                                Stocks.Clear();
+                                Stocks = null;
                             }
                             return;
 
                         case short error:
                             switch (error)
                             {
-                                case -106:
+                                case -0x6A:
                                     Dispose(WindowState);
                                     return;
                             }
@@ -488,6 +502,12 @@ namespace ShareInvest
 
                             break;
                     }
+            if (com is OpenAPI.ConnectAPI api && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, 0x55F).Equals(DialogResult.OK))
+            {
+                Stocks = new Stack<string>(GetRevisedStockPrices(stocks));
+                var retention = await SelectDaysCodeAsync();
+                (api?.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate))).Send += OnReceiveSecuritiesAPI;
+            }
             Connect = int.MaxValue;
         }
         void GoblinBatResize(object sender, EventArgs e)
@@ -659,6 +679,43 @@ namespace ShareInvest
             else
                 Close();
         }));
+        IEnumerable<string> GetRevisedStockPrices(List<string> list)
+        {
+            int index, start, end;
+            var stocks = new Stack<string>();
+
+            switch (DateTime.Now.Second % 5)
+            {
+                case 0:
+                    start = 0;
+                    end = 0x3E8;
+                    break;
+
+                case 1:
+                    start = 0x2EE;
+                    end = 0x6D6;
+                    break;
+
+                case 2:
+                    start = 0x5DC;
+                    end = 0x9C4;
+                    break;
+
+                case 3:
+                    start = 0;
+                    end = list.Count;
+                    break;
+
+                default:
+                    start = list.Count - 0x3E9;
+                    end = list.Count;
+                    break;
+            }
+            for (index = start; index < end; index++)
+                stocks.Push(list[index]);
+
+            return stocks.OrderBy(o => Guid.NewGuid());
+        }
         string SelectFuturesCode
         {
             get
@@ -722,31 +779,18 @@ namespace ShareInvest
         }
         async Task<Retention> SelectDaysCodeAsync()
         {
-            SendMessage(stocks.Count);
-
-            if (stocks.Count > 0)
+            if (Stocks.Count > 0)
             {
-                var code = stocks[random.Next(0, stocks.Count)];
-                var retention = await client.GetContext(code);
+                var code = Stocks.Pop();
+                SendMessage(string.Concat(Stocks.Count + "/" + stocks.Count + "\tCode_" + code));
+                var date = DateTime.Now;
 
-                if (stocks.Remove(retention.Code) && string.IsNullOrEmpty(retention.FirstDate) == false)
-                {
-                    if (Array.Exists(new string[] { "356540", "343510", "357250", "347890", "359210", "353070", string.Empty }, o => o.Equals(code)) || retention.FirstDate.Substring(0, 6).CompareTo("200717") > 0)
-                        return await SelectDaysCodeAsync();
-
-                    var day = await client.GetContext(new Retention { Code = code });
-                    SendMessage(string.Concat(code, ';', retention.FirstDate, ';', day.LastDate));
-
-                    if (string.IsNullOrEmpty(day.Code) == false && string.IsNullOrEmpty(day.LastDate) == false && int.TryParse(day.LastDate.Substring(2), out int dayLast) && int.TryParse(retention.FirstDate.Substring(0, 6), out int last) && last - 1 <= dayLast)
-                        return await SelectDaysCodeAsync();
-
-                    else
-                        return new Retention
-                        {
-                            Code = code,
-                            LastDate = retention.FirstDate.Substring(0, 6)
-                        };
-                }
+                if (string.IsNullOrEmpty(code) == false)
+                    return new Retention
+                    {
+                        Code = code,
+                        LastDate = (date.Hour < 6 ? date.AddDays(-1) : date).ToString("yyyyMMdd")
+                    };
                 else
                     return await SelectDaysCodeAsync();
             }
@@ -813,6 +857,10 @@ namespace ShareInvest
             get; set;
         }
         Stack<string> Stack
+        {
+            get; set;
+        }
+        Stack<string> Stocks
         {
             get; set;
         }

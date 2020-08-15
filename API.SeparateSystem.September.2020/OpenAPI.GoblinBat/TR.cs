@@ -40,7 +40,7 @@ namespace ShareInvest.OpenAPI
 
             if (single != null)
                 for (i = 0; i < single.Length; i++)
-                    sTemp[i] = API.GetCommData(e.sTrCode, e.sRQName, 0, single[i]);
+                    sTemp[i] = API.GetCommData(e.sTrCode, e.sRQName, 0, single[i]).Trim();
 
             if (multi != null)
             {
@@ -51,7 +51,7 @@ namespace ShareInvest.OpenAPI
                     var temp = new string[multi.Length];
 
                     for (i = 0; i < multi.Length; i++)
-                        temp[i] = API.GetCommData(e.sTrCode, e.sRQName, j, multi[i]);
+                        temp[i] = API.GetCommData(e.sTrCode, e.sRQName, j, multi[i]).Trim();
 
                     catalog.Enqueue(temp);
                 }
@@ -114,5 +114,16 @@ namespace ShareInvest.OpenAPI
         Opt50066,
         OPTKWFID,
         Opw00005
+    }
+    enum RevisedStockPrice
+    {
+        유상증자 = 1,
+        무상증자 = 2,
+        배당락 = 4,
+        액면분할 = 8,
+        액면병합 = 0x10,
+        기업합병 = 0x20,
+        감자 = 0x40,
+        권리락 = 0x100
     }
 }

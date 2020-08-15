@@ -48,14 +48,14 @@ namespace ShareInvest.Strategics
                 Statistical.SetProgressRate(Color.Maroon);
                 Console.WriteLine(e.Error.StackTrace);
             }
-            if (e.Cancelled)
+            else if (e.Cancelled)
             {
                 Statistical.SetProgressRate(e.Cancelled);
                 Statistical.SetProgressRate(Color.Ivory);
             }
-            if (e.Result is bool state)
+            else
             {
-                Statistical.SetProgressRate(state);
+                Statistical.SetProgressRate((bool)e.Result);
                 Statistical.SetProgressRate(Color.Ivory);
             }
             Cancel.Dispose();
