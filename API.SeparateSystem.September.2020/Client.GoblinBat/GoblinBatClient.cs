@@ -191,7 +191,7 @@ namespace ShareInvest.Client
                 LastDate = null
             };
         }
-        public async Task<HashSet<Catalog.Request.ConfirmRevisedStockPrice>> GetContext(Catalog.OpenAPI.RevisedStockPrice param)
+        public async Task<Queue<Catalog.Request.ConfirmRevisedStockPrice>> GetContext(Catalog.OpenAPI.RevisedStockPrice param)
         {
             try
             {
@@ -203,7 +203,7 @@ namespace ShareInvest.Client
                     SendMessage(Coin);
                 }
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
-                    return JsonConvert.DeserializeObject<HashSet<Catalog.Request.ConfirmRevisedStockPrice>>(response.Content);
+                    return JsonConvert.DeserializeObject<Queue<Catalog.Request.ConfirmRevisedStockPrice>>(response.Content);
             }
             catch (Exception ex)
             {
@@ -422,7 +422,7 @@ namespace ShareInvest.Client
                 }
                 SendMessage((int)response.StatusCode);
 
-                return JsonConvert.DeserializeObject<double>(response.Content) - Coin;
+                return JsonConvert.DeserializeObject<double>(response.Content) + Coin;
             }
             catch (Exception ex)
             {
@@ -462,7 +462,7 @@ namespace ShareInvest.Client
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
                 }
-                return JsonConvert.DeserializeObject<double>(response.Content) - Coin;
+                return JsonConvert.DeserializeObject<double>(response.Content) + Coin;
             }
             catch (Exception ex)
             {
@@ -497,11 +497,9 @@ namespace ShareInvest.Client
         [Conditional("DEBUG")]
         void SendMessage(object code)
         {
-            if (code is double? && Temp < Coin)
-            {
-                Temp = (int)(Coin + 1);
-                Console.WriteLine(((double)Coin).ToString("C0"));
-            }
+            if (code is double?)
+                Console.WriteLine(Coin);
+
             else if (code is Catalog.Request.Charts chart)
                 Console.WriteLine("Code_" + chart.Code + " Start_" + chart.Start + " End_" + chart.End);
 
@@ -520,10 +518,6 @@ namespace ShareInvest.Client
             };
             source = new CancellationTokenSource();
             random = new Random();
-        }
-        int Temp
-        {
-            get; set;
         }
         readonly CancellationTokenSource source;
         readonly Security security;

@@ -4,7 +4,6 @@ using System.Linq;
 
 using AxKHOpenAPILib;
 
-using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface.OpenAPI;
 
@@ -61,7 +60,7 @@ namespace ShareInvest.OpenAPI.Catalog
                         {
                             Code = temp.Item1[0],
                             Name = API.GetMasterCodeName(temp.Item1[0]),
-                            Revise = Enum.GetName(typeof(RevisedStockPrice), revise),
+                            Revise = Enum.GetName(typeof(ShareInvest.Catalog.Request.RevisedStockPrice), revise),
                             Rate = param[9],
                             Date = param[4].Substring(2),
                             Price = param[1]

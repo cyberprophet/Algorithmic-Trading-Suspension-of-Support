@@ -65,24 +65,78 @@ namespace ShareInvest.Analysis
         protected internal long StartProgress(string code)
         {
             if (string.IsNullOrEmpty(code) == false)
+            {
+                var revise = new Temporary(code.Length).CallUpTheRevisedStockPrice(code).Result;
+                var modify = revise != null && revise.Count > 0 ? new Catalog.Request.ConfirmRevisedStockPrice[revise.Count] : null;
+                var index = 0;
+
                 foreach (var queue in FindTheOldestDueDate(code))
                     if (queue != null && queue.Count > 0)
                     {
                         var enumerable = queue.OrderBy(o => o.Date);
+                        var before = enumerable.First().Date.Substring(0, 6);
 
+                        while (revise != null && revise.Count > 0)
+                        {
+                            var param = revise.Dequeue();
+
+                            if (param.Date.CompareTo(Days.Count > 0 ? Days.Max(o => o.Date).Substring(2) : before) > 0)
+                            {
+                                if (revise.Count == 0)
+                                {
+                                    modify[index] = param;
+
+                                    break;
+                                }
+                                var peek = revise.Peek();
+
+                                if (param.Rate != peek.Rate)
+                                    modify[index++] = param;
+                            }
+                        }
                         if (Days.Count > 0)
                         {
-                            var before = enumerable.First().Date.Substring(0, 6);
-
                             foreach (var day in Days.OrderBy(o => o.Date))
                                 if (string.Compare(day.Date.Substring(2), before) < 0)
-                                    Send?.Invoke(this, new SendConsecutive(day));
+                                {
+                                    SendConsecutive convey;
 
+                                    if (modify != null && int.TryParse(day.Price, out int price))
+                                    {
+                                        var rate = 1D;
+
+                                        foreach (var param in Array.FindAll(modify, o => string.IsNullOrEmpty(o.Date) == false && o.Date.CompareTo(day.Date.Substring(2)) > 0))
+                                            rate *= param.Rate;
+
+                                        convey = new SendConsecutive(day.Date, GetStartingPrice((int)((1 + rate * 1e-2) * price), Market), day.Volume);
+                                    }
+                                    else
+                                        convey = new SendConsecutive(day);
+
+                                    Send?.Invoke(this, convey);
+                                }
                             Days.Clear();
                         }
                         foreach (var consecutive in enumerable)
-                            Send?.Invoke(this, new SendConsecutive(consecutive));
+                        {
+                            SendConsecutive convey;
+
+                            if (modify != null && int.TryParse(consecutive.Price, out int price))
+                            {
+                                var rate = 1D;
+
+                                foreach (var param in Array.FindAll(modify, o => string.IsNullOrEmpty(o.Date) == false && o.Date.CompareTo(consecutive.Date.Substring(0, 6)) > 0))
+                                    rate *= param.Rate;
+
+                                convey = new SendConsecutive(consecutive.Date, GetStartingPrice((int)((1 + rate * 1e-2) * price), Market), consecutive.Volume);
+                            }
+                            else
+                                convey = new SendConsecutive(consecutive);
+
+                            Send?.Invoke(this, convey);
+                        }
                     }
+            }
             return GC.GetTotalMemory(true);
         }
         protected internal abstract bool Market

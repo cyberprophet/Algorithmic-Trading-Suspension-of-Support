@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +24,6 @@ namespace ShareInvest.Strategics
             this.cookie = cookie;
             InitializeComponent();
             random = new Random();
-            cultureInfo = CultureInfo.GetCultureInfo("en-US");
             client = GoblinBatClient.GetInstance(cookie);
             strip.ItemClicked += OnItemClick;
             StartProgress(new Catalog.Privacies { Security = cookie });
@@ -171,7 +169,7 @@ namespace ShareInvest.Strategics
                         Account = Privacy.Account,
                         Commission = Privacy.Commission,
                         CodeStrategics = Privacy.CodeStrategics,
-                        Coin = coin - GoblinBatClient.Coin
+                        Coin = coin + GoblinBatClient.Coin
                     });
                     if (remain < 0)
                     {
@@ -188,7 +186,7 @@ namespace ShareInvest.Strategics
                         }
                     }
                     else
-                        notifyIcon.Text = remain.ToString("C0", cultureInfo);
+                        notifyIcon.Text = ConvertTheFare(remain);
                 }
                 else
                     Console.WriteLine((tuple.Item1 as IStrategics).Code);
@@ -363,11 +361,11 @@ namespace ShareInvest.Strategics
                     Controls.Add(Statistical);
                     Statistical.Dock = DockStyle.Fill;
                 }
-                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && await client.GetContext<Catalog.Privacies>(Privacy) is Catalog.Privacies privacy && privacy.Coin > 0)
+                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && await client.GetContext<Catalog.Privacies>(Privacy) is Catalog.Privacies privacy && privacy.Coin < 0xF4240)
                 {
                     Privacy = privacy;
                     Text = await Statistical.SetPrivacy(privacy);
-                    notifyIcon.Text = privacy.Coin.ToString("C0", cultureInfo);
+                    notifyIcon.Text = ConvertTheFare(privacy.Coin);
 
                     if (backgroundWorker.IsBusy == false)
                     {
@@ -420,6 +418,5 @@ namespace ShareInvest.Strategics
         readonly dynamic cookie;
         readonly Random random;
         readonly GoblinBatClient client;
-        readonly CultureInfo cultureInfo;
     }
 }

@@ -502,7 +502,7 @@ namespace ShareInvest
 
                             break;
                     }
-            if (com is OpenAPI.ConnectAPI api && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, 0x55F).Equals(DialogResult.OK))
+            if (com is OpenAPI.ConnectAPI api && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1D3B7U : 0x55FU).Equals(DialogResult.OK))
             {
                 Stocks = new Stack<string>(GetRevisedStockPrices(stocks));
                 var retention = await SelectDaysCodeAsync();

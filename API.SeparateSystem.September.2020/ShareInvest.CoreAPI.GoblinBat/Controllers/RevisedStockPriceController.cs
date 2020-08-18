@@ -17,13 +17,13 @@ namespace ShareInvest.Controllers
         [HttpGet(Security.routeStocks), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> GetContext(string code)
         {
-            var hash = new HashSet<ConfirmRevisedStockPrice>();
+            var hash = new Queue<ConfirmRevisedStockPrice>();
 
             if (await context.RevisedStockPrices.AnyAsync(o => o.Code.Equals(code)))
             {
                 foreach (var sp in context.RevisedStockPrices.Where(o => o.Code.Equals(code)).OrderBy(o => o.Date).AsNoTracking())
                     if (double.TryParse(sp.Rate, out double rate))
-                        hash.Add(new ConfirmRevisedStockPrice
+                        hash.Enqueue(new ConfirmRevisedStockPrice
                         {
                             Date = sp.Date,
                             Price = sp.Price,

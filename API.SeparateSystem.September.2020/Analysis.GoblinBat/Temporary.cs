@@ -62,7 +62,7 @@ namespace ShareInvest.Analysis
 
             return queue;
         }
-        internal async Task<HashSet<Catalog.Request.ConfirmRevisedStockPrice>> CallUpTheRevisedStockPrice(string code) => await client.GetContext(new Catalog.OpenAPI.RevisedStockPrice { Code = code });
+        internal async Task<Queue<Catalog.Request.ConfirmRevisedStockPrice>> CallUpTheRevisedStockPrice(string code) => await client.GetContext(new Catalog.OpenAPI.RevisedStockPrice { Code = code });
         internal async Task<string> FindTheChartStartsAsync(string code) => await client.GetContext(new Catalog.Request.Charts { Code = code, Start = empty, End = empty }) as string;
         internal Temporary(int length)
         {

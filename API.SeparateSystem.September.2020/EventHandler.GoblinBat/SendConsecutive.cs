@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 using ShareInvest.Catalog;
 
@@ -30,6 +28,12 @@ namespace ShareInvest.EventHandler
 
             Date = chart.Date;
             Volume = chart.Volume;
+        }
+        public SendConsecutive(string date, int price, int volume)
+        {
+            Date = date;
+            Price = price;
+            Volume = volume;
         }
     }
 }

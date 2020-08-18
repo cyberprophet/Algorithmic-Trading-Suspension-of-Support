@@ -89,7 +89,7 @@ namespace ShareInvest.XingAPI
                     ai.Nick = name.Item1;
                     checkPrivacy.CheckState = ai.Server && checkPrivacy.Checked ? CheckState.Unchecked : checkPrivacy.CheckState;
 
-                    if (checkPrivacy.Checked && 0xC8 == await new Secrecy().Encrypt(this.privacy, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.AccountNumber, privacy.AccountPassword, checkDemo.Checked))
+                    if (checkPrivacy.Checked && int.MaxValue > await new Secrecy().Encrypt(this.privacy, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.AccountNumber, privacy.AccountPassword, checkDemo.Checked))
                         Console.WriteLine(ai.Nick);
                 }));
             }

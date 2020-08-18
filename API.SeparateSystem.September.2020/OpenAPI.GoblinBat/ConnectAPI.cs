@@ -61,7 +61,7 @@ namespace ShareInvest.OpenAPI
             checkAccount.CheckState = mServer.Equals(mock) && checkAccount.Checked ? CheckState.Unchecked : CheckState.Checked;
             Invoke(new Action(async () =>
             {
-                if (checkAccount.Checked && await new Security().Encrypt(this.privacy, privacy.AccountNumber, checkAccount.Checked) == 0xC8)
+                if (checkAccount.Checked && await new Security().Encrypt(this.privacy, privacy.AccountNumber, checkAccount.Checked) < int.MaxValue)
                     Console.WriteLine(log);
             }));
             var aInfo = new AccountInformation
