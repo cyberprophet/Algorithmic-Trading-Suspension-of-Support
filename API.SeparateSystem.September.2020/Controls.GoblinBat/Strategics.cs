@@ -285,7 +285,7 @@ namespace ShareInvest.Controls
                             }
                         sb.Append(';');
                     }
-                    if (0xF4240 > await client.PutContext(new Privacies
+                    if (0 < await client.PutContext(new Privacies
                     {
                         Security = Privacy.Security,
                         SecuritiesAPI = Privacy.SecuritiesAPI,

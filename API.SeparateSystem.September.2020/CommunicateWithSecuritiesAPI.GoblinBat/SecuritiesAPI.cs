@@ -19,10 +19,11 @@ namespace ShareInvest
 {
     sealed partial class SecuritiesAPI : Form
     {
-        internal SecuritiesAPI(GoblinBatClient client, Privacies privacy, ISecuritiesAPI<SendSecuritiesAPI> com)
+        internal SecuritiesAPI(Consensus consensus, GoblinBatClient client, Privacies privacy, ISecuritiesAPI<SendSecuritiesAPI> com)
         {
             this.com = com;
             this.privacy = privacy;
+            this.consensus = consensus;
             this.client = client;
             random = new Random();
             stocks = new List<string>();
@@ -502,7 +503,7 @@ namespace ShareInvest
 
                             break;
                     }
-            if (com is OpenAPI.ConnectAPI api && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1D3B7U : 0x55FU).Equals(DialogResult.OK))
+            if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8 && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1D3B7U : 0x55FU).Equals(DialogResult.OK))
             {
                 Stocks = new Stack<string>(GetRevisedStockPrices(stocks));
                 var retention = await SelectDaysCodeAsync();
@@ -769,7 +770,14 @@ namespace ShareInvest
                         return await SelectStocksCodeAsync();
 
                     else
+                    {
+                        for (int i = 0; i < retention.Code.Length / 3; i++)
+                        {
+                            var status = await client.PostContext(await consensus.GetContextAsync(i, retention.Code));
+                            SendMessage(status);
+                        }
                         return retention;
+                    }
                 }
                 else
                     return await SelectStocksCodeAsync();
@@ -877,6 +885,7 @@ namespace ShareInvest
         readonly List<string> stocks;
         readonly GoblinBatClient client;
         readonly Random random;
+        readonly Consensus consensus;
         readonly Dictionary<string, Codes> infoCodes;
         readonly Color[] colors;
         readonly Privacies privacy;
