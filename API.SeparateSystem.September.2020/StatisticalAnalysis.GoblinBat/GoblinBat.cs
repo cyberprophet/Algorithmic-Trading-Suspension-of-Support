@@ -204,6 +204,7 @@ namespace ShareInvest.Strategics
                     case Size size:
                         SuspendLayout();
                         Console.WriteLine(Size.Height + "\t" + Size.Width + "\t" + size.Height + "\t" + size.Width);
+                        
                         ResumeLayout();
                         return;
 

@@ -75,7 +75,7 @@ namespace ShareInvest.Controls
                             foreach (var commission in commissionStocks)
                                 comboCommission.Items.Add(commission.ToString("P3"));
 
-                            comboStrategics.Items.AddRange(new object[] { ts });
+                            comboStrategics.Items.AddRange(new object[] { st, ts });
                         }
                         str = "위탁종합";
                         Length = 6;
@@ -257,6 +257,9 @@ namespace ShareInvest.Controls
                                         Setting = (Setting)setting
                                     });
                                 break;
+
+                            case ScenarioAccordingToTrend st:
+                                break;
                         }
                     if (check && verify != null)
                     {
@@ -355,6 +358,16 @@ namespace ShareInvest.Controls
                             panel.RowStyles[0].Height = 0x83 + 0x23;
                         }
                         break;
+
+                    case st:
+                        if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
+                        {
+                            var view = new ScenarioAccordingToTrend(select);
+                            tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                            view.Dock = DockStyle.Fill;
+                            panel.RowStyles[0].Height = 0xEB + 0x23;
+                        }
+                        break;
                 }
                 this.link.LinkVisited = false;
                 var lasttabrect = tab.GetTabRect(tab.TabPages.Count - 1);
@@ -379,6 +392,32 @@ namespace ShareInvest.Controls
                 page.Dispose();
                 tab.Controls.Remove(page);
                 ResumeLayout();
+            }
+        }
+        void ComboStrategicsMouseHover(object sender, EventArgs e)
+        {
+            if (sender is ComboBox)
+            {
+                var sb = new StringBuilder();
+                var count = 0;
+
+                foreach (var text in comboStrategics.Text.ToCharArray())
+                {
+                    if (count++ > 0 && char.IsUpper(text))
+                        sb.Append(' ');
+
+                    sb.Append(text);
+                }
+                new ToolTip
+                {
+                    IsBalloon = true,
+                    ShowAlways = true,
+                    AutoPopDelay = 0x1CB7,
+                    InitialDelay = 0x3A7,
+                    ReshowDelay = 0,
+                    UseAnimation = true,
+                    UseFading = true
+                }.SetToolTip(comboStrategics, sb.ToString());
             }
         }
         void TabSelecting(object sender, EventArgs e)

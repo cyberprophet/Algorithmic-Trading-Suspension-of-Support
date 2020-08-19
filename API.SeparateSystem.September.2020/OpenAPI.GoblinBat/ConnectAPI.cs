@@ -199,7 +199,7 @@ namespace ShareInvest.OpenAPI
         {
             RQName = axAPI.GetMasterCodeName(order.Item2),
             ScreenNo = (API as Connect)?.LookupScreenNo,
-            AccNo = info.AccountNumber,
+            AccNo = info.Account,
             OrderType = order.Item1,
             Code = order.Item2,
             Qty = order.Item3,
