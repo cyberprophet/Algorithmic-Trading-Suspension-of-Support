@@ -57,6 +57,26 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<byte[]> GetContext(Catalog.Request.FileOfGoblinBat param)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestFile(param), Method.GET), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                if ((int)response.StatusCode == 0xC8)
+                    return JsonConvert.DeserializeObject<byte[]>(response.Content);
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return null;
+        }
         public async Task<Codes> GetContext(Codes codes)
         {
             var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, codes.GetType().Name, "/", codes.Code), Method.GET), source.Token);
@@ -401,6 +421,27 @@ namespace ShareInvest.Client
             try
             {
                 var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                code = (int)response.StatusCode;
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return code;
+        }
+        public async Task<int> PostContext(Catalog.Request.FileOfGoblinBat param)
+        {
+            int code = int.MinValue;
+
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {

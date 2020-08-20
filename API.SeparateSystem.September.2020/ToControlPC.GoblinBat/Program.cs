@@ -10,8 +10,13 @@ namespace ShareInvest
         static void Main()
         {
             secrecy.PublishTheDebuggedProgram();
-            secrecy.CheckAndUpdateTheProgramVersion();
-            StartProgess(secrecy.Key);
+
+            if (secrecy.IsProcessing == false && secrecy.CheckAndUpdateTheProgramVersion() == false)
+                StartProgess(secrecy.Key);
+
+            if (secrecy.IsProcessing == false && secrecy.IsDebugging == false)
+                Process.Start("shutdown.exe", "-r");
+
             Process.GetCurrentProcess().Kill();
         }
         static void StartProgess(dynamic param)

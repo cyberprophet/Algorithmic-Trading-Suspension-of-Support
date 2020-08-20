@@ -61,6 +61,10 @@ namespace ShareInvest.CoreAPI
         {
             get; set;
         }
+        public DbSet<FileOfGoblinBat> File
+        {
+            get; set;
+        }
         static ulong Count
         {
             get; set;
