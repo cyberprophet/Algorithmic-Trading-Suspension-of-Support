@@ -152,7 +152,7 @@ namespace ShareInvest.Controllers
         }
         [HttpGet, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetContexts() => NotFound();
-        [HttpPost("days/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPost("days/{code}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Days> chart) where T : struct
         {
             await context.BulkInsertAsync(chart, o =>
@@ -163,11 +163,11 @@ namespace ShareInvest.Controllers
                 o.AutoMapOutputDirection = false;
             });
             if (string.IsNullOrEmpty(code))
-                return StatusCode(0xCD);
+                return NotFound();
 
             return Ok(code);
         }
-        [HttpPost("futures/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPost("futures/{code}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Futures> chart) where T : struct
         {
             await context.BulkInsertAsync(chart, o =>
@@ -178,11 +178,11 @@ namespace ShareInvest.Controllers
                 o.AutoMapOutputDirection = false;
             });
             if (string.IsNullOrEmpty(code))
-                return StatusCode(0xCD);
+                return NotFound();
 
             return Ok(code);
         }
-        [HttpPost("options/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPost("options/{code}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Options> chart) where T : struct
         {
             await context.BulkInsertAsync(chart, o =>
@@ -193,11 +193,11 @@ namespace ShareInvest.Controllers
                 o.AutoMapOutputDirection = false;
             });
             if (string.IsNullOrEmpty(code))
-                return StatusCode(0xCD);
+                return NotFound();
 
             return Ok(code);
         }
-        [HttpPost("stocks/{code}"), ProducesResponseType(StatusCodes.Status205ResetContent), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPost("stocks/{code}"), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext<T>(string code, [FromBody] IEnumerable<Stocks> chart) where T : struct
         {
             await context.BulkInsertAsync(chart, o =>
@@ -208,7 +208,7 @@ namespace ShareInvest.Controllers
                 o.AutoMapOutputDirection = false;
             });
             if (string.IsNullOrEmpty(code))
-                return StatusCode(0xCD);
+                return NotFound();
 
             return Ok(code);
         }

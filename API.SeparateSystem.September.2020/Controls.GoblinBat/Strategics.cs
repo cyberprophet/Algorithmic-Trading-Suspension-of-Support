@@ -127,6 +127,7 @@ namespace ShareInvest.Controls
                             Name = strategics.Substring(2, Length),
                             TabIndex = Index++,
                             Text = strategics.Substring(2, Length),
+                            ToolTipText = strategics.Substring(0, 2)
                         });
                         switch (strategics.Substring(0, 2))
                         {
@@ -195,6 +196,10 @@ namespace ShareInvest.Controls
                             break;
 
                         case ts:
+                            url = "https://youtu.be/CIfSIsozG_E";
+                            break;
+
+                        case st:
                             url = "https://youtu.be/CIfSIsozG_E";
                             break;
                     }
@@ -323,6 +328,34 @@ namespace ShareInvest.Controls
             }
             else if (sender is ComboBox box && buttonSave.ForeColor.Equals(Color.Ivory) && comboStrategics.Name.Equals(box.Name) && textCode.TextLength == Length && tab.TabPages.ContainsKey(textCode.Text) == false)
             {
+                IEnumerable<ConvertConsensus> consensus = null;
+
+                if (box.SelectedItem.Equals(st))
+                {
+                    var code = string.Empty;
+
+                    switch (Length)
+                    {
+                        case 6:
+                            code = textCode.Text;
+                            break;
+
+                        case 8:
+                            break;
+
+                        default:
+                            return;
+                    }
+                    consensus = await client.GetContext(new ConvertConsensus { Code = code });
+
+                    if (consensus == null)
+                    {
+                        textCode.Text = string.Empty;
+                        box.SelectedIndex = -1;
+
+                        return;
+                    }
+                }
                 SuspendLayout();
                 var color = Color.FromArgb(0x79, 0x85, 0x82);
                 var select = Codes.FirstOrDefault(o => o.Code.Equals(textCode.Text));
@@ -336,6 +369,7 @@ namespace ShareInvest.Controls
                     Name = textCode.Text,
                     TabIndex = Index++,
                     Text = textCode.Text,
+                    ToolTipText = box.SelectedItem as string
                 });
                 switch (box.SelectedItem)
                 {
@@ -362,7 +396,7 @@ namespace ShareInvest.Controls
                     case st:
                         if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
                         {
-                            var view = new ScenarioAccordingToTrend(select);
+                            var view = new ScenarioAccordingToTrend(select, new ConvertConsensus().PresumeToConsensus(consensus));
                             tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0xEB + 0x23;
@@ -394,36 +428,89 @@ namespace ShareInvest.Controls
                 ResumeLayout();
             }
         }
-        void ComboStrategicsMouseHover(object sender, EventArgs e)
+        void StrategicsMouseHover(object sender, EventArgs e)
         {
-            if (sender is ComboBox)
+            switch (sender)
             {
-                var sb = new StringBuilder();
-                var count = 0;
+                case ComboBox box when box.Equals(comboStrategics):
+                    var sb = new StringBuilder();
+                    var count = 0;
 
-                foreach (var text in comboStrategics.Text.ToCharArray())
-                {
-                    if (count++ > 0 && char.IsUpper(text))
-                        sb.Append(' ');
+                    foreach (var text in comboStrategics.Text.ToCharArray())
+                    {
+                        if (count++ > 0 && char.IsUpper(text))
+                            sb.Append(' ');
 
-                    sb.Append(text);
-                }
-                new ToolTip
-                {
-                    IsBalloon = true,
-                    ShowAlways = true,
-                    AutoPopDelay = 0x1CB7,
-                    InitialDelay = 0x3A7,
-                    ReshowDelay = 0,
-                    UseAnimation = true,
-                    UseFading = true
-                }.SetToolTip(comboStrategics, sb.ToString());
+                        sb.Append(text);
+                    }
+                    new ToolTip
+                    {
+                        IsBalloon = true,
+                        ShowAlways = true,
+                        AutoPopDelay = 0x1CB7,
+                        InitialDelay = 0x3A7,
+                        ReshowDelay = 0,
+                        UseAnimation = true,
+                        UseFading = true
+                    }.SetToolTip(comboStrategics, sb.ToString());
+                    break;
+
+                case TabControl tab:
+                    var tip = tab.SelectedTab.ToolTipText;
+
+                    if (tip.Length > 2)
+                    {
+                        var str = new StringBuilder();
+                        var index = 0;
+
+                        foreach (var text in comboStrategics.Text.ToCharArray())
+                        {
+                            if (index++ > 0 && char.IsUpper(text))
+                                str.Append(' ');
+
+                            str.Append(text);
+                        }
+                        tip = str.ToString();
+                    }
+                    new ToolTip
+                    {
+                        IsBalloon = true,
+                        ShowAlways = true,
+                        AutoPopDelay = tip.Length > 2 ? 0x6D9 : 0x31B,
+                        InitialDelay = 0x177,
+                        ReshowDelay = 0x1CE3,
+                        UseAnimation = true,
+                        UseFading = true
+                    }.SetToolTip(tab, tip);
+                    break;
             }
         }
         void TabSelecting(object sender, EventArgs e)
         {
             if (sender is TabControl && e is TabControlCancelEventArgs tc && tc.TabPage != null)
+            {
                 SendSize?.Invoke(this, new SendHoldingStocks(tc.TabPage.Size));
+                int height = 0x23;
+
+                switch (tc.TabPage.ToolTipText)
+                {
+                    case tf:
+                    case "TF":
+                        height += 0x83;
+                        break;
+
+                    case ts:
+                    case "TS":
+                        height += 0xCD;
+                        break;
+
+                    case st:
+                    case "ST":
+                        height += 0xEB;
+                        break;
+                }
+                panel.RowStyles[0].Height = height;
+            }
         }
         int Length
         {

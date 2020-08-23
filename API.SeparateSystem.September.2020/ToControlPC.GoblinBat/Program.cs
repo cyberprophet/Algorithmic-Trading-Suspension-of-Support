@@ -9,14 +9,16 @@ namespace ShareInvest
         [STAThread]
         static void Main()
         {
+            secrecy.CheckTheSystemPeriodically(DateTime.Now);
             secrecy.PublishTheDebuggedProgram();
 
             if (secrecy.IsProcessing == false && secrecy.CheckAndUpdateTheProgramVersion() == false)
                 StartProgess(secrecy.Key);
 
             if (secrecy.IsProcessing == false && secrecy.IsDebugging == false)
-                Process.Start("shutdown.exe", "-r");
+                Process.Start(secrecy.ShutDown, "-r");
 
+            GC.Collect();
             Process.GetCurrentProcess().Kill();
         }
         static void StartProgess(dynamic param)

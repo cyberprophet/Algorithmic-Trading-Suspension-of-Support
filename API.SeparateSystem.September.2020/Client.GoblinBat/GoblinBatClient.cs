@@ -68,7 +68,7 @@ namespace ShareInvest.Client
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
                 }
-                if ((int)response.StatusCode == 0xC8)
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
                     return JsonConvert.DeserializeObject<byte[]>(response.Content);
             }
             catch (Exception ex)
@@ -243,7 +243,16 @@ namespace ShareInvest.Client
                         Coin += security.GetSettleTheFare(response.RawBytes.Length);
                         SendMessage(Coin);
                     }
-                    return JsonConvert.DeserializeObject<Retention>(response.Content);
+                    var retention = JsonConvert.DeserializeObject<Retention>(response.Content);
+
+                    if (string.IsNullOrEmpty(retention.Code) == false && string.IsNullOrEmpty(retention.FirstDate) && string.IsNullOrEmpty(retention.LastDate))
+                        return new Retention
+                        {
+                            Code = code,
+                            FirstDate = string.Empty,
+                            LastDate = string.Empty
+                        };
+                    return retention;
                 }
             }
             catch (Exception ex)
@@ -300,6 +309,31 @@ namespace ShareInvest.Client
                 SendMessage(ex.StackTrace);
             }
             return stack.OrderBy(o => random.Next(stack.Count));
+        }
+        public async Task<IEnumerable<ConvertConsensus>> GetContext(ConvertConsensus consensus)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestConsensus(consensus), Method.GET), source.Token);
+
+                if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                if (response.Content != null && response.Content.Length > 0)
+                {
+                    var list = JsonConvert.DeserializeObject<List<ConvertConsensus>>(response.Content);
+
+                    if (list != null && list.Count > 0)
+                        return list.OrderBy(o => o.Quarter);
+                }
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return null;
         }
         public async Task<bool> PostContext(ConfirmStrategics confirm)
         {

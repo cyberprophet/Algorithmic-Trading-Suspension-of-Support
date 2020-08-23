@@ -1,7 +1,24 @@
-﻿namespace ShareInvest.Catalog
+﻿using System;
+using System.Collections.Generic;
+
+namespace ShareInvest.Catalog
 {
     public struct ConvertConsensus
     {
+        public Tuple<List<ConvertConsensus>, List<ConvertConsensus>> PresumeToConsensus(IEnumerable<ConvertConsensus> consensus)
+        {
+            var quarterly = new List<ConvertConsensus>();
+            var yearly = new List<ConvertConsensus>();
+            var temp = string.Empty;
+
+            foreach (var classification in consensus)
+                if (classification.Date.Substring(0, 5).Equals(temp) == false)
+                {
+                    (classification.Quarter.Equals("0") ? yearly : quarterly).Add(classification);
+                    temp = classification.Date.Substring(0, 5);
+                }
+            return new Tuple<List<ConvertConsensus>, List<ConvertConsensus>>(yearly, quarterly);
+        }
         public string Code
         {
             get; set;

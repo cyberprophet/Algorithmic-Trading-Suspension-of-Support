@@ -12,13 +12,13 @@ namespace ShareInvest.Controllers
     [ApiController, Route(Security.route), Produces(Security.produces)]
     public class FileOfGoblinBatController : ControllerBase
     {
-        [HttpGet(Security.routeRetention), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status204NoContent)]
+        [HttpGet(Security.routeRetention), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetContext(string code)
         {
             if (await context.File.AnyAsync(o => o.Version.CompareTo(code) > 0))
                 return Ok((await context.File.FirstAsync(o => o.Version.CompareTo(code) > 0)).Content);
 
-            return NoContent();
+            return NotFound();
         }
         [HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PostContext([FromBody] FileOfGoblinBat param)
