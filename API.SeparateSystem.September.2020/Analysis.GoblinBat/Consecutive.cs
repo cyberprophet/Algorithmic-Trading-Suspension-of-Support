@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 using ShareInvest.Analysis.SecondaryIndicators;
@@ -24,6 +25,17 @@ namespace ShareInvest.Analysis
         Stack<double> Trend
         {
             get;
+        }
+        internal Consecutive(ScenarioAccordingToTrend strategics, Holding ho)
+        {
+            Short = new Stack<double>();
+            Long = new Stack<double>();
+            Trend = new Stack<double>();
+            st = strategics;
+            Compare = double.NaN;
+            this.strategics = strategics;
+            this.ho = ho;
+            ho.Send += OnReceiveDrawChart;
         }
         internal Consecutive(TrendsInStockPrices strategics, Holding ho)
         {
@@ -116,6 +128,46 @@ namespace ShareInvest.Analysis
                     tMinute = tf.Minute;
                     break;
 
+                case ScenarioAccordingToTrend _:
+                    tShort = st.Short;
+                    tLong = st.Long;
+                    trend = st.Trend;
+
+                    if (e.Date.Length > 6 && double.IsNaN(Compare) && string.IsNullOrEmpty(st.Calendar) == false && (e.Date.Length == 8 ? e.Date.Substring(2) : e.Date.Substring(0, 6)).CompareTo(st.Calendar) >= 0)
+                    {
+                        Compare = Trend.Pop();
+                        Trend.Clear();
+
+                        if (int.TryParse(e.Date.Length == 8 ? e.Date.Substring(2, 4) : e.Date.Substring(0, 4), out int closest))
+                        {
+                            var baseDate = int.MaxValue;
+                            var temp = string.Empty;
+                            var list = new List<ConvertConsensus>(ho.Consensus.Item1);
+                            list.AddRange(ho.Consensus.Item2);
+
+                            foreach (var parse in list.OrderByDescending(o => o.Date))
+                                if (int.TryParse(parse.Date.Substring(0, 5).Replace(".", string.Empty), out int date) && Math.Abs(date - closest) < baseDate)
+                                {
+                                    baseDate = Math.Abs(date - closest);
+                                    temp = parse.Date;
+                                }
+                            ho.EstimatedPrice = new Security(temp, list, st).EstimateThePrice(e.Date, Compare);
+                        }
+                    }
+                    if (GetCheckOnDate(e.Date, 0x5A0))
+                    {
+                        Short.Pop();
+                        Long.Pop();
+
+                        if (double.IsNaN(Compare))
+                            Trend.Pop();
+                    }
+                    if (double.IsNaN(Compare))
+                        Trend.Push(Trend.Count > 0 ? EMA.Make(trend, Trend.Count, e.Price, Trend.Peek()) : EMA.Make(e.Price));
+
+                    tMinute = st.IntervalInSeconds;
+                    break;
+
                 default:
                     return;
             }
@@ -138,7 +190,7 @@ namespace ShareInvest.Analysis
                         xs.OnReceiveTrendFollowingBasicFutures(gap, tMinute);
                         break;
 
-                    case HoldingStocks hs when strategics is TrendsInStockPrices:
+                    case HoldingStocks hs:
                         hs.OnReceiveTrendsInStockPrices(e, gap, Short.Peek(), Long.Peek(), Trend.Peek());
                         break;
                 }
@@ -211,6 +263,10 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        double Compare
+        {
+            get; set;
+        }
         string Check
         {
             get; set;
@@ -234,6 +290,7 @@ namespace ShareInvest.Analysis
             if (date.Substring(6).Equals("090000000"))
                 Console.WriteLine("D_" + date + " P_" + price + " V_" + volume + " E_" + sb);
         }
+        readonly ScenarioAccordingToTrend st;
         readonly TrendsInStockPrices ts;
         readonly TrendFollowingBasicFutures tf;
         readonly IStrategics strategics;

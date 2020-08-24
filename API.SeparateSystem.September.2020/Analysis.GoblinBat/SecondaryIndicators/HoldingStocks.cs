@@ -21,6 +21,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
             switch (strategics)
             {
+                case ScenarioAccordingToTrend st:
+
+                    break;
+
                 case TrendsInStockPrices ts:
                     if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0)
                     {
@@ -160,6 +164,14 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         {
             switch (strategics)
             {
+                case ScenarioAccordingToTrend _:
+                    Commission = commission > 0 ? commission : 1.5e-4;
+
+                    if (StartProgress(strategics.Code as string) > 0)
+                        consecutive.Dispose();
+
+                    break;
+
                 case TrendsInStockPrices _:
                     Commission = commission > 0 ? commission : 1.5e-4;
 
@@ -193,6 +205,16 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         {
             OrderNumber = new Dictionary<string, dynamic>();
             this.strategics = strategics;
+        }
+        public HoldingStocks(ScenarioAccordingToTrend strategics, Tuple<List<ConvertConsensus>, List<ConvertConsensus>> consensus) : base(strategics)
+        {
+            OrderNumber = new Dictionary<string, dynamic>();
+            Consensus = consensus;
+            this.strategics = strategics;
+        }
+        public override Tuple<List<ConvertConsensus>, List<ConvertConsensus>> Consensus
+        {
+            get; set;
         }
         public override string Code
         {
@@ -247,6 +269,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             get;
         }
         protected internal override bool Market
+        {
+            get; set;
+        }
+        internal override Dictionary<DateTime, double> EstimatedPrice
         {
             get; set;
         }

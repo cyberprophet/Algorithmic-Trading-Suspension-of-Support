@@ -30,8 +30,12 @@ namespace ShareInvest.Controls
             textCode.Leave += OnReceiveClickItem;
             Codes = new HashSet<Codes>();
             this.client = client;
+
+            foreach (var str in button)
+                string.Concat("button", str).FindByName<Button>(this).MouseLeave += ButtonPreviewKeyDown;
         }
         public event EventHandler<SendHoldingStocks> SendSize;
+        public void CheckForSurvival(Color color) => labelProgress.ForeColor = color;
         public void SetProgressRate(int rate) => progressBar.Value = rate + 1;
         public void SetProgressRate(Color color) => buttonProgress.ForeColor = color;
         public void SetProgressRate(bool state)
@@ -264,6 +268,28 @@ namespace ShareInvest.Controls
                                 break;
 
                             case ScenarioAccordingToTrend st:
+                                check = st.TransmuteStrategics();
+                                var item = st.TransmuteStrategics(tabPage.Text);
+                                stParam = item.Item1.Split('.');
+
+                                if (check && int.TryParse(stParam[11], out int stNet) && int.TryParse(stParam[9], out int stOperating) && int.TryParse(stParam[7], out int stSales) && int.TryParse(stParam[5], out int stRange) && int.TryParse(stParam[4], out int stInterval) && int.TryParse(stParam[3], out int stQuantity) && int.TryParse(stParam[2], out int stTrend) && int.TryParse(stParam[1], out int stLong) && int.TryParse(stParam[0].Substring(8), out int stShort))
+                                    verify = new SendHoldingStocks(item.Item2, new Catalog.ScenarioAccordingToTrend
+                                    {
+                                        Code = stParam[0].Substring(2, 6),
+                                        Short = stShort,
+                                        Long = stLong,
+                                        Trend = stTrend,
+                                        Quantity = stQuantity,
+                                        IntervalInSeconds = stInterval,
+                                        ErrorRange = stRange * 0.01,
+                                        CheckSales = stParam[6].Equals("1"),
+                                        Sales = stSales * 0.01,
+                                        CheckOperatingProfit = stParam[8].Equals("1"),
+                                        OperatingProfit = stOperating * 0.01,
+                                        CheckNetIncome = stParam[10].Equals("1"),
+                                        NetIncome = stNet * 0.01,
+                                        Calendar = stParam[12]
+                                    });
                                 break;
                         }
                     if (check && verify != null)
@@ -274,7 +300,7 @@ namespace ShareInvest.Controls
                     else
                         buttonChart.ForeColor = Color.Maroon;
                 }
-                else if (buttonSave.Name.Equals(bfn.Name) && bfn.ForeColor.Equals(Color.Ivory) && double.TryParse(str.Remove(str.Length - 1, 1), out double commission))
+                else if (buttonSave.Name.Equals(bfn.Name) && buttonProgress.ForeColor.Equals(Color.Ivory) && bfn.ForeColor.Equals(Color.Ivory) && double.TryParse(str.Remove(str.Length - 1, 1), out double commission))
                 {
                     var sb = new StringBuilder();
 
@@ -348,7 +374,7 @@ namespace ShareInvest.Controls
                     }
                     consensus = await client.GetContext(new ConvertConsensus { Code = code });
 
-                    if (consensus == null)
+                    if (consensus == null || consensus.Any(o => o.Date.EndsWith("(E)")) == false)
                     {
                         textCode.Text = string.Empty;
                         box.SelectedIndex = -1;
@@ -483,6 +509,22 @@ namespace ShareInvest.Controls
                         UseFading = true
                     }.SetToolTip(tab, tip);
                     break;
+
+                case Button button:
+                    switch (Array.FindIndex(this.button, o => o.Equals(button?.Name.Substring(6))))
+                    {
+                        case 0:
+                            buttonProgress.Enabled = buttonProgress.ForeColor.Equals(Color.Maroon) == false;
+                            break;
+
+                        case 1:
+                            break;
+
+                        case 2:
+                            buttonSave.Enabled = buttonProgress.ForeColor.Equals(Color.Ivory);
+                            break;
+                    }
+                    break;
             }
         }
         void TabSelecting(object sender, EventArgs e)
@@ -511,6 +553,40 @@ namespace ShareInvest.Controls
                 }
                 panel.RowStyles[0].Height = height;
             }
+        }
+        void ButtonPreviewKeyDown(object sender, EventArgs e)
+        {
+            var index = Array.FindIndex(button, o => o.Equals((sender as Button)?.Name.Substring(6)));
+
+            if (e is PreviewKeyDownEventArgs)
+                switch (index)
+                {
+                    case 0:
+                        buttonProgress.Enabled = buttonProgress.ForeColor.Equals(Color.Maroon) == false;
+                        break;
+
+                    case 1:
+                        break;
+
+                    case 2:
+                        buttonSave.Enabled = buttonProgress.ForeColor.Equals(Color.Ivory);
+                        break;
+                }
+            else
+                switch (index)
+                {
+                    case 0:
+                        buttonProgress.Enabled = true;
+                        break;
+
+                    case 1:
+                        buttonChart.Enabled = true;
+                        break;
+
+                    case 2:
+                        buttonSave.Enabled = true;
+                        break;
+                }
         }
         int Length
         {

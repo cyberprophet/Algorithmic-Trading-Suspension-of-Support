@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 namespace ShareInvest.EventHandler
@@ -74,6 +75,7 @@ namespace ShareInvest.EventHandler
         public SendHoldingStocks(int rate, Catalog.Privacies privacy) => Strategics = new Tuple<int, Catalog.Privacies>(rate, privacy);
         public SendHoldingStocks(Catalog.TrendFollowingBasicFutures tf) => Strategics = tf;
         public SendHoldingStocks(Catalog.TrendsInStockPrices ts) => Strategics = ts;
+        public SendHoldingStocks(Tuple<List<Catalog.ConvertConsensus>, List<Catalog.ConvertConsensus>> consensus, Catalog.ScenarioAccordingToTrend st) => Strategics = new Tuple<Tuple<List<Catalog.ConvertConsensus>, List<Catalog.ConvertConsensus>>, Catalog.ScenarioAccordingToTrend>(consensus, st);
         public SendHoldingStocks(Size size) => Strategics = size;
     }
 }

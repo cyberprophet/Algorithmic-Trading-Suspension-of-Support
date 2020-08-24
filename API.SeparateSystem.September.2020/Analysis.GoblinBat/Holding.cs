@@ -158,6 +158,11 @@ namespace ShareInvest.Analysis
             TS = strategics;
             consecutive = new Consecutive(strategics, this);
         }
+        public Holding(ScenarioAccordingToTrend strategics)
+        {
+            ST = strategics;
+            consecutive = new Consecutive(strategics, this);
+        }
         public abstract string Code
         {
             get; set;
@@ -266,17 +271,29 @@ namespace ShareInvest.Analysis
                     return 0x64;
             }
         }
+        public virtual Tuple<List<ConvertConsensus>, List<ConvertConsensus>> Consensus
+        {
+            get; set;
+        }
         public abstract event EventHandler<SendSecuritiesAPI> SendBalance;
         public abstract event EventHandler<SendHoldingStocks> SendStocks;
         internal Consecutive[] Consecutive
         {
             get;
         }
+        internal virtual Dictionary<DateTime, double> EstimatedPrice
+        {
+            get; set;
+        }
         protected internal TrendFollowingBasicFutures TF
         {
             get;
         }
         protected internal TrendsInStockPrices TS
+        {
+            get;
+        }
+        protected internal ScenarioAccordingToTrend ST
         {
             get;
         }

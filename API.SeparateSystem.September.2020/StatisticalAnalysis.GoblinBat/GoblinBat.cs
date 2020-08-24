@@ -76,7 +76,7 @@ namespace ShareInvest.Strategics
             var po = new ParallelOptions
             {
                 CancellationToken = Cancel.Token,
-                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 2.5e-1)
+                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.5)
             };
             while (stack.Count > 0)
                 try
@@ -158,9 +158,20 @@ namespace ShareInvest.Strategics
                                 WeightedAverageDailyReturn = tuple.Item2.Statistic / tuple.Item2.Base
                             });
                         break;
+
+                    case Catalog.ScenarioAccordingToTrend ts:
+                        
+                        break;
                 }
                 if (double.IsNaN(coin) == false)
                 {
+                    if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) && DateTime.Now.Hour < 3)
+                    {
+                        ClosingForm = true;
+                        Cancel.Cancel();
+                        backgroundWorker.CancelAsync();
+                        WindowState = FormWindowState.Minimized;
+                    }
                     var remain = await client.PutContext(new Catalog.Privacies
                     {
                         Security = Privacy.Security,
@@ -204,7 +215,7 @@ namespace ShareInvest.Strategics
                     case Size size:
                         SuspendLayout();
                         Console.WriteLine(Size.Height + "\t" + Size.Width + "\t" + size.Height + "\t" + size.Width);
-                        
+
                         ResumeLayout();
                         return;
 
@@ -220,6 +231,16 @@ namespace ShareInvest.Strategics
                             backgroundWorker.CancelAsync();
                         }
                         return;
+
+                    case Tuple<Tuple<List<Catalog.ConvertConsensus>, List<Catalog.ConvertConsensus>>, Catalog.ScenarioAccordingToTrend> consensus:
+                        hs = new HoldingStocks(consensus.Item2, consensus.Item1)
+                        {
+                            Code = consensus.Item2.Code
+                        };
+                        form = new ScenarioAccordingToTrend(hs);
+                        hs.SendBalance += OnReceiveAnalysisData;
+                        new Task(() => hs.StartProgress(Privacy.Commission)).Start();
+                        break;
 
                     case Catalog.TrendFollowingBasicFutures tf:
                         hs = new HoldingStocks(tf)
@@ -268,7 +289,7 @@ namespace ShareInvest.Strategics
                     break;
 
                 case 0xC8:
-                    foreach (var url in TermsOfUse)
+                    foreach (var url in termsOfUse)
                         Process.Start(url);
 
                     Result = ChooseBox.Show(string.Concat(welcomeTo, (await client.GetContext()).ToString("N0"), theGoblinBat), welcome, agree, fExit);
@@ -304,14 +325,13 @@ namespace ShareInvest.Strategics
             if (WindowState.Equals(FormWindowState.Minimized))
             {
                 if (string.IsNullOrEmpty(OnClickMinimized) == false && OnClickMinimized.Equals(st))
-                {
                     Statistical.Hide();
-                    timer.Start();
-                }
+
                 Opacity = 0.8135;
                 BackColor = Color.FromArgb(0x79, 0x85, 0x82);
                 Visible = false;
                 ShowIcon = false;
+                ClosingForm = false;
                 notifyIcon.Visible = true;
             }
         }
@@ -338,6 +358,12 @@ namespace ShareInvest.Strategics
                 FormBorderStyle = FormBorderStyle.FixedSingle;
                 WindowState = FormWindowState.Minimized;
             }
+            else if (DateTime.Now.Hour < 3 && backgroundWorker.IsBusy == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
+            {
+                timer.Stop();
+                strip.ItemClicked -= OnItemClick;
+                Dispose();
+            }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
             {
                 notifyIcon.Icon = (Icon)resources.GetObject(Change ? upload : download);
@@ -351,6 +377,8 @@ namespace ShareInvest.Strategics
                     Statistical.SetProgressRate();
                 }
             }
+            else
+                Statistical.CheckForSurvival(colors[DateTime.Now.Second % 3]);
         }
         void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(async () =>
         {
@@ -374,6 +402,7 @@ namespace ShareInvest.Strategics
                         backgroundWorker.RunWorkerAsync();
                         Statistical.SetProgressRate();
                     }
+                    ClosingForm = true;
                 }
                 Size = new Size(0x245, 0x208);
                 Visible = true;
@@ -381,7 +410,6 @@ namespace ShareInvest.Strategics
                 notifyIcon.Visible = false;
                 Statistical.Show();
                 WindowState = FormWindowState.Normal;
-                timer.Stop();
             }
             else
                 Close();

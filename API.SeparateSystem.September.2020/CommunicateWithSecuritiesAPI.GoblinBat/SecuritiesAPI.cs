@@ -493,7 +493,7 @@ namespace ShareInvest
                     connect = x;
                     break;
             }
-            foreach (var kv in catalog)
+            foreach (var kv in catalog.OrderByDescending(o => o.Key))
                 if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0)
                     switch (kv.Key.Length)
                     {
@@ -503,7 +503,7 @@ namespace ShareInvest
 
                             break;
                     }
-            if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8 && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1D3B7U : 0x55FU).Equals(DialogResult.OK))
+            if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8 && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1FAC7U : (uint)(catalog.Count * 0x4BAF)).Equals(DialogResult.OK))
             {
                 Stocks = new Stack<string>(GetRevisedStockPrices(stocks));
                 var retention = await SelectDaysCodeAsync();
@@ -743,6 +743,9 @@ namespace ShareInvest
                     else if (string.IsNullOrEmpty(retention.Code) == false && retention.LastDate == null)
                         return await SelectOptionsCodeAsync();
 
+                    else if (com is XingAPI.ConnectAPI && string.IsNullOrEmpty(retention.Code) == false && string.IsNullOrEmpty(retention.LastDate))
+                        return await SelectStocksCodeAsync();
+
                     else
                         return retention;
                 }
@@ -767,6 +770,9 @@ namespace ShareInvest
                         return await SelectStocksCodeAsync();
 
                     else if (string.IsNullOrEmpty(retention.Code) == false && retention.LastDate == null)
+                        return await SelectStocksCodeAsync();
+
+                    else if (com is XingAPI.ConnectAPI && string.IsNullOrEmpty(retention.Code) == false && string.IsNullOrEmpty(retention.LastDate))
                         return await SelectStocksCodeAsync();
 
                     else
