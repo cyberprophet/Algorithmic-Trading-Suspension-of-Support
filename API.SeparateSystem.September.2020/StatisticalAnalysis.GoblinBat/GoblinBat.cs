@@ -76,7 +76,7 @@ namespace ShareInvest.Strategics
             var po = new ParallelOptions
             {
                 CancellationToken = Cancel.Token,
-                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.5)
+                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.25)
             };
             while (stack.Count > 0)
                 try
@@ -160,7 +160,7 @@ namespace ShareInvest.Strategics
                         break;
 
                     case Catalog.ScenarioAccordingToTrend ts:
-                        
+
                         break;
                 }
                 if (double.IsNaN(coin) == false)

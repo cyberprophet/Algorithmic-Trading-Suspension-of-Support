@@ -32,6 +32,7 @@ namespace ShareInvest
             InitializeComponent();
             icon = new string[] { mono, duo, tri, quad };
             colors = new Color[] { Color.Maroon, Color.Ivory, Color.DeepSkyBlue };
+            GetTheCorrectAnswer = new int[privacy.Security.Length];
             infoCodes = new Dictionary<string, Codes>();
             strip.ItemClicked += OnItemClick;
             timer.Start();
@@ -189,7 +190,7 @@ namespace ShareInvest
                             var axAPI = com as OpenAPI.ConnectAPI;
                             axAPI.InputValueRqData(opt10081, tuple.Item1).Send -= OnReceiveSecuritiesAPI;
 
-                            if (axAPI.Count < 0x3B7 && DateTime.Now.Minute < 0x36)
+                            if (axAPI.Count < 0x3B7 && DateTime.Now.Minute < 0x31)
                             {
                                 retention = await SelectDaysCodeAsync();
                                 axAPI.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate)).Send += OnReceiveSecuritiesAPI;
@@ -585,8 +586,14 @@ namespace ShareInvest
                 Dispose();
             }
             else if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) == false)
+            {
+                for (int i = 0; i < GetTheCorrectAnswer.Length; i++)
+                {
+                    var temp = 1 + random.Next(Connect, 0x4B0) * (i + 1);
+                    GetTheCorrectAnswer[i] = temp < 0x4B1 ? temp : 0x4B0 - i;
+                }
                 WindowState = FormWindowState.Minimized;
-
+            }
             else if (Controls.Contains((Control)com) == false && WindowState.Equals(FormWindowState.Minimized))
                 strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
 
@@ -616,7 +623,7 @@ namespace ShareInvest
                 var remain = new DateTime(now.Year, now.Day == today ? now.AddMonths(1).Month : now.Month, day, 9, 0, 0) - DateTime.Now;
                 com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
 
-                if (remain.TotalMinutes < 0x1F && com.Start == false && DateTime.Now.Hour == 8 && DateTime.Now.Minute > 0x1E && (Connect > 0x4B0 || random.Next(Connect++, 0x4B1) == 0x4B0))
+                if (remain.TotalMinutes < 0x1F && com.Start == false && DateTime.Now.Hour == 8 && DateTime.Now.Minute > 0x1E && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B1))))
                     com.StartProgress();
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
