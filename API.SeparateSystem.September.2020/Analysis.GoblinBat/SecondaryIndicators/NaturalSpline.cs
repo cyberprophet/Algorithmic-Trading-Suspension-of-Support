@@ -2,75 +2,73 @@
 
 namespace ShareInvest.Analysis.SecondaryIndicators
 {
-    class NaturalSpline : SplineInterpolator
+    sealed class NaturalSpline : SplineInterpolator
     {
         void CalcParameters()
         {
             int i;
 
             for (i = 0; i < n; i++)
-                a[i] = givenYs[i];
+                A[i] = GivenYs[i];
 
             for (i = 0; i < n - 1; i++)
-                h[i] = givenXs[i + 1] - givenXs[i];
+                H[i] = GivenXs[i + 1] - GivenXs[i];
 
             for (i = 0; i < n - 2; i++)
                 for (int k = 0; k < n - 2; k++)
                 {
-                    m.a[i, k] = 0.0;
-                    m.y[i] = 0.0;
-                    m.x[i] = 0.0;
+                    M.a[i, k] = 0D;
+                    M.y[i] = 0D;
+                    M.x[i] = 0D;
                 }
             for (i = 0; i < n - 2; i++)
             {
                 if (i == 0)
                 {
-                    m.a[i, 0] = 2.0 * (h[0] + h[1]);
-                    m.a[i, 1] = h[1];
+                    M.a[i, 0] = 2D * (H[0] + H[1]);
+                    M.a[i, 1] = H[1];
                 }
                 else
                 {
-                    m.a[i, i - 1] = h[i];
-                    m.a[i, i] = 2.0 * (h[i] + h[i + 1]);
+                    M.a[i, i - 1] = H[i];
+                    M.a[i, i] = 2D * (H[i] + H[i + 1]);
 
                     if (i < n - 3)
-                        m.a[i, i + 1] = h[i + 1];
+                        M.a[i, i + 1] = H[i + 1];
                 }
-                if ((h[i] != 0.0) && (h[i + 1] != 0.0))
-                    m.y[i] = ((a[i + 2] - a[i + 1]) / h[i + 1] - (a[i + 1] - a[i]) / h[i]) * 3.0;
+                if ((H[i] != 0D) && (H[i + 1] != 0D))
+                    M.y[i] = ((A[i + 2] - A[i + 1]) / H[i + 1] - (A[i + 1] - A[i]) / H[i]) * 3D;
 
                 else
-                    m.y[i] = 0.0;
+                    M.y[i] = 0D;
             }
-            if (gauss.Eliminate() == false)
+            if (Gauss.Eliminate() == false)
                 throw new InvalidOperationException("error in matrix calculation");
 
-            gauss.Solve();
-            c[0] = 0.0;
-            c[n - 1] = 0.0;
+            Gauss.Solve();
+            C[0] = 0D;
+            C[n - 1] = 0D;
 
             for (i = 1; i < n - 1; i++)
-                c[i] = m.x[i - 1];
+                C[i] = M.x[i - 1];
 
             for (i = 0; i < n - 1; i++)
-                if (h[i] != 0.0)
+                if (H[i] != 0D)
                 {
-                    d[i] = 1.0 / 3.0 / h[i] * (c[i + 1] - c[i]);
-                    b[i] = 1.0 / h[i] * (a[i + 1] - a[i]) - h[i] / 3.0 * (c[i + 1] + 2 * c[i]);
+                    D[i] = 1D / 3D / H[i] * (C[i + 1] - C[i]);
+                    B[i] = 1D / H[i] * (A[i + 1] - A[i]) - H[i] / 3D * (C[i + 1] + 2 * C[i]);
                 }
         }
-        internal NaturalSpline(double[] xs, double[] ys, int resolution = 10) : base(xs, ys, resolution)
+        internal NaturalSpline(double[] xs, double[] ys, int resolution = 0xA) : base(xs, ys, resolution)
         {
-            m = new Matrix(n - 2);
-            gauss = new MatrixSolver(n - 2, m);
-            a = new double[n];
-            b = new double[n];
-            c = new double[n];
-            d = new double[n];
-            h = new double[n - 1];
+            M = new Matrix(n - 2);
+            Gauss = new MatrixSolver(n - 2, M);
+            A = new double[n];
+            B = new double[n];
+            C = new double[n];
+            D = new double[n];
+            H = new double[n - 1];
             CalcParameters();
-            Integrate();
-            Interpolate();
         }
     }
 }

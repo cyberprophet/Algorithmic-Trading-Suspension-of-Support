@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 
@@ -28,7 +30,7 @@ namespace ShareInvest.Strategics
         }
         void OnReceiveChart(object sender, SendHoldingStocks e) => BeginInvoke(new Action(() =>
         {
-            if (DateTime.TryParseExact(e.Time, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) && e.Strategics is long max)
+            if (e.Strategics is long max && DateTime.TryParseExact(e.Time, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
             {
                 price.Points.AddXY(date, e.Current);
                 revenue.Points.AddXY(date, e.Revenue);
@@ -43,6 +45,10 @@ namespace ShareInvest.Strategics
                 else
                     Cursor = Cursors.Default;
             }
+            else if (e.Strategics is Dictionary<DateTime, double> dictionary && DateTime.TryParseExact(e.Time, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time) && MessageBox.Show(question, Text, MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button2).Equals(DialogResult.Yes))
+                foreach (var kv in dictionary.OrderBy(o => o.Key))
+                    if (kv.Key.CompareTo(time) > 0)
+                        trend.Points.AddXY(kv.Key, kv.Value);
         }));
         void TrendsInStockPricesFormClosing(object sender, FormClosingEventArgs e)
         {

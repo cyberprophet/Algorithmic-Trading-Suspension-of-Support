@@ -71,7 +71,7 @@ namespace ShareInvest.Strategics
                 foreach (var enumerable in client.GetContext(strategics).Result)
                     stack.Push(enumerable);
 
-            var maximum = list.Count * array.Length * stack.Count;
+            var maximum = list.Count * stack.Count;
             var rate = 0;
             var po = new ParallelOptions
             {

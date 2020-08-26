@@ -133,7 +133,7 @@ namespace ShareInvest.Analysis
                     tLong = st.Long;
                     trend = st.Trend;
 
-                    if (e.Date.Length > 6 && double.IsNaN(Compare) && string.IsNullOrEmpty(st.Calendar) == false && (e.Date.Length == 8 ? e.Date.Substring(2) : e.Date.Substring(0, 6)).CompareTo(st.Calendar) >= 0)
+                    if (e.Date.Length > 6 && double.IsNaN(Compare) && Trend.Count > 0 && string.IsNullOrEmpty(st.Calendar) == false && (e.Date.Length == 8 ? e.Date.Substring(2) : e.Date.Substring(0, 6)).CompareTo(st.Calendar) >= 0)
                     {
                         Compare = Trend.Pop();
                         Trend.Clear();
@@ -191,10 +191,19 @@ namespace ShareInvest.Analysis
                         break;
 
                     case HoldingStocks hs:
-                        hs.OnReceiveTrendsInStockPrices(e, gap, Short.Peek(), Long.Peek(), Trend.Peek());
+                        hs.OnReceiveTrendsInStockPrices(e, gap, Short.Peek(), Long.Peek(), Trend.Count > 0 ? Trend.Peek() : CalculateTheEstimatedPrice(e.Date));
                         break;
                 }
             }
+        }
+        double CalculateTheEstimatedPrice(string date)
+        {
+            if (DateTime.TryParseExact(date.Substring(0, 6), memorize, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt) && (TempStorage == null || TempStorage.CompareTo(dt) < 0))
+            {
+                TempStorage = dt;
+                Compare = ho.EstimatedPrice.Last(o => o.Key.Year == dt.Year && o.Key.Month == dt.Month && o.Key.Day == dt.Day).Value;
+            }
+            return Compare;
         }
         bool GetCheckOnDate(string date, int minute)
         {
@@ -275,6 +284,10 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        DateTime TempStorage
+        {
+            get; set;
+        }
         EMA EMA
         {
             get;
@@ -299,6 +312,7 @@ namespace ShareInvest.Analysis
         const string nTime = "180000000";
         const string format = "HHmmss";
         const string hm = "HHmm";
+        const string memorize = "yyMMdd";
         const string end = "1529";
     }
 }

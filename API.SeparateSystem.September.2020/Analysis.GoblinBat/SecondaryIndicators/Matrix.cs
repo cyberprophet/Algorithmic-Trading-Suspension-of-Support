@@ -1,6 +1,6 @@
 ﻿namespace ShareInvest.Analysis.SecondaryIndicators
 {
-    class Matrix
+    sealed class Matrix
     {
         internal Matrix(int size)
         {

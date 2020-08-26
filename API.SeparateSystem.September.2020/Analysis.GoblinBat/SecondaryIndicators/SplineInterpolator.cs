@@ -4,45 +4,38 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 {
     abstract class SplineInterpolator
     {
-        protected internal void Interpolate()
+        protected internal (double[], double[]) Interpolate()
         {
-            int resolution = interpolatedXs.Length / n;
+            int resolution = InterpolatedXs.Length / n;
 
-            for (int i = 0; i < h.Length; i++)
+            for (int i = 0; i < H.Length; i++)
                 for (int k = 0; k < resolution; k++)
                 {
-                    double deltaX = (double)k / resolution * h[i];
-                    double termA = a[i];
-                    double termB = b[i] * deltaX;
-                    double termC = c[i] * deltaX * deltaX;
-                    double termD = d[i] * deltaX * deltaX * deltaX;
+                    double deltaX = (double)k / resolution * H[i];
                     int interpolatedIndex = i * resolution + k;
-                    interpolatedXs[interpolatedIndex] = deltaX + givenXs[i];
-                    interpolatedYs[interpolatedIndex] = termA + termB + termC + termD;
+                    InterpolatedXs[interpolatedIndex] = deltaX + GivenXs[i];
+                    InterpolatedYs[interpolatedIndex] = A[i] + (B[i] * deltaX) + (C[i] * deltaX * deltaX) + (D[i] * deltaX * deltaX * deltaX);
                 }
             int pointsToKeep = resolution * (n - 1) + 1;
             double[] interpolatedXsCopy = new double[pointsToKeep];
             double[] interpolatedYsCopy = new double[pointsToKeep];
-            Array.Copy(interpolatedXs, 0, interpolatedXsCopy, 0, pointsToKeep - 1);
-            Array.Copy(interpolatedYs, 0, interpolatedYsCopy, 0, pointsToKeep - 1);
-            interpolatedXs = interpolatedXsCopy;
-            interpolatedYs = interpolatedYsCopy;
-            interpolatedXs[pointsToKeep - 1] = givenXs[n - 1];
-            interpolatedYs[pointsToKeep - 1] = givenYs[n - 1];
+            Array.Copy(InterpolatedXs, 0, interpolatedXsCopy, 0, pointsToKeep - 1);
+            Array.Copy(InterpolatedYs, 0, interpolatedYsCopy, 0, pointsToKeep - 1);
+            InterpolatedXs = interpolatedXsCopy;
+            InterpolatedYs = interpolatedYsCopy;
+            InterpolatedXs[pointsToKeep - 1] = GivenXs[n - 1];
+            InterpolatedYs[pointsToKeep - 1] = GivenYs[n - 1];
+
+            return (InterpolatedXs, InterpolatedYs);
         }
-        protected internal double Integrate()
+        protected internal SplineInterpolator Integrate()
         {
             double integral = 0;
 
-            for (int i = 0; i < h.Length; i++)
-            {
-                double termA = a[i] * h[i];
-                double termB = b[i] * Math.Pow(h[i], 2) / 2.0;
-                double termC = c[i] * Math.Pow(h[i], 3) / 3.0;
-                double termD = d[i] * Math.Pow(h[i], 4) / 4.0;
-                integral += termA + termB + termC + termD;
-            }
-            return integral;
+            for (int i = 0; i < H.Length; i++)
+                integral += (A[i] * H[i]) + (B[i] * Math.Pow(H[i], 2) / 2D) + (C[i] * Math.Pow(H[i], 3) / 3D) + (D[i] * Math.Pow(H[i], 4) / 4D);
+
+            return this;
         }
         protected internal SplineInterpolator(double[] xs, double[] ys, int resolution = 10)
         {
@@ -58,17 +51,56 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             if (resolution < 1)
                 throw new ArgumentException("resolution must be 1 or greater");
 
-            givenXs = xs;
-            givenYs = ys;
+            GivenXs = xs;
+            GivenYs = ys;
             n = xs.Length;
-            interpolatedXs = new double[n * resolution];
-            interpolatedYs = new double[n * resolution];
+            InterpolatedXs = new double[n * resolution];
+            InterpolatedYs = new double[n * resolution];
         }
-        protected internal Matrix m;
-        protected internal MatrixSolver gauss;
+        protected internal Matrix M
+        {
+            get; set;
+        }
+        protected internal MatrixSolver Gauss
+        {
+            get; set;
+        }
+        protected internal double[] GivenXs
+        {
+            get; private set;
+        }
+        protected internal double[] GivenYs
+        {
+            get; private set;
+        }
+        protected internal double[] A
+        {
+            get; set;
+        }
+        protected internal double[] B
+        {
+            get; set;
+        }
+        protected internal double[] C
+        {
+            get; set;
+        }
+        protected internal double[] D
+        {
+            get; set;
+        }
+        protected internal double[] H
+        {
+            get; set;
+        }
+        double[] InterpolatedXs
+        {
+            get; set;
+        }
+        double[] InterpolatedYs
+        {
+            get; set;
+        }
         protected internal readonly int n;
-        protected internal double[] a, b, c, d, h;
-        internal double[] givenYs, givenXs;
-        internal double[] interpolatedXs, interpolatedYs;
     }
 }

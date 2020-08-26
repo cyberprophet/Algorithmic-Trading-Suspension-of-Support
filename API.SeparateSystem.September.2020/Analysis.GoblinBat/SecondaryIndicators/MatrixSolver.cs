@@ -2,8 +2,8 @@
 
 namespace ShareInvest.Analysis.SecondaryIndicators
 {
-    class MatrixSolver
-    {     
+    sealed class MatrixSolver
+    {
         void SwitchRows(int n)
         {
             double tempD;
@@ -25,36 +25,32 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         internal bool Eliminate()
         {
             int i, k, l;
-            CalcError = false;
+            CalcError = true;
 
             for (k = 0; k <= maxOrder - 2; k++)
-            {
                 for (i = k; i <= maxOrder - 2; i++)
                 {
                     if (Math.Abs(m.a[i + 1, i]) < 1e-8)
                         SwitchRows(i + 1);
 
-                    if (m.a[i + 1, k] != 0.0)
+                    if (m.a[i + 1, k] != 0D)
                     {
                         for (l = k + 1; l <= maxOrder - 1; l++)
-                        {
-                            if (!CalcError)
+                            if (CalcError)
                             {
                                 m.a[i + 1, l] = m.a[i + 1, l] * m.a[k, k] - m.a[k, l] * m.a[i + 1, k];
 
                                 if (m.a[i + 1, l] > 10E260)
                                 {
                                     m.a[i + 1, k] = 0;
-                                    CalcError = true;
+                                    CalcError = false;
                                 }
                             }
-                        }
                         m.y[i + 1] = m.y[i + 1] * m.a[k, k] - m.y[k] * m.a[i + 1, k];
                         m.a[i + 1, k] = 0;
                     }
                 }
-            }
-            return !CalcError;
+            return CalcError;
         }
         internal void Solve()
         {

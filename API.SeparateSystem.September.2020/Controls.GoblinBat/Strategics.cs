@@ -521,7 +521,7 @@ namespace ShareInvest.Controls
                             break;
 
                         case 2:
-                            buttonSave.Enabled = buttonProgress.ForeColor.Equals(Color.Ivory);
+                            buttonSave.Enabled = buttonSave.ForeColor.Equals(Color.Ivory) && buttonProgress.ForeColor.Equals(Color.Ivory);
                             break;
                     }
                     break;
@@ -569,7 +569,7 @@ namespace ShareInvest.Controls
                         break;
 
                     case 2:
-                        buttonSave.Enabled = buttonProgress.ForeColor.Equals(Color.Ivory);
+                        buttonSave.Enabled = buttonSave.ForeColor.Equals(Color.Ivory) && buttonProgress.ForeColor.Equals(Color.Ivory);
                         break;
                 }
             else
