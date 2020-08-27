@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 
 using ShareInvest.Catalog;
+using ShareInvest.Client;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 
@@ -15,7 +16,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         public override void OnReceiveConclusion(string[] param) => Console.WriteLine(param[0] + " Q_" + param[1] + " P_" + param[2] + " C_" + param[3] + " R_" + param[4] + " N_" + param[5]);
         public override void OnReceiveBalance(string[] param) => Console.WriteLine(param[0] + " N_" + param[1] + " P_" + param[2]);
         public override void OnReceiveEvent(string[] param) => Console.WriteLine(param[0] + " B_" + param[1] + " S_" + param[2]);
-        internal void OnReceiveTrendsInStockPrices(SendConsecutive e, double gap, double sShort, double sLong, double trend)
+        internal void OnReceiveTrendsInPrices(SendConsecutive e, double gap, double sShort, double sLong, double trend)
         {
             var date = e.Date.Substring(6, 4);
 
@@ -117,7 +118,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             Date = e.Date.Substring(0, 6),
                             Cumulative = (revenue + unrealize) / st.Quantity,
                             Base = SendMessage.Base > Base / st.Quantity ? SendMessage.Base : Base / st.Quantity,
-                            Statistic = (int)(avg / st.Quantity)
+                            Statistic = (int)(avg / st.Quantity),
+                            Price = e.Price
                         };
                         SendStocks?.Invoke(this, new SendHoldingStocks(e.Date, e.Price, sShort, sLong, trend, revenue + unrealize, (long)(Base > 0 ? Base : 0)));
                         Before = avg;
@@ -265,22 +267,58 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         {
             switch (strategics)
             {
-                case ScenarioAccordingToTrend _:
+                case ScenarioAccordingToTrend st:
                     Commission = commission > 0 ? commission : 1.5e-4;
 
                     if (StartProgress(strategics.Code as string) > 0)
                     {
-                        consecutive.Dispose();
+                        var price = SendMessage.Price;
+                        var estimate = EstimatedPrice.Where(o => o.Key.ToString(format.Substring(0, 6)).CompareTo(SendMessage.Date) > 0);
+                        var find = FindTheNearestQuarter(SendMessage.Date);
+                        var key = string.Concat("ST.", st.Calendar.Substring(0, 4), "15.", st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', st.Sales * 0x64, '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', st.OperatingProfit * 0x64, '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', st.NetIncome * 0x64);
+
+                        if (client.PutContext(new Catalog.Request.Consensus
+                        {
+                            Code = st.Code,
+                            Strategics = key,
+                            Date = SendMessage.Date,
+                            FirstQuarter = (estimate.Last(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[0])).Value - price) / price,
+                            SecondQuarter = (estimate.Last(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[1])).Value - price) / price,
+                            ThirdQuarter = (estimate.Last(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[2])).Value - price) / price,
+                            Quarter = (estimate.Last(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[find.Length - 2])).Value - price) / price,
+                            TheNextYear = (estimate.LastOrDefault(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[find.Length - 1])).Value - price) / price,
+                            TheYearAfterNext = (estimate.Last().Value - price) / price
+                        }).Result > 0)
+                            consecutive.Dispose();
+
+                        SendMessage = new Statistics
+                        {
+                            Base = SendMessage.Base,
+                            Cumulative = SendMessage.Cumulative,
+                            Date = SendMessage.Date,
+                            Statistic = SendMessage.Statistic,
+                            Price = (int)estimate.Max(o => o.Value),
+                            Key = key
+                        };
                         SendStocks?.Invoke(this, new SendHoldingStocks(EstimatedPrice, SendMessage.Date));
                     }
                     break;
 
-                case TrendsInStockPrices _:
+                case TrendsInStockPrices ts:
                     Commission = commission > 0 ? commission : 1.5e-4;
 
                     if (StartProgress(strategics.Code as string) > 0)
+                    {
+                        SendMessage = new Statistics
+                        {
+                            Base = SendMessage.Base,
+                            Cumulative = SendMessage.Cumulative,
+                            Date = SendMessage.Date,
+                            Statistic = SendMessage.Statistic,
+                            Key = string.Concat("TS.", ts.Short, '.', ts.Long, '.', ts.Trend, '.', (int)(ts.RealizeProfit * 0x2710), '.', (int)(ts.AdditionalPurchase * 0x2710), '.', ts.QuoteUnit, '.', (char)ts.LongShort, '.', (char)ts.TrendType, '.', (char)ts.Setting)
+                        };
                         consecutive.Dispose();
-
+                    }
                     break;
 
                 case TrendFollowingBasicFutures _:
@@ -309,11 +347,12 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             OrderNumber = new Dictionary<string, dynamic>();
             this.strategics = strategics;
         }
-        public HoldingStocks(ScenarioAccordingToTrend strategics, Tuple<List<ConvertConsensus>, List<ConvertConsensus>> consensus) : base(strategics)
+        public HoldingStocks(ScenarioAccordingToTrend strategics, Tuple<List<ConvertConsensus>, List<ConvertConsensus>> consensus, GoblinBatClient client) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();
             Consensus = consensus;
             this.strategics = strategics;
+            this.client = client;
         }
         public override Tuple<List<ConvertConsensus>, List<ConvertConsensus>> Consensus
         {
@@ -379,6 +418,25 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         {
             get; set;
         }
+        string[] FindTheNearestQuarter(string date)
+        {
+            if (int.TryParse(date.Substring(0, 2), out int year) && int.TryParse(date.Substring(2, 2), out int month))
+                switch (month)
+                {
+                    case int first when first > 0 && first < 4:
+                        return new string[] { string.Concat(date.Substring(0, 2), "0331"), string.Concat(date.Substring(0, 2), "0630"), string.Concat(date.Substring(0, 2), "0930"), string.Concat(date.Substring(0, 2), "1231"), string.Concat(year + 1, "1231") };
+
+                    case int second when second > 3 && second < 7:
+                        return new string[] { string.Concat(date.Substring(0, 2), "0630"), string.Concat(date.Substring(0, 2), "0930"), string.Concat(date.Substring(0, 2), "1231"), string.Concat(year + 1, "0331"), string.Concat(year + 2, "0331") };
+
+                    case int third when third > 6 && third < 0xA:
+                        return new string[] { string.Concat(date.Substring(0, 2), "0930"), string.Concat(date.Substring(0, 2), "1231"), string.Concat(year + 1, "0331"), string.Concat(year + 1, "0630"), string.Concat(year + 2, "0630") };
+
+                    case int quarter when quarter > 9 && quarter < 0xD:
+                        return new string[] { string.Concat(date.Substring(0, 2), "1231"), string.Concat(year + 1, "0331"), string.Concat(year + 1, "0630"), string.Concat(year + 1, "0930"), string.Concat(year + 2, "0930") };
+                }
+            return null;
+        }
         DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
         string GetOrderNumber(int type) => string.Concat(type, Count++.ToString("D4"));
         [Conditional("DEBUG")]
@@ -436,6 +494,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         const string transmit = "1529";
         const string format = "yyMMddHHmmss";
         readonly dynamic strategics;
+        readonly GoblinBatClient client;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;
         public override event EventHandler<SendHoldingStocks> SendStocks;
     }

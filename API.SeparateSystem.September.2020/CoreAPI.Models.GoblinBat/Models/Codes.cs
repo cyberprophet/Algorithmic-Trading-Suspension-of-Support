@@ -66,6 +66,11 @@ namespace ShareInvest.Models
         {
             get; set;
         }
+        [ForeignKey("Code")]
+        public virtual ICollection<EstimatedPrice> Estimate
+        {
+            get; set;
+        }
         public Codes()
         {
             Days = new HashSet<Days>();
@@ -75,6 +80,7 @@ namespace ShareInvest.Models
             RevisedStockPrices = new HashSet<RevisedStockPrice>();
             StocksStrategics = new HashSet<StocksStrategics>();
             Consensus = new HashSet<Consensus>();
+            Estimate = new HashSet<EstimatedPrice>();
         }
     }
 }

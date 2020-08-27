@@ -490,6 +490,25 @@ namespace ShareInvest.Client
             }
             return code;
         }
+        public async Task<double> PutContext(Catalog.Request.Consensus consensus)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestConsensus(consensus), Method.PUT).AddJsonBody(consensus, security.ContentType), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                SendMessage((int)response.StatusCode);
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return Coin;
+        }
         public async Task<double> PutContext(Catalog.Request.StocksStrategics param)
         {
             try

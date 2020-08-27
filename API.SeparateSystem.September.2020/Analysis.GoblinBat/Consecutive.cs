@@ -182,16 +182,16 @@ namespace ShareInvest.Analysis
 
                 switch (sender)
                 {
-                    case OpenAPI.HoldingStocks os when strategics is TrendsInStockPrices:
-                        os.OnReceiveTrendsInStockPrices(gap, Trend.Peek());
+                    case OpenAPI.HoldingStocks os:
+                        os.OnReceiveTrendsInPrices(gap, Trend.Peek());
                         break;
 
-                    case XingAPI.HoldingStocks xs when strategics is TrendFollowingBasicFutures:
-                        xs.OnReceiveTrendFollowingBasicFutures(gap, tMinute);
+                    case XingAPI.HoldingStocks xs:
+                        xs.OnReceiveTrendsInPrices(gap, tMinute);
                         break;
 
                     case HoldingStocks hs:
-                        hs.OnReceiveTrendsInStockPrices(e, gap, Short.Peek(), Long.Peek(), Trend.Count > 0 ? Trend.Peek() : CalculateTheEstimatedPrice(e.Date));
+                        hs.OnReceiveTrendsInPrices(e, gap, Short.Peek(), Long.Peek(), Trend.Count > 0 ? Trend.Peek() : CalculateTheEstimatedPrice(e.Date));
                         break;
                 }
             }

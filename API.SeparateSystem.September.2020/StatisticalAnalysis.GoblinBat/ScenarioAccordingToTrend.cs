@@ -50,7 +50,7 @@ namespace ShareInvest.Strategics
                     if (kv.Key.CompareTo(time) > 0)
                         trend.Points.AddXY(kv.Key, kv.Value);
         }));
-        void TrendsInStockPricesFormClosing(object sender, FormClosingEventArgs e)
+        void OnClosingTheForm(object sender, FormClosingEventArgs e)
         {
             if (MessageBox.Show(exit, Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
             {

@@ -24,23 +24,50 @@ namespace ShareInvest.Controllers
                 {
                     var temp = param.Strategics.Split('.');
 
-                    if (int.TryParse(temp[6], out int unit) && int.TryParse(temp[5], out int purchase) && int.TryParse(temp[4], out int profit) && int.TryParse(temp[3], out int trend) && int.TryParse(temp[2], out int iLong) && int.TryParse(temp[1], out int iShort))
+                    if (Enum.TryParse(temp[0], out Strategics initial))
                     {
-                        context.Catalog.Add(new CatalogStrategics
+                        switch (initial)
                         {
-                            Strategics = param.Strategics,
-                            Short = iShort,
-                            Long = iLong,
-                            Trend = trend,
-                            RealizeProfit = profit * 1e-4,
-                            AdditionalPurchase = purchase * 1e-4,
-                            QuoteUnit = unit,
-                            LongShort = temp[7],
-                            TrendType = temp[8],
-                            Setting = temp[9]
-                        });
+                            case Strategics.ST:
+                                if (int.TryParse(temp[8], out int stNet) && int.TryParse(temp[6], out int stOp) && int.TryParse(temp[4], out int stSales) && int.TryParse(temp[2], out int stTrend) && int.TryParse(temp[1], out int calendar))
+                                    context.Catalog.Add(new CatalogStrategics
+                                    {
+                                        Strategics = param.Strategics,
+                                        Short = calendar,
+                                        Long = stSales,
+                                        Trend = stTrend,
+                                        RealizeProfit = stOp * 1e-2,
+                                        AdditionalPurchase = stNet * 1e-2,
+                                        LongShort = temp[3],
+                                        TrendType = temp[5],
+                                        Setting = temp[7]
+                                    });
+                                break;
+
+                            case Strategics.TS:
+                                if (int.TryParse(temp[6], out int unit) && int.TryParse(temp[5], out int purchase) && int.TryParse(temp[4], out int profit) && int.TryParse(temp[3], out int trend) && int.TryParse(temp[2], out int iLong) && int.TryParse(temp[1], out int iShort))
+                                    context.Catalog.Add(new CatalogStrategics
+                                    {
+                                        Strategics = param.Strategics,
+                                        Short = iShort,
+                                        Long = iLong,
+                                        Trend = trend,
+                                        RealizeProfit = profit * 1e-4,
+                                        AdditionalPurchase = purchase * 1e-4,
+                                        QuoteUnit = unit,
+                                        LongShort = temp[7],
+                                        TrendType = temp[8],
+                                        Setting = temp[9]
+                                    });
+                                break;
+
+                            default:
+                                return BadRequest();
+                        }
                         await context.BulkSaveChangesAsync();
                     }
+                    else
+                        return BadRequest();
                 }
                 if (await context.StocksStrategics.AnyAsync(o => o.Code.Equals(param.Code) && o.Strategics.Equals(param.Strategics)))
                     context.Entry(param).State = EntityState.Modified;
@@ -59,34 +86,58 @@ namespace ShareInvest.Controllers
             return BadRequest();
         }
         [HttpPost(Security.strategics), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> PostContext(string strategics, [FromBody] ConfirmStrategics confirm) => strategics switch
+        public async Task<IActionResult> PostContext(string strategics, [FromBody] ConfirmStrategics confirm)
         {
-            "TS" => Ok(await context.StocksStrategics.AnyAsync(o => o.Strategics.Equals(confirm.Strategics) && o.Code.Equals(confirm.Code) && o.Date.Equals(confirm.Date))),
-            _ => BadRequest()
-        };
+            if (Enum.TryParse(strategics, out Strategics initial))
+                switch (initial)
+                {
+                    case Strategics.TS:
+                    case Strategics.ST:
+                        return Ok(await context.StocksStrategics.AnyAsync(o => o.Strategics.Equals(confirm.Strategics) && o.Code.Equals(confirm.Code) && o.Date.Equals(confirm.Date)));
+
+                    default:
+                        return BadRequest();
+                }
+            return BadRequest();
+        }
         [HttpGet(Security.strategics), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetContext(string strategics)
         {
             try
             {
-                switch (strategics)
-                {
-                    case "TS":
-                        return Ok(await context.Catalog.Where(o => o.Strategics.StartsWith(strategics)).AsNoTracking().Select(o => new
-                        {
-                            o.Short,
-                            o.Long,
-                            o.Trend,
-                            o.RealizeProfit,
-                            o.AdditionalPurchase,
-                            o.QuoteUnit,
-                            o.LongShort,
-                            o.TrendType,
-                            o.Setting
-                        }).ToListAsync());
-                    default:
-                        break;
-                }
+                if (Enum.TryParse(strategics, out Strategics initial))
+                    switch (initial)
+                    {
+                        case Strategics.TS:
+                            return Ok(await context.Catalog.Where(o => o.Strategics.StartsWith(strategics)).AsNoTracking().Select(o => new
+                            {
+                                o.Short,
+                                o.Long,
+                                o.Trend,
+                                o.RealizeProfit,
+                                o.AdditionalPurchase,
+                                o.QuoteUnit,
+                                o.LongShort,
+                                o.TrendType,
+                                o.Setting
+                            }).ToListAsync());
+
+                        case Strategics.ST:
+                            return Ok(await context.Catalog.Where(o => o.Strategics.StartsWith(strategics)).AsNoTracking().Select(o => new
+                            {
+                                o.Short,
+                                o.Trend,
+                                o.LongShort,
+                                o.Long,
+                                o.TrendType,
+                                o.RealizeProfit,
+                                o.Setting,
+                                o.AdditionalPurchase
+                            }).ToListAsync());
+
+                        default:
+                            break;
+                    }
             }
             catch (Exception ex)
             {

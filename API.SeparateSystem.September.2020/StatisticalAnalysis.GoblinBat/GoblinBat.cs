@@ -151,7 +151,7 @@ namespace ShareInvest.Strategics
                             coin = await client.PutContext(new StocksStrategics
                             {
                                 Code = ts.Code,
-                                Strategics = string.Concat("TS.", ts.Short, '.', ts.Long, '.', ts.Trend, '.', (int)(ts.RealizeProfit * 0x2710), '.', (int)(ts.AdditionalPurchase * 0x2710), '.', ts.QuoteUnit, '.', (char)ts.LongShort, '.', (char)ts.TrendType, '.', (char)ts.Setting),
+                                Strategics = tuple.Item2.Key,
                                 Date = tuple.Item2.Date,
                                 MaximumInvestment = (long)tuple.Item2.Base,
                                 CumulativeReturn = tuple.Item2.Cumulative / tuple.Item2.Base,
@@ -159,8 +159,18 @@ namespace ShareInvest.Strategics
                             });
                         break;
 
-                    case Catalog.ScenarioAccordingToTrend ts:
-
+                    case Catalog.ScenarioAccordingToTrend st:
+                        if (tuple.Item2.Base > 0)
+                            coin = await client.PutContext(new StocksStrategics
+                            {
+                                Code = st.Code,
+                                Strategics = tuple.Item2.Key,
+                                Date = tuple.Item2.Date,
+                                MaximumInvestment = (long)tuple.Item2.Base,
+                                CumulativeReturn = tuple.Item2.Cumulative / tuple.Item2.Base,
+                                WeightedAverageDailyReturn = tuple.Item2.Statistic / tuple.Item2.Base,
+                                DiscrepancyRateFromExpectedStockPrice = tuple.Item2.Price
+                            });
                         break;
                 }
                 if (double.IsNaN(coin) == false)
@@ -233,7 +243,7 @@ namespace ShareInvest.Strategics
                         return;
 
                     case Tuple<Tuple<List<Catalog.ConvertConsensus>, List<Catalog.ConvertConsensus>>, Catalog.ScenarioAccordingToTrend> consensus:
-                        hs = new HoldingStocks(consensus.Item2, consensus.Item1)
+                        hs = new HoldingStocks(consensus.Item2, consensus.Item1, client)
                         {
                             Code = consensus.Item2.Code
                         };

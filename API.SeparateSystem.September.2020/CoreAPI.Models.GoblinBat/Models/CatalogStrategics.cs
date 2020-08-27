@@ -66,9 +66,15 @@ namespace ShareInvest.Models
         {
             get; set;
         }
+        [ForeignKey("Strategics")]
+        public virtual ICollection<EstimatedPrice> Consensus
+        {
+            get; set;
+        }
         public CatalogStrategics()
         {
             Stocks = new HashSet<StocksStrategics>();
+            Consensus = new HashSet<EstimatedPrice>();
         }
     }
 }

@@ -19,6 +19,7 @@ namespace ShareInvest.CoreAPI
             modelBuilder.Entity<RevisedStockPrice>().HasKey(o => new { o.Code, o.Date });
             modelBuilder.Entity<StocksStrategics>().HasKey(o => new { o.Code, o.Strategics });
             modelBuilder.Entity<Consensus>().HasKey(o => new { o.Code, o.Date, o.Quarter });
+            modelBuilder.Entity<EstimatedPrice>().HasKey(o => new { o.Code, o.Strategics });
         }
         public CoreApiDbContext(DbContextOptions<CoreApiDbContext> options) : base(options) => IsDebugging(options.ContextType);
         public DbSet<Privacy> Privacies
@@ -58,6 +59,10 @@ namespace ShareInvest.CoreAPI
             get; set;
         }
         public DbSet<Consensus> Consensus
+        {
+            get; set;
+        }
+        public DbSet<EstimatedPrice> Estimate
         {
             get; set;
         }

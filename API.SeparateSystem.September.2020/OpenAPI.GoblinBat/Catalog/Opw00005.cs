@@ -31,7 +31,7 @@ namespace ShareInvest.OpenAPI.Catalog
 
                     if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs) && API.GetMasterStockState(balance.Item1).Contains(transactionSuspension) == false)
                     {
-                        if (hs.Quantity == 0 && hs.Purchase == 0 && hs.Current == 0 && hs.Revenue == 0 && hs.Rate == 0 && cash > 0 && now.Hour == 8 && now.Minute > 0x32)
+                        if (hs.Quantity == 0 && cash > 0 && now.Hour == 8 && now.Minute > 0x35)
                         {
                             uint quantity = (uint)balance.Item3, price = uint.TryParse(API.GetMasterLastPrice(hs.Code), out uint before) ? before : 0;
                             var stock = API.KOA_Functions(info, hs.Code).Split(';')[0].Contains(market);

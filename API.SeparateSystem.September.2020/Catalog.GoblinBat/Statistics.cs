@@ -18,5 +18,13 @@
         {
             get; set;
         }
+        public int Price
+        {
+            get; set;
+        }
+        public string Key
+        {
+            get; set;
+        }
     }
 }

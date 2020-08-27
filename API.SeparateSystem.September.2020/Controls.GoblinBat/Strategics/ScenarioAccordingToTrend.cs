@@ -20,7 +20,7 @@ namespace ShareInvest.Controls
 
             if (int.TryParse(first[0], out int fYear) && int.TryParse(first[first.Length - 1], out int fMonth) && int.TryParse(last[0], out int lYear) && int.TryParse(last[last.Length - 1], out int lMonth))
             {
-                calendar.MaxDate = new DateTime(lYear + 0x7D0, lMonth, DateTime.DaysInMonth(lYear + 0x7D0, lMonth));
+                calendar.MaxDate = new DateTime(lYear + 0x7CF, lMonth, DateTime.DaysInMonth(lYear + 0x7CF, lMonth));
                 calendar.MinDate = new DateTime(fYear + 0x7D0, fMonth, DateTime.DaysInMonth(fYear + 0x7D0, fMonth));
             }
             labelName.Text = codes.Name;

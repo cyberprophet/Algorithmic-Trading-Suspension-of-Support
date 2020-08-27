@@ -8,7 +8,7 @@ namespace ShareInvest.Analysis.OpenAPI
 {
     public class HoldingStocks : Holding
     {
-        internal void OnReceiveTrendsInStockPrices(double gap, double peek)
+        internal void OnReceiveTrendsInPrices(double gap, double peek)
         {
             switch (strategics)
             {

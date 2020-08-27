@@ -8,7 +8,7 @@ namespace ShareInvest.Analysis.XingAPI
 {
     public class HoldingStocks : Holding
     {
-        internal void OnReceiveTrendFollowingBasicFutures(double gap, int minute)
+        internal void OnReceiveTrendsInPrices(double gap, int minute)
         {
             if (minute == 0x5A0)
                 Base = gap;
