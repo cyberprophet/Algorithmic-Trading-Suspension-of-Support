@@ -191,7 +191,7 @@ namespace ShareInvest.Analysis
                         break;
 
                     case HoldingStocks hs:
-                        hs.OnReceiveTrendsInPrices(e, gap, Short.Peek(), Long.Peek(), Trend.Count > 0 ? Trend.Peek() : CalculateTheEstimatedPrice(e.Date));
+                        hs.OnReceiveTrendsInPrices(e, gap, popShort, popLong, hs.Code.Length == 6 ? (Trend.Count > 0 ? Trend.Peek() : CalculateTheEstimatedPrice(e.Date)) : tMinute);
                         break;
                 }
             }

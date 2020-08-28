@@ -63,11 +63,11 @@ namespace ShareInvest.Strategics
         {
             var list = client.GetContext(new Catalog.Codes(), 6).Result as List<Catalog.Codes>;
             var stack = new Stack<IStrategics>();
-            var array = new IStrategics[]
+
+            foreach (var strategics in new IStrategics[]
             {
                 new Catalog.TrendsInStockPrices()
-            };
-            foreach (var strategics in array.OrderBy(o => random.Next(array.Length)))
+            })
                 foreach (var enumerable in client.GetContext(strategics).Result)
                     stack.Push(enumerable);
 
@@ -302,7 +302,7 @@ namespace ShareInvest.Strategics
                     foreach (var url in termsOfUse)
                         Process.Start(url);
 
-                    Result = ChooseBox.Show(string.Concat(welcomeTo, (await client.GetContext()).ToString("N0"), theGoblinBat), welcome, agree, fExit);
+                    Result = ChooseBox.Show(string.Concat(welcomeTo, (1 + await client.GetContext()).ToString("N0"), theGoblinBat), welcome, agree, fExit);
                     break;
 
                 default:

@@ -22,6 +22,55 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
             switch (strategics)
             {
+                case TrendFollowingBasicFutures tf:
+                    if ((uint)trend < 0x5A0)
+                        Secondary = gap;
+
+                    else
+                    {
+                        if (date.CompareTo(start) > 0 && date.CompareTo(end) < 0 && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume))
+                        {
+                            Quantity += gap > 0 ? 1 : -1;
+                            CumulativeFee += (uint)(e.Price * transactionMultiplier * Commission);
+                            var liquidation = SetLiquidation(e.Price);
+                            Purchase = SetPurchasePrice(e.Price);
+                            Revenue += (long)(liquidation * transactionMultiplier);
+                            VerifyAmount = Quantity;
+                        }
+                        else if (date.CompareTo(cme) < 0 && date.CompareTo(end) > 0 && uint.TryParse(e.Date.Substring(0, 6), out uint remain))
+                        {
+                            if (tf.RollOver == false || Temporary.RemainingDay.Contains(remain))
+                                while (Quantity != 0)
+                                {
+                                    Quantity += Quantity > 0 ? -1 : 1;
+                                    CumulativeFee += (uint)(e.Price * transactionMultiplier * Commission);
+                                    var liquidation = SetLiquidation(e.Price);
+                                    Purchase = SetPurchasePrice(e.Price);
+                                    Revenue += (long)(liquidation * transactionMultiplier);
+                                    VerifyAmount = Quantity;
+                                }
+                            long revenue = Revenue - CumulativeFee, unrealize = (long)((e.Price - (Purchase ?? 0D)) * Quantity * transactionMultiplier);
+                            var avg = EMA.Make(++Accumulative, revenue - TodayRevenue + unrealize - TodayUnrealize, Before);
+                            SendMessage = new Statistics
+                            {
+                                Date = e.Date.Substring(0, 6),
+                                Cumulative = revenue + unrealize,
+                                Base = avg,
+                                Statistic = Quantity
+                            };
+                            SendStocks?.Invoke(this, new SendHoldingStocks(e.Date, e.Price, sShort, sLong, revenue + unrealize));
+                            Before = avg;
+                            TodayRevenue = revenue;
+                            TodayUnrealize = unrealize;
+                        }
+                        else
+                        {
+
+                        }
+                        Base = gap;
+                    }
+                    break;
+
                 case ScenarioAccordingToTrend st:
                     if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0 && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime interval))
                     {
@@ -258,9 +307,6 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                         TodayUnrealize = unrealize;
                     }
                     break;
-
-                case TrendFollowingBasicFutures tf:
-                    break;
             }
         }
         public void StartProgress(double commission)
@@ -289,7 +335,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             TheNextYear = (estimate.LastOrDefault(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[find.Length - 1])).Value - price) / price,
                             TheYearAfterNext = (estimate.Last().Value - price) / price
                         }).Result > 0)
-                            consecutive.Dispose();
+                            SendStocks?.Invoke(this, new SendHoldingStocks(EstimatedPrice, SendMessage.Date));
 
                         SendMessage = new Statistics
                         {
@@ -300,7 +346,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             Price = (int)estimate.Max(o => o.Value),
                             Key = key
                         };
-                        SendStocks?.Invoke(this, new SendHoldingStocks(EstimatedPrice, SendMessage.Date));
+                        consecutive.Dispose();
                     }
                     break;
 
@@ -323,12 +369,19 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
                 case TrendFollowingBasicFutures _:
                     Commission = commission > 0 ? commission : 3e-5;
-                    IsDebugging();
 
                     if (StartProgress(strategics.Code as string) > 0)
+                    {
+                        SendMessage = new Statistics
+                        {
+                            Base = SendMessage.Base,
+                            Cumulative = SendMessage.Cumulative,
+                            Date = SendMessage.Date,
+                            Statistic = SendMessage.Statistic
+                        };
                         foreach (var con in Consecutive)
                             con.Dispose();
-
+                    }
                     break;
 
                 default:
@@ -437,6 +490,24 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                 }
             return null;
         }
+        double SetPurchasePrice(double price)
+        {
+            if (Math.Abs(VerifyAmount) < Math.Abs(Quantity) && Math.Abs(Quantity) > 0)
+                Purchase = ((Purchase ?? 0D) * Math.Abs(VerifyAmount) + price) / Math.Abs(Quantity);
+
+            return Quantity == 0 ? 0D : (Purchase ?? 0D);
+        }
+        double SetLiquidation(double price)
+        {
+            if (VerifyAmount > Quantity && Quantity > -1)
+                return price - (Purchase ?? 0D);
+
+            else if (VerifyAmount < Quantity && Quantity < 1)
+                return (Purchase ?? 0D) - price;
+
+            else
+                return 0;
+        }
         DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
         string GetOrderNumber(int type) => string.Concat(type, Count++.ToString("D4"));
         [Conditional("DEBUG")]
@@ -492,6 +563,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         const double tax = 2.5e-3;
         const string start = "0859";
         const string transmit = "1529";
+        const string end = "1544";
+        const string cme = "1759";
         const string format = "yyMMddHHmmss";
         readonly dynamic strategics;
         readonly GoblinBatClient client;

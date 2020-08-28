@@ -15,6 +15,10 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        internal static HashSet<uint> RemainingDay
+        {
+            get; set;
+        }
         internal async Task<Queue<Charts>> CallUpTheChartAsync(Codes codes)
         {
             var start = CodeStorage.LastOrDefault(o => o.Code.StartsWith(codes.Code.Substring(0, 3)) && o.Code.EndsWith(codes.Code.Substring(5)) && string.Compare(o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap, codes.MaturityMarketCap.Length == 8 ? codes.MaturityMarketCap.Substring(2) : codes.MaturityMarketCap) < 0).MaturityMarketCap;
@@ -37,8 +41,12 @@ namespace ShareInvest.Analysis
         internal async Task<Queue<Charts>> CallUpTheChartAsync(string code)
         {
             if (code.Length == 8 && (code.StartsWith("106") || code.StartsWith("101")) && code.EndsWith("000"))
-                code = CodeStorage.First(f => f.MaturityMarketCap.Equals(CodeStorage.Where(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderBy(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap).First().MaturityMarketCap) && f.Code.StartsWith(code.Substring(0, 3)) && f.Code.EndsWith(code.Substring(5))).Code;
+            {
+                var past = CodeStorage.First(f => f.MaturityMarketCap.Equals(CodeStorage.Where(o => o.Code.Length == 8 && o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderBy(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap).First().MaturityMarketCap) && f.Code.StartsWith(code.Substring(0, 3)) && f.Code.EndsWith(code.Substring(5)));
 
+                if (uint.TryParse(past.MaturityMarketCap.Length == 8 ? past.MaturityMarketCap.Substring(2) : past.MaturityMarketCap, out uint remain) && RemainingDay.Add(remain - 1))
+                    code = past.Code;
+            }
             var queue = new Queue<Charts>();
 
             if (await client.GetContext(new Catalog.Request.Charts
@@ -67,11 +75,23 @@ namespace ShareInvest.Analysis
         internal Temporary(int length)
         {
             client = GoblinBatClient.GetInstance();
-
-            if (CodeStorage == null)
-                CallUpTheCodesAsync(length).Wait();
+            CallUpTheCodesAsync(length).Wait();
         }
-        async Task CallUpTheCodesAsync(int length) => CodeStorage = (await client.GetContext(new Codes { }, length) as List<Codes>)?.ToHashSet();
+        async Task CallUpTheCodesAsync(int length)
+        {
+            if (CodeStorage == null)
+            {
+                Length = length;
+                CodeStorage = (await client.GetContext(new Codes { }, length) as List<Codes>)?.ToHashSet();
+            }
+            else if (Length < length)
+                foreach (var code in client.GetContext(new Codes { }, length).Result as List<Codes>)
+                    if (CodeStorage.Add(code) && RemainingDay == null)
+                    {
+                        Length = length;
+                        RemainingDay = new HashSet<uint>() { 190910U, 191211U };
+                    }
+        }
         string ConvertDateTime(int length)
         {
             switch (length)
@@ -83,6 +103,10 @@ namespace ShareInvest.Analysis
                     return lFormat;
             }
             return null;
+        }
+        static int Length
+        {
+            get; set;
         }
         readonly GoblinBatClient client;
         const string sFormat = "yyMMdd";

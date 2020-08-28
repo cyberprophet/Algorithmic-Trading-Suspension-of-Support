@@ -26,7 +26,7 @@ namespace ShareInvest.Analysis.XingAPI
                 Current = current;
                 Purchase = gb.Equals("2") && Quantity >= 0 ? (Purchase * Quantity + current * quantity) / (quantity + Quantity) : (gb.Equals("1") && Quantity <= 0 ? (current * quantity - Purchase * Quantity) / (quantity - Quantity) : Purchase);
                 Quantity += gb.Equals("1") ? -quantity : quantity;
-                Revenue = (long)(current - Purchase) * Quantity * transactionMutiplier;
+                Revenue = (long)(current - Purchase) * Quantity * transactionMultiplier;
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
             }
             WaitOrder = true;
@@ -57,7 +57,7 @@ namespace ShareInvest.Analysis.XingAPI
             if (double.TryParse(param[4], out double current))
             {
                 Current = current;
-                Revenue = (long)((current - Purchase) * Quantity * transactionMutiplier);
+                Revenue = (long)((current - Purchase) * Quantity * transactionMultiplier);
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
             }
             SendStocks?.Invoke(this, new SendHoldingStocks(Code, Quantity, Purchase, Current, Revenue, Rate, Base, Secondary, AdjustTheColorAccordingToTheCurrentSituation(WaitOrder, OrderNumber.Count)));

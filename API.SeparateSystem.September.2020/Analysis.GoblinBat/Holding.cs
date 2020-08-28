@@ -18,15 +18,20 @@ namespace ShareInvest.Analysis
         {
             var temporary = new Temporary(code.Length);
 
-            if (code.Length == 8 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))))
+            if (code.Length == 8 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.Length == 8 && o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))))
             {
                 var stack = new Stack<Codes>();
-                var days = temporary.CallUpTheChartAsync(code);
 
                 foreach (var arg in Temporary.CodeStorage.Where(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderByDescending(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap))
+                {
                     stack.Push(arg);
+                    Days = new Queue<Charts>();
 
-                Days = days.Result;
+                    if (uint.TryParse(arg.MaturityMarketCap.Length == 8 ? arg.MaturityMarketCap.Substring(2) : arg.MaturityMarketCap, out uint remain) && Temporary.RemainingDay.Add(remain - 1))
+                        Days.Clear();
+                }
+                foreach (var day in temporary.CallUpTheChartAsync(code).Result)
+                    Days.Enqueue(day);
 
                 while (stack.Count > 0)
                     yield return temporary.CallUpTheChartAsync(stack.Pop()).Result;
@@ -319,7 +324,7 @@ namespace ShareInvest.Analysis
         protected internal const string confirmation = "확인";
         protected internal const string cancellantion = "취소";
         protected internal const string correction = "정정";
-        protected internal const uint transactionMutiplier = 0x3D090;
+        protected internal const uint transactionMultiplier = 0x3D090;
     }
     enum TR
     {
