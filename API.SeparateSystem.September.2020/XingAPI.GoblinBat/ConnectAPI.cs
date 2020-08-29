@@ -157,6 +157,14 @@ namespace ShareInvest.XingAPI
         {
             get;
         }
+        public IOrders<SendSecuritiesAPI>[] Orders
+        {
+            get;
+        }
+        public IQuerys<SendSecuritiesAPI>[] Querys
+        {
+            get;
+        }
         public IReals[] Conclusion
         {
             get
@@ -205,7 +213,8 @@ namespace ShareInvest.XingAPI
             var now = DateTime.Now;
             Codes = new HashSet<Codes>();
             Strategics = new HashSet<IStrategics>();
-            querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
+            Querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
+            Orders = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IOrders<SendSecuritiesAPI>[] { new CFOAT00100(), new CFOAT00200(), new CFOAT00300() } : new IOrders<SendSecuritiesAPI>[] { new CCEAT00100(), new CCEAT00200(), new CCEAT00300() };
             Stocks = new T8411();
             Options = new T8414();
             JIF = new JIF();
@@ -220,7 +229,6 @@ namespace ShareInvest.XingAPI
         }
         readonly string[] securites;
         readonly Privacies privacy;
-        public readonly IQuerys<SendSecuritiesAPI>[] querys;
         public event EventHandler<SendSecuritiesAPI> Send;
     }
 }

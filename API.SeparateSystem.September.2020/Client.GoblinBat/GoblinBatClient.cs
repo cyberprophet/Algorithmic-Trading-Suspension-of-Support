@@ -597,9 +597,11 @@ namespace ShareInvest.Client
         [Conditional("DEBUG")]
         void SendMessage(object code)
         {
-            if (code is double?)
-                Console.WriteLine(Coin);
-
+            if (code is double coin && Show < coin)
+            {
+                Show = (int)coin + 1;
+                Console.WriteLine(coin);
+            }
             else if (code is Catalog.Request.Charts chart)
                 Console.WriteLine("Code_" + chart.Code + " Start_" + chart.Start + " End_" + chart.End);
 
@@ -618,6 +620,10 @@ namespace ShareInvest.Client
             };
             source = new CancellationTokenSource();
             random = new Random();
+        }
+        int Show
+        {
+            get; set;
         }
         readonly CancellationTokenSource source;
         readonly Security security;

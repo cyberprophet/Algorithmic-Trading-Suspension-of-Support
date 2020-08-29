@@ -15,5 +15,5 @@ namespace ShareInvest.Interface.XingAPI
     {
         void QueryExcute(IRetention retention);
         event EventHandler<T> Send;
-    }
+    }   
 }

@@ -48,6 +48,10 @@ namespace ShareInvest.OpenAPI.Catalog
                         DeadLine = false;
                         Delay.Milliseconds = 0xE12;
                         break;
+
+                    case "d":
+                        arg = (int)Operation.시간외_단일가_매매종료;
+                        break;
                 }
                 if (arg > int.MinValue)
                     Send?.Invoke(this, new SendSecuritiesAPI(arg, conclusion));

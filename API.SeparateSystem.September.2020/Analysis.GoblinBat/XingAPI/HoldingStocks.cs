@@ -8,13 +8,46 @@ namespace ShareInvest.Analysis.XingAPI
 {
     public class HoldingStocks : Holding
     {
-        internal void OnReceiveTrendsInPrices(double gap, int minute)
+        internal void OnReceiveTrendsInPrices(SendConsecutive e, double gap, int minute)
         {
-            if (minute == 0x5A0)
-                Base = gap;
+            switch (strategics)
+            {
+                case TrendFollowingBasicFutures tf:
+                    if (minute == 0x5A0)
+                    {
+                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume) && OrderNumber.Count == 0)
+                        {
+                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Catalog.XingAPI.Order
+                            {
+                                FnoIsuNo = Code,
+                                BnsTpCode = gap > 0 ? "2" : "1",
+                                FnoOrdprcPtnCode = ((int)Catalog.XingAPI.FnoOrdprcPtnCode.지정가).ToString("D2"),
+                                OrdPrc = (gap > 0 ? Offer : Bid).ToString("F2"),
+                                OrdQty = "1"
+                            }));
+                            WaitOrder = false;
+                        }
+                        else if (e.Date.CompareTo(cme) > 0)
+                        {
 
-            else
-                Secondary = gap;
+                        }
+                        Base = gap;
+                    }
+                    else
+                    {
+                        if (e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (tf.QuantityShort + Quantity < 0 && Base < 0 || Base > 0 && Quantity - tf.QuantityLong > 0) && Revenue / Math.Abs(Quantity) > 0x927C)
+                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Catalog.XingAPI.Order
+                            {
+                                FnoIsuNo = Code,
+                                BnsTpCode = Quantity > 0 ? "1" : "2",
+                                FnoOrdprcPtnCode = ((int)Catalog.XingAPI.FnoOrdprcPtnCode.시장가).ToString("D2"),
+                                OrdPrc = (Quantity > 0 ? Bid : Offer).ToString("F2"),
+                                OrdQty = "1"
+                            }));
+                        Secondary = gap;
+                    }
+                    break;
+            }
         }
         public override void OnReceiveBalance(string[] param)
         {
@@ -29,7 +62,6 @@ namespace ShareInvest.Analysis.XingAPI
                 Revenue = (long)(current - Purchase) * Quantity * transactionMultiplier;
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
             }
-            WaitOrder = true;
             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, int, dynamic, dynamic, long, double>(param[cme ? 0x33 : 0xB], param[cme ? 0x34 : 0xB], Quantity, Purchase, Current, Revenue, Rate)));
         }
         public override void OnReceiveConclusion(string[] param)
@@ -41,6 +73,7 @@ namespace ShareInvest.Analysis.XingAPI
             {
                 OrderNumber[param[0x2D]] = nPrice;
                 SendBalance?.Invoke(this, new SendSecuritiesAPI(param[0x67], param[0x6C]));
+                WaitOrder = true;
             }
             else if (uint.TryParse(param[0x2F], out uint oNum) && OrderNumber.Remove(oNum.ToString()) && param[0x38].Equals("1") && uint.TryParse(param[0x2D], out uint nNum) && double.TryParse(param[0x3C], out double oPrice))
                 OrderNumber[nNum.ToString()] = oPrice;
@@ -59,6 +92,37 @@ namespace ShareInvest.Analysis.XingAPI
                 Current = current;
                 Revenue = (long)((current - Purchase) * Quantity * transactionMultiplier);
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
+
+                if (OrderNumber.Count > 0 && strategics is TrendFollowingBasicFutures && OrderNumber.ContainsValue(Bid) == false && OrderNumber.ContainsValue(Offer) == false)
+                    foreach (var kv in OrderNumber)
+                        if (kv.Value < Bid || kv.Value > Offer)
+                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Catalog.XingAPI.Order
+                            {
+                                FnoIsuNo = Code,
+                                OrgOrdNo = kv.Key,
+                                OrdQty = "1"
+                            }));
+            }
+            if (param[0].CompareTo(end) > 0 && uint.TryParse(param[0], out uint remain) && (RollOver == false || Temporary.RemainingDay.Contains(remain)))
+            {
+                var quantity = Math.Abs(Quantity);
+                RollOver = Temporary.RemainingDay.Remove(remain);
+
+                if (RollOver == false)
+                    RollOver = true;
+
+                while (quantity > 0)
+                {
+                    SendBalance?.Invoke(this, new SendSecuritiesAPI(new Catalog.XingAPI.Order
+                    {
+                        FnoIsuNo = Code,
+                        BnsTpCode = Quantity > 0 ? "1" : "2",
+                        FnoOrdprcPtnCode = ((int)Catalog.XingAPI.FnoOrdprcPtnCode.시장가).ToString("D2"),
+                        OrdPrc = Purchase.ToString("F2"),
+                        OrdQty = "1"
+                    }));
+                    quantity--;
+                }
             }
             SendStocks?.Invoke(this, new SendHoldingStocks(Code, Quantity, Purchase, Current, Revenue, Rate, Base, Secondary, AdjustTheColorAccordingToTheCurrentSituation(WaitOrder, OrderNumber.Count)));
         }
@@ -125,6 +189,7 @@ namespace ShareInvest.Analysis.XingAPI
 
             OrderNumber = new Dictionary<string, dynamic>();
             this.strategics = strategics;
+            RollOver = strategics.RollOver;
 
             foreach (var con in Consecutive)
                 con.Connect(this);
@@ -138,6 +203,13 @@ namespace ShareInvest.Analysis.XingAPI
             this.strategics = strategics;
             consecutive.Connect(this);
         }
+        bool RollOver
+        {
+            get; set;
+        }
+        const string start = "090000";
+        const string end = "153500";
+        const string cme = "180000";
         readonly dynamic strategics;
         public event EventHandler<SendConsecutive> SendConsecutive;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;

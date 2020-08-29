@@ -16,8 +16,6 @@ namespace ShareInvest.Analysis
         }
         IEnumerable<Queue<Charts>> FindTheOldestDueDate(string code)
         {
-            var temporary = new Temporary(code.Length);
-
             if (code.Length == 8 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.Length == 8 && o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))))
             {
                 var stack = new Stack<Codes>();
@@ -28,21 +26,21 @@ namespace ShareInvest.Analysis
                     Days = new Queue<Charts>();
 
                     if (uint.TryParse(arg.MaturityMarketCap.Length == 8 ? arg.MaturityMarketCap.Substring(2) : arg.MaturityMarketCap, out uint remain) && Temporary.RemainingDay.Add(remain - 1))
-                        Days.Clear();
+                        Console.WriteLine(Temporary.RemainingDay.Count);
                 }
-                foreach (var day in temporary.CallUpTheChartAsync(code).Result)
+                foreach (var day in Temporary.CallUpTheChartAsync(code).Result)
                     Days.Enqueue(day);
 
                 while (stack.Count > 0)
-                    yield return temporary.CallUpTheChartAsync(stack.Pop()).Result;
+                    yield return Temporary.CallUpTheChartAsync(stack.Pop()).Result;
             }
             else if (code.Length == 6 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.Equals(code)))
             {
                 Market = Temporary.CodeStorage.First(o => o.Code.Equals(code)).MarginRate == 1;
-                string sDate = temporary.FindTheChartStartsAsync(code).Result, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(format) : sDate.Substring(0, 6);
+                string sDate = Temporary.FindTheChartStartsAsync(code).Result, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(format) : sDate.Substring(0, 6);
                 Days = new Queue<Charts>();
 
-                foreach (var day in temporary.CallUpTheChartAsync(code).Result)
+                foreach (var day in Temporary.CallUpTheChartAsync(code).Result)
                     if (string.Compare(day.Date.Substring(2), date) < 0)
                         Days.Enqueue(day);
 
@@ -57,7 +55,7 @@ namespace ShareInvest.Analysis
                             for (int i = 0; i < 0x1C; i++)
                                 count++;
 
-                        yield return temporary.CallUpTheChartAsync(new Catalog.Request.Charts
+                        yield return Temporary.CallUpTheChartAsync(new Catalog.Request.Charts
                         {
                             Code = code,
                             Start = (start - 1 + 0x12C * count++).ToString(nFormat),
@@ -71,7 +69,8 @@ namespace ShareInvest.Analysis
         {
             if (string.IsNullOrEmpty(code) == false)
             {
-                var revise = new Temporary(code.Length).CallUpTheRevisedStockPrice(code).Result;
+                Temporary = new Temporary(code.Length);
+                var revise = Temporary.CallUpTheRevisedStockPrice(code).Result;
                 var modify = revise != null && revise.Count > 0 ? new Catalog.Request.ConfirmRevisedStockPrice[revise.Count] : null;
                 var index = 0;
 
@@ -313,6 +312,10 @@ namespace ShareInvest.Analysis
             }
             else
                 return Color.Maroon;
+        }
+        Temporary Temporary
+        {
+            get; set;
         }
         const string excluding = "191230";
         const string theDate = "192001";

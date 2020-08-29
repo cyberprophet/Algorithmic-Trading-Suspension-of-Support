@@ -41,12 +41,8 @@ namespace ShareInvest.Analysis
         internal async Task<Queue<Charts>> CallUpTheChartAsync(string code)
         {
             if (code.Length == 8 && (code.StartsWith("106") || code.StartsWith("101")) && code.EndsWith("000"))
-            {
-                var past = CodeStorage.First(f => f.MaturityMarketCap.Equals(CodeStorage.Where(o => o.Code.Length == 8 && o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderBy(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap).First().MaturityMarketCap) && f.Code.StartsWith(code.Substring(0, 3)) && f.Code.EndsWith(code.Substring(5)));
+                code = CodeStorage.First(f => f.MaturityMarketCap.Equals(CodeStorage.Where(o => o.Code.Length == 8 && o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderBy(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap).First().MaturityMarketCap) && f.Code.StartsWith(code.Substring(0, 3)) && f.Code.EndsWith(code.Substring(5))).Code;
 
-                if (uint.TryParse(past.MaturityMarketCap.Length == 8 ? past.MaturityMarketCap.Substring(2) : past.MaturityMarketCap, out uint remain) && RemainingDay.Add(remain - 1))
-                    code = past.Code;
-            }
             var queue = new Queue<Charts>();
 
             if (await client.GetContext(new Catalog.Request.Charts
@@ -83,6 +79,9 @@ namespace ShareInvest.Analysis
             {
                 Length = length;
                 CodeStorage = (await client.GetContext(new Codes { }, length) as List<Codes>)?.ToHashSet();
+
+                if (length == 8)
+                    RemainingDay = new HashSet<uint>() { 190910U, 191211U };
             }
             else if (Length < length)
                 foreach (var code in client.GetContext(new Codes { }, length).Result as List<Codes>)

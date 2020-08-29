@@ -63,14 +63,12 @@ namespace ShareInvest
 
                     switch (e.Convey)
                     {
-                        case Tuple<int, string, int, int, string> order:
-                            if (com is OpenAPI.ConnectAPI openOrder)
-                                openOrder.SendOrder(Info, order);
+                        case Tuple<int, string, int, int, string> order when com is OpenAPI.ConnectAPI oOrder:
+                            oOrder.SendOrder(Info, order);
+                            return;
 
-                            else if (com is XingAPI.ConnectAPI xingOrder)
-                            {
-
-                            }
+                        case Catalog.XingAPI.Order order when com is XingAPI.ConnectAPI xOrder:
+                            xOrder.Orders[string.IsNullOrEmpty(order.OrgOrdNo) ? 0 : (string.IsNullOrEmpty(order.BnsTpCode) && string.IsNullOrEmpty(order.OrdPrc) && string.IsNullOrEmpty(order.FnoOrdprcPtnCode) ? 2 : 1)].QueryExcute(order);
                             return;
 
                         case string message:
@@ -214,7 +212,7 @@ namespace ShareInvest
                         case Tuple<byte, byte> tuple:
                             switch (tuple)
                             {
-                                case Tuple<byte, byte> tp when tp.Item1 == 1 && tp.Item2 == 0x15 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && (tp.Item1 == 0 && tp.Item2 == 8 || tp.Item1 == 3 && tp.Item2 == 9):
+                                case Tuple<byte, byte> tp when (tp.Item1 == 1 || tp.Item1 == 5 || tp.Item1 == 7) && tp.Item2 == 0x15 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && (tp.Item1 == 0 && tp.Item2 == 8 || tp.Item1 == 3 && tp.Item2 == 9):
                                     if (WindowState.Equals(FormWindowState.Minimized))
                                         strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
 
@@ -226,7 +224,7 @@ namespace ShareInvest
                                     param = opt10079;
                                     break;
 
-                                case Tuple<byte, byte> tp when tp.Item2 == 41 && tp.Item1 == 5 && com is XingAPI.ConnectAPI:
+                                case Tuple<byte, byte> tp when tp.Item2 == 0x29 && tp.Item1 == 5 && com is XingAPI.ConnectAPI:
                                     retention = await SelectOptionsCodeAsync();
                                     chart = (com as XingAPI.ConnectAPI)?.Options;
                                     break;
@@ -235,6 +233,10 @@ namespace ShareInvest
                                     retention = await client.GetContext(SelectFuturesCode);
                                     param = opt50028;
                                     break;
+
+                                case Tuple<byte, byte> tp when tp.Item1 == 0x64 && tp.Item2 > 0x10 && com is OpenAPI.ConnectAPI:
+                                    Dispose(WindowState);
+                                    return;
 
                                 default:
                                     GetSettleTheFare();
@@ -488,6 +490,9 @@ namespace ShareInvest
                         foreach (var conclusion in x.Conclusion)
                             conclusion.OnReceiveRealTime(string.Empty);
 
+                    foreach (var ctor in x.Orders)
+                        ctor.Send += OnReceiveSecuritiesAPI;
+
                     var alarm = x.JIF;
                     alarm.Send += OnReceiveSecuritiesAPI;
                     alarm.QueryExcute();
@@ -544,7 +549,7 @@ namespace ShareInvest
                             Balance.SetDisconnectHoldingStock(ctor);
                             ctor.SendBalance -= OnReceiveSecuritiesAPI;
                         }
-                        foreach (var ctor in xing.querys)
+                        foreach (var ctor in xing.Querys)
                             ctor.Send -= OnReceiveSecuritiesAPI;
                     }
                 }
@@ -639,7 +644,7 @@ namespace ShareInvest
                 {
                     if (com is XingAPI.ConnectAPI xingAPI)
                     {
-                        foreach (var ctor in xingAPI.querys)
+                        foreach (var ctor in xingAPI.Querys)
                         {
                             ctor.Send += OnReceiveSecuritiesAPI;
                             ctor.QueryExcute();

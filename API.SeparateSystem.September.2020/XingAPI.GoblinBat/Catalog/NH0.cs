@@ -1,5 +1,6 @@
 ﻿using System;
 
+using ShareInvest.Analysis;
 using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
@@ -42,6 +43,11 @@ namespace ShareInvest.XingAPI.Catalog
 
                 if (str.Equals(string.Empty) == false && index < 6)
                     time[index++] = str;
+            }
+            if (Connect.HoldingStock.TryGetValue(time[4], out Holding hs))
+            {
+                hs.Offer = price[4];
+                hs.Bid = price[5];
             }
         }
         public void OnReceiveRealTime(string code)

@@ -187,7 +187,7 @@ namespace ShareInvest.Analysis
                         break;
 
                     case XingAPI.HoldingStocks xs:
-                        xs.OnReceiveTrendsInPrices(gap, tMinute);
+                        xs.OnReceiveTrendsInPrices(e, gap, tMinute);
                         break;
 
                     case HoldingStocks hs:

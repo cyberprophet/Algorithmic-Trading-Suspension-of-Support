@@ -62,9 +62,13 @@ namespace ShareInvest.XingAPI
         }
         internal void OnReceiveChapterOperatingInformation(int gubun, int status)
         {
+            if ((gubun == 5 || gubun == 7) && status == 0x15)
+                foreach (var ho in HoldingStock)
+                    ho.Value.WaitOrder = true;
+
             string jangubun = Enum.GetName(typeof(Attribute), gubun), jstatus = Enum.GetName(typeof(Attribute), status);
 
-            if (TimerBox.Show(jstatus, jangubun, MessageBoxButtons.YesNo, MessageBoxIcon.Information, gubun == 5 && status == 41 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 0x3B7).Equals(DialogResult.Yes))
+            if (TimerBox.Show(jstatus, jangubun, MessageBoxButtons.YesNo, MessageBoxIcon.Information, gubun == 5 && status == 0x29 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 0x3B7).Equals(DialogResult.Yes))
                 SendMessage(jangubun, jstatus);
         }
         void OnEventConnect(string szCode, string szMsg)
