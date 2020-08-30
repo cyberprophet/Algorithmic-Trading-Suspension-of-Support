@@ -51,8 +51,9 @@ namespace ShareInvest.Client
         public Consensus(dynamic key)
         {
             security = new Security(key);
+            GrantAccess = security.InternalAccess;
 
-            if (security.GrantAccess)
+            if (GrantAccess && security.GrantAccess)
             {
                 client = new RestClient(security.Info)
                 {
@@ -60,6 +61,10 @@ namespace ShareInvest.Client
                 };
                 source = new CancellationTokenSource();
             }
+        }
+        public bool GrantAccess
+        {
+            get;
         }
         readonly CancellationTokenSource source;
         readonly Security security;

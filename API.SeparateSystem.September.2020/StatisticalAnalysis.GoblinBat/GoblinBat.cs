@@ -382,13 +382,8 @@ namespace ShareInvest.Strategics
                 notifyIcon.Icon = (Icon)resources.GetObject(Change ? upload : download);
                 Change = !Change;
 
-                if (IsApplicationAlreadyRunning(Privacy.Security) && backgroundWorker.IsBusy == false && (string.IsNullOrEmpty(Privacy.Account) || string.IsNullOrEmpty(Privacy.SecuritiesAPI) || string.IsNullOrEmpty(Privacy.SecurityAPI)) == false)
-                {
-                    Cancel = new CancellationTokenSource();
-                    GetSettleTheFare();
-                    backgroundWorker.RunWorkerAsync();
-                    Statistical.SetProgressRate();
-                }
+                if (IsApplicationAlreadyRunning(Privacy.Security) == false && backgroundWorker.IsBusy == false && string.IsNullOrEmpty(Privacy.Account) && string.IsNullOrEmpty(Privacy.SecuritiesAPI) && string.IsNullOrEmpty(Privacy.SecurityAPI))
+                    strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
             }
             else
                 Statistical.CheckForSurvival(colors[DateTime.Now.Second % 3]);

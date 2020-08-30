@@ -605,27 +605,26 @@ namespace ShareInvest
             else if (Visible && ShowIcon && notifyIcon.Visible == false && FormBorderStyle.Equals(FormBorderStyle.None) && WindowState.Equals(FormWindowState.Normal) && (com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI))
             {
                 var now = DateTime.Now;
-                int day = 0, today = DateTime.DaysInMonth(now.Year, now.Month);
 
                 switch (now.DayOfWeek)
                 {
                     case DayOfWeek.Sunday:
-                        day = now.AddDays(1).Day;
+                        now = now.AddDays(1);
                         break;
 
                     case DayOfWeek.Saturday:
-                        day = now.AddDays(2).Day;
+                        now = now.AddDays(2);
                         break;
 
                     case DayOfWeek weeks when weeks.Equals(DayOfWeek.Friday) && now.Hour > 8:
-                        day = now.AddDays(3).Day;
+                        now = now.AddDays(3);
                         break;
 
                     default:
-                        day = (now.Hour > 8 || Array.Exists(holidays, o => o.Equals(now.ToString(dFormat))) ? now.AddDays(1) : now).Day;
+                        now = now.Hour > 8 || Array.Exists(holidays, o => o.Equals(now.ToString(dFormat))) ? now.AddDays(1) : now;
                         break;
                 }
-                var remain = new DateTime(now.Year, now.Day == today ? now.AddMonths(1).Month : now.Month, day, 9, 0, 0) - DateTime.Now;
+                var remain = new DateTime(now.Year, now.Month, now.Day, 9, 0, 0) - DateTime.Now;
                 com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
 
                 if (remain.TotalMinutes < 0x1F && com.Start == false && DateTime.Now.Hour == 8 && DateTime.Now.Minute > 0x1E && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B1))))
@@ -789,11 +788,12 @@ namespace ShareInvest
 
                     else
                     {
-                        for (int i = 0; i < retention.Code.Length / 3; i++)
-                        {
-                            var status = await client.PostContext(await consensus.GetContextAsync(i, retention.Code));
-                            SendMessage(status);
-                        }
+                        if (consensus.GrantAccess)
+                            for (int i = 0; i < retention.Code.Length / 3; i++)
+                            {
+                                var status = await client.PostContext(await consensus.GetContextAsync(i, retention.Code));
+                                SendMessage(status);
+                            }
                         return retention;
                     }
                 }
