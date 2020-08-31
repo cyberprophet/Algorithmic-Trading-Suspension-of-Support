@@ -159,11 +159,21 @@ namespace ShareInvest.XingAPI
         }
         public IOrders<SendSecuritiesAPI>[] Orders
         {
-            get;
+            get
+            {
+                var now = DateTime.Now;
+
+                return (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IOrders<SendSecuritiesAPI>[] { new CFOAT00100(), new CFOAT00200(), new CFOAT00300() } : new IOrders<SendSecuritiesAPI>[] { new CCEAT00100(), new CCEAT00200(), new CCEAT00300() };
+            }
         }
         public IQuerys<SendSecuritiesAPI>[] Querys
         {
-            get;
+            get
+            {
+                var now = DateTime.Now;
+
+                return (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
+            }
         }
         public IReals[] Conclusion
         {
@@ -210,11 +220,8 @@ namespace ShareInvest.XingAPI
                 textPassword.UseSystemPasswordChar = true;
                 textCertificate.UseSystemPasswordChar = true;
             }
-            var now = DateTime.Now;
             Codes = new HashSet<Codes>();
             Strategics = new HashSet<IStrategics>();
-            Querys = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
-            Orders = (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IOrders<SendSecuritiesAPI>[] { new CFOAT00100(), new CFOAT00200(), new CFOAT00300() } : new IOrders<SendSecuritiesAPI>[] { new CCEAT00100(), new CCEAT00200(), new CCEAT00300() };
             Stocks = new T8411();
             Options = new T8414();
             JIF = new JIF();

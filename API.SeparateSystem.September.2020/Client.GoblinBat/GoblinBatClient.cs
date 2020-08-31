@@ -79,7 +79,7 @@ namespace ShareInvest.Client
         }
         public async Task<Codes> GetContext(Codes codes)
         {
-            var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, codes.GetType().Name, "/", codes.Code), Method.GET), source.Token);
+            var response = await client.ExecuteAsync(new RestRequest(security.RequestCodes(codes), Method.GET), source.Token);
 
             try
             {
@@ -99,7 +99,7 @@ namespace ShareInvest.Client
         }
         public async Task<object> GetContext(Codes param, int length)
         {
-            var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", length), Method.GET), source.Token);
+            var response = await client.ExecuteAsync(new RestRequest(security.RequestCodes(param, length), Method.GET), source.Token);
 
             try
             {
@@ -138,7 +138,7 @@ namespace ShareInvest.Client
         }
         public async Task<object> GetContext<T>(IParameters param)
         {
-            var response = await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.GET), source.Token);
+            var response = await client.ExecuteAsync<T>(new RestRequest(security.RequestCodes(param), Method.GET), source.Token);
 
             try
             {
@@ -162,7 +162,7 @@ namespace ShareInvest.Client
         }
         public async Task<Retention> GetContext<T>(T param) where T : struct, ICharts
         {
-            var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.GET), source.Token);
+            var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.GET), source.Token);
 
             try
             {
@@ -379,7 +379,7 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -395,7 +395,7 @@ namespace ShareInvest.Client
         }
         public async Task<Tuple<int, double>> PostContext<T>(IParameters param)
         {
-            var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
+            var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
 
             try
             {
@@ -433,7 +433,7 @@ namespace ShareInvest.Client
                         index = 7;
                         break;
                 }
-                var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name.Substring(index)), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().GetGenericArguments()[0].Name.Substring(index)), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -454,7 +454,7 @@ namespace ShareInvest.Client
 
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -475,7 +475,7 @@ namespace ShareInvest.Client
 
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -532,7 +532,7 @@ namespace ShareInvest.Client
         }
         public async Task<int> PutContext<T>(Codes param)
         {
-            var response = await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
+            var response = await client.ExecuteAsync<T>(new RestRequest(security.RequestCodes(param), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
 
             try
             {
@@ -555,7 +555,7 @@ namespace ShareInvest.Client
             try
             {
                 Coin = 0;
-                var response = await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.PUT, DataFormat.Json).AddJsonBody(param, security.ContentType), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestCodes(param), Method.PUT, DataFormat.Json).AddJsonBody(param, security.ContentType), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -572,7 +572,7 @@ namespace ShareInvest.Client
         }
         public async Task<int> DeleteContext<T>(IParameters param)
         {
-            var response = await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Security), Method.DELETE), source.Token);
+            var response = await client.ExecuteAsync<T>(new RestRequest(security.RequestCodes(param), Method.DELETE), source.Token);
 
             try
             {

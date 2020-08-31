@@ -96,6 +96,19 @@ namespace ShareInvest
                             ResumeLayout();
                             return;
 
+                        case bool connect:
+                            var query = (com as XingAPI.ConnectAPI)?.Querys[1];
+
+                            if (connect)
+                            {
+                                query.Send += OnReceiveSecuritiesAPI;
+                                query.QueryExcute();
+                            }
+                            else
+                                query.Send -= OnReceiveSecuritiesAPI;
+
+                            return;
+
                         case long available:
                             Balance.OnReceiveDeposit(available);
                             return;
@@ -540,6 +553,7 @@ namespace ShareInvest
                         {
                             Balance.SetDisconnectHoldingStock(ctor);
                             ctor.SendBalance -= OnReceiveSecuritiesAPI;
+                            ctor.WaitOrder = false;
                         }
                     }
                     else if (com is XingAPI.ConnectAPI xing)
@@ -548,6 +562,7 @@ namespace ShareInvest
                         {
                             Balance.SetDisconnectHoldingStock(ctor);
                             ctor.SendBalance -= OnReceiveSecuritiesAPI;
+                            ctor.WaitOrder = false;
                         }
                         foreach (var ctor in xing.Querys)
                             ctor.Send -= OnReceiveSecuritiesAPI;
@@ -652,6 +667,7 @@ namespace ShareInvest
                         {
                             Balance.SetConnectHoldingStock(ctor);
                             ctor.SendBalance += OnReceiveSecuritiesAPI;
+                            ctor.WaitOrder = true;
                         }
                         if (Connect == int.MaxValue)
                             foreach (var convert in xingAPI.ConvertTheCodeToName)
@@ -667,6 +683,7 @@ namespace ShareInvest
                         {
                             Balance.SetConnectHoldingStock(ctor);
                             ctor.SendBalance += OnReceiveSecuritiesAPI;
+                            ctor.WaitOrder = true;
                         }
                         if (Connect == int.MaxValue)
                             while (Stack.Count > 0)

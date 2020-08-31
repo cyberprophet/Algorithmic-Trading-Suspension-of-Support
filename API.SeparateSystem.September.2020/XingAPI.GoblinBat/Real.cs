@@ -3,7 +3,7 @@
 namespace ShareInvest.XingAPI
 {
     abstract class Real : XARealClass
-    {
+    {       
         protected internal InBlock GetInBlock(string code) => new InBlock
         {
             Block = inBlock,

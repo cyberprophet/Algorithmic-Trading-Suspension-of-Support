@@ -52,12 +52,13 @@ namespace ShareInvest.Analysis.XingAPI
         public override void OnReceiveBalance(string[] param)
         {
             var cme = param.Length > 0x1C;
+            SendBalance?.Invoke(this, new SendSecuritiesAPI(true));
 
             if (param[cme ? 0x33 : 0xB].Length == 8 && int.TryParse(param[cme ? 0x53 : 0xE], out int quantity) && double.TryParse(param[cme ? 0x52 : 0xD], out double current) && int.TryParse(param[cme ? 0x2D : 9], out int number) && OrderNumber.Remove(number.ToString()))
             {
                 var gb = param[cme ? 0x37 : 0x14];
                 Current = current;
-                Purchase = gb.Equals("2") && Quantity >= 0 ? (Purchase * Quantity + current * quantity) / (quantity + Quantity) : (gb.Equals("1") && Quantity <= 0 ? (current * quantity - Purchase * Quantity) / (quantity - Quantity) : Purchase);
+                Purchase = gb.Equals("2") && Quantity >= 0 ? ((Purchase ?? 0D) * Quantity + current * quantity) / (quantity + Quantity) : (gb.Equals("1") && Quantity <= 0 ? (current * quantity - (Purchase ?? 0D) * Quantity) / (quantity - Quantity) : (Purchase ?? 0D));
                 Quantity += gb.Equals("1") ? -quantity : quantity;
                 Revenue = (long)(current - Purchase) * Quantity * transactionMultiplier;
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
@@ -90,7 +91,7 @@ namespace ShareInvest.Analysis.XingAPI
             if (double.TryParse(param[4], out double current))
             {
                 Current = current;
-                Revenue = (long)((current - Purchase) * Quantity * transactionMultiplier);
+                Revenue = (long)((current - (Purchase ?? 0D)) * Quantity * transactionMultiplier);
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
 
                 if (OrderNumber.Count > 0 && strategics is TrendFollowingBasicFutures && OrderNumber.ContainsValue(Bid) == false && OrderNumber.ContainsValue(Offer) == false)
