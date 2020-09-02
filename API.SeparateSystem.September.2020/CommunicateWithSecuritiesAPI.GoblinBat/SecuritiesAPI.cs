@@ -247,7 +247,7 @@ namespace ShareInvest
                                     param = opt50028;
                                     break;
 
-                                case Tuple<byte, byte> tp when tp.Item1 == 0x64 && tp.Item2 > 0x10 && com is OpenAPI.ConnectAPI:
+                                case Tuple<byte, byte> tp when tp.Item2 == 0x19 && tp.Item1 == 7 && com is XingAPI.ConnectAPI || tp.Item1 == 0x64 && tp.Item2 > 0x10 && com is OpenAPI.ConnectAPI:
                                     Dispose(WindowState);
                                     return;
 

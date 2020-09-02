@@ -35,7 +35,8 @@ namespace ShareInvest.Analysis.XingAPI
                     }
                     else
                     {
-                        if (e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (tf.QuantityShort + Quantity < 0 && Base < 0 || Base > 0 && Quantity - tf.QuantityLong > 0) && Revenue / Math.Abs(Quantity) > 0x927C)
+                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (tf.QuantityShort + Quantity < 0 && Base < 0 || Base > 0 && Quantity - tf.QuantityLong > 0) && Revenue / Math.Abs(Quantity) > 0x927C)
+                        {
                             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Catalog.XingAPI.Order
                             {
                                 FnoIsuNo = Code,
@@ -44,6 +45,8 @@ namespace ShareInvest.Analysis.XingAPI
                                 OrdPrc = (Quantity > 0 ? Bid : Offer).ToString("F2"),
                                 OrdQty = "1"
                             }));
+                            WaitOrder = false;
+                        }
                         Secondary = gap;
                     }
                     break;
@@ -52,7 +55,7 @@ namespace ShareInvest.Analysis.XingAPI
         public override void OnReceiveBalance(string[] param)
         {
             var cme = param.Length > 0x1C;
-            SendBalance?.Invoke(this, new SendSecuritiesAPI(true));
+            var span = DateTime.Now;
 
             if (param[cme ? 0x33 : 0xB].Length == 8 && int.TryParse(param[cme ? 0x53 : 0xE], out int quantity) && double.TryParse(param[cme ? 0x52 : 0xD], out double current) && int.TryParse(param[cme ? 0x2D : 9], out int number) && OrderNumber.Remove(number.ToString()))
             {
@@ -64,6 +67,12 @@ namespace ShareInvest.Analysis.XingAPI
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
             }
             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, int, dynamic, dynamic, long, double>(param[cme ? 0x33 : 0xB], param[cme ? 0x34 : 0xB], Quantity, Purchase, Current, Revenue, Rate)));
+
+            if (Span == null || Span.AddMilliseconds(0x3ED).CompareTo(span) < 0)
+            {
+                SendBalance?.Invoke(this, new SendSecuritiesAPI(true));
+                Span = span;
+            }
         }
         public override void OnReceiveConclusion(string[] param)
         {
@@ -76,7 +85,7 @@ namespace ShareInvest.Analysis.XingAPI
                 SendBalance?.Invoke(this, new SendSecuritiesAPI(param[0x67], param[0x6C]));
                 WaitOrder = true;
             }
-            else if (uint.TryParse(param[0x2F], out uint oNum) && OrderNumber.Remove(oNum.ToString()) && param[0x38].Equals("1") && uint.TryParse(param[0x2D], out uint nNum) && double.TryParse(param[0x3C], out double oPrice))
+            else if (param.Length > 0x38 && uint.TryParse(param[0x2F], out uint oNum) && OrderNumber.Remove(oNum.ToString()) && param[0x38].Equals("1") && uint.TryParse(param[0x2D], out uint nNum) && double.TryParse(param[0x3C], out double oPrice))
                 OrderNumber[nNum.ToString()] = oPrice;
         }
         public override void OnReceiveEvent(string[] param)
@@ -205,6 +214,14 @@ namespace ShareInvest.Analysis.XingAPI
             consecutive.Connect(this);
         }
         bool RollOver
+        {
+            get; set;
+        }
+        DateTime Span
+        {
+            get; set;
+        }
+        internal override Dictionary<DateTime, double> EstimatedPrice
         {
             get; set;
         }

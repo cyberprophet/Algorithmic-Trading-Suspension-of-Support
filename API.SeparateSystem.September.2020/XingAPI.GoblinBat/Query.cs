@@ -9,10 +9,6 @@ namespace ShareInvest.XingAPI
 {
     abstract class Query : XAQueryClass
     {
-        protected internal static int DelayMilliseconds
-        {
-            get; set;
-        }
         protected internal Query()
         {
             ReceiveData += OnReceiveData;

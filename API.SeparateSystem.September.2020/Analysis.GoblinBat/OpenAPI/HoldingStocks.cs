@@ -165,6 +165,10 @@ namespace ShareInvest.Analysis.OpenAPI
             foreach (var con in Consecutive)
                 con.Connect(this);
         }
+        internal override Dictionary<DateTime, double> EstimatedPrice
+        {
+            get; set;
+        }
         readonly dynamic strategics;
         public event EventHandler<SendConsecutive> SendConsecutive;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;

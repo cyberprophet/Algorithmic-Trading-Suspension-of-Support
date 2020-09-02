@@ -66,13 +66,13 @@ namespace ShareInvest.Strategics
 
             foreach (var strategics in new IStrategics[]
             {
-                new Catalog.TrendsInStockPrices()
+                new Catalog.TrendsInStockPrices(),
+                new Catalog.ScenarioAccordingToTrend()
             })
                 foreach (var enumerable in client.GetContext(strategics).Result)
                     stack.Push(enumerable);
 
-            var maximum = list.Count * stack.Count;
-            var rate = 0;
+            int maximum = list.Count * stack.Count, rate = 0;
             var po = new ParallelOptions
             {
                 CancellationToken = Cancel.Token,
@@ -98,6 +98,26 @@ namespace ShareInvest.Strategics
 
                             switch (strategics)
                             {
+                                case Catalog.ScenarioAccordingToTrend st:
+                                    var consensus = client.GetContext(new Catalog.ConvertConsensus { Code = w.Code }).Result;
+
+                                    if (consensus != null && consensus.Any(o => o.Date.EndsWith("(E)") && o.Date.StartsWith(now.AddYears(2).ToString("yy"))) && client.PostContext(new ConfirmStrategics
+                                    {
+                                        Code = w.Code,
+                                        Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
+                                        Strategics = string.Concat("ST.", st.Calendar, '.', st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', (uint)(st.Sales * 0x64), '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', (uint)(st.OperatingProfit * 0x64), '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', (uint)(st.NetIncome * 0x64))
+                                    }).Result == false)
+                                    {
+                                        st.Code = w.Code;
+                                        hs = new HoldingStocks(st, new Catalog.ConvertConsensus().PresumeToConsensus(consensus), client)
+                                        {
+                                            Code = st.Code
+                                        };
+                                        hs.SendBalance += OnReceiveAnalysisData;
+                                        hs.StartProgress(0D);
+                                    }
+                                    break;
+
                                 case Catalog.TrendsInStockPrices ts:
                                     if (client.PostContext(new ConfirmStrategics
                                     {
@@ -126,6 +146,7 @@ namespace ShareInvest.Strategics
                 catch (OperationCanceledException ex)
                 {
                     Statistical.SetProgressRate(Color.Ivory);
+                    Cancel.Dispose();
                     Console.WriteLine("Count_" + rate + "\t" + ex.TargetSite.Name);
                 }
                 catch (Exception ex)
@@ -141,38 +162,39 @@ namespace ShareInvest.Strategics
             {
                 var coin = double.NaN;
 
-                switch (tuple.Item1)
-                {
-                    case Catalog.TrendFollowingBasicFutures tf:
-                        break;
+                if (string.IsNullOrEmpty(tuple.Item2.Key) == false)
+                    switch (tuple.Item1)
+                    {
+                        case Catalog.TrendFollowingBasicFutures tf:
+                            break;
 
-                    case Catalog.TrendsInStockPrices ts:
-                        if (tuple.Item2.Base > 0 && (ts.Setting.Equals(Setting.Both) || ts.Setting.Equals(Setting.Reservation)))
-                            coin = await client.PutContext(new StocksStrategics
-                            {
-                                Code = ts.Code,
-                                Strategics = tuple.Item2.Key,
-                                Date = tuple.Item2.Date,
-                                MaximumInvestment = (long)tuple.Item2.Base,
-                                CumulativeReturn = tuple.Item2.Cumulative / tuple.Item2.Base,
-                                WeightedAverageDailyReturn = tuple.Item2.Statistic / tuple.Item2.Base
-                            });
-                        break;
+                        case Catalog.TrendsInStockPrices ts:
+                            if (tuple.Item2.Base > 0 && (ts.Setting.Equals(Setting.Both) || ts.Setting.Equals(Setting.Reservation)))
+                                coin = await client.PutContext(new StocksStrategics
+                                {
+                                    Code = ts.Code,
+                                    Strategics = tuple.Item2.Key,
+                                    Date = tuple.Item2.Date,
+                                    MaximumInvestment = (long)tuple.Item2.Base,
+                                    CumulativeReturn = tuple.Item2.Cumulative / tuple.Item2.Base,
+                                    WeightedAverageDailyReturn = tuple.Item2.Statistic / tuple.Item2.Base
+                                });
+                            break;
 
-                    case Catalog.ScenarioAccordingToTrend st:
-                        if (tuple.Item2.Base > 0)
-                            coin = await client.PutContext(new StocksStrategics
-                            {
-                                Code = st.Code,
-                                Strategics = tuple.Item2.Key,
-                                Date = tuple.Item2.Date,
-                                MaximumInvestment = (long)tuple.Item2.Base,
-                                CumulativeReturn = tuple.Item2.Cumulative / tuple.Item2.Base,
-                                WeightedAverageDailyReturn = tuple.Item2.Statistic / tuple.Item2.Base,
-                                DiscrepancyRateFromExpectedStockPrice = tuple.Item2.Price
-                            });
-                        break;
-                }
+                        case Catalog.ScenarioAccordingToTrend st:
+                            if (tuple.Item2.Base > 0)
+                                coin = await client.PutContext(new StocksStrategics
+                                {
+                                    Code = st.Code,
+                                    Strategics = tuple.Item2.Key,
+                                    Date = tuple.Item2.Date,
+                                    MaximumInvestment = (long)tuple.Item2.Base,
+                                    CumulativeReturn = tuple.Item2.Cumulative / tuple.Item2.Base,
+                                    WeightedAverageDailyReturn = tuple.Item2.Statistic / tuple.Item2.Base,
+                                    DiscrepancyRateFromExpectedStockPrice = tuple.Item2.Price
+                                });
+                            break;
+                    }
                 if (double.IsNaN(coin) == false)
                 {
                     if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) && DateTime.Now.Hour < 3)
@@ -223,10 +245,16 @@ namespace ShareInvest.Strategics
                 switch (e.Strategics)
                 {
                     case Size size:
-                        SuspendLayout();
-                        Console.WriteLine(Size.Height + "\t" + Size.Width + "\t" + size.Height + "\t" + size.Width);
+                        var height = 0x2DC;
 
-                        ResumeLayout();
+                        switch (size.Height)
+                        {
+                            case 0xCD:
+                                height -= 0x1E;
+                                break;
+                        }
+                        Size = new Size(0x2B9, height);
+
                         return;
 
                     case Tuple<int, Catalog.Privacies> tuple when tuple.Item2 is Catalog.Privacies privacy && (string.IsNullOrEmpty(privacy.Account) || string.IsNullOrEmpty(privacy.SecuritiesAPI) || string.IsNullOrEmpty(privacy.SecurityAPI)) == false:
@@ -404,7 +432,7 @@ namespace ShareInvest.Strategics
                     Text = await Statistical.SetPrivacy(privacy);
                     notifyIcon.Text = ConvertTheFare(privacy.Coin);
 
-                    if (backgroundWorker.IsBusy == false)
+                    if (backgroundWorker.IsBusy == false && Cancel == null && string.IsNullOrEmpty(Privacy.Account) == false && string.IsNullOrEmpty(Privacy.SecuritiesAPI) == false && string.IsNullOrEmpty(Privacy.SecurityAPI) == false)
                     {
                         Cancel = new CancellationTokenSource();
                         backgroundWorker.RunWorkerAsync();
@@ -412,7 +440,7 @@ namespace ShareInvest.Strategics
                     }
                     ClosingForm = true;
                 }
-                Size = new Size(0x245, 0x208);
+                Size = new Size(0x2B9, 0x2DC - 0xF4);
                 Visible = true;
                 ShowIcon = true;
                 notifyIcon.Visible = false;

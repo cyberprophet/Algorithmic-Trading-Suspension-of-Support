@@ -21,6 +21,33 @@ namespace ShareInvest.Controls
         {
             get; set;
         }
+        void DataSortCompare(object sender, DataGridViewSortCompareEventArgs e)
+        {
+            if (e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
+            {
+                e.SortResult = x.CompareTo(y);
+                e.Handled = true;
+            }
+        }
+        string GetQuarter(DateTime dt)
+        {
+            switch (dt.Month)
+            {
+                case int month when month > 0 && month < 4:
+                    return string.Concat(dt.Year, ".03");
+
+                case int month when month > 3 && month < 7:
+                    return string.Concat(dt.Year, ".06");
+
+                case int month when month > 6 && month < 0xA:
+                    return string.Concat(dt.Year, ".09");
+
+                case int month when month > 9 && month < 0xD:
+                case 0:
+                    return string.Concat(dt.Year, ".12");
+            }
+            return null;
+        }
         public Strategics(dynamic client)
         {
             InitializeComponent();
@@ -29,6 +56,7 @@ namespace ShareInvest.Controls
             buttonProgress.Click += OnReceiveClickItem;
             textCode.Leave += OnReceiveClickItem;
             Codes = new HashSet<Codes>();
+            data = new DataGridView();
             this.client = client;
 
             foreach (var str in button)
@@ -36,7 +64,97 @@ namespace ShareInvest.Controls
         }
         public event EventHandler<SendHoldingStocks> SendSize;
         public void CheckForSurvival(Color color) => labelProgress.ForeColor = color;
-        public void SetProgressRate(int rate) => progressBar.Value = rate + 1;
+        public void SetProgressRate(int rate)
+        {
+            if (rate > 0 && rate == progressBar.Value && rate % 3 == 0)
+                BeginInvoke(new Action(async () =>
+                {
+                    var count = 0;
+                    var code = string.Empty;
+                    var codes = await client.GetContext(new Codes { }, 6) as List<Codes>;
+                    var temp = new double[6];
+                    var stack = new Stack<Catalog.Request.Consensus>();
+                    var now = DateTime.Now;
+                    var price = 0U;
+
+                    foreach (var consensus in (await client.GetContext(new Catalog.Request.Consensus { })).OrderByDescending(o => o.Code))
+                    {
+                        if (string.IsNullOrEmpty(code) || code.Equals(consensus.Code) == false)
+                        {
+                            if (string.IsNullOrEmpty(code) == false)
+                                stack.Push(new Catalog.Request.Consensus
+                                {
+                                    Code = code,
+                                    FirstQuarter = (temp[0] / count - price) / price,
+                                    SecondQuarter = (temp[1] / count - price) / price,
+                                    ThirdQuarter = (temp[2] / count - price) / price,
+                                    Quarter = (temp[3] / count - price) / price,
+                                    TheNextYear = (temp[4] / count - price) / price,
+                                    TheYearAfterNext = (temp[5] / count - price) / price
+                                });
+                            temp = new double[6];
+                            code = consensus.Code;
+                            count = 0;
+
+                            if (uint.TryParse(codes.First(o => o.Code.Equals(code)).Price, out uint current))
+                                price = current;
+                        }
+                        temp[0] += price * (1 + consensus.FirstQuarter);
+                        temp[1] += price * (1 + consensus.SecondQuarter);
+                        temp[2] += price * (1 + consensus.ThirdQuarter);
+                        temp[3] += price * (1 + consensus.Quarter);
+                        temp[4] += price * (1 + consensus.TheNextYear);
+                        temp[5] += price * (1 + consensus.TheYearAfterNext);
+                        count++;
+                    }
+                    if (Length == 8)
+                    {
+
+                    }
+                    SuspendLayout();
+                    linkTerms.Dispose();
+                    InitializeDataGridView();
+
+                    if (data.Rows.Count == 0)
+                    {
+                        data.ColumnCount = 8;
+                        data.BackgroundColor = Color.FromArgb(0x79, 0x85, 0x82);
+                        data.Columns[0].Name = "종목코드";
+                        data.Columns[1].Name = "종목명";
+                    }
+                    else
+                        data.Rows.Clear();
+
+                    for (count = 2; count < data.ColumnCount; count++)
+                        data.Columns[count].Name = GetQuarter(now.AddMonths(count == 2 ? 1 : ((count - 2) * 3) + 1));
+
+                    while (stack.Count > 0)
+                    {
+                        var pop = stack.Pop();
+                        var index = data.Rows.Add(new string[] { pop.Code, codes.First(o => o.Code.Equals(pop.Code)).Name, Math.Abs(pop.FirstQuarter).ToString("P2"), Math.Abs(pop.SecondQuarter).ToString("P2"), Math.Abs(pop.ThirdQuarter).ToString("P2"), Math.Abs(pop.Quarter).ToString("P2"), Math.Abs(pop.TheNextYear).ToString("P2"), Math.Abs(pop.TheYearAfterNext).ToString("P2") });
+                        data.Rows[index].Cells[2].Style.ForeColor = pop.FirstQuarter > 0 ? Color.Maroon : Color.Navy;
+                        data.Rows[index].Cells[2].Style.SelectionForeColor = pop.FirstQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                        data.Rows[index].Cells[3].Style.ForeColor = pop.SecondQuarter > 0 ? Color.Maroon : Color.Navy;
+                        data.Rows[index].Cells[3].Style.SelectionForeColor = pop.SecondQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                        data.Rows[index].Cells[4].Style.ForeColor = pop.ThirdQuarter > 0 ? Color.Maroon : Color.Navy;
+                        data.Rows[index].Cells[4].Style.SelectionForeColor = pop.ThirdQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                        data.Rows[index].Cells[5].Style.ForeColor = pop.Quarter > 0 ? Color.Maroon : Color.Navy;
+                        data.Rows[index].Cells[5].Style.SelectionForeColor = pop.Quarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                        data.Rows[index].Cells[6].Style.ForeColor = pop.TheNextYear > 0 ? Color.Maroon : Color.Navy;
+                        data.Rows[index].Cells[6].Style.SelectionForeColor = pop.TheNextYear > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                        data.Rows[index].Cells[7].Style.ForeColor = pop.TheYearAfterNext > 0 ? Color.Maroon : Color.Navy;
+                        data.Rows[index].Cells[7].Style.SelectionForeColor = pop.TheYearAfterNext > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                    }
+                    data.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+                    data.RowsDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                    data.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                    data.ScrollBars = ScrollBars.Vertical;
+                    data.AutoResizeRows();
+                    data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                    ResumeLayout();
+                }));
+            progressBar.Value = rate + 1;
+        }
         public void SetProgressRate(Color color) => buttonProgress.ForeColor = color;
         public void SetProgressRate(bool state)
         {
@@ -192,7 +310,7 @@ namespace ShareInvest.Controls
             {
                 var url = "https://youtu.be/CIfSIsozG_E";
 
-                if (comboStrategics.SelectedItem is string str)
+                if (link.Name.Equals(this.link.Name) && comboStrategics.SelectedItem is string str)
                     switch (str)
                     {
                         case tf:
@@ -207,6 +325,9 @@ namespace ShareInvest.Controls
                             url = "https://youtu.be/CIfSIsozG_E";
                             break;
                     }
+                else if (link.Name.Equals(linkTerms.Name))
+                    url = "https://sharecompany.tistory.com/46";
+
                 Process.Start(url);
                 link.LinkVisited = true;
             }
@@ -295,6 +416,7 @@ namespace ShareInvest.Controls
                     if (check && verify != null)
                     {
                         buttonSave.ForeColor = Color.Ivory;
+                        buttonChart.ForeColor = Color.Ivory;
                         SendSize?.Invoke(this, verify);
                     }
                     else
@@ -503,7 +625,7 @@ namespace ShareInvest.Controls
                         IsBalloon = true,
                         ShowAlways = true,
                         AutoPopDelay = tip.Length > 2 ? 0x6D9 : 0x31B,
-                        InitialDelay = 0x177,
+                        InitialDelay = 0x249F,
                         ReshowDelay = 0x1CE3,
                         UseAnimation = true,
                         UseFading = true
@@ -531,7 +653,16 @@ namespace ShareInvest.Controls
         {
             if (sender is TabControl && e is TabControlCancelEventArgs tc && tc.TabPage != null)
             {
-                SendSize?.Invoke(this, new SendHoldingStocks(tc.TabPage.Size));
+                if (data.Columns.Count > 0)
+                {
+                    SuspendLayout();
+                    data.SuspendLayout();
+                    SendSize?.Invoke(this, new SendHoldingStocks(tc.TabPage.Size));
+                    data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                    data.ResumeLayout();
+                    ResumeLayout();
+                }
+                panel.SuspendLayout();
                 int height = 0x23;
 
                 switch (tc.TabPage.ToolTipText)
@@ -552,6 +683,7 @@ namespace ShareInvest.Controls
                         break;
                 }
                 panel.RowStyles[0].Height = height;
+                panel.ResumeLayout();
             }
         }
         void ButtonPreviewKeyDown(object sender, EventArgs e)
@@ -600,6 +732,7 @@ namespace ShareInvest.Controls
         {
             get;
         }
+        readonly DataGridView data;
         readonly GoblinBatClient client;
         readonly double[] commissionFutures = { 3e-5, 25e-6, 2e-5, 24e-6, 21e-6, 18e-6, 15e-6, 1e-5 };
         readonly double[] commissionStocks = { 1.5e-4, 1.4e-4, 1.3e-4, 1.2e-4, 1.1e-4 };

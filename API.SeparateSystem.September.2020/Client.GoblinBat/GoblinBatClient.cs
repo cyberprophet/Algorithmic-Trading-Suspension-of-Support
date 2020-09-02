@@ -57,6 +57,26 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<List<Catalog.Request.Consensus>> GetContext(Catalog.Request.Consensus consensus)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestConsensus(consensus), Method.GET), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    return JsonConvert.DeserializeObject<List<Catalog.Request.Consensus>>(response.Content);
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return null;
+        }
         public async Task<byte[]> GetContext(Catalog.Request.FileOfGoblinBat param)
         {
             try
@@ -280,6 +300,32 @@ namespace ShareInvest.Client
                 }
                 switch (strategics)
                 {
+                    case ScenarioAccordingToTrend _:
+                        foreach (var content in JArray.Parse(response.Content))
+                        {
+                            var param = content.Values().ToArray();
+
+                            if (double.TryParse(param[7].ToString(), out double net) && double.TryParse(param[5].ToString(), out double profit) && int.TryParse(param[3].ToString(), out int sales) && int.TryParse(param[1].ToString(), out int sTrend))
+                                stack.Push(new ScenarioAccordingToTrend
+                                {
+                                    Code = string.Empty,
+                                    Calendar = param[0].ToString(),
+                                    Trend = sTrend,
+                                    CheckSales = param[2].ToString().Equals("T"),
+                                    Sales = sales * 0.01,
+                                    CheckOperatingProfit = param[4].ToString().Equals("T"),
+                                    OperatingProfit = profit,
+                                    CheckNetIncome = param[6].ToString().Equals("T"),
+                                    NetIncome = net,
+                                    Short = 5,
+                                    Long = 0x78,
+                                    Quantity = 1,
+                                    IntervalInSeconds = 0,
+                                    ErrorRange = 0D
+                                });
+                        }
+                        break;
+
                     case TrendsInStockPrices _:
                         foreach (var content in JArray.Parse(response.Content))
                         {
@@ -302,6 +348,9 @@ namespace ShareInvest.Client
                                 });
                         }
                         break;
+
+                    default:
+                        return null;
                 }
             }
             catch (Exception ex)

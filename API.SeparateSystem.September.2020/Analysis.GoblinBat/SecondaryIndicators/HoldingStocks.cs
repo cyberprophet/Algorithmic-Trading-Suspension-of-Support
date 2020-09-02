@@ -318,34 +318,37 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
                     if (StartProgress(strategics.Code as string) > 0)
                     {
-                        var price = SendMessage.Price;
-                        var estimate = EstimatedPrice.Where(o => o.Key.ToString(format.Substring(0, 6)).CompareTo(SendMessage.Date) > 0);
-                        var find = FindTheNearestQuarter(SendMessage.Date);
-                        var key = string.Concat("ST.", st.Calendar.Substring(0, 4), "15.", st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', st.Sales * 0x64, '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', st.OperatingProfit * 0x64, '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', st.NetIncome * 0x64);
-
-                        if (client.PutContext(new Catalog.Request.Consensus
+                        if (EstimatedPrice != null && EstimatedPrice.Count > 3 && EstimatedPrice.Any(o => double.IsNaN(o.Value) || double.IsInfinity(o.Value)) == false)
                         {
-                            Code = st.Code,
-                            Strategics = key,
-                            Date = SendMessage.Date,
-                            FirstQuarter = (estimate.Last(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[0])).Value - price) / price,
-                            SecondQuarter = (estimate.Last(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[1])).Value - price) / price,
-                            ThirdQuarter = (estimate.Last(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[2])).Value - price) / price,
-                            Quarter = (estimate.Last(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[find.Length - 2])).Value - price) / price,
-                            TheNextYear = (estimate.LastOrDefault(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[find.Length - 1])).Value - price) / price,
-                            TheYearAfterNext = (estimate.Last().Value - price) / price
-                        }).Result > 0)
-                            SendStocks?.Invoke(this, new SendHoldingStocks(EstimatedPrice, SendMessage.Date));
+                            var price = SendMessage.Price;
+                            var estimate = EstimatedPrice.Where(o => o.Key.ToString(format.Substring(0, 6)).CompareTo(SendMessage.Date) > 0);
+                            var find = FindTheNearestQuarter(SendMessage.Date);
+                            var key = string.Concat("ST.", st.Calendar.Substring(0, 4), "15.", st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', st.Sales * 0x64, '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', st.OperatingProfit * 0x64, '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', st.NetIncome * 0x64);
 
-                        SendMessage = new Statistics
-                        {
-                            Base = SendMessage.Base,
-                            Cumulative = SendMessage.Cumulative,
-                            Date = SendMessage.Date,
-                            Statistic = SendMessage.Statistic,
-                            Price = (int)estimate.Max(o => o.Value),
-                            Key = key
-                        };
+                            if (client.PutContext(new Catalog.Request.Consensus
+                            {
+                                Code = st.Code,
+                                Strategics = key,
+                                Date = SendMessage.Date,
+                                FirstQuarter = (estimate.LastOrDefault(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[0])).Value - price) / price,
+                                SecondQuarter = (estimate.LastOrDefault(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[1])).Value - price) / price,
+                                ThirdQuarter = (estimate.LastOrDefault(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[2])).Value - price) / price,
+                                Quarter = (estimate.LastOrDefault(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[find.Length - 2])).Value - price) / price,
+                                TheNextYear = (estimate.LastOrDefault(o => o.Key.ToString(format.Substring(0, 6)).Equals(find[find.Length - 1])).Value - price) / price,
+                                TheYearAfterNext = (estimate.LastOrDefault().Value - price) / price
+                            }).Result > 0)
+                                SendStocks?.Invoke(this, new SendHoldingStocks(EstimatedPrice, SendMessage.Date));
+
+                            SendMessage = new Statistics
+                            {
+                                Base = SendMessage.Base,
+                                Cumulative = SendMessage.Cumulative,
+                                Date = SendMessage.Date,
+                                Statistic = SendMessage.Statistic,
+                                Price = (int)estimate.Max(o => o.Value),
+                                Key = key
+                            };
+                        }
                         consecutive.Dispose();
                     }
                     break;
@@ -477,16 +480,16 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                 switch (month)
                 {
                     case int first when first > 0 && first < 4:
-                        return new string[] { string.Concat(date.Substring(0, 2), "0331"), string.Concat(date.Substring(0, 2), "0630"), string.Concat(date.Substring(0, 2), "0930"), string.Concat(date.Substring(0, 2), "1231"), string.Concat(year + 1, "1231") };
+                        return new string[] { string.Concat(date.Substring(0, 2), "0331"), string.Concat(date.Substring(0, 2), "0630"), string.Concat(date.Substring(0, 2), "0930"), string.Concat(date.Substring(0, 2), "1229"), string.Concat(year + 1, "1229") };
 
                     case int second when second > 3 && second < 7:
-                        return new string[] { string.Concat(date.Substring(0, 2), "0630"), string.Concat(date.Substring(0, 2), "0930"), string.Concat(date.Substring(0, 2), "1231"), string.Concat(year + 1, "0331"), string.Concat(year + 2, "0331") };
+                        return new string[] { string.Concat(date.Substring(0, 2), "0630"), string.Concat(date.Substring(0, 2), "0930"), string.Concat(date.Substring(0, 2), "1229"), string.Concat(year + 1, "0331"), string.Concat(year + 2, "0331") };
 
                     case int third when third > 6 && third < 0xA:
-                        return new string[] { string.Concat(date.Substring(0, 2), "0930"), string.Concat(date.Substring(0, 2), "1231"), string.Concat(year + 1, "0331"), string.Concat(year + 1, "0630"), string.Concat(year + 2, "0630") };
+                        return new string[] { string.Concat(date.Substring(0, 2), "0930"), string.Concat(date.Substring(0, 2), "1229"), string.Concat(year + 1, "0331"), string.Concat(year + 1, "0630"), string.Concat(year + 2, "0630") };
 
                     case int quarter when quarter > 9 && quarter < 0xD:
-                        return new string[] { string.Concat(date.Substring(0, 2), "1231"), string.Concat(year + 1, "0331"), string.Concat(year + 1, "0630"), string.Concat(year + 1, "0930"), string.Concat(year + 2, "0930") };
+                        return new string[] { string.Concat(date.Substring(0, 2), "1229"), string.Concat(year + 1, "0331"), string.Concat(year + 1, "0630"), string.Concat(year + 1, "0930"), string.Concat(year + 2, "0930") };
                 }
             return null;
         }

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using ShareInvest.Analysis;
 using ShareInvest.EventHandler;
@@ -42,6 +40,9 @@ namespace ShareInvest.XingAPI.Catalog
 
                     if (sAPI.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs))
                     {
+                        if ((DateTime.Now.Hour > 0x11 || DateTime.Now.Hour < 5) && hs.WaitOrder == false)
+                            hs.WaitOrder = true;
+
                         hs.Quantity = balance.Item3;
                         hs.Purchase = (double)balance.Item4;
                         hs.Current = (double)balance.Item5;
@@ -51,7 +52,6 @@ namespace ShareInvest.XingAPI.Catalog
                     }
                     Send?.Invoke(this, sAPI);
                 }
-            DelayMilliseconds = 0x3E8 / GetTRCountPerSec(szTrCode);
             Send?.Invoke(this, new SendSecuritiesAPI(false));
         }
         public void QueryExcute()
@@ -61,11 +61,7 @@ namespace ShareInvest.XingAPI.Catalog
                 foreach (var param in GetInBlocks(GetType().Name))
                     SetFieldData(param.Block, param.Field, param.Occurs, param.Data);
 
-                new Task(() =>
-                {
-                    Thread.Sleep(DelayMilliseconds);
-                    SendErrorMessage(GetType().Name, Request(false));
-                }).Start();
+                SendErrorMessage(GetType().Name, Request(false));
             }
         }
         public event EventHandler<SendSecuritiesAPI> Send;

@@ -15,7 +15,7 @@ namespace ShareInvest.XingAPI.Catalog
             for (int i = 0; i < arr.Length - 1; i++)
                 temp[i] = GetFieldData(OutBlock, arr[i]);
 
-            if (Connect.HoldingStock.TryGetValue(temp[0xB], out Holding hs))
+            if (Connect.HoldingStock.TryGetValue(temp[0x33], out Holding hs))
                 new Task(() => hs.OnReceiveConclusion(temp)).Start();
         }
         public void OnReceiveRealTime(string code)

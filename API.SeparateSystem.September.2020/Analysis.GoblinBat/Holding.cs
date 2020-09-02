@@ -285,7 +285,7 @@ namespace ShareInvest.Analysis
         {
             get;
         }
-        internal virtual Dictionary<DateTime, double> EstimatedPrice
+        internal abstract Dictionary<DateTime, double> EstimatedPrice
         {
             get; set;
         }

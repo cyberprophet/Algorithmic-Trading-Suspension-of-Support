@@ -72,6 +72,7 @@ namespace ShareInvest.Controls
                 data.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                 data.AutoResizeRows();
                 data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+                data.Columns[1].HeaderCell.Style.SelectionForeColor = Color.Ivory;
             }
             ChangeToCurrent(balance.Item1, hasRows, balance.Item5, balance.Item6, balance.Item7, balance.Item3, balance.Item4);
 

@@ -136,7 +136,6 @@ namespace ShareInvest.Analysis
                     if (e.Date.Length > 6 && double.IsNaN(Compare) && Trend.Count > 0 && string.IsNullOrEmpty(st.Calendar) == false && (e.Date.Length == 8 ? e.Date.Substring(2) : e.Date.Substring(0, 6)).CompareTo(st.Calendar) >= 0)
                     {
                         Compare = Trend.Pop();
-                        Trend.Clear();
 
                         if (int.TryParse(e.Date.Length == 8 ? e.Date.Substring(2, 4) : e.Date.Substring(0, 4), out int closest))
                         {
@@ -151,15 +150,22 @@ namespace ShareInvest.Analysis
                                     baseDate = Math.Abs(date - closest);
                                     temp = parse.Date;
                                 }
-                            ho.EstimatedPrice = new Security(temp, list, st).EstimateThePrice(e.Date, Compare);
+                            var estimate = new Security(temp, list, st).EstimateThePrice(e.Date, Compare);
+
+                            if (estimate.Count > 3)
+                                ho.EstimatedPrice = estimate;
+
+                            else
+                                return;
                         }
+                        Trend.Clear();
                     }
                     if (GetCheckOnDate(e.Date, 0x5A0))
                     {
                         Short.Pop();
                         Long.Pop();
 
-                        if (double.IsNaN(Compare))
+                        if (double.IsNaN(Compare) && Trend.Count > 0)
                             Trend.Pop();
                     }
                     if (double.IsNaN(Compare))
@@ -198,7 +204,7 @@ namespace ShareInvest.Analysis
         }
         double CalculateTheEstimatedPrice(string date)
         {
-            if (DateTime.TryParseExact(date.Substring(0, 6), memorize, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt) && (TempStorage == null || TempStorage.CompareTo(dt) < 0))
+            if (ho.EstimatedPrice != null && ho.EstimatedPrice.Count > 3 && DateTime.TryParseExact(date.Substring(0, 6), memorize, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt) && (TempStorage == null || TempStorage.CompareTo(dt) < 0))
             {
                 TempStorage = dt;
                 Compare = ho.EstimatedPrice.Last(o => o.Key.Year == dt.Year && o.Key.Month == dt.Month && o.Key.Day == dt.Day).Value;
@@ -209,11 +215,15 @@ namespace ShareInvest.Analysis
         {
             if (date.Length == 6)
             {
-                if (minute < 0x5A0 && (date.Substring(0, 4).Equals(Check) || string.IsNullOrEmpty(Check)) && DateTime.TryParseExact(date, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
+                if (minute < 0x5A0)
                 {
-                    Check = (time + TimeSpan.FromMinutes(minute)).ToString(hm);
+                    if ((date.Substring(0, 4).Equals(Check) || string.IsNullOrEmpty(Check)) && DateTime.TryParseExact(date, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
+                    {
+                        Check = (time + TimeSpan.FromMinutes(minute)).ToString(hm);
 
-                    return false;
+                        return false;
+                    }
+                    return true;
                 }
                 else if (minute == 0x5A0 && OnTime)
                 {
