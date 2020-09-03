@@ -306,8 +306,23 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                         TodayRevenue = revenue;
                         TodayUnrealize = unrealize;
                     }
+                    Trend = trend;
                     break;
             }
+        }
+        public void StartProgress(uint price)
+        {
+            switch (strategics)
+            {
+                case TrendsInStockPrices _:
+                    Commission = 1.5e-4;
+
+                    if (StartProgress(strategics.Code as string) > 0)
+                        consecutive.Dispose();
+
+                    break;
+            }
+            SendBalance?.Invoke(this, new SendSecuritiesAPI(price, strategics, Trend));
         }
         public void StartProgress(double commission)
         {
@@ -556,6 +571,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             get; set;
         }
         double Before
+        {
+            get; set;
+        }
+        double Trend
         {
             get; set;
         }

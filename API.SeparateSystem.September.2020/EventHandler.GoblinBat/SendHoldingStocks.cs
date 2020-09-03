@@ -55,6 +55,11 @@ namespace ShareInvest.EventHandler
             Time = date;
             Strategics = dictionary;
         }
+        public SendHoldingStocks(string price, Catalog.TrendsInStockPrices ts)
+        {
+            Code = price;
+            Strategics = ts;
+        }
         public SendHoldingStocks(string date, double price, double sShort, double sLong, long revenue)
         {
             Time = date.Substring(0, 10);

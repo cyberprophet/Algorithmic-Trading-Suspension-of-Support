@@ -234,6 +234,13 @@ namespace ShareInvest.Strategics
                 else
                     Console.WriteLine((tuple.Item1 as IStrategics).Code);
             }
+            else if (e.Convey is Tuple<dynamic, double, uint> strategics)
+                switch (strategics.Item1)
+                {
+                    case Catalog.TrendsInStockPrices ts:
+                        Statistical.SetDataGridView(ts, strategics.Item3, strategics.Item2);
+                        return;
+                }
         }
         void OnReceiveTheChangedSize(object sender, SendHoldingStocks e)
         {
@@ -244,6 +251,15 @@ namespace ShareInvest.Strategics
 
                 switch (e.Strategics)
                 {
+                    case Catalog.TrendsInStockPrices ts when string.IsNullOrEmpty(e.Code) == false && uint.TryParse(e.Code, out uint price):
+                        hs = new HoldingStocks(ts)
+                        {
+                            Code = ts.Code
+                        };
+                        hs.SendBalance += OnReceiveAnalysisData;
+                        hs.StartProgress(price);
+                        return;
+
                     case Size size:
                         var height = 0x2DC;
 
@@ -445,6 +461,7 @@ namespace ShareInvest.Strategics
                 ShowIcon = true;
                 notifyIcon.Visible = false;
                 Statistical.Show();
+                Statistical.SetProgressRate(false);
                 WindowState = FormWindowState.Normal;
             }
             else

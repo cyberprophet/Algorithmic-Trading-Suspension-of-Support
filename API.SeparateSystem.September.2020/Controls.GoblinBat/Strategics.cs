@@ -21,14 +21,6 @@ namespace ShareInvest.Controls
         {
             get; set;
         }
-        void DataSortCompare(object sender, DataGridViewSortCompareEventArgs e)
-        {
-            if (e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
-            {
-                e.SortResult = x.CompareTo(y);
-                e.Handled = true;
-            }
-        }
         string GetQuarter(DateTime dt)
         {
             switch (dt.Month)
@@ -48,6 +40,51 @@ namespace ShareInvest.Controls
             }
             return null;
         }
+        bool CheckDayOfWeek(DateTime now)
+        {
+            switch (now.DayOfWeek)
+            {
+                case DayOfWeek.Sunday:
+                case DayOfWeek.Saturday when now.Hour > 0xF:
+                case DayOfWeek.Monday when now.Hour < 0x11:
+                    return false;
+            }
+            return true;
+        }
+        void DataSortCompare(object sender, DataGridViewSortCompareEventArgs e)
+        {
+            if (e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
+            {
+                e.SortResult = x.CompareTo(y);
+                e.Handled = true;
+            }
+        }
+        void WorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            if (e.Argument is Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>> tuple)
+                foreach (var cs in tuple.Item2)
+                {
+                    var next = cs.TheNextYear * 0.85;
+                    var trends = new int[] { 0xF0, 0x1E0, 0x2D0 };
+
+                    if (cs.FirstQuarter < cs.SecondQuarter && cs.SecondQuarter < cs.ThirdQuarter && cs.ThirdQuarter < cs.Quarter && next > cs.FirstQuarter && next > cs.SecondQuarter && next > cs.ThirdQuarter && next > cs.Quarter)
+                        foreach (var trend in trends)
+                            SendSize?.Invoke(this, new SendHoldingStocks(tuple.Item1.First(o => o.Code.Equals(cs.Code)).Price, new Catalog.TrendsInStockPrices
+                            {
+                                Code = cs.Code,
+                                Short = 5,
+                                Long = 0x3C,
+                                Trend = trend,
+                                RealizeProfit = 325e-3,
+                                AdditionalPurchase = 105e-3,
+                                Quantity = 1,
+                                QuoteUnit = 1,
+                                LongShort = LongShort.Day,
+                                TrendType = Trend.Day,
+                                Setting = Setting.Both
+                            }));
+                }
+        }
         public Strategics(dynamic client)
         {
             InitializeComponent();
@@ -63,10 +100,36 @@ namespace ShareInvest.Controls
                 string.Concat("button", str).FindByName<Button>(this).MouseLeave += ButtonPreviewKeyDown;
         }
         public event EventHandler<SendHoldingStocks> SendSize;
+        public void SetDataGridView(Catalog.TrendsInStockPrices ts, uint price, double trend)
+        {
+            if (price < trend)
+            {
+                var color = Color.Gainsboro;
+
+                switch (ts.Trend)
+                {
+                    case 0xF0:
+                        color = Color.PapayaWhip;
+                        break;
+
+                    case 0x1E0:
+                        color = Color.Moccasin;
+                        break;
+
+                    case 0x2D0:
+                        color = Color.Wheat;
+                        break;
+
+                    default:
+                        return;
+                }
+                data.Rows.Cast<DataGridViewRow>().First(o => o.Cells[0].Value.ToString().Equals(ts.Code)).DefaultCellStyle.BackColor = color;
+            }
+        }
         public void CheckForSurvival(Color color) => labelProgress.ForeColor = color;
         public void SetProgressRate(int rate)
         {
-            if (rate > 0 && rate == progressBar.Value && rate % 3 == 0)
+            if (rate > 0 && rate == progressBar.Value && rate % 5 == 0 && CheckDayOfWeek(DateTime.Now))
                 BeginInvoke(new Action(async () =>
                 {
                     var count = 0;
@@ -111,10 +174,15 @@ namespace ShareInvest.Controls
                     {
 
                     }
+                    worker.RunWorkerAsync(new Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>>(codes, stack.OrderByDescending(o => o.TheNextYear)));
                     SuspendLayout();
-                    linkTerms.Dispose();
-                    InitializeDataGridView();
 
+                    if (linkTerms != null)
+                    {
+                        linkTerms.Dispose();
+                        InitializeDataGridView();
+                        linkTerms = null;
+                    }
                     if (data.Rows.Count == 0)
                     {
                         data.ColumnCount = 8;
@@ -162,6 +230,13 @@ namespace ShareInvest.Controls
             {
                 buttonProgress.Text = start;
                 progressBar.Value = 0;
+            }
+            else if (data.Rows.Count > 0)
+            {
+                SuspendLayout();
+                data.AutoResizeRows();
+                data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                ResumeLayout();
             }
         }
         public void SetProgressRate()
