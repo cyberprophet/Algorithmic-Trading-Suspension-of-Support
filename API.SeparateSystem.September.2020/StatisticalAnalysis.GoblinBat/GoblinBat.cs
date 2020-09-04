@@ -334,7 +334,7 @@ namespace ShareInvest.Strategics
                 case 0xCA:
                     if (Statistical == null)
                     {
-                        Statistical = new Controls.Strategics(client, new Disclosure(cookie));
+                        Statistical = new Controls.Strategics(client, new Disclosure(cookie, 'D'));
                         Controls.Add(Statistical);
                         Statistical.Dock = DockStyle.Fill;
                         Statistical.SendSize += OnReceiveTheChangedSize;
@@ -438,7 +438,7 @@ namespace ShareInvest.Strategics
             {
                 if (Statistical == null)
                 {
-                    Statistical = new Controls.Strategics(client, new Disclosure(cookie));
+                    Statistical = new Controls.Strategics(client, new Disclosure(cookie, 'D'));
                     Controls.Add(Statistical);
                     Statistical.Dock = DockStyle.Fill;
                 }

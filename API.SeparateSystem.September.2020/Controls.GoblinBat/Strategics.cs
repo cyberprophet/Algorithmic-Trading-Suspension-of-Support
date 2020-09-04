@@ -173,6 +173,11 @@ namespace ShareInvest.Controls
                         count++;
                     }
                     if (Length == 8)
+                    {
+                        var cap = new Disclosure(Privacy.Security, 0x4B);
+                        var page = 1;
+                        var list = await cap.GetMarketCap(0x50, page++);
+
                         foreach (var param in codes)
                             if (Codes.Add(new Codes
                             {
@@ -183,6 +188,7 @@ namespace ShareInvest.Controls
                             {
 
                             }
+                    }
                     worker.RunWorkerAsync(new Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>>(codes, stack.OrderByDescending(o => o.TheNextYear)));
                     data.CellContentDoubleClick -= OnReceiveCellContentDoubleClick;
                     SuspendLayout();
