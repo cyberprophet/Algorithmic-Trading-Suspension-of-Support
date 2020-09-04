@@ -428,15 +428,18 @@ namespace ShareInvest
                 foreach (var strategics in cStrategics?.Split(';'))
                 {
                     var stParam = strategics?.Split('.');
+                    var code = string.Empty;
 
                     if (Enum.TryParse(strategics.Substring(0, 2), out Strategics initial))
                         switch (initial)
                         {
                             case Strategics.TF:
                                 if (int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
+                                {
+                                    code = strategics.Substring(2, 8);
                                     catalog[strategics.Substring(2, 8)] = new TrendFollowingBasicFutures
                                     {
-                                        Code = strategics.Substring(2, 8),
+                                        Code = code,
                                         RollOver = stParam[0].Substring(0xA, 1).Equals("1"),
                                         DayShort = ds,
                                         DayLong = dl,
@@ -448,13 +451,17 @@ namespace ShareInvest
                                         QuantityShort = qs,
                                         QuantityLong = ql
                                     };
+                                    Balance.ToolTipDictionary[code] = string.Concat("RollOver_", stParam[0].Substring(0xA, 1).Equals("1"), "\r\nDayShort_", ds, "\r\nDayLong_", dl, "\r\nMinute_", m, "\r\nMinuteShort_", ms, "\r\nMinuteLong_", ml, "\r\nShortReaction_", rs, "\r\nLongReaction_", rl, "\r\nShortQuantity_", qs, "\r\nLongQuantity_", ql);
+                                }
                                 break;
 
                             case Strategics.TS:
                                 if (char.TryParse(stParam[stParam.Length - 1], out char setting) && char.TryParse(stParam[8], out char tTrend) && char.TryParse(stParam[7], out char longShort) && int.TryParse(stParam[6], out int quoteUnit) && int.TryParse(stParam[5], out int quantity) && double.TryParse(stParam[4].Insert(stParam[4].Length - 2, "."), out double additionalPurchase) && double.TryParse(stParam[3].Insert(stParam[3].Length - 2, "."), out double realizeProfit) && int.TryParse(stParam[2], out int trend) && int.TryParse(stParam[1], out int l) && int.TryParse(stParam[0].Substring(8), out int s))
+                                {
+                                    code = strategics.Substring(2, 6);
                                     catalog[strategics.Substring(2, 6)] = new TrendsInStockPrices
                                     {
-                                        Code = strategics.Substring(2, 6),
+                                        Code = code,
                                         Short = s,
                                         Long = l,
                                         Trend = trend,
@@ -466,6 +473,8 @@ namespace ShareInvest
                                         TrendType = (Trend)tTrend,
                                         Setting = (Setting)setting
                                     };
+                                    Balance.ToolTipDictionary[code] = string.Concat("Short_", s, "\r\nLong_", l, "\r\nTrend_", trend, "\r\nRealize_", (realizeProfit * 0.01).ToString("P2"), "\r\nAddition_", (additionalPurchase * 0.01).ToString("P2"), "\r\nQuantity_", quantity, "\r\nQuoteUnit_", quoteUnit, "\r\nLongShort_", Enum.GetName(typeof(LongShort), longShort), "\r\nTrendType_", Enum.GetName(typeof(Trend), tTrend), "\r\nSetting_", Enum.GetName(typeof(Setting), setting));
+                                }
                                 break;
                         }
                 }
@@ -894,7 +903,7 @@ namespace ShareInvest
                 var retention = await SelectDaysCodeAsync();
                 ((com as OpenAPI.ConnectAPI)?.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate))).Send += OnReceiveSecuritiesAPI;
             }
-        }));
+        }));     
         Balance Balance
         {
             get; set;

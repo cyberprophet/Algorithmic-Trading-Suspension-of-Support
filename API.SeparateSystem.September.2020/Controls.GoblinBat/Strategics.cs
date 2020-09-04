@@ -85,7 +85,8 @@ namespace ShareInvest.Controls
                             }));
                 }
         }
-        public Strategics(dynamic client)
+        void OnReceiveCellContentDoubleClick(object sender, DataGridViewCellEventArgs e) => BeginInvoke(new Action(async () => await disclosure.GetDisclosureInformation(data.Rows[e.RowIndex].Cells[0].Value.ToString(), data.Rows[e.RowIndex].Cells[1].Value.ToString())));
+        public Strategics(dynamic client, dynamic disclosure)
         {
             InitializeComponent();
             buttonChart.Click += OnReceiveClickItem;
@@ -95,6 +96,7 @@ namespace ShareInvest.Controls
             Codes = new HashSet<Codes>();
             data = new DataGridView();
             this.client = client;
+            this.disclosure = disclosure;
 
             foreach (var str in button)
                 string.Concat("button", str).FindByName<Button>(this).MouseLeave += ButtonPreviewKeyDown;
@@ -171,10 +173,18 @@ namespace ShareInvest.Controls
                         count++;
                     }
                     if (Length == 8)
-                    {
+                        foreach (var param in codes)
+                            if (Codes.Add(new Codes
+                            {
+                                Code = param.Code,
+                                Name = param.Name,
+                                Price = param.Price
+                            }))
+                            {
 
-                    }
+                            }
                     worker.RunWorkerAsync(new Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>>(codes, stack.OrderByDescending(o => o.TheNextYear)));
+                    data.CellContentDoubleClick -= OnReceiveCellContentDoubleClick;
                     SuspendLayout();
 
                     if (linkTerms != null)
@@ -220,6 +230,7 @@ namespace ShareInvest.Controls
                     data.AutoResizeRows();
                     data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
                     ResumeLayout();
+                    data.CellContentDoubleClick += OnReceiveCellContentDoubleClick;
                 }));
             progressBar.Value = rate + 1;
         }
@@ -807,6 +818,7 @@ namespace ShareInvest.Controls
         {
             get;
         }
+        readonly Disclosure disclosure;
         readonly DataGridView data;
         readonly GoblinBatClient client;
         readonly double[] commissionFutures = { 3e-5, 25e-6, 2e-5, 24e-6, 21e-6, 18e-6, 15e-6, 1e-5 };

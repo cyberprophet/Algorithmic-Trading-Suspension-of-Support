@@ -11,6 +11,10 @@ namespace ShareInvest.Controls
 {
     public partial class Balance : UserControl
     {
+        public Dictionary<string, string> ToolTipDictionary
+        {
+            get; private set;
+        }
         public Balance(IAccountInformation info)
         {
             InitializeComponent();
@@ -21,7 +25,11 @@ namespace ShareInvest.Controls
             textServer.ForeColor = info.Server ? Color.Navy : Color.Maroon;
             data.ColumnCount = 0xA;
             data.BackgroundColor = Color.FromArgb(0x79, 0x85, 0x82);
+            data.Enabled = true;
+            data.MouseMove += OnResponseToMouse;
+            data.MouseLeave += OnResponseToMouse;
             dIndex = new Dictionary<string, int>();
+            ToolTipDictionary = new Dictionary<string, string>();
 
             foreach (Control control in panel.Controls)
                 if (control is TextBox box)
@@ -73,6 +81,9 @@ namespace ShareInvest.Controls
                 data.AutoResizeRows();
                 data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
                 data.Columns[1].HeaderCell.Style.SelectionForeColor = Color.Ivory;
+
+                if (ToolTipDictionary.TryGetValue(balance.Item1, out string tip))
+                    data.Rows[dIndex[balance.Item1]].Cells[9].ToolTipText = tip;
             }
             ChangeToCurrent(balance.Item1, hasRows, balance.Item5, balance.Item6, balance.Item7, balance.Item3, balance.Item4);
 
@@ -156,6 +167,9 @@ namespace ShareInvest.Controls
 
                         return;
                 }
+            else if (sender is DataGridView)
+                for (int i = 0; i < columns.Length; i++)
+                    data.Columns[i].SortMode = e is MouseEventArgs ? DataGridViewColumnSortMode.NotSortable : DataGridViewColumnSortMode.Automatic;
         }
         readonly Dictionary<string, int> dIndex;
     }
