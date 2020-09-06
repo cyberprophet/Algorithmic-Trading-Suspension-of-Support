@@ -47,7 +47,7 @@ namespace ShareInvest.Controls
                 case DayOfWeek.Sunday:
                 case DayOfWeek.Saturday when now.Hour > 0xF:
                 case DayOfWeek.Monday when now.Hour < 0x11:
-                    return false;
+                    return linkTerms != null;
             }
             return true;
         }

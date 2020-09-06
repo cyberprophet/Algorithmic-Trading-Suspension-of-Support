@@ -49,8 +49,8 @@ namespace ShareInvest.Client
                         var split = str.Split('=');
                         param[index++] = split[split.Length - 1].Replace("'", string.Empty);
                     }
-                param[index++] = year;
-                param[index++] = "11011";
+                param[index++] = year.Length == 4 ? year : year.Substring(0, 4);
+                param[index++] = security.RequestQuarter(year.Length == 4 ? 0 : security.RequestQuarter(year.Substring(5)));
                 param[index] = "0";
                 var request = new RestRequest(security.DisclosureInfo, Method.POST).AddHeader(security.ContentType, security.Form);
                 var url = string.Empty;
@@ -149,6 +149,7 @@ namespace ShareInvest.Client
                                     {
                                         Catalog.Dart.BalanceSheet sheet;
                                         Catalog.Dart.IncomeStatement income;
+                                        Catalog.Dart.CashFlowStatement flow;
                                         string serialize;
 
                                         switch (index)
@@ -188,6 +189,12 @@ namespace ShareInvest.Client
                                                 Op = income.IncomeFromOperations,
                                                 Np = income.NetIncome
                                             });
+                                        }
+                                        else if (dp.ContainsKey(finance) && lp.ContainsKey(finance) && p.ContainsKey(finance) && dp.ContainsKey(invest) && lp.ContainsKey(invest) && p.ContainsKey(invest) && dp.ContainsKey(operate) && lp.ContainsKey(operate) && p.ContainsKey(operate))
+                                        {
+                                            flow = JsonConvert.DeserializeObject<Catalog.Dart.CashFlowStatement>(serialize);
+                                            flow.Code = code;
+                                            flow.Date = array[index].ToString("D4");
                                         }
                                     }
                                 dp = new Dictionary<string, long>();
@@ -255,5 +262,8 @@ namespace ShareInvest.Client
         const string profit = "매출총이익";
         const string current = "유동자산";
         const string non = "비유동자산";
+        const string operate = "영업활동현금흐름";
+        const string invest = "투자활동현금흐름";
+        const string finance = "재무활동현금흐름";
     }
 }
