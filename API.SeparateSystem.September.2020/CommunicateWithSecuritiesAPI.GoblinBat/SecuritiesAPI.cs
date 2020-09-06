@@ -19,12 +19,13 @@ namespace ShareInvest
 {
     sealed partial class SecuritiesAPI : Form
     {
-        internal SecuritiesAPI(Consensus consensus, GoblinBatClient client, Privacies privacy, ISecuritiesAPI<SendSecuritiesAPI> com)
+        internal SecuritiesAPI(Disclosure disclosure, Consensus consensus, GoblinBatClient client, Privacies privacy, ISecuritiesAPI<SendSecuritiesAPI> com)
         {
             this.com = com;
             this.privacy = privacy;
             this.consensus = consensus;
             this.client = client;
+            this.disclosure = disclosure;
             random = new Random();
             stocks = new List<string>();
             futures = new List<string>();
@@ -814,7 +815,9 @@ namespace ShareInvest
 
                     else
                     {
-                        if (consensus.GrantAccess)
+                        var statements = await disclosure.GetFinancialStatements(retention.Code, DateTime.Now.AddYears(-4).ToString("yyyy"));
+
+                        if (statements != null && await client.PostContext(statements) > 0xC7 && consensus.GrantAccess)
                             for (int i = 0; i < retention.Code.Length / 3; i++)
                             {
                                 var status = await client.PostContext(await consensus.GetContextAsync(i, retention.Code));
@@ -903,7 +906,7 @@ namespace ShareInvest
                 var retention = await SelectDaysCodeAsync();
                 ((com as OpenAPI.ConnectAPI)?.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate))).Send += OnReceiveSecuritiesAPI;
             }
-        }));     
+        }));
         Balance Balance
         {
             get; set;
@@ -930,6 +933,7 @@ namespace ShareInvest
         readonly GoblinBatClient client;
         readonly Random random;
         readonly Consensus consensus;
+        readonly Disclosure disclosure;
         readonly Dictionary<string, Codes> infoCodes;
         readonly Color[] colors;
         readonly Privacies privacy;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Net;
 using System.Windows.Forms;
 
 namespace ShareInvest
@@ -16,8 +17,12 @@ namespace ShareInvest
                 StartProgess(secrecy.Key);
 
             if (secrecy.IsProcessing == false && secrecy.IsDebugging == false)
+            {
                 Process.Start(secrecy.ShutDown, "-r");
 
+                foreach (var program in Process.GetProcessesByName(secrecy.SecuritiesAPI, Dns.GetHostName()))
+                    program.Kill();
+            }
             GC.Collect();
             Process.GetCurrentProcess().Kill();
         }

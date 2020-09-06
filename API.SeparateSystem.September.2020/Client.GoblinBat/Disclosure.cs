@@ -62,101 +62,147 @@ namespace ShareInvest.Client
                     if (str.StartsWith(security.Filter[1]))
                         url = str.Replace(security.Filter[1], string.Empty);
 
-                var response = await new RestClient(url.Remove(url.Length - 1, 1).Remove(0, 1)).ExecuteAsync(new RestRequest(Method.GET));
-
-                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                if (string.IsNullOrEmpty(url) == false)
                 {
-                    bool filter = false, assets = true;
-                    var turn = 0;
-                    var temp = new long[3];
-                    var queue = new Queue<long[]>();
-                    var names = new Queue<string>();
+                    var response = await new RestClient(url.Remove(url.Length - 1, 1).Remove(0, 1)).ExecuteAsync(new RestRequest(Method.GET));
 
-                    foreach (var str in response.Content.Replace(@"&nbsp;", string.Empty).Split(exception))
+                    if (response.StatusCode.Equals(HttpStatusCode.OK))
                     {
-                        var sTrim = str.Trim();
+                        bool filter = false, assets = true;
+                        var turn = 0;
+                        var temp = new long[3];
+                        var queue = new Queue<long[]>();
+                        var names = new Queue<string>();
 
-                        if (filter)
+                        foreach (var str in response.Content.Replace(@"&nbsp;", string.Empty).Split(exception))
                         {
-                            sTrim = sTrim.Replace(",", string.Empty);
+                            var sTrim = str.Trim();
 
-                            if (sTrim.StartsWith("(단위") || sTrim.EndsWith("(단위:원)"))
-                                switch (sTrim)
-                                {
-                                    case string unit when unit.EndsWith("백만원)"):
-                                        index = 0xF4240;
-                                        break;
-
-                                    case string unit when unit.EndsWith("만원)"):
-                                        index = 0x2710;
-                                        break;
-
-                                    default:
-                                        index = 1;
-                                        break;
-                                }
-                            else if (long.TryParse((sTrim.StartsWith("(") ? sTrim.Replace("(", "-").Replace(")", string.Empty) : sTrim).Replace(",", string.Empty), out long num) && assets)
+                            if (filter)
                             {
-                                if (turn < 3)
-                                    temp[turn] = num * index;
+                                sTrim = sTrim.Replace(",", string.Empty);
 
-                                if (turn++ == 2)
+                                if (sTrim.StartsWith("(단위") || sTrim.EndsWith("(단위:원)"))
+                                    switch (sTrim)
+                                    {
+                                        case string unit when unit.EndsWith("백만원)"):
+                                            index = 0xF4240;
+                                            break;
+
+                                        case string unit when unit.EndsWith("만원)"):
+                                            index = 0x2710;
+                                            break;
+
+                                        default:
+                                            index = 1;
+                                            break;
+                                    }
+                                else if (long.TryParse((sTrim.StartsWith("(") ? sTrim.Replace("(", "-").Replace(")", string.Empty) : sTrim).Replace(",", string.Empty), out long num) && assets)
                                 {
-                                    queue.Enqueue(temp);
-                                    names.Enqueue(url.Replace(" ", string.Empty));
-                                }
-                            }
-                            else
-                            {
-                                if (sTrim.StartsWith("제") && sTrim.Contains("."))
-                                {
-                                    var date = sTrim.Split('.')[0];
+                                    if (turn < 3)
+                                        temp[turn] = num * index;
 
-                                    if (int.TryParse(date.Substring(date.Length - 4), out int dYear))
-                                        temp[turn++] = dYear;
-
-                                    if (turn == 3)
+                                    if (turn++ == 2)
+                                    {
                                         queue.Enqueue(temp);
+                                        names.Enqueue(url.Replace(" ", string.Empty));
+                                    }
                                 }
                                 else
                                 {
-                                    if (sTrim.EndsWith(" (기초자본)"))
-                                        assets = false;
+                                    if (sTrim.StartsWith("제") && sTrim.Contains("."))
+                                    {
+                                        var date = sTrim.Split('.')[0];
 
-                                    else if (sTrim.StartsWith("영업활동") && sTrim.EndsWith("현금흐름"))
-                                        assets = true;
+                                        if (int.TryParse(date.Substring(date.Length - 4), out int dYear))
+                                            temp[turn++] = dYear;
 
-                                    turn = 0;
+                                        if (turn == 3)
+                                            queue.Enqueue(temp);
+                                    }
+                                    else
+                                    {
+                                        if (sTrim.EndsWith(" (기초자본)"))
+                                            assets = false;
+
+                                        else if (sTrim.StartsWith("영업활동") && sTrim.EndsWith("현금흐름"))
+                                            assets = true;
+
+                                        turn = 0;
+                                    }
+                                    url = sTrim;
                                 }
-                                url = sTrim;
+                                if (turn == 0)
+                                    temp = new long[3];
                             }
-                            if (turn == 0)
-                                temp = new long[3];
+                            filter = sTrim.Equals("P");
                         }
-                        filter = sTrim.Equals("P");
-                    }
-                    while (queue.Count > 0)
-                    {
-                        var array = queue.Dequeue();
-                        url = array[0].ToString().Length == 4 && array[1].ToString().Length == 4 && array[2].ToString().Length == 4 ? string.Empty : names.Dequeue();
-
-                        if (string.IsNullOrEmpty(url))
+                        while (queue.Count > 0)
                         {
+                            var array = queue.Dequeue();
+                            url = array[0].ToString().Length == 4 && array[1].ToString().Length == 4 && array[2].ToString().Length == 4 ? string.Empty : names.Dequeue();
 
-                            Console.WriteLine(dp.Count);
+                            if (string.IsNullOrEmpty(url))
+                            {
+                                if (dp.Count > 0 && lp.Count > 0 && p.Count > 0 && code.Length == 6)
+                                    for (index = 0; index < array.Length; index++)
+                                    {
+                                        Catalog.Dart.BalanceSheet sheet;
+                                        Catalog.Dart.IncomeStatement income;
+                                        string serialize;
 
-                            dp = new Dictionary<string, long>();
-                            lp = new Dictionary<string, long>();
-                            p = new Dictionary<string, long>();
+                                        switch (index)
+                                        {
+                                            case 0:
+                                                serialize = JsonConvert.SerializeObject(p, Formatting.Indented);
+                                                break;
+
+                                            case 1:
+                                                serialize = JsonConvert.SerializeObject(lp, Formatting.Indented);
+                                                break;
+
+                                            case 2:
+                                                serialize = JsonConvert.SerializeObject(dp, Formatting.Indented);
+                                                break;
+
+                                            default:
+                                                continue;
+                                        }
+                                        if (dp.ContainsKey(non) && lp.ContainsKey(non) && p.ContainsKey(non) && dp.ContainsKey(current) && lp.ContainsKey(current) && p.ContainsKey(current))
+                                        {
+                                            sheet = JsonConvert.DeserializeObject<Catalog.Dart.BalanceSheet>(serialize);
+                                            sheet.Code = code;
+                                            sheet.Date = array[index].ToString("D4");
+                                        }
+                                        else if (dp.ContainsKey(cost) && lp.ContainsKey(cost) && p.ContainsKey(cost) && dp.ContainsKey(profit) && lp.ContainsKey(profit) && p.ContainsKey(profit))
+                                        {
+                                            income = JsonConvert.DeserializeObject<Catalog.Dart.IncomeStatement>(serialize);
+                                            income.Code = code;
+                                            income.Date = array[index].ToString("D4");
+                                            statements.Enqueue(new Catalog.ConvertConsensus
+                                            {
+                                                Code = income.Code,
+                                                Date = string.Concat(income.Date.Substring(2), ".12(A)"),
+                                                Quarter = "0",
+                                                Sales = income.Revenues,
+                                                Op = income.IncomeFromOperations,
+                                                Np = income.NetIncome
+                                            });
+                                        }
+                                    }
+                                dp = new Dictionary<string, long>();
+                                lp = new Dictionary<string, long>();
+                                p = new Dictionary<string, long>();
+                            }
+                            else
+                            {
+                                dp[url] = array[2];
+                                lp[url] = array[1];
+                                p[url] = array[0];
+                            }
                         }
-                        else
-                        {
-                            dp[url] = array[2];
-                            lp[url] = array[1];
-                            p[url] = array[0];
-                        }
+                        return statements;
                     }
-                    return statements;
                 }
             }
             catch (Exception ex)
@@ -205,5 +251,9 @@ namespace ShareInvest.Client
         readonly Security security;
         readonly IRestClient client;
         const string format = "yyyyMMdd";
+        const string cost = "매출원가";
+        const string profit = "매출총이익";
+        const string current = "유동자산";
+        const string non = "비유동자산";
     }
 }

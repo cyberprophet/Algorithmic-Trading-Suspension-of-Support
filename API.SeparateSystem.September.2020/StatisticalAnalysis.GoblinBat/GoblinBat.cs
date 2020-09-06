@@ -279,7 +279,7 @@ namespace ShareInvest.Strategics
                             Cancel = new CancellationTokenSource();
                             backgroundWorker.RunWorkerAsync();
                         }
-                        else if (tuple.Item1 > 0)
+                        else if (tuple.Item1 > 0 && Cancel.IsCancellationRequested == false)
                         {
                             Cancel.Cancel();
                             backgroundWorker.CancelAsync();
@@ -414,11 +414,9 @@ namespace ShareInvest.Strategics
             }
             else if (DateTime.Now.Hour < 3 && backgroundWorker.IsBusy == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
             {
-                Process.Start(shut, "-r");
                 timer.Stop();
                 strip.ItemClicked -= OnItemClick;
                 GetSettleTheFare();
-                IsApplicationAlreadyRunning();
                 Dispose();
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
