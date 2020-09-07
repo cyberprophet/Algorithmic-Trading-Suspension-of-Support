@@ -818,11 +818,15 @@ namespace ShareInvest
                         var statements = await disclosure.GetFinancialStatements(retention.Code, DateTime.Now.AddYears(-4).ToString("yyyy"));
 
                         if (statements != null && await client.PostContext(statements) > 0xC7 && consensus.GrantAccess)
+                        {
                             for (int i = 0; i < retention.Code.Length / 3; i++)
                             {
                                 var status = await client.PostContext(await consensus.GetContextAsync(i, retention.Code));
                                 SendMessage(status);
                             }
+                            var result = await client.PostContext(await consensus.GetContextAsync(retention.Code, 0x59));
+                            SendMessage(result);
+                        }
                         return retention;
                     }
                 }

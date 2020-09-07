@@ -40,17 +40,16 @@ namespace ShareInvest.Client
                 var statements = new Queue<Catalog.ConvertConsensus>();
                 var param = new string[security.InfoParam.Length];
                 var index = 0;
-                var exception = new char[] { '\n', '<', '>', '\t' };
                 Dictionary<string, long> dp = new Dictionary<string, long>(), lp = new Dictionary<string, long>(), p = new Dictionary<string, long>();
 
-                foreach (var str in (await client.ExecuteAsync(new RestRequest(security.SearchCorp, Method.POST).AddHeader(security.ContentType, security.Form).AddParameter(security.Text, code))).Content.Split(exception))
+                foreach (var str in (await client.ExecuteAsync(new RestRequest(security.SearchCorp, Method.POST).AddHeader(security.ContentType, security.Form).AddParameter(security.Text, code))).Content.Split(security.Exception))
                     if (str.StartsWith(security.Filter[0]))
                     {
                         var split = str.Split('=');
                         param[index++] = split[split.Length - 1].Replace("'", string.Empty);
                     }
                 param[index++] = year.Length == 4 ? year : year.Substring(0, 4);
-                param[index++] = security.RequestQuarter(year.Length == 4 ? 0 : security.RequestQuarter(year.Substring(5)));
+                param[index++] = security.RequestQuarter(year.Length == 4 ? 0 : security.RequestQuarter(year.Substring(4)));
                 param[index] = "0";
                 var request = new RestRequest(security.DisclosureInfo, Method.POST).AddHeader(security.ContentType, security.Form);
                 var url = string.Empty;
@@ -58,7 +57,7 @@ namespace ShareInvest.Client
                 for (index = 0; index < param.Length; index++)
                     request.AddParameter(security.InfoParam[index], param[index]);
 
-                foreach (var str in (await client.ExecuteAsync(request)).Content.Split(exception))
+                foreach (var str in (await client.ExecuteAsync(request)).Content.Split(security.Exception))
                     if (str.StartsWith(security.Filter[1]))
                         url = str.Replace(security.Filter[1], string.Empty);
 
@@ -74,7 +73,7 @@ namespace ShareInvest.Client
                         var queue = new Queue<long[]>();
                         var names = new Queue<string>();
 
-                        foreach (var str in response.Content.Replace(@"&nbsp;", string.Empty).Split(exception))
+                        foreach (var str in response.Content.Replace(@"&nbsp;", string.Empty).Split(security.Exception))
                         {
                             var sTrim = str.Trim();
 

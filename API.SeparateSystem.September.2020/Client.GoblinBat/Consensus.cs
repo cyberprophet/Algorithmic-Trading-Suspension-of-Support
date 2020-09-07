@@ -48,6 +48,69 @@ namespace ShareInvest.Client
             }
             return queue;
         }
+        public async Task<Queue<Catalog.Dart.FinancialStatement>> GetContextAsync(string code, int quarter)
+        {
+            var queue = new Queue<Catalog.Dart.FinancialStatement>();
+
+            try
+            {
+                string param = string.Empty, id = string.Empty;
+                var request = new RestRequest(security.RequestParameter(code), Method.GET);
+
+                foreach (var str in (await client.ExecuteAsync(request, source.Token)).Content.Split(security.Exception))
+                {
+                    if (str.Trim().StartsWith(security.Enc))
+                        param = str.Trim().Replace(security.Enc, string.Empty);
+
+                    else if (str.Trim().StartsWith(security.Id))
+                        id = str.Trim().Replace(security.Id, string.Empty).Split('?')[0];
+                }
+                request = new RestRequest(security.RequestParameter(code, quarter, param.Remove(param.Length - 1, 1), id.Remove(id.Length - 2, 2)), Method.GET);
+                var read = false;
+                var index = 0;
+                var temp = new string[8];
+                var dictionary = new Dictionary<string, string[]>();
+
+                foreach (var str in (await client.ExecuteAsync(request, source.Token)).Content.Split(security.Exception))
+                {
+                    param = str.Replace("&nbsp;", string.Empty).Replace("tr", string.Empty).Replace("tbody", string.Empty).Replace("th", string.Empty).Replace("br", string.Empty).Replace("span", string.Empty).Replace("td", string.Empty).Replace("/", string.Empty).Trim();
+
+                    if (read == false)
+                        read = param.Equals("주요재무정보");
+
+                    else if (string.IsNullOrWhiteSpace(param) == false && read && param.StartsWith("caption") == false && param.StartsWith("row=") == false && param.StartsWith("주요재무정보") == false && param.StartsWith("ead") == false && param.StartsWith("table") == false && param.StartsWith("(IFRS연결)") == false && param.StartsWith("class=") == false)
+                    {
+                        if (char.IsLetter(param[0]))
+                        {
+                            if (Array.Exists(temp, o => string.IsNullOrEmpty(o)) == false)
+                                dictionary[id] = temp;
+
+                            id = param;
+                            index = 0;
+                            temp = new string[8];
+                        }
+                        else
+                            temp[index++] = param;
+                    }
+                }
+                for (index = 0; index < temp.Length; index++)
+                {
+                    var serialize = new Dictionary<string, string>()
+                    {
+                        { "종목코드", code }
+                    };
+                    foreach (var kv in dictionary)
+                        serialize[kv.Key] = kv.Key.Equals("연간") ? (kv.Value[index].EndsWith("(E)") ? kv.Value[index].Insert(4, ".") : kv.Value[index].Insert(kv.Value[index].Length, "(A)").Insert(4, ".")).Substring(2) : kv.Value[index].Replace(",", string.Empty);
+
+                    queue.Enqueue(JsonConvert.DeserializeObject<Catalog.Dart.FinancialStatement>(JsonConvert.SerializeObject(serialize)));
+                }
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return queue;
+        }
         public Consensus(dynamic key)
         {
             security = new Security(key);
