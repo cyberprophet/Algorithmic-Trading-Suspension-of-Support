@@ -19,13 +19,12 @@ namespace ShareInvest
 {
     sealed partial class SecuritiesAPI : Form
     {
-        internal SecuritiesAPI(Disclosure disclosure, Consensus consensus, GoblinBatClient client, Privacies privacy, ISecuritiesAPI<SendSecuritiesAPI> com)
+        internal SecuritiesAPI(Consensus consensus, GoblinBatClient client, Privacies privacy, ISecuritiesAPI<SendSecuritiesAPI> com)
         {
             this.com = com;
             this.privacy = privacy;
             this.consensus = consensus;
             this.client = client;
-            this.disclosure = disclosure;
             random = new Random();
             stocks = new List<string>();
             futures = new List<string>();
@@ -652,7 +651,7 @@ namespace ShareInvest
                 var remain = new DateTime(now.Year, now.Month, now.Day, 9, 0, 0) - DateTime.Now;
                 com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
 
-                if (remain.TotalMinutes < 0x1F && com.Start == false && DateTime.Now.Hour == 8 && DateTime.Now.Minute > 0x1E && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B1))))
+                if (remain.TotalMinutes < 0x1F && com.Start == false && DateTime.Now.Hour == 8 && DateTime.Now.Minute > 0x1E && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B2))))
                     com.StartProgress();
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
@@ -815,16 +814,14 @@ namespace ShareInvest
 
                     else
                     {
-                        var statements = await disclosure.GetFinancialStatements(retention.Code, DateTime.Now.AddYears(-4).ToString("yyyy"));
-
-                        if (statements != null && await client.PostContext(statements) > 0xC7 && consensus.GrantAccess)
+                        if (consensus.GrantAccess)
                         {
                             for (int i = 0; i < retention.Code.Length / 3; i++)
                             {
                                 var status = await client.PostContext(await consensus.GetContextAsync(i, retention.Code));
                                 SendMessage(status);
                             }
-                            var result = await client.PostContext(await consensus.GetContextAsync(retention.Code, 0x59));
+                            var result = await client.PostContext(new Summary(privacy.Security).GetContextAsync(retention.Code));
                             SendMessage(result);
                         }
                         return retention;
@@ -937,7 +934,6 @@ namespace ShareInvest
         readonly GoblinBatClient client;
         readonly Random random;
         readonly Consensus consensus;
-        readonly Disclosure disclosure;
         readonly Dictionary<string, Codes> infoCodes;
         readonly Color[] colors;
         readonly Privacies privacy;

@@ -475,7 +475,7 @@ namespace ShareInvest.Client
                 switch (param)
                 {
                     case IEnumerable<Codes> _:
-                    case IEnumerable<Catalog.Dart.FinancialStatement> _:
+                    case IEnumerable<Catalog.Request.FinancialStatement> _:
                         index = 0;
                         break;
 

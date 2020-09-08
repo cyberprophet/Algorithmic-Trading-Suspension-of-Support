@@ -55,9 +55,8 @@ namespace ShareInvest.Client
             try
             {
                 string param = string.Empty, id = string.Empty;
-                var request = new RestRequest(security.RequestParameter(code), Method.GET);
 
-                foreach (var str in (await client.ExecuteAsync(request, source.Token)).Content.Split(security.Exception))
+                foreach (var str in (await client.ExecuteAsync(new RestRequest(security.RequestParameter(code), Method.GET), source.Token)).Content.Split(security.Exception))
                 {
                     if (str.Trim().StartsWith(security.Enc))
                         param = str.Trim().Replace(security.Enc, string.Empty);
@@ -65,20 +64,21 @@ namespace ShareInvest.Client
                     else if (str.Trim().StartsWith(security.Id))
                         id = str.Trim().Replace(security.Id, string.Empty).Split('?')[0];
                 }
-                request = new RestRequest(security.RequestParameter(code, quarter, param.Remove(param.Length - 1, 1), id.Remove(id.Length - 2, 2)), Method.GET);
+                param = param.Remove(param.Length - 1, 1);
+                id = id.Remove(id.Length - 2, 2);
                 var read = false;
                 var index = 0;
                 var temp = new string[8];
                 var dictionary = new Dictionary<string, string[]>();
 
-                foreach (var str in (await client.ExecuteAsync(request, source.Token)).Content.Split(security.Exception))
+                foreach (var str in (await client.ExecuteAsync(new RestRequest(security.RequestParameter(code, quarter, param, id), Method.GET), source.Token)).Content.Split(security.Exception))
                 {
                     param = str.Replace("&nbsp;", string.Empty).Replace("tr", string.Empty).Replace("tbody", string.Empty).Replace("th", string.Empty).Replace("br", string.Empty).Replace("span", string.Empty).Replace("td", string.Empty).Replace("/", string.Empty).Trim();
 
                     if (read == false)
                         read = param.Equals("주요재무정보");
 
-                    else if (string.IsNullOrWhiteSpace(param) == false && read && param.StartsWith("caption") == false && param.StartsWith("row=") == false && param.StartsWith("주요재무정보") == false && param.StartsWith("ead") == false && param.StartsWith("table") == false && param.StartsWith("(IFRS연결)") == false && param.StartsWith("class=") == false)
+                    else if (string.IsNullOrWhiteSpace(param) == false && read && param.Length > 0 && param.StartsWith("caption") == false && param.StartsWith("row=") == false && param.StartsWith("주요재무정보") == false && param.StartsWith("ead") == false && param.StartsWith("table") == false && param.StartsWith("(IFRS별도)") == false && param.StartsWith("(GAAP개별)") == false && param.StartsWith("(IFRS연결)") == false && param.StartsWith("class=") == false)
                     {
                         if (char.IsLetter(param[0]))
                         {
@@ -122,8 +122,8 @@ namespace ShareInvest.Client
                 {
                     Timeout = -1
                 };
-                source = new CancellationTokenSource();
             }
+            source = new CancellationTokenSource();
         }
         public bool GrantAccess
         {
