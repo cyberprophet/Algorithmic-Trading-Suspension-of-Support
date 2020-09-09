@@ -828,7 +828,7 @@ namespace ShareInvest
                                     status = await client.PostContext(queue);
 
                                     if (i == 0)
-                                        status = await client.PostContext(new Summary(privacy.Security).GetContextAsync(retention.Code));
+                                        status = await client.PostContext(new Summary(privacy.Security).GetContext(retention.Code));
                                 }
                                 SendMessage(status);
                             }

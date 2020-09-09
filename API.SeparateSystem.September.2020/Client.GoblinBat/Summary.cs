@@ -9,7 +9,7 @@ namespace ShareInvest.Client
 {
     public class Summary
     {
-        public Queue<Catalog.Request.FinancialStatement> GetContextAsync(string code)
+        public Queue<Catalog.Request.FinancialStatement> GetContext(string code)
         {
             try
             {

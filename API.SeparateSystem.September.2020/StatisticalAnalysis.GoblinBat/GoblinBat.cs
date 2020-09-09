@@ -268,6 +268,10 @@ namespace ShareInvest.Strategics
                             case 0xCD:
                                 height -= 0x1E;
                                 break;
+
+                            case 0x145:
+                                height += 0x4B;
+                                break;
                         }
                         Size = new Size(0x2B9, height);
 

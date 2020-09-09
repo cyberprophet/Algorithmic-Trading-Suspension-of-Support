@@ -289,7 +289,7 @@ namespace ShareInvest.Controls
                             foreach (var commission in commissionStocks)
                                 comboCommission.Items.Add(commission.ToString("P3"));
 
-                            comboStrategics.Items.AddRange(new object[] { st, ts });
+                            comboStrategics.Items.AddRange(new object[] { tc, st, ts });
                         }
                         str = "위탁종합";
                         Length = 6;
@@ -400,25 +400,29 @@ namespace ShareInvest.Controls
             }
             else if (sender is LinkLabel link)
             {
-                var url = "https://youtu.be/CIfSIsozG_E";
+                var url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
 
                 if (link.Name.Equals(this.link.Name) && comboStrategics.SelectedItem is string str)
                     switch (str)
                     {
+                        case tc:
+                            url = @"https://youtu.be/CIfSIsozG_E";
+                            break;
+
                         case tf:
-                            url = "https://youtu.be/CIfSIsozG_E";
+                            url = @"https://youtu.be/CIfSIsozG_E";
                             break;
 
                         case ts:
-                            url = "https://youtu.be/CIfSIsozG_E";
+                            url = @"https://youtu.be/CIfSIsozG_E";
                             break;
 
                         case st:
-                            url = "https://youtu.be/CIfSIsozG_E";
+                            url = @"https://youtu.be/CIfSIsozG_E";
                             break;
                     }
                 else if (link.Name.Equals(linkTerms.Name))
-                    url = "https://sharecompany.tistory.com/46";
+                    url = @"https://sharecompany.tistory.com/46";
 
                 Process.Start(url);
                 link.LinkVisited = true;
@@ -478,6 +482,10 @@ namespace ShareInvest.Controls
                                         TrendType = (Trend)tTrend,
                                         Setting = (Setting)setting
                                     });
+                                break;
+
+                            case TrendToCashflow tc:
+
                                 break;
 
                             case ScenarioAccordingToTrend st:
@@ -613,6 +621,19 @@ namespace ShareInvest.Controls
                 });
                 switch (box.SelectedItem)
                 {
+                    case tc:
+                        if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
+                        {
+                            var view = new TrendToCashflow(select);
+                            tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                            view.Dock = DockStyle.Fill;
+                            panel.RowStyles[0].Height = 0x145 + 0x23;
+
+                            foreach (var radio in view.RadioButtons)
+                                radio.Click += SetDataGridView;
+                        }
+                        break;
+
                     case ts:
                         if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
                         {
@@ -652,6 +673,30 @@ namespace ShareInvest.Controls
                 ResumeLayout();
             }
         }));
+        void SetDataGridView(object sender, EventArgs e)
+        {
+            switch (Enum.ToObject(typeof(RadioButtons), (sender as RadioButton)?.Name[5]))
+            {
+                case RadioButtons.매출:
+                    Console.WriteLine((sender as RadioButton)?.Name);
+                    break;
+
+                case RadioButtons.영업이익:
+                    Console.WriteLine((sender as RadioButton)?.Name);
+                    break;
+
+                case RadioButtons.순이익:
+                    Console.WriteLine((sender as RadioButton)?.Name);
+                    break;
+
+                case RadioButtons.현금흐름:
+                    Console.WriteLine((sender as RadioButton)?.Name);
+                    break;
+
+                default:
+                    return;
+            }
+        }
         void RemoveThePage(object sender, KeyEventArgs e)
         {
             if (e.KeyData.Equals(Keys.Delete) && sender is TabControl tab)
@@ -745,15 +790,8 @@ namespace ShareInvest.Controls
         {
             if (sender is TabControl && e is TabControlCancelEventArgs tc && tc.TabPage != null)
             {
-                if (data.Columns.Count > 0)
-                {
-                    SuspendLayout();
-                    data.SuspendLayout();
-                    SendSize?.Invoke(this, new SendHoldingStocks(tc.TabPage.Size));
-                    data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
-                    data.ResumeLayout();
-                    ResumeLayout();
-                }
+                SuspendLayout();
+                SendSize?.Invoke(this, new SendHoldingStocks(tc.TabPage.Size));
                 panel.SuspendLayout();
                 int height = 0x23;
 
@@ -773,9 +811,21 @@ namespace ShareInvest.Controls
                     case "ST":
                         height += 0xEB;
                         break;
+
+                    case Strategics.tc:
+                    case "TC":
+                        height += 0x145;
+                        break;
+                }
+                if (data.Columns.Count > 0)
+                {
+                    data.SuspendLayout();
+                    data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+                    data.ResumeLayout();
                 }
                 panel.RowStyles[0].Height = height;
                 panel.ResumeLayout();
+                ResumeLayout();
             }
         }
         void ButtonPreviewKeyDown(object sender, EventArgs e)
