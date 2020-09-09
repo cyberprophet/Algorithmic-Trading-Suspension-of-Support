@@ -482,6 +482,9 @@ namespace ShareInvest.Client
                     case IEnumerable<ConvertConsensus> _:
                         index = 7;
                         break;
+
+                    default:
+                        return int.MinValue;
                 }
                 var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().GetGenericArguments()[0].Name.Substring(index)), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 

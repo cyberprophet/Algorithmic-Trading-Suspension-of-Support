@@ -816,13 +816,22 @@ namespace ShareInvest
                     {
                         if (consensus.GrantAccess)
                         {
+                            Queue<ConvertConsensus> queue;
+
                             for (int i = 0; i < retention.Code.Length / 3; i++)
                             {
-                                var status = await client.PostContext(await consensus.GetContextAsync(i, retention.Code));
+                                queue = await consensus.GetContextAsync(i, retention.Code);
+                                int status = int.MinValue;
+
+                                if (queue != null && queue.Count > 0)
+                                {
+                                    status = await client.PostContext(queue);
+
+                                    if (i == 0)
+                                        status = await client.PostContext(new Summary(privacy.Security).GetContextAsync(retention.Code));
+                                }
                                 SendMessage(status);
                             }
-                            var result = await client.PostContext(new Summary(privacy.Security).GetContextAsync(retention.Code));
-                            SendMessage(result);
                         }
                         return retention;
                     }

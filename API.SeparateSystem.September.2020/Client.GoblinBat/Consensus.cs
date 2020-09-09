@@ -17,10 +17,9 @@ namespace ShareInvest.Client
         void SendMessage(string message) => Console.WriteLine(message);
         public async Task<Queue<Catalog.ConvertConsensus>> GetContextAsync(int quarter, string code)
         {
-            var queue = new Queue<Catalog.ConvertConsensus>();
-
             try
             {
+                var queue = new Queue<Catalog.ConvertConsensus>();
                 var response = await client.ExecuteAsync(new RestRequest(security.RequestCode(quarter, code), Method.GET), source.Token);
 
                 foreach (var convert in JsonConvert.DeserializeObject<List<Catalog.UpdateConsensus>>(JObject.Parse(response.Content)[security.Data].ToString()))
@@ -41,12 +40,13 @@ namespace ShareInvest.Client
                             Roe = convert.ROE,
                             Ev = convert.EV
                         });
+                return queue;
             }
             catch (Exception ex)
             {
                 SendMessage(ex.StackTrace);
             }
-            return queue;
+            return null;
         }
         public async Task<Queue<Catalog.Dart.FinancialStatement>> GetContextAsync(string code, int quarter)
         {

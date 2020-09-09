@@ -168,8 +168,13 @@ namespace ShareInvest.Controls
                         return;
                 }
             else if (sender is DataGridView)
+            {
                 for (int i = 0; i < columns.Length; i++)
                     data.Columns[i].SortMode = e is MouseEventArgs ? DataGridViewColumnSortMode.NotSortable : DataGridViewColumnSortMode.Automatic;
+
+                if (data.Columns[0].SortMode.Equals(DataGridViewColumnSortMode.Automatic))
+                    data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.AllCells);
+            }
         }
         readonly Dictionary<string, int> dIndex;
     }

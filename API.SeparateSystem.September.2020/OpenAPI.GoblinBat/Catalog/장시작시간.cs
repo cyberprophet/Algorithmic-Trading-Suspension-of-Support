@@ -40,13 +40,13 @@ namespace ShareInvest.OpenAPI.Catalog
                     case "e" when DeadLine:
                         arg = (int)Operation.선옵_장마감전_동시호가_종료;
                         DeadLine = false;
-                        Delay.Milliseconds = 0xE11;
+                        Delay.Milliseconds = 0xE17;
                         break;
 
                     case "8":
                         arg = (int)Operation.장마감;
                         DeadLine = false;
-                        Delay.Milliseconds = 0xE12;
+                        Delay.Milliseconds = 0xE11;
                         break;
 
                     case "d":

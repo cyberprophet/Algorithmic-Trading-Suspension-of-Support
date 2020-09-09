@@ -15,7 +15,7 @@ namespace ShareInvest.Client
             {
                 driver.Navigate().GoToUrl(string.Concat(security.Info, '/', security.RequestParameter(code)));
                 driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(3);
-                driver.FindElementByXPath(security.Cns).Click();
+                driver.FindElementByXPath(security.Cns)?.Click();
                 string[] quarter = new string[8], name = new string[0x21], value = new string[8];
                 var list = new List<string[]>();
                 var queue = new Queue<Catalog.Request.FinancialStatement>();
@@ -60,8 +60,6 @@ namespace ShareInvest.Client
                         }
                 }
                 list.Add(value);
-                driver.Close();
-                driver.Dispose();
 
                 for (count = 0; count < quarter.Length; count++)
                 {
@@ -71,8 +69,10 @@ namespace ShareInvest.Client
                         { "Date", quarter[count] }
                     };
                     for (int i = 0; i < name.Length; i++)
-                        dictionary[name[i]] = list[i][count];
-
+                    {
+                        var temp = list[i][count];
+                        dictionary[name[i]] = temp.Length > 3 ? temp.Replace(",", string.Empty) : temp;
+                    }
                     var dart = JsonConvert.DeserializeObject<Catalog.Dart.FinancialStatement>(JsonConvert.SerializeObject(dictionary));
                     queue.Enqueue(new Catalog.Request.FinancialStatement
                     {
@@ -119,6 +119,13 @@ namespace ShareInvest.Client
             {
                 Console.WriteLine(ex.StackTrace);
             }
+            finally
+            {
+                driver.Close();
+                driver.Dispose();
+                service.Dispose();
+                GC.Collect();
+            }
             return null;
         }
         public Summary(dynamic key)
@@ -130,7 +137,7 @@ namespace ShareInvest.Client
                 service = ChromeDriverService.CreateDefaultService(security.Path);
                 service.HideCommandPromptWindow = true;
                 options = new ChromeOptions();
-                options.AddArgument("headless");
+                options.AddArgument(string.Concat("user-agent=", security.Agent));
                 driver = new ChromeDriver(service, options);
             }
         }
