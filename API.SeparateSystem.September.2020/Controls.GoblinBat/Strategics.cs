@@ -485,7 +485,25 @@ namespace ShareInvest.Controls
                                 break;
 
                             case TrendToCashflow tc:
+                                check = tc.TransmuteStrategics();
+                                stParam = tc.TransmuteStrategics(tabPage.Text)?.Split('|');
 
+                                if (check && stParam.Length == 0xD && double.TryParse(stParam[0xC], out double cpAddition) && double.TryParse(stParam[0xB], out double cpRevenue) && int.TryParse(stParam[0xA], out int ctQuantity) && int.TryParse(stParam[9], out int cInterval) && double.TryParse(stParam[8], out double cAddition) && double.TryParse(stParam[7], out double crRevenue) && int.TryParse(stParam[6], out int crQuantity) && int.TryParse(stParam[5], out int cUnit) && int.TryParse(stParam[4], out int cTrend) && int.TryParse(stParam[3], out int cLong) && int.TryParse(stParam[2], out int cShort))
+                                    verify = new SendHoldingStocks(new Catalog.TrendToCashflow
+                                    {
+                                        Code = stParam[1],
+                                        Short = cShort,
+                                        Long = cLong,
+                                        Trend = cTrend,
+                                        Unit = cUnit,
+                                        ReservationQuantity = crQuantity,
+                                        ReservationRevenue = crRevenue * 1e-2,
+                                        Addition = cAddition * 1e-2,
+                                        Interval = cInterval,
+                                        TradingQuantity = ctQuantity,
+                                        PositionRevenue = cpRevenue * 1e-2,
+                                        PositionAddition = cpAddition * 1e-2
+                                    });
                                 break;
 
                             case ScenarioAccordingToTrend st:

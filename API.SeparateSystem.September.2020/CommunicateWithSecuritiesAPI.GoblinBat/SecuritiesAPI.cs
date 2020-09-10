@@ -817,21 +817,34 @@ namespace ShareInvest
                         if (consensus.GrantAccess)
                         {
                             Queue<ConvertConsensus> queue;
+                            Queue<Catalog.Request.FinancialStatement> context = null;
 
                             for (int i = 0; i < retention.Code.Length / 3; i++)
-                            {
-                                queue = await consensus.GetContextAsync(i, retention.Code);
-                                int status = int.MinValue;
-
-                                if (queue != null && queue.Count > 0)
+                                try
                                 {
-                                    status = await client.PostContext(queue);
+                                    queue = await consensus.GetContextAsync(i, retention.Code);
+                                    int status = int.MinValue;
 
-                                    if (i == 0)
-                                        status = await client.PostContext(new Summary(privacy.Security).GetContext(retention.Code));
+                                    if (queue != null && queue.Count > 0)
+                                    {
+                                        status = await client.PostContext(queue);
+
+                                        if (i == 0)
+                                            context = new Summary(privacy.Security).GetContext(retention.Code);
+
+                                        if (i == 1 && context != null)
+                                            status = await client.PostContext(context);
+                                    }
+                                    SendMessage(status);
                                 }
-                                SendMessage(status);
-                            }
+                                catch (Exception ex)
+                                {
+                                    SendMessage(ex.StackTrace);
+                                }
+                                finally
+                                {
+                                    GC.Collect();
+                                }
                         }
                         return retention;
                     }

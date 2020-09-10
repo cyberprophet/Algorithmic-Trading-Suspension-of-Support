@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Text;
 using System.Windows.Forms;
+
+using ShareInvest.FindByName;
 
 namespace ShareInvest.Controls
 {
@@ -9,23 +12,25 @@ namespace ShareInvest.Controls
         {
             InitializeComponent();
             boxTrend.Text = codes.Name;
-            this.codes = codes;
+            code = codes.Code;
         }
         internal void TransmuteStrategics(string[] strategics)
         {
 
         }
-        internal bool TransmuteStrategics()
-        {
-            return false;
-        }
+        internal bool TransmuteStrategics() => numericShort.Value < numericLong.Value;
         internal string TransmuteStrategics(string code)
         {
-            if (codes.Code.Equals(code))
+            if (this.code.Equals(code))
             {
+                var sb = new StringBuilder("TC|").Append(code);
 
+                foreach (var str in strategics)
+                    sb.Append('|').Append(string.Concat(numeric, str).FindByName<NumericUpDown>(this).Value);
+
+                return sb.ToString();
             }
-            return null;
+            return string.Empty;
         }
         internal IEnumerable<RadioButton> RadioButtons
         {
@@ -36,6 +41,6 @@ namespace ShareInvest.Controls
                         yield return button;
             }
         }
-        readonly Catalog.Codes codes;
-    }  
+        readonly string code;
+    }
 }

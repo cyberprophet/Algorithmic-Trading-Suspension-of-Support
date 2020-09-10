@@ -138,7 +138,7 @@ namespace ShareInvest.Client
                 service.HideCommandPromptWindow = true;
                 options = new ChromeOptions();
                 options.AddArgument(string.Concat("user-agent=", security.Agent));
-                driver = new ChromeDriver(service, options);
+                driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
             }
         }
         readonly Security security;

@@ -270,7 +270,7 @@ namespace ShareInvest.Strategics
                                 break;
 
                             case 0x145:
-                                height += 0x4B;
+                                height += 0x57;
                                 break;
                         }
                         Size = new Size(0x2B9, height);
@@ -306,6 +306,16 @@ namespace ShareInvest.Strategics
                             Code = tf.Code
                         };
                         form = new TrendFollowingBasicFutures(hs);
+                        hs.SendBalance += OnReceiveAnalysisData;
+                        new Task(() => hs.StartProgress(Privacy.Commission)).Start();
+                        break;
+
+                    case Catalog.TrendToCashflow tc:
+                        hs = new HoldingStocks(tc)
+                        {
+                            Code = tc.Code
+                        };
+                        form = new TrendsInStockPrices(hs);
                         hs.SendBalance += OnReceiveAnalysisData;
                         new Task(() => hs.StartProgress(Privacy.Commission)).Start();
                         break;
@@ -458,7 +468,7 @@ namespace ShareInvest.Strategics
                     }
                     ClosingForm = true;
                 }
-                Size = new Size(0x2B9, 0x2DC - 0xF4);
+                Size = new Size(0x2B9, 0x325 - 0xF4);
                 Visible = true;
                 ShowIcon = true;
                 notifyIcon.Visible = false;

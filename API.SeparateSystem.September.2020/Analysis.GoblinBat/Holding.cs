@@ -157,6 +157,11 @@ namespace ShareInvest.Analysis
             for (int i = 0; i < catalog.Length; i++)
                 Consecutive[i] = new Consecutive(catalog[i], this);
         }
+        public Holding(TrendToCashflow strategics)
+        {
+            TC = strategics;
+            consecutive = new Consecutive(strategics, this);
+        }
         public Holding(TrendsInStockPrices strategics)
         {
             TS = strategics;
@@ -294,6 +299,10 @@ namespace ShareInvest.Analysis
             get;
         }
         protected internal TrendsInStockPrices TS
+        {
+            get;
+        }
+        protected internal TrendToCashflow TC
         {
             get;
         }
