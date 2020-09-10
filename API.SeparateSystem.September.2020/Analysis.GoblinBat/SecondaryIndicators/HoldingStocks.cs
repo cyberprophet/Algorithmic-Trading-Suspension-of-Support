@@ -79,6 +79,30 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (NextOrderTime == null)
                                 NextOrderTime = cInterval;
 
+                            else if (Quantity > tc.ReservationQuantity - 1 && (Offer ?? int.MaxValue) < e.Price && OrderNumber.Any(o => o.Key.StartsWith("8") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
+                            {
+                                CumulativeFee += (uint)(e.Price * tc.ReservationQuantity * (Commission + tax));
+                                Revenue += (long)((e.Price - (Purchase ?? 0D)) * tc.ReservationQuantity);
+                                Quantity -= tc.ReservationQuantity;
+                                var profit = OrderNumber.First(o => o.Key.StartsWith("8") && o.Value == e.Price - GetQuoteUnit(e.Price, Market));
+                                Base -= profit.Value * tc.ReservationQuantity;
+                                Offer = profit.Value;
+
+                                if (OrderNumber.Remove(profit.Key) && Verify)
+                                    OnReceiveBalance(new string[] { string.Concat(cInterval.ToShortDateString(), " ", cInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
+                            }
+                            else if ((Bid ?? int.MinValue) > e.Price && OrderNumber.Any(o => o.Key.StartsWith("7") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
+                            {
+                                CumulativeFee += (uint)(e.Price * Commission * tc.ReservationQuantity);
+                                Purchase = (double)((e.Price * tc.ReservationQuantity + (Purchase ?? 0D) * Quantity) / (Quantity + tc.ReservationQuantity));
+                                Quantity += tc.ReservationQuantity;
+                                var profit = OrderNumber.First(o => o.Key.StartsWith("7") && o.Value == e.Price + GetQuoteUnit(e.Price, Market));
+                                Base += profit.Value * tc.ReservationQuantity;
+                                Bid = profit.Value;
+
+                                if (OrderNumber.Remove(profit.Key) && Verify)
+                                    OnReceiveBalance(new string[] { string.Concat(cInterval.ToShortDateString(), " ", cInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
+                            }
                             else if (Quantity > tc.TradingQuantity - 1 && OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
                             {
                                 CumulativeFee += (uint)(e.Price * tc.TradingQuantity * (Commission + tax));
@@ -138,14 +162,33 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             Count = 0;
                             long revenue = Revenue - CumulativeFee, unrealize = (long)((e.Price - (Purchase ?? 0D)) * Quantity);
                             var avg = EMA.Make(++Accumulative, revenue - TodayRevenue + unrealize - TodayUnrealize, Before);
-                            SendMessage = new Statistics
+
+                            if (tc.ReservationQuantity > 0 && Quantity > tc.ReservationQuantity - 1)
                             {
-                                Date = e.Date.Substring(0, 6),
-                                Cumulative = (revenue + unrealize) / tc.TradingQuantity,
-                                Base = SendMessage.Base > Base / tc.TradingQuantity ? SendMessage.Base : Base / tc.TradingQuantity,
-                                Statistic = (int)(avg / tc.TradingQuantity),
-                                Price = e.Price
-                            };
+                                var stock = Market;
+                                int quantity = Quantity / tc.ReservationQuantity, price = e.Price, sell = (int)((Purchase ?? 0D) * (1 + tc.ReservationRevenue)), buy = (int)((Purchase ?? 0D) * (1 - tc.Addition)), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
+                                sPrice = sPrice < lower ? lower + GetQuoteUnit(sPrice, stock) : sPrice;
+
+                                while (sPrice < upper && quantity-- > 0)
+                                {
+                                    OrderNumber[GetOrderNumber((int)OpenOrderType.예약매도)] = sPrice;
+
+                                    for (int i = 0; i < tc.Unit; i++)
+                                        sPrice += GetQuoteUnit(sPrice, stock);
+                                }
+                                while (bPrice < upper && bPrice < buy)
+                                {
+                                    OrderNumber[GetOrderNumber((int)OpenOrderType.예약매수)] = bPrice;
+
+                                    for (int i = 0; i < tc.Unit; i++)
+                                        bPrice += GetQuoteUnit(bPrice, stock);
+                                }
+                                if (Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                                    OnReceiveEvent(new string[] { string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()), OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Key), OrderNumber.Where(o => o.Key.StartsWith("8")).Max(o => o.Key) });
+
+                                Bid = OrderNumber.Count > 0 && OrderNumber.Any(o => o.Key.StartsWith("7")) ? OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Value) : 0;
+                                Offer = OrderNumber.Count > 0 && OrderNumber.Any(o => o.Key.StartsWith("8")) ? OrderNumber.Where(o => o.Key.StartsWith("8")).Min(o => o.Value) : 0;
+                            }
                             SendStocks?.Invoke(this, new SendHoldingStocks(e.Date, e.Price, sShort, sLong, trend, revenue + unrealize, (long)(Base > 0 ? Base : 0)));
                             Before = avg;
                             TodayRevenue = revenue;
@@ -420,6 +463,11 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
                     if (StartProgress(strategics.Code as string) > 0)
                     {
+                        if (commission == 0)
+                            SendMessage = new Statistics
+                            {
+                                
+                            };
                         consecutive.Dispose();
                     }
                     break;

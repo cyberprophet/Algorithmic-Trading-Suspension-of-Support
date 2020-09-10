@@ -194,6 +194,9 @@ namespace ShareInvest.Strategics
                                     DiscrepancyRateFromExpectedStockPrice = tuple.Item2.Price
                                 });
                             break;
+
+                        case Catalog.TrendToCashflow tc:
+                            break;
                     }
                 if (double.IsNaN(coin) == false)
                 {

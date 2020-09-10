@@ -330,7 +330,8 @@ namespace ShareInvest.Controls
                     foreach (var strategics in privacy.CodeStrategics.Split(';'))
                     {
                         var color = Color.FromArgb(0x79, 0x85, 0x82);
-                        var select = Codes.FirstOrDefault(o => o.Code.Equals(strategics.Substring(2, Length)));
+                        var code = strategics.Substring(strategics[2].Equals('|') ? 3 : 2, Length);
+                        var select = Codes.FirstOrDefault(o => o.Code.Equals(code));
                         tab.Controls.Add(new TabPage
                         {
                             BackColor = Color.Transparent,
@@ -338,9 +339,9 @@ namespace ShareInvest.Controls
                             ForeColor = Color.Black,
                             Location = new Point(4, 0x22),
                             Margin = new Padding(0),
-                            Name = strategics.Substring(2, Length),
+                            Name = code,
                             TabIndex = Index++,
-                            Text = strategics.Substring(2, Length),
+                            Text = code,
                             ToolTipText = strategics.Substring(0, 2)
                         });
                         switch (strategics.Substring(0, 2))
@@ -364,6 +365,17 @@ namespace ShareInvest.Controls
                                     view.Dock = DockStyle.Fill;
                                     view.TransmuteStrategics(strategics.Substring(8).Split('.'));
                                     panel.RowStyles[0].Height = 0xCD + 0x23;
+                                }
+                                break;
+
+                            case string tc when tc.Equals("TC") && Length == 6:
+                                if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
+                                {
+                                    var view = new TrendToCashflow(select);
+                                    tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                                    view.Dock = DockStyle.Fill;
+                                    view.TransmuteStrategics(strategics.Substring(0xA).Split('|'));
+                                    panel.RowStyles[0].Height = 0xEB + 0x23;
                                 }
                                 break;
                         }
@@ -549,6 +561,13 @@ namespace ShareInvest.Controls
                         foreach (var con in tabPage.Controls)
                             switch (con)
                             {
+                                case ScenarioAccordingToTrend _:
+                                    continue;
+
+                                case TrendToCashflow tc:
+                                    sb.Append(tc.TransmuteStrategics(tabPage.Text));
+                                    break;
+
                                 case TrendFollowingBasicFutures tf:
                                     sb.Append(tf.TransmuteStrategics(tabPage.Text));
                                     break;
@@ -850,7 +869,7 @@ namespace ShareInvest.Controls
         {
             var index = Array.FindIndex(button, o => o.Equals((sender as Button)?.Name.Substring(6)));
 
-            if (e is PreviewKeyDownEventArgs)
+            if (e is PreviewKeyDownEventArgs && index > -1)
                 switch (index)
                 {
                     case 0:

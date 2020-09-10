@@ -427,12 +427,35 @@ namespace ShareInvest
             if (privacy.CodeStrategics is string cStrategics)
                 foreach (var strategics in cStrategics?.Split(';'))
                 {
-                    var stParam = strategics?.Split('.');
+                    var stParam = strategics?.Split(strategics[2].Equals('|') ? '|' : '.');
                     var code = string.Empty;
 
                     if (Enum.TryParse(strategics.Substring(0, 2), out Strategics initial))
                         switch (initial)
                         {
+                            case Strategics.TC:
+                                if (stParam.Length == 0xD && double.TryParse(stParam[0xC], out double cpAddition) && double.TryParse(stParam[0xB], out double cpRevenue) && int.TryParse(stParam[0xA], out int ctQuantity) && int.TryParse(stParam[9], out int cInterval) && double.TryParse(stParam[8], out double cAddition) && double.TryParse(stParam[7], out double crRevenue) && int.TryParse(stParam[6], out int crQuantity) && int.TryParse(stParam[5], out int cUnit) && int.TryParse(stParam[4], out int cTrend) && int.TryParse(stParam[3], out int cLong) && int.TryParse(stParam[2], out int cShort))
+                                {
+                                    code = stParam[1];
+                                    catalog[code] = new TrendToCashflow
+                                    {
+                                        Code = stParam[1],
+                                        Short = cShort,
+                                        Long = cLong,
+                                        Trend = cTrend,
+                                        Unit = cUnit,
+                                        ReservationQuantity = crQuantity,
+                                        ReservationRevenue = crRevenue * 1e-2,
+                                        Addition = cAddition * 1e-2,
+                                        Interval = cInterval,
+                                        TradingQuantity = ctQuantity,
+                                        PositionRevenue = cpRevenue * 1e-2,
+                                        PositionAddition = cpAddition * 1e-2
+                                    };
+                                    Balance.ToolTipDictionary[code] = string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n추가매수_", stParam[8], "%\r\n매매간격_", stParam[9], "초\r\n매매수량_", stParam[10], "주\r\n수익실현_", stParam[11], "%\r\n추가매수_", stParam[12], "%");
+                                }
+                                break;
+
                             case Strategics.TF:
                                 if (int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
                                 {
@@ -840,9 +863,6 @@ namespace ShareInvest
                                 catch (Exception ex)
                                 {
                                     SendMessage(ex.StackTrace);
-                                }
-                                finally
-                                {
                                     GC.Collect();
                                 }
                         }

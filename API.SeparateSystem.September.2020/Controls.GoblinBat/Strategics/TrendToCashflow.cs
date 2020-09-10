@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 
@@ -11,14 +12,30 @@ namespace ShareInvest.Controls
         internal TrendToCashflow(Catalog.Codes codes)
         {
             InitializeComponent();
+            random = new Random();
             boxTrend.Text = codes.Name;
             code = codes.Code;
+
+            foreach (var radio in panel.Controls)
+                if (radio is RadioButton button)
+                    button.Checked = random.Next(0, 4) == 0;
         }
         internal void TransmuteStrategics(string[] strategics)
         {
-
+            for (int i = 0; i < strategics.Length; i++)
+                if (decimal.TryParse(strategics[i], out decimal value))
+                    string.Concat(numeric, this.strategics[i]).FindByName<NumericUpDown>(this).Value = value;
         }
-        internal bool TransmuteStrategics() => numericShort.Value < numericLong.Value;
+        internal bool TransmuteStrategics()
+        {
+            var pass = false;
+
+            foreach (var radio in panel.Controls)
+                if (radio is RadioButton button && button.Checked)
+                    pass = true;
+
+            return numericShort.Value < numericLong.Value && pass;
+        }
         internal string TransmuteStrategics(string code)
         {
             if (this.code.Equals(code))
@@ -42,5 +59,6 @@ namespace ShareInvest.Controls
             }
         }
         readonly string code;
+        readonly Random random;
     }
 }
