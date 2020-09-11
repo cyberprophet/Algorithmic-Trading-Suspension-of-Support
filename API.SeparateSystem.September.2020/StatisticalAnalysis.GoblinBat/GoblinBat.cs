@@ -273,7 +273,7 @@ namespace ShareInvest.Strategics
                                 break;
 
                             case 0x145:
-                                height += 0x57;
+                                height += 0x59;
                                 break;
                         }
                         Size = new Size(0x2B9, height);
@@ -471,7 +471,7 @@ namespace ShareInvest.Strategics
                     }
                     ClosingForm = true;
                 }
-                Size = new Size(0x2B9, 0x325 - 0xF4);
+                Size = new Size(0x2B9, 0x329 - 0xF4);
                 Visible = true;
                 ShowIcon = true;
                 notifyIcon.Visible = false;

@@ -820,10 +820,11 @@ namespace ShareInvest
             if (stocks.Count > 0)
             {
                 var retention = await client.GetContext(stocks[random.Next(0, stocks.Count)]);
+                var now = DateTime.Now;
 
                 if (stocks.Remove(retention.Code))
                 {
-                    if (string.IsNullOrEmpty(retention.LastDate) == false && retention.LastDate.Substring(0, 6).Equals(DateTime.Now.ToString("yyMMdd")))
+                    if (string.IsNullOrEmpty(retention.LastDate) == false && retention.LastDate.Substring(0, 6).Equals(now.ToString("yyMMdd")))
                         return await SelectStocksCodeAsync();
 
                     else if ((await client.GetContext(new Codes { Code = retention.Code })).MaturityMarketCap.Contains("거래정지"))
@@ -866,6 +867,9 @@ namespace ShareInvest
                                     GC.Collect();
                                 }
                         }
+                        else
+                            await new Advertise(privacy.Security).StartAdvertisingInTheDataCollectionSection(now);
+
                         return retention;
                     }
                 }

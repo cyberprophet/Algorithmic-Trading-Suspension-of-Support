@@ -14,7 +14,7 @@ namespace ShareInvest.Client
             try
             {
                 driver.Navigate().GoToUrl(string.Concat(security.Info, '/', security.RequestParameter(code)));
-                driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(3);
+                driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(7);
                 driver.FindElementByXPath(security.Cns)?.Click();
                 string[] quarter = new string[8], name = new string[0x21], value = new string[8];
                 var list = new List<string[]>();
