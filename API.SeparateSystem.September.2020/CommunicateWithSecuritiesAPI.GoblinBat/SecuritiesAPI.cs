@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -656,6 +657,16 @@ namespace ShareInvest
                 switch (now.DayOfWeek)
                 {
                     case DayOfWeek.Sunday:
+                        if (now.Hour < 3 && now.Minute > 15)
+                        {
+                            foreach (var process in Process.GetProcessesByName(program, Dns.GetHostName()))
+                                process.Kill();
+
+                            Process.Start(shut, "-r");
+                            Dispose(WindowState);
+
+                            return;
+                        }
                         now = now.AddDays(1);
                         break;
 

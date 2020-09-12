@@ -9,11 +9,12 @@ namespace ShareInvest.Controls
 {
     partial class TrendToCashflow : UserControl
     {
+        string UseMnemonic(string name) => name.Insert(Array.FindIndex(name.ToCharArray(), o => o.Equals('&')), @"&");
         internal TrendToCashflow(Catalog.Codes codes)
         {
             InitializeComponent();
             random = new Random();
-            boxTrend.Text = codes.Name;
+            boxTrend.Text = codes.Name.Contains("&") ? UseMnemonic(codes.Name) : codes.Name;
             code = codes.Code;
 
             foreach (var radio in panel.Controls)
