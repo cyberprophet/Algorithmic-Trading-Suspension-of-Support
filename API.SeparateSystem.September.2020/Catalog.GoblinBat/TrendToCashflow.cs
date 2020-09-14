@@ -52,5 +52,9 @@ namespace ShareInvest.Catalog
         {
             get; set;
         }
+        public string AnalysisType
+        {
+            get; set;
+        }
     }
 }

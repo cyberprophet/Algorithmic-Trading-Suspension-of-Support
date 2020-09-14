@@ -19,13 +19,13 @@ namespace ShareInvest.Client
                 string[] quarter = new string[8], name = new string[0x21], value = new string[8];
                 var list = new List<string[]>();
                 var queue = new Queue<Catalog.Request.FinancialStatement>();
-                var count = 0;
+                int count = 0, index;
 
                 foreach (var str in driver.PageSource.Split(security.Summary, StringSplitOptions.RemoveEmptyEntries)[1].Split(security.T1, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var param = str.Replace("\t", string.Empty).Replace("\r\n", string.Empty).Replace(security.Replace[0], string.Empty);
                     var empty = false;
-                    var index = 0;
+                    index = 0;
 
                     if (param.StartsWith(security.Replace[1]))
                         foreach (var num in param.Split(security.T2, StringSplitOptions.None))
@@ -60,59 +60,61 @@ namespace ShareInvest.Client
                         }
                 }
                 list.Add(value);
+                index = 0;
 
                 for (count = 0; count < quarter.Length; count++)
-                {
-                    var dictionary = new Dictionary<string, string>()
+                    if (string.IsNullOrEmpty(quarter[quarter.Length - count - 1]) == false)
                     {
-                        { "Code", code },
-                        { "Date", quarter[count] }
-                    };
-                    for (int i = 0; i < name.Length; i++)
-                    {
-                        var temp = list[i][count];
-                        dictionary[name[i]] = temp.Length > 3 ? temp.Replace(",", string.Empty) : temp;
+                        var dictionary = new Dictionary<string, string>()
+                        {
+                            { "Code", code },
+                            { "Date", quarter[index++] }
+                        };
+                        for (int i = 0; i < name.Length; i++)
+                        {
+                            var temp = list[i][count];
+                            dictionary[name[i]] = temp.Length > 3 ? temp.Replace(",", string.Empty) : temp;
+                        }
+                        var dart = JsonConvert.DeserializeObject<Catalog.Dart.FinancialStatement>(JsonConvert.SerializeObject(dictionary));
+                        queue.Enqueue(new Catalog.Request.FinancialStatement
+                        {
+                            Code = dart.Code,
+                            Date = dart.Date,
+                            Revenues = dart.Revenues,
+                            IncomeFromOperation = dart.IncomeFromOperation,
+                            IncomeFromOperations = dart.IncomeFromOperations,
+                            ProfitFromContinuingOperations = dart.ProfitFromContinuingOperations,
+                            NetIncome = dart.NetIncome,
+                            ControllingNetIncome = dart.ControllingNetIncome,
+                            NonControllingNetIncome = dart.NonControllingNetIncome,
+                            TotalAssets = dart.TotalAssets,
+                            TotalLiabilites = dart.TotalLiabilites,
+                            TotalEquity = dart.TotalEquity,
+                            ControllingEquity = dart.ControllingEquity,
+                            NonControllingEquity = dart.NonControllingEquity,
+                            EquityCapital = dart.EquityCapital,
+                            OperatingActivities = dart.OperatingActivities,
+                            InvestingActivities = dart.InvestingActivities,
+                            FinancingActivities = dart.FinancingActivities,
+                            CAPEX = dart.CAPEX,
+                            FCF = dart.FCF,
+                            InterestAccruingLiabilities = dart.InterestAccruingLiabilities,
+                            OperatingMargin = dart.OperatingMargin,
+                            NetMargin = dart.NetMargin,
+                            ROE = dart.ROE,
+                            ROA = dart.ROA,
+                            DebtRatio = dart.DebtRatio,
+                            RetentionRatio = dart.RetentionRatio,
+                            EPS = dart.EPS,
+                            PER = dart.PER,
+                            BPS = dart.BPS,
+                            PBR = dart.PBR,
+                            DPS = dart.DPS,
+                            DividendYield = dart.DividendYield,
+                            PayoutRatio = dart.PayoutRatio,
+                            IssuedStocks = dart.IssuedStocks
+                        });
                     }
-                    var dart = JsonConvert.DeserializeObject<Catalog.Dart.FinancialStatement>(JsonConvert.SerializeObject(dictionary));
-                    queue.Enqueue(new Catalog.Request.FinancialStatement
-                    {
-                        Code = dart.Code,
-                        Date = dart.Date,
-                        Revenues = dart.Revenues,
-                        IncomeFromOperation = dart.IncomeFromOperation,
-                        IncomeFromOperations = dart.IncomeFromOperations,
-                        ProfitFromContinuingOperations = dart.ProfitFromContinuingOperations,
-                        NetIncome = dart.NetIncome,
-                        ControllingNetIncome = dart.ControllingNetIncome,
-                        NonControllingNetIncome = dart.NonControllingNetIncome,
-                        TotalAssets = dart.TotalAssets,
-                        TotalLiabilites = dart.TotalLiabilites,
-                        TotalEquity = dart.TotalEquity,
-                        ControllingEquity = dart.ControllingEquity,
-                        NonControllingEquity = dart.NonControllingEquity,
-                        EquityCapital = dart.EquityCapital,
-                        OperatingActivities = dart.OperatingActivities,
-                        InvestingActivities = dart.InvestingActivities,
-                        FinancingActivities = dart.FinancingActivities,
-                        CAPEX = dart.CAPEX,
-                        FCF = dart.FCF,
-                        InterestAccruingLiabilities = dart.InterestAccruingLiabilities,
-                        OperatingMargin = dart.OperatingMargin,
-                        NetMargin = dart.NetMargin,
-                        ROE = dart.ROE,
-                        ROA = dart.ROA,
-                        DebtRatio = dart.DebtRatio,
-                        RetentionRatio = dart.RetentionRatio,
-                        EPS = dart.EPS,
-                        PER = dart.PER,
-                        BPS = dart.BPS,
-                        PBR = dart.PBR,
-                        DPS = dart.DPS,
-                        DividendYield = dart.DividendYield,
-                        PayoutRatio = dart.PayoutRatio,
-                        IssuedStocks = dart.IssuedStocks
-                    });
-                }
                 return queue;
             }
             catch (Exception ex)

@@ -17,8 +17,8 @@ namespace ShareInvest.Controls
             boxTrend.Text = codes.Name.Contains("&") ? UseMnemonic(codes.Name) : codes.Name;
             code = codes.Code;
 
-            foreach (var radio in panel.Controls)
-                if (radio is RadioButton button)
+            foreach (var check in panel.Controls)
+                if (check is CheckBox button)
                     button.Checked = random.Next(0, 4) == 0;
         }
         internal void TransmuteStrategics(string[] strategics)
@@ -31,8 +31,8 @@ namespace ShareInvest.Controls
         {
             var pass = false;
 
-            foreach (var radio in panel.Controls)
-                if (radio is RadioButton button && button.Checked)
+            foreach (var check in panel.Controls)
+                if (check is CheckBox button && button.Checked)
                     pass = true;
 
             return numericShort.Value < numericLong.Value && pass;
@@ -50,12 +50,12 @@ namespace ShareInvest.Controls
             }
             return string.Empty;
         }
-        internal IEnumerable<RadioButton> RadioButtons
+        internal IEnumerable<CheckBox> CheckBoxButtons
         {
             get
             {
-                foreach (var radio in panel.Controls)
-                    if (radio is RadioButton button)
+                foreach (var check in panel.Controls)
+                    if (check is CheckBox button)
                         yield return button;
             }
         }

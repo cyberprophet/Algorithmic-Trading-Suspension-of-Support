@@ -514,7 +514,8 @@ namespace ShareInvest.Controls
                                         Interval = cInterval,
                                         TradingQuantity = ctQuantity,
                                         PositionRevenue = cpRevenue * 1e-2,
-                                        PositionAddition = cpAddition * 1e-2
+                                        PositionAddition = cpAddition * 1e-2,
+                                        AnalysisType = AnalysisType
                                     });
                                 break;
 
@@ -665,8 +666,9 @@ namespace ShareInvest.Controls
                             tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0x145 + 0x23;
+                            CheckValues = view.CheckBoxButtons;
 
-                            foreach (var radio in view.RadioButtons)
+                            foreach (var radio in view.CheckBoxButtons)
                                 radio.Click += SetDataGridView;
                         }
                         break;
@@ -712,27 +714,35 @@ namespace ShareInvest.Controls
         }));
         void SetDataGridView(object sender, EventArgs e)
         {
-            switch (Enum.ToObject(typeof(RadioButtons), (sender as RadioButton)?.Name[5]))
+            var str = new char[4];
+
+            foreach (var check in CheckValues)
             {
-                case RadioButtons.매출:
-                    Console.WriteLine((sender as RadioButton)?.Name);
-                    break;
+                var value = check.Checked.ToString()[0];
 
-                case RadioButtons.영업이익:
-                    Console.WriteLine((sender as RadioButton)?.Name);
-                    break;
+                switch (Enum.ToObject(typeof(CheckBoxButtons), check?.Name[5]))
+                {
+                    case CheckBoxButtons.매출:
+                        str[0] = value;
+                        break;
 
-                case RadioButtons.순이익:
-                    Console.WriteLine((sender as RadioButton)?.Name);
-                    break;
+                    case CheckBoxButtons.영업이익:
+                        str[1] = value;
+                        break;
 
-                case RadioButtons.현금흐름:
-                    Console.WriteLine((sender as RadioButton)?.Name);
-                    break;
+                    case CheckBoxButtons.순이익:
+                        str[2] = value;
+                        break;
 
-                default:
-                    return;
+                    case CheckBoxButtons.현금흐름:
+                        str[3] = value;
+                        break;
+
+                    default:
+                        return;
+                }
             }
+            AnalysisType = string.Concat(str[0], str[1], str[2], str[3]);
         }
         void RemoveThePage(object sender, KeyEventArgs e)
         {
@@ -814,6 +824,7 @@ namespace ShareInvest.Controls
                             break;
 
                         case 1:
+                            buttonChart.Enabled = buttonProgress.ForeColor.Equals(Color.Gold);
                             break;
 
                         case 2:
@@ -877,6 +888,7 @@ namespace ShareInvest.Controls
                         break;
 
                     case 1:
+                        buttonChart.Enabled = buttonProgress.ForeColor.Equals(Color.Gold);
                         break;
 
                     case 2:
@@ -907,9 +919,17 @@ namespace ShareInvest.Controls
         {
             get; set;
         }
+        string AnalysisType
+        {
+            get; set;
+        }
         HashSet<Codes> Codes
         {
             get;
+        }
+        IEnumerable<CheckBox> CheckValues
+        {
+            get; set;
         }
         readonly Disclosure disclosure;
         readonly DataGridView data;

@@ -67,7 +67,8 @@ namespace ShareInvest.Strategics
             foreach (var strategics in new IStrategics[]
             {
                 new Catalog.TrendsInStockPrices(),
-                new Catalog.ScenarioAccordingToTrend()
+                new Catalog.ScenarioAccordingToTrend(),
+                new Catalog.TrendToCashflow()
             })
                 foreach (var enumerable in client.GetContext(strategics).Result)
                     stack.Push(enumerable);
@@ -112,6 +113,24 @@ namespace ShareInvest.Strategics
                                         hs = new HoldingStocks(st, new Catalog.ConvertConsensus().PresumeToConsensus(consensus), client)
                                         {
                                             Code = st.Code
+                                        };
+                                        hs.SendBalance += OnReceiveAnalysisData;
+                                        hs.StartProgress(0D);
+                                    }
+                                    break;
+
+                                case Catalog.TrendToCashflow tc:
+                                    if (client.PostContext(new ConfirmStrategics
+                                    {
+                                        Code = w.Code,
+                                        Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
+                                        Strategics = string.Concat("TC.", tc.AnalysisType)
+                                    }).Result == false)
+                                    {
+                                        tc.Code = w.Code;
+                                        hs = new HoldingStocks(tc)
+                                        {
+                                            Code = tc.Code
                                         };
                                         hs.SendBalance += OnReceiveAnalysisData;
                                         hs.StartProgress(0D);
@@ -196,6 +215,17 @@ namespace ShareInvest.Strategics
                             break;
 
                         case Catalog.TrendToCashflow tc:
+                            if (tuple.Item2.Base > 0)
+                                coin = await client.PutContext(new StocksStrategics
+                                {
+                                    Code = tc.Code,
+                                    Strategics = tuple.Item2.Key,
+                                    Date = tuple.Item2.Date,
+                                    MaximumInvestment = (long)tuple.Item2.Base,
+                                    CumulativeReturn = tuple.Item2.Cumulative / tuple.Item2.Base,
+                                    WeightedAverageDailyReturn = tuple.Item2.Statistic / tuple.Item2.Base,
+                                    DiscrepancyRateFromExpectedStockPrice = tuple.Item2.Price
+                                });
                             break;
                     }
                 if (double.IsNaN(coin) == false)
@@ -205,7 +235,9 @@ namespace ShareInvest.Strategics
                         ClosingForm = true;
                         Cancel.Cancel();
                         backgroundWorker.CancelAsync();
-                        WindowState = FormWindowState.Minimized;
+
+                        if (WindowState.Equals(FormWindowState.Minimized))
+                            WindowState = FormWindowState.Normal;
                     }
                     var remain = await client.PutContext(new Catalog.Privacies
                     {

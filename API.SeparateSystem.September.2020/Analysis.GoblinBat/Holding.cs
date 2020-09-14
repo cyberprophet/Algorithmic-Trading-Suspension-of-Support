@@ -346,7 +346,7 @@ namespace ShareInvest.Analysis
         CONET801 = 3,
         CONET002 = 4,
         CONET003 = 5
-    }
+    }   
     public enum OpenOrderType
     {
         신규매수 = 1,

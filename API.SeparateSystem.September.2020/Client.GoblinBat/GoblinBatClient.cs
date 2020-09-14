@@ -57,6 +57,45 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<List<Catalog.Request.FinancialStatement>> GetContext(Catalog.Request.FinancialStatement param)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestCode(param), Method.GET), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                var list = JsonConvert.DeserializeObject<List<Catalog.Request.FinancialStatement>>(response.Content);
+                var remove = new Queue<Catalog.Request.FinancialStatement>();
+                var str = string.Empty;
+
+                foreach (var fs in list.OrderBy(o => o.Date))
+                {
+                    var date = fs.Date.Substring(0, 5);
+
+                    if (date.Equals(str))
+                        remove.Enqueue(fs);
+
+                    str = date;
+                }
+                while (remove.Count > 0)
+                {
+                    var fs = remove.Dequeue();
+
+                    if (list.Remove(fs))
+                        SendMessage(string.Concat("Count_" + list.Count + "\tDate_" + fs.Date));
+                }
+                return list;
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return null;
+        }
         public async Task<List<Catalog.Request.Consensus>> GetContext(Catalog.Request.Consensus consensus)
         {
             try
@@ -300,6 +339,27 @@ namespace ShareInvest.Client
                 }
                 switch (strategics)
                 {
+                    case TrendToCashflow _:
+                        foreach (var content in JArray.Parse(response.Content))
+                            if (int.TryParse(content.Values().ToArray()[0].ToString(), out int analysis))
+                                stack.Push(new TrendToCashflow
+                                {
+                                    Code = string.Empty,
+                                    Short = 5,
+                                    Long = 0x3C,
+                                    Trend = 0x14,
+                                    Unit = 1,
+                                    ReservationQuantity = 0,
+                                    ReservationRevenue = 0xA,
+                                    Addition = 0xB,
+                                    Interval = 1,
+                                    TradingQuantity = 1,
+                                    PositionRevenue = 5.25e-3,
+                                    PositionAddition = 7.25e-3,
+                                    AnalysisType = Enum.GetName(typeof(AnalysisType), analysis)
+                                });
+                        break;
+
                     case ScenarioAccordingToTrend _:
                         foreach (var content in JArray.Parse(response.Content))
                         {
