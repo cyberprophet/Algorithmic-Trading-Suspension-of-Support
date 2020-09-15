@@ -53,10 +53,17 @@ namespace ShareInvest.Controls
         }
         void DataSortCompare(object sender, DataGridViewSortCompareEventArgs e)
         {
-            if (e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
+            try
             {
-                e.SortResult = x.CompareTo(y);
-                e.Handled = true;
+                if (e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
+                {
+                    e.SortResult = x.CompareTo(y);
+                    e.Handled = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.StackTrace);
             }
         }
         void WorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
@@ -86,6 +93,57 @@ namespace ShareInvest.Controls
                 }
         }
         void OnReceiveCellContentDoubleClick(object sender, DataGridViewCellEventArgs e) => BeginInvoke(new Action(async () => await disclosure.GetDisclosureInformation(data.Rows[e.RowIndex].Cells[0].Value.ToString(), data.Rows[e.RowIndex].Cells[1].Value.ToString())));
+        void InitializeComponent(Stack<Catalog.Request.Consensus> stack, int count, List<Codes> codes)
+        {
+            var now = DateTime.Now;
+            data.CellContentDoubleClick -= OnReceiveCellContentDoubleClick;
+            SuspendLayout();
+
+            if (linkTerms != null)
+            {
+                linkTerms.Dispose();
+                InitializeDataGridView();
+                linkTerms = null;
+            }
+            if (data.Rows.Count == 0)
+            {
+                data.ColumnCount = 8;
+                data.BackgroundColor = Color.FromArgb(0x79, 0x85, 0x82);
+                data.Columns[0].Name = "종목코드";
+                data.Columns[1].Name = "종목명";
+            }
+            else
+                data.Rows.Clear();
+
+            for (count = 2; count < data.ColumnCount; count++)
+                data.Columns[count].Name = GetQuarter(now.AddMonths(count == 2 ? 1 : ((count - 2) * 3) + 1));
+
+            while (stack.Count > 0)
+            {
+                var pop = stack.Pop();
+                var index = data.Rows.Add(new string[] { pop.Code, codes.First(o => o.Code.Equals(pop.Code)).Name, Math.Abs(pop.FirstQuarter).ToString("P2"), Math.Abs(pop.SecondQuarter).ToString("P2"), Math.Abs(pop.ThirdQuarter).ToString("P2"), Math.Abs(pop.Quarter).ToString("P2"), Math.Abs(pop.TheNextYear).ToString("P2"), Math.Abs(pop.TheYearAfterNext).ToString("P2") });
+                data.Rows[index].Cells[2].Style.ForeColor = pop.FirstQuarter > 0 ? Color.Maroon : Color.Navy;
+                data.Rows[index].Cells[2].Style.SelectionForeColor = pop.FirstQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                data.Rows[index].Cells[3].Style.ForeColor = pop.SecondQuarter > 0 ? Color.Maroon : Color.Navy;
+                data.Rows[index].Cells[3].Style.SelectionForeColor = pop.SecondQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                data.Rows[index].Cells[4].Style.ForeColor = pop.ThirdQuarter > 0 ? Color.Maroon : Color.Navy;
+                data.Rows[index].Cells[4].Style.SelectionForeColor = pop.ThirdQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                data.Rows[index].Cells[5].Style.ForeColor = pop.Quarter > 0 ? Color.Maroon : Color.Navy;
+                data.Rows[index].Cells[5].Style.SelectionForeColor = pop.Quarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                data.Rows[index].Cells[6].Style.ForeColor = pop.TheNextYear > 0 ? Color.Maroon : Color.Navy;
+                data.Rows[index].Cells[6].Style.SelectionForeColor = pop.TheNextYear > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+                data.Rows[index].Cells[7].Style.ForeColor = pop.TheYearAfterNext > 0 ? Color.Maroon : Color.Navy;
+                data.Rows[index].Cells[7].Style.SelectionForeColor = pop.TheYearAfterNext > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+            }
+            data.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
+            data.RowsDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            data.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            data.ScrollBars = ScrollBars.Vertical;
+            data.AutoResizeRows();
+            data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
+            ResumeLayout();
+            data.CellContentDoubleClick += OnReceiveCellContentDoubleClick;
+        }
         public Strategics(dynamic client, dynamic disclosure)
         {
             InitializeComponent();
@@ -131,7 +189,7 @@ namespace ShareInvest.Controls
         public void CheckForSurvival(Color color) => labelProgress.ForeColor = color;
         public void SetProgressRate(int rate)
         {
-            if (rate > 0 && rate == progressBar.Value && rate % 5 == 0 && CheckDayOfWeek(DateTime.Now))
+            if (rate > 0 && rate == progressBar.Value && rate % 0x19 == 0 && CheckDayOfWeek(DateTime.Now))
                 BeginInvoke(new Action(async () =>
                 {
                     var count = 0;
@@ -139,7 +197,6 @@ namespace ShareInvest.Controls
                     var codes = await client.GetContext(new Codes { }, 6) as List<Codes>;
                     var temp = new double[6];
                     var stack = new Stack<Catalog.Request.Consensus>();
-                    var now = DateTime.Now;
                     var price = 0U;
 
                     foreach (var consensus in (await client.GetContext(new Catalog.Request.Consensus { })).OrderByDescending(o => o.Code))
@@ -190,53 +247,7 @@ namespace ShareInvest.Controls
                             }
                     }
                     worker.RunWorkerAsync(new Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>>(codes, stack.OrderByDescending(o => o.TheNextYear)));
-                    data.CellContentDoubleClick -= OnReceiveCellContentDoubleClick;
-                    SuspendLayout();
-
-                    if (linkTerms != null)
-                    {
-                        linkTerms.Dispose();
-                        InitializeDataGridView();
-                        linkTerms = null;
-                    }
-                    if (data.Rows.Count == 0)
-                    {
-                        data.ColumnCount = 8;
-                        data.BackgroundColor = Color.FromArgb(0x79, 0x85, 0x82);
-                        data.Columns[0].Name = "종목코드";
-                        data.Columns[1].Name = "종목명";
-                    }
-                    else
-                        data.Rows.Clear();
-
-                    for (count = 2; count < data.ColumnCount; count++)
-                        data.Columns[count].Name = GetQuarter(now.AddMonths(count == 2 ? 1 : ((count - 2) * 3) + 1));
-
-                    while (stack.Count > 0)
-                    {
-                        var pop = stack.Pop();
-                        var index = data.Rows.Add(new string[] { pop.Code, codes.First(o => o.Code.Equals(pop.Code)).Name, Math.Abs(pop.FirstQuarter).ToString("P2"), Math.Abs(pop.SecondQuarter).ToString("P2"), Math.Abs(pop.ThirdQuarter).ToString("P2"), Math.Abs(pop.Quarter).ToString("P2"), Math.Abs(pop.TheNextYear).ToString("P2"), Math.Abs(pop.TheYearAfterNext).ToString("P2") });
-                        data.Rows[index].Cells[2].Style.ForeColor = pop.FirstQuarter > 0 ? Color.Maroon : Color.Navy;
-                        data.Rows[index].Cells[2].Style.SelectionForeColor = pop.FirstQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
-                        data.Rows[index].Cells[3].Style.ForeColor = pop.SecondQuarter > 0 ? Color.Maroon : Color.Navy;
-                        data.Rows[index].Cells[3].Style.SelectionForeColor = pop.SecondQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
-                        data.Rows[index].Cells[4].Style.ForeColor = pop.ThirdQuarter > 0 ? Color.Maroon : Color.Navy;
-                        data.Rows[index].Cells[4].Style.SelectionForeColor = pop.ThirdQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
-                        data.Rows[index].Cells[5].Style.ForeColor = pop.Quarter > 0 ? Color.Maroon : Color.Navy;
-                        data.Rows[index].Cells[5].Style.SelectionForeColor = pop.Quarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
-                        data.Rows[index].Cells[6].Style.ForeColor = pop.TheNextYear > 0 ? Color.Maroon : Color.Navy;
-                        data.Rows[index].Cells[6].Style.SelectionForeColor = pop.TheNextYear > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
-                        data.Rows[index].Cells[7].Style.ForeColor = pop.TheYearAfterNext > 0 ? Color.Maroon : Color.Navy;
-                        data.Rows[index].Cells[7].Style.SelectionForeColor = pop.TheYearAfterNext > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
-                    }
-                    data.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
-                    data.RowsDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-                    data.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-                    data.ScrollBars = ScrollBars.Vertical;
-                    data.AutoResizeRows();
-                    data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
-                    ResumeLayout();
-                    data.CellContentDoubleClick += OnReceiveCellContentDoubleClick;
+                    InitializeComponent(stack, count, codes);
                 }));
             progressBar.Value = rate + 1;
         }
@@ -418,19 +429,19 @@ namespace ShareInvest.Controls
                     switch (str)
                     {
                         case tc:
-                            url = @"https://youtu.be/CIfSIsozG_E";
+                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
                             break;
 
                         case tf:
-                            url = @"https://youtu.be/CIfSIsozG_E";
+                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
                             break;
 
                         case ts:
-                            url = @"https://youtu.be/CIfSIsozG_E";
+                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
                             break;
 
                         case st:
-                            url = @"https://youtu.be/CIfSIsozG_E";
+                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
                             break;
                     }
                 else if (link.Name.Equals(linkTerms.Name))

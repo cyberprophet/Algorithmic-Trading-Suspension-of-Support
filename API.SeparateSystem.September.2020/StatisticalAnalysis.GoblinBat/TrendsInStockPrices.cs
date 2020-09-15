@@ -43,6 +43,8 @@ namespace ShareInvest.Strategics
                 else
                     Cursor = Cursors.Default;
             }
+            else if (e.Strategics is DateTime time)
+                trend.Points.AddXY(time, e.Rate);
         }));
         void TrendsInStockPricesFormClosing(object sender, FormClosingEventArgs e)
         {

@@ -50,6 +50,11 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
+        public SendHoldingStocks(DateTime date, double normalize)
+        {
+            Rate = normalize;
+            Strategics = date;
+        }
         public SendHoldingStocks(Dictionary<DateTime, double> dictionary, string date)
         {
             Time = date;

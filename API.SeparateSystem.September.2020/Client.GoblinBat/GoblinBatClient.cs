@@ -99,7 +99,7 @@ namespace ShareInvest.Client
         public async Task<List<Catalog.Request.Consensus>> GetContext(Catalog.Request.Consensus consensus)
         {
             try
-            {
+            {                
                 var response = await client.ExecuteAsync(new RestRequest(security.RequestConsensus(consensus), Method.GET), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)

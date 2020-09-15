@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Windows.Forms;
 
 using ShareInvest.Catalog;
 using ShareInvest.Client;
@@ -559,6 +560,31 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             Cumulative = SendMessage.Cumulative,
                             Base = SendMessage.Base
                         };
+                        if (EstimatedPrice != null && EstimatedPrice.Count > 3)
+                        {
+                            var normalize = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(SendMessage.Date)).Value;
+                            var near = FindTheNearestQuarter(DateTime.TryParseExact(SendMessage.Date, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
+
+                            if (client.PutContext(new Catalog.Request.Consensus
+                            {
+                                Code = tc.Code,
+                                Strategics = SendMessage.Key,
+                                Date = SendMessage.Date,
+                                FirstQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[0])).Value - normalize,
+                                SecondQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[1])).Value - normalize,
+                                ThirdQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[2])).Value - normalize,
+                                Quarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[3])).Value - normalize,
+                                TheNextYear = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[4])).Value - normalize,
+                                TheYearAfterNext = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[5])).Value - normalize
+                            }).Result > 0 && SendStocks != null && new Security(Code).AnswersToQuestions.Equals(DialogResult.Yes))
+                            {
+                                var price = SendMessage.Price / normalize;
+
+                                foreach (var kv in EstimatedPrice.OrderBy(o => o.Key))
+                                    if (SendMessage.Date.CompareTo(kv.Key.ToString(format.Substring(0, 6))) < 0)
+                                        SendStocks?.Invoke(this, new SendHoldingStocks(kv.Key, price * kv.Value));
+                            }
+                        }
                         consecutive.Dispose();
                     }
                     break;
@@ -674,6 +700,24 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         {
             get; set;
         }
+        double SetPurchasePrice(double price)
+        {
+            if (Math.Abs(VerifyAmount) < Math.Abs(Quantity) && Math.Abs(Quantity) > 0)
+                Purchase = ((Purchase ?? 0D) * Math.Abs(VerifyAmount) + price) / Math.Abs(Quantity);
+
+            return Quantity == 0 ? 0D : (Purchase ?? 0D);
+        }
+        double SetLiquidation(double price)
+        {
+            if (VerifyAmount > Quantity && Quantity > -1)
+                return price - (Purchase ?? 0D);
+
+            else if (VerifyAmount < Quantity && Quantity < 1)
+                return (Purchase ?? 0D) - price;
+
+            else
+                return 0;
+        }
         string[] FindTheNearestQuarter(string date)
         {
             if (int.TryParse(date.Substring(0, 2), out int year) && int.TryParse(date.Substring(2, 2), out int month))
@@ -693,23 +737,48 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                 }
             return null;
         }
-        double SetPurchasePrice(double price)
+        string[] FindTheNearestQuarter(DateTime now)
         {
-            if (Math.Abs(VerifyAmount) < Math.Abs(Quantity) && Math.Abs(Quantity) > 0)
-                Purchase = ((Purchase ?? 0D) * Math.Abs(VerifyAmount) + price) / Math.Abs(Quantity);
+            DateTime near;
+            var quarter = new string[6];
 
-            return Quantity == 0 ? 0D : (Purchase ?? 0D);
-        }
-        double SetLiquidation(double price)
-        {
-            if (VerifyAmount > Quantity && Quantity > -1)
-                return price - (Purchase ?? 0D);
+            switch (now.Month)
+            {
+                case 1:
+                case 4:
+                case 7:
+                case 0xA:
+                    near = IsTheSecondThursday(new DateTime(now.Year, now.AddMonths(2).Month, DateTime.DaysInMonth(now.Year, now.Month)));
+                    break;
 
-            else if (VerifyAmount < Quantity && Quantity < 1)
-                return (Purchase ?? 0D) - price;
+                case 2:
+                case 5:
+                case 8:
+                case 0xB:
+                    near = IsTheSecondThursday(new DateTime(now.Year, now.AddMonths(1).Month, DateTime.DaysInMonth(now.Year, now.Month)));
+                    break;
 
-            else
-                return 0;
+                case 3:
+                case 6:
+                case 9:
+                    near = IsTheSecondThursday(new DateTime(now.Year, now.AddMonths(3).Month, DateTime.DaysInMonth(now.Year, now.Month)));
+                    break;
+
+                case 0xC:
+                    near = IsTheSecondThursday(new DateTime(now.AddYears(1).Year, now.AddMonths(-9).Month, DateTime.DaysInMonth(now.Year, now.Month)));
+                    break;
+
+                default:
+                    return null;
+            }
+            for (int i = 0; i < quarter.Length; i++)
+            {
+                if (i > 0)
+                    near = IsTheSecondThursday(near.AddMonths(3).AddDays(0xB));
+
+                quarter[i] = near.ToString(format.Substring(0, 6));
+            }
+            return quarter;
         }
         DateTime IsTheSecondThursday(DateTime now)
         {
