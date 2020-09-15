@@ -128,7 +128,7 @@ namespace ShareInvest.Strategics
                                     }).Result == false)
                                     {
                                         tc.Code = w.Code;
-                                        hs = new HoldingStocks(tc)
+                                        hs = new HoldingStocks(tc, client)
                                         {
                                             Code = tc.Code
                                         };
@@ -346,7 +346,7 @@ namespace ShareInvest.Strategics
                         break;
 
                     case Catalog.TrendToCashflow tc:
-                        hs = new HoldingStocks(tc)
+                        hs = new HoldingStocks(tc, client)
                         {
                             Code = tc.Code
                         };

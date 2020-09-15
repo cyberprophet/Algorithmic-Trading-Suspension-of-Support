@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 
@@ -50,13 +49,37 @@ namespace ShareInvest.Controls
             }
             return string.Empty;
         }
-        internal IEnumerable<CheckBox> CheckBoxButtons
+        internal string CheckValues
         {
             get
             {
+                var str = new char[4];
+
                 foreach (var check in panel.Controls)
                     if (check is CheckBox button)
-                        yield return button;
+                    {
+                        var value = button.Checked.ToString()[0];
+
+                        switch (Enum.ToObject(typeof(CheckBoxButtons), button?.Name[5]))
+                        {
+                            case CheckBoxButtons.매출:
+                                str[0] = value;
+                                break;
+
+                            case CheckBoxButtons.영업이익:
+                                str[1] = value;
+                                break;
+
+                            case CheckBoxButtons.순이익:
+                                str[2] = value;
+                                break;
+
+                            case CheckBoxButtons.현금흐름:
+                                str[3] = value;
+                                break;
+                        }
+                    }
+                return string.Concat(str[0], str[1], str[2], str[3]);
             }
         }
         readonly string code;

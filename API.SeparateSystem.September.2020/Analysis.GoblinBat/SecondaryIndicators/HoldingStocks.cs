@@ -192,7 +192,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             Date = e.Date.Substring(0, 6),
                             Cumulative = revenue + unrealize,
                             Base = SendMessage.Base > Base ? SendMessage.Base : Base,
-                            Statistic = (int)avg
+                            Statistic = (int)avg,
+                            Price = e.Price
                         };
                         SendStocks?.Invoke(this, new SendHoldingStocks(e.Date, e.Price, sShort, sLong, trend, revenue + unrealize, (long)(Base > 0 ? Base : 0)));
                         Before = avg;
@@ -460,7 +461,93 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
                 case TrendToCashflow tc:
                     Commission = commission > 0 ? commission : 1.5e-4;
+                    var analysis = tc.AnalysisType.ToCharArray();
 
+                    foreach (var fs in client.GetContext(new Catalog.Request.FinancialStatement { Code = Code }).Result)
+                    {
+                        long sales = 0, operation = 0, net = 0, cash = 0;
+                        var date = fs.Date.Substring(0, 5).Split('.');
+
+                        for (int i = 0; i < analysis.Length; i++)
+                            if (analysis[i].Equals('T'))
+                                switch (i)
+                                {
+                                    case 0:
+                                        sales = long.TryParse(fs.Revenues, out long revenues) ? revenues : long.MinValue;
+                                        break;
+
+                                    case 1:
+                                        operation = long.TryParse(fs.IncomeFromOperations, out long operations) ? operations : long.MinValue;
+                                        break;
+
+                                    case 2:
+                                        net = long.TryParse(fs.NetIncome, out long income) ? income : long.MinValue;
+                                        break;
+
+                                    case 3:
+                                        cash = long.TryParse(fs.OperatingActivities, out long activities) ? activities : long.MinValue;
+                                        break;
+
+                                    default:
+                                        continue;
+                                }
+                        if (int.TryParse(date[0], out int year) && int.TryParse(date[1], out int month))
+                            FinancialStatement[IsTheSecondThursday(new DateTime(0x7D0 + year, month, DateTime.DaysInMonth(year + 0x7D0, month), 0xF, 0x1E, 0))] = new Tuple<long, long, long, long>(sales, operation, net, cash);
+                    }
+                    List<long> sale = new List<long>(), oper = new List<long>(), netincome = new List<long>(), flow = new List<long>();
+                    var list = new List<long>[] { sale, oper, netincome, flow };
+                    var dictionary = new Dictionary<DateTime, double>();
+                    var count = 0;
+
+                    if (FinancialStatement.Count > 0)
+                    {
+                        foreach (var kv in FinancialStatement.OrderBy(o => o.Key))
+                        {
+                            if (analysis[0].Equals('T'))
+                                sale.Add(kv.Value.Item1);
+
+                            if (analysis[1].Equals('T'))
+                                oper.Add(kv.Value.Item2);
+
+                            if (analysis[2].Equals('T'))
+                                netincome.Add(kv.Value.Item3);
+
+                            if (analysis[3].Equals('T'))
+                                flow.Add(kv.Value.Item4);
+                        }
+                        for (int i = 0; i < analysis.Length; i++)
+                            if (analysis[i].Equals('T') && list[i].Count > 0 && list[i][list[i].Count - 2] > long.MinValue && list[i][list[i].Count - 1] > long.MinValue)
+                                count++;
+
+                        foreach (var item in list)
+                            if (item.Count > 0)
+                            {
+                                if (item[item.Count - 1] > long.MinValue && item[item.Count - 2] > long.MinValue)
+                                {
+                                    var normal = new Normalization(item);
+                                    var index = 0;
+
+                                    foreach (var kv in FinancialStatement.OrderBy(o => o.Key))
+                                    {
+                                        if (item[index] > long.MinValue)
+                                        {
+                                            if (dictionary.TryGetValue(kv.Key, out double normalize))
+                                                dictionary[kv.Key] = normalize + normal.Normalize(item[index]) / count;
+
+                                            else
+                                                dictionary[kv.Key] = normal.Normalize(item[index]) / count;
+                                        }
+                                        index++;
+                                    }
+                                }
+                                else
+                                {
+
+                                }
+                            }
+                        if (dictionary.Count > 3)
+                            EstimatedPrice = new Security(dictionary).EstimateThePrice(DateTime.Now);
+                    }
                     if (StartProgress(strategics.Code as string) > 0)
                     {
                         SendMessage = new Statistics
@@ -504,10 +591,12 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             OrderNumber = new Dictionary<string, dynamic>();
             this.strategics = strategics;
         }
-        public HoldingStocks(TrendToCashflow strategics) : base(strategics)
+        public HoldingStocks(TrendToCashflow strategics, GoblinBatClient client) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();
+            FinancialStatement = new Dictionary<DateTime, Tuple<long, long, long, long>>();
             this.strategics = strategics;
+            this.client = client;
         }
         public HoldingStocks(TrendsInStockPrices strategics) : base(strategics)
         {
@@ -622,10 +711,21 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             else
                 return 0;
         }
+        DateTime IsTheSecondThursday(DateTime now)
+        {
+            var month = now.AddDays(1 - now.Day);
+            var dt = month.DayOfWeek;
+
+            return month.AddDays((dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 2 : 1) * 7 + (DayOfWeek.Thursday - dt));
+        }
         DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
         string GetOrderNumber(int type) => string.Concat(type, Count++.ToString("D4"));
         [Conditional("DEBUG")]
         void IsDebugging() => Verify = true;
+        Dictionary<DateTime, Tuple<long, long, long, long>> FinancialStatement
+        {
+            get;
+        }
         EMA EMA
         {
             get;

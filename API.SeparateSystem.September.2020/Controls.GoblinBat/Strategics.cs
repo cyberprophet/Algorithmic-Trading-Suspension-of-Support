@@ -515,7 +515,7 @@ namespace ShareInvest.Controls
                                         TradingQuantity = ctQuantity,
                                         PositionRevenue = cpRevenue * 1e-2,
                                         PositionAddition = cpAddition * 1e-2,
-                                        AnalysisType = AnalysisType
+                                        AnalysisType = tc.CheckValues
                                     });
                                 break;
 
@@ -666,10 +666,6 @@ namespace ShareInvest.Controls
                             tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0x145 + 0x23;
-                            CheckValues = view.CheckBoxButtons;
-
-                            foreach (var radio in view.CheckBoxButtons)
-                                radio.Click += SetDataGridView;
                         }
                         break;
 
@@ -712,38 +708,6 @@ namespace ShareInvest.Controls
                 ResumeLayout();
             }
         }));
-        void SetDataGridView(object sender, EventArgs e)
-        {
-            var str = new char[4];
-
-            foreach (var check in CheckValues)
-            {
-                var value = check.Checked.ToString()[0];
-
-                switch (Enum.ToObject(typeof(CheckBoxButtons), check?.Name[5]))
-                {
-                    case CheckBoxButtons.매출:
-                        str[0] = value;
-                        break;
-
-                    case CheckBoxButtons.영업이익:
-                        str[1] = value;
-                        break;
-
-                    case CheckBoxButtons.순이익:
-                        str[2] = value;
-                        break;
-
-                    case CheckBoxButtons.현금흐름:
-                        str[3] = value;
-                        break;
-
-                    default:
-                        return;
-                }
-            }
-            AnalysisType = string.Concat(str[0], str[1], str[2], str[3]);
-        }
         void RemoveThePage(object sender, KeyEventArgs e)
         {
             if (e.KeyData.Equals(Keys.Delete) && sender is TabControl tab)
@@ -919,17 +883,9 @@ namespace ShareInvest.Controls
         {
             get; set;
         }
-        string AnalysisType
-        {
-            get; set;
-        }
         HashSet<Codes> Codes
         {
             get;
-        }
-        IEnumerable<CheckBox> CheckValues
-        {
-            get; set;
         }
         readonly Disclosure disclosure;
         readonly DataGridView data;
