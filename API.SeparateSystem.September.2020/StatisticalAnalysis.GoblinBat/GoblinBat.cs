@@ -73,7 +73,7 @@ namespace ShareInvest.Strategics
                 foreach (var enumerable in client.GetContext(strategics).Result)
                     stack.Push(enumerable);
 
-            int maximum = list.Count * stack.Count, rate = 0;
+            ulong maximum = (ulong)(list.Count * stack.Count), rate = 0;
             var po = new ParallelOptions
             {
                 CancellationToken = Cancel.Token,
@@ -159,7 +159,7 @@ namespace ShareInvest.Strategics
                                 hs.SendBalance -= OnReceiveAnalysisData;
                         }
                         Statistical.SetProgressRate(Color.Gold);
-                        backgroundWorker.ReportProgress((int)(rate++ * 0x64 / (double)maximum));
+                        backgroundWorker.ReportProgress((int)(rate++ * 1e+2 / maximum));
                     }));
                 }
                 catch (OperationCanceledException ex)
@@ -372,6 +372,12 @@ namespace ShareInvest.Strategics
                 {
                     hs.SendBalance -= OnReceiveAnalysisData;
                     Cursor = Cursors.Default;
+
+                    if (e.Strategics is Catalog.TrendToCashflow tc)
+                        Statistical.SetProgressRate(new Catalog.Request.Consensus
+                        {
+                            Strategics = string.Concat("TC.", tc.AnalysisType)
+                        });
                     strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
                 }
             }

@@ -194,7 +194,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             Cumulative = revenue + unrealize,
                             Base = SendMessage.Base > Base ? SendMessage.Base : Base,
                             Statistic = (int)avg,
-                            Price = e.Price
+                            Price = (int)trend
                         };
                         SendStocks?.Invoke(this, new SendHoldingStocks(e.Date, e.Price, sShort, sLong, trend, revenue + unrealize, (long)(Base > 0 ? Base : 0)));
                         Before = avg;

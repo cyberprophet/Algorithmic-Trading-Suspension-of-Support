@@ -53,17 +53,10 @@ namespace ShareInvest.Controls
         }
         void DataSortCompare(object sender, DataGridViewSortCompareEventArgs e)
         {
-            try
+            if (e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
             {
-                if (e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
-                {
-                    e.SortResult = x.CompareTo(y);
-                    e.Handled = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.StackTrace);
+                e.SortResult = x.CompareTo(y);
+                e.Handled = true;
             }
         }
         void WorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
@@ -92,7 +85,11 @@ namespace ShareInvest.Controls
                             }));
                 }
         }
-        void OnReceiveCellContentDoubleClick(object sender, DataGridViewCellEventArgs e) => BeginInvoke(new Action(async () => await disclosure.GetDisclosureInformation(data.Rows[e.RowIndex].Cells[0].Value.ToString(), data.Rows[e.RowIndex].Cells[1].Value.ToString())));
+        void OnReceiveCellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex > -1)
+                BeginInvoke(new Action(async () => await disclosure.GetDisclosureInformation(data.Rows[e.RowIndex].Cells[0].Value.ToString(), data.Rows[e.RowIndex].Cells[1].Value.ToString())));
+        }
         void InitializeComponent(Stack<Catalog.Request.Consensus> stack, int count, List<Codes> codes)
         {
             var now = DateTime.Now;
@@ -187,6 +184,21 @@ namespace ShareInvest.Controls
             }
         }
         public void CheckForSurvival(Color color) => labelProgress.ForeColor = color;
+        public void SetProgressRate(Catalog.Request.Consensus consensus) => BeginInvoke(new Action(async () =>
+        {
+            var stack = new Stack<Catalog.Request.Consensus>();
+            var list = await client.GetContext(consensus);
+
+            if (list != null && list.Count > 0)
+            {
+                foreach (var context in list.OrderByDescending(o => o.Code))
+                    if (string.IsNullOrEmpty(context.Code) == false && context.Code.Length == 6)
+                        stack.Push(context);
+
+                if (stack.Count > 0)
+                    InitializeComponent(stack, 0, await client.GetContext(new Codes { }, 6) as List<Codes>);
+            }
+        }));
         public void SetProgressRate(int rate)
         {
             if (rate > 0 && rate == progressBar.Value && rate % 0x19 == 0 && CheckDayOfWeek(DateTime.Now))
