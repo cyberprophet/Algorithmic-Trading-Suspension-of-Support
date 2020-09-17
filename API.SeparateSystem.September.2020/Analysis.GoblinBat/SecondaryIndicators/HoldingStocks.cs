@@ -499,6 +499,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     var list = new List<long>[] { sale, oper, netincome, flow };
                     var dictionary = new Dictionary<DateTime, double>();
                     var count = 0;
+                    var now = DateTime.Now;
 
                     if (FinancialStatement.Count > 0)
                     {
@@ -517,37 +518,38 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                 flow.Add(kv.Value.Item4);
                         }
                         for (int i = 0; i < analysis.Length; i++)
-                            if (analysis[i].Equals('T') && list[i].Count > 0 && list[i][list[i].Count - 2] > long.MinValue && list[i][list[i].Count - 1] > long.MinValue)
+                            if (analysis[i].Equals('T') && list[i].Count > 0)
                                 count++;
 
                         foreach (var item in list)
-                            if (item.Count > 0)
+                            if (item.Count > 0 && item.TrueForAll(o => o == 0 || o == long.MinValue) == false)
                             {
-                                if (item[item.Count - 1] > long.MinValue && item[item.Count - 2] > long.MinValue)
-                                {
-                                    var normal = new Normalization(item);
-                                    var index = 0;
+                                var normal = new Normalization(item);
+                                var index = 0;
 
-                                    foreach (var kv in FinancialStatement.OrderBy(o => o.Key))
+                                foreach (var kv in FinancialStatement.OrderBy(o => o.Key))
+                                {
+                                    if (item[index] > long.MinValue)
                                     {
-                                        if (item[index] > long.MinValue)
-                                        {
-                                            if (dictionary.TryGetValue(kv.Key, out double normalize))
-                                                dictionary[kv.Key] = normalize + normal.Normalize(item[index]) / count;
+                                        if (dictionary.TryGetValue(kv.Key, out double normalize))
+                                            dictionary[kv.Key] = normalize + normal.Normalize(item[index]) / count;
 
-                                            else
-                                                dictionary[kv.Key] = normal.Normalize(item[index]) / count;
-                                        }
-                                        index++;
+                                        else
+                                            dictionary[kv.Key] = normal.Normalize(item[index]) / count;
                                     }
-                                }
-                                else
-                                {
-                                    Console.WriteLine("F_" + Code + "\t" + tc.AnalysisType);
+                                    index++;
                                 }
                             }
-                        if (dictionary.Count > 3)
-                            EstimatedPrice = new Security(dictionary).EstimateThePrice(DateTime.Now);
+                        /*
+                        if (dictionary.Count > 3 && dictionary.Any(o => o.Key.Year == now.AddYears(2).Year) == false)
+                        {
+                            var temp = new Security(dictionary).EstimateThePrice();
+
+                            
+                        }
+                        */
+                        if (dictionary.Count > 7)
+                            EstimatedPrice = new Security(dictionary).EstimateThePrice(now);
                     }
                     if (StartProgress(strategics.Code as string) > 0)
                     {

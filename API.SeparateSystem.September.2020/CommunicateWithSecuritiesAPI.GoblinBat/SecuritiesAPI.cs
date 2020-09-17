@@ -414,9 +414,9 @@ namespace ShareInvest
                 Controls.Add(Balance);
                 Balance.Dock = DockStyle.Fill;
                 Text = Info.Nick;
-                notifyIcon.Text = Info.Nick;
                 Opacity = 0.79315;
-                backgroundWorker.RunWorkerAsync();
+                notifyIcon.Text = loading;
+                backgroundWorker.RunWorkerAsync(Info.Nick);
                 OnReceiveData(MessageBox.Show("This is a Temporary Code.", "Emergency", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
             }
         }
@@ -562,6 +562,7 @@ namespace ShareInvest
                 (api?.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate))).Send += OnReceiveSecuritiesAPI;
             }
             Connect = int.MaxValue;
+            UserName = e.Argument as string;
         }
         void GoblinBatResize(object sender, EventArgs e)
         {
@@ -689,7 +690,12 @@ namespace ShareInvest
                     com.StartProgress();
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
+            {
                 notifyIcon.Icon = (Icon)resources.GetObject(icon[DateTime.Now.Second % 4]);
+
+                if (string.IsNullOrEmpty(UserName) == false)
+                    notifyIcon.Text = UserName;
+            }
         }
         void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(() =>
         {
@@ -982,6 +988,10 @@ namespace ShareInvest
             get; set;
         }
         int Connect
+        {
+            get; set;
+        }
+        string UserName
         {
             get; set;
         }
