@@ -543,7 +543,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                 }
                                 else
                                 {
-
+                                    Console.WriteLine("F_" + Code + "\t" + tc.AnalysisType);
                                 }
                             }
                         if (dictionary.Count > 3)

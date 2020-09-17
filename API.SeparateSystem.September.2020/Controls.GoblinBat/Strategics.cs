@@ -184,7 +184,7 @@ namespace ShareInvest.Controls
             }
         }
         public void CheckForSurvival(Color color) => labelProgress.ForeColor = color;
-        public void SetProgressRate(Catalog.Request.Consensus consensus) => BeginInvoke(new Action(async () =>
+        public IAsyncResult SetProgressRate(Catalog.Request.Consensus consensus) => BeginInvoke(new Action(async () =>
         {
             var stack = new Stack<Catalog.Request.Consensus>();
             var list = await client.GetContext(consensus);

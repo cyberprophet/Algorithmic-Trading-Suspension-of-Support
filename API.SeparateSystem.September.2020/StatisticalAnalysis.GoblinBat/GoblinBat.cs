@@ -372,12 +372,20 @@ namespace ShareInvest.Strategics
                 {
                     hs.SendBalance -= OnReceiveAnalysisData;
                     Cursor = Cursors.Default;
+                    IAsyncResult result = null;
 
-                    if (e.Strategics is Catalog.TrendToCashflow tc)
-                        Statistical.SetProgressRate(new Catalog.Request.Consensus
-                        {
-                            Strategics = string.Concat("TC.", tc.AnalysisType)
-                        });
+                    switch (e.Strategics)
+                    {
+                        case Catalog.TrendToCashflow tc:
+                            result = Statistical.SetProgressRate(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", tc.AnalysisType) });
+                            break;
+                    }
+                    if (result != null && result.AsyncWaitHandle.WaitOne(0xED3))
+                    {
+                        result.AsyncWaitHandle.Close();
+                        result.AsyncWaitHandle.Dispose();
+                        GC.Collect();
+                    }
                     strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
                 }
             }
