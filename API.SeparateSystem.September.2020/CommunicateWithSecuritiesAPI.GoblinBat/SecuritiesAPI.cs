@@ -855,13 +855,14 @@ namespace ShareInvest
 
                     else
                     {
-                        if (consensus.GrantAccess)
+                        try
                         {
-                            Queue<ConvertConsensus> queue;
-                            Queue<Catalog.Request.FinancialStatement> context = null;
+                            if (consensus.GrantAccess)
+                            {
+                                Queue<ConvertConsensus> queue;
+                                Queue<Catalog.Request.FinancialStatement> context = null;
 
-                            for (int i = 0; i < retention.Code.Length / 3; i++)
-                                try
+                                for (int i = 0; i < retention.Code.Length / 3; i++)
                                 {
                                     queue = await consensus.GetContextAsync(i, retention.Code);
                                     int status = int.MinValue;
@@ -878,15 +879,20 @@ namespace ShareInvest
                                     }
                                     SendMessage(status);
                                 }
-                                catch (Exception ex)
-                                {
-                                    SendMessage(ex.StackTrace);
-                                    GC.Collect();
-                                }
+                            }
+                            else if (random.Next(0, now.Second) == 0)
+                                await new Advertise(privacy.Security).StartAdvertisingInTheDataCollectionSection(now);
                         }
-                        else
-                            await new Advertise(privacy.Security).StartAdvertisingInTheDataCollectionSection(now);
-
+                        catch (Exception ex)
+                        {
+                            SendMessage(ex.StackTrace);
+                            GC.Collect();
+                        }
+                        if (string.IsNullOrEmpty(UserName) == false && notifyIcon.Text.Equals(UserName))
+                        {
+                            notifyIcon.Text = collecting;
+                            UserName = string.Empty;
+                        }
                         return retention;
                     }
                 }
