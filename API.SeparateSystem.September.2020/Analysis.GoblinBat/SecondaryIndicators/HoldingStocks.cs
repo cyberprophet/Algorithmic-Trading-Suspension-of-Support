@@ -540,7 +540,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                     index++;
                                 }
                             }
-                        if (dictionary.Count > 4 && dictionary.Any(o => o.Key.Year == now.AddYears(2).Year) == false)
+                        if (dictionary.Count > 4 && dictionary.Any(o => o.Key.Year == now.AddYears(now.Month > 3 ? 2 : 1).Year) == false)
                         {
                             var temp = new Security(dictionary).EstimateThePrice(now.AddYears(3).Year);
                             var normal = new Normalization(temp);
@@ -550,7 +550,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                 if (kv.Value > normal.Min && kv.Value < normal.Max)
                                     dictionary[kv.Key] = normal.Normalize(kv.Value);
                         }
-                        if (dictionary.Count > 7)
+                        if (dictionary.Count > 4 && dictionary.Any(o => o.Key.Year == now.AddYears(now.Month > 3 ? 2 : 1).Year))
                             try
                             {
                                 EstimatedPrice = new Security(dictionary).EstimateThePrice(now);

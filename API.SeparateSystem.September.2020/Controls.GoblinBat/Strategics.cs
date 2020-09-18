@@ -195,8 +195,8 @@ namespace ShareInvest.Controls
                     if (string.IsNullOrEmpty(context.Code) == false && context.Code.Length == 6)
                         stack.Push(context);
 
-                if (stack.Count > 0)
-                    InitializeComponent(stack, 0, await client.GetContext(new Codes { }, 6) as List<Codes>);
+                if (stack.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
+                    InitializeComponent(stack, 0, codes);
             }
         }));
         public void SetProgressRate(int rate)
@@ -435,13 +435,13 @@ namespace ShareInvest.Controls
             }
             else if (sender is LinkLabel link)
             {
-                var url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
+                var url = @"https://youtu.be/ecwpY1_XvdM";
 
                 if (link.Name.Equals(this.link.Name) && comboStrategics.SelectedItem is string str)
                     switch (str)
                     {
                         case tc:
-                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
+                            url = @"https://youtu.be/Zk1nZJYAb6Q";
                             break;
 
                         case tf:
