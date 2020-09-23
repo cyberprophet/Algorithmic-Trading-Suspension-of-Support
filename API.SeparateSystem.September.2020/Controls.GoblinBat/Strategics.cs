@@ -61,7 +61,22 @@ namespace ShareInvest.Controls
         }
         void WorkerDoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
-            if (e.Argument is Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>> tuple)
+            if (e.Argument is Dictionary<string, Tuple<int, double, double, double, double, double, double>> dictionary)
+                foreach (var kv in dictionary)
+                {
+                    if (kv.Value.Item6 * 1.09 < kv.Value.Item7 && kv.Value.Item5 * 1.09 < kv.Value.Item6 && kv.Value.Item4 * 1.09 < kv.Value.Item5 && kv.Value.Item3 * 1.09 < kv.Value.Item4 && kv.Value.Item2 * 1.09 < kv.Value.Item3)
+                        SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Wheat));
+
+                    else if (kv.Value.Item6 * 1.07 < kv.Value.Item7 && kv.Value.Item5 * 1.07 < kv.Value.Item6 && kv.Value.Item4 * 1.07 < kv.Value.Item5 && kv.Value.Item3 * 1.07 < kv.Value.Item4 && kv.Value.Item2 * 1.07 < kv.Value.Item3)
+                        SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Moccasin));
+
+                    else if (kv.Value.Item6 * 1.05 < kv.Value.Item7 && kv.Value.Item5 * 1.05 < kv.Value.Item6 && kv.Value.Item4 * 1.05 < kv.Value.Item5 && kv.Value.Item3 * 1.05 < kv.Value.Item4 && kv.Value.Item2 * 1.05 < kv.Value.Item3)
+                        SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.PapayaWhip));
+
+                    else if (kv.Value.Item6 * 1.03 < kv.Value.Item7 && kv.Value.Item5 * 1.03 < kv.Value.Item6 && kv.Value.Item4 * 1.03 < kv.Value.Item5 && kv.Value.Item3 * 1.03 < kv.Value.Item4 && kv.Value.Item2 * 1.03 < kv.Value.Item3)
+                        SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Cornsilk));
+                }
+            else if (e.Argument is Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>> tuple)
                 foreach (var cs in tuple.Item2)
                 {
                     var next = cs.TheNextYear * 0.85;
@@ -183,6 +198,16 @@ namespace ShareInvest.Controls
                 data.Rows.Cast<DataGridViewRow>().First(o => o.Cells[0].Value.ToString().Equals(ts.Code)).DefaultCellStyle.BackColor = color;
             }
         }
+        public void SetDataGridView(string code, Color color)
+        {
+            if (data.Rows != null && data.Rows.Count > 0)
+            {
+                var cast = data.Rows.Cast<DataGridViewRow>();
+
+                if (cast.Any(o => o.Cells[0].Value.ToString().Equals(code)))
+                    cast.First(o => o.Cells[0].Value.ToString().Equals(code)).DefaultCellStyle.BackColor = color;
+            }
+        }
         public void CheckForSurvival(Color color) => labelProgress.ForeColor = color;
         public IAsyncResult SetProgressRate(Catalog.Request.Consensus consensus) => BeginInvoke(new Action(async () =>
         {
@@ -201,7 +226,40 @@ namespace ShareInvest.Controls
         }));
         public void SetProgressRate(int rate)
         {
-            if (rate > 0 && rate == progressBar.Value && rate % 0x19 == 0 && CheckDayOfWeek(DateTime.Now))
+            if (rate > 0 && rate == progressBar.Value && rate % 7 == 0)
+                BeginInvoke(new Action(async () =>
+                {
+                    var strategics = new Dictionary<string, Tuple<int, double, double, double, double, double, double>>();
+                    var stack = new Stack<Catalog.Request.Consensus>();
+
+                    for (int i = 0; i < this.strategics.Length; i++)
+                        foreach (var context in await client.GetContext(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", this.strategics[i]) }))
+                        {
+                            if (strategics.TryGetValue(context.Code, out Tuple<int, double, double, double, double, double, double> tuple))
+                                strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(tuple.Item1 + 1, tuple.Item2 + context.FirstQuarter, tuple.Item3 + context.SecondQuarter, tuple.Item4 + context.ThirdQuarter, tuple.Item5 + context.Quarter, tuple.Item6 + context.TheNextYear, tuple.Item7 + context.TheYearAfterNext);
+
+                            else
+                                strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(1, context.FirstQuarter, context.SecondQuarter, context.ThirdQuarter, context.Quarter, context.TheNextYear, context.TheYearAfterNext);
+                        }
+                    foreach (var kv in strategics.OrderByDescending(o => o.Key))
+                        if (string.IsNullOrEmpty(kv.Key) == false && kv.Key.Length == 6)
+                            stack.Push(new Catalog.Request.Consensus
+                            {
+                                Code = kv.Key,
+                                FirstQuarter = kv.Value.Item2 / kv.Value.Item1,
+                                SecondQuarter = kv.Value.Item3 / kv.Value.Item1,
+                                ThirdQuarter = kv.Value.Item4 / kv.Value.Item1,
+                                Quarter = kv.Value.Item5 / kv.Value.Item1,
+                                TheNextYear = kv.Value.Item6 / kv.Value.Item1,
+                                TheYearAfterNext = kv.Value.Item7 / kv.Value.Item1,
+                            });
+                    if (stack.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
+                    {
+                        InitializeComponent(stack, 0, codes);
+                        worker.RunWorkerAsync(strategics);
+                    }
+                }));
+            else if (rate > 0 && rate == progressBar.Value && rate % 0x19 == 0 && CheckDayOfWeek(DateTime.Now))
                 BeginInvoke(new Action(async () =>
                 {
                     var count = 0;

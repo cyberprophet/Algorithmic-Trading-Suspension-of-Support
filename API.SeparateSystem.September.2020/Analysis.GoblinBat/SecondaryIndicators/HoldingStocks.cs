@@ -575,30 +575,36 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             Base = SendMessage.Base
                         };
                         if (EstimatedPrice != null && EstimatedPrice.Count > 3)
-                        {
-                            var normalize = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(SendMessage.Date)).Value;
-                            var near = FindTheNearestQuarter(DateTime.TryParseExact(SendMessage.Date, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
-
-                            if (client.PutContext(new Catalog.Request.Consensus
+                            try
                             {
-                                Code = tc.Code,
-                                Strategics = SendMessage.Key,
-                                Date = SendMessage.Date,
-                                FirstQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[0])).Value - normalize,
-                                SecondQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[1])).Value - normalize,
-                                ThirdQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[2])).Value - normalize,
-                                Quarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[3])).Value - normalize,
-                                TheNextYear = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[4])).Value - normalize,
-                                TheYearAfterNext = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[5])).Value - normalize
-                            }).Result > 0 && SendStocks != null && new Security(Code).AnswersToQuestions.Equals(DialogResult.Yes))
-                            {
-                                var price = SendMessage.Price / normalize;
+                                var normalize = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(SendMessage.Date)).Value;
+                                var near = FindTheNearestQuarter(DateTime.TryParseExact(SendMessage.Date, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
 
-                                foreach (var kv in EstimatedPrice.OrderBy(o => o.Key))
-                                    if (SendMessage.Date.CompareTo(kv.Key.ToString(format.Substring(0, 6))) < 0)
-                                        SendStocks?.Invoke(this, new SendHoldingStocks(kv.Key, price * kv.Value));
+                                if (client.PutContext(new Catalog.Request.Consensus
+                                {
+                                    Code = tc.Code,
+                                    Strategics = SendMessage.Key,
+                                    Date = SendMessage.Date,
+                                    FirstQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[0])).Value - normalize,
+                                    SecondQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[1])).Value - normalize,
+                                    ThirdQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[2])).Value - normalize,
+                                    Quarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[3])).Value - normalize,
+                                    TheNextYear = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[4])).Value - normalize,
+                                    TheYearAfterNext = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[5])).Value - normalize
+                                }).Result > 0 && SendStocks != null && new Security(Code).AnswersToQuestions.Equals(DialogResult.Yes))
+                                {
+                                    var price = SendMessage.Price / normalize;
+
+                                    foreach (var kv in EstimatedPrice.OrderBy(o => o.Key))
+                                        if (SendMessage.Date.CompareTo(kv.Key.ToString(format.Substring(0, 6))) < 0)
+                                            SendStocks?.Invoke(this, new SendHoldingStocks(kv.Key, price * kv.Value));
+                                }
                             }
-                        }
+                            catch (Exception ex)
+                            {
+                                if (Verify)
+                                    Console.WriteLine(ex.StackTrace);
+                            }
                         consecutive.Dispose();
                     }
                     break;

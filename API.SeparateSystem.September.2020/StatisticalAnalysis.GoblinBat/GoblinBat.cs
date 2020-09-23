@@ -281,113 +281,118 @@ namespace ShareInvest.Strategics
         {
             if (sender is Controls.Strategics)
             {
-                Form form = null;
-                HoldingStocks hs = null;
-
-                switch (e.Strategics)
+                if (e.Strategics != null)
                 {
-                    case Catalog.TrendsInStockPrices ts when string.IsNullOrEmpty(e.Code) == false && uint.TryParse(e.Code, out uint price):
-                        hs = new HoldingStocks(ts)
-                        {
-                            Code = ts.Code
-                        };
-                        hs.SendBalance += OnReceiveAnalysisData;
-                        hs.StartProgress(price);
-                        return;
-
-                    case Size size:
-                        var height = 0x2DC;
-
-                        switch (size.Height)
-                        {
-                            case 0xCD:
-                                height -= 0x1E;
-                                break;
-
-                            case 0x145:
-                                height += 0x59;
-                                break;
-                        }
-                        Size = new Size(0x2B9, height);
-
-                        return;
-
-                    case Tuple<int, Catalog.Privacies> tuple when tuple.Item2 is Catalog.Privacies privacy && (string.IsNullOrEmpty(privacy.Account) || string.IsNullOrEmpty(privacy.SecuritiesAPI) || string.IsNullOrEmpty(privacy.SecurityAPI)) == false:
-                        if (tuple.Item1 == 0)
-                        {
-                            Cancel = new CancellationTokenSource();
-                            backgroundWorker.RunWorkerAsync();
-                        }
-                        else if (tuple.Item1 > 0 && Cancel.IsCancellationRequested == false)
-                        {
-                            Cancel.Cancel();
-                            backgroundWorker.CancelAsync();
-                        }
-                        return;
-
-                    case Tuple<Tuple<List<Catalog.ConvertConsensus>, List<Catalog.ConvertConsensus>>, Catalog.ScenarioAccordingToTrend> consensus:
-                        hs = new HoldingStocks(consensus.Item2, consensus.Item1, client)
-                        {
-                            Code = consensus.Item2.Code
-                        };
-                        form = new ScenarioAccordingToTrend(hs);
-                        hs.SendBalance += OnReceiveAnalysisData;
-                        new Task(() => hs.StartProgress(Privacy.Commission)).Start();
-                        break;
-
-                    case Catalog.TrendFollowingBasicFutures tf:
-                        hs = new HoldingStocks(tf)
-                        {
-                            Code = tf.Code
-                        };
-                        form = new TrendFollowingBasicFutures(hs);
-                        hs.SendBalance += OnReceiveAnalysisData;
-                        new Task(() => hs.StartProgress(Privacy.Commission)).Start();
-                        break;
-
-                    case Catalog.TrendToCashflow tc:
-                        hs = new HoldingStocks(tc, client)
-                        {
-                            Code = tc.Code
-                        };
-                        form = new TrendsInStockPrices(hs);
-                        hs.SendBalance += OnReceiveAnalysisData;
-                        new Task(() => hs.StartProgress(Privacy.Commission)).Start();
-                        break;
-
-                    case Catalog.TrendsInStockPrices ts:
-                        hs = new HoldingStocks(ts)
-                        {
-                            Code = ts.Code
-                        };
-                        form = new TrendsInStockPrices(hs);
-                        hs.SendBalance += OnReceiveAnalysisData;
-                        new Task(() => hs.StartProgress(Privacy.Commission)).Start();
-                        break;
-                }
-                Cursor = Cursors.AppStarting;
-                WindowState = FormWindowState.Minimized;
-
-                if (form.ShowDialog().Equals(DialogResult.Cancel))
-                {
-                    hs.SendBalance -= OnReceiveAnalysisData;
-                    Cursor = Cursors.Default;
-                    IAsyncResult result = null;
+                    Form form = null;
+                    HoldingStocks hs = null;
 
                     switch (e.Strategics)
                     {
+                        case Catalog.TrendsInStockPrices ts when string.IsNullOrEmpty(e.Code) == false && uint.TryParse(e.Code, out uint price):
+                            hs = new HoldingStocks(ts)
+                            {
+                                Code = ts.Code
+                            };
+                            hs.SendBalance += OnReceiveAnalysisData;
+                            hs.StartProgress(price);
+                            return;
+
+                        case Size size:
+                            var height = 0x2DC;
+
+                            switch (size.Height)
+                            {
+                                case 0xCD:
+                                    height -= 0x1E;
+                                    break;
+
+                                case 0x145:
+                                    height += 0x59;
+                                    break;
+                            }
+                            Size = new Size(0x2B9, height);
+
+                            return;
+
+                        case Tuple<int, Catalog.Privacies> tuple when tuple.Item2 is Catalog.Privacies privacy && (string.IsNullOrEmpty(privacy.Account) || string.IsNullOrEmpty(privacy.SecuritiesAPI) || string.IsNullOrEmpty(privacy.SecurityAPI)) == false:
+                            if (tuple.Item1 == 0)
+                            {
+                                Cancel = new CancellationTokenSource();
+                                backgroundWorker.RunWorkerAsync();
+                            }
+                            else if (tuple.Item1 > 0 && Cancel.IsCancellationRequested == false)
+                            {
+                                Cancel.Cancel();
+                                backgroundWorker.CancelAsync();
+                            }
+                            return;
+
+                        case Tuple<Tuple<List<Catalog.ConvertConsensus>, List<Catalog.ConvertConsensus>>, Catalog.ScenarioAccordingToTrend> consensus:
+                            hs = new HoldingStocks(consensus.Item2, consensus.Item1, client)
+                            {
+                                Code = consensus.Item2.Code
+                            };
+                            form = new ScenarioAccordingToTrend(hs);
+                            hs.SendBalance += OnReceiveAnalysisData;
+                            new Task(() => hs.StartProgress(Privacy.Commission)).Start();
+                            break;
+
+                        case Catalog.TrendFollowingBasicFutures tf:
+                            hs = new HoldingStocks(tf)
+                            {
+                                Code = tf.Code
+                            };
+                            form = new TrendFollowingBasicFutures(hs);
+                            hs.SendBalance += OnReceiveAnalysisData;
+                            new Task(() => hs.StartProgress(Privacy.Commission)).Start();
+                            break;
+
                         case Catalog.TrendToCashflow tc:
-                            result = Statistical.SetProgressRate(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", tc.AnalysisType) });
+                            hs = new HoldingStocks(tc, client)
+                            {
+                                Code = tc.Code
+                            };
+                            form = new TrendsInStockPrices(hs);
+                            hs.SendBalance += OnReceiveAnalysisData;
+                            new Task(() => hs.StartProgress(Privacy.Commission)).Start();
+                            break;
+
+                        case Catalog.TrendsInStockPrices ts:
+                            hs = new HoldingStocks(ts)
+                            {
+                                Code = ts.Code
+                            };
+                            form = new TrendsInStockPrices(hs);
+                            hs.SendBalance += OnReceiveAnalysisData;
+                            new Task(() => hs.StartProgress(Privacy.Commission)).Start();
                             break;
                     }
-                    if (result != null && result.AsyncWaitHandle.WaitOne(0xED3))
+                    Cursor = Cursors.AppStarting;
+                    WindowState = FormWindowState.Minimized;
+
+                    if (form.ShowDialog().Equals(DialogResult.Cancel))
                     {
-                        result.AsyncWaitHandle.Close();
-                        result.AsyncWaitHandle.Dispose();
-                        GC.Collect();
+                        hs.SendBalance -= OnReceiveAnalysisData;
+                        Cursor = Cursors.Default;
+                        IAsyncResult result = null;
+
+                        switch (e.Strategics)
+                        {
+                            case Catalog.TrendToCashflow tc:
+                                result = Statistical.SetProgressRate(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", tc.AnalysisType) });
+                                break;
+                        }
+                        if (result != null && result.AsyncWaitHandle.WaitOne(0xED3))
+                        {
+                            result.AsyncWaitHandle.Close();
+                            result.AsyncWaitHandle.Dispose();
+                            GC.Collect();
+                        }
+                        strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
                     }
-                    strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
                 }
+                else if (string.IsNullOrEmpty(e.Code) == false && e.Color != null)
+                    Statistical.SetDataGridView(e.Code, e.Color);
             }
         }
         async void StartProgress(IParameters param)

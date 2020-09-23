@@ -880,7 +880,7 @@ namespace ShareInvest
                                     SendMessage(status);
                                 }
                             }
-                            else if (random.Next(0, now.Second) == 0)
+                            else if (await client.GetContext(new Catalog.Request.IncorporatedStocks { Market = 'P' }) is int next && random.Next(0, await client.PostContext(new IncorporatedStocks(privacy.Security).OnReceiveSequentially(next))) == 0)
                                 await new Advertise(privacy.Security).StartAdvertisingInTheDataCollectionSection(now);
                         }
                         catch (Exception ex)

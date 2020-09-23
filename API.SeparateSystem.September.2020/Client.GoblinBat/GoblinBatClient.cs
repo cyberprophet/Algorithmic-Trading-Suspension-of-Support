@@ -57,6 +57,31 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<object> GetContext(Catalog.Request.IncorporatedStocks stocks)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestCount(stocks), Method.GET), source.Token);
+
+                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                if (string.IsNullOrEmpty(stocks.Date))
+                {
+                    var page = JsonConvert.DeserializeObject<int>(response.Content);
+
+                    if (page < 0x16)
+                        return page;
+                }
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return null;
+        }
         public async Task<List<Catalog.Request.FinancialStatement>> GetContext(Catalog.Request.FinancialStatement param)
         {
             try
@@ -99,7 +124,7 @@ namespace ShareInvest.Client
         public async Task<List<Catalog.Request.Consensus>> GetContext(Catalog.Request.Consensus consensus)
         {
             try
-            {                
+            {
                 var response = await client.ExecuteAsync(new RestRequest(security.RequestConsensus(consensus), Method.GET), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
@@ -443,6 +468,27 @@ namespace ShareInvest.Client
                 SendMessage(ex.StackTrace);
             }
             return null;
+        }
+        public async Task<int> PostContext(Stack<Catalog.Request.IncorporatedStocks> stocks)
+        {
+            var status = int.MaxValue;
+
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestIncorporatedStocks(stocks.Peek()), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(stocks), ParameterType.RequestBody), source.Token);
+
+                if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                status = (int)response.StatusCode;
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return status;
         }
         public async Task<bool> PostContext(ConfirmStrategics confirm)
         {
