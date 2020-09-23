@@ -34,25 +34,40 @@ namespace ShareInvest.Client
         public async Task<Retention> EmergencyContext<T>(Queue<T> param) where T : struct => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token)).Content);
         public async Task<object> GetContext(Catalog.Request.Charts chart)
         {
-            var response = await client.ExecuteAsync(new RestRequest(security.RequestCharts(chart), Method.GET), source.Token);
-
             try
             {
-                if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
-                {
-                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
-                    SendMessage(Coin);
-                }
-                if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
-                    return JsonConvert.DeserializeObject<string>(response.Content);
+                var request = security.RequestCharts(chart);
 
+                if (request.Item2)
+                {
+                    if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
+                        return JsonConvert.DeserializeObject<string>(request.Item1);
+
+                    else
+                        return JsonConvert.DeserializeObject<IEnumerable<Charts>>(request.Item1);
+                }
                 else
-                    return JsonConvert.DeserializeObject<IEnumerable<Charts>>(response.Content);
+                {
+                    var response = await client.ExecuteAsync(new RestRequest(request.Item1, Method.GET), source.Token);
+
+                    if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
+                    {
+                        if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString("yyMMdd")) < 0 || chart.End.Length < 6)
+                            await security.Save(chart, response.Content);
+
+                        Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                        SendMessage(Coin);
+                    }
+                    if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
+                        return JsonConvert.DeserializeObject<string>(response.Content);
+
+                    else
+                        return JsonConvert.DeserializeObject<IEnumerable<Charts>>(response.Content);
+                }
             }
             catch (Exception ex)
             {
                 SendMessage(ex.StackTrace);
-                SendMessage((int)response.StatusCode);
                 SendMessage(chart);
             }
             return null;
@@ -72,7 +87,7 @@ namespace ShareInvest.Client
                 {
                     var page = JsonConvert.DeserializeObject<int>(response.Content);
 
-                    if (page < 0x16)
+                    if (response.StatusCode.Equals(HttpStatusCode.OK) && page < 0x16)
                         return page;
                 }
             }

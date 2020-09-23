@@ -64,16 +64,16 @@ namespace ShareInvest.Controls
             if (e.Argument is Dictionary<string, Tuple<int, double, double, double, double, double, double>> dictionary)
                 foreach (var kv in dictionary)
                 {
-                    if (kv.Value.Item6 * 1.09 < kv.Value.Item7 && kv.Value.Item5 * 1.09 < kv.Value.Item6 && kv.Value.Item4 * 1.09 < kv.Value.Item5 && kv.Value.Item3 * 1.09 < kv.Value.Item4 && kv.Value.Item2 * 1.09 < kv.Value.Item3)
+                    if (kv.Value.Item2 > 0 && kv.Value.Item6 * 195e-2 < kv.Value.Item7 && kv.Value.Item5 * 195e-2 < kv.Value.Item6 && kv.Value.Item4 * 195e-2 < kv.Value.Item5 && kv.Value.Item3 * 195e-2 < kv.Value.Item4 && kv.Value.Item2 * 195e-2 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Wheat));
 
-                    else if (kv.Value.Item6 * 1.07 < kv.Value.Item7 && kv.Value.Item5 * 1.07 < kv.Value.Item6 && kv.Value.Item4 * 1.07 < kv.Value.Item5 && kv.Value.Item3 * 1.07 < kv.Value.Item4 && kv.Value.Item2 * 1.07 < kv.Value.Item3)
+                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 185e-2 < kv.Value.Item7 && kv.Value.Item5 * 185e-2 < kv.Value.Item6 && kv.Value.Item4 * 185e-2 < kv.Value.Item5 && kv.Value.Item3 * 185e-2 < kv.Value.Item4 && kv.Value.Item2 * 185e-2 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Moccasin));
 
-                    else if (kv.Value.Item6 * 1.05 < kv.Value.Item7 && kv.Value.Item5 * 1.05 < kv.Value.Item6 && kv.Value.Item4 * 1.05 < kv.Value.Item5 && kv.Value.Item3 * 1.05 < kv.Value.Item4 && kv.Value.Item2 * 1.05 < kv.Value.Item3)
+                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 175e-2 < kv.Value.Item7 && kv.Value.Item5 * 175e-2 < kv.Value.Item6 && kv.Value.Item4 * 175e-2 < kv.Value.Item5 && kv.Value.Item3 * 175e-2 < kv.Value.Item4 && kv.Value.Item2 * 175e-2 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.PapayaWhip));
 
-                    else if (kv.Value.Item6 * 1.03 < kv.Value.Item7 && kv.Value.Item5 * 1.03 < kv.Value.Item6 && kv.Value.Item4 * 1.03 < kv.Value.Item5 && kv.Value.Item3 * 1.03 < kv.Value.Item4 && kv.Value.Item2 * 1.03 < kv.Value.Item3)
+                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 155e-2 < kv.Value.Item7 && kv.Value.Item5 * 155e-2 < kv.Value.Item6 && kv.Value.Item4 * 155e-2 < kv.Value.Item5 && kv.Value.Item3 * 155e-2 < kv.Value.Item4 && kv.Value.Item2 * 155e-2 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Cornsilk));
                 }
             else if (e.Argument is Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>> tuple)
@@ -256,10 +256,12 @@ namespace ShareInvest.Controls
                     if (stack.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
                     {
                         InitializeComponent(stack, 0, codes);
-                        worker.RunWorkerAsync(strategics);
+
+                        if (worker.IsBusy == false)
+                            worker.RunWorkerAsync(strategics);
                     }
                 }));
-            else if (rate > 0 && rate == progressBar.Value && rate % 0x19 == 0 && CheckDayOfWeek(DateTime.Now))
+            else if (rate > 0 && rate == progressBar.Value && rate % 0x5F == 0 && CheckDayOfWeek(DateTime.Now))
                 BeginInvoke(new Action(async () =>
                 {
                     var count = 0;
@@ -316,7 +318,9 @@ namespace ShareInvest.Controls
 
                             }
                     }
-                    worker.RunWorkerAsync(new Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>>(codes, stack.OrderByDescending(o => o.TheNextYear)));
+                    if (worker.IsBusy == false)
+                        worker.RunWorkerAsync(new Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>>(codes, stack.OrderByDescending(o => o.TheNextYear)));
+
                     InitializeComponent(stack, count, codes);
                 }));
             progressBar.Value = rate + 1;
