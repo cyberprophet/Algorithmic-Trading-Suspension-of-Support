@@ -157,6 +157,10 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             get; set;
         }
+        protected internal override DateTime NextOrderTime
+        {
+            get; set;
+        }
         public HoldingStocks(TrendToCashflow strategics) : base(strategics)
         {
             if (StartProgress(strategics.Code) > 0)

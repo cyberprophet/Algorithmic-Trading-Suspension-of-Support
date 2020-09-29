@@ -72,6 +72,145 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     }
                     break;
 
+                case TrendsInValuation tv:
+                    if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0 && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime vInterval))
+                    {
+                        if (NextOrderTime == null)
+                            NextOrderTime = vInterval;
+
+                        else if (Quantity > tv.ReservationSubtractionalQuantity - 1 && (Offer ?? int.MaxValue) < e.Price && OrderNumber.Any(o => o.Key.StartsWith("8") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
+                        {
+                            CumulativeFee += (uint)(e.Price * tv.ReservationSubtractionalQuantity * (Commission + tax));
+                            Revenue += (long)((e.Price - (Purchase ?? 0D)) * tv.ReservationSubtractionalQuantity);
+                            Quantity -= tv.ReservationSubtractionalQuantity;
+                            var profit = OrderNumber.First(o => o.Key.StartsWith("8") && o.Value == e.Price - GetQuoteUnit(e.Price, Market));
+                            Base -= profit.Value * tv.ReservationSubtractionalQuantity;
+                            Offer = profit.Value;
+
+                            if (OrderNumber.Remove(profit.Key) && Verify)
+                                OnReceiveBalance(new string[] { string.Concat(vInterval.ToShortDateString(), " ", vInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
+                        }
+                        else if ((Bid ?? int.MinValue) > e.Price && OrderNumber.Any(o => o.Key.StartsWith("7") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
+                        {
+                            CumulativeFee += (uint)(e.Price * Commission * tv.ReservationAddtionalQuantity);
+                            Purchase = (double)((e.Price * tv.ReservationAddtionalQuantity + (Purchase ?? 0D) * Quantity) / (Quantity + tv.ReservationAddtionalQuantity));
+                            Quantity += tv.ReservationAddtionalQuantity;
+                            var profit = OrderNumber.First(o => o.Key.StartsWith("7") && o.Value == e.Price + GetQuoteUnit(e.Price, Market));
+                            Base += profit.Value * tv.ReservationAddtionalQuantity;
+                            Bid = profit.Value;
+
+                            if (OrderNumber.Remove(profit.Key) && Verify)
+                                OnReceiveBalance(new string[] { string.Concat(vInterval.ToShortDateString(), " ", vInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
+                        }
+                        else if (Quantity > tv.TradingSubtractionalQuantity - 1 && OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
+                        {
+                            CumulativeFee += (uint)(e.Price * tv.TradingSubtractionalQuantity * (Commission + tax));
+                            Revenue += (long)((e.Price - (Purchase ?? 0D)) * tv.TradingSubtractionalQuantity);
+                            Quantity -= tv.TradingSubtractionalQuantity;
+                            var profit = OrderNumber.First(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market));
+                            Base -= profit.Value * tv.TradingSubtractionalQuantity;
+
+                            if (OrderNumber.Remove(profit.Key) && Verify)
+                                OnReceiveBalance(new string[] { string.Concat(vInterval.ToShortDateString(), " ", vInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
+                        }
+                        else if (OrderNumber.Any(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
+                        {
+                            CumulativeFee += (uint)(e.Price * Commission * tv.TradingAddtionalQuantity);
+                            Purchase = (double)((e.Price * tv.TradingAddtionalQuantity + (Purchase ?? 0D) * Quantity) / (Quantity + tv.TradingAddtionalQuantity));
+                            Quantity += tv.TradingAddtionalQuantity;
+                            var profit = OrderNumber.First(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market));
+                            Base += profit.Value * tv.TradingAddtionalQuantity;
+
+                            if (OrderNumber.Remove(profit.Key) && Verify)
+                                OnReceiveBalance(new string[] { string.Concat(vInterval.ToShortDateString(), " ", vInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
+                        }
+                        else if (Quantity > tv.TradingSubtractionalQuantity - 1 && OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + tv.SubtractionalPosition) && e.Price > (Purchase ?? 0D) && gap < 0 && (tv.SubtractionalInterval == 0 || tv.SubtractionalInterval > 0 && vInterval.CompareTo(NextOrderTime) > 0))
+                        {
+                            var unit = GetQuoteUnit(e.Price, Market);
+
+                            if (Verify && VerifyAmount > Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            {
+                                OnReceiveConclusion(new string[] { string.Concat(OpenOrderType.신규매도, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString(), " ", NextOrderTime), Quantity.ToString("N0"), (Purchase ?? 0D).ToString("N2"), (e.Price + unit).ToString("N0"), (Revenue - CumulativeFee).ToString("C0"), OrderNumber.Max(o => o.Key) });
+                                VerifyAmount = Quantity;
+                            }
+                            if (OrderNumber.ContainsValue(e.Price + unit) == false)
+                                OrderNumber[GetOrderNumber((int)OpenOrderType.신규매도)] = e.Price + unit;
+
+                            if (tv.SubtractionalInterval > 0)
+                                NextOrderTime = MeasureTheDelayTime(tv.SubtractionalInterval, vInterval);
+                        }
+                        else if (tv.TradingAddtionalQuantity > 0 && OrderNumber.ContainsValue(e.Price) == false && e.Price < trend * (1 - tv.AdditionalPosition) && gap > 0 && (tv.AddtionalInterval == 0 || tv.AddtionalInterval > 0 && vInterval.CompareTo(NextOrderTime) > 0))
+                        {
+                            var unit = GetQuoteUnit(e.Price, Market);
+
+                            if (Verify && VerifyAmount < Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            {
+                                OnReceiveConclusion(new string[] { string.Concat(OpenOrderType.신규매수, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString(), " ", NextOrderTime), Quantity.ToString("N0"), (Purchase ?? 0D).ToString("N2"), (e.Price - unit).ToString("N0"), (Revenue - CumulativeFee).ToString("C0"), OrderNumber.Where(o => o.Key.StartsWith("1")).Max(o => o.Key) });
+                                VerifyAmount = Quantity;
+                            }
+                            if (OrderNumber.ContainsValue(e.Price - unit) == false)
+                                OrderNumber[GetOrderNumber((int)OpenOrderType.신규매수)] = e.Price - unit;
+
+                            if (tv.AddtionalInterval > 0)
+                                NextOrderTime = MeasureTheDelayTime(tv.AddtionalInterval, vInterval);
+                        }
+                    }
+                    else if (date.CompareTo(transmit) > 0)
+                    {
+                        OrderNumber.Clear();
+                        Count = 0;
+                        long revenue = Revenue - CumulativeFee, unrealize = (long)((e.Price - (Purchase ?? 0D)) * Quantity);
+                        var avg = EMA.Make(++Accumulative, revenue - TodayRevenue + unrealize - TodayUnrealize, Before);
+                        var stock = Market;
+                        int quantity, price = e.Price, upper = (int)(price * 1.3), lower = (int)(price * 0.7);
+
+                        if (tv.ReservationSubtractionalQuantity > 0 && Quantity > tv.ReservationSubtractionalQuantity - 1)
+                        {
+                            quantity = Quantity / tv.ReservationSubtractionalQuantity;
+                            int sell = (int)((Purchase ?? 0D) * (1 + tv.Subtraction)), sPrice = GetStartingPrice(sell, stock);
+                            sPrice = sPrice < lower ? lower + GetQuoteUnit(sPrice, stock) : sPrice;
+
+                            while (sPrice < upper && quantity-- > 0)
+                            {
+                                OrderNumber[GetOrderNumber((int)OpenOrderType.예약매도)] = sPrice;
+
+                                for (int i = 0; i < tv.SubtractionalUnit; i++)
+                                    sPrice += GetQuoteUnit(sPrice, stock);
+                            }
+                            Offer = OrderNumber.Count > 0 && OrderNumber.Any(o => o.Key.StartsWith("8")) ? OrderNumber.Where(o => o.Key.StartsWith("8")).Min(o => o.Value) : 0;
+                        }
+                        if (tv.ReservationAddtionalQuantity > 0)
+                        {
+                            quantity = Quantity / tv.ReservationAddtionalQuantity;
+                            int buy = (int)((Purchase ?? 0D) * (1 - tv.Addition)), bPrice = GetStartingPrice(lower, stock);
+
+                            while (bPrice < upper && bPrice < buy)
+                            {
+                                OrderNumber[GetOrderNumber((int)OpenOrderType.예약매수)] = bPrice;
+
+                                for (int i = 0; i < tv.AdditionalUnit; i++)
+                                    bPrice += GetQuoteUnit(bPrice, stock);
+                            }
+                            Bid = OrderNumber.Count > 0 && OrderNumber.Any(o => o.Key.StartsWith("7")) ? OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Value) : 0;
+                        }
+                        if (Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            OnReceiveEvent(new string[] { string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()), OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Key), OrderNumber.Where(o => o.Key.StartsWith("8")).Max(o => o.Key) });
+
+                        SendMessage = new Statistics
+                        {
+                            Date = e.Date.Substring(0, 6),
+                            Cumulative = revenue + unrealize,
+                            Base = SendMessage.Base > Base ? SendMessage.Base : Base,
+                            Statistic = (int)avg,
+                            Price = (int)trend
+                        };
+                        SendStocks?.Invoke(this, new SendHoldingStocks(e.Date, e.Price, sShort, sLong, trend, revenue + unrealize, (long)(Base > 0 ? Base : 0)));
+                        Before = avg;
+                        TodayRevenue = revenue;
+                        TodayUnrealize = unrealize;
+                    }
+                    break;
+
                 case TrendToCashflow tc:
                     if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0 && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime cInterval))
                     {
@@ -408,7 +547,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
                     if (StartProgress(strategics.Code as string) > 0)
                     {
-                        if (EstimatedPrice != null && EstimatedPrice.Count > 3 && EstimatedPrice.Any(o => double.IsNaN(o.Value) || double.IsInfinity(o.Value)) == false)
+                        if (string.IsNullOrEmpty(SendMessage.Date) == false && EstimatedPrice != null && EstimatedPrice.Count > 3 && EstimatedPrice.Any(o => double.IsNaN(o.Value) || double.IsInfinity(o.Value)) == false)
                         {
                             var price = SendMessage.Price;
                             var estimate = EstimatedPrice.Where(o => o.Key.ToString(format.Substring(0, 6)).CompareTo(SendMessage.Date) > 0);
@@ -460,109 +599,30 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     }
                     break;
 
+                case TrendsInValuation tv:
+                    Commission = commission > 0 ? commission : 1.5e-4;
+                    AnalyzeFinancialStatements(tv.AnalysisType.ToCharArray());
+
+                    if (StartProgress(strategics.Code as string) > 0)
+                    {
+                        SendMessage = new Statistics
+                        {
+                            Key = string.Concat("TC.", tv.AnalysisType),
+                            Date = SendMessage.Date,
+                            Price = SendMessage.Price,
+                            Statistic = SendMessage.Statistic,
+                            Cumulative = SendMessage.Cumulative,
+                            Base = SendMessage.Base
+                        };
+                        Normalize(tv.Code);
+                        consecutive.Dispose();
+                    }
+                    break;
+
                 case TrendToCashflow tc:
                     Commission = commission > 0 ? commission : 1.5e-4;
-                    var analysis = tc.AnalysisType.ToCharArray();
+                    AnalyzeFinancialStatements(tc.AnalysisType.ToCharArray());
 
-                    foreach (var fs in client.GetContext(new Catalog.Request.FinancialStatement { Code = Code }).Result)
-                    {
-                        long sales = 0, operation = 0, net = 0, cash = 0;
-                        var date = fs.Date.Substring(0, 5).Split('.');
-
-                        for (int i = 0; i < analysis.Length; i++)
-                            if (analysis[i].Equals('T'))
-                                switch (i)
-                                {
-                                    case 0:
-                                        sales = long.TryParse(fs.Revenues, out long revenues) ? revenues : long.MinValue;
-                                        break;
-
-                                    case 1:
-                                        operation = long.TryParse(fs.IncomeFromOperations, out long operations) ? operations : long.MinValue;
-                                        break;
-
-                                    case 2:
-                                        net = long.TryParse(fs.NetIncome, out long income) ? income : long.MinValue;
-                                        break;
-
-                                    case 3:
-                                        cash = long.TryParse(fs.OperatingActivities, out long activities) ? activities : long.MinValue;
-                                        break;
-
-                                    default:
-                                        continue;
-                                }
-                        if (int.TryParse(date[0], out int year) && int.TryParse(date[1], out int month))
-                            FinancialStatement[IsTheSecondThursday(new DateTime(0x7D0 + year, month, DateTime.DaysInMonth(year + 0x7D0, month), 0xF, 0x1E, 0))] = new Tuple<long, long, long, long>(sales, operation, net, cash);
-                    }
-                    List<long> sale = new List<long>(), oper = new List<long>(), netincome = new List<long>(), flow = new List<long>();
-                    var list = new List<long>[] { sale, oper, netincome, flow };
-                    var dictionary = new Dictionary<DateTime, double>();
-                    var count = 0;
-                    var now = DateTime.Now;
-
-                    if (FinancialStatement.Count > 0)
-                    {
-                        foreach (var kv in FinancialStatement.OrderBy(o => o.Key))
-                        {
-                            if (analysis[0].Equals('T'))
-                                sale.Add(kv.Value.Item1);
-
-                            if (analysis[1].Equals('T'))
-                                oper.Add(kv.Value.Item2);
-
-                            if (analysis[2].Equals('T'))
-                                netincome.Add(kv.Value.Item3);
-
-                            if (analysis[3].Equals('T'))
-                                flow.Add(kv.Value.Item4);
-                        }
-                        for (int i = 0; i < analysis.Length; i++)
-                            if (analysis[i].Equals('T') && list[i].Count > 0)
-                                count++;
-
-                        foreach (var item in list)
-                            if (item.Count > 0 && item.TrueForAll(o => o == 0 || o == long.MinValue) == false)
-                            {
-                                var normal = new Normalization(item);
-                                var index = 0;
-
-                                foreach (var kv in FinancialStatement.OrderBy(o => o.Key))
-                                {
-                                    if (item[index] > long.MinValue)
-                                    {
-                                        if (dictionary.TryGetValue(kv.Key, out double normalize))
-                                            dictionary[kv.Key] = normalize + normal.Normalize(item[index]) / count;
-
-                                        else
-                                            dictionary[kv.Key] = normal.Normalize(item[index]) / count;
-                                    }
-                                    index++;
-                                }
-                            }
-                        if (dictionary.Count > 4 && dictionary.Any(o => o.Key.Year == now.AddYears(now.Month > 3 ? 2 : 1).Year) == false)
-                        {
-                            var temp = new Security(dictionary).EstimateThePrice(now.AddYears(3).Year);
-                            var normal = new Normalization(temp);
-                            dictionary.Clear();
-
-                            foreach (var kv in temp.OrderBy(o => o.Key))
-                                if (kv.Value > normal.Min && kv.Value < normal.Max)
-                                    dictionary[kv.Key] = normal.Normalize(kv.Value);
-                        }
-                        if (dictionary.Count > 4 && dictionary.Any(o => o.Key.Year == now.AddYears(now.Month > 3 ? 2 : 1).Year))
-                            try
-                            {
-                                EstimatedPrice = new Security(dictionary).EstimateThePrice(now);
-                            }
-                            catch (Exception ex)
-                            {
-                                if (Verify)
-                                    Console.WriteLine(ex.StackTrace);
-
-                                EstimatedPrice = null;
-                            }
-                    }
                     if (StartProgress(strategics.Code as string) > 0)
                     {
                         SendMessage = new Statistics
@@ -574,37 +634,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             Cumulative = SendMessage.Cumulative,
                             Base = SendMessage.Base
                         };
-                        if (EstimatedPrice != null && EstimatedPrice.Count > 3)
-                            try
-                            {
-                                var normalize = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(SendMessage.Date)).Value;
-                                var near = FindTheNearestQuarter(DateTime.TryParseExact(SendMessage.Date, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
-
-                                if (client.PutContext(new Catalog.Request.Consensus
-                                {
-                                    Code = tc.Code,
-                                    Strategics = SendMessage.Key,
-                                    Date = SendMessage.Date,
-                                    FirstQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[0])).Value - normalize,
-                                    SecondQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[1])).Value - normalize,
-                                    ThirdQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[2])).Value - normalize,
-                                    Quarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[3])).Value - normalize,
-                                    TheNextYear = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[4])).Value - normalize,
-                                    TheYearAfterNext = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[5])).Value - normalize
-                                }).Result > 0 && SendStocks != null && new Security(Code).AnswersToQuestions.Equals(DialogResult.Yes))
-                                {
-                                    var price = SendMessage.Price / normalize;
-
-                                    foreach (var kv in EstimatedPrice.OrderBy(o => o.Key))
-                                        if (SendMessage.Date.CompareTo(kv.Key.ToString(format.Substring(0, 6))) < 0)
-                                            SendStocks?.Invoke(this, new SendHoldingStocks(kv.Key, price * kv.Value));
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                if (Verify)
-                                    Console.WriteLine(ex.StackTrace);
-                            }
+                        Normalize(tc.Code);
                         consecutive.Dispose();
                     }
                     break;
@@ -638,6 +668,13 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             this.strategics = strategics;
         }
         public HoldingStocks(TrendToCashflow strategics, GoblinBatClient client) : base(strategics)
+        {
+            OrderNumber = new Dictionary<string, dynamic>();
+            FinancialStatement = new Dictionary<DateTime, Tuple<long, long, long, long>>();
+            this.strategics = strategics;
+            this.client = client;
+        }
+        public HoldingStocks(TrendsInValuation strategics, GoblinBatClient client) : base(strategics)
         {
             OrderNumber = new Dictionary<string, dynamic>();
             FinancialStatement = new Dictionary<DateTime, Tuple<long, long, long, long>>();
@@ -713,6 +750,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             get;
         }
         protected internal override bool Market
+        {
+            get; set;
+        }
+        protected internal override DateTime NextOrderTime
         {
             get; set;
         }
@@ -807,8 +848,143 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
             return month.AddDays((dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 2 : 1) * 7 + (DayOfWeek.Thursday - dt));
         }
-        DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
         string GetOrderNumber(int type) => string.Concat(type, Count++.ToString("D4"));
+        void Normalize(string code)
+        {
+            if (EstimatedPrice != null && EstimatedPrice.Count > 3)
+                try
+                {
+                    var normalize = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(SendMessage.Date)).Value;
+                    var near = FindTheNearestQuarter(DateTime.TryParseExact(SendMessage.Date, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
+
+                    if (client.PutContext(new Catalog.Request.Consensus
+                    {
+                        Code = code,
+                        Strategics = SendMessage.Key,
+                        Date = SendMessage.Date,
+                        FirstQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[0])).Value - normalize,
+                        SecondQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[1])).Value - normalize,
+                        ThirdQuarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[2])).Value - normalize,
+                        Quarter = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[3])).Value - normalize,
+                        TheNextYear = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[4])).Value - normalize,
+                        TheYearAfterNext = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(near[5])).Value - normalize
+                    }).Result > 0 && SendStocks != null && new Security(Code).AnswersToQuestions.Equals(DialogResult.Yes))
+                    {
+                        var price = SendMessage.Price / normalize;
+
+                        foreach (var kv in EstimatedPrice.OrderBy(o => o.Key))
+                            if (SendMessage.Date.CompareTo(kv.Key.ToString(format.Substring(0, 6))) < 0)
+                                SendStocks?.Invoke(this, new SendHoldingStocks(kv.Key, price * kv.Value));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (Verify)
+                        Console.WriteLine(ex.StackTrace);
+                }
+        }
+        void AnalyzeFinancialStatements(char[] analysis)
+        {
+            foreach (var fs in client.GetContext(new Catalog.Request.FinancialStatement { Code = Code }).Result)
+            {
+                long sales = 0, operation = 0, net = 0, cash = 0;
+                var date = fs.Date.Substring(0, 5).Split('.');
+
+                for (int i = 0; i < analysis.Length; i++)
+                    if (analysis[i].Equals('T'))
+                        switch (i)
+                        {
+                            case 0:
+                                sales = long.TryParse(fs.Revenues, out long revenues) ? revenues : long.MinValue;
+                                break;
+
+                            case 1:
+                                operation = long.TryParse(fs.IncomeFromOperations, out long operations) ? operations : long.MinValue;
+                                break;
+
+                            case 2:
+                                net = long.TryParse(fs.NetIncome, out long income) ? income : long.MinValue;
+                                break;
+
+                            case 3:
+                                cash = long.TryParse(fs.OperatingActivities, out long activities) ? activities : long.MinValue;
+                                break;
+
+                            default:
+                                continue;
+                        }
+                if (int.TryParse(date[0], out int year) && int.TryParse(date[1], out int month))
+                    FinancialStatement[IsTheSecondThursday(new DateTime(0x7D0 + year, month, DateTime.DaysInMonth(year + 0x7D0, month), 0xF, 0x1E, 0))] = new Tuple<long, long, long, long>(sales, operation, net, cash);
+            }
+            List<long> sale = new List<long>(), oper = new List<long>(), netincome = new List<long>(), flow = new List<long>();
+            var list = new List<long>[] { sale, oper, netincome, flow };
+            var dictionary = new Dictionary<DateTime, double>();
+            var count = 0;
+            var now = DateTime.Now;
+
+            if (FinancialStatement.Count > 0)
+            {
+                foreach (var kv in FinancialStatement.OrderBy(o => o.Key))
+                {
+                    if (analysis[0].Equals('T'))
+                        sale.Add(kv.Value.Item1);
+
+                    if (analysis[1].Equals('T'))
+                        oper.Add(kv.Value.Item2);
+
+                    if (analysis[2].Equals('T'))
+                        netincome.Add(kv.Value.Item3);
+
+                    if (analysis[3].Equals('T'))
+                        flow.Add(kv.Value.Item4);
+                }
+                for (int i = 0; i < analysis.Length; i++)
+                    if (analysis[i].Equals('T') && list[i].Count > 0)
+                        count++;
+
+                foreach (var item in list)
+                    if (item.Count > 0 && item.TrueForAll(o => o == 0 || o == long.MinValue) == false)
+                    {
+                        var normal = new Normalization(item);
+                        var index = 0;
+
+                        foreach (var kv in FinancialStatement.OrderBy(o => o.Key))
+                        {
+                            if (item[index] > long.MinValue)
+                            {
+                                if (dictionary.TryGetValue(kv.Key, out double normalize))
+                                    dictionary[kv.Key] = normalize + normal.Normalize(item[index]) / count;
+
+                                else
+                                    dictionary[kv.Key] = normal.Normalize(item[index]) / count;
+                            }
+                            index++;
+                        }
+                    }
+                if (dictionary.Count > 4 && dictionary.Any(o => o.Key.Year == now.AddYears(now.Month > 3 ? 2 : 1).Year) == false)
+                {
+                    var temp = new Security(dictionary).EstimateThePrice(now.AddYears(3).Year);
+                    var normal = new Normalization(temp);
+                    dictionary.Clear();
+
+                    foreach (var kv in temp.OrderBy(o => o.Key))
+                        if (kv.Value > normal.Min && kv.Value < normal.Max)
+                            dictionary[kv.Key] = normal.Normalize(kv.Value);
+                }
+                if (dictionary.Count > 4 && dictionary.Any(o => o.Key.Year == now.AddYears(now.Month > 3 ? 2 : 1).Year))
+                    try
+                    {
+                        EstimatedPrice = new Security(dictionary).EstimateThePrice(now);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (Verify)
+                            Console.WriteLine(ex.StackTrace);
+
+                        EstimatedPrice = null;
+                    }
+            }
+        }
         [Conditional("DEBUG")]
         void IsDebugging() => Verify = true;
         Dictionary<DateTime, Tuple<long, long, long, long>> FinancialStatement
@@ -820,10 +996,6 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             get;
         }
         Statistics SendMessage
-        {
-            get; set;
-        }
-        DateTime NextOrderTime
         {
             get; set;
         }

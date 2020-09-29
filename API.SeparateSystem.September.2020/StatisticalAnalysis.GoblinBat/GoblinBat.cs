@@ -309,6 +309,10 @@ namespace ShareInvest.Strategics
                                 case 0x145:
                                     height += 0x59;
                                     break;
+
+                                case 0x145 - 0x23:
+                                    height += 0x60;
+                                    break;
                             }
                             Size = new Size(0x2B9, height);
 
@@ -357,6 +361,16 @@ namespace ShareInvest.Strategics
                             new Task(() => hs.StartProgress(Privacy.Commission)).Start();
                             break;
 
+                        case Catalog.TrendsInValuation tv:
+                            hs = new HoldingStocks(tv, client)
+                            {
+                                Code = tv.Code
+                            };
+                            form = new TrendsInStockPrices(hs);
+                            hs.SendBalance += OnReceiveAnalysisData;
+                            new Task(() => hs.StartProgress(Privacy.Commission)).Start();
+                            break;
+
                         case Catalog.TrendsInStockPrices ts:
                             hs = new HoldingStocks(ts)
                             {
@@ -380,6 +394,10 @@ namespace ShareInvest.Strategics
                         {
                             case Catalog.TrendToCashflow tc:
                                 result = Statistical.SetProgressRate(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", tc.AnalysisType) });
+                                break;
+
+                            case Catalog.TrendsInValuation tv:
+                                result = Statistical.SetProgressRate(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", tv.AnalysisType) });
                                 break;
                         }
                         if (result != null && result.AsyncWaitHandle.WaitOne(0xED3))

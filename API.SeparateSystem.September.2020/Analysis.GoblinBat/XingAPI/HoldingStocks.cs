@@ -191,6 +191,10 @@ namespace ShareInvest.Analysis.XingAPI
         {
             get; set;
         }
+        protected internal override DateTime NextOrderTime
+        {
+            get; set;
+        }
         public HoldingStocks(TrendFollowingBasicFutures strategics) : base(strategics)
         {
             if (StartProgress(strategics.Code) > 0)

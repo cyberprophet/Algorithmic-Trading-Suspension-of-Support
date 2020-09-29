@@ -64,16 +64,16 @@ namespace ShareInvest.Controls
             if (e.Argument is Dictionary<string, Tuple<int, double, double, double, double, double, double>> dictionary)
                 foreach (var kv in dictionary)
                 {
-                    if (kv.Value.Item2 > 0 && kv.Value.Item6 * 195e-2 < kv.Value.Item7 && kv.Value.Item5 * 195e-2 < kv.Value.Item6 && kv.Value.Item4 * 195e-2 < kv.Value.Item5 && kv.Value.Item3 * 195e-2 < kv.Value.Item4 && kv.Value.Item2 * 195e-2 < kv.Value.Item3)
+                    if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1575e-3 < kv.Value.Item7 && kv.Value.Item5 * 1575e-3 < kv.Value.Item6 && kv.Value.Item4 * 1575e-3 < kv.Value.Item5 && kv.Value.Item3 * 1575e-3 < kv.Value.Item4 && kv.Value.Item2 * 1575e-3 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Wheat));
 
-                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 185e-2 < kv.Value.Item7 && kv.Value.Item5 * 185e-2 < kv.Value.Item6 && kv.Value.Item4 * 185e-2 < kv.Value.Item5 && kv.Value.Item3 * 185e-2 < kv.Value.Item4 && kv.Value.Item2 * 185e-2 < kv.Value.Item3)
+                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1525e-3 < kv.Value.Item7 && kv.Value.Item5 * 1525e-3 < kv.Value.Item6 && kv.Value.Item4 * 1525e-3 < kv.Value.Item5 && kv.Value.Item3 * 1525e-3 < kv.Value.Item4 && kv.Value.Item2 * 1525e-3 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Moccasin));
 
-                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 175e-2 < kv.Value.Item7 && kv.Value.Item5 * 175e-2 < kv.Value.Item6 && kv.Value.Item4 * 175e-2 < kv.Value.Item5 && kv.Value.Item3 * 175e-2 < kv.Value.Item4 && kv.Value.Item2 * 175e-2 < kv.Value.Item3)
+                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1475e-3 < kv.Value.Item7 && kv.Value.Item5 * 1475e-3 < kv.Value.Item6 && kv.Value.Item4 * 1475e-3 < kv.Value.Item5 && kv.Value.Item3 * 1475e-3 < kv.Value.Item4 && kv.Value.Item2 * 1475e-3 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.PapayaWhip));
 
-                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 155e-2 < kv.Value.Item7 && kv.Value.Item5 * 155e-2 < kv.Value.Item6 && kv.Value.Item4 * 155e-2 < kv.Value.Item5 && kv.Value.Item3 * 155e-2 < kv.Value.Item4 && kv.Value.Item2 * 155e-2 < kv.Value.Item3)
+                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1425e-3 < kv.Value.Item7 && kv.Value.Item5 * 1425e-3 < kv.Value.Item6 && kv.Value.Item4 * 1425e-3 < kv.Value.Item5 && kv.Value.Item3 * 1425e-3 < kv.Value.Item4 && kv.Value.Item2 * 1425e-3 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Cornsilk));
                 }
             else if (e.Argument is Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>> tuple)
@@ -374,7 +374,7 @@ namespace ShareInvest.Controls
                             foreach (var commission in commissionStocks)
                                 comboCommission.Items.Add(commission.ToString("P3"));
 
-                            comboStrategics.Items.AddRange(new object[] { tc, st, ts });
+                            comboStrategics.Items.AddRange(new object[] { tv, tc, st, ts });
                         }
                         str = "위탁종합";
                         Length = 6;
@@ -463,6 +463,17 @@ namespace ShareInvest.Controls
                                     panel.RowStyles[0].Height = 0xEB + 0x23;
                                 }
                                 break;
+
+                            case string tv when tv.Equals("TV") && Length == 6:
+                                if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
+                                {
+                                    var view = new TrendsInValuation(select);
+                                    tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                                    view.Dock = DockStyle.Fill;
+                                    view.TransmuteStrategics(strategics.Substring(0xA).Split('|'));
+                                    panel.RowStyles[0].Height = 0x145;
+                                }
+                                break;
                         }
                         var lasttabrect = tab.GetTabRect(tab.TabPages.Count - 1);
                         tab.TabPages[tab.TabPages.Count - 1].BackColor = color;
@@ -511,6 +522,10 @@ namespace ShareInvest.Controls
                             break;
 
                         case ts:
+                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
+                            break;
+
+                        case tv:
                             url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
                             break;
 
@@ -604,6 +619,33 @@ namespace ShareInvest.Controls
                                     });
                                 break;
 
+                            case TrendsInValuation tv:
+                                check = tv.TransmuteStrategics();
+                                stParam = tv.TransmuteStrategics(tabPage.Text)?.Split('|');
+
+                                if (check && stParam.Length == 0x11 && int.TryParse(stParam[2], out int vShort) && int.TryParse(stParam[3], out int vLong) && int.TryParse(stParam[4], out int vTrend) && int.TryParse(stParam[5], out int su) && int.TryParse(stParam[6], out int sq) && double.TryParse(stParam[7], out double vSubtraction) && int.TryParse(stParam[8], out int au) && int.TryParse(stParam[9], out int aq) && double.TryParse(stParam[0xA], out double vAddition) && int.TryParse(stParam[0xB], out int si) && int.TryParse(stParam[0xC], out int tsq) && double.TryParse(stParam[0xD], out double sp) && int.TryParse(stParam[0xE], out int ai) && int.TryParse(stParam[0xF], out int taq) && double.TryParse(stParam[0x10], out double ap))
+                                    verify = new SendHoldingStocks(new Catalog.TrendsInValuation
+                                    {
+                                        Code = stParam[1],
+                                        Short = vShort,
+                                        Long = vLong,
+                                        Trend = vTrend,
+                                        SubtractionalUnit = su,
+                                        ReservationSubtractionalQuantity = sq,
+                                        Subtraction = vSubtraction * 1e-2,
+                                        AdditionalUnit = au,
+                                        ReservationAddtionalQuantity = aq,
+                                        Addition = vAddition * 1e-2,
+                                        SubtractionalInterval = si,
+                                        TradingSubtractionalQuantity = tsq,
+                                        SubtractionalPosition = sp * 1e-2,
+                                        AddtionalInterval = ai,
+                                        TradingAddtionalQuantity = taq,
+                                        AdditionalPosition = ap * 1e-2,
+                                        AnalysisType = tv.CheckValues
+                                    });
+                                break;
+
                             case ScenarioAccordingToTrend st:
                                 check = st.TransmuteStrategics();
                                 var item = st.TransmuteStrategics(tabPage.Text);
@@ -660,6 +702,10 @@ namespace ShareInvest.Controls
 
                                 case TrendsInStockPrices ts:
                                     sb.Append(ts.TransmuteStrategics(tabPage.Text));
+                                    break;
+
+                                case TrendsInValuation tv:
+                                    sb.Append(tv.TransmuteStrategics(tabPage.Text));
                                     break;
                             }
                         sb.Append(';');
@@ -751,6 +797,16 @@ namespace ShareInvest.Controls
                             tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0x145 + 0x23;
+                        }
+                        break;
+
+                    case tv:
+                        if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
+                        {
+                            var view = new TrendsInValuation(select);
+                            tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                            view.Dock = DockStyle.Fill;
+                            panel.RowStyles[0].Height = 0x145;
                         }
                         break;
 
@@ -912,6 +968,11 @@ namespace ShareInvest.Controls
                     case Strategics.tc:
                     case "TC":
                         height += 0x145;
+                        break;
+
+                    case tv:
+                    case "TV":
+                        height += 0x145 - 0x23;
                         break;
                 }
                 if (data.Columns.Count > 0)

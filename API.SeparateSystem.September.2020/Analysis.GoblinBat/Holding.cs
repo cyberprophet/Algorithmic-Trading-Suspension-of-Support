@@ -162,6 +162,11 @@ namespace ShareInvest.Analysis
             TC = strategics;
             consecutive = new Consecutive(strategics, this);
         }
+        public Holding(TrendsInValuation strategics)
+        {
+            TV = strategics;
+            consecutive = new Consecutive(strategics, this);
+        }
         public Holding(TrendsInStockPrices strategics)
         {
             TS = strategics;
@@ -294,6 +299,10 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        protected internal abstract DateTime NextOrderTime
+        {
+            get; set;
+        }
         protected internal TrendFollowingBasicFutures TF
         {
             get;
@@ -303,6 +312,10 @@ namespace ShareInvest.Analysis
             get;
         }
         protected internal TrendToCashflow TC
+        {
+            get;
+        }
+        protected internal TrendsInValuation TV
         {
             get;
         }
@@ -322,6 +335,7 @@ namespace ShareInvest.Analysis
             else
                 return Color.Maroon;
         }
+        protected internal DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
         Temporary Temporary
         {
             get; set;
@@ -346,7 +360,7 @@ namespace ShareInvest.Analysis
         CONET801 = 3,
         CONET002 = 4,
         CONET003 = 5
-    }   
+    }
     public enum OpenOrderType
     {
         신규매수 = 1,
