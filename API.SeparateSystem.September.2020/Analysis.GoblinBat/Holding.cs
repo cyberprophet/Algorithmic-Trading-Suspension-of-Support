@@ -51,7 +51,7 @@ namespace ShareInvest.Analysis
 
                     while (string.IsNullOrEmpty(end) || string.Compare(end, DateTime.Now.ToString(format)) <= 0)
                     {
-                        if (end.CompareTo(excluding) > 0 && end.CompareTo(theDate) < 0)
+                        if (string.IsNullOrEmpty(end) == false && end.Substring(2).CompareTo(excluding.Substring(2)) > 0 && end.Substring(2).CompareTo(theDate.Substring(2)) < 0)
                             for (int i = 0; i < 0x1C; i++)
                                 count++;
 
@@ -185,6 +185,10 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        public abstract int Cash
+        {
+            get; protected internal set;
+        }
         public abstract dynamic Purchase
         {
             get; set;
@@ -204,10 +208,6 @@ namespace ShareInvest.Analysis
         public abstract long Revenue
         {
             get; set;
-        }
-        public abstract ulong Cash
-        {
-            protected internal get; set;
         }
         public abstract double Rate
         {

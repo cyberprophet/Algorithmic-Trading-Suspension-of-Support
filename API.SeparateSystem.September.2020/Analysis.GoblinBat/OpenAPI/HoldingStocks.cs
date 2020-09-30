@@ -8,10 +8,31 @@ namespace ShareInvest.Analysis.OpenAPI
 {
     public class HoldingStocks : Holding
     {
-        internal void OnReceiveTrendsInPrices(double gap, double peek)
+        internal void OnReceiveTrendsInPrices(SendConsecutive e, double gap, double peek)
         {
             switch (strategics)
             {
+                case TrendsInValuation tv:
+                    var interval = e.Date.Length == 6 ? new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day, int.TryParse(e.Date.Substring(0, 2), out int hour) ? hour : DateTime.Now.Hour, int.TryParse(e.Date.Substring(2, 2), out int minute) ? minute : DateTime.Now.Minute, int.TryParse(e.Date.Substring(4), out int second) ? second : DateTime.Now.Second) : DateTime.Now;
+
+                    if (tv.TradingAddtionalQuantity > 0 && Bid < peek * (1 - tv.AdditionalPosition) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder && (tv.AddtionalInterval == 0 || tv.AddtionalInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                    {
+                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, tv.Code, tv.TradingAddtionalQuantity, Bid, string.Empty)));
+                        WaitOrder = false;
+
+                        if (tv.AddtionalInterval > 0)
+                            NextOrderTime = MeasureTheDelayTime(tv.AddtionalInterval, interval);
+                    }
+                    else if (tv.TradingSubtractionalQuantity > 0 && Offer > peek * (1 + tv.SubtractionalPosition) && Offer > Purchase && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder && (tv.SubtractionalInterval == 0 || tv.SubtractionalInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                    {
+                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, tv.Code, tv.TradingSubtractionalQuantity, Offer, string.Empty)));
+                        WaitOrder = false;
+
+                        if (tv.SubtractionalInterval > 0)
+                            NextOrderTime = MeasureTheDelayTime(tv.SubtractionalInterval, interval);
+                    }
+                    break;
+
                 case TrendsInStockPrices ts:
                     if (ts.Setting.Equals(Interface.Setting.Short) == false && Bid < peek * (1 - ts.AdditionalPurchase) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder)
                     {
@@ -37,19 +58,6 @@ namespace ShareInvest.Analysis.OpenAPI
                         WaitOrder = false;
                     }
                     break;
-
-                case TrendsInValuation tv:
-                    if (tv.TradingAddtionalQuantity > 0 && Bid < peek * (1 - tv.AdditionalPosition) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder)
-                    {
-                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, tv.Code, tv.TradingAddtionalQuantity, Bid, string.Empty)));
-                        WaitOrder = false;
-                    }
-                    else if (tv.TradingSubtractionalQuantity > 0 && Offer > peek * (1 + tv.SubtractionalPosition) && Offer > Purchase && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder)
-                    {
-                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, tv.Code, tv.TradingSubtractionalQuantity, Offer, string.Empty)));
-                        WaitOrder = false;
-                    }
-                    break;
             }
             Base = peek;
             Secondary = gap;
@@ -62,6 +70,10 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             get; set;
         }
+        public override int Cash
+        {
+            get; protected internal set;
+        }
         public override dynamic Purchase
         {
             get; set;
@@ -73,10 +85,6 @@ namespace ShareInvest.Analysis.OpenAPI
         public override long Revenue
         {
             get; set;
-        }
-        public override ulong Cash
-        {
-            protected internal get; set;
         }
         public override double Rate
         {
@@ -131,6 +139,8 @@ namespace ShareInvest.Analysis.OpenAPI
         }
         public override void OnReceiveConclusion(string[] param)
         {
+            Cash = 0;
+
             switch (param[5])
             {
                 case conclusion:
@@ -150,6 +160,9 @@ namespace ShareInvest.Analysis.OpenAPI
                     break;
 
                 case confirmation when param[12].EndsWith(cancellantion) || param[12].EndsWith(correction):
+                    if (param[12].EndsWith(cancellantion) && OrderNumber.TryGetValue(param[11], out dynamic price))
+                        Cash = (price < Current && price is int ? price : 0) * (int.TryParse(param[7], out int volume) ? volume : 0);
+
                     WaitOrder = OrderNumber.Remove(param[11]);
                     break;
             }
@@ -185,6 +198,7 @@ namespace ShareInvest.Analysis.OpenAPI
 
             OrderNumber = new Dictionary<string, dynamic>();
             this.strategics = strategics;
+            NextOrderTime = DateTime.Now;
             consecutive.Connect(this);
         }
         public HoldingStocks(TrendToCashflow strategics) : base(strategics)

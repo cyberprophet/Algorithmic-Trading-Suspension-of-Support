@@ -146,6 +146,10 @@ namespace ShareInvest.Analysis.XingAPI
         {
             get; set;
         }
+        public override int Cash
+        {
+            get; protected internal set;
+        }
         public override dynamic Purchase
         {
             get; set;
@@ -157,10 +161,6 @@ namespace ShareInvest.Analysis.XingAPI
         public override long Revenue
         {
             get; set;
-        }
-        public override ulong Cash
-        {
-            protected internal get; set;
         }
         public override double Rate
         {

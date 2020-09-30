@@ -159,7 +159,7 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
-        internal static ulong Cash
+        internal static long Cash
         {
             get; set;
         }

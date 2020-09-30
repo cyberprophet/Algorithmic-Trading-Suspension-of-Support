@@ -7,6 +7,10 @@ namespace ShareInvest.OpenAPI
 {
     abstract class Real
     {
+        internal static string Account
+        {
+            get; set;
+        }
         protected internal virtual string[] OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e, int[] fid)
         {
             var param = new string[fid.Length];

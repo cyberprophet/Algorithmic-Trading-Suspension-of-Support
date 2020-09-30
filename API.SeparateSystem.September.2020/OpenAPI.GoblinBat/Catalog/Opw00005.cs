@@ -22,7 +22,7 @@ namespace ShareInvest.OpenAPI.Catalog
 
             if (long.TryParse(temp.Item1[7], out long available))
             {
-                var cash = available;
+                Connect.Cash = available;
                 var now = DateTime.Now;
 
                 while (temp.Item2?.Count > 0)
@@ -31,7 +31,7 @@ namespace ShareInvest.OpenAPI.Catalog
 
                     if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs) && API.GetMasterStockState(balance.Item1).Contains(transactionSuspension) == false)
                     {
-                        if (hs.Quantity == 0 && cash > 0 && now.Hour == 8 && now.Minute > 0x35)
+                        if (hs.Quantity == 0 && Connect.Cash > 0 && now.Hour == 8 && now.Minute > 0x35)
                         {
                             int sell, buy, upper, lower, bPrice, sPrice;
                             uint quantity = (uint)balance.Item3, price = uint.TryParse(API.GetMasterLastPrice(hs.Code), out uint before) ? before : 0;
@@ -41,6 +41,63 @@ namespace ShareInvest.OpenAPI.Catalog
 
                             switch (hs.FindStrategics)
                             {
+                                case TrendsInValuation tv:
+                                    upper = (int)(price * 1.3);
+                                    lower = (int)(price * 0.7);
+
+                                    if (tv.ReservationSubtractionalQuantity > 0)
+                                    {
+                                        sell = (int)(balance.Item4 * (1 + tv.Subtraction));
+                                        sPrice = hs.GetStartingPrice(sell, stock);
+                                        sPrice = sPrice < lower ? lower + hs.GetQuoteUnit(sPrice, stock) : sPrice;
+
+                                        while (sPrice < upper && quantity-- > 0)
+                                        {
+                                            SendMessage(sPrice.ToString("C0"), string.Empty);
+                                            connect.SendOrder(new SendOrder
+                                            {
+                                                RQName = balance.Item2,
+                                                ScreenNo = connect.LookupScreenNo,
+                                                AccNo = account,
+                                                OrderType = (int)OpenOrderType.신규매도,
+                                                Code = hs.Code,
+                                                Qty = tv.ReservationSubtractionalQuantity,
+                                                Price = sPrice,
+                                                HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                                OrgOrderNo = string.Empty
+                                            });
+                                            for (int i = 0; i < tv.SubtractionalUnit; i++)
+                                                sPrice += hs.GetQuoteUnit(sPrice, stock);
+                                        }
+                                    }
+                                    if (tv.ReservationAddtionalQuantity > 0)
+                                    {
+                                        buy = (int)(balance.Item4 * (1 - tv.Addition));
+                                        bPrice = hs.GetStartingPrice(lower, stock);
+
+                                        while (bPrice < upper && bPrice < buy && Connect.Cash > bPrice * (1.5e-4 + 1))
+                                        {
+                                            connect.SendOrder(new SendOrder
+                                            {
+                                                RQName = balance.Item2,
+                                                ScreenNo = connect.LookupScreenNo,
+                                                AccNo = account,
+                                                OrderType = (int)OpenOrderType.신규매수,
+                                                Code = hs.Code,
+                                                Qty = tv.ReservationAddtionalQuantity,
+                                                Price = bPrice,
+                                                HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                                OrgOrderNo = string.Empty
+                                            });
+                                            for (int i = 0; i < tv.AdditionalUnit; i++)
+                                                bPrice += hs.GetQuoteUnit(bPrice, stock);
+
+                                            Connect.Cash -= (long)(bPrice * (1.5e-4 + 1));
+                                            SendMessage(bPrice.ToString("C0"), Connect.Cash.ToString("C0"));
+                                        }
+                                    }
+                                    break;
+
                                 case TrendToCashflow tc when tc.ReservationQuantity > 0:
                                     sell = (int)(balance.Item4 * (1 + tc.ReservationRevenue));
                                     buy = (int)(balance.Item4 * (1 - tc.Addition));
@@ -68,7 +125,7 @@ namespace ShareInvest.OpenAPI.Catalog
                                         for (int i = 0; i < tc.Unit; i++)
                                             sPrice += hs.GetQuoteUnit(sPrice, stock);
                                     }
-                                    while (bPrice < upper && bPrice < buy && cash > bPrice * (1.5e-4 + 1))
+                                    while (bPrice < upper && bPrice < buy && Connect.Cash > bPrice * (1.5e-4 + 1))
                                     {
                                         connect.SendOrder(new SendOrder
                                         {
@@ -85,8 +142,8 @@ namespace ShareInvest.OpenAPI.Catalog
                                         for (int i = 0; i < tc.Unit; i++)
                                             bPrice += hs.GetQuoteUnit(bPrice, stock);
 
-                                        cash -= (long)(bPrice * (1.5e-4 + 1));
-                                        SendMessage(bPrice.ToString("C0"), cash.ToString("C0"));
+                                        Connect.Cash -= (long)(bPrice * (1.5e-4 + 1));
+                                        SendMessage(bPrice.ToString("C0"), Connect.Cash.ToString("C0"));
                                     }
                                     break;
 
@@ -117,7 +174,7 @@ namespace ShareInvest.OpenAPI.Catalog
                                         for (int i = 0; i < ts.QuoteUnit; i++)
                                             sPrice += hs.GetQuoteUnit(sPrice, stock);
                                     }
-                                    while (bPrice < upper && bPrice < buy && cash > bPrice * (1.5e-4 + 1))
+                                    while (bPrice < upper && bPrice < buy && Connect.Cash > bPrice * (1.5e-4 + 1))
                                     {
                                         connect.SendOrder(new SendOrder
                                         {
@@ -134,8 +191,8 @@ namespace ShareInvest.OpenAPI.Catalog
                                         for (int i = 0; i < ts.QuoteUnit; i++)
                                             bPrice += hs.GetQuoteUnit(bPrice, stock);
 
-                                        cash -= (long)(bPrice * (1.5e-4 + 1));
-                                        SendMessage(bPrice.ToString("C0"), cash.ToString("C0"));
+                                        Connect.Cash -= (long)(bPrice * (1.5e-4 + 1));
+                                        SendMessage(bPrice.ToString("C0"), Connect.Cash.ToString("C0"));
                                     }
                                     break;
                             }

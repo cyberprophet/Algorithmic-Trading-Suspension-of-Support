@@ -64,6 +64,7 @@ namespace ShareInvest.OpenAPI
                 if (checkAccount.Checked && await new Security().Encrypt(this.privacy, privacy.AccountNumber, checkAccount.Checked) < int.MaxValue)
                     Console.WriteLine(log);
             }));
+            Real.Account = privacy.AccountNumber;
             var aInfo = new AccountInformation
             {
                 Identity = axAPI.GetLoginInfo(user),
@@ -177,8 +178,7 @@ namespace ShareInvest.OpenAPI
                         Purchase = 0,
                         Quantity = 0,
                         Rate = 0,
-                        Revenue = 0,
-                        Cash = 0
+                        Revenue = 0
                     };
                     break;
 
@@ -220,18 +220,51 @@ namespace ShareInvest.OpenAPI
             }
             return Connect.HoldingStock.Count;
         }
-        public void SendOrder(IAccountInformation info, Tuple<int, string, int, int, string> order) => (API as Connect)?.SendOrder(new SendOrder
+        public void SendOrder(IAccountInformation info, Tuple<int, string, int, int, string> order)
         {
-            RQName = axAPI.GetMasterCodeName(order.Item2),
-            ScreenNo = (API as Connect)?.LookupScreenNo,
-            AccNo = info.Account,
-            OrderType = order.Item1,
-            Code = order.Item2,
-            Qty = order.Item3,
-            Price = order.Item4,
-            HogaGb = ((int)HogaGb.지정가).ToString("D2"),
-            OrgOrderNo = order.Item5
-        });
+            if (Connect.HoldingStock.TryGetValue(order.Item2, out Holding holding))
+            {
+                if (order.Item1 == 1 && Connect.Cash < order.Item4 * 2 && holding.OrderNumber.Count(o => o.Value < order.Item4) > 0)
+                    (API as Connect)?.SendOrder(new SendOrder
+                    {
+                        RQName = axAPI.GetMasterCodeName(order.Item2),
+                        ScreenNo = (API as Connect)?.LookupScreenNo,
+                        AccNo = info.Account,
+                        OrderType = 3,
+                        Code = order.Item2,
+                        Qty = order.Item3,
+                        Price = order.Item4,
+                        HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                        OrgOrderNo = holding.OrderNumber.OrderBy(o => o.Value).First().Key
+                    });
+                else if (order.Item1 == 2 && holding.Quantity > 0 && holding.Quantity - holding.OrderNumber.Count(o => o.Value > order.Item4) < 1)
+                    (API as Connect)?.SendOrder(new SendOrder
+                    {
+                        RQName = axAPI.GetMasterCodeName(order.Item2),
+                        ScreenNo = (API as Connect)?.LookupScreenNo,
+                        AccNo = info.Account,
+                        OrderType = 4,
+                        Code = order.Item2,
+                        Qty = order.Item3,
+                        Price = order.Item4,
+                        HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                        OrgOrderNo = holding.OrderNumber.OrderByDescending(o => o.Value).First().Key
+                    });
+            }
+            (API as Connect)?.SendOrder(new SendOrder
+            {
+                RQName = axAPI.GetMasterCodeName(order.Item2),
+                ScreenNo = (API as Connect)?.LookupScreenNo,
+                AccNo = info.Account,
+                OrderType = order.Item1,
+                Code = order.Item2,
+                Qty = order.Item3,
+                Price = order.Item4,
+                HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                OrgOrderNo = order.Item5
+            });
+            Connect.Cash += (order.Item1 == 1 ? -order.Item4 : order.Item4) * order.Item3;
+        }
         public ISendSecuritiesAPI<SendSecuritiesAPI> ConnectChapterOperation => Connect.Chapter;
         public ISendSecuritiesAPI<SendSecuritiesAPI> OnConnectErrorMessage => API as Connect ?? null;
         public IEnumerable<Holding> HoldingStocks

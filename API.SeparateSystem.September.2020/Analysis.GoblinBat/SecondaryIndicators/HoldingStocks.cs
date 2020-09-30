@@ -705,6 +705,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         {
             get; set;
         }
+        public override int Cash
+        {
+            get; protected internal set;
+        }
         public override dynamic Purchase
         {
             get; set;
@@ -724,10 +728,6 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         public override long Revenue
         {
             get; set;
-        }
-        public override ulong Cash
-        {
-            protected internal get; set;
         }
         public override double Rate
         {

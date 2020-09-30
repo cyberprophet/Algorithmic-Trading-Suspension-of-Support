@@ -239,7 +239,7 @@ namespace ShareInvest.Analysis
                 switch (sender)
                 {
                     case OpenAPI.HoldingStocks os:
-                        os.OnReceiveTrendsInPrices(gap, Trend.Peek());
+                        os.OnReceiveTrendsInPrices(e, gap, Trend.Peek());
                         break;
 
                     case XingAPI.HoldingStocks xs:
