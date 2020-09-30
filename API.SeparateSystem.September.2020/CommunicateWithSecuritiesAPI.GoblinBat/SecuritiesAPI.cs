@@ -434,6 +434,33 @@ namespace ShareInvest
                     if (Enum.TryParse(strategics.Substring(0, 2), out Strategics initial))
                         switch (initial)
                         {
+                            case Strategics.TV:
+                                if (stParam.Length == 0x11 && int.TryParse(stParam[2], out int vShort) && int.TryParse(stParam[3], out int vLong) && int.TryParse(stParam[4], out int vTrend) && int.TryParse(stParam[5], out int su) && int.TryParse(stParam[6], out int sq) && double.TryParse(stParam[7], out double vSubtraction) && int.TryParse(stParam[8], out int au) && int.TryParse(stParam[9], out int aq) && double.TryParse(stParam[0xA], out double vAddition) && int.TryParse(stParam[0xB], out int si) && int.TryParse(stParam[0xC], out int tsq) && double.TryParse(stParam[0xD], out double sp) && int.TryParse(stParam[0xE], out int ai) && int.TryParse(stParam[0xF], out int taq) && double.TryParse(stParam[0x10], out double ap))
+                                {
+                                    code = stParam[1];
+                                    catalog[code] = new TrendsInValuation
+                                    {
+                                        Code = stParam[1],
+                                        Short = vShort,
+                                        Long = vLong,
+                                        Trend = vTrend,
+                                        SubtractionalUnit = su,
+                                        ReservationSubtractionalQuantity = sq,
+                                        Subtraction = vSubtraction * 1e-2,
+                                        AdditionalUnit = au,
+                                        ReservationAddtionalQuantity = aq,
+                                        Addition = vAddition * 1e-2,
+                                        SubtractionalInterval = si,
+                                        TradingSubtractionalQuantity = tsq,
+                                        SubtractionalPosition = sp * 1e-2,
+                                        AddtionalInterval = ai,
+                                        TradingAddtionalQuantity = taq,
+                                        AdditionalPosition = ap * 1e-2
+                                    };
+                                    Balance.ToolTipDictionary[code] = string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n☞매도예약\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n☞매수예약\r\n호가단위_", stParam[8], "틱\r\n예약수량_", stParam[9], "주\r\n수익실현_", stParam[0xA], "%\r\n☞매도\r\n매매간격_", stParam[0xB], "초\r\n매매수량_", stParam[0xC], "주\r\n수익실현_", stParam[0xD], "%\r\n☞매수\r\n매매간격_", stParam[0xE], "초\r\n매매수량_", stParam[0xF], "주\r\n수익실현_", stParam[0x10], "%");
+                                }
+                                break;
+
                             case Strategics.TC:
                                 if (stParam.Length == 0xD && double.TryParse(stParam[0xC], out double cpAddition) && double.TryParse(stParam[0xB], out double cpRevenue) && int.TryParse(stParam[0xA], out int ctQuantity) && int.TryParse(stParam[9], out int cInterval) && double.TryParse(stParam[8], out double cAddition) && double.TryParse(stParam[7], out double crRevenue) && int.TryParse(stParam[6], out int crQuantity) && int.TryParse(stParam[5], out int cUnit) && int.TryParse(stParam[4], out int cTrend) && int.TryParse(stParam[3], out int cLong) && int.TryParse(stParam[2], out int cShort))
                                 {

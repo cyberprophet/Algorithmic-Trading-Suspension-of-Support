@@ -725,6 +725,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         {
             get; set;
         }
+        public override ulong Cash
+        {
+            protected internal get; set;
+        }
         public override double Rate
         {
             get; set;

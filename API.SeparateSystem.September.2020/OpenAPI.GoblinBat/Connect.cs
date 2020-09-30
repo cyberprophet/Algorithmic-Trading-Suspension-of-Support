@@ -159,6 +159,10 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
+        internal static ulong Cash
+        {
+            get; set;
+        }
         internal static HashSet<TR> TR
         {
             get; private set;

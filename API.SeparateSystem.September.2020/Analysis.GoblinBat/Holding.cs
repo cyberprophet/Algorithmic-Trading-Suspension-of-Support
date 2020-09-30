@@ -205,6 +205,10 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        public abstract ulong Cash
+        {
+            protected internal get; set;
+        }
         public abstract double Rate
         {
             get; set;

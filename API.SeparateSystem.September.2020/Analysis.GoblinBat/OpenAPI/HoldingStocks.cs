@@ -37,6 +37,19 @@ namespace ShareInvest.Analysis.OpenAPI
                         WaitOrder = false;
                     }
                     break;
+
+                case TrendsInValuation tv:
+                    if (tv.TradingAddtionalQuantity > 0 && Bid < peek * (1 - tv.AdditionalPosition) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder)
+                    {
+                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, tv.Code, tv.TradingAddtionalQuantity, Bid, string.Empty)));
+                        WaitOrder = false;
+                    }
+                    else if (tv.TradingSubtractionalQuantity > 0 && Offer > peek * (1 + tv.SubtractionalPosition) && Offer > Purchase && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder)
+                    {
+                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, tv.Code, tv.TradingSubtractionalQuantity, Offer, string.Empty)));
+                        WaitOrder = false;
+                    }
+                    break;
             }
             Base = peek;
             Secondary = gap;
@@ -60,6 +73,10 @@ namespace ShareInvest.Analysis.OpenAPI
         public override long Revenue
         {
             get; set;
+        }
+        public override ulong Cash
+        {
+            protected internal get; set;
         }
         public override double Rate
         {
@@ -160,6 +177,15 @@ namespace ShareInvest.Analysis.OpenAPI
         protected internal override DateTime NextOrderTime
         {
             get; set;
+        }
+        public HoldingStocks(TrendsInValuation strategics) : base(strategics)
+        {
+            if (StartProgress(strategics.Code) > 0)
+                consecutive.Dispose();
+
+            OrderNumber = new Dictionary<string, dynamic>();
+            this.strategics = strategics;
+            consecutive.Connect(this);
         }
         public HoldingStocks(TrendToCashflow strategics) : base(strategics)
         {

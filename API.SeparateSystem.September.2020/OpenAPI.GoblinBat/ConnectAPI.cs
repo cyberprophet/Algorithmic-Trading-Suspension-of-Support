@@ -169,6 +169,19 @@ namespace ShareInvest.OpenAPI
         {
             switch (strategics)
             {
+                case TrendsInValuation tv:
+                    Connect.HoldingStock[strategics.Code] = new HoldingStocks(tv)
+                    {
+                        Code = strategics.Code,
+                        Current = 0,
+                        Purchase = 0,
+                        Quantity = 0,
+                        Rate = 0,
+                        Revenue = 0,
+                        Cash = 0
+                    };
+                    break;
+
                 case TrendToCashflow tc:
                     Connect.HoldingStock[strategics.Code] = new HoldingStocks(tc)
                     {
