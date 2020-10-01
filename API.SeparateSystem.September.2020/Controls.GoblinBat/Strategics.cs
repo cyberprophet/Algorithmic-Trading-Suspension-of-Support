@@ -26,17 +26,17 @@ namespace ShareInvest.Controls
             switch (dt.Month)
             {
                 case int month when month > 0 && month < 4:
-                    return string.Concat(dt.Year, ".03");
+                    return string.Concat(dt.Year - 0x7D0, "/03");
 
                 case int month when month > 3 && month < 7:
-                    return string.Concat(dt.Year, ".06");
+                    return string.Concat(dt.Year - 0x7D0, "/06");
 
                 case int month when month > 6 && month < 0xA:
-                    return string.Concat(dt.Year, ".09");
+                    return string.Concat(dt.Year - 0x7D0, "/09");
 
                 case int month when month > 9 && month < 0xD:
                 case 0:
-                    return string.Concat(dt.Year, ".12");
+                    return string.Concat(dt.Year - 0x7D0, "/12");
             }
             return null;
         }
@@ -53,9 +53,14 @@ namespace ShareInvest.Controls
         }
         void DataSortCompare(object sender, DataGridViewSortCompareEventArgs e)
         {
-            if (e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
+            if (e.Column.Index < data.Columns.Count - 1 && e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
             {
                 e.SortResult = x.CompareTo(y);
+                e.Handled = true;
+            }
+            else if (e.Column.Index == data.Columns.Count - 1 && int.TryParse(e.CellValue2.ToString().Replace(",", string.Empty), out int ca) && int.TryParse(e.CellValue1.ToString().Replace(",", string.Empty), out int cb))
+            {
+                e.SortResult = cb.CompareTo(ca);
                 e.Handled = true;
             }
         }
@@ -105,7 +110,7 @@ namespace ShareInvest.Controls
             if (e.RowIndex > -1)
                 BeginInvoke(new Action(async () => await disclosure.GetDisclosureInformation(data.Rows[e.RowIndex].Cells[0].Value.ToString(), data.Rows[e.RowIndex].Cells[1].Value.ToString())));
         }
-        void InitializeComponent(Stack<Catalog.Request.Consensus> stack, int count, List<Codes> codes)
+        void InitializeComponent(Stack<Catalog.Request.Consensus> stack, int count, List<Codes> codes, Dictionary<string, int> rank)
         {
             var now = DateTime.Now;
             data.CellContentDoubleClick -= OnReceiveCellContentDoubleClick;
@@ -119,21 +124,22 @@ namespace ShareInvest.Controls
             }
             if (data.Rows.Count == 0)
             {
-                data.ColumnCount = 8;
+                data.ColumnCount = 9;
                 data.BackgroundColor = Color.FromArgb(0x79, 0x85, 0x82);
                 data.Columns[0].Name = "종목코드";
                 data.Columns[1].Name = "종목명";
+                data.Columns[data.Columns.Count - 1].Name = "AC";
             }
             else
                 data.Rows.Clear();
 
-            for (count = 2; count < data.ColumnCount; count++)
+            for (count = 2; count < data.ColumnCount - 1; count++)
                 data.Columns[count].Name = GetQuarter(now.AddMonths(count == 2 ? 1 : ((count - 2) * 3) + 1));
 
             while (stack.Count > 0)
             {
                 var pop = stack.Pop();
-                var index = data.Rows.Add(new string[] { pop.Code, codes.First(o => o.Code.Equals(pop.Code)).Name, Math.Abs(pop.FirstQuarter).ToString("P2"), Math.Abs(pop.SecondQuarter).ToString("P2"), Math.Abs(pop.ThirdQuarter).ToString("P2"), Math.Abs(pop.Quarter).ToString("P2"), Math.Abs(pop.TheNextYear).ToString("P2"), Math.Abs(pop.TheYearAfterNext).ToString("P2") });
+                var index = data.Rows.Add(new string[] { pop.Code, codes.First(o => o.Code.Equals(pop.Code)).Name, Math.Abs(pop.FirstQuarter).ToString("P2"), Math.Abs(pop.SecondQuarter).ToString("P2"), Math.Abs(pop.ThirdQuarter).ToString("P2"), Math.Abs(pop.Quarter).ToString("P2"), Math.Abs(pop.TheNextYear).ToString("P2"), Math.Abs(pop.TheYearAfterNext).ToString("P2"), rank.TryGetValue(pop.Code, out int choice) ? choice.ToString("N0") : string.Empty });
                 data.Rows[index].Cells[2].Style.ForeColor = pop.FirstQuarter > 0 ? Color.Maroon : Color.Navy;
                 data.Rows[index].Cells[2].Style.SelectionForeColor = pop.FirstQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
                 data.Rows[index].Cells[3].Style.ForeColor = pop.SecondQuarter > 0 ? Color.Maroon : Color.Navy;
@@ -220,8 +226,8 @@ namespace ShareInvest.Controls
                     if (string.IsNullOrEmpty(context.Code) == false && context.Code.Length == 6)
                         stack.Push(context);
 
-                if (stack.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
-                    InitializeComponent(stack, 0, codes);
+                if (stack.Count > 0 && await client.GetContextAsync() is Dictionary<string, int> rank && rank.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
+                    InitializeComponent(stack, 0, codes, rank);
             }
         }));
         public void SetProgressRate(int rate)
@@ -253,9 +259,9 @@ namespace ShareInvest.Controls
                                 TheNextYear = kv.Value.Item6 / kv.Value.Item1,
                                 TheYearAfterNext = kv.Value.Item7 / kv.Value.Item1,
                             });
-                    if (stack.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
+                    if (stack.Count > 0 && await client.GetContextAsync() is Dictionary<string, int> rank && rank.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
                     {
-                        InitializeComponent(stack, 0, codes);
+                        InitializeComponent(stack, 0, codes, rank);
 
                         if (worker.IsBusy == false)
                             worker.RunWorkerAsync(strategics);
@@ -321,7 +327,7 @@ namespace ShareInvest.Controls
                     if (worker.IsBusy == false)
                         worker.RunWorkerAsync(new Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>>(codes, stack.OrderByDescending(o => o.TheNextYear)));
 
-                    InitializeComponent(stack, count, codes);
+                    InitializeComponent(stack, count, codes, await client.GetContextAsync());
                 }));
             progressBar.Value = rate + 1;
         }
