@@ -457,7 +457,7 @@ namespace ShareInvest
                                         TradingAddtionalQuantity = taq,
                                         AdditionalPosition = ap * 1e-2
                                     };
-                                    Balance.ToolTipDictionary[code] = string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n☞매도예약\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n☞매수예약\r\n호가단위_", stParam[8], "틱\r\n예약수량_", stParam[9], "주\r\n수익실현_", stParam[0xA], "%\r\n☞매도\r\n매매간격_", stParam[0xB], "초\r\n매매수량_", stParam[0xC], "주\r\n수익실현_", stParam[0xD], "%\r\n☞매수\r\n매매간격_", stParam[0xE], "초\r\n매매수량_", stParam[0xF], "주\r\n수익실현_", stParam[0x10], "%");
+                                    Balance.ToolTipDictionary[code] = string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n☞매도예약\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n☞매수예약\r\n호가단위_", stParam[8], "틱\r\n예약수량_", stParam[9], "주\r\n추가매수_", stParam[0xA], "%\r\n☞매도\r\n매매간격_", stParam[0xB], "초\r\n매매수량_", stParam[0xC], "주\r\n수익실현_", stParam[0xD], "%\r\n☞매수\r\n매매간격_", stParam[0xE], "초\r\n매매수량_", stParam[0xF], "주\r\n추가매수_", stParam[0x10], "%");
                                 }
                                 break;
 

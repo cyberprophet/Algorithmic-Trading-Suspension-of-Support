@@ -109,6 +109,8 @@ namespace ShareInvest.Client
                     if (response.StatusCode.Equals(HttpStatusCode.OK) && page < 0x16)
                         return page;
                 }
+                else
+                    return JsonConvert.DeserializeObject<List<Catalog.Request.IncorporatedStocks>>(response.Content);
             }
             catch (Exception ex)
             {

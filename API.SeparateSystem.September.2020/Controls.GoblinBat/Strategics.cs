@@ -230,6 +230,92 @@ namespace ShareInvest.Controls
                     InitializeComponent(stack, 0, codes, rank);
             }
         }));
+        public IAsyncResult SetProgressRate(DateTime now) => BeginInvoke(new Action(async () =>
+        {
+            var stack = new Stack<Catalog.Request.Consensus>();
+            var strategics = new Dictionary<string, Tuple<int, double, double, double, double, double, double>>()
+            {
+                {
+                    Codes.First(o => o.Code.Length == 8 && o.Code.StartsWith("101") && o.Code.EndsWith("000")).Code,
+                    new Tuple<int, double, double, double, double, double, double>('P', 0, 0, 0, 0, 0, 0)
+                }
+            };
+            for (int i = 0; i < this.strategics.Length; i++)
+                foreach (var context in await client.GetContext(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", this.strategics[i]) }))
+                {
+                    if (strategics.TryGetValue(context.Code, out Tuple<int, double, double, double, double, double, double> tuple))
+                        strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(tuple.Item1 + 1, tuple.Item2 + context.FirstQuarter, tuple.Item3 + context.SecondQuarter, tuple.Item4 + context.ThirdQuarter, tuple.Item5 + context.Quarter, tuple.Item6 + context.TheNextYear, tuple.Item7 + context.TheYearAfterNext);
+
+                    else
+                        strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(1, context.FirstQuarter, context.SecondQuarter, context.ThirdQuarter, context.Quarter, context.TheNextYear, context.TheYearAfterNext);
+                }
+            foreach (var incorporate in strategics.Where(o => o.Key.Length == 8))
+                if (await client.GetContext(new Catalog.Request.IncorporatedStocks
+                {
+                    Date = now.ToString(format),
+                    Market = (char)incorporate.Value.Item1
+                }) is List<Catalog.Request.IncorporatedStocks> list)
+                {
+                    var total = (double)list.Sum(o => o.Capitalization);
+
+                    foreach (var kv in strategics.Where(o => o.Key.Length == 6))
+                        if (list.Any(o => o.Code.Equals(kv.Key)))
+                        {
+                            var cap = list.Find(o => o.Code.Equals(kv.Key)).Capitalization;
+
+                            if (stack.Any(o => o.Code.Equals(incorporate.Key)))
+                            {
+                                var accumulate = stack.Pop();
+                                stack.Push(new Catalog.Request.Consensus
+                                {
+                                    Code = incorporate.Key,
+                                    FirstQuarter = accumulate.FirstQuarter + cap / total * (kv.Value.Item2 / kv.Value.Item1),
+                                    SecondQuarter = accumulate.SecondQuarter + cap / total * (kv.Value.Item3 / kv.Value.Item1),
+                                    ThirdQuarter = accumulate.ThirdQuarter + cap / total * (kv.Value.Item4 / kv.Value.Item1),
+                                    Quarter = accumulate.Quarter + cap / total * (kv.Value.Item5 / kv.Value.Item1),
+                                    TheNextYear = accumulate.TheNextYear + cap / total * (kv.Value.Item6 / kv.Value.Item1),
+                                    TheYearAfterNext = accumulate.TheYearAfterNext + cap / total * (kv.Value.Item7 / kv.Value.Item1),
+                                });
+                            }
+                            else
+                                stack.Push(new Catalog.Request.Consensus
+                                {
+                                    Code = incorporate.Key,
+                                    FirstQuarter = cap / total * (kv.Value.Item2 / kv.Value.Item1),
+                                    SecondQuarter = cap / total * (kv.Value.Item3 / kv.Value.Item1),
+                                    ThirdQuarter = cap / total * (kv.Value.Item4 / kv.Value.Item1),
+                                    Quarter = cap / total * (kv.Value.Item5 / kv.Value.Item1),
+                                    TheNextYear = cap / total * (kv.Value.Item6 / kv.Value.Item1),
+                                    TheYearAfterNext = cap / total * (kv.Value.Item7 / kv.Value.Item1),
+                                });
+                        }
+                }
+            if (await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
+                foreach (var futures in Codes.Where(o => o.Code.StartsWith("1")))
+                    if (strategics.Where(o => o.Key.Length == 8).Any(o => o.Key.Equals(futures.Code)) == false)
+                    {
+                        var code = codes.FirstOrDefault(n => n.Name.Equals(futures.Name) || n.Name.StartsWith(futures.Name)).Code;
+
+                        if (string.IsNullOrEmpty(code) == false)
+                        {
+                            var fv = strategics.FirstOrDefault(o => o.Key.Equals(code)).Value;
+
+                            if (fv != null)
+                                stack.Push(new Catalog.Request.Consensus
+                                {
+                                    Code = futures.Code,
+                                    FirstQuarter = fv.Item2 / fv.Item1,
+                                    SecondQuarter = fv.Item3 / fv.Item1,
+                                    ThirdQuarter = fv.Item4 / fv.Item1,
+                                    Quarter = fv.Item5 / fv.Item1,
+                                    TheNextYear = fv.Item6 / fv.Item1,
+                                    TheYearAfterNext = fv.Item7 / fv.Item1,
+                                });
+                        }
+                    }
+            if (stack.Count > 0 && await client.GetContextAsync() is Dictionary<string, int> rank && rank.Count > 0)
+                InitializeComponent(stack, 0, Codes.Where(o => o.Code.StartsWith("1")).ToList(), rank);
+        }));
         public void SetProgressRate(int rate)
         {
             if (rate > 0 && rate == progressBar.Value && rate % 7 == 0)
@@ -327,7 +413,8 @@ namespace ShareInvest.Controls
                     if (worker.IsBusy == false)
                         worker.RunWorkerAsync(new Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>>(codes, stack.OrderByDescending(o => o.TheNextYear)));
 
-                    InitializeComponent(stack, count, codes, await client.GetContextAsync());
+                    if (await client.GetContextAsync() is Dictionary<string, int> rank && rank.Count > 0)
+                        InitializeComponent(stack, count, codes, rank);
                 }));
             progressBar.Value = rate + 1;
         }

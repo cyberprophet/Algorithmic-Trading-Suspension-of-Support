@@ -399,6 +399,10 @@ namespace ShareInvest.Strategics
                             case Catalog.TrendsInValuation tv:
                                 result = Statistical.SetProgressRate(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", tv.AnalysisType) });
                                 break;
+
+                            case Catalog.TrendFollowingBasicFutures tf:
+                                result = Statistical.SetProgressRate(DateTime.Now);
+                                break;
                         }
                         if (result != null && result.AsyncWaitHandle.WaitOne(0xED3))
                         {
