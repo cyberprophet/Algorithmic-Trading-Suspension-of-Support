@@ -58,6 +58,27 @@ namespace ShareInvest.Analysis.OpenAPI
                         WaitOrder = false;
                     }
                     break;
+
+                case TrendFollowingBasicFutures tf:
+                    if (0x5A0 == (int)peek)
+                    {
+                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume) && OrderNumber.Count == 0)
+                        {
+                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, int, string, string, int, string, string>(Code, 1, gap > 0 ? "2" : "1", ((int)Catalog.OpenAPI.OrderType.지정가).ToString(), 1, (gap > 0 ? Offer : Bid).ToString("F2"), string.Empty)));
+                            WaitOrder = false;
+                        }
+                        Base = gap;
+                    }
+                    else
+                    {
+                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (tf.QuantityShort + Quantity < 0 && Base < 0 || Base > 0 && Quantity - tf.QuantityLong > 0) && Revenue / Math.Abs(Quantity) > 0x927C)
+                        {
+                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, int, string, string, int, string, string>(Code, 1, Quantity > 0 ? "1" : "2", ((int)Catalog.OpenAPI.OrderType.시장가).ToString(), 1, (Quantity > 0 ? Bid : Offer).ToString("F2"), string.Empty)));
+                            WaitOrder = false;
+                        }
+                        Secondary = gap;
+                    }
+                    return;
             }
             Base = peek;
             Secondary = gap;
@@ -235,6 +256,8 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             get; set;
         }
+        const string start = "090000";
+        const string end = "153500";
         readonly dynamic strategics;
         public event EventHandler<SendConsecutive> SendConsecutive;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;

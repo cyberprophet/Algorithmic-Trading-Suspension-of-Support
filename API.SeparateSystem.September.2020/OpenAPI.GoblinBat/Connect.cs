@@ -21,6 +21,7 @@ namespace ShareInvest.OpenAPI
     class Connect : ISendSecuritiesAPI<SendSecuritiesAPI>
     {
         internal void SendOrder(SendOrder o) => request.RequestTrData(new Task(() => SendErrorMessage(axAPI.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
+        internal void SendOrder(SendOrderFO fo) => request.RequestTrData(new Task(() => SendErrorMessage(axAPI.SendOrderFO(fo.RQName, fo.ScreenNo, fo.AccNo, fo.Code, fo.OrdKind, fo.SlbyTp, fo.OrdTp, fo.Qty, fo.Price, fo.OrgOrdNo))));
         internal void InputValueRqData(TR param) => request.RequestTrData(new Task(() =>
         {
             string[] count = param.ID.Split(';'), value = param.Value.Split(';');

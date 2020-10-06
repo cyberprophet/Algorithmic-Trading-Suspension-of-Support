@@ -68,6 +68,10 @@ namespace ShareInvest
                             oOrder.SendOrder(Info, order);
                             return;
 
+                        case Tuple<string, int, string, string, int, string, string> order when com is OpenAPI.ConnectAPI oOrderFO:
+                            oOrderFO.SendOrder(Info, order);
+                            return;
+
                         case Catalog.XingAPI.Order order when com is XingAPI.ConnectAPI xOrder:
                             xOrder.Orders[string.IsNullOrEmpty(order.OrgOrdNo) ? 0 : (string.IsNullOrEmpty(order.BnsTpCode) && string.IsNullOrEmpty(order.OrdPrc) && string.IsNullOrEmpty(order.FnoOrdprcPtnCode) ? 2 : 1)].QueryExcute(order);
                             return;
@@ -577,8 +581,9 @@ namespace ShareInvest
                     switch (kv.Key.Length)
                     {
                         case int length when length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("106")):
-                            foreach (var real in (connect as XingAPI.ConnectAPI)?.Reals)
-                                real.OnReceiveRealTime(kv.Key);
+                            if (connect is XingAPI.ConnectAPI xing)
+                                foreach (var real in xing.Reals)
+                                    real.OnReceiveRealTime(kv.Key);
 
                             break;
                     }
@@ -608,7 +613,14 @@ namespace ShareInvest
                     {
                         openAPI.OnConnectErrorMessage.Send -= OnReceiveSecuritiesAPI;
                         openAPI.Send -= OnReceiveSecuritiesAPI;
-                        openAPI.InputValueRqData(false, opw00005).Send -= OnReceiveSecuritiesAPI;
+
+                        if (openAPI.HoldingStocks.All(o => o.Code.Length == 8))
+                        {
+                            openAPI.InputValueRqData(false, opw20010).Send -= OnReceiveSecuritiesAPI;
+                            openAPI.InputValueRqData(false, opw20007).Send -= OnReceiveSecuritiesAPI;
+                        }
+                        else
+                            openAPI.InputValueRqData(false, opw00005).Send -= OnReceiveSecuritiesAPI;
 
                         foreach (var ctor in openAPI.HoldingStocks)
                         {
@@ -753,7 +765,14 @@ namespace ShareInvest
                     {
                         openAPI.OnConnectErrorMessage.Send += OnReceiveSecuritiesAPI;
                         openAPI.Send += OnReceiveSecuritiesAPI;
-                        openAPI.InputValueRqData(true, opw00005).Send += OnReceiveSecuritiesAPI;
+
+                        if (openAPI.HoldingStocks.All(o => o.Code.Length == 8))
+                        {
+                            openAPI.InputValueRqData(true, opw20010).Send += OnReceiveSecuritiesAPI;
+                            openAPI.InputValueRqData(true, opw20007).Send += OnReceiveSecuritiesAPI;
+                        }
+                        else
+                            openAPI.InputValueRqData(true, opw00005).Send += OnReceiveSecuritiesAPI;
 
                         foreach (var ctor in openAPI.HoldingStocks)
                         {

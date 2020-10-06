@@ -51,14 +51,45 @@ namespace ShareInvest.OpenAPI
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
         public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
-            if (Connect.TR.Add(new OPT50010 { PrevNext = 0, API = axAPI }) && Connect.TR.Add(new Opw00005 { Value = string.Concat(privacy.AccountNumber, password), PrevNext = 0, API = axAPI }))
+            if (Connect.TR.Add(new OPT50010
             {
+                PrevNext = 0,
+                API = axAPI
+            }))
+            {
+                bool response, message;
+
+                if (privacy.AccountNumber.Substring(privacy.AccountNumber.Length - 2).Equals("31"))
+                {
+                    response = Connect.TR.Add(new OPW20007
+                    {
+                        Value = string.Concat(privacy.AccountNumber, password),
+                        PrevNext = 0,
+                        API = axAPI
+                    });
+                    message = Connect.TR.Add(new OPW20010
+                    {
+                        Value = string.Concat(privacy.AccountNumber, password),
+                        PrevNext = 0,
+                        API = axAPI
+                    });
+                }
+                else
+                {
+                    response = Connect.TR.Add(new Opw00005
+                    {
+                        Value = string.Concat(privacy.AccountNumber, password),
+                        PrevNext = 0,
+                        API = axAPI
+                    });
+                    message = axAPI.GetLoginInfo(server).Equals(mock);
+                }
+                SendMessage(response.ToString(), message.ToString());
                 axAPI.OnReceiveTrData += OnReceiveTrData;
                 axAPI.OnReceiveRealData += OnReceiveRealData;
                 axAPI.OnReceiveChejanData += OnReceiveChejanData;
             }
             string mServer = axAPI.GetLoginInfo(server), log = axAPI.GetLoginInfo(name);
-            checkAccount.CheckState = mServer.Equals(mock) && checkAccount.Checked ? CheckState.Unchecked : CheckState.Checked;
             Invoke(new Action(async () =>
             {
                 if (checkAccount.Checked && await new Security().Encrypt(this.privacy, privacy.AccountNumber, checkAccount.Checked) < int.MaxValue)
@@ -198,8 +229,8 @@ namespace ShareInvest.OpenAPI
                     Connect.HoldingStock[strategics.Code] = new HoldingStocks(tf)
                     {
                         Code = strategics.Code,
-                        Current = 0,
-                        Purchase = 0,
+                        Current = 0D,
+                        Purchase = 0D,
                         Quantity = 0,
                         Rate = 0,
                         Revenue = 0
@@ -220,6 +251,19 @@ namespace ShareInvest.OpenAPI
             }
             return Connect.HoldingStock.Count;
         }
+        public void SendOrder(IAccountInformation info, Tuple<string, int, string, string, int, string, string> order) => (API as Connect)?.SendOrder(new SendOrderFO
+        {
+            RQName = order.Item1,
+            ScreenNo = (API as Connect)?.LookupScreenNo,
+            AccNo = info.Account,
+            Code = order.Item1,
+            OrdKind = order.Item2,
+            SlbyTp = order.Item3,
+            OrdTp = order.Item4,
+            Qty = order.Item5,
+            Price = order.Item6,
+            OrgOrdNo = order.Item7
+        });
         public void SendOrder(IAccountInformation info, Tuple<int, string, int, int, string> order)
         {
             if (Connect.HoldingStock.TryGetValue(order.Item2, out Holding holding))
