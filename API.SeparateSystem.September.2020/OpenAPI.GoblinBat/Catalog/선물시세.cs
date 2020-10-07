@@ -1,47 +1,25 @@
-﻿using System.Collections;
+﻿using System.Threading.Tasks;
+
+using AxKHOpenAPILib;
+
+using ShareInvest.Analysis;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
-    public struct 선물시세 : IEnumerable
+    class 선물시세 : Real
     {
-        public IEnumerator GetEnumerator()
+        internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
-            foreach (var index in new int[]
+            if (Connect.HoldingStock.TryGetValue(e.sRealKey, out Holding hs))
             {
-                20,
-                10,
-                11,
-                12,
-                27,
-                28,
-                15,
-                13,
-                14,
-                16,
-                17,
-                18,
-                195,
-                182,
-                184,
-                183,
-                186,
-                181,
-                185,
-                25,
-                197,
-                26,
-                246,
-                247,
-                248,
-                30,
-                196,
-                1365,
-                1366,
-                1367,
-                305,
-                306,
-            })
-                yield return index;
+                var param = base.OnReceiveRealData(e, fid);
+                new Task(() => hs.OnReceiveEvent(param)).Start();
+            }
         }
+        internal override AxKHOpenAPI API
+        {
+            get; set;
+        }
+        readonly int[] fid = new int[] { 20, 10, 11, 12, 27, 28, 15, 13, 14, 16, 17, 18, 195, 182, 184, 183, 186, 181, 185, 25, 197, 26, 246, 247, 248, 30, 196, 1365, 1366, 1367, 305, 306, };
     }
 }

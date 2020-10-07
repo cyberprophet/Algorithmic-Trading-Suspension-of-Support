@@ -138,9 +138,9 @@ namespace ShareInvest.Controls
                 }
                 data.Rows[index].Cells[5].Value = Math.Abs(revenue).ToString("C0");
                 data.Rows[index].Cells[6].Value = Math.Abs(rate).ToString("P2");
-                data.Rows[index].Cells[3].Value = purchase.ToString(purchase is double ? "N2" : "N0");
+                data.Rows[index].Cells[3].Value = purchase.ToString(purchase is double && code[1].Equals('0') ? "N2" : "N0");
                 data.Rows[index].Cells[2].Value = Math.Abs(quantity).ToString("N0");
-                data.Rows[index].Cells[4].Value = current.ToString(current is double ? "N2" : "N0");
+                data.Rows[index].Cells[4].Value = current.ToString(current is double && code[1].Equals('0') ? "N2" : "N0");
             }
             data.CurrentCell = data.Rows.Count > 1 && dIndex.ContainsKey(code) ? data.Rows[dIndex[code]].Cells[1] : null;
         }

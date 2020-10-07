@@ -2,6 +2,7 @@
 
 using AxKHOpenAPILib;
 
+using ShareInvest.Analysis;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface.OpenAPI;
 
@@ -21,8 +22,22 @@ namespace ShareInvest.OpenAPI.Catalog
             {
                 var futures = temp.Item2.Dequeue();
 
-                for (int i = 0; i < futures.Length; i++)
-                    SendMessage(multiple[i], futures[i]);
+                if (int.TryParse(futures[4], out int purchase) && int.TryParse(futures[5], out int current))
+                {
+                    var param = new SendSecuritiesAPI(new string[] { futures[0], futures[1].Split('F')[0].Trim().Replace("_", string.Empty), futures[2], string.Empty, futures[3], futures[0][1].Equals('0') ? futures[4].Insert(futures[4].Length - 2, ".") : futures[4].Remove(futures[4].Length - 2, 2), futures[0][1].Equals('0') ? futures[5].Insert(futures[5].Length - 2, ".") : futures[5].Remove(futures[5].Length - 2, 2), string.Empty, futures[6], ((current / (double)purchase - 1) * 0x64).ToString("F5") });
+
+                    if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs))
+                    {
+                        hs.Code = balance.Item1;
+                        hs.Quantity = balance.Item3;
+                        hs.Purchase = futures[0][1].Equals('0') ? (double)balance.Item4 : (int)balance.Item4;
+                        hs.Current = futures[0][1].Equals('0') ? (double)balance.Item5 : (int)balance.Item5;
+                        hs.Revenue = balance.Item6;
+                        hs.Rate = balance.Item3 > 0 ? balance.Item7 : -balance.Item7;
+                        Connect.HoldingStock[balance.Item1] = hs;
+                    }
+                    Send?.Invoke(this, param);
+                }
             }
         }
         internal override string ID => id;

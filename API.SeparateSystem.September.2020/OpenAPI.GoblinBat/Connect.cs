@@ -202,7 +202,15 @@ namespace ShareInvest.OpenAPI
                     new 주식호가잔량 { API = axAPI },
                     new 주식시세 { API = axAPI },
                     new 주식우선호가 { API = axAPI },
-                    Chapter
+                    Chapter,
+                    new 선물시세
+                    {
+                        API = axAPI
+                    },
+                    new 선물옵션우선호가
+                    {
+                        API = axAPI
+                    }
                 };
                 Chejan = new Dictionary<string, Chejan>()
                 {

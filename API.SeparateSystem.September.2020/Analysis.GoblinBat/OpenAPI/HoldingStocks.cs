@@ -142,6 +142,12 @@ namespace ShareInvest.Analysis.OpenAPI
                 Revenue = (current - Purchase) * Quantity;
                 Rate = current / (double)Purchase - 1;
             }
+            else if (double.TryParse(param[1].StartsWith("-") ? param[1].Substring(1) : param[1], out double price))
+            {
+                Current = price;
+                Revenue = (long)((price - Purchase) * Quantity * transactionMultiplier);
+                Rate = (price / Purchase - 1) * (Quantity > 0 ? 1 : -1);
+            }
             SendStocks?.Invoke(this, new SendHoldingStocks(Code, Quantity, Purchase, Current, Revenue, Rate, Base, Secondary, AdjustTheColorAccordingToTheCurrentSituation(WaitOrder, OrderNumber.Count)));
         }
         public override void OnReceiveBalance(string[] param)

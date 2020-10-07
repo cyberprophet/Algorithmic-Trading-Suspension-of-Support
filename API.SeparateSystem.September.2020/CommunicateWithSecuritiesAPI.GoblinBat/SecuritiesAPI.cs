@@ -614,7 +614,7 @@ namespace ShareInvest
                         openAPI.OnConnectErrorMessage.Send -= OnReceiveSecuritiesAPI;
                         openAPI.Send -= OnReceiveSecuritiesAPI;
 
-                        if (openAPI.HoldingStocks.All(o => o.Code.Length == 8))
+                        if (Info.Name.Equals(fo))
                         {
                             openAPI.InputValueRqData(false, opw20010).Send -= OnReceiveSecuritiesAPI;
                             openAPI.InputValueRqData(false, opw20007).Send -= OnReceiveSecuritiesAPI;
@@ -766,7 +766,7 @@ namespace ShareInvest
                         openAPI.OnConnectErrorMessage.Send += OnReceiveSecuritiesAPI;
                         openAPI.Send += OnReceiveSecuritiesAPI;
 
-                        if (openAPI.HoldingStocks.All(o => o.Code.Length == 8))
+                        if (Info.Name.Equals(fo))
                         {
                             openAPI.InputValueRqData(true, opw20010).Send += OnReceiveSecuritiesAPI;
                             openAPI.InputValueRqData(true, opw20007).Send += OnReceiveSecuritiesAPI;
