@@ -152,7 +152,20 @@ namespace ShareInvest.Analysis.OpenAPI
         }
         public override void OnReceiveBalance(string[] param)
         {
-            if (long.TryParse(param[9], out long available) && int.TryParse(param[7], out int purchase) && int.TryParse(param[5].StartsWith("-") ? param[5].Substring(1) : param[5], out int current) && int.TryParse(param[6], out int quantity))
+            if (param.Length == 0x13 && long.TryParse(param[7], out long active) && double.TryParse(param[0xC].StartsWith("-") ? param[0xC].Substring(1) : param[0xC], out double offer) && double.TryParse(param[0xD].StartsWith("-") ? param[0xD].Substring(1) : param[0xD], out double bid) && double.TryParse(param[5].StartsWith("-") ? param[5].Substring(1) : param[5], out double unit) && double.TryParse(param[0x10], out double transaction) && int.TryParse(param[4], out int amount) && double.TryParse(param[3].StartsWith("-") ? param[3].Substring(1) : param[3], out double price))
+            {
+                var classification = param[9].Equals("1") ? -1 : 1;
+                Current = price;
+                Quantity = amount * classification;
+                Purchase = unit;
+                Revenue = (long)((price - unit) * classification * amount * transaction);
+                Rate = price / unit - 1;
+                Bid = bid;
+                Offer = offer;
+                WaitOrder = true;
+                SendBalance?.Invoke(this, new SendSecuritiesAPI((long)(active * transaction * classification * price)));
+            }
+            else if (long.TryParse(param[9], out long available) && int.TryParse(param[7], out int purchase) && int.TryParse(param[5].StartsWith("-") ? param[5].Substring(1) : param[5], out int current) && int.TryParse(param[6], out int quantity))
             {
                 Current = current;
                 Quantity = quantity;
@@ -162,7 +175,7 @@ namespace ShareInvest.Analysis.OpenAPI
                 WaitOrder = true;
                 SendBalance?.Invoke(this, new SendSecuritiesAPI(available * current));
             }
-            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, int, dynamic, dynamic, long, double>(param[1].StartsWith("A") ? param[1].Substring(1) : param[1], param[4], Quantity, Purchase, Current, Revenue, Rate)));
+            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, int, dynamic, dynamic, long, double>(param[1].StartsWith("A") ? param[1].Substring(1) : param[1], param[param[1].Length == 8 ? 2 : 4], Quantity, Purchase, Current, Revenue, Rate)));
         }
         public override void OnReceiveConclusion(string[] param)
         {

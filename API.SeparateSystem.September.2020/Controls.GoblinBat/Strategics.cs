@@ -619,7 +619,7 @@ namespace ShareInvest.Controls
                             break;
 
                         case tv:
-                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
+                            url = @"https://youtu.be/GKzn6v6qeyA";
                             break;
 
                         case st:

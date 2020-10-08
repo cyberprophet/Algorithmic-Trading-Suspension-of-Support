@@ -16,7 +16,7 @@ namespace ShareInvest.OpenAPI.Catalog
         {
             var param = base.OnReceiveChejanData(e, fid);
 
-            if (Connect.HoldingStock.TryGetValue(param[3].Substring(1), out Holding hs))
+            if (Connect.HoldingStock.TryGetValue(param[3].Length == 8 ? param[3] : param[3].Substring(1), out Holding hs))
                 new Task(() =>
                 {
                     hs.OnReceiveConclusion(param);
