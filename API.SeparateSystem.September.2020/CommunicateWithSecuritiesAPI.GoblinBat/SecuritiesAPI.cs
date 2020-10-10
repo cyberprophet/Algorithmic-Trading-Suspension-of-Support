@@ -283,7 +283,7 @@ namespace ShareInvest
 
                                     break;
 
-                                case int length when length == 8 && (charts.Item1.StartsWith("101") || charts.Item1.StartsWith("106")):
+                                case int length when length == 8 && (charts.Item1.StartsWith("101") || charts.Item1.StartsWith("105") || charts.Item1.StartsWith("106")):
                                     (com as OpenAPI.ConnectAPI).InputValueRqData(opt50028, charts.Item1).Send -= OnReceiveSecuritiesAPI;
                                     param = opt50028;
 
@@ -547,7 +547,7 @@ namespace ShareInvest
                     foreach (var code in o.InputValueRqData())
                         if ((code.Length == 8 && (code.StartsWith("2") || code.StartsWith("3")) && double.TryParse(code.Substring(code.Length - 3), out double oPrice) && (oPrice > basePrice + 0x41 || oPrice < basePrice - 0x41)) == false)
                         {
-                            if (code.Length == 8 && code.StartsWith("106"))
+                            if (code.Length == 8 && (code.StartsWith("106") || code.StartsWith("105")))
                                 futures.Add(code);
 
                             else if (code.Length == 8 && code.StartsWith("101") && double.TryParse((await client.GetContext(new Codes { Code = code })).Price, out double price))
@@ -585,7 +585,7 @@ namespace ShareInvest
                 if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0)
                     switch (kv.Key.Length)
                     {
-                        case int length when length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("106")):
+                        case int length when length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("105") || kv.Key.StartsWith("106")):
                             if (connect is XingAPI.ConnectAPI xing)
                                 foreach (var real in xing.Reals)
                                     real.OnReceiveRealTime(kv.Key);

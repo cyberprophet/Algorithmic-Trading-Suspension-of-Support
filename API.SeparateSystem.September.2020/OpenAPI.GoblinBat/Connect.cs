@@ -83,7 +83,18 @@ namespace ShareInvest.OpenAPI
             }));
             var stack = CatalogStocksCode(market.OrderByDescending(o => o));
             list[1] = axAPI.GetFutureCodeByIndex(0x18);
+            list.Add(axAPI.GetFutureCodeByIndex(0xD));
 
+            foreach (var str in axAPI.GetSFutureList(string.Empty).Split('|'))
+                if (string.IsNullOrEmpty(str) == false)
+                {
+                    var temp = str.Split('^');
+
+                    if (temp[2].Equals(date) == false)
+                        list.Add(temp[0]);
+
+                    date = temp[2];
+                }
             while (stack.Count > 0)
                 yield return stack.Pop();
 
