@@ -145,7 +145,7 @@ namespace ShareInvest.Analysis.OpenAPI
             else if (double.TryParse(param[1].StartsWith("-") ? param[1].Substring(1) : param[1], out double price))
             {
                 Current = price;
-                Revenue = (long)((price - Purchase) * Quantity * transactionMultiplier);
+                Revenue = (long)((price - Purchase) * Quantity * TransactionMultiplier);
                 Rate = (price / Purchase - 1) * (Quantity > 0 ? 1 : -1);
             }
             SendStocks?.Invoke(this, new SendHoldingStocks(Code, Quantity, Purchase, Current, Revenue, Rate, Base, Secondary, AdjustTheColorAccordingToTheCurrentSituation(WaitOrder, OrderNumber.Count)));
@@ -163,7 +163,7 @@ namespace ShareInvest.Analysis.OpenAPI
                 Bid = bid;
                 Offer = offer;
                 WaitOrder = true;
-                SendBalance?.Invoke(this, new SendSecuritiesAPI((long)(active * transaction * classification * price)));
+                SendBalance?.Invoke(this, new SendSecuritiesAPI((long)(active * transaction * MarginRate * classification * price)));
             }
             else if (long.TryParse(param[9], out long available) && int.TryParse(param[7], out int purchase) && int.TryParse(param[5].StartsWith("-") ? param[5].Substring(1) : param[5], out int current) && int.TryParse(param[6], out int quantity))
             {
@@ -277,6 +277,11 @@ namespace ShareInvest.Analysis.OpenAPI
         }
         const string start = "090000";
         const string end = "153500";
+        const string conclusion = "체결";
+        const string acceptance = "접수";
+        const string confirmation = "확인";
+        const string cancellantion = "취소";
+        const string correction = "정정";
         readonly dynamic strategics;
         public event EventHandler<SendConsecutive> SendConsecutive;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;

@@ -32,10 +32,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                         if (date.CompareTo(start) > 0 && date.CompareTo(end) < 0 && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume))
                         {
                             Quantity += gap > 0 ? 1 : -1;
-                            CumulativeFee += (uint)(e.Price * transactionMultiplier * Commission);
+                            CumulativeFee += (uint)(e.Price * TransactionMultiplier * Commission);
                             var liquidation = SetLiquidation(e.Price);
                             Purchase = SetPurchasePrice(e.Price);
-                            Revenue += (long)(liquidation * transactionMultiplier);
+                            Revenue += (long)(liquidation * TransactionMultiplier);
                             VerifyAmount = Quantity;
                         }
                         else if (date.CompareTo(cme) < 0 && date.CompareTo(end) > 0 && uint.TryParse(e.Date.Substring(0, 6), out uint remain))
@@ -44,13 +44,13 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                 while (Quantity != 0)
                                 {
                                     Quantity += Quantity > 0 ? -1 : 1;
-                                    CumulativeFee += (uint)(e.Price * transactionMultiplier * Commission);
+                                    CumulativeFee += (uint)(e.Price * TransactionMultiplier * Commission);
                                     var liquidation = SetLiquidation(e.Price);
                                     Purchase = SetPurchasePrice(e.Price);
-                                    Revenue += (long)(liquidation * transactionMultiplier);
+                                    Revenue += (long)(liquidation * TransactionMultiplier);
                                     VerifyAmount = Quantity;
                                 }
-                            long revenue = Revenue - CumulativeFee, unrealize = (long)((e.Price - (Purchase ?? 0D)) * Quantity * transactionMultiplier);
+                            long revenue = Revenue - CumulativeFee, unrealize = (long)((e.Price - (Purchase ?? 0D)) * Quantity * TransactionMultiplier);
                             var avg = EMA.Make(++Accumulative, revenue - TodayRevenue + unrealize - TodayUnrealize, Before);
                             SendMessage = new Statistics
                             {

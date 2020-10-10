@@ -238,6 +238,10 @@ namespace ShareInvest.Controls
                 {
                     Codes.First(o => o.Code.Length == 8 && o.Code.StartsWith("101") && o.Code.EndsWith("000")).Code,
                     new Tuple<int, double, double, double, double, double, double>('P', 0, 0, 0, 0, 0, 0)
+                },
+                {
+                    Codes.First(o => o.Code.Length == 8 && o.Code.StartsWith("106") && o.Code.EndsWith("000")).Code,
+                    new Tuple<int, double, double, double, double, double, double>('Q', 0, 0, 0, 0, 0, 0)
                 }
             };
             for (int i = 0; i < this.strategics.Length; i++)
@@ -392,23 +396,6 @@ namespace ShareInvest.Controls
                         temp[4] += price * (1 + consensus.TheNextYear);
                         temp[5] += price * (1 + consensus.TheYearAfterNext);
                         count++;
-                    }
-                    if (Length == 8)
-                    {
-                        var cap = new Disclosure(Privacy.Security, 0x4B);
-                        var page = 1;
-                        var list = await cap.GetMarketCap(0x50, page++);
-
-                        foreach (var param in codes)
-                            if (Codes.Add(new Codes
-                            {
-                                Code = param.Code,
-                                Name = param.Name,
-                                Price = param.Price
-                            }))
-                            {
-
-                            }
                     }
                     if (worker.IsBusy == false)
                         worker.RunWorkerAsync(new Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>>(codes, stack.OrderByDescending(o => o.TheNextYear)));
@@ -891,6 +878,11 @@ namespace ShareInvest.Controls
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0x145 + 0x23;
                         }
+                        else
+                        {
+                            RemoveThePage(tab.TabPages[tab.TabPages.Count - 1]);
+                            GC.Collect();
+                        }
                         break;
 
                     case tv:
@@ -900,6 +892,11 @@ namespace ShareInvest.Controls
                             tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0x145;
+                        }
+                        else
+                        {
+                            RemoveThePage(tab.TabPages[tab.TabPages.Count - 1]);
+                            GC.Collect();
                         }
                         break;
 
@@ -911,6 +908,11 @@ namespace ShareInvest.Controls
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0xCD + 0x23;
                         }
+                        else
+                        {
+                            RemoveThePage(tab.TabPages[tab.TabPages.Count - 1]);
+                            GC.Collect();
+                        }
                         break;
 
                     case tf:
@@ -920,6 +922,11 @@ namespace ShareInvest.Controls
                             tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0x83 + 0x23;
+                        }
+                        else
+                        {
+                            RemoveThePage(tab.TabPages[tab.TabPages.Count - 1]);
+                            GC.Collect();
                         }
                         break;
 
@@ -931,17 +938,33 @@ namespace ShareInvest.Controls
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0xEB + 0x23;
                         }
+                        else
+                        {
+                            RemoveThePage(tab.TabPages[tab.TabPages.Count - 1]);
+                            GC.Collect();
+                        }
                         break;
                 }
+                if ((select.Code.Length == 6 && string.IsNullOrEmpty(select.MaturityMarketCap) == false || select.Code.Length == 8 && select.MarginRate > 0) && string.IsNullOrEmpty(select.Price) == false)
+                    buttonSave.ForeColor = Color.Maroon;
+
                 this.link.LinkVisited = false;
                 var lasttabrect = tab.GetTabRect(tab.TabPages.Count - 1);
                 tab.TabPages[tab.TabPages.Count - 1].BackColor = color;
                 tab.SelectTab(tab.TabPages.Count - 1);
                 tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
-                buttonSave.ForeColor = Color.Maroon;
                 ResumeLayout();
             }
         }));
+        void RemoveThePage(TabPage page)
+        {
+            foreach (Control control in page.Controls)
+                control.Dispose();
+
+            page.Controls.Clear();
+            page.Dispose();
+            tab.Controls.Remove(page);
+        }
         void RemoveThePage(object sender, KeyEventArgs e)
         {
             if (e.KeyData.Equals(Keys.Delete) && sender is TabControl tab)
@@ -955,6 +978,7 @@ namespace ShareInvest.Controls
                 page.Controls.Clear();
                 page.Dispose();
                 tab.Controls.Remove(page);
+                buttonSave.ForeColor = Color.Ivory;
                 ResumeLayout();
             }
         }

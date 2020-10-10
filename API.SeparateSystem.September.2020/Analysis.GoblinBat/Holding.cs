@@ -20,6 +20,11 @@ namespace ShareInvest.Analysis
             {
                 var stack = new Stack<Codes>();
 
+                if (code[0].Equals('1'))
+                {
+                    MarginRate = Temporary.CodeStorage.First(o => o.Code.Equals(code)).MarginRate;
+                    TransactionMultiplier = GetTransactionMultiplier(code);
+                }
                 foreach (var arg in Temporary.CodeStorage.Where(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderByDescending(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap))
                 {
                     stack.Push(arg);
@@ -307,6 +312,14 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        protected internal double MarginRate
+        {
+            get; private set;
+        }
+        protected internal uint TransactionMultiplier
+        {
+            get; private set;
+        }
         protected internal TrendFollowingBasicFutures TF
         {
             get;
@@ -344,17 +357,32 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        uint GetTransactionMultiplier(string code)
+        {
+            if (code[1].Equals('0'))
+                switch (code[2])
+                {
+                    case '1':
+                        return 0x3D090;
+
+                    case '5':
+                        return 0xC350;
+
+                    case '6':
+                        return 0x2710;
+
+                    default:
+                        return 0;
+                }
+            MarginRate *= 0.1;
+
+            return 0xA;
+        }
         const string excluding = "191230";
         const string theDate = "192001";
         const string nFormat = "D6";
         const string format = "yyMMdd";
         internal readonly Consecutive consecutive;
-        protected internal const string conclusion = "체결";
-        protected internal const string acceptance = "접수";
-        protected internal const string confirmation = "확인";
-        protected internal const string cancellantion = "취소";
-        protected internal const string correction = "정정";
-        protected internal const uint transactionMultiplier = 0x3D090;
     }
     enum TR
     {

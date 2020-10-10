@@ -12,8 +12,8 @@ namespace ShareInvest.Controls
         internal TrendFollowingBasicFutures(Codes codes)
         {
             marginRate = codes.MarginRate;
+            transactionMutiplier = GetTransactionMultiplier(codes.Code);
             price = codes.Price;
-            code = codes.Code;
             InitializeComponent();
             numericQuantityShort.Leave += OutOfFocusNumericQuantity;
             numericQuantityLong.Leave += OutOfFocusNumericQuantity;
@@ -36,6 +36,22 @@ namespace ShareInvest.Controls
                 return false;
         }
         internal string TransmuteStrategics(string code) => string.Concat("TF", code, checkRollover.Checked ? 1 : 0, numericBaseShort.Value, '.', numericBaseLong.Value, '.', numericMinute.Value, '.', numericMinuteShort.Value, '.', numericMinuteLong.Value, '.', numericReactionShort.Value, '.', numericReactionLong.Value, '.', numericQuantityShort.Value, '.', numericQuantityLong.Value);
+        uint GetTransactionMultiplier(string code)
+        {
+            if (code[1].Equals('0'))
+                switch (code[2])
+                {
+                    case '1':
+                        return 0x3D090;
+
+                    case '5':
+                        return 0xC350;
+
+                    case '6':
+                        return 0x2710;
+                }
+            return 0;
+        }
         void OutOfFocusNumericQuantity(object sender, EventArgs e)
         {
             if (sender is CheckBox check)
@@ -55,21 +71,15 @@ namespace ShareInvest.Controls
             {
                 var amount = (uint)(numericQuantityShort.Value > numericQuantityLong.Value ? numericQuantityShort.Value : numericQuantityLong.Value);
 
-                if (double.TryParse(price, out double current))
-                {
-                    if (price.Contains("."))
-                    {
-                        if (code.Substring(2, 1).Equals("1"))
-                            labelAvailable.Text = (transactionMutiplier * amount * current * marginRate).ToString("C0");
-                    }
-                    else
-                        labelAvailable.Text = (amount * current * marginRate).ToString("C0");
-                }
+                if (price.Contains(".") && double.TryParse(price, out double current))
+                    labelAvailable.Text = (transactionMutiplier * amount * current * marginRate).ToString("C0");
+
+                else if (int.TryParse(this.price, out int price))
+                    labelAvailable.Text = (amount * price * marginRate).ToString("C0");
             }
         }
-        const uint transactionMutiplier = 0x3D090;
+        readonly uint transactionMutiplier;
         readonly double marginRate;
         readonly string price;
-        readonly string code;
     }
 }

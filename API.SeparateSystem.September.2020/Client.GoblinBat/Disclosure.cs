@@ -22,7 +22,7 @@ namespace ShareInvest.Client
             try
             {
                 var now = DateTime.Now;
-                var response = (await client.ExecuteAsync(new RestRequest(security.RequestMKD99000001, Method.POST).AddHeader(security.ContentType, security.Form).AddParameter(security.Param[0], (Path)key).AddParameter(security.Param[1], Path.ALL).AddParameter(security.Param[2], now.Hour > 15 ? now.ToString(format) : now.AddDays(-1).ToString(format)).AddParameter(security.Param[3], (await client.ExecuteAsync(new RestRequest(security.RequestMarketCap, Method.GET))).Content).AddParameter(security.Param[4], page), source.Token));
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestMKD99000001, Method.POST).AddHeader(security.ContentType, security.Form).AddParameter(security.Param[0], (Path)key).AddParameter(security.Param[1], Path.ALL).AddParameter(security.Param[2], now.Hour > 15 ? now.ToString(format) : now.AddDays(-1).ToString(format)).AddParameter(security.Param[3], (await client.ExecuteAsync(new RestRequest(security.RequestMarketCap, Method.GET))).Content).AddParameter(security.Param[4], page), source.Token);
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
                     return JsonConvert.DeserializeObject<List<MKD30015>>(JObject.Parse(response.Content)[security.MKD99000001].ToString());

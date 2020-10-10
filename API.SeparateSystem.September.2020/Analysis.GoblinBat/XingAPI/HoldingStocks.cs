@@ -63,7 +63,7 @@ namespace ShareInvest.Analysis.XingAPI
                 Current = current;
                 Purchase = gb.Equals("2") && Quantity >= 0 ? ((Purchase ?? 0D) * Quantity + current * quantity) / (quantity + Quantity) : (gb.Equals("1") && Quantity <= 0 ? (current * quantity - (Purchase ?? 0D) * Quantity) / (quantity - Quantity) : (Purchase ?? 0D));
                 Quantity += gb.Equals("1") ? -quantity : quantity;
-                Revenue = (long)(current - Purchase) * Quantity * transactionMultiplier;
+                Revenue = (long)(current - Purchase) * Quantity * TransactionMultiplier;
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
             }
             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, int, dynamic, dynamic, long, double>(param[cme ? 0x33 : 0xB], param[cme ? 0x34 : 0xB], Quantity, Purchase, Current, Revenue, Rate)));
@@ -100,7 +100,7 @@ namespace ShareInvest.Analysis.XingAPI
             if (double.TryParse(param[4], out double current))
             {
                 Current = current;
-                Revenue = (long)((current - (Purchase ?? 0D)) * Quantity * transactionMultiplier);
+                Revenue = (long)((current - (Purchase ?? 0D)) * Quantity * TransactionMultiplier);
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
 
                 if (OrderNumber.Count > 0 && strategics is TrendFollowingBasicFutures && OrderNumber.ContainsValue(Bid) == false && OrderNumber.ContainsValue(Offer) == false)

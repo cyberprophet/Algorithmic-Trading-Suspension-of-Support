@@ -312,6 +312,11 @@ namespace ShareInvest
 
                                     else if (stocks.Count == 0 && this.futures.Count == 0 && options.Count == 0)
                                     {
+                                        var now = DateTime.Now;
+
+                                        if (random.Next(0, int.MaxValue) == await client.PostContext(await new ConstituentStocks(privacy.Security).GetConstituentStocks(privacy.Account.Equals("S") ? 2 : 1, now)))
+                                            await new Advertise(privacy.Security).StartAdvertisingInTheDataCollectionSection(now);
+
                                         Dispose(WindowState);
 
                                         return;
@@ -697,7 +702,7 @@ namespace ShareInvest
                 switch (now.DayOfWeek)
                 {
                     case DayOfWeek.Sunday:
-                        if (now.Hour < 3 && now.Minute > 15)
+                        if (now.Hour < 3 && now.Minute > 15 && privacy.Security.Equals(admin) == false)
                         {
                             foreach (var process in Process.GetProcessesByName(program, Dns.GetHostName()))
                                 process.Kill();

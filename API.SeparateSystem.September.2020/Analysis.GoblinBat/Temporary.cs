@@ -70,7 +70,9 @@ namespace ShareInvest.Analysis
         internal async Task<string> FindTheChartStartsAsync(string code) => await client.GetContext(new Catalog.Request.Charts { Code = code, Start = empty, End = empty }) as string;
         internal Temporary(int length)
         {
-            client = GoblinBatClient.GetInstance();
+            if (client == null)
+                client = GoblinBatClient.GetInstance();
+
             CallUpTheCodesAsync(length).Wait();
         }
         async Task CallUpTheCodesAsync(int length)

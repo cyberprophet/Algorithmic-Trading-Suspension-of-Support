@@ -230,7 +230,7 @@ namespace ShareInvest.Strategics
                     }
                 if (double.IsNaN(coin) == false)
                 {
-                    if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) && DateTime.Now.Hour < 3)
+                    if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) && DateTime.Now.Hour < 3 && (cookie as string).Equals(admin) == false)
                     {
                         ClosingForm = true;
                         Cancel.Cancel();
@@ -502,7 +502,7 @@ namespace ShareInvest.Strategics
                 FormBorderStyle = FormBorderStyle.FixedSingle;
                 WindowState = FormWindowState.Minimized;
             }
-            else if (DateTime.Now.Hour < 3 && backgroundWorker.IsBusy == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday))
+            else if (DateTime.Now.Hour < 3 && backgroundWorker.IsBusy == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) && (cookie as string).Equals(admin) == false)
             {
                 timer.Stop();
                 strip.ItemClicked -= OnItemClick;
