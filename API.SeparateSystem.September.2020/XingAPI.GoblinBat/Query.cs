@@ -81,6 +81,12 @@ namespace ShareInvest.XingAPI
             }
             return queue;
         }
+        protected internal Queue<InBlock> GetInBlocks(string name, string gubun)
+        {
+            Secrecy.SetData(name, gubun);
+
+            return GetInBlocks(name);
+        }
         protected internal Queue<OutBlock> GetOutBlocks()
         {
             string block = string.Empty;

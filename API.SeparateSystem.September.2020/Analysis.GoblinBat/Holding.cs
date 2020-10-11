@@ -31,7 +31,7 @@ namespace ShareInvest.Analysis
                     Days = new Queue<Charts>();
 
                     if (uint.TryParse(arg.MaturityMarketCap.Length == 8 ? arg.MaturityMarketCap.Substring(2) : arg.MaturityMarketCap, out uint remain) && Temporary.RemainingDay.Add(remain - 1))
-                        Console.WriteLine(Temporary.RemainingDay.Count);
+                        Console.WriteLine(code + "_" + Temporary.RemainingDay.Count + "_" + (remain - 1));
                 }
                 foreach (var day in Temporary.CallUpTheChartAsync(code).Result)
                     Days.Enqueue(day);

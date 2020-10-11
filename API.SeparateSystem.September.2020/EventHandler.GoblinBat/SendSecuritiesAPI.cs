@@ -26,7 +26,7 @@ namespace ShareInvest.EventHandler
         public SendSecuritiesAPI(string code, Stack<string> stack) => Convey = new Tuple<string, Stack<string>>(code, stack);
         public SendSecuritiesAPI(Tuple<string, string, string> tuple)
         {
-            if (tuple.Item1.StartsWith("106") && tuple.Item1.Length == 8)
+            if ((tuple.Item1.StartsWith("106") || tuple.Item1.StartsWith("105")) && tuple.Item1.Length == 8)
                 convert[tuple.Item1] = tuple.Item2;
 
             Convey = tuple;
@@ -83,6 +83,9 @@ namespace ShareInvest.EventHandler
 
                         else if (temp[4].Equals("KOSPI200"))
                             dic[convert.First(o => o.Key.StartsWith("101") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
+
+                        else if (temp[4].Equals("미니KOSPI200"))
+                            dic[convert.First(o => o.Key.StartsWith("105") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
 
                         else if (temp[4].Equals("코스닥150"))
                             dic[convert.First(o => o.Key.StartsWith("106") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);

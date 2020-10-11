@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 using ShareInvest.EventHandler;
 using ShareInvest.Interface.XingAPI;
@@ -47,19 +49,36 @@ namespace ShareInvest.XingAPI.Catalog
                             break;
                     }
             }
+            if (Repeat)
+                new Task(() =>
+                {
+                    Thread.Sleep(0x3ED / GetTRCountPerSec(szTrCode));
+                    QueryExcute(gubun[gubun.Length - 1]);
+                }).Start();
+            Repeat = false;
             Send?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, string>(code[0], name[0], price[0])));
         }
         protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
         public void QueryExcute()
         {
+            Repeat = true;
+            QueryExcute(gubun[0]);
+        }
+        void QueryExcute(string property)
+        {
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {
-                foreach (var param in GetInBlocks(GetType().Name))
+                foreach (var param in GetInBlocks(GetType().Name, property))
                     SetFieldData(param.Block, param.Field, param.Occurs, param.Data);
 
                 SendErrorMessage(GetType().Name, Request(false));
             }
         }
+        bool Repeat
+        {
+            get; set;
+        }
+        readonly string[] gubun = new string[] { "MF", "MO", "WK", "SF" };
         public event EventHandler<SendSecuritiesAPI> Send;
     }
 }

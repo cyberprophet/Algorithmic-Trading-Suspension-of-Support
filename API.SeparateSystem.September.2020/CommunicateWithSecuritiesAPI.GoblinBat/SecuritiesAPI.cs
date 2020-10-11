@@ -563,7 +563,7 @@ namespace ShareInvest
                     break;
 
                 case XingAPI.ConnectAPI x:
-                    foreach (var ctor in x.ConvertTheCodeToName)
+                    foreach (var ctor in x.GetConvertTheCodeToName(0x1BDF))
                     {
                         ctor.Send += OnReceiveSecuritiesAPI;
                         ctor.QueryExcute();
@@ -581,17 +581,18 @@ namespace ShareInvest
                     connect = x;
                     break;
             }
-            foreach (var kv in catalog.OrderByDescending(o => o.Key))
-                if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0)
+            Parallel.ForEach(catalog, new ParallelOptions { MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.5) }, new Action<KeyValuePair<string, IStrategics>>((kv) =>
+            {
+                if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0 && connect is XingAPI.ConnectAPI xing)
                     switch (kv.Key.Length)
                     {
                         case int length when length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("105") || kv.Key.StartsWith("106")):
-                            if (connect is XingAPI.ConnectAPI xing)
-                                foreach (var real in xing.Reals)
-                                    real.OnReceiveRealTime(kv.Key);
+                            foreach (var real in xing.Reals)
+                                real.OnReceiveRealTime(kv.Key);
 
                             break;
                     }
+            }));
             if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8 && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1FAC7U : (uint)(catalog.Count * 0x4BAF)).Equals(DialogResult.OK))
             {
                 Stocks = new Stack<string>(GetRevisedStockPrices(stocks));
@@ -763,7 +764,7 @@ namespace ShareInvest
                             ctor.WaitOrder = true;
                         }
                         if (Connect == int.MaxValue)
-                            foreach (var convert in xingAPI.ConvertTheCodeToName)
+                            foreach (var convert in xingAPI.GetConvertTheCodeToName(0x3A7))
                                 convert.Send -= OnReceiveSecuritiesAPI;
                     }
                     else if (com is OpenAPI.ConnectAPI openAPI)

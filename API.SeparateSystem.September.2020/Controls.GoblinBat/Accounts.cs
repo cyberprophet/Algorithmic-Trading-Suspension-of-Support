@@ -17,6 +17,7 @@ namespace ShareInvest.Controls
                     timer.Stop();
                     timer.Dispose();
                 }
+                buttonStartProgress.Click -= new System.EventHandler(ButtonStartProgressClick);
             }
         }
         void TimerTick(object sender, EventArgs e)

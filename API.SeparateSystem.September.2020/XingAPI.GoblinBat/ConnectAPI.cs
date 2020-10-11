@@ -87,7 +87,6 @@ namespace ShareInvest.XingAPI
                 {
                     ai.Name = name.Item2;
                     ai.Nick = name.Item1;
-                    checkPrivacy.CheckState = ai.Server && checkPrivacy.Checked ? CheckState.Unchecked : checkPrivacy.CheckState;
 
                     if (checkPrivacy.Checked && int.MaxValue > await new Secrecy().Encrypt(this.privacy, textIdentity.Text, textPassword.Text, textCertificate.Text, privacy.AccountNumber, privacy.AccountPassword, checkDemo.Checked))
                         Console.WriteLine(ai.Nick);
@@ -152,7 +151,12 @@ namespace ShareInvest.XingAPI
                     yield return ctor.Value ?? null;
             }
         }
-        public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => new IQuerys<SendSecuritiesAPI>[] { new T8430(), new T8435(), new T9943(), new T8401(), new T8432(), new T8433(), new MMDAQ91200() };
+        public IQuerys<SendSecuritiesAPI>[] GetConvertTheCodeToName(int milliseconds)
+        {
+            System.Threading.Thread.Sleep(milliseconds);
+
+            return new IQuerys<SendSecuritiesAPI>[] { new T8430(), new T8435(), new T9943(), new T8401(), new T8432(), new T8433(), new MMDAQ91200() };
+        }
         public IQuerys<SendSecuritiesAPI> JIF
         {
             get;
