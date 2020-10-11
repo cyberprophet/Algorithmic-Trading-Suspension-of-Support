@@ -581,8 +581,7 @@ namespace ShareInvest
                     connect = x;
                     break;
             }
-            Parallel.ForEach(catalog, new ParallelOptions { MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.5) }, new Action<KeyValuePair<string, IStrategics>>((kv) =>
-            {
+            foreach (var kv in catalog.OrderByDescending(o => o.Key))
                 if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0 && connect is XingAPI.ConnectAPI xing)
                     switch (kv.Key.Length)
                     {
@@ -592,7 +591,6 @@ namespace ShareInvest
 
                             break;
                     }
-            }));
             if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8 && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1FAC7U : (uint)(catalog.Count * 0x4BAF)).Equals(DialogResult.OK))
             {
                 Stocks = new Stack<string>(GetRevisedStockPrices(stocks));
