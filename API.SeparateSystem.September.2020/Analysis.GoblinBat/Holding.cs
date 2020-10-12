@@ -37,7 +37,22 @@ namespace ShareInvest.Analysis
                     Days.Enqueue(day);
 
                 while (stack.Count > 0)
-                    yield return Temporary.CallUpTheChartAsync(stack.Pop()).Result;
+                {
+                    var codes = stack.Pop();
+
+                    if (codes.Code.Equals("105QA000"))
+                    {
+                        foreach (var arg in Temporary.CallUpTheChartAsync(Temporary.CodeStorage.First(o => o.Code.Equals("101QC000"))).Result)
+                            if (arg.Date.Substring(6, 4).Equals("1545"))
+                                Days.Enqueue(new Charts
+                                {
+                                    Date = string.Concat("20", arg.Date.Substring(0, 6)),
+                                    Price = arg.Price
+                                });
+                        continue;
+                    }
+                    yield return Temporary.CallUpTheChartAsync(codes).Result;
+                }
             }
             else if (code.Length == 6 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.Equals(code)))
             {

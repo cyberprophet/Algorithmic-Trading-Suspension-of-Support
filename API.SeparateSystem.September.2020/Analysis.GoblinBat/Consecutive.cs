@@ -288,7 +288,7 @@ namespace ShareInvest.Analysis
                 if (date.Length > 8 && int.TryParse(date.Substring(6, 2), out int hour))
                     CME = hour > 17 || hour < 5;
 
-                return date.Length > 8 && (strategics.Code.Length == 6 ? GetCheckOnDeadline(date) : date.Substring(6).Equals(onTime) == false);
+                return date.Length > 8 && (strategics.Code.Length == 6 || strategics.Code.Length == 8 && strategics.Code[1].Equals('0') == false ? GetCheckOnDeadline(date) : date.Substring(6).Equals(onTime) == false);
             }
             else
                 return date.Length > 8 && GetCheckOnTime(date, minute);
@@ -299,10 +299,10 @@ namespace ShareInvest.Analysis
 
             if ((string.IsNullOrEmpty(Check) || Check.Equals(check.Substring(0, 4)) || GetCheckOnDeadline(check) || on.Equals(onTime) || on.Equals(nTime)) && DateTime.TryParseExact(check, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
             {
-                if (strategics.Code.Length == 6 && string.IsNullOrEmpty(Check) == false && string.Compare(check.Substring(0, 4), end) > 0)
+                if ((strategics.Code.Length == 6 || strategics.Code.Length == 8 && strategics.Code[1].Equals('0') == false) && string.IsNullOrEmpty(Check) == false && string.Compare(check.Substring(0, 4), end) > 0)
                     Check = string.Empty;
 
-                else if (strategics.Code.Length == 6 && string.Compare(check.Substring(0, 4), end) > 0)
+                else if ((strategics.Code.Length == 6 || strategics.Code.Length == 8 && strategics.Code[1].Equals('0') == false) && string.Compare(check.Substring(0, 4), end) > 0)
                     return string.IsNullOrEmpty(Check);
 
                 Check = (date + TimeSpan.FromMinutes(minute)).ToString(hm);
@@ -313,7 +313,7 @@ namespace ShareInvest.Analysis
         }
         bool GetCheckOnDeadline(string time)
         {
-            if (time.Length > 6 && strategics.Code.Length == 6)
+            if (time.Length > 6 && (strategics.Code.Length == 6 || strategics.Code.Length == 8 && strategics.Code[1].Equals('0') == false))
             {
                 var date = time.Substring(0, 6);
                 var change = string.IsNullOrEmpty(DateChange) == false && date.Equals(DateChange);

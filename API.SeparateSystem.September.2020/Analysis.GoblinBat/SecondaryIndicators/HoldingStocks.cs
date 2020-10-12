@@ -29,7 +29,9 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
                     else
                     {
-                        if (date.CompareTo(start) > 0 && date.CompareTo(end) < 0 && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume))
+                        var condition = (strategics.Code as string)[1].Equals('0');
+
+                        if (date.CompareTo(start) > 0 && date.CompareTo(condition ? end : transmit) < 0 && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume))
                         {
                             Quantity += gap > 0 ? 1 : -1;
                             CumulativeFee += (uint)(e.Price * TransactionMultiplier * Commission);
@@ -38,9 +40,9 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             Revenue += (long)(liquidation * TransactionMultiplier);
                             VerifyAmount = Quantity;
                         }
-                        else if (date.CompareTo(cme) < 0 && date.CompareTo(end) > 0 && uint.TryParse(e.Date.Substring(0, 6), out uint remain))
+                        else if (date.CompareTo(cme) < 0 && date.CompareTo(condition ? end : transmit) > 0 && uint.TryParse(e.Date.Substring(0, 6), out uint remain))
                         {
-                            if (tf.RollOver == false || Temporary.RemainingDay.Contains(remain))
+                            if (tf.RollOver == false || CheckTheRemainingDay(remain, condition, e.Date.Substring(2, 2)))
                                 while (Quantity != 0)
                                 {
                                     Quantity += Quantity > 0 ? -1 : 1;
@@ -853,6 +855,18 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             return month.AddDays((dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 2 : 1) * 7 + (DayOfWeek.Thursday - dt));
         }
         string GetOrderNumber(int type) => string.Concat(type, Count++.ToString("D4"));
+        bool CheckTheRemainingDay(uint day, bool condition, string date)
+        {
+            if (Temporary.RemainingDay.Contains(day))
+            {
+                if (condition && (strategics.Code as string)[2].Equals('5') == false)
+                    return Array.Exists(month, o => o.Equals(date));
+
+                else
+                    return true;
+            }
+            return false;
+        }
         void Normalize(string code)
         {
             if (EstimatedPrice != null && EstimatedPrice.Count > 3)
@@ -1051,6 +1065,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
         const string format = "yyMMddHHmmss";
         readonly dynamic strategics;
         readonly GoblinBatClient client;
+        readonly string[] month = new string[] { "03", "06", "09", "12" };
         public override event EventHandler<SendSecuritiesAPI> SendBalance;
         public override event EventHandler<SendHoldingStocks> SendStocks;
     }
