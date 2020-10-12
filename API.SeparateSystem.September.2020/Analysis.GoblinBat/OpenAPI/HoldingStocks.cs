@@ -73,7 +73,7 @@ namespace ShareInvest.Analysis.OpenAPI
                     {
                         if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (tf.QuantityShort + Quantity < 0 && Base < 0 || Base > 0 && Quantity - tf.QuantityLong > 0) && Revenue / Math.Abs(Quantity) > 0x927C)
                         {
-                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, int, string, string, int, string, string>(Code, 1, Quantity > 0 ? "1" : "2", ((int)Catalog.OpenAPI.OrderType.시장가).ToString(), 1, (Quantity > 0 ? Bid : Offer).ToString("F2"), string.Empty)));
+                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, int, string, string, int, string, string>(Code, 1, Quantity > 0 ? "1" : "2", ((int)Catalog.OpenAPI.OrderType.시장가).ToString(), 1, string.Empty, string.Empty)));
                             WaitOrder = false;
                         }
                         Secondary = gap;
@@ -136,17 +136,17 @@ namespace ShareInvest.Analysis.OpenAPI
                     Price = param[1].StartsWith("-") ? param[1].Substring(1) : param[1],
                     Volume = volume
                 }));
-            if (int.TryParse(param[1].StartsWith("-") ? param[1].Substring(1) : param[1], out int current))
-            {
-                Current = current;
-                Revenue = (current - Purchase) * Quantity;
-                Rate = current / (double)Purchase - 1;
-            }
-            else if (double.TryParse(param[1].StartsWith("-") ? param[1].Substring(1) : param[1], out double price))
+            if (param.Length == 0x20 && double.TryParse(param[1].StartsWith("-") ? param[1].Substring(1) : param[1], out double price))
             {
                 Current = price;
                 Revenue = (long)((price - Purchase) * Quantity * TransactionMultiplier);
                 Rate = (price / Purchase - 1) * (Quantity > 0 ? 1 : -1);
+            }
+            else if (int.TryParse(param[1].StartsWith("-") ? param[1].Substring(1) : param[1], out int current))
+            {
+                Current = current;
+                Revenue = (current - Purchase) * Quantity;
+                Rate = current / (double)Purchase - 1;
             }
             SendStocks?.Invoke(this, new SendHoldingStocks(Code, Quantity, Purchase, Current, Revenue, Rate, Base, Secondary, AdjustTheColorAccordingToTheCurrentSituation(WaitOrder, OrderNumber.Count)));
         }

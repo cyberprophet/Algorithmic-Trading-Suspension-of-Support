@@ -40,7 +40,7 @@ namespace ShareInvest.Analysis
         }
         internal async Task<Queue<Charts>> CallUpTheChartAsync(string code)
         {
-            if (code.Length == 8 && (code.StartsWith("106") || code.StartsWith("101")) && code.EndsWith("000"))
+            if (code.Length == 8 && code.StartsWith("1") && code.EndsWith("000") && code[1].Equals('0'))
                 code = CodeStorage.First(f => f.MaturityMarketCap.Equals(CodeStorage.Where(o => o.Code.Length == 8 && o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderBy(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap).First().MaturityMarketCap) && f.Code.StartsWith(code.Substring(0, 3)) && f.Code.EndsWith(code.Substring(5))).Code;
 
             var queue = new Queue<Charts>();
