@@ -83,7 +83,7 @@ namespace ShareInvest.XingAPI
         }
         protected internal Queue<InBlock> GetInBlocks(string name, string gubun)
         {
-            Secrecy.SetData(name, gubun);
+            Secrecy.SetData(gubun);
 
             return GetInBlocks(name);
         }
@@ -125,6 +125,7 @@ namespace ShareInvest.XingAPI
                 if (Secrecy.ErrorMessage.Equals(param))
                     Connect.GetInstance().Dispose();
             }
+            SendMessage(name);
         }
         protected internal TimeSpan WaitForTheLimitTime(int limit) => TimeSpan.FromSeconds(limit);
         protected internal virtual void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
@@ -142,6 +143,8 @@ namespace ShareInvest.XingAPI
                 SendMessage(nMessageCode, szMessage);
         }
         protected internal abstract void OnReceiveData(string szTrCode);
+        [Conditional("DEBUG")]
+        protected internal void SendMessage(string name) => Console.WriteLine(name);
         [Conditional("DEBUG")]
         protected internal void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         [Conditional("DEBUG")]

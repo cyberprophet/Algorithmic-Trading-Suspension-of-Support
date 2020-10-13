@@ -16,9 +16,7 @@ namespace ShareInvest.XingAPI.Catalog
         {
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))
             {
-                var temp = GetInBlocks(GetType().Name);
-
-                foreach (var param in temp)
+                foreach (var param in GetInBlocks(GetType().Name))
                 {
                     SetFieldData(param.Block, param.Field, param.Occurs, param.Data);
                     InBlock = new InBlock

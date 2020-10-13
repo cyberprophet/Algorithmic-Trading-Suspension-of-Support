@@ -642,7 +642,7 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     break;
 
                 case TrendFollowingBasicFutures _:
-                    Commission = commission > 0 ? commission : 3e-5;
+                    Commission = commission > 0 ? commission : ((strategics.Code as string)[1].Equals('0') ? 3e-5 : 6e-5);
 
                     if (StartProgress(strategics.Code as string) > 0)
                     {

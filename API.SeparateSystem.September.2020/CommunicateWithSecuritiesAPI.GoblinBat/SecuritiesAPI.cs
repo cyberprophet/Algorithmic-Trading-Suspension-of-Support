@@ -563,8 +563,9 @@ namespace ShareInvest
                     break;
 
                 case XingAPI.ConnectAPI x:
-                    foreach (var ctor in x.GetConvertTheCodeToName(0x1BDF))
+                    foreach (var ctor in x.ConvertTheCodeToName)
                     {
+                        System.Threading.Thread.Sleep(0x78F);
                         ctor.Send += OnReceiveSecuritiesAPI;
                         ctor.QueryExcute();
                     }
@@ -762,7 +763,7 @@ namespace ShareInvest
                             ctor.WaitOrder = true;
                         }
                         if (Connect == int.MaxValue)
-                            foreach (var convert in xingAPI.GetConvertTheCodeToName(0x3A7))
+                            foreach (var convert in xingAPI.ConvertTheCodeToName)
                                 convert.Send -= OnReceiveSecuritiesAPI;
                     }
                     else if (com is OpenAPI.ConnectAPI openAPI)

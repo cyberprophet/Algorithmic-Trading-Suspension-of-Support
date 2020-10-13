@@ -1153,7 +1153,7 @@ namespace ShareInvest.Controls
         readonly Disclosure disclosure;
         readonly DataGridView data;
         readonly GoblinBatClient client;
-        readonly double[] commissionFutures = { 3e-5, 25e-6, 2e-5, 24e-6, 21e-6, 18e-6, 15e-6, 1e-5 };
+        readonly double[] commissionFutures = { 6e-5, 5e-5, 4e-5, 3e-5, 25e-6, 2e-5, 24e-6, 21e-6, 18e-6, 15e-6, 1e-5 };
         readonly double[] commissionStocks = { 1.5e-4, 1.4e-4, 1.3e-4, 1.2e-4, 1.1e-4 };
     }
     enum StrategicsCode

@@ -16,7 +16,21 @@ namespace ShareInvest.EventHandler
         {
             get; private set;
         }
-        public SendSecuritiesAPI(bool cme) => Convey = cme;
+        public SendSecuritiesAPI(bool cme)
+        {
+            if (cme)
+            {
+                var span = DateTime.Now;
+
+                if (Span == null || Span.AddMilliseconds(0x3ED).CompareTo(span) < 0)
+                {
+                    Convey = cme;
+                    Span = span;
+                }
+                return;
+            }
+            Convey = cme;
+        }
         public SendSecuritiesAPI(Catalog.XingAPI.Order order) => Convey = order;
         public SendSecuritiesAPI(Stack<Catalog.OpenAPI.RevisedStockPrice> days, string code) => Convey = new Tuple<string, Stack<Catalog.OpenAPI.RevisedStockPrice>>(code, days);
         public SendSecuritiesAPI(Tuple<int, string, int, int, string> order) => Convey = order;
@@ -139,6 +153,10 @@ namespace ShareInvest.EventHandler
 
             else
                 Convey = tuple;
+        }
+        static DateTime Span
+        {
+            get; set;
         }
         static readonly Dictionary<string, string> convert = new Dictionary<string, string>();
     }

@@ -72,6 +72,7 @@ namespace ShareInvest.XingAPI
                 else if (sub.Controls.Count > 0)
                     FindControlRecursive(sub);
         }
+        bool DistinguishBetweenDayAndNight(DateTime now) => (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 5;
         public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
             var ai = new AccountInformation
@@ -97,7 +98,7 @@ namespace ShareInvest.XingAPI
         public void StartProgress(Codes codes)
         {
             if (codes.Code.Length == 8 && Codes.Add(codes) && API is Connect api)
-                api.Request.RequestTrData(new Task(() => (codes.Code.Substring(1, 1).Equals("0") ? new T2101() as IQuerys : new T8402())?.QueryExcute(codes.Code)));
+                api.Request.RequestTrData(new Task(() => (codes.Code[1].Equals('0') ? new T2101() as IQuerys : new T8402())?.QueryExcute(codes.Code)));
         }
         public void StartProgress() => buttonStartProgress.PerformClick();
         public void SetForeColor(Color color, string remain)
@@ -151,52 +152,63 @@ namespace ShareInvest.XingAPI
                     yield return ctor.Value ?? null;
             }
         }
-        public IQuerys<SendSecuritiesAPI>[] GetConvertTheCodeToName(int milliseconds)
-        {
-            System.Threading.Thread.Sleep(milliseconds);
-
-            return new IQuerys<SendSecuritiesAPI>[] { new T8430(), new T8435(), new T9943(), new T8401(), new T8432(), new T8433(), new MMDAQ91200() };
-        }
         public IQuerys<SendSecuritiesAPI> JIF
         {
             get;
         }
-        public IOrders<SendSecuritiesAPI>[] Orders
+        public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => DistinguishBetweenDayAndNight(DateTime.Now) ? new IQuerys<SendSecuritiesAPI>[]
         {
-            get
-            {
-                var now = DateTime.Now;
-
-                return (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IOrders<SendSecuritiesAPI>[] { new CFOAT00100(), new CFOAT00200(), new CFOAT00300() } : new IOrders<SendSecuritiesAPI>[] { new CCEAT00100(), new CCEAT00200(), new CCEAT00300() };
-            }
-        }
-        public IQuerys<SendSecuritiesAPI>[] Querys
+            new T8430(),
+            new T8435(),
+            new T9943(),
+            new T8401(),
+            new T8432(),
+            new T8433(),
+            new MMDAQ91200()
+        } : new IQuerys<SendSecuritiesAPI>[]
         {
-            get
-            {
-                var now = DateTime.Now;
 
-                return (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IQuerys<SendSecuritiesAPI>[] { new CFOBQ10500(), new T0441() } : new IQuerys<SendSecuritiesAPI>[] { new CCEBQ10500(), new CCEAQ50600() };
-            }
-        }
-        public IReals[] Conclusion
+        };
+        public IOrders<SendSecuritiesAPI>[] Orders => DistinguishBetweenDayAndNight(DateTime.Now) ? new IOrders<SendSecuritiesAPI>[]
         {
-            get
-            {
-                var now = DateTime.Now;
-
-                return (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IReals[] { new C01(), new H01(), new O01() } : new IReals[] { new CM0(), new CM1(), new CM2() };
-            }
-        }
-        public IReals[] Reals
+            new CFOAT00100(),
+            new CFOAT00200(),
+            new CFOAT00300()
+        } : new IOrders<SendSecuritiesAPI>[]
         {
-            get
-            {
-                var now = DateTime.Now;
-
-                return (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 4 ? new IReals[] { new FC0(), new FH0() } : new IReals[] { new NC0(), new NH0() };
-            }
-        }
+            new CCEAT00100(),
+            new CCEAT00200(),
+            new CCEAT00300()
+        };
+        public IQuerys<SendSecuritiesAPI>[] Querys => DistinguishBetweenDayAndNight(DateTime.Now) ? new IQuerys<SendSecuritiesAPI>[]
+        {
+            new CFOBQ10500(),
+            new T0441()
+        } : new IQuerys<SendSecuritiesAPI>[]
+        {
+            new CCEBQ10500(),
+            new CCEAQ50600()
+        };
+        public IReals[] Conclusion => DistinguishBetweenDayAndNight(DateTime.Now) ? new IReals[]
+        {
+            new C01(),
+            new H01(),
+            new O01()
+        } : new IReals[]
+        {
+            new CM0(),
+            new CM1(),
+            new CM2()
+        };
+        public IReals[] Reals => DistinguishBetweenDayAndNight(DateTime.Now) ? new IReals[]
+        {
+            new FC0(),
+            new FH0()
+        } : new IReals[]
+        {
+            new NC0(),
+            new NH0()
+        };
         public dynamic API
         {
             get; private set;

@@ -55,7 +55,6 @@ namespace ShareInvest.Analysis.XingAPI
         public override void OnReceiveBalance(string[] param)
         {
             var cme = param.Length > 0x1C;
-            var span = DateTime.Now;
 
             if (param[cme ? 0x33 : 0xB].Length == 8 && int.TryParse(param[cme ? 0x53 : 0xE], out int quantity) && double.TryParse(param[cme ? 0x52 : 0xD], out double current) && int.TryParse(param[cme ? 0x2D : 9], out int number) && OrderNumber.Remove(number.ToString()))
             {
@@ -67,12 +66,7 @@ namespace ShareInvest.Analysis.XingAPI
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
             }
             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, int, dynamic, dynamic, long, double>(param[cme ? 0x33 : 0xB], param[cme ? 0x34 : 0xB], Quantity, Purchase, Current, Revenue, Rate)));
-
-            if (Span == null || Span.AddMilliseconds(0x3ED).CompareTo(span) < 0)
-            {
-                SendBalance?.Invoke(this, new SendSecuritiesAPI(true));
-                Span = span;
-            }
+            SendBalance?.Invoke(this, new SendSecuritiesAPI(true));
         }
         public override void OnReceiveConclusion(string[] param)
         {
@@ -222,10 +216,6 @@ namespace ShareInvest.Analysis.XingAPI
             consecutive.Connect(this);
         }
         bool RollOver
-        {
-            get; set;
-        }
-        DateTime Span
         {
             get; set;
         }
