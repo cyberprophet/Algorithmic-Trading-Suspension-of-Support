@@ -118,6 +118,10 @@ namespace ShareInvest
                             Balance.OnReceiveDeposit(available);
                             return;
 
+                        case DateTime now:
+                            SendMessage(now);
+                            return;
+
                         case Tuple<long, long> tuple:
                             Balance.OnReceiveDeposit(tuple);
                             return;
@@ -1004,6 +1008,9 @@ namespace ShareInvest
 
             else if (code is string str)
                 Console.WriteLine(str);
+
+            else if (code is DateTime now)
+                Console.WriteLine(now);
         }
         [Conditional("DEBUG")]
         void OnReceiveData(DialogResult result) => BeginInvoke(new Action(async () =>

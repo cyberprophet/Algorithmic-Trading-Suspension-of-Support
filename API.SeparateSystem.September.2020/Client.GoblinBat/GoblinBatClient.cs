@@ -72,8 +72,10 @@ namespace ShareInvest.Client
                     if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                     {
                         if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString("yyMMdd")) < 0 || chart.End.Length < 6)
+                        {
+                            GC.Collect();
                             await security.Save(chart, response.Content);
-
+                        }
                         Coin += security.GetSettleTheFare(response.RawBytes.Length);
                         SendMessage(Coin);
                     }

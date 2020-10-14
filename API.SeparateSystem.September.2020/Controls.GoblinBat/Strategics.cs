@@ -590,7 +590,7 @@ namespace ShareInvest.Controls
             {
                 var url = @"https://youtu.be/ecwpY1_XvdM";
 
-                if (link.Name.Equals(this.link.Name) && comboStrategics.SelectedItem is string str)
+                if (link.Name.Equals(this.link.Name) && comboStrategics.SelectedItem is string str && string.IsNullOrEmpty(str) == false)
                     switch (str)
                     {
                         case tc:

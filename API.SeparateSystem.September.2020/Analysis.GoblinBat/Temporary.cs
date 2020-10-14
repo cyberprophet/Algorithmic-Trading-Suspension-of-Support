@@ -25,7 +25,7 @@ namespace ShareInvest.Analysis
             var queue = new Queue<Charts>();
 
             if (string.IsNullOrEmpty(start) && DateTime.TryParseExact(codes.MaturityMarketCap, ConvertDateTime(codes.MaturityMarketCap.Length), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
-                start = date.AddYears(-3).ToString(ConvertDateTime(6));
+                start = Array.Exists(this.codes, o => o.Equals(codes.Code)) ? Temporary.date : date.AddYears(-3).ToString(ConvertDateTime(6));
 
             if (await client.GetContext(new Catalog.Request.Charts
             {
@@ -110,6 +110,8 @@ namespace ShareInvest.Analysis
             get; set;
         }
         readonly GoblinBatClient client;
+        readonly string[] codes = new string[] { "111Q8000" };
+        const string date = "200611";
         const string sFormat = "yyMMdd";
         const string lFormat = "yyyyMMdd";
         const string empty = "empty";

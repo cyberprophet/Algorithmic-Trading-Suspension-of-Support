@@ -27,9 +27,11 @@ namespace ShareInvest.EventHandler
                     Convey = cme;
                     Span = span;
                 }
-                return;
+                else
+                    Convey = span;
             }
-            Convey = cme;
+            else
+                Convey = cme;
         }
         public SendSecuritiesAPI(Catalog.XingAPI.Order order) => Convey = order;
         public SendSecuritiesAPI(Stack<Catalog.OpenAPI.RevisedStockPrice> days, string code) => Convey = new Tuple<string, Stack<Catalog.OpenAPI.RevisedStockPrice>>(code, days);
