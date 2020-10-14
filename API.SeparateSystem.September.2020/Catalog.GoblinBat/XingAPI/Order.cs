@@ -42,6 +42,11 @@ namespace ShareInvest.Catalog.XingAPI
         최유리지정가_IOC = 16,
         최유리지정가_FOK = 26
     }
+    public enum ErxPrcCndiTpCode
+    {
+        시장가 = 1,
+        지정가 = 2
+    }
     enum Cancellation
     {
         FnoIsuNo = 2,

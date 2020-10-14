@@ -72,7 +72,7 @@ namespace ShareInvest.XingAPI
                 else if (sub.Controls.Count > 0)
                     FindControlRecursive(sub);
         }
-        bool DistinguishBetweenDayAndNight(DateTime now) => (now.Hour == 0xF && now.Minute < 0x2D || now.Hour < 0xF) && now.Hour > 5;
+        bool DistinguishBetweenDayAndNight(DateTime now) => now.Hour < 0x10 && now.Hour > 5;
         public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
             var ai = new AccountInformation
@@ -167,7 +167,7 @@ namespace ShareInvest.XingAPI
             new MMDAQ91200()
         } : new IQuerys<SendSecuritiesAPI>[]
         {
-
+            new T8437()
         };
         public IOrders<SendSecuritiesAPI>[] Orders => DistinguishBetweenDayAndNight(DateTime.Now) ? new IOrders<SendSecuritiesAPI>[]
         {
@@ -176,6 +176,9 @@ namespace ShareInvest.XingAPI
             new CFOAT00300()
         } : new IOrders<SendSecuritiesAPI>[]
         {
+            new CEXAT11100(),
+            new CEXAT11200(),
+            new CEXAT11300(),
             new CCEAT00100(),
             new CCEAT00200(),
             new CCEAT00300()
@@ -196,6 +199,9 @@ namespace ShareInvest.XingAPI
             new O01()
         } : new IReals[]
         {
+            new EU0(),
+            new EU1(),
+            new EU2(),
             new CM0(),
             new CM1(),
             new CM2()
@@ -206,6 +212,8 @@ namespace ShareInvest.XingAPI
             new FH0()
         } : new IReals[]
         {
+            new EC0(),
+            new EH0(),
             new NC0(),
             new NH0()
         };

@@ -1,13 +1,30 @@
-﻿using XA_DATASETLib;
+﻿using System;
+
+using XA_DATASETLib;
 
 namespace ShareInvest.XingAPI
 {
     abstract class Real : XARealClass
-    {       
+    {
+        string GetField(string code)
+        {
+            var now = DateTime.Now;
+
+            if (code.Length == 8 && (now.Hour > 0xF || now.Hour < 5))
+                switch (code[2])
+                {
+                    case '1':
+                        return field;
+
+                    case '5':
+                        return "optcode";
+                }
+            return field;
+        }
         protected internal InBlock GetInBlock(string code) => new InBlock
         {
             Block = inBlock,
-            Field = field,
+            Field = GetField(code),
             Data = code
         };
         protected internal abstract void OnReceiveRealData(string szTrCode);
@@ -55,6 +72,39 @@ namespace ShareInvest.XingAPI
         futcode = 29,
         chetime1 = 30
     }
+    enum EC
+    {
+        chetime = 1,
+        sign = 2,
+        change = 3,
+        drate = 4,
+        price = 5,
+        open = 6,
+        high = 7,
+        low = 8,
+        cgubun = 9,
+        cvolume = 10,
+        volume = 11,
+        value = 12,
+        mdvolume = 13,
+        mdchecnt = 14,
+        msvolume = 15,
+        mschecnt = 16,
+        cpower = 17,
+        offerho1 = 18,
+        bidho1 = 19,
+        openyak = 20,
+        k200jisu = 21,
+        eqva = 22,
+        theoryprice = 23,
+        impv = 24,
+        openyakcha = 25,
+        timevalue = 26,
+        jgubun = 27,
+        jnilvolume = 28,
+        optcode = 29,
+        chetime1 = 30
+    }
     enum H
     {
         hotime = 12,
@@ -69,8 +119,24 @@ namespace ShareInvest.XingAPI
         totoffercnt = 9,
         totbidcnt = 10,
         futcode = 11,
-        dangochk = 'H',
+        danhochk = 'H',
         alloc_gubun = 'G'
+    }
+    enum EH
+    {
+        hotime = 12,
+        offerho = 1,
+        bidho = 2,
+        offerrem = 3,
+        bidrem = 4,
+        offercnt = 5,
+        bidcnt = 6,
+        totofferrem = 7,
+        totbidrem = 8,
+        totoffercnt = 9,
+        totbidcnt = 10,
+        optcode = 11,
+        danhochk = 'H'
     }
     enum Attribute
     {

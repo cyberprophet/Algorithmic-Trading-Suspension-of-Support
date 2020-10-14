@@ -430,7 +430,9 @@ namespace ShareInvest
                 Opacity = 0.79315;
                 notifyIcon.Text = loading;
                 backgroundWorker.RunWorkerAsync(Info.Nick);
-                OnReceiveData(MessageBox.Show("This is a Temporary Code.", "Emergency", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
+
+                if (privacy.SecuritiesAPI.Equals("O"))
+                    OnReceiveData(MessageBox.Show("This is a Temporary Code.", "Emergency", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
             }
         }
         async void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
@@ -588,14 +590,24 @@ namespace ShareInvest
             }
             foreach (var kv in catalog.OrderByDescending(o => o.Key))
                 if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0 && connect is XingAPI.ConnectAPI xing)
-                    switch (kv.Key.Length)
+                {
+                    var reals = xing.Reals;
+
+                    if (reals.Length == 4)
                     {
-                        case int length when length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("105") || kv.Key.StartsWith("106")):
-                            foreach (var real in xing.Reals)
+                        for (int i = 0; i < reals.Length; i++)
+                            if ((kv.Key[2].Equals('1') && (i == 2 || i == 3) || kv.Key[2].Equals('5') && (i == 1 || i == 0)) && kv.Key.Length == 8)
+                                reals[i].OnReceiveRealTime(kv.Key);
+                    }
+                    else
+                    {
+                        if (kv.Key.Length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("105") || kv.Key.StartsWith("106")))
+                            foreach (var real in reals)
                                 real.OnReceiveRealTime(kv.Key);
 
-                            break;
+                        break;
                     }
+                }
             if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8 && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1FAC7U : (uint)(catalog.Count * 0x4BAF)).Equals(DialogResult.OK))
             {
                 Stocks = new Stack<string>(GetRevisedStockPrices(stocks));
