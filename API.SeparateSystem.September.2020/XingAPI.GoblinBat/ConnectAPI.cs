@@ -111,14 +111,17 @@ namespace ShareInvest.XingAPI
             switch (strategics)
             {
                 case TrendFollowingBasicFutures tf:
+                    var index = strategics.Code.Length == 8 && strategics.Code[1].Equals('0');
                     Connect.HoldingStock[strategics.Code] = new HoldingStocks(tf)
                     {
                         Code = strategics.Code,
-                        Current = 0,
-                        Purchase = 0,
+                        Current = index ? 0D : 0,
+                        Purchase = index ? 0D : 0,
                         Quantity = 0,
                         Rate = 0,
-                        Revenue = 0
+                        Revenue = 0,
+                        Offer = index ? 0D : 0,
+                        Bid = index ? 0D : 0
                     };
                     break;
 

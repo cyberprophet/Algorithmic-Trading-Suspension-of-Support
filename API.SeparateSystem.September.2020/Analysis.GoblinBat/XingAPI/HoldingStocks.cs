@@ -15,33 +15,29 @@ namespace ShareInvest.Analysis.XingAPI
                 case TrendFollowingBasicFutures tf:
                     if (minute == 0x5A0)
                     {
-                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume) && OrderNumber.Count == 0)
+                        if (WaitOrder && (e.Date.CompareTo(cme) > 0 || e.Date.CompareTo(eurex) < 0 || e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0) && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume) && OrderNumber.Count == 0)
                         {
                             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Catalog.XingAPI.Order
                             {
                                 FnoIsuNo = Code,
                                 BnsTpCode = gap > 0 ? "2" : "1",
-                                FnoOrdprcPtnCode = ((int)Catalog.XingAPI.FnoOrdprcPtnCode.지정가).ToString("D2"),
+                                FnoOrdprcPtnCode = e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 ? ((int)Catalog.XingAPI.FnoOrdprcPtnCode.지정가).ToString("D2") : ((int)Catalog.XingAPI.ErxPrcCndiTpCode.지정가).ToString("D1"),
                                 OrdPrc = (gap > 0 ? Offer : Bid).ToString("F2"),
                                 OrdQty = "1"
                             }));
                             WaitOrder = false;
                         }
-                        else if (e.Date.CompareTo(cme) > 0)
-                        {
-
-                        }
                         Base = gap;
                     }
                     else
                     {
-                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (tf.QuantityShort + Quantity < 0 && Base < 0 || Base > 0 && Quantity - tf.QuantityLong > 0) && Revenue / Math.Abs(Quantity) > 0x927C)
+                        if (WaitOrder && (e.Date.CompareTo(cme) > 0 || e.Date.CompareTo(eurex) < 0 || e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0) && (tf.QuantityShort + Quantity < 0 && Base < 0 || Base > 0 && Quantity - tf.QuantityLong > 0) && Revenue / Math.Abs(Quantity) > 0x927C)
                         {
                             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Catalog.XingAPI.Order
                             {
                                 FnoIsuNo = Code,
                                 BnsTpCode = Quantity > 0 ? "1" : "2",
-                                FnoOrdprcPtnCode = ((int)Catalog.XingAPI.FnoOrdprcPtnCode.시장가).ToString("D2"),
+                                FnoOrdprcPtnCode = e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 ? ((int)Catalog.XingAPI.FnoOrdprcPtnCode.시장가).ToString("D2") : ((int)Catalog.XingAPI.ErxPrcCndiTpCode.시장가).ToString("D1"),
                                 OrdPrc = (Quantity > 0 ? Bid : Offer).ToString("F2"),
                                 OrdQty = "1"
                             }));
@@ -107,13 +103,10 @@ namespace ShareInvest.Analysis.XingAPI
                                 OrdQty = "1"
                             }));
             }
-            if (param[0].CompareTo(end) > 0 && uint.TryParse(param[0], out uint remain) && (RollOver == false || Temporary.RemainingDay.Contains(remain)))
+            if (param[0].CompareTo(end) > 0 && param[0].CompareTo(cme) < 0 && RollOver == false)
             {
                 var quantity = Math.Abs(Quantity);
-                RollOver = Temporary.RemainingDay.Remove(remain);
-
-                if (RollOver == false)
-                    RollOver = true;
+                RollOver = true;
 
                 while (quantity > 0)
                 {
@@ -226,6 +219,7 @@ namespace ShareInvest.Analysis.XingAPI
         const string start = "090000";
         const string end = "153500";
         const string cme = "180000";
+        const string eurex = "050000";
         readonly dynamic strategics;
         public event EventHandler<SendConsecutive> SendConsecutive;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;

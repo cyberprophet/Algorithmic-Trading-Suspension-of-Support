@@ -73,7 +73,15 @@ namespace ShareInvest
                             return;
 
                         case Catalog.XingAPI.Order order when com is XingAPI.ConnectAPI xOrder:
-                            xOrder.Orders[string.IsNullOrEmpty(order.OrgOrdNo) ? 0 : (string.IsNullOrEmpty(order.BnsTpCode) && string.IsNullOrEmpty(order.OrdPrc) && string.IsNullOrEmpty(order.FnoOrdprcPtnCode) ? 2 : 1)].QueryExcute(order);
+                            int neo = 0, correct = 1, cancel = 2, hour = DateTime.Now.Hour;
+
+                            if ((hour > 17 || hour < 5) && order.FnoIsuNo.StartsWith("101"))
+                            {
+                                neo = 3;
+                                correct = 4;
+                                cancel = 5;
+                            }
+                            xOrder.Orders[string.IsNullOrEmpty(order.OrgOrdNo) ? neo : (string.IsNullOrEmpty(order.BnsTpCode) && string.IsNullOrEmpty(order.OrdPrc) && string.IsNullOrEmpty(order.FnoOrdprcPtnCode) ? cancel : correct)].QueryExcute(order);
                             return;
 
                         case string message:
@@ -589,24 +597,34 @@ namespace ShareInvest
                     break;
             }
             foreach (var kv in catalog.OrderByDescending(o => o.Key))
-                if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0 && connect is XingAPI.ConnectAPI xing)
+                if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0 && com is XingAPI.ConnectAPI xing)
                 {
-                    var reals = xing.Reals;
+                    var reals = xing?.Reals;
+                    int c = 0, h = 1;
 
-                    if (reals.Length == 4)
+                    switch (reals.Length)
                     {
-                        for (int i = 0; i < reals.Length; i++)
-                            if ((kv.Key[2].Equals('1') && (i == 2 || i == 3) || kv.Key[2].Equals('5') && (i == 1 || i == 0)) && kv.Key.Length == 8)
-                                reals[i].OnReceiveRealTime(kv.Key);
-                    }
-                    else
-                    {
-                        if (kv.Key.Length == 8 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("105") || kv.Key.StartsWith("106")))
-                            foreach (var real in reals)
-                                real.OnReceiveRealTime(kv.Key);
+                        case int length when length == 2 && kv.Key.Length == 8 && kv.Key.StartsWith("10"):
 
-                        break;
+                            break;
+
+                        case int length when length == 2 && kv.Key.Length == 6:
+
+                            break;
+
+                        case int length when length == 4 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("105")) && kv.Key.Length == 8:
+                            if (kv.Key[2].Equals('1'))
+                            {
+                                c = 2;
+                                h = 3;
+                            }
+                            break;
+
+                        default:
+                            continue;
                     }
+                    reals[c].OnReceiveRealTime(kv.Key);
+                    reals[h].OnReceiveRealTime(kv.Key);
                 }
             if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8 && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1FAC7U : (uint)(catalog.Count * 0x4BAF)).Equals(DialogResult.OK))
             {
