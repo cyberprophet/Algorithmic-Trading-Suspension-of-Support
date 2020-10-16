@@ -36,7 +36,7 @@ namespace ShareInvest.XingAPI.Catalog
                 if (sb != null)
                 {
                     var param = sb.ToString().Split(';');
-                    var sAPI = new SendSecuritiesAPI(new string[] { param[0], param[1], param[2], string.Empty, param[4], param[5], param[6], string.Empty, param[8], param[9] });
+                    var sAPI = new SendSecuritiesAPI(new string[] { param[0], param[1].StartsWith(kospi200) ? param[1].Replace(kospi200, string.Empty) : param[1], param[2], string.Empty, param[4], param[5], param[6], string.Empty, param[8], param[9] });
 
                     if (sAPI.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs))
                     {
@@ -65,5 +65,6 @@ namespace ShareInvest.XingAPI.Catalog
             }
         }
         public event EventHandler<SendSecuritiesAPI> Send;
+        const string kospi200 = "코스피200 ";
     }
 }

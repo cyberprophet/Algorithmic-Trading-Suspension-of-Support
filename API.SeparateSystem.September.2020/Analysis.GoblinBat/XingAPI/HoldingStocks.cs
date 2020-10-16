@@ -94,7 +94,6 @@ namespace ShareInvest.Analysis.XingAPI
                 Rate = (Quantity > 0 ? current / (double)Purchase : Purchase / (double)current) - 1;
 
                 if (OrderNumber.Count > 0 && strategics is TrendFollowingBasicFutures && OrderNumber.ContainsValue(Bid) == false && OrderNumber.ContainsValue(Offer) == false)
-                {
                     foreach (var kv in OrderNumber)
                         if (kv.Value < Bid || kv.Value > Offer)
                             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Catalog.XingAPI.Order
@@ -103,7 +102,6 @@ namespace ShareInvest.Analysis.XingAPI
                                 OrgOrdNo = kv.Key,
                                 OrdQty = "1"
                             }));
-                }
             }
             if (param[0].CompareTo(end) > 0 && param[0].CompareTo(cme) < 0 && RollOver == false)
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 using XA_DATASETLib;
 
@@ -21,6 +22,8 @@ namespace ShareInvest.XingAPI
                 }
             return field;
         }
+        [Conditional("DEBUG")]
+        protected internal void SendMessage(string message) => Console.WriteLine(message);
         protected internal InBlock GetInBlock(string code) => new InBlock
         {
             Block = inBlock,
