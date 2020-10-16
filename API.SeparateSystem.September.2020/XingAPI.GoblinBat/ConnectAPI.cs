@@ -192,8 +192,8 @@ namespace ShareInvest.XingAPI
             new T0441()
         } : new IQuerys<SendSecuritiesAPI>[]
         {
-            new CCEBQ10500(),
-            new CCEAQ50600()
+            new CCEAQ50600(),
+            new CEXAQ31200()
         };
         public IReals[] Conclusion => DistinguishBetweenDayAndNight(DateTime.Now) ? new IReals[]
         {

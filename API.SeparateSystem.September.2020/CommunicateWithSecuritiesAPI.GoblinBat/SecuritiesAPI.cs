@@ -113,6 +113,7 @@ namespace ShareInvest
                             return;
 
                         case bool connect:
+                            var span = DateTime.Now;
                             var query = (com as XingAPI.ConnectAPI)?.Querys[1];
 
                             if (connect)
