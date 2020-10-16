@@ -12,7 +12,7 @@ namespace ShareInvest.XingAPI.Catalog
         protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
         {
             base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
-            Send?.Invoke(this, new SendSecuritiesAPI(szMessage.Trim()));
+            SendMessage(szMessage.Trim());
         }
         protected internal override void OnReceiveData(string szTrCode)
         {

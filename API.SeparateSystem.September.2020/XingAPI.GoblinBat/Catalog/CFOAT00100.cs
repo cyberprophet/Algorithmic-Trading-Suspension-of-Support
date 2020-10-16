@@ -18,6 +18,7 @@ namespace ShareInvest.XingAPI.Catalog
         {
             var enumerable = GetOutBlocks();
             var temp = new string[enumerable.Count];
+            Delay.Milliseconds = 0x3E8 / GetTRCountPerSec(szTrCode);
 
             while (enumerable.Count > 0)
             {
@@ -26,7 +27,8 @@ namespace ShareInvest.XingAPI.Catalog
                 for (int i = 0; i < GetBlockCount(param.Block); i++)
                     temp[temp.Length - enumerable.Count - 1] = GetFieldData(param.Block, param.Field, i);
             }
-            Delay.Milliseconds = 0x3E8 / GetTRCountPerSec(szTrCode);
+            if (temp.Length > 0x24 && long.TryParse(temp[0x24], out long available))
+                Send?.Invoke(this, new SendSecuritiesAPI(available));
         }
         public void QueryExcute(IOrders order) => Connect.GetInstance().Request.RequestTrData(new Task(() =>
         {

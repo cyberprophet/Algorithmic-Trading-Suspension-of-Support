@@ -81,7 +81,10 @@ namespace ShareInvest
                                 correct = 4;
                                 cancel = 5;
                             }
-                            xOrder.Orders[string.IsNullOrEmpty(order.OrgOrdNo) ? neo : (string.IsNullOrEmpty(order.BnsTpCode) && string.IsNullOrEmpty(order.OrdPrc) && string.IsNullOrEmpty(order.FnoOrdprcPtnCode) ? cancel : correct)].QueryExcute(order);
+                            var ctor = xOrder.Orders[string.IsNullOrEmpty(order.OrgOrdNo) ? neo : (string.IsNullOrEmpty(order.BnsTpCode) && string.IsNullOrEmpty(order.OrdPrc) && string.IsNullOrEmpty(order.FnoOrdprcPtnCode) ? cancel : correct)];
+                            ctor.Send -= OnReceiveSecuritiesAPI;
+                            ctor.Send += OnReceiveSecuritiesAPI;
+                            ctor.QueryExcute(order);
                             return;
 
                         case string message:
