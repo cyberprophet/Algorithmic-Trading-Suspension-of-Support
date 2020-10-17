@@ -18,10 +18,9 @@ namespace ShareInvest.EventHandler
         }
         public SendSecuritiesAPI(bool cme)
         {
-            var span = DateTime.Now;            
-
             if (cme)
             {
+                var span = DateTime.Now;
 
                 if (Span == null || Span.AddMilliseconds(0x3ED).CompareTo(span) < 0)
                 {
