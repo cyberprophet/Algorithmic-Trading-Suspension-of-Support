@@ -105,6 +105,7 @@ namespace ShareInvest.EventHandler
         public SendHoldingStocks(Catalog.TrendsInStockPrices ts) => Strategics = ts;
         public SendHoldingStocks(Catalog.TrendToCashflow tc) => Strategics = tc;
         public SendHoldingStocks(Catalog.TrendsInValuation tv) => Strategics = tv;
+        public SendHoldingStocks(Catalog.Privacies privacies) => Strategics = privacies;
         public SendHoldingStocks(Tuple<List<Catalog.ConvertConsensus>, List<Catalog.ConvertConsensus>> consensus, Catalog.ScenarioAccordingToTrend st) => Strategics = new Tuple<Tuple<List<Catalog.ConvertConsensus>, List<Catalog.ConvertConsensus>>, Catalog.ScenarioAccordingToTrend>(consensus, st);
         public SendHoldingStocks(Size size) => Strategics = size;
     }

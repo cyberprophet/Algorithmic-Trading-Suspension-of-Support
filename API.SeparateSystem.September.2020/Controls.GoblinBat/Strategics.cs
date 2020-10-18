@@ -454,6 +454,9 @@ namespace ShareInvest.Controls
                             foreach (var commission in commissionStocks)
                                 comboCommission.Items.Add(commission.ToString("P3"));
 
+                            if (privacy.SecuritiesAPI.Equals("O"))
+                                comboStrategics.Items.Add(sc);
+
                             comboStrategics.Items.AddRange(new object[] { tv, tc, st, ts });
                         }
                         str = "위탁종합";
@@ -955,6 +958,8 @@ namespace ShareInvest.Controls
                 tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
                 ResumeLayout();
             }
+            else if (sender is ComboBox condition && condition.Text.Equals(sc) && string.IsNullOrEmpty(textCode.Text) && Privacy.SecuritiesAPI.Equals("O") && Length == 6)
+                SendSize?.Invoke(this, new SendHoldingStocks(Privacy));
         }));
         void RemoveThePage(TabPage page)
         {

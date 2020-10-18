@@ -297,6 +297,10 @@ namespace ShareInvest.Strategics
                             hs.StartProgress(price);
                             return;
 
+                        case Catalog.Privacies privacies:
+                            new SatisfyConditionsAccordingToTrends(privacies, client).PerformClick().ShowDialog();
+                            return;
+
                         case Size size:
                             var height = 0x2DC;
 
@@ -315,7 +319,6 @@ namespace ShareInvest.Strategics
                                     break;
                             }
                             Size = new Size(0x2B9, height);
-
                             return;
 
                         case Tuple<int, Catalog.Privacies> tuple when tuple.Item2 is Catalog.Privacies privacy && (string.IsNullOrEmpty(privacy.Account) || string.IsNullOrEmpty(privacy.SecuritiesAPI) || string.IsNullOrEmpty(privacy.SecurityAPI)) == false:
