@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -33,6 +34,8 @@ namespace ShareInvest.Strategics
             }
             data.SortCompare += DataSortCompare;
             data.CellClick += DataCellClick;
+            buttonSave.Click += ButtonClick;
+            link.Click += ButtonClick;
         }
         internal SatisfyConditionsAccordingToTrends PerformClick()
         {
@@ -122,12 +125,21 @@ namespace ShareInvest.Strategics
                         if (stack.Count > 0 && await client.GetContextAsync() is Dictionary<string, int> rank && rank.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
                             InitializeComponent(stack, codes, rank);
                     }));
+                else if (button.Name.Equals(buttonSave.Name))
+                {
+                    Console.WriteLine(privacies.Security);
+                }
             }
             else if (sender is Timer)
             {
                 this.button.PerformClick();
                 timer.Stop();
                 timer.Dispose();
+            }
+            else if (sender is LinkLabel)
+            {
+                Process.Start(@"https://www.youtube.com/c/TenbaggercyberprophetsStock");
+                link.LinkVisited = true;
             }
         }
         void InitializeComponent(Stack<Catalog.Request.Consensus> stack, List<Codes> codes, Dictionary<string, int> rank)
@@ -164,7 +176,7 @@ namespace ShareInvest.Strategics
             data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
             ResumeLayout();
         }
-        bool JudgeWhetherMeetsTheConditions(Catalog.Request.Consensus consensus) => consensus.FirstQuarter > (double)numericFirst.Value * 1e-2 && consensus.SecondQuarter > (double)numericSecond.Value * 1e-2 && consensus.ThirdQuarter > (double)numericThird.Value * 1e-2 && consensus.Quarter > (double)numericFourth.Value * 1e-2 && consensus.TheNextYear > (double)numericFifth.Value * 1e-2 && consensus.TheYearAfterNext > (double)numericSixth.Value * 1e-2;
+        bool JudgeWhetherMeetsTheConditions(Catalog.Request.Consensus consensus) => consensus.FirstQuarter > (double)numericFirst.Value * 1e-2 && consensus.SecondQuarter > (double)numericSecond.Value * 1e-2 && consensus.ThirdQuarter > (double)numericThird.Value * 1e-2 && consensus.Quarter > (double)numericFourth.Value * 1e-2 && consensus.TheNextYear > (double)numericFifth.Value * 1e-2 && consensus.TheYearAfterNext > (double)numericSixth.Value * 1e-2 && consensus.FirstQuarter + (double)numericFirstRate.Value * 1e-2 < consensus.SecondQuarter && consensus.SecondQuarter + (double)numericSecondRate.Value * 1e-2 < consensus.ThirdQuarter && consensus.ThirdQuarter + (double)numericThirdRate.Value * 1e-2 < consensus.Quarter && consensus.Quarter + (double)numericFourthRate.Value * 1e-2 < consensus.TheNextYear && consensus.TheNextYear + (double)numericFifthRate.Value * 1e-2 < consensus.TheYearAfterNext;
         readonly Privacies privacies;
         readonly GoblinBatClient client;
     }
