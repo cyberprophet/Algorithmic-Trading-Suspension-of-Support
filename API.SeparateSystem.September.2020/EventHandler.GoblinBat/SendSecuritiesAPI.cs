@@ -156,6 +156,7 @@ namespace ShareInvest.EventHandler
             else
                 Convey = tuple;
         }
+        public SendSecuritiesAPI(int index, string name) => Convey = new Tuple<int, string>(index, name);
         static DateTime Span
         {
             get; set;

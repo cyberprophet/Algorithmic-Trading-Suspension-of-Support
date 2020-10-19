@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using AxKHOpenAPILib;
@@ -46,6 +47,35 @@ namespace ShareInvest.OpenAPI
         void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => Connect.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name.Substring(1).Equals(e.sTrCode.Substring(1)))?.OnReceiveTrData(e);
         void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => Connect.Real.FirstOrDefault(o => o.GetType().Name.Replace('_', ' ').Equals(e.sRealType))?.OnReceiveRealData(e);
         void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.BeginInvoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg.Substring(9), "(", e.sScrNo, ")")), null, null);
+        void OnReceiveConditionVersion(object sender, _DKHOpenAPIEvents_OnReceiveConditionVerEvent e)
+        {
+            if (e.lRet == 1)
+                foreach (var str in axAPI.GetConditionNameList().Split(';'))
+                    if (string.IsNullOrEmpty(str) == false)
+                    {
+                        var param = str.Split('^');
+
+                        if (int.TryParse(param[0], out int index))
+                            Connect.Conditions[index] = param[1];
+                    }
+            SendMessage(e.sMsg, e.lRet.ToString("N0"));
+        }
+        void OnReceiveRealConditions(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e)
+        {
+            if (e.strType.Equals("I") && Strategics.Any(o => o.Code.Equals(e.sTrCode)) == false && Connect.HoldingStock.ContainsKey(e.sTrCode) == false)
+            {
+                new Task(() => Console.WriteLine(e.sTrCode)).Start();
+            }
+        }
+        void OnReceiveTrConditions(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e)
+        {
+            foreach (var code in e.strCodeList.Split(';'))
+                if (Array.Exists(Codes, o => o.Equals(code)) == false && string.IsNullOrEmpty(code) == false)
+                {
+
+                    Console.WriteLine(code);
+                }
+        }
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
@@ -88,6 +118,7 @@ namespace ShareInvest.OpenAPI
                 axAPI.OnReceiveTrData += OnReceiveTrData;
                 axAPI.OnReceiveRealData += OnReceiveRealData;
                 axAPI.OnReceiveChejanData += OnReceiveChejanData;
+                axAPI.OnReceiveConditionVer += OnReceiveConditionVersion;
             }
             string mServer = axAPI.GetLoginInfo(server), log = axAPI.GetLoginInfo(name);
             Invoke(new Action(async () =>
@@ -111,6 +142,11 @@ namespace ShareInvest.OpenAPI
                     break;
 
                 default:
+                    if (axAPI.GetConditionLoad() == 1)
+                    {
+                        Connect.Conditions = new Dictionary<int, string>();
+                        SendMessage(log, mServer);
+                    }
                     aInfo.Name = "위탁종합";
                     break;
             }
@@ -190,6 +226,17 @@ namespace ShareInvest.OpenAPI
                 BeginInvoke(new Action(() => (API as Connect)?.InputValueRqData(ctor)));
 
             return ctor ?? null;
+        }
+        public void SetConditions(string[] codes)
+        {
+            Codes = codes;
+            axAPI.OnReceiveTrCondition += OnReceiveTrConditions;
+            axAPI.OnReceiveRealCondition += OnReceiveRealConditions;
+            var count = 0x56E;
+
+            foreach (var kv in Connect.Conditions)
+                if (kv.Value.StartsWith("SC_"))
+                    (API as Connect)?.SendCondition(count++.ToString("D4"), kv.Value, kv.Key);
         }
         public void StartProgress() => buttonStartProgress.PerformClick();
         public void SetForeColor(Color color, string remain)
@@ -346,6 +393,10 @@ namespace ShareInvest.OpenAPI
                 checkAccount.CheckState = CheckState.Checked;
             }
             Strategics = new HashSet<IStrategics>();
+        }
+        string[] Codes
+        {
+            get; set;
         }
         readonly StringBuilder securites;
         readonly Privacies privacy;

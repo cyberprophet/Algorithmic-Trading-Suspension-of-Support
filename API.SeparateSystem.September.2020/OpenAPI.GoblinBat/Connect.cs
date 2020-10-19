@@ -116,6 +116,11 @@ namespace ShareInvest.OpenAPI
                 }
             }
         }
+        internal void SendCondition(string strScrNo, string strConditionName, int nIndex) => request.RequestTrData(new Task(() =>
+        {
+            if (axAPI.SendCondition(strScrNo, strConditionName, nIndex, 1) < 1)
+                Send?.Invoke(this, new SendSecuritiesAPI(nIndex, strConditionName));
+        }));
         internal string LookupScreenNo
         {
             get
@@ -182,6 +187,10 @@ namespace ShareInvest.OpenAPI
         internal static HashSet<Real> Real
         {
             get; private set;
+        }
+        internal static Dictionary<int, string> Conditions
+        {
+            get; set;
         }
         internal static Dictionary<string, Chejan> Chejan
         {

@@ -137,8 +137,8 @@ namespace ShareInvest
                             Balance.OnReceiveDeposit(tuple);
                             return;
 
-                        case Tuple<int, string> kw:
-
+                        case Tuple<int, string> kc:
+                            SendMessage(string.Concat(kc.Item1, kc.Item2));
                             return;
 
                         case Tuple<string, string, string> code:
@@ -442,7 +442,7 @@ namespace ShareInvest
                 notifyIcon.Text = loading;
                 backgroundWorker.RunWorkerAsync(Info.Nick);
 
-                if (privacy.SecuritiesAPI.Equals("O"))
+                if (privacy.SecuritiesAPI.Equals("O") && privacy.SecuritiesAPI.Equals("X"))
                     OnReceiveData(MessageBox.Show("This is a Temporary Code.", "Emergency", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
             }
         }
@@ -576,6 +576,7 @@ namespace ShareInvest
                             o.InputValueRqData(string.Concat(instance, code.Length == 8 ? opt50001 : optkwFID), code).Send += OnReceiveSecuritiesAPI;
                         }
                     o.ConnectChapterOperation.Send += OnReceiveSecuritiesAPI;
+                    o.SetConditions(catalog.Keys.ToArray());
                     connect = o;
                     break;
 
