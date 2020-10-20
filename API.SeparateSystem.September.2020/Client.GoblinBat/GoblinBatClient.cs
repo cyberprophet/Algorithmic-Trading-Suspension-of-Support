@@ -51,6 +51,25 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<object> GetContext(Catalog.Request.SatisfyConditions conditions)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestConditions(conditions), Method.GET), source.Token);
+
+                if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                return JsonConvert.DeserializeObject<Catalog.Request.SatisfyConditions>(response.Content);
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return null;
+        }
         public async Task<object> GetContext(Catalog.Request.Charts chart)
         {
             try
@@ -506,6 +525,25 @@ namespace ShareInvest.Client
                 SendMessage(ex.StackTrace);
             }
             return null;
+        }
+        public async Task<int> PostContext(Catalog.Request.SatisfyConditions conditions)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestConditions(conditions.GetType().Name), Method.POST).AddJsonBody(conditions, security.ContentType), source.Token);
+
+                if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                return (int)response.StatusCode;
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return int.MinValue;
         }
         public async Task<int> PostContext(Stack<Catalog.Request.IncorporatedStocks> stocks)
         {
