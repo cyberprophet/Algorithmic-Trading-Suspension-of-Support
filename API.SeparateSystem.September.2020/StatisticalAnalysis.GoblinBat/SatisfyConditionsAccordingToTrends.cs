@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
@@ -127,11 +128,77 @@ namespace ShareInvest.Strategics
                     }));
                 else if (button.Name.Equals(buttonSave.Name))
                 {
-                    Console.WriteLine(privacies.Security);
+                    if (buttonSave.ForeColor.Equals(Color.Ivory))
+                    {
+                        if (numericShort.Value < numericLong.Value)
+                            BeginInvoke(new Action(async () =>
+                            {
+                                int index;
+                                var numeric = "numeric";
+                                StringBuilder ban = new StringBuilder(), setting = new StringBuilder(), value = new StringBuilder(), strategics = new StringBuilder("SC;");
+
+                                for (index = 0; index < this.numeric.Length; index++)
+                                    strategics.Append(string.Concat(numeric, this.numeric[index]).FindByName<NumericUpDown>(this).Value).Append(';');
+
+                                foreach (DataGridViewRow row in data.Rows)
+                                    if (row.DefaultCellStyle.BackColor.Equals(Color.Maroon))
+                                        ban.Append(row.Cells[0].Value).Append(';');
+
+                                for (index = 0; index < label.Length; index++)
+                                {
+                                    setting.Append(string.Concat(numeric, label[index]).FindByName<NumericUpDown>(this).Value).Append(';');
+
+                                    if (index < label.Length - 1)
+                                        value.Append(string.Concat(numeric, label[index], rate).FindByName<NumericUpDown>(this).Value).Append(';');
+                                }
+                                if (await client.PostContext(new Catalog.Request.SatisfyConditions
+                                {
+                                    Security = privacies.Security,
+                                    Strategics = strategics.Remove(strategics.Length - 1, 1).ToString(),
+                                    SettingValue = string.Concat(setting, value.Remove(value.Length - 1, 1)),
+                                    Ban = ban.Length > 0 ? ban.Remove(ban.Length - 1, 1).ToString() : string.Empty,
+                                    TempStorage = string.Empty
+                                }) == 0xC8)
+                                {
+                                    buttonSave.ForeColor = Color.Maroon;
+                                    buttonSave.Text = "Complete";
+                                }
+                            }));
+                        else
+                            buttonSave.Text = retry;
+                    }
+                    else
+                    {
+                        buttonSave.Text = retry;
+                        buttonSave.Enabled = false;
+                    }
                 }
             }
             else if (sender is Timer)
             {
+                BeginInvoke(new Action(async () =>
+                {
+                    if (await client.GetContext(new Catalog.Request.SatisfyConditions { Security = privacies.Security }) is Catalog.Request.SatisfyConditions condition)
+                    {
+                        Ban = string.IsNullOrEmpty(condition.Ban) ? null : condition.Ban.Split(';');
+                        string[] strategics = condition.Strategics.Split(';'), sv = condition.SettingValue.Split(';');
+                        var numeric = "numeric";
+                        int index;
+
+                        for (index = 0; index < this.numeric.Length; index++)
+                            if (decimal.TryParse(strategics[index + 1], out decimal value))
+                                string.Concat(numeric, this.numeric[index]).FindByName<NumericUpDown>(this).Value = value;
+
+                        for (index = 0; index < label.Length; index++)
+                            if (decimal.TryParse(sv[index], out decimal setting))
+                            {
+                                string.Concat(numeric, label[index]).FindByName<NumericUpDown>(this).Value = setting;
+
+                                if (index < label.Length - 1 && decimal.TryParse(sv[index + label.Length], out decimal value))
+                                    string.Concat(numeric, label[index], rate).FindByName<NumericUpDown>(this).Value = value;
+                            }
+                    }
+                }));
                 this.button.PerformClick();
                 timer.Stop();
                 timer.Dispose();
@@ -166,6 +233,9 @@ namespace ShareInvest.Strategics
                     data.Rows[index].Cells[6].Style.SelectionForeColor = pop.TheNextYear > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
                     data.Rows[index].Cells[7].Style.ForeColor = pop.TheYearAfterNext > 0 ? Color.Maroon : Color.Navy;
                     data.Rows[index].Cells[7].Style.SelectionForeColor = pop.TheYearAfterNext > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
+
+                    if (Ban != null && Array.Exists(Ban, o => o.Equals(pop.Code)))
+                        data.Rows[index].DefaultCellStyle.BackColor = Color.Maroon;
                 }
             }
             data.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
@@ -175,6 +245,10 @@ namespace ShareInvest.Strategics
             data.AutoResizeRows();
             data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
             ResumeLayout();
+        }
+        string[] Ban
+        {
+            get; set;
         }
         bool JudgeWhetherMeetsTheConditions(Catalog.Request.Consensus consensus) => consensus.FirstQuarter > (double)numericFirst.Value * 1e-2 && consensus.SecondQuarter > (double)numericSecond.Value * 1e-2 && consensus.ThirdQuarter > (double)numericThird.Value * 1e-2 && consensus.Quarter > (double)numericFourth.Value * 1e-2 && consensus.TheNextYear > (double)numericFifth.Value * 1e-2 && consensus.TheYearAfterNext > (double)numericSixth.Value * 1e-2 && consensus.FirstQuarter + (double)numericFirstRate.Value * 1e-2 < consensus.SecondQuarter && consensus.SecondQuarter + (double)numericSecondRate.Value * 1e-2 < consensus.ThirdQuarter && consensus.ThirdQuarter + (double)numericThirdRate.Value * 1e-2 < consensus.Quarter && consensus.Quarter + (double)numericFourthRate.Value * 1e-2 < consensus.TheNextYear && consensus.TheNextYear + (double)numericFifthRate.Value * 1e-2 < consensus.TheYearAfterNext;
         readonly Privacies privacies;
