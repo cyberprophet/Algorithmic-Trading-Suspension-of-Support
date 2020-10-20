@@ -67,6 +67,16 @@ namespace ShareInvest.Analysis
             this.ho = ho;
             ho.Send += OnReceiveDrawChart;
         }
+        internal Consecutive(SatisfyConditionsAccordingToTrends strategics, Holding ho)
+        {
+            Short = new Stack<double>();
+            Long = new Stack<double>();
+            Trend = new Stack<double>();
+            sc = strategics;
+            this.strategics = strategics;
+            this.ho = ho;
+            ho.Send += OnReceiveDrawChart;
+        }
         internal Consecutive(TrendFollowingBasicFutures strategics, Holding ho)
         {
             Short = new Stack<double>();
@@ -95,6 +105,21 @@ namespace ShareInvest.Analysis
 
             switch (strategics)
             {
+                case SatisfyConditionsAccordingToTrends _:
+                    tShort = sc.Short;
+                    tLong = sc.Long;
+                    trend = sc.Trend;
+
+                    if (GetCheckOnDate(e.Date, 0x5A0))
+                    {
+                        Short.Pop();
+                        Long.Pop();
+                        Trend.Pop();
+                    }
+                    Trend.Push(Trend.Count > 0 ? EMA.Make(trend, Trend.Count, e.Price, Trend.Peek()) : EMA.Make(e.Price));
+                    tMinute = sc.ReservationBuyUnit;
+                    break;
+
                 case TrendsInValuation _:
                     tShort = tv.Short;
                     tLong = tv.Long;
@@ -364,6 +389,7 @@ namespace ShareInvest.Analysis
                 Console.WriteLine("D_" + date + " P_" + price + " V_" + volume + " E_" + sb);
         }
         readonly ScenarioAccordingToTrend st;
+        readonly SatisfyConditionsAccordingToTrends sc;
         readonly TrendToCashflow tc;
         readonly TrendsInValuation tv;
         readonly TrendsInStockPrices ts;

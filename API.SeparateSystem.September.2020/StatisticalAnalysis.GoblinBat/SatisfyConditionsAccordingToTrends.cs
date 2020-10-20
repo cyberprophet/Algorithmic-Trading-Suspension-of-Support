@@ -246,6 +246,13 @@ namespace ShareInvest.Strategics
             data.AutoResizeColumns(DataGridViewAutoSizeColumnsMode.DisplayedCells);
             ResumeLayout();
         }
+        void SatisfyConditionsAccordingToTrendsFormClosed(object sender, FormClosedEventArgs e)
+        {
+            SendMessage(e.CloseReason);
+            Dispose();
+        }
+        [Conditional("DEBUG")]
+        void SendMessage(object reason) => Console.WriteLine(reason);
         string[] Ban
         {
             get; set;

@@ -177,6 +177,11 @@ namespace ShareInvest.Analysis
             for (int i = 0; i < catalog.Length; i++)
                 Consecutive[i] = new Consecutive(catalog[i], this);
         }
+        public Holding(SatisfyConditionsAccordingToTrends strategics)
+        {
+            SC = strategics;
+            consecutive = new Consecutive(strategics, this);
+        }
         public Holding(TrendToCashflow strategics)
         {
             TC = strategics;
@@ -355,6 +360,10 @@ namespace ShareInvest.Analysis
         {
             get;
         }
+        protected internal SatisfyConditionsAccordingToTrends SC
+        {
+            get;
+        }
         protected internal Color AdjustTheColorAccordingToTheCurrentSituation(bool wait, int count)
         {
             if (wait)
@@ -367,6 +376,7 @@ namespace ShareInvest.Analysis
             else
                 return Color.Maroon;
         }
+        protected internal DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);
         protected internal DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
         Temporary Temporary
         {

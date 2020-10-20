@@ -10,10 +10,33 @@ namespace ShareInvest.Analysis.OpenAPI
     {
         internal void OnReceiveTrendsInPrices(SendConsecutive e, double gap, double peek)
         {
+            DateTime interval;
+
             switch (strategics)
             {
+                case SatisfyConditionsAccordingToTrends sc:
+                    interval = e.Date.Length == 6 ? new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day, int.TryParse(e.Date.Substring(0, 2), out int cHour) ? cHour : DateTime.Now.Hour, int.TryParse(e.Date.Substring(2, 2), out int cMinute) ? cMinute : DateTime.Now.Minute, int.TryParse(e.Date.Substring(4), out int cSecond) ? cSecond : DateTime.Now.Second) : DateTime.Now;
+
+                    if (sc.TradingBuyQuantity > 0 && Bid < peek * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder && (sc.TradingBuyInterval == 0 || sc.TradingBuyInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                    {
+                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, sc.Code, sc.TradingBuyQuantity, Bid, string.Empty)));
+                        WaitOrder = false;
+
+                        if (sc.TradingBuyInterval > 0)
+                            NextOrderTime = MeasureTheDelayTime(sc.TradingBuyInterval, interval);
+                    }
+                    else if (sc.TradingSellQuantity > 0 && Offer > peek * (1 + sc.TradingSellRate) && Offer > Purchase && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder && (sc.TradingSellInterval == 0 || sc.TradingSellInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                    {
+                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, sc.Code, sc.TradingSellQuantity, Offer, string.Empty)));
+                        WaitOrder = false;
+
+                        if (sc.TradingSellInterval > 0)
+                            NextOrderTime = MeasureTheDelayTime(sc.TradingSellInterval, interval);
+                    }
+                    break;
+
                 case TrendsInValuation tv:
-                    var interval = e.Date.Length == 6 ? new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day, int.TryParse(e.Date.Substring(0, 2), out int hour) ? hour : DateTime.Now.Hour, int.TryParse(e.Date.Substring(2, 2), out int minute) ? minute : DateTime.Now.Minute, int.TryParse(e.Date.Substring(4), out int second) ? second : DateTime.Now.Second) : DateTime.Now;
+                    interval = e.Date.Length == 6 ? new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day, int.TryParse(e.Date.Substring(0, 2), out int hour) ? hour : DateTime.Now.Hour, int.TryParse(e.Date.Substring(2, 2), out int minute) ? minute : DateTime.Now.Minute, int.TryParse(e.Date.Substring(4), out int second) ? second : DateTime.Now.Second) : DateTime.Now;
 
                     if (tv.TradingAddtionalQuantity > 0 && Bid < peek * (1 - tv.AdditionalPosition) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder && (tv.AddtionalInterval == 0 || tv.AddtionalInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
                     {
@@ -230,6 +253,17 @@ namespace ShareInvest.Analysis.OpenAPI
         protected internal override DateTime NextOrderTime
         {
             get; set;
+        }
+        public HoldingStocks(SatisfyConditionsAccordingToTrends strategics) : base(strategics)
+        {
+            if (StartProgress(strategics.Code) > 0)
+                consecutive.Dispose();
+
+            OrderNumber = new Dictionary<string, dynamic>();
+            this.strategics = strategics;
+            NextOrderTime = DateTime.Now;
+            consecutive.Connect(this);
+            WaitOrder = NextOrderTime.Hour > 8;
         }
         public HoldingStocks(TrendsInValuation strategics) : base(strategics)
         {

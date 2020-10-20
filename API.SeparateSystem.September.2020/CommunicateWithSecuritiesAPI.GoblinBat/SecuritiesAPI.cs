@@ -575,8 +575,35 @@ namespace ShareInvest
                             Stack.Push(code);
                             o.InputValueRqData(string.Concat(instance, code.Length == 8 ? opt50001 : optkwFID), code).Send += OnReceiveSecuritiesAPI;
                         }
+                    if (privacy.Account.Equals("S") && await client.GetContext(new Catalog.Request.SatisfyConditions { Security = privacy.Security }) is Catalog.Request.SatisfyConditions condition)
+                    {
+                        var strategics = new Dictionary<string, Tuple<int, double, double, double, double, double, double>>();
+                        var stack = new Stack<Catalog.Request.Consensus>();
+
+                        for (int i = 0; i < this.strategics.Length; i++)
+                            foreach (var context in await client.GetContext(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", this.strategics[i]) }))
+                            {
+                                if (strategics.TryGetValue(context.Code, out Tuple<int, double, double, double, double, double, double> tuple))
+                                    strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(tuple.Item1 + 1, tuple.Item2 + context.FirstQuarter, tuple.Item3 + context.SecondQuarter, tuple.Item4 + context.ThirdQuarter, tuple.Item5 + context.Quarter, tuple.Item6 + context.TheNextYear, tuple.Item7 + context.TheYearAfterNext);
+
+                                else
+                                    strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(1, context.FirstQuarter, context.SecondQuarter, context.ThirdQuarter, context.Quarter, context.TheNextYear, context.TheYearAfterNext);
+                            }
+                        foreach (var kv in strategics.OrderByDescending(order => order.Key))
+                            if (string.IsNullOrEmpty(kv.Key) == false && kv.Key.Length == 6)
+                                stack.Push(new Catalog.Request.Consensus
+                                {
+                                    Code = kv.Key,
+                                    FirstQuarter = kv.Value.Item2 / kv.Value.Item1,
+                                    SecondQuarter = kv.Value.Item3 / kv.Value.Item1,
+                                    ThirdQuarter = kv.Value.Item4 / kv.Value.Item1,
+                                    Quarter = kv.Value.Item5 / kv.Value.Item1,
+                                    TheNextYear = kv.Value.Item6 / kv.Value.Item1,
+                                    TheYearAfterNext = kv.Value.Item7 / kv.Value.Item1,
+                                });
+                        o.SetConditions(catalog.Keys.ToArray(), condition, stack);
+                    }
                     o.ConnectChapterOperation.Send += OnReceiveSecuritiesAPI;
-                    o.SetConditions(catalog.Keys.ToArray());
                     connect = o;
                     break;
 

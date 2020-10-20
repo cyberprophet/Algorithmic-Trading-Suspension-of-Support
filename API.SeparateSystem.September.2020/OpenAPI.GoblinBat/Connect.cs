@@ -192,6 +192,10 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
+        internal static ShareInvest.Catalog.Request.SatisfyConditions SatisfyConditions
+        {
+            get; set;
+        }
         internal static Dictionary<string, Chejan> Chejan
         {
             get; private set;

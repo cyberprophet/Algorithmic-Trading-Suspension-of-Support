@@ -62,20 +62,66 @@ namespace ShareInvest.OpenAPI
         }
         void OnReceiveRealConditions(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e)
         {
-            if (e.strType.Equals("I") && Strategics.Any(o => o.Code.Equals(e.sTrCode)) == false && Connect.HoldingStock.ContainsKey(e.sTrCode) == false)
-            {
-                new Task(() => Console.WriteLine(e.sTrCode)).Start();
-            }
+            if (e.strType.Equals("I") && Pick.Contains(e.sTrCode) && Ban.Contains(e.sTrCode) == false && Strategics.Any(o => o.Code.Equals(e.sTrCode)) == false && Connect.HoldingStock.ContainsKey(e.sTrCode) == false && int.TryParse(axAPI.GetMasterLastPrice(e.sTrCode), out int price))
+                new Task(() =>
+                {
+                    var sc = new SatisfyConditionsAccordingToTrends
+                    {
+                        Code = e.sTrCode,
+                        Short = AccordingToTrends.Short,
+                        Long = AccordingToTrends.Long,
+                        Trend = AccordingToTrends.Trend,
+                        ReservationSellUnit = AccordingToTrends.ReservationSellUnit,
+                        ReservationSellQuantity = AccordingToTrends.ReservationSellQuantity,
+                        ReservationSellRate = AccordingToTrends.ReservationSellRate,
+                        ReservationBuyUnit = AccordingToTrends.ReservationBuyUnit,
+                        ReservationBuyQuantity = AccordingToTrends.ReservationBuyQuantity,
+                        ReservationBuyRate = AccordingToTrends.ReservationBuyRate,
+                        TradingSellInterval = price / AccordingToTrends.TradingSellInterval,
+                        TradingSellQuantity = AccordingToTrends.TradingSellQuantity,
+                        TradingSellRate = AccordingToTrends.TradingSellRate,
+                        TradingBuyInterval = price / AccordingToTrends.TradingBuyInterval,
+                        TradingBuyQuantity = AccordingToTrends.TradingBuyQuantity,
+                        TradingBuyRate = AccordingToTrends.TradingBuyRate
+                    };
+                    if (Strategics.Add(sc) && Ban.Add(e.sTrCode))
+                    {
+                        var count = SetStrategics(sc);
+                        SendMessage(string.Concat(e.strConditionName, '_', count), e.sTrCode);
+                    }
+                }).Start();
         }
-        void OnReceiveTrConditions(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e)
+        void OnReceiveTrConditions(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e) => new Task(() =>
         {
             foreach (var code in e.strCodeList.Split(';'))
-                if (Array.Exists(Codes, o => o.Equals(code)) == false && string.IsNullOrEmpty(code) == false)
+                if (Ban.Contains(code) == false && string.IsNullOrEmpty(code) == false && Pick.Contains(code) && int.TryParse(axAPI.GetMasterLastPrice(code), out int price))
                 {
-
-                    Console.WriteLine(code);
+                    var sc = new SatisfyConditionsAccordingToTrends
+                    {
+                        Code = code,
+                        Short = AccordingToTrends.Short,
+                        Long = AccordingToTrends.Long,
+                        Trend = AccordingToTrends.Trend,
+                        ReservationSellUnit = AccordingToTrends.ReservationSellUnit,
+                        ReservationSellQuantity = AccordingToTrends.ReservationSellQuantity,
+                        ReservationSellRate = AccordingToTrends.ReservationSellRate,
+                        ReservationBuyUnit = AccordingToTrends.ReservationBuyUnit,
+                        ReservationBuyQuantity = AccordingToTrends.ReservationBuyQuantity,
+                        ReservationBuyRate = AccordingToTrends.ReservationBuyRate,
+                        TradingSellInterval = price / AccordingToTrends.TradingSellInterval,
+                        TradingSellQuantity = AccordingToTrends.TradingSellQuantity,
+                        TradingSellRate = AccordingToTrends.TradingSellRate,
+                        TradingBuyInterval = price / AccordingToTrends.TradingBuyInterval,
+                        TradingBuyQuantity = AccordingToTrends.TradingBuyQuantity,
+                        TradingBuyRate = AccordingToTrends.TradingBuyRate
+                    };
+                    if (Strategics.Add(sc) && Ban.Add(code))
+                    {
+                        var count = SetStrategics(sc);
+                        SendMessage(string.Concat(e.strConditionName, '_', count), code);
+                    }
                 }
-        }
+        }).Start();
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
@@ -227,15 +273,77 @@ namespace ShareInvest.OpenAPI
 
             return ctor ?? null;
         }
-        public void SetConditions(string[] codes)
+        public void SetConditions(string[] codes, ShareInvest.Catalog.Request.SatisfyConditions condition, Stack<ShareInvest.Catalog.Request.Consensus> stack)
         {
-            Codes = codes;
+            string[] benchmark = condition.SettingValue.Split(';'), strategics = condition.Strategics.Split(';');
+            Pick = new HashSet<string>();
+            Connect.SatisfyConditions = condition;
+            Ban = new HashSet<string>(codes.Union(condition.Ban.Split(';')));
             axAPI.OnReceiveTrCondition += OnReceiveTrConditions;
             axAPI.OnReceiveRealCondition += OnReceiveRealConditions;
             var count = 0x56E;
 
+            while (stack.Count > 0)
+            {
+                var consensus = stack.Pop();
+
+                if (double.TryParse(benchmark[0xA], out double fifthRate) && consensus.TheNextYear + fifthRate * 1e-2 < consensus.TheYearAfterNext && double.TryParse(benchmark[9], out double fourthRate) && consensus.Quarter + fourthRate * 1e-2 < consensus.TheNextYear && double.TryParse(benchmark[8], out double thirdRate) && consensus.ThirdQuarter + thirdRate * 1e-2 < consensus.Quarter && double.TryParse(benchmark[7], out double secondRate) && consensus.SecondQuarter + secondRate * 1e-2 < consensus.ThirdQuarter && double.TryParse(benchmark[6], out double firstRate) && consensus.FirstQuarter + firstRate * 1e-2 < consensus.SecondQuarter && double.TryParse(benchmark[5], out double sixth) && consensus.TheYearAfterNext > sixth * 1e-2 && double.TryParse(benchmark[4], out double fifth) && consensus.TheNextYear > fifth * 1e-2 && double.TryParse(benchmark[3], out double fourth) && consensus.Quarter > fourth * 1e-2 && double.TryParse(benchmark[2], out double third) && consensus.ThirdQuarter > third * 1e-2 && double.TryParse(benchmark[1], out double second) && consensus.SecondQuarter > second * 1e-2 && double.TryParse(benchmark[0], out double first) && consensus.FirstQuarter > first * 1e-2 && Pick.Add(consensus.Code))
+                    SendMessage(Pick.Count.ToString("N0"), consensus.Code);
+            }
+            if (double.TryParse(strategics[0xF], out double tbRate) && int.TryParse(strategics[0xE], out int tbQuantity) && double.TryParse(strategics[0xD], out double bInterval) && double.TryParse(strategics[0xC], out double tsRate) && int.TryParse(strategics[0xB], out int tsQuantity) && double.TryParse(strategics[0xA], out double sInterval) && double.TryParse(strategics[9], out double bRate) && int.TryParse(strategics[8], out int bQuantity) && int.TryParse(strategics[7], out int bUnit) && double.TryParse(strategics[6], out double sRate) && int.TryParse(strategics[5], out int sQuantity) && int.TryParse(strategics[4], out int sUnit) && int.TryParse(strategics[3], out int trend) && int.TryParse(strategics[2], out int cLong) && int.TryParse(strategics[1], out int cShort))
+            {
+                AccordingToTrends = new SatisfyConditionsAccordingToTrends
+                {
+                    Short = cShort,
+                    Long = cLong,
+                    Trend = trend,
+                    ReservationSellUnit = sUnit,
+                    ReservationSellQuantity = sQuantity,
+                    ReservationSellRate = sRate * 1e-2,
+                    ReservationBuyUnit = bUnit,
+                    ReservationBuyQuantity = bQuantity,
+                    ReservationBuyRate = bRate * 1e-2,
+                    TradingSellInterval = sInterval,
+                    TradingSellQuantity = tsQuantity,
+                    TradingSellRate = tsRate * 1e-2,
+                    TradingBuyInterval = bInterval,
+                    TradingBuyQuantity = tbQuantity,
+                    TradingBuyRate = tbRate * 1e-2
+                };
+                if (string.IsNullOrEmpty(condition.TempStorage) == false)
+                    Parallel.ForEach(condition.TempStorage.Split(';'), new ParallelOptions { MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 25e-2) }, new Action<string>((code) =>
+                    {
+                        if (Ban.Contains(code) == false && int.TryParse(axAPI.GetMasterLastPrice(code), out int price))
+                        {
+                            var sc = new SatisfyConditionsAccordingToTrends
+                            {
+                                Code = code,
+                                Short = AccordingToTrends.Short,
+                                Long = AccordingToTrends.Long,
+                                Trend = AccordingToTrends.Trend,
+                                ReservationSellUnit = AccordingToTrends.ReservationSellUnit,
+                                ReservationSellQuantity = AccordingToTrends.ReservationSellQuantity,
+                                ReservationSellRate = AccordingToTrends.ReservationSellRate,
+                                ReservationBuyUnit = AccordingToTrends.ReservationBuyUnit,
+                                ReservationBuyQuantity = AccordingToTrends.ReservationBuyQuantity,
+                                ReservationBuyRate = AccordingToTrends.ReservationBuyRate,
+                                TradingSellInterval = price / AccordingToTrends.TradingSellInterval,
+                                TradingSellQuantity = AccordingToTrends.TradingSellQuantity,
+                                TradingSellRate = AccordingToTrends.TradingSellRate,
+                                TradingBuyInterval = price / AccordingToTrends.TradingBuyInterval,
+                                TradingBuyQuantity = AccordingToTrends.TradingBuyQuantity,
+                                TradingBuyRate = AccordingToTrends.TradingBuyRate
+                            };
+                            if (Strategics.Add(sc) && Ban.Add(code))
+                            {
+                                var length = SetStrategics(sc);
+                                SendMessage(code, length.ToString("N0"));
+                            }
+                        }
+                    }));
+            }
             foreach (var kv in Connect.Conditions)
-                if (kv.Value.StartsWith("SC_"))
+                if (kv.Value.StartsWith(string.Concat(condition.Strategics.Substring(0, 2), '_')))
                     (API as Connect)?.SendCondition(count++.ToString("D4"), kv.Value, kv.Key);
         }
         public void StartProgress() => buttonStartProgress.PerformClick();
@@ -248,11 +356,23 @@ namespace ShareInvest.OpenAPI
         {
             switch (strategics)
             {
+                case SatisfyConditionsAccordingToTrends sc:
+                    Connect.HoldingStock[strategics.Code] = new HoldingStocks(sc)
+                    {
+                        Code = strategics.Code,
+                        Current = int.TryParse(axAPI.GetMasterLastPrice(strategics.Code), out int price) ? price : 0,
+                        Purchase = 0,
+                        Quantity = 0,
+                        Rate = 0,
+                        Revenue = 0
+                    };
+                    break;
+
                 case TrendsInValuation tv:
                     Connect.HoldingStock[strategics.Code] = new HoldingStocks(tv)
                     {
                         Code = strategics.Code,
-                        Current = 0,
+                        Current = int.TryParse(axAPI.GetMasterLastPrice(strategics.Code), out int vPrice) ? vPrice : 0,
                         Purchase = 0,
                         Quantity = 0,
                         Rate = 0,
@@ -264,7 +384,7 @@ namespace ShareInvest.OpenAPI
                     Connect.HoldingStock[strategics.Code] = new HoldingStocks(tc)
                     {
                         Code = strategics.Code,
-                        Current = 0,
+                        Current = int.TryParse(axAPI.GetMasterLastPrice(strategics.Code), out int cPrice) ? cPrice : 0,
                         Purchase = 0,
                         Quantity = 0,
                         Rate = 0,
@@ -288,7 +408,7 @@ namespace ShareInvest.OpenAPI
                     Connect.HoldingStock[strategics.Code] = new HoldingStocks(ts)
                     {
                         Code = strategics.Code,
-                        Current = 0,
+                        Current = int.TryParse(axAPI.GetMasterLastPrice(strategics.Code), out int sPrice) ? sPrice : 0,
                         Purchase = 0,
                         Quantity = 0,
                         Rate = 0,
@@ -394,7 +514,15 @@ namespace ShareInvest.OpenAPI
             }
             Strategics = new HashSet<IStrategics>();
         }
-        string[] Codes
+        HashSet<string> Ban
+        {
+            get; set;
+        }
+        HashSet<string> Pick
+        {
+            get; set;
+        }
+        SatisfyConditionsAccordingToTrends AccordingToTrends
         {
             get; set;
         }
