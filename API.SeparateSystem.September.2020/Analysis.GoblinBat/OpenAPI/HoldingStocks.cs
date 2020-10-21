@@ -262,8 +262,7 @@ namespace ShareInvest.Analysis.OpenAPI
             OrderNumber = new Dictionary<string, dynamic>();
             this.strategics = strategics;
             NextOrderTime = DateTime.Now;
-            consecutive.Connect(this);
-            WaitOrder = NextOrderTime.Hour > 8;
+            consecutive.Connect(this);            
         }
         public HoldingStocks(TrendsInValuation strategics) : base(strategics)
         {

@@ -233,6 +233,23 @@ namespace ShareInvest
                             }
                             return;
 
+                        case Tuple<Catalog.Request.SatisfyConditions, SatisfyConditionsAccordingToTrends> satisfy when com is OpenAPI.ConnectAPI api:
+                            Balance.ToolTipDictionary[satisfy.Item2.Code] = string.Concat("Short_", satisfy.Item2.Short, "\r\nLong_", satisfy.Item2.Long, "\r\nTrend_", satisfy.Item2.Trend, "\r\n☞매도예약\r\n호가단위_", satisfy.Item2.ReservationSellUnit, "틱\r\n예약수량_", satisfy.Item2.ReservationSellQuantity, "주\r\n수익실현_", satisfy.Item2.ReservationSellRate * 0x64, "%\r\n☞매수예약\r\n호가단위_", satisfy.Item2.ReservationBuyUnit, "틱\r\n예약수량_", satisfy.Item2.ReservationBuyQuantity, "주\r\n추가매수_", satisfy.Item2.ReservationBuyRate * 0x64, "%\r\n☞매도\r\n매매간격_", (uint)(satisfy.Item2.TradingSellInterval * 1e-3), "초\r\n매매수량_", satisfy.Item2.TradingSellQuantity, "주\r\n수익실현_", satisfy.Item2.TradingSellRate * 0x64, "%\r\n☞매수\r\n매매간격_", (uint)(satisfy.Item2.TradingBuyInterval * 1e-3), "초\r\n매매수량_", satisfy.Item2.TradingBuyQuantity, "주\r\n추가매수_", satisfy.Item2.TradingBuyRate * 0x64, "%");
+
+                            if (WindowState.Equals(FormWindowState.Minimized) == false)
+                            {
+                                var stocks = api.HoldingStocks.First(o => o.Code.Equals(satisfy.Item2.Code));
+                                Balance.SetConnectHoldingStock(stocks);
+                                stocks.SendBalance += OnReceiveSecuritiesAPI;
+                                stocks.WaitOrder = true;
+                            }
+                            if (string.IsNullOrEmpty(satisfy.Item1.Security) == false)
+                            {
+                                var status = await client.PostContext(satisfy.Item1);
+                                SendMessage(status);
+                            }
+                            return;
+
                         case short error:
                             switch (error)
                             {
@@ -601,7 +618,7 @@ namespace ShareInvest
                                     TheNextYear = kv.Value.Item6 / kv.Value.Item1,
                                     TheYearAfterNext = kv.Value.Item7 / kv.Value.Item1,
                                 });
-                        o.SetConditions(catalog.Keys.ToArray(), condition, stack);
+                        o.SetConditions(catalog.Count == 0 ? null : catalog.Keys.ToArray(), condition, stack).SendConditions += OnReceiveSecuritiesAPI;
                     }
                     o.ConnectChapterOperation.Send += OnReceiveSecuritiesAPI;
                     connect = o;

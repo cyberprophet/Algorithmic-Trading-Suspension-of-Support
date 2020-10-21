@@ -62,7 +62,8 @@ namespace ShareInvest.Client
                     Coin += security.GetSettleTheFare(response.RawBytes.Length);
                     SendMessage(Coin);
                 }
-                return JsonConvert.DeserializeObject<Catalog.Request.SatisfyConditions>(JArray.Parse(response.Content)[0].ToString());
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    return JsonConvert.DeserializeObject<Catalog.Request.SatisfyConditions>(JArray.Parse(response.Content)[0].ToString());
             }
             catch (Exception ex)
             {

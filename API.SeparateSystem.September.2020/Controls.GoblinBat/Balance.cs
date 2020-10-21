@@ -74,6 +74,10 @@ namespace ShareInvest.Controls
             {
                 switch (strategics)
                 {
+                    case conditions:
+                        strategics = sc;
+                        break;
+
                     case following:
                         strategics = tf;
                         break;

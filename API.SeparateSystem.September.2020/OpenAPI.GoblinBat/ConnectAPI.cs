@@ -88,12 +88,16 @@ namespace ShareInvest.OpenAPI
                     {
                         var count = SetStrategics(sc);
                         SendMessage(string.Concat(e.strConditionName, '_', count), e.sTrCode);
+                        SendConditions?.Invoke(this, new SendSecuritiesAPI(SetSatisfyConditions(sc), sc));
                     }
                 }).Start();
         }
         void OnReceiveTrConditions(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e) => new Task(() =>
         {
-            foreach (var code in e.strCodeList.Split(';'))
+            var list = e.strCodeList.Split(';');
+            SendMessage(string.Concat(e.strConditionName, '_', list.Length), e.sScrNo);
+
+            foreach (var code in list)
                 if (Ban.Contains(code) == false && string.IsNullOrEmpty(code) == false && Pick.Contains(code) && int.TryParse(axAPI.GetMasterLastPrice(code), out int price))
                 {
                     var sc = new SatisfyConditionsAccordingToTrends
@@ -119,9 +123,28 @@ namespace ShareInvest.OpenAPI
                     {
                         var count = SetStrategics(sc);
                         SendMessage(string.Concat(e.strConditionName, '_', count), code);
+                        SendConditions?.Invoke(this, new SendSecuritiesAPI(SetSatisfyConditions(sc), sc));
                     }
                 }
         }).Start();
+        ShareInvest.Catalog.Request.SatisfyConditions SetSatisfyConditions(SatisfyConditionsAccordingToTrends condition) => SatisfyConditions = new ShareInvest.Catalog.Request.SatisfyConditions
+        {
+            Security = SatisfyConditions.Security,
+            SettingValue = SatisfyConditions.SettingValue,
+            Strategics = SatisfyConditions.Strategics,
+            Ban = SatisfyConditions.Ban,
+            TempStorage = GetSatisfyConditions(condition)
+        };
+        string GetSatisfyConditions(SatisfyConditionsAccordingToTrends condition)
+        {
+            var storage = string.Concat("SC|", condition.Code, '|', condition.Short, '|', condition.Long, '|', condition.Trend, '|', condition.ReservationSellUnit, '|', condition.ReservationSellQuantity, '|', condition.ReservationSellRate * 0x64, '|', condition.ReservationBuyUnit, '|', condition.ReservationBuyQuantity, '|', condition.ReservationBuyRate * 0x64, '|', (uint)(condition.TradingSellInterval * 1e-3), '|', condition.TradingSellQuantity, '|', condition.TradingSellRate * 0x64, '|', (uint)(condition.TradingBuyInterval * 1e-3), '|', condition.TradingBuyQuantity, '|', condition.TradingBuyRate * 0x64);
+
+            if (string.IsNullOrEmpty(SatisfyConditions.TempStorage))
+                return storage;
+
+            else
+                return string.Concat(SatisfyConditions.TempStorage, ';', storage);
+        }
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
@@ -273,12 +296,12 @@ namespace ShareInvest.OpenAPI
 
             return ctor ?? null;
         }
-        public void SetConditions(string[] codes, ShareInvest.Catalog.Request.SatisfyConditions condition, Stack<ShareInvest.Catalog.Request.Consensus> stack)
+        public ConnectAPI SetConditions(string[] codes, ShareInvest.Catalog.Request.SatisfyConditions condition, Stack<ShareInvest.Catalog.Request.Consensus> stack)
         {
-            string[] benchmark = condition.SettingValue.Split(';'), strategics = condition.Strategics.Split(';');
+            string[] benchmark = condition.SettingValue.Split(';'), strategics = condition.Strategics.Split(';'), ban = condition.Ban.Split(';');
             Pick = new HashSet<string>();
-            Connect.SatisfyConditions = condition;
-            Ban = new HashSet<string>(codes.Union(condition.Ban.Split(';')));
+            SatisfyConditions = condition;
+            Ban = codes == null && string.IsNullOrEmpty(condition.Ban) ? new HashSet<string>() : new HashSet<string>(codes != null && string.IsNullOrEmpty(condition.Ban) == false ? codes.Union(ban) : (codes != null && string.IsNullOrEmpty(condition.Ban) ? codes : ban));
             axAPI.OnReceiveTrCondition += OnReceiveTrConditions;
             axAPI.OnReceiveRealCondition += OnReceiveRealConditions;
             var count = 0x56E;
@@ -311,40 +334,48 @@ namespace ShareInvest.OpenAPI
                     TradingBuyRate = tbRate * 1e-2
                 };
                 if (string.IsNullOrEmpty(condition.TempStorage) == false)
-                    Parallel.ForEach(condition.TempStorage.Split(';'), new ParallelOptions { MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 25e-2) }, new Action<string>((code) =>
+                    new Task(() =>
                     {
-                        if (Ban.Contains(code) == false && int.TryParse(axAPI.GetMasterLastPrice(code), out int price))
+                        foreach (var storage in condition.TempStorage.Split(';'))
                         {
-                            var sc = new SatisfyConditionsAccordingToTrends
+                            var code = storage.Split('|')[1];
+
+                            if (Ban.Contains(code) == false && int.TryParse(axAPI.GetMasterLastPrice(code), out int price))
                             {
-                                Code = code,
-                                Short = AccordingToTrends.Short,
-                                Long = AccordingToTrends.Long,
-                                Trend = AccordingToTrends.Trend,
-                                ReservationSellUnit = AccordingToTrends.ReservationSellUnit,
-                                ReservationSellQuantity = AccordingToTrends.ReservationSellQuantity,
-                                ReservationSellRate = AccordingToTrends.ReservationSellRate,
-                                ReservationBuyUnit = AccordingToTrends.ReservationBuyUnit,
-                                ReservationBuyQuantity = AccordingToTrends.ReservationBuyQuantity,
-                                ReservationBuyRate = AccordingToTrends.ReservationBuyRate,
-                                TradingSellInterval = price / AccordingToTrends.TradingSellInterval,
-                                TradingSellQuantity = AccordingToTrends.TradingSellQuantity,
-                                TradingSellRate = AccordingToTrends.TradingSellRate,
-                                TradingBuyInterval = price / AccordingToTrends.TradingBuyInterval,
-                                TradingBuyQuantity = AccordingToTrends.TradingBuyQuantity,
-                                TradingBuyRate = AccordingToTrends.TradingBuyRate
-                            };
-                            if (Strategics.Add(sc) && Ban.Add(code))
-                            {
-                                var length = SetStrategics(sc);
-                                SendMessage(code, length.ToString("N0"));
+                                var sc = new SatisfyConditionsAccordingToTrends
+                                {
+                                    Code = code,
+                                    Short = AccordingToTrends.Short,
+                                    Long = AccordingToTrends.Long,
+                                    Trend = AccordingToTrends.Trend,
+                                    ReservationSellUnit = AccordingToTrends.ReservationSellUnit,
+                                    ReservationSellQuantity = AccordingToTrends.ReservationSellQuantity,
+                                    ReservationSellRate = AccordingToTrends.ReservationSellRate,
+                                    ReservationBuyUnit = AccordingToTrends.ReservationBuyUnit,
+                                    ReservationBuyQuantity = AccordingToTrends.ReservationBuyQuantity,
+                                    ReservationBuyRate = AccordingToTrends.ReservationBuyRate,
+                                    TradingSellInterval = price / AccordingToTrends.TradingSellInterval,
+                                    TradingSellQuantity = AccordingToTrends.TradingSellQuantity,
+                                    TradingSellRate = AccordingToTrends.TradingSellRate,
+                                    TradingBuyInterval = price / AccordingToTrends.TradingBuyInterval,
+                                    TradingBuyQuantity = AccordingToTrends.TradingBuyQuantity,
+                                    TradingBuyRate = AccordingToTrends.TradingBuyRate
+                                };
+                                if (Strategics.Add(sc) && Ban.Add(code))
+                                {
+                                    var length = SetStrategics(sc);
+                                    SendMessage(code, length.ToString("N0"));
+                                    SendConditions?.Invoke(this, new SendSecuritiesAPI(new ShareInvest.Catalog.Request.SatisfyConditions(), sc));
+                                }
                             }
                         }
-                    }));
+                    }).Start();
             }
             foreach (var kv in Connect.Conditions)
                 if (kv.Value.StartsWith(string.Concat(condition.Strategics.Substring(0, 2), '_')))
                     (API as Connect)?.SendCondition(count++.ToString("D4"), kv.Value, kv.Key);
+
+            return this;
         }
         public void StartProgress() => buttonStartProgress.PerformClick();
         public void SetForeColor(Color color, string remain)
@@ -526,8 +557,13 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
+        ShareInvest.Catalog.Request.SatisfyConditions SatisfyConditions
+        {
+            get; set;
+        }
         readonly StringBuilder securites;
         readonly Privacies privacy;
         public event EventHandler<SendSecuritiesAPI> Send;
+        public event EventHandler<SendSecuritiesAPI> SendConditions;
     }
 }
