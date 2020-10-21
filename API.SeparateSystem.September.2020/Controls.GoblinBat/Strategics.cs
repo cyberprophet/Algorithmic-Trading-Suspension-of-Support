@@ -492,79 +492,10 @@ namespace ShareInvest.Controls
                     textCode.AutoCompleteSource = AutoCompleteSource.CustomSource;
                 }
                 if (string.IsNullOrEmpty(privacy.CodeStrategics) == false)
-                {
-                    SuspendLayout();
+                    InitializeComponent(privacy.CodeStrategics.Split(';'));
 
-                    foreach (var strategics in privacy.CodeStrategics.Split(';'))
-                    {
-                        var color = Color.FromArgb(0x79, 0x85, 0x82);
-                        var code = strategics.Substring(strategics[2].Equals('|') ? 3 : 2, Length);
-                        var select = Codes.FirstOrDefault(o => o.Code.Equals(code));
-                        tab.Controls.Add(new TabPage
-                        {
-                            BackColor = Color.Transparent,
-                            BorderStyle = BorderStyle.FixedSingle,
-                            ForeColor = Color.Black,
-                            Location = new Point(4, 0x22),
-                            Margin = new Padding(0),
-                            Name = code,
-                            TabIndex = Index++,
-                            Text = code,
-                            ToolTipText = strategics.Substring(0, 2)
-                        });
-                        switch (strategics.Substring(0, 2))
-                        {
-                            case string tf when tf.Equals("TF") && Length == 8:
-                                if (select.MarginRate > 0 && string.IsNullOrEmpty(select.Price) == false)
-                                {
-                                    var view = new TrendFollowingBasicFutures(select);
-                                    tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
-                                    view.Dock = DockStyle.Fill;
-                                    view.TransmuteStrategics(strategics.Substring(10, 1).Equals("1"), strategics.Substring(11).Split('.'));
-                                    panel.RowStyles[0].Height = 0x83 + 0x23;
-                                }
-                                break;
-
-                            case string ts when ts.Equals("TS") && Length == 6:
-                                if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
-                                {
-                                    var view = new TrendsInStockPrices(select);
-                                    tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
-                                    view.Dock = DockStyle.Fill;
-                                    view.TransmuteStrategics(strategics.Substring(8).Split('.'));
-                                    panel.RowStyles[0].Height = 0xCD + 0x23;
-                                }
-                                break;
-
-                            case string tc when tc.Equals("TC") && Length == 6:
-                                if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
-                                {
-                                    var view = new TrendToCashflow(select);
-                                    tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
-                                    view.Dock = DockStyle.Fill;
-                                    view.TransmuteStrategics(strategics.Substring(0xA).Split('|'));
-                                    panel.RowStyles[0].Height = 0xEB + 0x23;
-                                }
-                                break;
-
-                            case string tv when tv.Equals("TV") && Length == 6:
-                                if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
-                                {
-                                    var view = new TrendsInValuation(select);
-                                    tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
-                                    view.Dock = DockStyle.Fill;
-                                    view.TransmuteStrategics(strategics.Substring(0xA).Split('|'));
-                                    panel.RowStyles[0].Height = 0x145;
-                                }
-                                break;
-                        }
-                        var lasttabrect = tab.GetTabRect(tab.TabPages.Count - 1);
-                        tab.TabPages[tab.TabPages.Count - 1].BackColor = color;
-                        tab.SelectTab(tab.TabPages.Count - 1);
-                        tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
-                    }
-                    ResumeLayout();
-                }
+                if (await client.GetContext(new Catalog.Request.SatisfyConditions { Security = privacy.Security }) is Catalog.Request.SatisfyConditions condition && string.IsNullOrEmpty(condition.TempStorage) == false)
+                    InitializeComponent(condition.TempStorage.Split(';'));
             }
             return str;
         }
@@ -581,6 +512,84 @@ namespace ShareInvest.Controls
                     return codes.MaturityMarketCap.Length == 6 && string.Compare(DateTime.Now.ToString(format), codes.MaturityMarketCap) <= 0;
             }
             return false;
+        }
+        void InitializeComponent(string[] param)
+        {
+            SuspendLayout();
+
+            foreach (var strategics in param)
+            {
+                var color = Color.FromArgb(0x79, 0x85, 0x82);
+                var code = strategics.Substring(strategics[2].Equals('|') ? 3 : 2, Length);
+
+                if (tab.Controls.Cast<TabPage>().Any(o => o.Name.Equals(code)) == false)
+                {
+                    var select = Codes.FirstOrDefault(o => o.Code.Equals(code));
+                    tab.Controls.Add(new TabPage
+                    {
+                        BackColor = Color.Transparent,
+                        BorderStyle = BorderStyle.FixedSingle,
+                        ForeColor = Color.Black,
+                        Location = new Point(4, 0x22),
+                        Margin = new Padding(0),
+                        Name = code,
+                        TabIndex = Index++,
+                        Text = code,
+                        ToolTipText = strategics.Substring(0, 2)
+                    });
+                    switch (strategics.Substring(0, 2))
+                    {
+                        case string tf when tf.Equals("TF") && Length == 8:
+                            if (select.MarginRate > 0 && string.IsNullOrEmpty(select.Price) == false)
+                            {
+                                var view = new TrendFollowingBasicFutures(select);
+                                tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                                view.Dock = DockStyle.Fill;
+                                view.TransmuteStrategics(strategics.Substring(10, 1).Equals("1"), strategics.Substring(11).Split('.'));
+                                panel.RowStyles[0].Height = 0x83 + 0x23;
+                            }
+                            break;
+
+                        case string ts when ts.Equals("TS") && Length == 6:
+                            if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
+                            {
+                                var view = new TrendsInStockPrices(select);
+                                tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                                view.Dock = DockStyle.Fill;
+                                view.TransmuteStrategics(strategics.Substring(8).Split('.'));
+                                panel.RowStyles[0].Height = 0xCD + 0x23;
+                            }
+                            break;
+
+                        case string tc when tc.Equals("TC") && Length == 6:
+                            if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
+                            {
+                                var view = new TrendToCashflow(select);
+                                tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                                view.Dock = DockStyle.Fill;
+                                view.TransmuteStrategics(strategics.Substring(0xA).Split('|'));
+                                panel.RowStyles[0].Height = 0xEB + 0x23;
+                            }
+                            break;
+
+                        case string tv when (tv.Equals("TV") || tv.Equals("SC")) && Length == 6:
+                            if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
+                            {
+                                var view = new TrendsInValuation(tv, select);
+                                tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
+                                view.Dock = DockStyle.Fill;
+                                view.TransmuteStrategics(strategics.Substring(0xA).Split('|'));
+                                panel.RowStyles[0].Height = 0x145;
+                            }
+                            break;
+                    }
+                    var lasttabrect = tab.GetTabRect(tab.TabPages.Count - 1);
+                    tab.TabPages[tab.TabPages.Count - 1].BackColor = color;
+                    tab.SelectTab(tab.TabPages.Count - 1);
+                    tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
+                }
+            }
+            ResumeLayout();
         }
         void OnReceiveClickItem(object sender, EventArgs e) => BeginInvoke(new Action(async () =>
         {
@@ -609,6 +618,7 @@ namespace ShareInvest.Controls
                             break;
 
                         case tv:
+                        case sc:
                             url = @"https://youtu.be/GKzn6v6qeyA";
                             break;
 
@@ -889,9 +899,10 @@ namespace ShareInvest.Controls
                         break;
 
                     case tv:
+                    case sc:
                         if (string.IsNullOrEmpty(select.MaturityMarketCap) == false && string.IsNullOrEmpty(select.Price) == false)
                         {
-                            var view = new TrendsInValuation(select);
+                            var view = new TrendsInValuation(symbols[box.SelectedItem as string], select);
                             tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
                             view.Dock = DockStyle.Fill;
                             panel.RowStyles[0].Height = 0x145;
@@ -1094,6 +1105,8 @@ namespace ShareInvest.Controls
 
                     case tv:
                     case "TV":
+                    case sc:
+                    case "SC":
                         height += 0x145 - 0x23;
                         break;
                 }

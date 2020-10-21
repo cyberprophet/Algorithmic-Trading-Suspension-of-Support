@@ -9,12 +9,13 @@ namespace ShareInvest.Controls
     partial class TrendsInValuation : UserControl
     {
         string UseMnemonic(string name) => name.Insert(Array.FindIndex(name.ToCharArray(), o => o.Equals('&')), @"&");
-        internal TrendsInValuation(Catalog.Codes codes)
+        internal TrendsInValuation(string symbol, Catalog.Codes codes)
         {
             InitializeComponent();
             random = new Random();
             boxTrend.Text = codes.Name.Contains("&") ? UseMnemonic(codes.Name) : codes.Name;
             code = codes.Code;
+            this.symbol = string.Concat(symbol, '|');
 
             foreach (var check in panel.Controls)
                 if (check is CheckBox button)
@@ -40,7 +41,7 @@ namespace ShareInvest.Controls
         {
             if (this.code.Equals(code))
             {
-                var sb = new StringBuilder("TV|").Append(code);
+                var sb = new StringBuilder(symbol).Append(code);
 
                 foreach (var str in strategics)
                     sb.Append('|').Append(string.Concat(numeric, str).FindByName<NumericUpDown>(this).Value);
@@ -82,6 +83,7 @@ namespace ShareInvest.Controls
                 return string.Concat(str[0], str[1], str[2], str[3]);
             }
         }
+        readonly string symbol;
         readonly string code;
         readonly Random random;
     }

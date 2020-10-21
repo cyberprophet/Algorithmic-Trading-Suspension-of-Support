@@ -130,7 +130,7 @@ namespace ShareInvest.Strategics
                 {
                     if (buttonSave.ForeColor.Equals(Color.Ivory))
                     {
-                        if (numericShort.Value < numericLong.Value)
+                        if (numericShort.Value < numericLong.Value && (string.IsNullOrEmpty(Storage) || MessageBox.Show(text, string.Concat(Storage.Split(';').Length, "종목"), MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2).Equals(DialogResult.OK)))
                             BeginInvoke(new Action(async () =>
                             {
                                 int index;
@@ -197,6 +197,7 @@ namespace ShareInvest.Strategics
                                 if (index < label.Length - 1 && decimal.TryParse(sv[index + label.Length], out decimal value))
                                     string.Concat(numeric, label[index], rate).FindByName<NumericUpDown>(this).Value = value;
                             }
+                        Storage = condition.TempStorage;
                     }
                 }));
                 this.button.PerformClick();
@@ -254,6 +255,10 @@ namespace ShareInvest.Strategics
         [Conditional("DEBUG")]
         void SendMessage(object reason) => Console.WriteLine(reason);
         string[] Ban
+        {
+            get; set;
+        }
+        string Storage
         {
             get; set;
         }
