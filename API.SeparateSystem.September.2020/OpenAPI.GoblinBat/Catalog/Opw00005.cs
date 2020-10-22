@@ -41,6 +41,65 @@ namespace ShareInvest.OpenAPI.Catalog
 
                             switch (hs.FindStrategics)
                             {
+                                case SatisfyConditionsAccordingToTrends sc:
+                                    upper = (int)(price * 1.3);
+                                    lower = (int)(price * 0.7);
+
+                                    if (sc.ReservationSellQuantity > 0)
+                                    {
+                                        sell = (int)(balance.Item4 * (1 + sc.ReservationSellRate));
+                                        sPrice = hs.GetStartingPrice(sell, stock);
+                                        sPrice = sPrice < lower ? lower + hs.GetQuoteUnit(sPrice, stock) : sPrice;
+                                        hs.SellPrice = sPrice;
+
+                                        while (sPrice < upper && quantity-- > 0)
+                                        {
+                                            SendMessage(sPrice.ToString("C0"), string.Empty);
+                                            connect.SendOrder(new SendOrder
+                                            {
+                                                RQName = balance.Item2,
+                                                ScreenNo = connect.LookupScreenNo,
+                                                AccNo = account,
+                                                OrderType = (int)OpenOrderType.신규매도,
+                                                Code = hs.Code,
+                                                Qty = sc.ReservationSellQuantity,
+                                                Price = sPrice,
+                                                HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                                OrgOrderNo = string.Empty
+                                            });
+                                            for (int i = 0; i < sc.ReservationSellUnit; i++)
+                                                sPrice += hs.GetQuoteUnit(sPrice, stock);
+                                        }
+                                    }
+                                    if (sc.ReservationBuyQuantity > 0)
+                                    {
+                                        buy = (int)(balance.Item4 * (1 - sc.ReservationBuyRate));
+                                        hs.BuyPrice = hs.GetStartingPrice(buy, stock);
+                                        bPrice = hs.GetStartingPrice(lower, stock);
+
+                                        while (bPrice < upper && bPrice < buy && Connect.Cash > bPrice * (1.5e-4 + 1))
+                                        {
+                                            connect.SendOrder(new SendOrder
+                                            {
+                                                RQName = balance.Item2,
+                                                ScreenNo = connect.LookupScreenNo,
+                                                AccNo = account,
+                                                OrderType = (int)OpenOrderType.신규매수,
+                                                Code = hs.Code,
+                                                Qty = sc.ReservationBuyQuantity,
+                                                Price = bPrice,
+                                                HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                                OrgOrderNo = string.Empty
+                                            });
+                                            for (int i = 0; i < sc.ReservationBuyUnit; i++)
+                                                bPrice += hs.GetQuoteUnit(bPrice, stock);
+
+                                            Connect.Cash -= (long)(bPrice * (1.5e-4 + 1));
+                                            SendMessage(bPrice.ToString("C0"), Connect.Cash.ToString("C0"));
+                                        }
+                                    }
+                                    break;
+
                                 case TrendsInValuation tv:
                                     upper = (int)(price * 1.3);
                                     lower = (int)(price * 0.7);

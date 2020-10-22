@@ -59,12 +59,79 @@ namespace ShareInvest.OpenAPI.Catalog
                     case "2":
                         if (param[1].Equals(quote))
                         {
+                            int bPrice, sPrice, quantity, price, upper, lower;
+                            bool stock;
                             var connect = Connect.GetInstance(API);
                             Delay.Milliseconds = 0xCF;
 
                             foreach (var kv in Connect.HoldingStock)
                                 switch (kv.Value.FindStrategics)
                                 {
+                                    case SatisfyConditionsAccordingToTrends sc:
+                                        quantity = kv.Value.Quantity;
+                                        price = int.TryParse(API.GetMasterLastPrice(sc.Code), out int eve) ? eve : 0;
+                                        upper = (int)(price * 1.3);
+                                        lower = (int)(price * 0.7);
+                                        stock = API.KOA_Functions(info, sc.Code).Split(';')[0].Contains(market);
+
+                                        if (sc.ReservationSellQuantity > 0)
+                                        {
+                                            sPrice = kv.Value.GetStartingPrice((int)((kv.Value.Purchase ?? 0D) * (1 + sc.ReservationSellRate)), stock);
+                                            sPrice = sPrice < lower ? lower + kv.Value.GetQuoteUnit(sPrice, stock) : sPrice;
+
+                                            while (sPrice < upper && quantity-- > 0)
+                                            {
+                                                if (kv.Value.OrderNumber.ContainsValue(sPrice))
+                                                    SendMessage(sPrice.ToString("C0"));
+
+                                                else
+                                                    connect.SendOrder(new SendOrder
+                                                    {
+                                                        RQName = API.GetMasterCodeName(sc.Code),
+                                                        ScreenNo = connect.LookupScreenNo,
+                                                        AccNo = Account,
+                                                        OrderType = (int)OpenOrderType.신규매도,
+                                                        Code = sc.Code,
+                                                        Qty = sc.ReservationSellQuantity,
+                                                        Price = sPrice,
+                                                        HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                                        OrgOrderNo = string.Empty
+                                                    });
+                                                for (int i = 0; i < sc.ReservationSellUnit; i++)
+                                                    sPrice += kv.Value.GetQuoteUnit(sPrice, stock);
+                                            }
+                                        }
+                                        if (sc.ReservationBuyQuantity > 0)
+                                        {
+                                            bPrice = kv.Value.GetStartingPrice((int)((kv.Value.Purchase ?? 0D) * (1 - sc.ReservationBuyRate)), stock);
+
+                                            while (bPrice > lower && Connect.Cash > bPrice * (15e-5 + 1))
+                                            {
+                                                if (kv.Value.OrderNumber.ContainsValue(bPrice))
+                                                    SendMessage(Connect.Cash.ToString("C0"));
+
+                                                else
+                                                {
+                                                    connect.SendOrder(new SendOrder
+                                                    {
+                                                        RQName = API.GetMasterCodeName(sc.Code),
+                                                        ScreenNo = connect.LookupScreenNo,
+                                                        AccNo = Account,
+                                                        OrderType = (int)OpenOrderType.신규매수,
+                                                        Code = sc.Code,
+                                                        Qty = sc.ReservationBuyQuantity,
+                                                        Price = bPrice,
+                                                        HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+                                                        OrgOrderNo = string.Empty
+                                                    });
+                                                    Connect.Cash -= (long)(bPrice * (15e-5 + 1));
+                                                }
+                                                for (int i = 0; i < sc.ReservationBuyUnit; i++)
+                                                    bPrice -= kv.Value.GetQuoteUnit(bPrice, stock);
+                                            }
+                                        }
+                                        break;
+
                                     case TrendsInValuation tv:
                                         foreach (var order in kv.Value.OrderNumber)
                                         {
@@ -83,8 +150,11 @@ namespace ShareInvest.OpenAPI.Catalog
                                             connect.SendOrder(send);
                                             Connect.Cash += (send.OrderType == 3 ? send.Price : 0);
                                         }
-                                        int bPrice, sPrice, quantity = kv.Value.Quantity, price = int.TryParse(API.GetMasterLastPrice(tv.Code), out int before) ? before : 0, upper = (int)(price * 1.3), lower = (int)(price * 0.7);
-                                        var stock = API.KOA_Functions(info, tv.Code).Split(';')[0].Contains(market);
+                                        quantity = kv.Value.Quantity;
+                                        price = int.TryParse(API.GetMasterLastPrice(tv.Code), out int before) ? before : 0;
+                                        upper = (int)(price * 1.3);
+                                        lower = (int)(price * 0.7);
+                                        stock = API.KOA_Functions(info, tv.Code).Split(';')[0].Contains(market);
 
                                         if (tv.ReservationSubtractionalQuantity > 0)
                                         {

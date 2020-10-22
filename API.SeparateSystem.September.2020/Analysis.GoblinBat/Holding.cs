@@ -210,6 +210,14 @@ namespace ShareInvest.Analysis
         {
             get; set;
         }
+        public abstract int BuyPrice
+        {
+            protected internal get; set;
+        }
+        public abstract int SellPrice
+        {
+            protected internal get; set;
+        }
         public abstract int Cash
         {
             get; protected internal set;

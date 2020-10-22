@@ -137,6 +137,14 @@ namespace ShareInvest.Analysis.XingAPI
         {
             get; protected internal set;
         }
+        public override int BuyPrice
+        {
+            protected internal get; set;
+        }
+        public override int SellPrice
+        {
+            protected internal get; set;
+        }
         public override dynamic Purchase
         {
             get; set;

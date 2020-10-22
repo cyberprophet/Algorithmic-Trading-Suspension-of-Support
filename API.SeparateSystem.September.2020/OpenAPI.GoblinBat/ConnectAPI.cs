@@ -395,7 +395,9 @@ namespace ShareInvest.OpenAPI
                         Purchase = 0,
                         Quantity = 0,
                         Rate = 0,
-                        Revenue = 0
+                        Revenue = 0,
+                        SellPrice = 0,
+                        BuyPrice = 0
                     };
                     break;
 

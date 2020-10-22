@@ -51,8 +51,11 @@ namespace ShareInvest.Strategics
                 Statistical.SetProgressRate(e.Cancelled);
                 Statistical.SetProgressRate(Color.Ivory);
             }
-            Statistical.SetProgressRate((bool)e.Result);
-            Statistical.SetProgressRate(Color.Ivory);
+            else
+            {
+                Statistical.SetProgressRate((bool)e.Result);
+                Statistical.SetProgressRate(Color.Ivory);
+            }
         }
         void BackgroundWorkerProgressChanged(object sender, ProgressChangedEventArgs e) => Statistical.SetProgressRate(e.ProgressPercentage);
         void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
@@ -77,7 +80,7 @@ namespace ShareInvest.Strategics
                     if (backgroundWorker.CancellationPending)
                     {
                         e.Cancel = true;
-                        SendMessage((rate / maximum).ToString("P3"));
+                        SendMessage(string.Concat(rate, '/', maximum));
 
                         break;
                     }
@@ -90,7 +93,7 @@ namespace ShareInvest.Strategics
                             if (backgroundWorker.CancellationPending)
                             {
                                 e.Cancel = true;
-                                SendMessage((rate / maximum).ToString("P5"));
+                                SendMessage((rate / (double)maximum).ToString("P5"));
 
                                 break;
                             }

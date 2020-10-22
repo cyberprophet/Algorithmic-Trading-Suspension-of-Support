@@ -322,7 +322,7 @@ namespace ShareInvest.Controls
         }));
         public void SetProgressRate(int rate)
         {
-            if (rate > 0 && rate == progressBar.Value && rate % 7 == 0)
+            if (rate > 0 && rate == progressBar.Value && rate % 0xC == 0)
                 BeginInvoke(new Action(async () =>
                 {
                     var strategics = new Dictionary<string, Tuple<int, double, double, double, double, double, double>>();
@@ -353,7 +353,7 @@ namespace ShareInvest.Controls
                     {
                         InitializeComponent(stack, 0, codes, rank);
 
-                        if (worker.IsBusy == false)
+                        if (rate % 0x24 == 0 && worker.IsBusy == false)
                             worker.RunWorkerAsync(strategics);
                     }
                 }));

@@ -23,15 +23,39 @@ namespace ShareInvest.Analysis.OpenAPI
                         WaitOrder = false;
 
                         if (sc.TradingBuyInterval > 0)
-                            NextOrderTime = MeasureTheDelayTime(sc.TradingBuyInterval, interval);
+                            NextOrderTime = MeasureTheDelayTime(sc.TradingBuyInterval * (Purchase > 0 && Bid > 0 ? Purchase / (double)Bid : 1), interval);
                     }
-                    else if (sc.TradingSellQuantity > 0 && Offer > peek * (1 + sc.TradingSellRate) && Offer > Purchase && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder && (sc.TradingSellInterval == 0 || sc.TradingSellInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                    else if (Quantity > 0)
                     {
-                        SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, sc.Code, sc.TradingSellQuantity, Offer, string.Empty)));
-                        WaitOrder = false;
+                        if (sc.TradingSellQuantity > 0 && Offer > peek * (1 + sc.TradingSellRate) && Offer > Purchase + tax * Offer && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder && (sc.TradingSellInterval == 0 || sc.TradingSellInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                        {
+                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, sc.Code, sc.TradingSellQuantity, Offer, string.Empty)));
+                            WaitOrder = false;
 
-                        if (sc.TradingSellInterval > 0)
-                            NextOrderTime = MeasureTheDelayTime(sc.TradingSellInterval, interval);
+                            if (sc.TradingSellInterval > 0)
+                                NextOrderTime = MeasureTheDelayTime(sc.TradingSellInterval * (Purchase > 0 && Offer > 0 ? Offer / (double)Purchase : 1), interval);
+                        }
+                        else if (SellPrice > 0 && sc.ReservationSellQuantity > 0 && Offer > SellPrice && OrderNumber.ContainsValue(Offer) == false && WaitOrder)
+                        {
+                            for (int i = 0; i < sc.ReservationSellUnit; i++)
+                                SellPrice += GetQuoteUnit(SellPrice, Market);
+
+                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, sc.Code, sc.ReservationSellQuantity, Offer, string.Empty)));
+                            WaitOrder = false;
+                        }
+                        else if (BuyPrice > 0 && sc.ReservationBuyQuantity > 0 && Bid < BuyPrice && OrderNumber.ContainsValue(Bid) == false && WaitOrder)
+                        {
+                            for (int i = 0; i < sc.ReservationBuyUnit; i++)
+                                BuyPrice -= GetQuoteUnit(BuyPrice, Market);
+
+                            SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, sc.Code, sc.ReservationBuyQuantity, Bid, string.Empty)));
+                            WaitOrder = false;
+                        }
+                        else if (SellPrice == 0 && Purchase > 0)
+                            SellPrice = GetStartingPrice((1 + sc.ReservationSellRate) * Purchase, Market);
+
+                        else if (BuyPrice == 0 && Purchase > 0)
+                            BuyPrice = GetStartingPrice(Purchase * (1 - sc.ReservationBuyRate), Market);
                     }
                     break;
 
@@ -246,6 +270,14 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             get; set;
         }
+        public override int BuyPrice
+        {
+            protected internal get; set;
+        }
+        public override int SellPrice
+        {
+            protected internal get; set;
+        }
         protected internal override bool Market
         {
             get; set;
@@ -262,7 +294,7 @@ namespace ShareInvest.Analysis.OpenAPI
             OrderNumber = new Dictionary<string, dynamic>();
             this.strategics = strategics;
             NextOrderTime = DateTime.Now;
-            consecutive.Connect(this);            
+            consecutive.Connect(this);
         }
         public HoldingStocks(TrendsInValuation strategics) : base(strategics)
         {
@@ -308,6 +340,7 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             get; set;
         }
+        const double tax = 25e-4 + 15e-5 + 15e-5;
         const string start = "090000";
         const string end = "153500";
         const string conclusion = "체결";
