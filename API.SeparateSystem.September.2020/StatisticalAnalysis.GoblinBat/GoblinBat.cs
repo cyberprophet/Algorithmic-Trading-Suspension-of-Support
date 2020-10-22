@@ -44,19 +44,15 @@ namespace ShareInvest.Strategics
             if (e.Error != null)
             {
                 Statistical.SetProgressRate(Color.Maroon);
-                Console.WriteLine(e.Error.StackTrace);
+                SendMessage(e.Error.StackTrace);
             }
             else if (e.Cancelled)
             {
                 Statistical.SetProgressRate(e.Cancelled);
                 Statistical.SetProgressRate(Color.Ivory);
             }
-            else
-            {
-                Statistical.SetProgressRate((bool)e.Result);
-                Statistical.SetProgressRate(Color.Ivory);
-            }
-            Cancel.Dispose();
+            Statistical.SetProgressRate((bool)e.Result);
+            Statistical.SetProgressRate(Color.Ivory);
         }
         void BackgroundWorkerProgressChanged(object sender, ProgressChangedEventArgs e) => Statistical.SetProgressRate(e.ProgressPercentage);
         void BackgroundWorkerDoWork(object sender, DoWorkEventArgs e)
@@ -74,107 +70,112 @@ namespace ShareInvest.Strategics
                     stack.Push(enumerable);
 
             ulong maximum = (ulong)(list.Count * stack.Count), rate = 0;
-            var po = new ParallelOptions
-            {
-                CancellationToken = Cancel.Token,
-                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.25)
-            };
+
             while (stack.Count > 0)
                 try
                 {
-                    var strategics = stack.Pop();
-                    Parallel.ForEach(list.OrderBy(o => Guid.NewGuid()), po, new Action<Catalog.Codes>((w) =>
+                    if (backgroundWorker.CancellationPending)
                     {
-                        if (backgroundWorker.CancellationPending)
-                        {
-                            e.Cancel = true;
+                        e.Cancel = true;
+                        SendMessage((rate / maximum).ToString("P3"));
 
-                            if (Cancel.IsCancellationRequested)
-                                po.CancellationToken.ThrowIfCancellationRequested();
-                        }
-                        else if (IsTheCorrectInformation(w))
-                        {
-                            var now = DateTime.Now;
-                            HoldingStocks hs = null;
+                        break;
+                    }
+                    else
+                    {
+                        var strategics = stack.Pop();
 
-                            switch (strategics)
+                        foreach (var w in list.OrderBy(o => Guid.NewGuid()))
+                        {
+                            if (backgroundWorker.CancellationPending)
                             {
-                                case Catalog.ScenarioAccordingToTrend st:
-                                    var consensus = client.GetContext(new Catalog.ConvertConsensus { Code = w.Code }).Result;
+                                e.Cancel = true;
+                                SendMessage((rate / maximum).ToString("P5"));
 
-                                    if (consensus != null && consensus.Any(o => o.Date.EndsWith("(E)") && o.Date.StartsWith(now.AddYears(2).ToString("yy"))) && client.PostContext(new ConfirmStrategics
-                                    {
-                                        Code = w.Code,
-                                        Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
-                                        Strategics = string.Concat("ST.", st.Calendar, '.', st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', (uint)(st.Sales * 0x64), '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', (uint)(st.OperatingProfit * 0x64), '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', (uint)(st.NetIncome * 0x64))
-                                    }).Result == false)
-                                    {
-                                        st.Code = w.Code;
-                                        hs = new HoldingStocks(st, new Catalog.ConvertConsensus().PresumeToConsensus(consensus), client)
-                                        {
-                                            Code = st.Code
-                                        };
-                                        hs.SendBalance += OnReceiveAnalysisData;
-                                        hs.StartProgress(0D);
-                                    }
-                                    break;
-
-                                case Catalog.TrendToCashflow tc:
-                                    if (client.PostContext(new ConfirmStrategics
-                                    {
-                                        Code = w.Code,
-                                        Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
-                                        Strategics = string.Concat("TC.", tc.AnalysisType)
-                                    }).Result == false)
-                                    {
-                                        tc.Code = w.Code;
-                                        hs = new HoldingStocks(tc, client)
-                                        {
-                                            Code = tc.Code
-                                        };
-                                        hs.SendBalance += OnReceiveAnalysisData;
-                                        hs.StartProgress(0D);
-                                    }
-                                    break;
-
-                                case Catalog.TrendsInStockPrices ts:
-                                    if (client.PostContext(new ConfirmStrategics
-                                    {
-                                        Code = w.Code,
-                                        Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
-                                        Strategics = string.Concat("TS.", ts.Short, '.', ts.Long, '.', ts.Trend, '.', (int)(ts.RealizeProfit * 0x2710), '.', (int)(ts.AdditionalPurchase * 0x2710), '.', ts.QuoteUnit, '.', (char)ts.LongShort, '.', (char)ts.TrendType, '.', (char)ts.Setting)
-                                    }).Result == false)
-                                    {
-                                        ts.Code = w.Code;
-                                        hs = new HoldingStocks(ts)
-                                        {
-                                            Code = ts.Code
-                                        };
-                                        hs.SendBalance += OnReceiveAnalysisData;
-                                        hs.StartProgress(0D);
-                                    }
-                                    break;
+                                break;
                             }
-                            if (hs != null)
-                                hs.SendBalance -= OnReceiveAnalysisData;
+                            else if (IsTheCorrectInformation(w))
+                            {
+                                var now = DateTime.Now;
+                                HoldingStocks hs = null;
+
+                                switch (strategics)
+                                {
+                                    case Catalog.ScenarioAccordingToTrend st:
+                                        var consensus = client.GetContext(new Catalog.ConvertConsensus { Code = w.Code }).Result;
+
+                                        if (consensus != null && consensus.Any(o => o.Date.EndsWith("(E)") && o.Date.StartsWith(now.AddYears(2).ToString("yy"))) && client.PostContext(new ConfirmStrategics
+                                        {
+                                            Code = w.Code,
+                                            Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
+                                            Strategics = string.Concat("ST.", st.Calendar, '.', st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', (uint)(st.Sales * 0x64), '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', (uint)(st.OperatingProfit * 0x64), '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', (uint)(st.NetIncome * 0x64))
+                                        }).Result == false)
+                                        {
+                                            st.Code = w.Code;
+                                            hs = new HoldingStocks(st, new Catalog.ConvertConsensus().PresumeToConsensus(consensus), client)
+                                            {
+                                                Code = st.Code
+                                            };
+                                            hs.SendBalance += OnReceiveAnalysisData;
+                                            hs.StartProgress(0D);
+                                        }
+                                        break;
+
+                                    case Catalog.TrendToCashflow tc:
+                                        if (client.PostContext(new ConfirmStrategics
+                                        {
+                                            Code = w.Code,
+                                            Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
+                                            Strategics = string.Concat("TC.", tc.AnalysisType)
+                                        }).Result == false)
+                                        {
+                                            tc.Code = w.Code;
+                                            hs = new HoldingStocks(tc, client)
+                                            {
+                                                Code = tc.Code
+                                            };
+                                            hs.SendBalance += OnReceiveAnalysisData;
+                                            hs.StartProgress(0D);
+                                        }
+                                        break;
+
+                                    case Catalog.TrendsInStockPrices ts:
+                                        if (client.PostContext(new ConfirmStrategics
+                                        {
+                                            Code = w.Code,
+                                            Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
+                                            Strategics = string.Concat("TS.", ts.Short, '.', ts.Long, '.', ts.Trend, '.', (int)(ts.RealizeProfit * 0x2710), '.', (int)(ts.AdditionalPurchase * 0x2710), '.', ts.QuoteUnit, '.', (char)ts.LongShort, '.', (char)ts.TrendType, '.', (char)ts.Setting)
+                                        }).Result == false)
+                                        {
+                                            ts.Code = w.Code;
+                                            hs = new HoldingStocks(ts)
+                                            {
+                                                Code = ts.Code
+                                            };
+                                            hs.SendBalance += OnReceiveAnalysisData;
+                                            hs.StartProgress(0D);
+                                        }
+                                        break;
+                                }
+                                if (hs != null)
+                                    hs.SendBalance -= OnReceiveAnalysisData;
+                            }
+                            Statistical.SetProgressRate(Color.Gold);
+                            backgroundWorker.ReportProgress((int)(rate++ * 1e+2 / maximum));
                         }
-                        Statistical.SetProgressRate(Color.Gold);
-                        backgroundWorker.ReportProgress((int)(rate++ * 1e+2 / maximum));
-                    }));
-                }
-                catch (OperationCanceledException ex)
-                {
-                    Statistical.SetProgressRate(Color.Ivory);
-                    Cancel.Dispose();
-                    Console.WriteLine("Count_" + rate + "\t" + ex.TargetSite.Name);
+                    }
                 }
                 catch (Exception ex)
                 {
                     e.Cancel = true;
-                    Console.WriteLine(ex.StackTrace);
+                    SendMessage(ex.StackTrace);
+
+                    break;
                 }
             e.Result = rate == maximum || rate - 1 == maximum;
         }
+        [Conditional("DEBUG")]
+        void SendMessage(string message) => Console.WriteLine(message);
         async void OnReceiveAnalysisData(object sender, SendSecuritiesAPI e)
         {
             if (e.Convey is Tuple<dynamic, Catalog.Statistics> tuple)
@@ -233,7 +234,6 @@ namespace ShareInvest.Strategics
                     if (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) && DateTime.Now.Hour < 3 && (cookie as string).Equals(admin) == false)
                     {
                         ClosingForm = true;
-                        Cancel.Cancel();
                         backgroundWorker.CancelAsync();
 
                         if (WindowState.Equals(FormWindowState.Minimized))
@@ -267,7 +267,7 @@ namespace ShareInvest.Strategics
                         notifyIcon.Text = ConvertTheFare(remain);
                 }
                 else
-                    Console.WriteLine((tuple.Item1 as IStrategics).Code);
+                    SendMessage((tuple.Item1 as IStrategics).Code);
             }
             else if (e.Convey is Tuple<dynamic, double, uint> strategics)
                 switch (strategics.Item1)
@@ -323,15 +323,11 @@ namespace ShareInvest.Strategics
 
                         case Tuple<int, Catalog.Privacies> tuple when tuple.Item2 is Catalog.Privacies privacy && (string.IsNullOrEmpty(privacy.Account) || string.IsNullOrEmpty(privacy.SecuritiesAPI) || string.IsNullOrEmpty(privacy.SecurityAPI)) == false:
                             if (tuple.Item1 == 0)
-                            {
-                                Cancel = new CancellationTokenSource();
                                 backgroundWorker.RunWorkerAsync();
-                            }
-                            else if (tuple.Item1 > 0 && Cancel.IsCancellationRequested == false)
-                            {
-                                Cancel.Cancel();
+
+                            else if (tuple.Item1 > 0)
                                 backgroundWorker.CancelAsync();
-                            }
+
                             return;
 
                         case Tuple<Tuple<List<Catalog.ConvertConsensus>, List<Catalog.ConvertConsensus>>, Catalog.ScenarioAccordingToTrend> consensus:
@@ -539,9 +535,8 @@ namespace ShareInvest.Strategics
                     Text = await Statistical.SetPrivacy(privacy);
                     notifyIcon.Text = ConvertTheFare(privacy.Coin);
 
-                    if (backgroundWorker.IsBusy == false && Cancel == null && string.IsNullOrEmpty(Privacy.Account) == false && string.IsNullOrEmpty(Privacy.SecuritiesAPI) == false && string.IsNullOrEmpty(Privacy.SecurityAPI) == false)
+                    if (backgroundWorker.IsBusy == false && string.IsNullOrEmpty(Privacy.Account) == false && string.IsNullOrEmpty(Privacy.SecuritiesAPI) == false && string.IsNullOrEmpty(Privacy.SecurityAPI) == false)
                     {
-                        Cancel = new CancellationTokenSource();
                         backgroundWorker.RunWorkerAsync();
                         Statistical.SetProgressRate();
                     }
@@ -581,10 +576,6 @@ namespace ShareInvest.Strategics
             get; set;
         }
         Catalog.Privacies Privacy
-        {
-            get; set;
-        }
-        CancellationTokenSource Cancel
         {
             get; set;
         }
