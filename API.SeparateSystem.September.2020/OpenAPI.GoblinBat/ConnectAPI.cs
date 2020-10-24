@@ -148,6 +148,25 @@ namespace ShareInvest.OpenAPI
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
+        public void SetToCollect(string code)
+        {
+            var access = new Security().GetGrantAccess(privacy.Security);
+
+            if (string.IsNullOrEmpty(access) == false)
+            {
+                if (Connect.Collect == null)
+                    Connect.Collect = new Dictionary<string, Collect>();
+
+                if (code.Length > 8)
+                {
+                    foreach (var split in code.Split(';'))
+                        Connect.Collect[split] = new Collect(split, access);
+
+                    return;
+                }
+                Connect.Collect[code] = new Collect(code, access);
+            }
+        }
         public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
             if (Connect.TR.Add(new OPT50010

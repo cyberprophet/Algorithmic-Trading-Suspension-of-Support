@@ -196,6 +196,10 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
+        internal static Dictionary<string, Analysis.OpenAPI.Collect> Collect
+        {
+            get; set;
+        }
         internal static Dictionary<string, Holding> HoldingStock
         {
             get; private set;

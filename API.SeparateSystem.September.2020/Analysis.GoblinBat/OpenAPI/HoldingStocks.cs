@@ -52,10 +52,10 @@ namespace ShareInvest.Analysis.OpenAPI
                             WaitOrder = false;
                         }
                         else if (SellPrice == 0 && Purchase > 0)
-                            SellPrice = GetStartingPrice((1 + sc.ReservationSellRate) * Purchase, Market);
+                            SellPrice = GetStartingPrice((int)((1 + sc.ReservationSellRate) * Purchase), Market);
 
                         else if (BuyPrice == 0 && Purchase > 0)
-                            BuyPrice = GetStartingPrice(Purchase * (1 - sc.ReservationBuyRate), Market);
+                            BuyPrice = GetStartingPrice((int)(Purchase * (1 - sc.ReservationBuyRate)), Market);
                     }
                     break;
 

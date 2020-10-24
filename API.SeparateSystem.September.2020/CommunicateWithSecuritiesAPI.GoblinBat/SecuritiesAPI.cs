@@ -893,6 +893,7 @@ namespace ShareInvest
                             {
                                 var pop = Stack.Pop();
                                 openAPI.InputValueRqData(pop.Length == 8 ? opt50001 : optkwFID, pop).Send -= OnReceiveSecuritiesAPI;
+                                openAPI.SetToCollect(pop);
                             }
                     }
                     Connect = int.MinValue;

@@ -51,6 +51,26 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<Queue<string>> GetContextAsync(string code, string date)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestToCollect(code, date), Method.GET), source.Token);
+
+                if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                {
+                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                    SendMessage(Coin);
+                }
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    return security.RequestCharts(JsonConvert.DeserializeObject<string>(response.Content));
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return null;
+        }
         public async Task<object> GetContext(Catalog.Request.SatisfyConditions conditions)
         {
             try
@@ -63,7 +83,7 @@ namespace ShareInvest.Client
                     SendMessage(Coin);
                 }
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
-                    return JsonConvert.DeserializeObject<Catalog.Request.SatisfyConditions>(JArray.Parse(response.Content)[0].ToString());
+                    return JsonConvert.DeserializeObject<Catalog.Request.SatisfyConditions>(response.Content);
             }
             catch (Exception ex)
             {
