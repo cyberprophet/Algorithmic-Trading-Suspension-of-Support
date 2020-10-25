@@ -958,6 +958,9 @@ namespace ShareInvest
                 while (futures.Count > 0 && string.IsNullOrEmpty(code))
                     code = futures[random.Next(0, futures.Count)];
 
+                if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(code) == false)
+                    api.TransmitStringData(code);
+
                 return code;
             }
         }
@@ -966,6 +969,9 @@ namespace ShareInvest
             if (options.Count > 0)
             {
                 var retention = await client.GetContext(options[random.Next(0, options.Count)]);
+
+                if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(retention.Code) == false)
+                    api.TransmitStringData(retention.Code);
 
                 if (options.Remove(retention.Code))
                 {
@@ -993,6 +999,9 @@ namespace ShareInvest
             {
                 var retention = await client.GetContext(stocks[random.Next(0, stocks.Count)]);
                 var now = DateTime.Now;
+
+                if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(retention.Code) == false)
+                    api.TransmitStringData(retention.Code);
 
                 if (stocks.Remove(retention.Code))
                 {

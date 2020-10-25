@@ -18,21 +18,27 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             get;
         }
-        StringBuilder Data
+        public StringBuilder Data
         {
             get;
         }
-        public void ToCollect(string[] param)
+        public void ToCollect(string time)
         {
-            if (Time.Equals(param[0]) == false)
+            if (Time.Equals(time) == false)
             {
-                Time = param[0];
+                Time = time;
                 Index = 0;
             }
-            Date.Append(param[0]).Append(Index++.ToString("D3")).Append('|');
-            Data.Append(param[1]).Append(';').Append(param[2]).Append(';').Append(param[3]).Append(';').Append(param[4]).Append('|');
+            Date.Append(time).Append(Index++.ToString("D3")).Append('|');
         }
-        public async Task TransmitStringData() => await client.PostContextAsync(Data.Remove(Data.Length - 1, 1), Date.Remove(Date.Length - 1, 1), code);
+        public async Task TransmitStringData()
+        {
+            if (Date.Length > 0xA && await client.PostContextAsync(Data.Remove(Data.Length - 1, 1), Date.Remove(Date.Length - 1, 1), code) > 0)
+            {
+                Date.Clear();
+                Data.Clear();
+            }
+        }
         public Collect(string code, string grant)
         {
             this.code = code;

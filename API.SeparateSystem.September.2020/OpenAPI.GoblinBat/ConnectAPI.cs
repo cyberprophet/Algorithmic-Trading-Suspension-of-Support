@@ -157,16 +157,19 @@ namespace ShareInvest.OpenAPI
                 if (Connect.Collect == null)
                     Connect.Collect = new Dictionary<string, Collect>();
 
-                if (code.Length > 8)
-                {
-                    foreach (var split in code.Split(';'))
-                        Connect.Collect[split] = new Collect(split, access);
+                if (code.Length == 8)
+                    Connect.Collect[code] = new Collect(code, access);
 
-                    return;
-                }
-                Connect.Collect[code] = new Collect(code, access);
+                else
+                    foreach (var param in code.Split(';'))
+                        Connect.Collect[param] = new Collect(param, access);
             }
         }
+        public void TransmitStringData(string code) => BeginInvoke(new Action(async () =>
+        {
+            if (Connect.Collect != null && Connect.Collect.TryGetValue(code, out Collect collect))
+                await collect.TransmitStringData();
+        }));
         public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
             if (Connect.TR.Add(new OPT50010
