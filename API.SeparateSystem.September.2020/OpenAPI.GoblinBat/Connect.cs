@@ -234,6 +234,18 @@ namespace ShareInvest.OpenAPI
                     new 선물옵션우선호가
                     {
                         API = axAPI
+                    },
+                    new 선물호가잔량
+                    {
+                        API = axAPI
+                    },
+                    new 옵션시세
+                    {
+                        API = axAPI
+                    },
+                    new 옵션호가잔량
+                    {
+                        API = axAPI
                     }
                 };
                 Chejan = new Dictionary<string, Chejan>()

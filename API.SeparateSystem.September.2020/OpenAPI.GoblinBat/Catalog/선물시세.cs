@@ -15,6 +15,16 @@ namespace ShareInvest.OpenAPI.Catalog
                 var param = base.OnReceiveRealData(e, fid);
                 new Task(() => hs.OnReceiveEvent(param)).Start();
             }
+            if (Connect.Collect != null && Connect.Collect.TryGetValue(e.sRealKey, out Analysis.OpenAPI.Collect collect))
+            {
+                var temp = base.OnReceiveRealData(e, fid);
+
+                if (int.TryParse(temp[6], out int volume) && volume != 0)
+                {
+                    collect.ToCollect(temp[0]);
+                    collect.Data.Append(temp[1]).Append(';').Append(temp[6]).Append('|');
+                }
+            }
         }
         internal override AxKHOpenAPI API
         {
