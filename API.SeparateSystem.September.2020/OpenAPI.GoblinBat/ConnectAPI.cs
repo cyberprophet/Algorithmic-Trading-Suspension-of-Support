@@ -154,20 +154,39 @@ namespace ShareInvest.OpenAPI
 
             if (string.IsNullOrEmpty(access) == false)
             {
-                if (Connect.Collect == null)
-                    Connect.Collect = new Dictionary<string, Collect>();
+                if (Connect.Stocks == null)
+                    Connect.Stocks = new Dictionary<string, Collect>();
 
-                if (code.Length == 8)
-                    Connect.Collect[code] = new Collect(code, access);
+                if (Connect.Futures == null)
+                    Connect.Futures = new Dictionary<string, Collect>();
+
+                if (Connect.Options == null)
+                    Connect.Options = new Dictionary<string, Collect>();
+
+                if (code.Length == 8 && code[0].Equals('1'))
+                    Connect.Futures[code] = new Collect(code, access);
+
+                else if (code.Length == 8 && (code[0].Equals('2') || code[0].Equals('3')))
+                    Connect.Options[code] = new Collect(code, access);
 
                 else
                     foreach (var param in code.Split(';'))
-                        Connect.Collect[param] = new Collect(param, access);
+                        Connect.Stocks[param] = new Collect(param, access);
             }
         }
-        public void TransmitStringData(string code) => BeginInvoke(new Action(async () =>
+        public void TransmitFuturesData(string code) => BeginInvoke(new Action(async () =>
         {
-            if (Connect.Collect != null && Connect.Collect.TryGetValue(code, out Collect collect))
+            if (Connect.Futures != null && Connect.Futures.TryGetValue(code, out Collect collect))
+                await collect.TransmitStringData();
+        }));
+        public void TransmitOptionsData(string code) => BeginInvoke(new Action(async () =>
+        {
+            if (Connect.Options != null && Connect.Options.TryGetValue(code, out Collect collect))
+                await collect.TransmitStringData();
+        }));
+        public void TransmitStocksData(string code) => BeginInvoke(new Action(async () =>
+        {
+            if (Connect.Stocks != null && Connect.Stocks.TryGetValue(code, out Collect collect))
                 await collect.TransmitStringData();
         }));
         public IAccountInformation SetPrivacy(IAccountInformation privacy)

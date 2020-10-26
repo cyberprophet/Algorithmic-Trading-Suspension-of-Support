@@ -959,7 +959,7 @@ namespace ShareInvest
                     code = futures[random.Next(0, futures.Count)];
 
                 if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(code) == false)
-                    api.TransmitStringData(code);
+                    api.TransmitFuturesData(code);
 
                 return code;
             }
@@ -971,7 +971,7 @@ namespace ShareInvest
                 var retention = await client.GetContext(options[random.Next(0, options.Count)]);
 
                 if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(retention.Code) == false)
-                    api.TransmitStringData(retention.Code);
+                    api.TransmitOptionsData(retention.Code);
 
                 if (options.Remove(retention.Code))
                 {
@@ -1001,7 +1001,7 @@ namespace ShareInvest
                 var now = DateTime.Now;
 
                 if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(retention.Code) == false)
-                    api.TransmitStringData(retention.Code);
+                    api.TransmitStocksData(retention.Code);
 
                 if (stocks.Remove(retention.Code))
                 {

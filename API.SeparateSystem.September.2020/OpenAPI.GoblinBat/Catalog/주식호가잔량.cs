@@ -18,16 +18,17 @@ namespace ShareInvest.OpenAPI.Catalog
                     hs.Bid = bid;
                 }
             }
-            if (Connect.Collect != null && Connect.Collect.TryGetValue(e.sRealKey, out Analysis.OpenAPI.Collect collect))
+            if (Connect.Stocks != null && Connect.Stocks.TryGetValue(e.sRealKey, out Analysis.OpenAPI.Collect collect))
             {
-                var temp = base.OnReceiveRealData(e, fid);
+                int i = 0;
+                var time = API.GetCommRealData(e.sRealKey, fid[i]);
 
-                if (string.Compare(temp[0], initiate) > 0 && string.Compare(temp[0], closing) < 0)
+                if (string.Compare(time, initiate) > i && string.Compare(time, closing) < i)
                 {
-                    collect.ToCollect(temp[0]);
+                    collect.ToCollect(time);
 
-                    for (int i = 0; i < 0x40; i++)
-                        collect.Data.Append(temp[i + 1]).Append(';');
+                    for (i = 0; i < 0x40; i++)
+                        collect.Data.Append(API.GetCommRealData(e.sRealKey, fid[i + 1])).Append(';');
 
                     collect.Data.Replace(';', '|', collect.Data.Length - 1, 1);
                 }

@@ -19,14 +19,14 @@ namespace ShareInvest.OpenAPI.Catalog
                 var param = base.OnReceiveRealData(e, fid);
                 new Task(() => hs.OnReceiveEvent(param)).Start();
             }
-            if (Connect.Collect != null && Connect.Collect.TryGetValue(e.sRealKey, out Analysis.OpenAPI.Collect collect))
+            if (Connect.Options != null && Connect.Options.TryGetValue(e.sRealKey, out Analysis.OpenAPI.Collect collect))
             {
-                var temp = base.OnReceiveRealData(e, fid);
+                var temp = API.GetCommRealData(e.sRealKey, fid[6]);
 
-                if (int.TryParse(temp[6], out int volume) && volume != 0)
+                if (int.TryParse(temp, out int volume) && volume != 0)
                 {
-                    collect.ToCollect(temp[0]);
-                    collect.Data.Append(temp[1]).Append(';').Append(temp[6]).Append('|');
+                    collect.ToCollect(API.GetCommRealData(e.sRealKey, fid[0]));
+                    collect.Data.Append(API.GetCommRealData(e.sRealKey, fid[1])).Append(';').Append(temp).Append('|');
                 }
             }
         }

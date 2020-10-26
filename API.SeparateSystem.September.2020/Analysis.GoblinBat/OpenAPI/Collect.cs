@@ -43,8 +43,8 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             this.code = code;
             Time = DateTime.Now.ToString("HHmmss");
-            Date = new StringBuilder(grant.Length);
-            Data = new StringBuilder(grant.Length * code.Length);
+            Date = new StringBuilder(code.Length);
+            Data = new StringBuilder(grant.Length * Time.Length);
             client = new Client.Collect(grant);
         }
         readonly string code;
