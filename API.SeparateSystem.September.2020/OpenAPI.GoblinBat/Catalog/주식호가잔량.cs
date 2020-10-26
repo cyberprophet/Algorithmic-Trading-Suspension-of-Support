@@ -1,4 +1,6 @@
-﻿using AxKHOpenAPILib;
+﻿using System.Text;
+
+using AxKHOpenAPILib;
 
 using ShareInvest.Analysis;
 
@@ -25,12 +27,12 @@ namespace ShareInvest.OpenAPI.Catalog
 
                 if (string.Compare(time, initiate) > i && string.Compare(time, closing) < i)
                 {
-                    collect.ToCollect(time);
+                    var sb = new StringBuilder();
 
                     for (i = 0; i < 0x40; i++)
-                        collect.Data.Append(API.GetCommRealData(e.sRealKey, fid[i + 1])).Append(';');
+                        sb.Append(API.GetCommRealData(e.sRealKey, fid[i + 1])).Append(';');
 
-                    collect.Data.Replace(';', '|', collect.Data.Length - 1, 1);
+                    collect.ToCollect(time, sb.Remove(sb.Length - 1, 1));
                 }
             }
         }

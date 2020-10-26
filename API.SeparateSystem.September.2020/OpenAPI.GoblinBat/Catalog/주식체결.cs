@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Text;
+using System.Threading.Tasks;
 
 using AxKHOpenAPILib;
 
@@ -21,15 +22,14 @@ namespace ShareInvest.OpenAPI.Catalog
             }
             if (Connect.Stocks != null && Connect.Stocks.TryGetValue(e.sRealKey, out Analysis.OpenAPI.Collect collect))
             {
-                var temp = API.GetCommRealData(e.sRealKey, fid[6]);
+                string temp = API.GetCommRealData(e.sRealKey, fid[6]), time = API.GetCommRealData(e.sRealKey, fid[0]);
 
-                if (int.TryParse(temp, out int volume) && volume != 0)
-                {
-                    collect.ToCollect(API.GetCommRealData(e.sRealKey, fid[0]));
-                    collect.Data.Append(API.GetCommRealData(e.sRealKey, fid[1])).Append(';').Append(temp).Append('|');
-                }
+                if (string.Compare(time, initiate) > 0 && string.Compare(time, closing) < 0 && int.TryParse(temp, out int volume) && volume != 0)
+                    collect.ToCollect(time, new StringBuilder(API.GetCommRealData(e.sRealKey, fid[1])).Append(';').Append(temp));
             }
         }
+        const string initiate = "085959";
+        const string closing = "153959";
         readonly int[] fid = new int[] { 20, 10, 11, 12, 27, 28, 15, 13, 14, 16, 17, 18, 25, 26, 29, 30, 31, 32, 228, 311, 290, 691, 567, 568 };
     }
 }
