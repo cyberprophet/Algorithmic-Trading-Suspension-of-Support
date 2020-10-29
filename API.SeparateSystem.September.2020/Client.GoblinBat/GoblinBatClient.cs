@@ -103,7 +103,28 @@ namespace ShareInvest.Client
                         return JsonConvert.DeserializeObject<string>(request.Item1);
 
                     else
-                        return JsonConvert.DeserializeObject<IEnumerable<Charts>>(request.Item1);
+                    {
+                        var enumerable = JsonConvert.DeserializeObject<IEnumerable<Charts>>(request.Item1);
+
+                        if (string.IsNullOrEmpty(chart.Start) == false && string.IsNullOrEmpty(chart.End) == false)
+                        {
+                            if (Environment.Is64BitProcess && enumerable.First().Volume > 0)
+                            {
+                                var file = security.RequestDaysExists(chart);
+
+                                if (file.Item1 == false && await security.RequestDaysAsync(file.Item2, enumerable) is int count)
+                                    SendMessage(count);
+                            }
+                            else if (enumerable.First().Volume > 0)
+                            {
+                                var file = security.RequestDaysExists(chart);
+
+                                if (file.Item1 && await security.RequestDaysAsync(file.Item2) is string contents)
+                                    return JsonConvert.DeserializeObject<IEnumerable<Charts>>(contents);
+                            }
+                        }
+                        return enumerable;
+                    }
                 }
                 else
                 {

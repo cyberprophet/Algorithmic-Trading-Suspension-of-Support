@@ -148,47 +148,43 @@ namespace ShareInvest.OpenAPI
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
-        public void SetToCollect(string code)
+        public IEnumerable<Collect> SetToCollect(string code)
         {
             var access = new Security().GetGrantAccess(privacy.Security);
 
             if (string.IsNullOrEmpty(access) == false)
             {
-                if (Connect.Stocks == null)
-                    Connect.Stocks = new Dictionary<string, Collect>();
+                if (Connect.Collection == null)
+                {
+                    Connect.Collection = new Dictionary<string, Collect>();
+                    Access = access;
+                }
+                if (code.Length == 8)
+                {
+                    if (Connect.Collection.ContainsKey(code) == false)
+                    {
+                        var collect = new Collect(code);
+                        Connect.Collection[code] = collect;
 
-                if (Connect.Futures == null)
-                    Connect.Futures = new Dictionary<string, Collect>();
-
-                if (Connect.Options == null)
-                    Connect.Options = new Dictionary<string, Collect>();
-
-                if (code.Length == 8 && code[0].Equals('1'))
-                    Connect.Futures[code] = new Collect(code, access);
-
-                else if (code.Length == 8 && (code[0].Equals('2') || code[0].Equals('3')))
-                    Connect.Options[code] = new Collect(code, access);
-
+                        yield return collect;
+                    }
+                }
                 else
                     foreach (var param in code.Split(';'))
-                        Connect.Stocks[param] = new Collect(param, access);
+                        if (Connect.Collection.ContainsKey(param) == false)
+                        {
+                            var collect = new Collect(param);
+                            Connect.Collection[param] = collect;
+
+                            yield return collect;
+                        }
             }
         }
-        public void TransmitFuturesData(string code) => BeginInvoke(new Action(async () =>
+        public void SendTransmitCommand(string code)
         {
-            if (Connect.Futures != null && Connect.Futures.TryGetValue(code, out Collect collect))
-                await collect.TransmitStringData();
-        }));
-        public void TransmitOptionsData(string code) => BeginInvoke(new Action(async () =>
-        {
-            if (Connect.Options != null && Connect.Options.TryGetValue(code, out Collect collect))
-                await collect.TransmitStringData();
-        }));
-        public void TransmitStocksData(string code) => BeginInvoke(new Action(async () =>
-        {
-            if (Connect.Stocks != null && Connect.Stocks.TryGetValue(code, out Collect collect))
-                await collect.TransmitStringData();
-        }));
+            if (Connect.Collection != null && Connect.Collection.TryGetValue(code, out Collect collect))
+                collect.SendTransmitCommand(code);
+        }
         public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
             if (Connect.TR.Add(new OPT50010
@@ -561,6 +557,10 @@ namespace ShareInvest.OpenAPI
             }
         }
         public dynamic API
+        {
+            get; private set;
+        }
+        public string Access
         {
             get; private set;
         }

@@ -196,15 +196,7 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
-        internal static Dictionary<string, Analysis.OpenAPI.Collect> Stocks
-        {
-            get; set;
-        }
-        internal static Dictionary<string, Analysis.OpenAPI.Collect> Futures
-        {
-            get; set;
-        }
-        internal static Dictionary<string, Analysis.OpenAPI.Collect> Options
+        internal static Dictionary<string, Analysis.OpenAPI.Collect> Collection
         {
             get; set;
         }

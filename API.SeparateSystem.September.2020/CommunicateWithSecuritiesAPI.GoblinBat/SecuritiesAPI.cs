@@ -141,6 +141,18 @@ namespace ShareInvest
                             SendMessage(string.Concat(kc.Item1, kc.Item2));
                             return;
 
+                        case Tuple<string, Stack<Catalog.Request.Collect>> collect:
+                            if (collect.Item2 != null && await Collection.PostContextAsync(collect.Item1, collect.Item2) is string count)
+                                SendMessage(string.Concat(collect.Item1, '_', count));
+
+                            return;
+
+                        case Tuple<Queue<Catalog.Request.Collect>, string> collection:
+                            if (collection.Item1.Count > 0 && await Collection.PostContextAsync(collection.Item1, collection.Item2) is string str)
+                                SendMessage(string.Concat(collection.Item2, '_', str));
+
+                            return;
+
                         case Tuple<string, string, string> code:
                             infoCodes[code.Item1] = new Codes
                             {
@@ -468,7 +480,7 @@ namespace ShareInvest
             ISecuritiesAPI<SendSecuritiesAPI> connect = null;
             var catalog = new Dictionary<string, IStrategics>();
 
-            if (privacy.CodeStrategics is string cStrategics)
+            if (privacy.CodeStrategics is string cStrategics && string.IsNullOrEmpty(cStrategics) == false)
                 foreach (var strategics in cStrategics?.Split(';'))
                 {
                     var stParam = strategics?.Split(strategics[2].Equals('|') ? '|' : '.');
@@ -844,7 +856,7 @@ namespace ShareInvest
                     notifyIcon.Text = UserName;
             }
         }
-        void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(() =>
+        void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(async () =>
         {
             if (e.ClickedItem.Name.Equals(st))
             {
@@ -889,12 +901,23 @@ namespace ShareInvest
                             ctor.WaitOrder = true;
                         }
                         if (Connect == int.MaxValue)
+                        {
                             while (Stack.Count > 0)
                             {
                                 var pop = Stack.Pop();
                                 openAPI.InputValueRqData(pop.Length == 8 ? opt50001 : optkwFID, pop).Send -= OnReceiveSecuritiesAPI;
-                                openAPI.SetToCollect(pop);
+
+                                foreach (var ctor in openAPI.SetToCollect(pop))
+                                    ctor.Send += OnReceiveSecuritiesAPI;
                             }
+                            if (string.IsNullOrEmpty(openAPI.Access) == false)
+                            {
+                                Collection = new Collect(openAPI.Access);
+
+                                if (await Collection.GetContextAsync(new Catalog.Request.Collect()) is string str)
+                                    SendMessage(str);
+                            }
+                        }
                     }
                     Connect = int.MinValue;
                     Size = new Size(0x3B8, 0x63 + 0x28);
@@ -959,7 +982,7 @@ namespace ShareInvest
                     code = futures[random.Next(0, futures.Count)];
 
                 if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(code) == false)
-                    api.TransmitFuturesData(code);
+                    api.SendTransmitCommand(code);
 
                 return code;
             }
@@ -971,7 +994,7 @@ namespace ShareInvest
                 var retention = await client.GetContext(options[random.Next(0, options.Count)]);
 
                 if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(retention.Code) == false)
-                    api.TransmitOptionsData(retention.Code);
+                    api.SendTransmitCommand(retention.Code);
 
                 if (options.Remove(retention.Code))
                 {
@@ -1001,7 +1024,7 @@ namespace ShareInvest
                 var now = DateTime.Now;
 
                 if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(retention.Code) == false)
-                    api.TransmitStocksData(retention.Code);
+                    api.SendTransmitCommand(retention.Code);
 
                 if (stocks.Remove(retention.Code))
                 {
@@ -1153,6 +1176,10 @@ namespace ShareInvest
             get; set;
         }
         Stack<string> Stocks
+        {
+            get; set;
+        }
+        Collect Collection
         {
             get; set;
         }

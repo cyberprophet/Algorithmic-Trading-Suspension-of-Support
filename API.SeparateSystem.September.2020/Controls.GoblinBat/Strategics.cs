@@ -809,7 +809,7 @@ namespace ShareInvest.Controls
                         SecuritiesAPI = Privacy.SecuritiesAPI,
                         SecurityAPI = Privacy.SecurityAPI,
                         Account = Privacy.Account,
-                        CodeStrategics = sb.Remove(sb.Length - 1, 1).ToString(),
+                        CodeStrategics = sb.Length > 0 ? sb.Remove(sb.Length - 1, 1).ToString() : string.Empty,
                         Commission = commission / 0x64,
                         Coin = Privacy.Coin + GoblinBatClient.Coin
                     }))

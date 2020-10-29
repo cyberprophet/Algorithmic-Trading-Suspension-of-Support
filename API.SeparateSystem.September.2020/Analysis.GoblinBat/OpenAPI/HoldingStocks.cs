@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 
 using ShareInvest.Catalog;
 using ShareInvest.EventHandler;
@@ -177,12 +178,17 @@ namespace ShareInvest.Analysis.OpenAPI
         public override void OnReceiveEvent(string[] param)
         {
             if (int.TryParse(param[6], out int volume))
+            {
+                slim.Wait();
                 SendConsecutive?.Invoke(this, new SendConsecutive(new Charts
                 {
                     Date = param[0],
                     Price = param[1].StartsWith("-") ? param[1].Substring(1) : param[1],
                     Volume = volume
                 }));
+                if (slim.Release() > 0)
+                    Console.WriteLine(string.Concat(GetType().FullName, '_', Code));
+            }
             if (param.Length == 0x20 && double.TryParse(param[1].StartsWith("-") ? param[1].Substring(1) : param[1], out double price))
             {
                 Current = price;
@@ -349,6 +355,7 @@ namespace ShareInvest.Analysis.OpenAPI
         const string cancellantion = "취소";
         const string correction = "정정";
         readonly dynamic strategics;
+        readonly SemaphoreSlim slim = new SemaphoreSlim(1);
         public event EventHandler<SendConsecutive> SendConsecutive;
         public override event EventHandler<SendSecuritiesAPI> SendBalance;
         public override event EventHandler<SendHoldingStocks> SendStocks;

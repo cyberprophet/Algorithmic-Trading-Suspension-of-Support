@@ -3,6 +3,7 @@
 using AxKHOpenAPILib;
 
 using ShareInvest.Analysis;
+using ShareInvest.Analysis.OpenAPI;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
@@ -20,10 +21,10 @@ namespace ShareInvest.OpenAPI.Catalog
                     hs.Bid = bid;
                 }
             }
-            if (Connect.Stocks != null && Connect.Stocks.TryGetValue(e.sRealKey, out Analysis.OpenAPI.Collect collect))
+            if (Connect.Collection != null && Connect.Collection.TryGetValue(e.sRealKey, out Collect collect))
             {
                 int i = 0;
-                var time = API.GetCommRealData(e.sRealKey, fid[i]);
+                string time = API.GetCommRealData(e.sRealKey, fid[i]), index = string.Concat(time, collect.GetTime(time[time.Length - 2]));
 
                 if (string.Compare(time, initiate) > i && string.Compare(time, closing) < i)
                 {
@@ -32,7 +33,7 @@ namespace ShareInvest.OpenAPI.Catalog
                     for (i = 0; i < 0x40; i++)
                         sb.Append(API.GetCommRealData(e.sRealKey, fid[i + 1])).Append(';');
 
-                    collect.ToCollect(time, sb.Remove(sb.Length - 1, 1));
+                    collect.ToCollect(index, sb.Remove(sb.Length - 1, 1));
                 }
             }
         }

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AxKHOpenAPILib;
 
 using ShareInvest.Analysis;
+using ShareInvest.Analysis.OpenAPI;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
@@ -20,12 +21,12 @@ namespace ShareInvest.OpenAPI.Catalog
                 var param = base.OnReceiveRealData(e, fid);
                 new Task(() => hs.OnReceiveEvent(param)).Start();
             }
-            if (Connect.Options != null && Connect.Options.TryGetValue(e.sRealKey, out Analysis.OpenAPI.Collect collect))
+            if (Connect.Collection != null && Connect.Collection.TryGetValue(e.sRealKey, out Collect collect))
             {
                 string temp = API.GetCommRealData(e.sRealKey, fid[6]), time = API.GetCommRealData(e.sRealKey, fid[0]);
 
                 if (string.Compare(time, initiate) > 0 && string.Compare(time, closing) < 0 && int.TryParse(temp, out int volume) && volume != 0)
-                    collect.ToCollect(time, new StringBuilder(API.GetCommRealData(e.sRealKey, fid[1])).Append(';').Append(temp));
+                    collect.ToCollect(string.Concat(time, collect.GetTime(time[time.Length - 1])), new StringBuilder(API.GetCommRealData(e.sRealKey, fid[1])).Append(';').Append(temp));
             }
         }
         const string initiate = "085959";

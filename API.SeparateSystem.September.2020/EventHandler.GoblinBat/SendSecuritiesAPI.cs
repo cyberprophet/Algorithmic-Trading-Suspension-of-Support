@@ -33,6 +33,8 @@ namespace ShareInvest.EventHandler
             else
                 Convey = cme;
         }
+        public SendSecuritiesAPI(string code, Stack<Catalog.Request.Collect> collection) => Convey = new Tuple<string, Stack<Catalog.Request.Collect>>(code, collection);
+        public SendSecuritiesAPI(Queue<Catalog.Request.Collect> collection, string code) => Convey = new Tuple<Queue<Catalog.Request.Collect>, string>(collection, code);
         public SendSecuritiesAPI(Catalog.XingAPI.Order order) => Convey = order;
         public SendSecuritiesAPI(Stack<Catalog.OpenAPI.RevisedStockPrice> days, string code) => Convey = new Tuple<string, Stack<Catalog.OpenAPI.RevisedStockPrice>>(code, days);
         public SendSecuritiesAPI(Tuple<int, string, int, int, string> order) => Convey = order;
