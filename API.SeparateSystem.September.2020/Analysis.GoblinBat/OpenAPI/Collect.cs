@@ -16,8 +16,8 @@ namespace ShareInvest.Analysis.OpenAPI
                 Date = time,
                 Datum = data.ToString()
             });
-            if (Collection.Count > 0 && Collection.Count % 0xFA0 == 0)
-                SendTransmitCommand(new SendSecuritiesAPI(Clone, code));
+            if (Collection.Count > 0 && Collection.Count % 0xBB8 == 0)
+                Send?.Invoke(this, new SendSecuritiesAPI(Clone, code));
         }
         public void SendTransmitCommand(string code)
         {
@@ -47,7 +47,6 @@ namespace ShareInvest.Analysis.OpenAPI
         {
             get; set;
         }
-        void SendTransmitCommand(SendSecuritiesAPI collection) => Send?.Invoke(this, collection);
         Queue<Catalog.Request.Collect> Clone
         {
             get

@@ -625,7 +625,7 @@ namespace ShareInvest
                             Stack.Push(code);
                             o.InputValueRqData(string.Concat(instance, code.Length == 8 ? opt50001 : optkwFID), code).Send += OnReceiveSecuritiesAPI;
                         }
-                    if (privacy.Account.Equals("S") && await client.GetContext(new Catalog.Request.SatisfyConditions { Security = privacy.Security }) is Catalog.Request.SatisfyConditions condition)
+                    if (string.IsNullOrEmpty(privacy.Account) == false && privacy.Account.Equals("S") && await client.GetContext(new Catalog.Request.SatisfyConditions { Security = privacy.Security }) is Catalog.Request.SatisfyConditions condition)
                     {
                         var strategics = new Dictionary<string, Tuple<int, double, double, double, double, double, double>>();
                         var stack = new Stack<Catalog.Request.Consensus>();

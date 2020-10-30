@@ -32,10 +32,13 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestToCollect(code, storage.Peek()), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(storage), ParameterType.RequestBody), source.Token);
+                if (storage.Count > 0)
+                {
+                    var response = await client.ExecuteAsync(new RestRequest(security.RequestToCollect(code, storage.Peek()), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(storage), ParameterType.RequestBody), source.Token);
 
-                if (response.StatusCode.Equals(HttpStatusCode.OK))
-                    return JsonConvert.DeserializeObject<string>(response.Content);
+                    if (response.StatusCode.Equals(HttpStatusCode.OK))
+                        return JsonConvert.DeserializeObject<string>(response.Content);
+                }
             }
             catch (Exception ex)
             {
