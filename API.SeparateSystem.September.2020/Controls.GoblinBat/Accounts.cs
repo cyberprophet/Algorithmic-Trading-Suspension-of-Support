@@ -8,7 +8,7 @@ namespace ShareInvest.Controls
     {
         void ButtonStartProgressClick(object sender, EventArgs e)
         {
-            if (textPassword.TextLength == 4 && comboAccounts.SelectedItem is string str)
+            if (textPassword.TextLength == 4 && comboAccounts.SelectedItem is string str && string.IsNullOrEmpty(str) == false)
             {
                 Send?.Invoke(this, new EventHandler.SendSecuritiesAPI(this, str, textPassword.Text));
 

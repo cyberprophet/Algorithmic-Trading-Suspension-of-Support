@@ -26,7 +26,7 @@ namespace ShareInvest.OpenAPI.Catalog
                 string temp = API.GetCommRealData(e.sRealKey, fid[6]), time = API.GetCommRealData(e.sRealKey, fid[0]);
 
                 if (string.Compare(time, initiate) > 0 && string.Compare(time, closing) < 0 && int.TryParse(temp, out int volume) && volume != 0)
-                    collect.ToCollect(string.Concat(time, collect.GetTime(time[time.Length - 1])), new StringBuilder(API.GetCommRealData(e.sRealKey, fid[1])).Append(';').Append(temp));
+                    collect.ToCollect(string.Concat(time, collect.GetTime(time[time.Length - 1]).ToString("D3")), new StringBuilder(API.GetCommRealData(e.sRealKey, fid[1])).Append(';').Append(temp));
             }
         }
         const string initiate = "085959";

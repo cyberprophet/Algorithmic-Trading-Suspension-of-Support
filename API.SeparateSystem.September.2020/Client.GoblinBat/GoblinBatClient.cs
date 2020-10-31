@@ -867,6 +867,7 @@ namespace ShareInvest.Client
             }
             return int.MinValue;
         }
+        public bool InternalAccess => security.InternalAccess;
         static GoblinBatClient Client
         {
             get; set;

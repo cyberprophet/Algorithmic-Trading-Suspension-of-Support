@@ -471,7 +471,7 @@ namespace ShareInvest
                 notifyIcon.Text = loading;
                 backgroundWorker.RunWorkerAsync(Info.Nick);
 
-                if (privacy.SecuritiesAPI.Equals("O") && privacy.SecuritiesAPI.Equals("X"))
+                if (string.IsNullOrEmpty(privacy.SecuritiesAPI) == false && privacy.SecuritiesAPI.Equals("O") && privacy.SecuritiesAPI.Equals("X"))
                     OnReceiveData(MessageBox.Show("This is a Temporary Code.", "Emergency", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
             }
         }

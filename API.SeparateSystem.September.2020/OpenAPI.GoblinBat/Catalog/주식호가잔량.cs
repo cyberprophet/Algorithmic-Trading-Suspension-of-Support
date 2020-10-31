@@ -24,7 +24,7 @@ namespace ShareInvest.OpenAPI.Catalog
             if (Connect.Collection != null && Connect.Collection.TryGetValue(e.sRealKey, out Collect collect))
             {
                 int i = 0;
-                string time = API.GetCommRealData(e.sRealKey, fid[i]), index = string.Concat(time, collect.GetTime(time[time.Length - 2]));
+                string time = API.GetCommRealData(e.sRealKey, fid[i]), index = string.Concat(time, collect.GetTime(time[time.Length - 2]).ToString("D3"));
 
                 if (string.Compare(time, initiate) > i && string.Compare(time, closing) < i)
                 {

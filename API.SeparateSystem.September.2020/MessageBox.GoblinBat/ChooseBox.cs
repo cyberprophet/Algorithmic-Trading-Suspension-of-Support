@@ -66,7 +66,7 @@ namespace ShareInvest.Message
         static string yes;
         static string cancel;
         static string no;
-        const string admin = "GoblinBat";
-        const string welcome = "Welcome to the GoblinBat";
+        const string admin = "Algorithmic Trading";
+        const string welcome = "Welcome to the Algorithmic Trading";
     }
 }

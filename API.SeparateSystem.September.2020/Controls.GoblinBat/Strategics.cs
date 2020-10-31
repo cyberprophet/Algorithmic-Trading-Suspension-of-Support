@@ -429,7 +429,7 @@ namespace ShareInvest.Controls
         public async Task<string> SetPrivacy(Privacies privacy)
         {
             Privacy = privacy;
-            string str = "도깨비방망이";
+            string str = "Algorithmic Trading";
 
             if (string.IsNullOrEmpty(privacy.Account) == false)
             {
