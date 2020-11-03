@@ -22,7 +22,7 @@ namespace ShareInvest.Analysis.OpenAPI
         public void SendTransmitCommand(string code)
         {
             if (this.code.Equals(code))
-                Send?.Invoke(this, new SendSecuritiesAPI(code, Collection));
+                Send?.Invoke(this, new SendSecuritiesAPI(code, FinalClone));
         }
         public uint GetTime(char time)
         {
@@ -39,6 +39,7 @@ namespace ShareInvest.Analysis.OpenAPI
             Time = 'A';
             Collection = new Stack<Catalog.Request.Collect>(0x9C5);
         }
+        public int Count => Collection.Count;
         char Time
         {
             get; set;
@@ -46,6 +47,18 @@ namespace ShareInvest.Analysis.OpenAPI
         uint Index
         {
             get; set;
+        }
+        Stack<Catalog.Request.Collect> FinalClone
+        {
+            get
+            {
+                var stack = new Stack<Catalog.Request.Collect>();
+
+                while (Collection.Count > 0)
+                    stack.Push(Collection.Pop());
+
+                return stack;
+            }
         }
         Queue<Catalog.Request.Collect> Clone
         {

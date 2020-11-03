@@ -185,6 +185,13 @@ namespace ShareInvest.OpenAPI
             if (Connect.Collection != null && Connect.Collection.TryGetValue(code, out Collect collect))
                 collect.SendTransmitCommand(code);
         }
+        public void SendTransmitCommand()
+        {
+            if (Connect.Collection != null)
+                foreach (var kv in Connect.Collection)
+                    if (kv.Value.Count > 0)
+                        kv.Value.SendTransmitCommand(kv.Key);
+        }
         public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
             if (Connect.TR.Add(new OPT50010

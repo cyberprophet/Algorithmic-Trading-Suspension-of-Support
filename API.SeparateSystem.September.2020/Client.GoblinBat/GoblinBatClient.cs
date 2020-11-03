@@ -51,19 +51,44 @@ namespace ShareInvest.Client
             }
             return null;
         }
-        public async Task<Queue<string>> GetContextAsync(string code, string date)
+        public async Task<Queue<Catalog.Request.Collect>> GetContextAsync(string code, string date)
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestToCollect(code, date), Method.GET), source.Token);
+                var file = security.RequestToCollect(code, date);
 
-                if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                if (file.Item1)
+                    return JsonConvert.DeserializeObject<Queue<Catalog.Request.Collect>>(file.Item2);
+
+                else
                 {
-                    Coin += security.GetSettleTheFare(response.RawBytes.Length);
-                    SendMessage(Coin);
+                    var response = await client.ExecuteAsync(new RestRequest(file.Item2, Method.GET), source.Token);
+
+                    if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
+                    {
+                        Coin += security.GetSettleTheFare(response.RawBytes.Length);
+                        SendMessage(Coin);
+                    }
+                    if (response.StatusCode.Equals(HttpStatusCode.OK))
+                        switch (baseDate.CompareTo(date))
+                        {
+                            case int baseDate when baseDate < 0:
+                                return JsonConvert.DeserializeObject<Queue<Catalog.Request.Collect>>(response.Content);
+
+                            case 0:
+                                var queue = new Queue<Catalog.Request.Collect>();
+
+                                foreach (var param in JArray.Parse(JsonConvert.DeserializeObject<string>(response.Content)))
+                                    queue.Enqueue(new Catalog.Request.Collect
+                                    {
+                                        Date = param.Value<string>("Key"),
+                                        Datum = param.Value<string>("Value")
+                                    });
+                                await security.AskForStorageAsync(code, JsonConvert.SerializeObject(queue), date);
+
+                                return queue;
+                        }
                 }
-                if (response.StatusCode.Equals(HttpStatusCode.OK))
-                    return security.RequestCharts(JsonConvert.DeserializeObject<string>(response.Content));
             }
             catch (Exception ex)
             {
@@ -133,10 +158,8 @@ namespace ShareInvest.Client
                     if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                     {
                         if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString("yyMMdd")) < 0 || chart.End.Length < 6)
-                        {
-                            GC.Collect();
                             await security.Save(chart, response.Content);
-                        }
+
                         Coin += security.GetSettleTheFare(response.RawBytes.Length);
                         SendMessage(Coin);
                     }
@@ -903,6 +926,7 @@ namespace ShareInvest.Client
         {
             get; set;
         }
+        const string baseDate = "20201103";
         readonly CancellationTokenSource source;
         readonly Security security;
         readonly Random random;

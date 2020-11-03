@@ -1119,6 +1119,9 @@ namespace ShareInvest
             switch (com)
             {
                 case OpenAPI.ConnectAPI o:
+                    if (string.IsNullOrEmpty(o.Access) == false)
+                        o.SendTransmitCommand();
+
                     o.ConnectChapterOperation.Send -= OnReceiveSecuritiesAPI;
                     break;
 
