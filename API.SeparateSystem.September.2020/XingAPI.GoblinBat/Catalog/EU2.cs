@@ -19,8 +19,8 @@ namespace ShareInvest.XingAPI.Catalog
                 new Task(() => hs.OnReceiveConclusion(temp)).Start();
 
             var name = GetType().Name;
-            SendMessage(string.Concat(8, name, temp[8]));
-            SendMessage(string.Concat(37, name, temp[37]));
+            SendMessage(string.Concat(8, '_', name, '_', temp[8]));
+            SendMessage(string.Concat(37, '_', name, '_', temp[37]));
         }
         public void OnReceiveRealTime(string code)
         {

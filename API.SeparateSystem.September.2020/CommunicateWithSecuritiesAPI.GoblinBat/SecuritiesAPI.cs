@@ -845,7 +845,7 @@ namespace ShareInvest
                 var remain = new DateTime(now.Year, now.Month, now.Day, 9, 0, 0) - DateTime.Now;
                 com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
 
-                if (remain.TotalMinutes < 0x1F && com.Start == false && DateTime.Now.Hour == 8 && DateTime.Now.Minute > 0x1E && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B2))))
+                if (com.Start == false && (remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E || now.Hour == 0x11 && now.Minute > 0x31 && com is XingAPI.ConnectAPI && char.TryParse(privacy.SecuritiesAPI, out char api) && ((char)SecuritiesCOM.XingAPI).Equals(api) && char.TryParse(privacy.Account, out char account) && ((char)Strategics.TF).Equals(account)) && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B2))))
                     com.StartProgress();
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))

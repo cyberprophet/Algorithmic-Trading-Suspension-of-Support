@@ -66,6 +66,22 @@ namespace ShareInvest.Analysis.XingAPI
         }
         public override void OnReceiveConclusion(string[] param)
         {
+            switch (param[param.Length - 1])
+            {
+                case "EU0":
+                case "EU1":
+                    switch (param[37])
+                    {
+                        case "HO01":
+                            Console.WriteLine(param[37] + "_" + param.Length);
+                            break;
+
+                        case "CH01":
+                            Console.WriteLine(param[37] + "_" + param.Length);
+                            break;
+                    }
+                    break;
+            }
             if (param.Length == 0x2E && uint.TryParse(param[0xA], out uint order) && OrderNumber.Remove(order.ToString()) && param[0xD].Equals("2") && uint.TryParse(param[9], out uint number) && double.TryParse(param[0x10], out double price))
                 OrderNumber[number.ToString()] = price;
 
