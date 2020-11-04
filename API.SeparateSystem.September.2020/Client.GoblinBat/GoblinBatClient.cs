@@ -73,7 +73,10 @@ namespace ShareInvest.Client
                         switch (baseDate.CompareTo(date))
                         {
                             case int baseDate when baseDate < 0:
-                                return JsonConvert.DeserializeObject<Queue<Catalog.Request.Collect>>(response.Content);
+                                var collect = JsonConvert.DeserializeObject<string>(response.Content);
+                                await security.AskForStorageAsync(code, collect, date);
+
+                                return JsonConvert.DeserializeObject<Queue<Catalog.Request.Collect>>(collect);
 
                             case 0:
                                 var queue = new Queue<Catalog.Request.Collect>();

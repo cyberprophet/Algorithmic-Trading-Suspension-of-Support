@@ -1129,7 +1129,7 @@ namespace ShareInvest
                     x.JIF.Send -= OnReceiveSecuritiesAPI;
                     break;
             }
-            if (timer.Enabled)
+            if (timer != null && timer.Enabled)
                 timer.Stop();
 
             strip.ItemClicked -= OnItemClick;
