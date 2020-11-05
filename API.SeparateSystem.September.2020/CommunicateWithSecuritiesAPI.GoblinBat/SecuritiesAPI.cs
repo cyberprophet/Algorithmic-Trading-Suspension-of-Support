@@ -906,8 +906,22 @@ namespace ShareInvest
                             ctor.WaitOrder = true;
                         }
                         if (Connect == int.MaxValue)
+                        {
                             foreach (var convert in xingAPI.ConvertTheCodeToName)
                                 convert.Send -= OnReceiveSecuritiesAPI;
+
+                            if (xingAPI.ConvertTheCodeToName.Length == 1 && infoCodes.Count > 0)
+                                foreach (var ce in infoCodes)
+                                    xingAPI.SetToCollect(ce.Key).Send += OnReceiveSecuritiesAPI;
+
+                            if (string.IsNullOrEmpty(xingAPI.Access) == false)
+                            {
+                                Collection = new Collect(xingAPI.Access);
+
+                                if (await Collection.GetContextAsync(new Catalog.Request.Collect()) is string str)
+                                    SendMessage(str);
+                            }
+                        }
                     }
                     else if (com is OpenAPI.ConnectAPI openAPI)
                     {
@@ -1154,6 +1168,9 @@ namespace ShareInvest
                     break;
 
                 case XingAPI.ConnectAPI x:
+                    if (string.IsNullOrEmpty(x.Access) == false)
+                        x.SendTransmitCommand();
+
                     x.JIF.Send -= OnReceiveSecuritiesAPI;
                     break;
             }

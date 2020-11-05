@@ -24,6 +24,10 @@ namespace ShareInvest.XingAPI
         {
             get; private set;
         }
+        internal static Dictionary<string, Analysis.XingAPI.Collect> Collection
+        {
+            get; set;
+        }
         internal static Connect GetInstance() => API;
         internal static Connect GetInstance(Privacies privacy, ShareInvest.Catalog.XingAPI.LoadServer load)
         {

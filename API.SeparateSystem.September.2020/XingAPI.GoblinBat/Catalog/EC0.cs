@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 
 using ShareInvest.Analysis;
+using ShareInvest.Analysis.XingAPI;
 using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
@@ -17,6 +19,9 @@ namespace ShareInvest.XingAPI.Catalog
 
             if (Connect.HoldingStock.TryGetValue(temp[temp.Length - 2], out Holding hs))
                 new Task(() => hs.OnReceiveEvent(temp)).Start();
+
+            if (Connect.Collection != null && Connect.Collection.TryGetValue(temp[temp.Length - 2], out Collect collect))
+                collect.ToCollect(string.Concat(temp[temp.Length - 1], collect.GetTime(temp[temp.Length - 1][temp[temp.Length - 1].Length - 1]).ToString("D3")), new StringBuilder(temp[4]).Append(';').Append(string.Concat(temp[8], temp[9])));
         }
         public void OnReceiveRealTime(string code)
         {

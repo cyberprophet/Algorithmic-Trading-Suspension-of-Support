@@ -2,6 +2,7 @@
 using System.Text;
 
 using ShareInvest.Analysis;
+using ShareInvest.Analysis.XingAPI;
 using ShareInvest.Interface.XingAPI;
 
 namespace ShareInvest.XingAPI.Catalog
@@ -10,7 +11,7 @@ namespace ShareInvest.XingAPI.Catalog
     {
         protected internal override void OnReceiveRealData(string szTrCode)
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder(), collection = new StringBuilder();
 
             foreach (var param in Enum.GetValues(typeof(EH)))
             {
@@ -29,6 +30,15 @@ namespace ShareInvest.XingAPI.Catalog
             {
                 hs.Offer = offer;
                 hs.Bid = bid;
+            }
+            if (Connect.Collection != null && Connect.Collection.TryGetValue(str[0x22], out Collect collect))
+            {
+                for (int index = 0; index < str.Length; index++)
+                    if (index > 1 && index < 8 || index > 0xB && index < 0x12 || index == 0x1E || index == 0x1F)
+                        collection.Append(str[index]).Append(';');
+
+                string hotime = GetFieldData(OutBlock, string.Concat(EH.hotime, 1)), time = string.Concat(hotime, collect.GetTime(hotime[hotime.Length - 1]).ToString("D3"));
+                collect.ToCollect(time, collection.Remove(collection.Length - 1, 1));
             }
         }
         public void OnReceiveRealTime(string code)

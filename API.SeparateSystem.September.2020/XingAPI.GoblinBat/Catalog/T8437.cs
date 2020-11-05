@@ -68,7 +68,7 @@ namespace ShareInvest.XingAPI.Catalog
             {
                 case 1:
                 case 3:
-                    SendMessage(code[0], name[0]);
+                    api = new SendSecuritiesAPI(new Tuple<string, string>(code[0], name[0]));
                     break;
 
                 case 4:
