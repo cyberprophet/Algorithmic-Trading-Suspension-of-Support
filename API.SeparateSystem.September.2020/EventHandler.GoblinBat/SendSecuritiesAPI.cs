@@ -158,6 +158,11 @@ namespace ShareInvest.EventHandler
             else
                 Convey = tuple;
         }
+        public SendSecuritiesAPI(StringBuilder code)
+        {
+            var convey = code.ToString().Split(';');
+            Convey = new Tuple<string, string>(convey[0], convey[1]);
+        }
         public SendSecuritiesAPI(Catalog.Request.SatisfyConditions satisfy, Catalog.SatisfyConditionsAccordingToTrends condition) => Convey = new Tuple<Catalog.Request.SatisfyConditions, Catalog.SatisfyConditionsAccordingToTrends>(satisfy, condition);
         public SendSecuritiesAPI(int index, string name) => Convey = new Tuple<int, string>(index, name);
         static DateTime Span

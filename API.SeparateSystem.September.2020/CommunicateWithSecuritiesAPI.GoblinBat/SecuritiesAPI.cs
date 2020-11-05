@@ -188,6 +188,21 @@ namespace ShareInvest
                                 }
                             return;
 
+                        case Tuple<string, string> maturity:
+                            if (infoCodes.TryGetValue(maturity.Item1, out Codes mc) && com is XingAPI.ConnectAPI m)
+                            {
+                                m.StartProgress(new Codes
+                                {
+                                    Code = maturity.Item2,
+                                    Name = mc.Name,
+                                    MarginRate = mc.MarginRate,
+                                    Price = mc.Price,
+                                    MaturityMarketCap = string.Empty
+                                });
+                                SendMessage(string.Concat("Before_", maturity.Item1, "\tAfter_", maturity.Item2));
+                            }
+                            return;
+
                         case Tuple<string[], string[], string[], string[]> tuple:
                             for (int i = 0; i < tuple.Item1.Length; i++)
                                 if (int.TryParse(tuple.Item3[i], out int gubun))
@@ -274,7 +289,7 @@ namespace ShareInvest
                         case Tuple<byte, byte> tuple:
                             switch (tuple)
                             {
-                                case Tuple<byte, byte> tp when (tp.Item1 == 1 || tp.Item1 == 5 || tp.Item1 == 7) && tp.Item2 == 0x15 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && (tp.Item1 == 0 && tp.Item2 == 8 || tp.Item1 == 3 && tp.Item2 == 9):
+                                case Tuple<byte, byte> tp when (tp.Item1 == 1 || tp.Item1 == 5 || tp.Item1 == 7 || tp.Item1 == 8) && tp.Item2 == 0x15 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && (tp.Item1 == 0 && tp.Item2 == 8 || tp.Item1 == 3 && tp.Item2 == 9):
                                     if (WindowState.Equals(FormWindowState.Minimized))
                                         strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
 
@@ -287,6 +302,19 @@ namespace ShareInvest
                                     break;
 
                                 case Tuple<byte, byte> tp when tp.Item2 == 0x29 && tp.Item1 == 5 && com is XingAPI.ConnectAPI:
+                                    infoCodes.Clear();
+                                    var now = DateTime.Now.ToString(dFormat);
+
+                                    foreach (var next in await client.GetContext(new Codes(), 8) as List<Codes>)
+                                        if (next.Code[0].Equals('1') && now.Equals(next.MaturityMarketCap))
+                                            infoCodes[next.Code] = next;
+
+                                    if (infoCodes.Count > 0)
+                                        foreach (var maturity in (com as XingAPI.ConnectAPI)?.Maturity)
+                                        {
+                                            maturity.Send += OnReceiveSecuritiesAPI;
+                                            maturity.QueryExcute();
+                                        }
                                     retention = await SelectOptionsCodeAsync();
                                     chart = (com as XingAPI.ConnectAPI)?.Options;
                                     break;
@@ -296,7 +324,7 @@ namespace ShareInvest
                                     param = opt50028;
                                     break;
 
-                                case Tuple<byte, byte> tp when tp.Item2 == 0x19 && tp.Item1 == 7 && com is XingAPI.ConnectAPI || tp.Item1 == 0x64 && tp.Item2 > 0x10 && com is OpenAPI.ConnectAPI:
+                                case Tuple<byte, byte> tp when (tp.Item2 == 0x19 || tp.Item2 == 0x29) && (tp.Item1 == 7 || tp.Item1 == 8) && com is XingAPI.ConnectAPI || tp.Item1 == 0x64 && tp.Item2 > 0x10 && com is OpenAPI.ConnectAPI:
                                     Dispose(WindowState);
                                     return;
 
@@ -1132,7 +1160,9 @@ namespace ShareInvest
             if (timer != null && timer.Enabled)
                 timer.Stop();
 
-            strip.ItemClicked -= OnItemClick;
+            if (strip != null)
+                strip.ItemClicked -= OnItemClick;
+
             Dispose();
         }
         [Conditional("DEBUG")]

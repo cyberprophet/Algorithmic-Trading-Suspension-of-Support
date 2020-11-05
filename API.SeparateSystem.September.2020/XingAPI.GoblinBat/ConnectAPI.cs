@@ -159,6 +159,12 @@ namespace ShareInvest.XingAPI
         {
             get;
         }
+        public IQuerys<SendSecuritiesAPI>[] Maturity => new IQuerys<SendSecuritiesAPI>[]
+        {
+            new Maturity.T8401(),
+            new Maturity.T8432(),
+            new Maturity.T8435()
+        };
         public IQuerys<SendSecuritiesAPI>[] ConvertTheCodeToName => DistinguishBetweenDayAndNight(DateTime.Now) ? new IQuerys<SendSecuritiesAPI>[]
         {
             new T8430(),
