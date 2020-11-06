@@ -16,8 +16,14 @@ namespace ShareInvest.Analysis.OpenAPI
                 Date = time,
                 Datum = data.ToString()
             });
-            if (Collection.Count > 0 && Collection.Count % 0x9C4 == 0)
-                Send?.Invoke(this, new SendSecuritiesAPI(Clone, code));
+            if (Collection.Count > 0)
+            {
+                if (Collection.Count % 0x9C4 == 0)
+                    Send?.Invoke(this, new SendSecuritiesAPI(Clone, code));
+
+                else if (code.Length == 6 && time.Substring(0, 6).CompareTo(stocks) > 0 || code.Length == 8 && time.Substring(0, 6).CompareTo(futures) > 0)
+                    SendTransmitCommand(code);
+            }
         }
         public void SendTransmitCommand(string code)
         {
@@ -77,5 +83,7 @@ namespace ShareInvest.Analysis.OpenAPI
             get;
         }
         readonly string code;
+        const string stocks = "152959";
+        const string futures = "154459";
     }
 }

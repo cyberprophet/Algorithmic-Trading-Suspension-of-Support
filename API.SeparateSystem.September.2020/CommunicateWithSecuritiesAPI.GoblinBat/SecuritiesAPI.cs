@@ -707,34 +707,8 @@ namespace ShareInvest
             }
             foreach (var kv in catalog.OrderByDescending(o => o.Key))
                 if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0 && com is XingAPI.ConnectAPI xing)
-                {
-                    var reals = xing?.Reals;
-                    int c = 0, h = 1;
+                    RegisterRealTimeReceivingCode(xing?.Reals, kv.Key);
 
-                    switch (reals.Length)
-                    {
-                        case int length when length == 2 && kv.Key.Length == 8 && kv.Key.StartsWith("10"):
-
-                            break;
-
-                        case int length when length == 2 && kv.Key.Length == 6:
-
-                            break;
-
-                        case int length when length == 4 && (kv.Key.StartsWith("101") || kv.Key.StartsWith("105")) && kv.Key.Length == 8:
-                            if (kv.Key[2].Equals('1'))
-                            {
-                                c = 2;
-                                h = 3;
-                            }
-                            break;
-
-                        default:
-                            continue;
-                    }
-                    reals[c].OnReceiveRealTime(kv.Key);
-                    reals[h].OnReceiveRealTime(kv.Key);
-                }
             if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8 && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1FAC7U : (uint)(catalog.Count * 0x4BAF)).Equals(DialogResult.OK))
             {
                 Stocks = new Stack<string>(GetRevisedStockPrices(stocks));
@@ -743,6 +717,34 @@ namespace ShareInvest
             }
             Connect = int.MaxValue;
             UserName = e.Argument as string;
+        }
+        void RegisterRealTimeReceivingCode(IReals[] reals, string code)
+        {
+            int c = 0, h = 1;
+
+            switch (reals.Length)
+            {
+                case int length when length == 2 && code.Length == 8 && code.StartsWith("10"):
+
+                    break;
+
+                case int length when length == 2 && code.Length == 6:
+
+                    break;
+
+                case int length when length == 4 && (code.StartsWith("101") || code.StartsWith("105")) && code.Length == 8:
+                    if (code[2].Equals('1'))
+                    {
+                        c = 2;
+                        h = 3;
+                    }
+                    break;
+
+                default:
+                    return;
+            }
+            reals[c].OnReceiveRealTime(code);
+            reals[h].OnReceiveRealTime(code);
         }
         void GoblinBatResize(object sender, EventArgs e)
         {
@@ -912,8 +914,17 @@ namespace ShareInvest
 
                             if (xingAPI.ConvertTheCodeToName.Length == 1 && infoCodes.Count > 0)
                                 foreach (var ce in infoCodes)
-                                    xingAPI.SetToCollect(ce.Key).Send += OnReceiveSecuritiesAPI;
+                                {
+                                    var collect = xingAPI.SetToCollect(ce.Key);
 
+                                    if (collect != null)
+                                    {
+                                        if (xingAPI.Strategics.Any(o => o.Code.Equals(ce.Key)) == false)
+                                            RegisterRealTimeReceivingCode(xingAPI.Reals, ce.Key);
+
+                                        collect.Send += OnReceiveSecuritiesAPI;
+                                    }
+                                }
                             if (string.IsNullOrEmpty(xingAPI.Access) == false)
                             {
                                 Collection = new Collect(xingAPI.Access);
