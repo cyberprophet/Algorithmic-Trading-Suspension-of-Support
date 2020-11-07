@@ -325,6 +325,9 @@ namespace ShareInvest
                                     break;
 
                                 case Tuple<byte, byte> tp when (tp.Item2 == 0x19 || tp.Item2 == 0x29) && (tp.Item1 == 7 || tp.Item1 == 8) && com is XingAPI.ConnectAPI || tp.Item1 == 0x64 && tp.Item2 > 0x10 && com is OpenAPI.ConnectAPI:
+                                    if (string.IsNullOrEmpty((com as XingAPI.ConnectAPI)?.Access) == false)
+                                        (com as XingAPI.ConnectAPI)?.SendTransmitCommand();
+
                                     Dispose(WindowState);
                                     return;
 
@@ -875,7 +878,7 @@ namespace ShareInvest
                 var remain = new DateTime(now.Year, now.Month, now.Day, 9, 0, 0) - DateTime.Now;
                 com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
 
-                if (com.Start == false && (remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E || now.Hour == 0x11 && now.Minute > 0x31 && com is XingAPI.ConnectAPI && char.TryParse(privacy.SecuritiesAPI, out char api) && ((char)SecuritiesCOM.XingAPI).Equals(api) && char.TryParse(privacy.Account, out char account) && ((char)Strategics.TF).Equals(account)) && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B2))))
+                if (com.Start == false && (remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E || Array.Exists(holidays, o => o.Equals(now.ToString(dFormat))) == false && now.DayOfWeek.Equals(DayOfWeek.Sunday) == false && now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && now.Hour == 0x11 && now.Minute > 0x31 && com is XingAPI.ConnectAPI && char.TryParse(privacy.SecuritiesAPI, out char api) && ((char)SecuritiesCOM.XingAPI).Equals(api) && char.TryParse(privacy.Account, out char account) && ((char)Strategics.TF).Equals(account)) && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B2))))
                     com.StartProgress();
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
@@ -1179,9 +1182,6 @@ namespace ShareInvest
                     break;
 
                 case XingAPI.ConnectAPI x:
-                    if (string.IsNullOrEmpty(x.Access) == false)
-                        x.SendTransmitCommand();
-
                     x.JIF.Send -= OnReceiveSecuritiesAPI;
                     break;
             }

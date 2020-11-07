@@ -13,20 +13,21 @@ namespace ShareInvest
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                StartProgress();
+
+                if (StartProgress().Repeat)
+                {
+
+                }
             }
             Process.GetCurrentProcess().Kill();
         }
-        static void StartProgress()
+        static SecuritiesAPI StartProgress()
         {
-            var api = new SecuritiesAPI();
+            var api = new SecuritiesAPI(new OpenAPI.ConnectAPI());
             Application.Run(api);
             GC.Collect();
 
-            if (api.Repeat)
-            {
-
-            }
+            return api;
         }
     }
 }
