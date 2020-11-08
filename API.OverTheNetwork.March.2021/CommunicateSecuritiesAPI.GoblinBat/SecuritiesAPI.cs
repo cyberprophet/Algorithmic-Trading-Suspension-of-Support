@@ -18,10 +18,19 @@ namespace ShareInvest
             this.connect = connect;
             timer.Start();
         }
-        void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e)
+        void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(async () =>
         {
+            switch (e.Convey)
+            {
+                case string message:
 
-        }
+                    return;
+
+                case Tuple<string, string[]> param:
+
+                    return;
+            }
+        }));
         void TimerTick(object sender, EventArgs e)
         {
             if (connect == null)
@@ -51,7 +60,20 @@ namespace ShareInvest
         }
         void StripItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
+            if (e.ClickedItem.Name.Equals(reference.Name))
+            {
+                if (e.ClickedItem.Text.Equals("연결"))
+                {
+                    e.ClickedItem.Text = "조회";
+                    StartProgress((Control)connect);
+                }
+                else
+                {
 
+                }
+            }
+            else
+                Close();
         }
         void StartProgress(Control connect)
         {
@@ -61,11 +83,11 @@ namespace ShareInvest
             FormBorderStyle = FormBorderStyle.None;
             CenterToScreen();
             this.connect.Send += OnReceiveSecuritiesAPI;
+            this.connect.StartProgress();
         }
         void Dispose(Control connect)
         {
             connect.Dispose();
-            Repeat = true;
             Dispose();
         }
         readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
