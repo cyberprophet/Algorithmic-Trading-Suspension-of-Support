@@ -22,11 +22,15 @@ namespace ShareInvest
         {
             switch (e.Convey)
             {
-                case string message:
+                case Tuple<string, string[]> param:
 
                     return;
 
-                case Tuple<string, string[]> param:
+                case Tuple<string, string> request:
+                    (sender as OpenAPI.ConnectAPI).InputValueRqData(string.Concat(instance, request.Item1), request.Item2).Send += OnReceiveSecuritiesAPI;
+                    return;
+
+                case string message:
 
                     return;
             }
@@ -90,6 +94,7 @@ namespace ShareInvest
             connect.Dispose();
             Dispose();
         }
+        const string instance = "ShareInvest.OpenAPI.Catalog.";
         readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
     }
 }
