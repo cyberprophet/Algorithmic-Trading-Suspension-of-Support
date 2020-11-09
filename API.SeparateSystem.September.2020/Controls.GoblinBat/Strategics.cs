@@ -600,34 +600,34 @@ namespace ShareInvest.Controls
             }
             else if (sender is LinkLabel link)
             {
-                var url = @"https://youtu.be/ecwpY1_XvdM";
+                var url = @"http://www.pgsolution.kr/";
 
                 if (link.Name.Equals(this.link.Name) && comboStrategics.SelectedItem is string str && string.IsNullOrEmpty(str) == false)
                     switch (str)
                     {
                         case tc:
-                            url = @"https://youtu.be/Zk1nZJYAb6Q";
+                            url = @"http://www.pgsolution.kr/";
                             break;
 
                         case tf:
-                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
+                            url = @"http://www.pgsolution.kr/";
                             break;
 
                         case ts:
-                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
+                            url = @"http://www.pgsolution.kr/";
                             break;
 
                         case tv:
                         case sc:
-                            url = @"https://youtu.be/GKzn6v6qeyA";
+                            url = @"http://www.pgsolution.kr/";
                             break;
 
                         case st:
-                            url = @"https://www.youtube.com/c/TenbaggercyberprophetsStock";
+                            url = @"http://www.pgsolution.kr/";
                             break;
                     }
                 else if (link.Name.Equals(linkTerms.Name))
-                    url = @"https://sharecompany.tistory.com/46";
+                    url = @"http://www.pgsolution.kr/";
 
                 Process.Start(url);
                 link.LinkVisited = true;

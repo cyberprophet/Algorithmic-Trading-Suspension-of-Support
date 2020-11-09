@@ -435,9 +435,7 @@ namespace ShareInvest.Strategics
                     break;
 
                 case 0xC8:
-                    foreach (var url in termsOfUse)
-                        Process.Start(url);
-
+                    Process.Start(@"http://www.pgsolution.kr/");
                     Result = ChooseBox.Show(string.Concat(welcomeTo, (1 + await client.GetContext()).ToString("N0"), theGoblinBat), welcome, agree, fExit);
                     break;
 

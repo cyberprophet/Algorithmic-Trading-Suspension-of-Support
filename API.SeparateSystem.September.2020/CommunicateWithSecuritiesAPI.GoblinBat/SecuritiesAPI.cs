@@ -325,8 +325,8 @@ namespace ShareInvest
                                     break;
 
                                 case Tuple<byte, byte> tp when (tp.Item2 == 0x19 || tp.Item2 == 0x29) && (tp.Item1 == 7 || tp.Item1 == 8) && com is XingAPI.ConnectAPI || tp.Item1 == 0x64 && tp.Item2 > 0x10 && com is OpenAPI.ConnectAPI:
-                                    if (string.IsNullOrEmpty((com as XingAPI.ConnectAPI)?.Access) == false)
-                                        (com as XingAPI.ConnectAPI)?.SendTransmitCommand();
+                                    if (com is XingAPI.ConnectAPI x && string.IsNullOrEmpty(x.Access) == false)
+                                        x.SendTransmitCommand();
 
                                     Dispose(WindowState);
                                     return;
@@ -845,7 +845,7 @@ namespace ShareInvest
 
             else if (Visible && ShowIcon && notifyIcon.Visible == false && FormBorderStyle.Equals(FormBorderStyle.None) && WindowState.Equals(FormWindowState.Normal) && (com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI))
             {
-                var now = DateTime.Now;
+                DateTime now = DateTime.Now, today = DateTime.Now;
 
                 switch (now.DayOfWeek)
                 {
@@ -878,7 +878,7 @@ namespace ShareInvest
                 var remain = new DateTime(now.Year, now.Month, now.Day, 9, 0, 0) - DateTime.Now;
                 com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
 
-                if (com.Start == false && (remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E || Array.Exists(holidays, o => o.Equals(now.ToString(dFormat))) == false && now.DayOfWeek.Equals(DayOfWeek.Sunday) == false && now.DayOfWeek.Equals(DayOfWeek.Saturday) == false && now.Hour == 0x11 && now.Minute > 0x31 && com is XingAPI.ConnectAPI && char.TryParse(privacy.SecuritiesAPI, out char api) && ((char)SecuritiesCOM.XingAPI).Equals(api) && char.TryParse(privacy.Account, out char account) && ((char)Strategics.TF).Equals(account)) && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B2))))
+                if (com.Start == false && (remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E || Array.Exists(holidays, o => o.Equals(today.ToString(dFormat))) == false && today.DayOfWeek.Equals(DayOfWeek.Sunday) == false && today.DayOfWeek.Equals(DayOfWeek.Saturday) == false && now.Hour == 0x11 && now.Minute > 0x31 && com is XingAPI.ConnectAPI && char.TryParse(privacy.SecuritiesAPI, out char api) && ((char)SecuritiesCOM.XingAPI).Equals(api) && char.TryParse(privacy.Account, out char account) && ((char)Strategics.TF).Equals(account)) && (Connect > 0x4B0 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B2))))
                     com.StartProgress();
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))

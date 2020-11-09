@@ -206,7 +206,7 @@ namespace ShareInvest.Strategics
             }
             else if (sender is LinkLabel)
             {
-                Process.Start(@"https://www.youtube.com/c/TenbaggercyberprophetsStock");
+                Process.Start(@"http://www.pgsolution.kr/");
                 link.LinkVisited = true;
             }
         }

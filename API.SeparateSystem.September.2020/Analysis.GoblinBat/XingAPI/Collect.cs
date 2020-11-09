@@ -21,7 +21,7 @@ namespace ShareInvest.Analysis.XingAPI
         }
         public void SendTransmitCommand(string code)
         {
-            if (this.code.Equals(code))
+            if (this.code.Equals(code) && Collection.Count > 0)
                 Send?.Invoke(this, new SendSecuritiesAPI(code.Substring(0, 7), FinalClone));
         }
         public uint GetTime(char time)

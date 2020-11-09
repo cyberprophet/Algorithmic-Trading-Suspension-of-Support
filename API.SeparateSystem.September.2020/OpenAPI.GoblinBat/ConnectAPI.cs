@@ -182,7 +182,7 @@ namespace ShareInvest.OpenAPI
         }
         public void SendTransmitCommand(string code)
         {
-            if (Connect.Collection != null && Connect.Collection.TryGetValue(code, out Collect collect))
+            if (Connect.Collection != null && Connect.Collection.TryGetValue(code, out Collect collect) && collect.Count > 0)
                 collect.SendTransmitCommand(code);
         }
         public void SendTransmitCommand()
