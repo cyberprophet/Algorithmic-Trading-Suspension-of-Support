@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 using ShareInvest.EventHandler;
@@ -17,6 +18,7 @@ namespace ShareInvest
             InitializeComponent();
             this.connect = connect;
             timer.Start();
+            Codes = new Queue<string>();
         }
         void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(async () =>
         {
@@ -27,11 +29,47 @@ namespace ShareInvest
                     return;
 
                 case Tuple<string, string> request:
+                    if (request.Item2.Length != 8)
+                        Codes.Enqueue(string.Concat(request.Item1, '_', request.Item2));
+
                     (sender as OpenAPI.ConnectAPI).InputValueRqData(string.Concat(instance, request.Item1), request.Item2).Send += OnReceiveSecuritiesAPI;
+                    return;
+
+                case Tuple<string, string, string, string, int> tr:
+                    if (tr.Item1.Length == 6 || tr.Item1.Length == 8 && tr.Item1[0] > '1')
+                        new Catalog.Models.Codes
+                        {
+                            Code = tr.Item1,
+                            Name = tr.Item2,
+                            MaturityMarketCap = tr.Item3,
+                            Price = tr.Item4,
+                            MarginRate = tr.Item5
+                        };
+                    if (tr.Item1.Length == 8)
+                    {
+                        if (Codes.TryPeek(out string param) && param.Length > 8)
+                        {
+                            var temp = Codes.Dequeue().Split('_');
+                            (connect as OpenAPI.ConnectAPI).RemoveValueRqData(temp[0], temp[^1]).Send -= OnReceiveSecuritiesAPI;
+                        }
+                        (connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, tr.Item1).Send -= OnReceiveSecuritiesAPI;
+                    }
+                    if (tr.Item1.Length == 6 || tr.Item1.Length == 8 && tr.Item1[1] == '0')
+                        Codes.Enqueue(tr.Item1);
+
+                    return;
+
+                case Catalog.Models.Codes codes:
+
                     return;
 
                 case string message:
 
+                    return;
+
+                case short error:
+                    Repeat = error == -0x6A;
+                    Dispose((Control)connect);
                     return;
             }
         }));
@@ -93,6 +131,10 @@ namespace ShareInvest
         {
             connect.Dispose();
             Dispose();
+        }
+        Queue<string> Codes
+        {
+            get; set;
         }
         const string instance = "ShareInvest.OpenAPI.Catalog.";
         readonly ISecuritiesAPI<SendSecuritiesAPI> connect;

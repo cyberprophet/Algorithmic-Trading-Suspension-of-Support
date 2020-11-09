@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 
@@ -104,9 +106,12 @@ namespace ShareInvest.OpenAPI
 
                     date = temp[2];
                 }
-            foreach (var code in list.OrderBy(o => o))
+            foreach (var code in list.OrderBy(o => Guid.NewGuid()))
                 yield return new Tuple<string, string>("Opt50001", code);
         }
+        [Conditional("DEBUG")]
+        void SendMessage(string code, string message) => Debug.WriteLine(code + "\t" + message);
+        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => (API as Connect)?.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name.Substring(1).Equals(e.sTrCode.Substring(1)))?.OnReceiveTrData(e);
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e) => BeginInvoke(new Action(() =>
         {
             if (e.nErrCode == 0)
@@ -129,9 +134,64 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
+        public uint Count
+        {
+            get; private set;
+        }
         public ISendSecuritiesAPI<SendSecuritiesAPI> InputValueRqData(string name, string param)
         {
-            TR ctor = null;
+            var ctor = Assembly.GetExecutingAssembly().CreateInstance(name) as TR;
+            ctor.API = axAPI;
+
+            if (Enum.TryParse(name.Substring(0x1C), out CatalogTR tr) && API?.TR.Add(ctor))
+                switch (tr)
+                {
+                    case CatalogTR.Opt10079:
+                        if (param.Length == 0x16)
+                            ctor.RQName = param.Substring(7, 0xC);
+
+                        ctor.Value = param.Substring(0, 6);
+                        API?.InputValueRqData(ctor);
+                        break;
+
+                    case CatalogTR.Opt50001:
+                        ctor.Value = param;
+                        ctor.RQName = param;
+                        API?.InputValueRqData(ctor);
+                        Count++;
+                        break;
+
+                    case CatalogTR.Opt50028:
+                    case CatalogTR.Opt50066:
+                        if (param.Length == 0x18)
+                            ctor.RQName = param.Substring(9, 0xC);
+
+                        ctor.Value = param.Substring(0, 8);
+                        API?.InputValueRqData(ctor);
+                        break;
+
+                    case CatalogTR.OPTKWFID:
+                        ctor.Value = param;
+                        API?.InputValueRqData(param.Split(';').Length, ctor);
+                        Count++;
+                        break;
+
+                    case CatalogTR.Opt10081:
+                        var str = param.Substring(7);
+                        ctor.RQName = str;
+                        ctor.Value = string.Concat(param.Substring(0, 6), ';', str);
+                        API?.InputValueRqData(ctor);
+                        Count++;
+                        break;
+                }
+            return ctor;
+        }
+        public ISendSecuritiesAPI<SendSecuritiesAPI> RemoveValueRqData(string name, string param)
+        {
+            var ctor = (API as Connect)?.TR.FirstOrDefault(o => o.GetType().Name.Equals(name) && (o.RQName.Contains(param) || o.Value.Contains(param)));
+
+            if (API?.TR.Remove(ctor))
+                SendMessage(param, name);
 
             return ctor;
         }
@@ -140,6 +200,7 @@ namespace ShareInvest.OpenAPI
             Start = true;
             axAPI.OnEventConnect += OnEventConnect;
             axAPI.OnReceiveMsg += OnReceiveMessage;
+            axAPI.OnReceiveTrData += OnReceiveTrData;
             API = Connect.GetInstance(axAPI);
         }
         public event EventHandler<SendSecuritiesAPI> Send;

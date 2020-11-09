@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 
 using AxKHOpenAPILib;
 
@@ -17,10 +18,33 @@ namespace ShareInvest.OpenAPI
         internal static Connect GetInstance(AxKHOpenAPI axAPI)
         {
             if (API == null && axAPI.CommConnect() == 0)
-            {
                 API = new Connect(axAPI);
-            }
+
             return API;
+        }
+        internal void InputValueRqData(TR param) => request.RequestTrData(new Task(() =>
+        {
+            string[] count = param.ID.Split(';'), value = param.Value.Split(';');
+            int i, l = count.Length;
+
+            for (i = 0; i < l; i++)
+                axAPI.SetInputValue(count[i], value[i]);
+
+            SendErrorMessage(param, axAPI.CommRqData(param.RQName, param.TrCode, param.PrevNext, param.ScreenNo));
+        }));
+        internal void InputValueRqData(int nCodeCount, TR param) => request.RequestTrData(new Task(() => SendErrorMessage(param, axAPI.CommKwRqData(param.Value, 0, nCodeCount, param.PrevNext, param.RQName, param.ScreenNo))));
+        internal void SendErrorMessage(TR tr, int error)
+        {
+            if (error < 0 && this.error.TryGetValue(error, out string param))
+            {
+                switch (error)
+                {
+                    case -0x6A:
+                        tr.SendErrorMessage((short)error);
+                        return;
+                }
+                tr.SendMessage(tr.GetType().Name, param);
+            }
         }
         internal string SendErrorMessage(int code) => error[code];
         internal string DistinctDate
@@ -33,8 +57,13 @@ namespace ShareInvest.OpenAPI
                 return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString(distinctDate) : DateTime.Now.ToString(distinctDate);
             }
         }
+        internal HashSet<TR> TR
+        {
+            get; private set;
+        }
         Connect(AxKHOpenAPI axAPI)
         {
+            TR = new HashSet<TR>();
             this.axAPI = axAPI;
             request = Delay.GetInstance(0xC9);
             request.Run();
