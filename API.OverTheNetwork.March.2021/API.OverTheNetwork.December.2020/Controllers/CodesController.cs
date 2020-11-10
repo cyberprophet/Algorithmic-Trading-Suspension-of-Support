@@ -13,8 +13,10 @@ namespace ShareInvest.Controllers
         [HttpPut, ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PutContextAsync([FromBody] Codes codes)
         {
-            
-            return NoContent();
+            if ((await Security.Client.PutContextAsync(codes)) < int.MaxValue)
+                return NoContent();
+
+            return Ok();
         }
     }
 }

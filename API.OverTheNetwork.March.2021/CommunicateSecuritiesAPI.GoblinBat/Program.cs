@@ -7,14 +7,14 @@ namespace ShareInvest
     static class Program
     {
         [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
             if (Application.SetHighDpiMode(HighDpiMode.SystemAware))
             {
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 
-                if (StartProgress().Repeat)
+                if (args.Length > 0 && StartProgress().Repeat)
                 {
 
                 }

@@ -4,6 +4,8 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+
 using RestSharp;
 
 namespace ShareInvest.Client
@@ -34,11 +36,14 @@ namespace ShareInvest.Client
 
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param.GetType()), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ? security.RequestTheIntegratedAddress(param) : security.RequestTheIntegratedAddress(param.GetType()), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
-                    return int.MaxValue;
+                {
+                    SendMessage(JsonConvert.DeserializeObject<string>(response.Content));
 
+                    return int.MaxValue;
+                }
                 status = (int)response.StatusCode;
             }
             catch (Exception ex)
@@ -68,7 +73,12 @@ namespace ShareInvest.Client
         }
         GoblinBat(dynamic key)
         {
-
+            security = new Security(key);
+            client = new RestClient(security.Url)
+            {
+                Timeout = -1
+            };
+            source = new CancellationTokenSource();
         }
         readonly CancellationTokenSource source;
         readonly Security security;

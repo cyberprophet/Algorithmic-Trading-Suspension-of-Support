@@ -1,5 +1,10 @@
+using System;
+using System.Diagnostics;
+
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+
+using ShareInvest;
 
 namespace ShareInvet
 {
@@ -7,8 +12,15 @@ namespace ShareInvet
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            if (new Security(args).GrantAccess)
+                CreateHostBuilder().Build().Run();
+
+            else
+            {
+                GC.Collect();
+                Process.GetCurrentProcess().Kill();
+            }
         }
-        public static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args).UseStartup<Startup>();
+        public static IWebHostBuilder CreateHostBuilder() => WebHost.CreateDefaultBuilder().UseStartup<Startup>();
     }
 }
