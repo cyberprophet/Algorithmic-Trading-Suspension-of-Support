@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Forms;
 
+using ShareInvest.Client;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 
@@ -18,10 +20,13 @@ namespace ShareInvest
             InitializeComponent();
             this.connect = connect;
             timer.Start();
+            client = GoblinBat.GetInstance();
             Codes = new Queue<string>();
         }
         void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(async () =>
         {
+            int status;
+
             switch (e.Convey)
             {
                 case Tuple<string, string[]> param:
@@ -37,14 +42,18 @@ namespace ShareInvest
 
                 case Tuple<string, string, string, string, int> tr:
                     if (tr.Item1.Length == 6 || tr.Item1.Length == 8 && tr.Item1[0] > '1')
-                        new Catalog.Models.Codes
+                    {
+                        status = await client.PutContextAsync(new Catalog.Models.Codes
                         {
                             Code = tr.Item1,
                             Name = tr.Item2,
                             MaturityMarketCap = tr.Item3,
                             Price = tr.Item4,
                             MarginRate = tr.Item5
-                        };
+                        });
+                        if (status < int.MaxValue)
+                            SendMessage(string.Concat(tr.GetType(), '_', tr.Item2, '_', status));
+                    }
                     if (tr.Item1.Length == 8)
                     {
                         if (Codes.TryPeek(out string param) && param.Length > 8)
@@ -60,6 +69,10 @@ namespace ShareInvest
                     return;
 
                 case Catalog.Models.Codes codes:
+                    status = await client.PutContextAsync(codes);
+
+                    if (status < int.MaxValue)
+                        SendMessage(string.Concat(codes.GetType(), '_', codes.Name, '_', status));
 
                     return;
 
@@ -73,6 +86,16 @@ namespace ShareInvest
                     return;
             }
         }));
+        [Conditional("DEBUG")]
+        void SendMessage(object message)
+        {
+            switch (message)
+            {
+                case string _:
+                    Debug.WriteLine(message);
+                    return;
+            }
+        }
         void TimerTick(object sender, EventArgs e)
         {
             if (connect == null)
@@ -137,6 +160,7 @@ namespace ShareInvest
             get; set;
         }
         const string instance = "ShareInvest.OpenAPI.Catalog.";
+        readonly GoblinBat client;
         readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
     }
 }

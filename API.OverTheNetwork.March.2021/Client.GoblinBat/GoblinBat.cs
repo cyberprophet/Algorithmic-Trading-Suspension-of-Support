@@ -1,4 +1,8 @@
-﻿using System.Threading;
+﻿using System;
+using System.Diagnostics;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 
 using RestSharp;
 
@@ -23,6 +27,35 @@ namespace ShareInvest.Client
         static GoblinBat Client
         {
             get; set;
+        }
+        public async Task<int> PutContextAsync<T>(T param) where T : struct
+        {
+            var status = int.MaxValue;
+
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param.GetType()), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
+
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    return int.MaxValue;
+
+                status = (int)response.StatusCode;
+            }
+            catch (Exception ex)
+            {
+                SendMessage(ex.StackTrace);
+            }
+            return status;
+        }
+        [Conditional("DEBUG")]
+        void SendMessage(object message)
+        {
+            switch (message)
+            {
+                case string _:
+                    Debug.WriteLine(message);
+                    return;
+            }
         }
         GoblinBat()
         {
