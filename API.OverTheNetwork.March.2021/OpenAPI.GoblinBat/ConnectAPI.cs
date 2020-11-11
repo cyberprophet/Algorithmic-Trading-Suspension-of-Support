@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -41,7 +40,7 @@ namespace ShareInvest.OpenAPI
         }
         IEnumerable<Tuple<string, string>> GetInformationOfCode(List<string> list, string[] market)
         {
-            string exclusion, date = API?.DistinctDate;
+            string exclusion, date = Base.DistinctDate;
             Delay.Milliseconds = 0x259;
 
             for (int i = 2; i < 4; i++)
@@ -109,9 +108,7 @@ namespace ShareInvest.OpenAPI
             foreach (var code in list.OrderBy(o => Guid.NewGuid()))
                 yield return new Tuple<string, string>("Opt50001", code);
         }
-        [Conditional("DEBUG")]
-        void SendMessage(string code, string message) => Debug.WriteLine(code + "\t" + message);
-        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => (API as Connect)?.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name.Substring(1).Equals(e.sTrCode.Substring(1)))?.OnReceiveTrData(e);
+        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => (API as Connect)?.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name[1..].Equals(e.sTrCode[1..]))?.OnReceiveTrData(e);
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e) => BeginInvoke(new Action(() =>
         {
             if (e.nErrCode == 0)
@@ -124,7 +121,7 @@ namespace ShareInvest.OpenAPI
             else
                 Send?.Invoke(this, new SendSecuritiesAPI(API?.SendErrorMessage(e.nErrCode)));
         }));
-        void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => BeginInvoke(new Action(() => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg.Substring(9), "(", e.sScrNo, ")")))));
+        void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => BeginInvoke(new Action(() => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg[9..], "(", e.sScrNo, ")")))));
         public ConnectAPI() => InitializeComponent();
         public dynamic API
         {
@@ -143,7 +140,7 @@ namespace ShareInvest.OpenAPI
             var ctor = Assembly.GetExecutingAssembly().CreateInstance(name) as TR;
             ctor.API = axAPI;
 
-            if (Enum.TryParse(name.Substring(0x1C), out CatalogTR tr) && API?.TR.Add(ctor))
+            if (Enum.TryParse(name[0x1C..], out CatalogTR tr) && API?.TR.Add(ctor))
                 switch (tr)
                 {
                     case CatalogTR.Opt10079:
@@ -177,7 +174,7 @@ namespace ShareInvest.OpenAPI
                         break;
 
                     case CatalogTR.Opt10081:
-                        var str = param.Substring(7);
+                        var str = param[7..];
                         ctor.RQName = str;
                         ctor.Value = string.Concat(param.Substring(0, 6), ';', str);
                         API?.InputValueRqData(ctor);
@@ -191,7 +188,7 @@ namespace ShareInvest.OpenAPI
             var ctor = (API as Connect)?.TR.FirstOrDefault(o => o.GetType().Name.Equals(name) && (o.RQName.Contains(param) || o.Value.Contains(param)));
 
             if (API?.TR.Remove(ctor))
-                SendMessage(param, name);
+                Base.SendMessage(GetType(), param, name);
 
             return ctor;
         }

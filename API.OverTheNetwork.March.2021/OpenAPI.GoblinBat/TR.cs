@@ -11,9 +11,7 @@ namespace ShareInvest.OpenAPI
 {
     abstract class TR : ISendSecuritiesAPI<SendSecuritiesAPI>
     {
-        public abstract event EventHandler<SendSecuritiesAPI> Send;
-        [Conditional("DEBUG")]
-        protected internal void SendMessage(string code, string message) => Debug.WriteLine(string.Concat(code, "_", message));
+        public abstract event EventHandler<SendSecuritiesAPI> Send;        
         protected internal static uint Screen
         {
             get; set;

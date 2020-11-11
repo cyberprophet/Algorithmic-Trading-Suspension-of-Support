@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -41,14 +40,12 @@ namespace ShareInvest.DelayRequest
                     }
                     catch (Exception ex)
                     {
-                        SendMessage(ex.StackTrace, ex.TargetSite.Name);
+                        Base.SendMessage(GetType(), ex.StackTrace, ex.TargetSite.Name);
                     }
             });
         }
         static Delay request;
         readonly Thread taskWorker;
         readonly Queue<Task> requestTaskQueue;
-        [Conditional("DEBUG")]
-        void SendMessage(string message, string name) => Console.WriteLine(name + "\n" + message);
     }
 }

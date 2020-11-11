@@ -16,11 +16,11 @@ namespace ShareInvest.OpenAPI.Catalog
             var code = e.sRQName.Split(';')[1];
 
             if (temp.Item1 != null)
-                Send?.Invoke(this, new SendSecuritiesAPI(code, temp.Item1[0x48].Trim(), temp.Item1[0x3F].Trim().Substring(2), temp.Item1[0x33].Trim(), 0));
+                Send?.Invoke(this, new SendSecuritiesAPI(code, temp.Item1[0x48].Trim(), temp.Item1[0x3F].Trim()[2..], temp.Item1[0x33].Trim(), 0));
 
             while (temp.Item2?.Count > 0)
                 foreach (var pop in temp.Item2.Dequeue())
-                    SendMessage(e.sRQName, pop);
+                    Base.SendMessage(GetType(), e.sRQName, pop);
         }
         internal override void SendErrorMessage(short error) => Send?.Invoke(this, new SendSecuritiesAPI(error));
         protected internal override string LookupScreenNo

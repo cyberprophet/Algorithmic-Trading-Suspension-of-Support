@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +6,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 using RestSharp;
+
+using ShareInvest.Catalog.Models;
 
 namespace ShareInvest.Client
 {
@@ -30,36 +31,33 @@ namespace ShareInvest.Client
         {
             get; set;
         }
-        public async Task<int> PutContextAsync<T>(T param) where T : struct
+        public async Task<object> GetContextAsync(string[] security)
         {
-            var status = int.MaxValue;
-
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ? security.RequestTheIntegratedAddress(param) : security.RequestTheIntegratedAddress(param.GetType()), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(this.security.RequestTheIntegratedAddress(new Privacies { Security = security[0] }), Method.GET), source.Token);
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
-                {
-                    SendMessage(JsonConvert.DeserializeObject<string>(response.Content));
-
-                    return int.MaxValue;
-                }
-                status = (int)response.StatusCode;
+                    return JsonConvert.DeserializeObject<Privacies>(response.Content);
             }
             catch (Exception ex)
             {
-                SendMessage(ex.StackTrace);
+                Base.SendMessage(GetType(), ex.StackTrace);
             }
-            return status;
+            return null;
         }
-        [Conditional("DEBUG")]
-        void SendMessage(object message)
+        public async Task PutContextAsync<T>(T param) where T : struct
         {
-            switch (message)
+            try
             {
-                case string _:
-                    Debug.WriteLine(message);
-                    return;
+                var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ? security.RequestTheIntegratedAddress(param) : Security.RequestTheIntegratedAddress(param.GetType()), Method.PUT).AddJsonBody(param, Security.content_type), source.Token);
+
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    Base.SendMessage(GetType(), JsonConvert.DeserializeObject<string>(response.Content));
+            }
+            catch (Exception ex)
+            {
+                Base.SendMessage(GetType(), ex.StackTrace);
             }
         }
         GoblinBat()

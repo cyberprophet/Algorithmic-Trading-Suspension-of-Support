@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Windows.Forms;
 
 using ShareInvest.Client;
@@ -25,8 +24,6 @@ namespace ShareInvest
         }
         void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(async () =>
         {
-            int status;
-
             switch (e.Convey)
             {
                 case Tuple<string, string[]> param:
@@ -41,19 +38,14 @@ namespace ShareInvest
                     return;
 
                 case Tuple<string, string, string, string, int> tr:
-                    if (tr.Item1.Length == 6 || tr.Item1.Length == 8 && tr.Item1[0] > '1')
+                    await client.PutContextAsync(new Catalog.Models.Codes
                     {
-                        status = await client.PutContextAsync(new Catalog.Models.Codes
-                        {
-                            Code = tr.Item1,
-                            Name = tr.Item2,
-                            MaturityMarketCap = tr.Item3,
-                            Price = tr.Item4,
-                            MarginRate = tr.Item5
-                        });
-                        if (status < int.MaxValue)
-                            SendMessage(string.Concat(tr.GetType(), '_', tr.Item2, '_', status));
-                    }
+                        Code = tr.Item1,
+                        Name = tr.Item2,
+                        MaturityMarketCap = tr.Item3,
+                        Price = tr.Item4,
+                        MarginRate = tr.Item5
+                    });
                     if (tr.Item1.Length == 8)
                     {
                         if (Codes.TryPeek(out string param) && param.Length > 8)
@@ -69,11 +61,7 @@ namespace ShareInvest
                     return;
 
                 case Catalog.Models.Codes codes:
-                    status = await client.PutContextAsync(codes);
-
-                    if (status < int.MaxValue)
-                        SendMessage(string.Concat(codes.GetType(), '_', codes.Name, '_', status));
-
+                    await client.PutContextAsync(codes);
                     return;
 
                 case string message:
@@ -86,16 +74,6 @@ namespace ShareInvest
                     return;
             }
         }));
-        [Conditional("DEBUG")]
-        void SendMessage(object message)
-        {
-            switch (message)
-            {
-                case string _:
-                    Debug.WriteLine(message);
-                    return;
-            }
-        }
         void TimerTick(object sender, EventArgs e)
         {
             if (connect == null)
@@ -112,7 +90,7 @@ namespace ShareInvest
 
             }
         }
-        void SecuritiesResize(object sender, EventArgs e)
+        void SecuritiesResize(object sender, EventArgs e) => BeginInvoke(new Action(() =>
         {
             if (WindowState.Equals(FormWindowState.Minimized))
             {
@@ -122,8 +100,8 @@ namespace ShareInvest
                 notifyIcon.Visible = true;
                 ResumeLayout();
             }
-        }
-        void StripItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        }));
+        void StripItemClicked(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(() =>
         {
             if (e.ClickedItem.Name.Equals(reference.Name))
             {
@@ -139,7 +117,7 @@ namespace ShareInvest
             }
             else
                 Close();
-        }
+        }));
         void StartProgress(Control connect)
         {
             Controls.Add(connect);
