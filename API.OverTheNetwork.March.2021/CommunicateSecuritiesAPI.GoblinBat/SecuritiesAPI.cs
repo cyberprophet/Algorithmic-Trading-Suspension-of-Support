@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Windows.Forms;
 
 using ShareInvest.Client;
@@ -26,6 +27,62 @@ namespace ShareInvest
         {
             switch (e.Convey)
             {
+                case Tuple<string, string, string, string> conclusion:
+                    var conclusion_order = await client.PostContextAsync(sender.GetType(), new Catalog.Models.Conclusion
+                    {
+                        Code = conclusion.Item1,
+                        Time = conclusion.Item2,
+                        Price = conclusion.Item3,
+                        Volume = conclusion.Item4
+                    });
+                    if (conclusion_order is not null)
+                    {
+
+                    }
+                    return;
+
+                case Tuple<string, StringBuilder> quotes:
+                    var quotes_order = await client.PostContextAsync(sender.GetType(), new Catalog.Models.Quotes
+                    {
+                        Code = quotes.Item1,
+                        Datum = quotes.Item2.ToString()
+                    });
+                    if (quotes_order is not null)
+                    {
+
+                    }
+                    return;
+
+                case Tuple<string, double, double, double> futures:
+                    await client.PutContextAsync(new Catalog.Models.Priority
+                    {
+                        Code = futures.Item1,
+                        Current = futures.Item2,
+                        Offer = futures.Item3,
+                        Bid = futures.Item4
+                    });
+                    return;
+
+                case Tuple<string, int, int, int> stocks:
+                    await client.PutContextAsync(new Catalog.Models.Priority
+                    {
+                        Code = stocks.Item1,
+                        Current = stocks.Item2,
+                        Offer = stocks.Item3,
+                        Bid = stocks.Item4
+                    });
+                    return;
+
+                case Tuple<string, int, int> bs:
+                    await client.PutContextAsync(new Catalog.Models.Priority
+                    {
+                        Code = bs.Item1,
+                        Current = int.MinValue,
+                        Offer = bs.Item2,
+                        Bid = bs.Item3
+                    });
+                    return;
+
                 case Tuple<string, string[]> account:
                     foreach (var ctor in (sender as OpenAPI.ConnectAPI)?.ConnectToReceiveRealTime)
                         ctor.Send += OnReceiveSecuritiesAPI;
@@ -37,6 +94,10 @@ namespace ShareInvest
                         Codes.Enqueue(string.Concat(request.Item1, '_', request.Item2));
 
                     (sender as OpenAPI.ConnectAPI).InputValueRqData(string.Concat(instance, request.Item1), request.Item2).Send += OnReceiveSecuritiesAPI;
+                    return;
+
+                case Tuple<string, string, string> operation:
+
                     return;
 
                 case Tuple<string, string, string, string, int> tr:
@@ -67,7 +128,7 @@ namespace ShareInvest
                     return;
 
                 case string message:
-
+                    notifyIcon.Text = message;
                     return;
 
                 case short error:

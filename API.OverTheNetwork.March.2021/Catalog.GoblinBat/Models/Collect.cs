@@ -7,7 +7,7 @@ namespace ShareInvest.Catalog.Models
     public struct Collect
     {
         [DataMember, JsonProperty("T")]
-        public int Time
+        public string Time
         {
             get; set;
         }

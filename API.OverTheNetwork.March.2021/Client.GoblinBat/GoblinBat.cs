@@ -46,6 +46,25 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<object> PostContextAsync<T>(Type type, T param) where T : struct
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.POST).AddJsonBody(param, Security.content_type), source.Token);
+
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    switch (type.Namespace.Split('.')[1])
+                    {
+                        case "OpenAPI":
+                            return JsonConvert.DeserializeObject<Catalog.OpenAPI.Order>(response.Content);
+                    }
+            }
+            catch (Exception ex)
+            {
+                Base.SendMessage(GetType(), ex.StackTrace);
+            }
+            return null;
+        }
         public async Task PutContextAsync<T>(T param) where T : struct
         {
             try

@@ -5,7 +5,7 @@ using ShareInvest.Catalog.Models;
 
 namespace ShareInvest.Statistical.OpenAPI
 {
-    public class Stocks : Analysis
+    public class Futures : Analysis
     {
         public override Task<object> AnalyzeTheDataAsync(Conclusion param)
         {
@@ -19,10 +19,6 @@ namespace ShareInvest.Statistical.OpenAPI
         {
             get; set;
         }
-        public override Queue<Collect> Collection
-        {
-            get; set;
-        }
         public override dynamic Current
         {
             get; set;
@@ -32,6 +28,10 @@ namespace ShareInvest.Statistical.OpenAPI
             get; set;
         }
         public override dynamic Bid
+        {
+            get; set;
+        }
+        public override Queue<Collect> Collection
         {
             get; set;
         }
