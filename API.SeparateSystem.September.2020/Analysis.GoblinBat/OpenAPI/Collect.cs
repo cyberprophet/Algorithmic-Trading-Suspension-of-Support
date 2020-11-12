@@ -27,7 +27,7 @@ namespace ShareInvest.Analysis.OpenAPI
         }
         public void SendTransmitCommand(string code)
         {
-            if (this.code.Equals(code))
+            if (this.code.Equals(code) && Collection.Count > 0)
                 Send?.Invoke(this, new SendSecuritiesAPI(code, FinalClone));
         }
         public uint GetTime(char time)

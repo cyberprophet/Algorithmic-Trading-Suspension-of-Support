@@ -1,7 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace ShareInvest.Catalog.KRX
 {
