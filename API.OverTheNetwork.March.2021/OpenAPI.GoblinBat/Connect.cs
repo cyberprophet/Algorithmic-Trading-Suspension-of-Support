@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AxKHOpenAPILib;
 
 using ShareInvest.DelayRequest;
+using ShareInvest.OpenAPI.Catalog;
 
 namespace ShareInvest.OpenAPI
 {
@@ -45,8 +46,11 @@ namespace ShareInvest.OpenAPI
             }
         }
         internal string SendErrorMessage(int code) => error[code];
-
         internal HashSet<TR> TR
+        {
+            get; private set;
+        }
+        internal HashSet<Real> Real
         {
             get; private set;
         }
@@ -56,6 +60,7 @@ namespace ShareInvest.OpenAPI
             this.axAPI = axAPI;
             request = Delay.GetInstance(0xC9);
             request.Run();
+            Real = new HashSet<Real> { new 주식체결 { API = axAPI }, new 주식호가잔량 { API = axAPI }, new 주식시세 { API = axAPI }, new 주식우선호가 { API = axAPI }, new 장시작시간 { API = axAPI }, new 선물시세 { API = axAPI }, new 선물옵션우선호가 { API = axAPI }, new 선물호가잔량 { API = axAPI }, new 옵션시세 { API = axAPI }, new 옵션호가잔량 { API = axAPI } };
         }
         readonly Delay request;
         readonly AxKHOpenAPI axAPI;

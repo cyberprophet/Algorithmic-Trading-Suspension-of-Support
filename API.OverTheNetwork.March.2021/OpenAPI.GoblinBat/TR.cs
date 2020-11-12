@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using AxKHOpenAPILib;
 
@@ -11,7 +10,7 @@ namespace ShareInvest.OpenAPI
 {
     abstract class TR : ISendSecuritiesAPI<SendSecuritiesAPI>
     {
-        public abstract event EventHandler<SendSecuritiesAPI> Send;        
+        public abstract event EventHandler<SendSecuritiesAPI> Send;
         protected internal static uint Screen
         {
             get; set;

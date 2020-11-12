@@ -14,7 +14,7 @@ namespace ShareInvest.Controllers
         [HttpPut, ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PutContextAsync([FromBody] Codes codes)
         {
-            if (Security.SecuritiesCompany == 0x4F && (codes.Code.Length == 6 || codes.Code.Length == 8 && codes.Code[0] > 1))
+            if (Security.SecuritiesCompany == 0x4F && (codes.Code.Length == 6 || codes.Code.Length == 8 && codes.Code[0] > '1'))
                 await Security.Client.PutContextAsync(codes);
 
             if (codes.MaturityMarketCap.Contains(transaction_suspension) == false && Security.Collection.ContainsKey(codes.Code) == false)
@@ -24,7 +24,7 @@ namespace ShareInvest.Controllers
                     Code = codes.Code,
                     Collection = new Queue<Collect>()
                 };
-                return Ok();
+                return Ok(codes.Name);
             }
             return NoContent();
         }

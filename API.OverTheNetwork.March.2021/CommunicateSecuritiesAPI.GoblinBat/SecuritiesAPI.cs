@@ -26,7 +26,9 @@ namespace ShareInvest
         {
             switch (e.Convey)
             {
-                case Tuple<string, string[]> param:
+                case Tuple<string, string[]> account:
+                    foreach (var ctor in (sender as OpenAPI.ConnectAPI)?.ConnectToReceiveRealTime)
+                        ctor.Send += OnReceiveSecuritiesAPI;
 
                     return;
 

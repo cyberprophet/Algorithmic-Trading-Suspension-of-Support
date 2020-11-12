@@ -1,0 +1,29 @@
+﻿using System;
+using System.Text;
+
+using AxKHOpenAPILib;
+
+using ShareInvest.EventHandler;
+
+namespace ShareInvest.OpenAPI.Catalog
+{
+    class 옵션호가잔량 : Real
+    {
+        public override event EventHandler<SendSecuritiesAPI> Send;
+        internal override AxKHOpenAPI API
+        {
+            get; set;
+        }
+        internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
+        {
+            var index = 0;
+            var sb = new StringBuilder(API.GetCommRealData(e.sRealKey, Fid[index]));
+
+            for (index = 0; index < 0x30; index++)
+                sb.Append(';').Append(API.GetCommRealData(e.sRealKey, Fid[index + 3]));
+
+            Send?.Invoke(this, new SendSecuritiesAPI(e.sRealKey, sb));
+        }
+        protected internal override int[] Fid => new int[] { 21, 27, 28, 41, 61, 81, 101, 51, 71, 91, 111, 42, 62, 82, 102, 52, 72, 92, 112, 43, 63, 83, 103, 53, 73, 93, 113, 44, 64, 84, 104, 54, 74, 94, 114, 45, 65, 85, 105, 55, 75, 95, 115, 121, 122, 123, 125, 126, 127, 137, 128, 13, 23, 238, 200, 201, 291, 293, 294, 295 };
+    }
+}

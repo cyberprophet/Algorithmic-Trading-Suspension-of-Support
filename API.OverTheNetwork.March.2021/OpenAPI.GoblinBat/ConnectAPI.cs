@@ -121,6 +121,7 @@ namespace ShareInvest.OpenAPI
             else
                 Send?.Invoke(this, new SendSecuritiesAPI(API?.SendErrorMessage(e.nErrCode)));
         }));
+        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => BeginInvoke(new Action(() => (API as Connect)?.Real.FirstOrDefault(o => o.GetType().Name.Replace("_", string.Empty).Equals(e.sRealType))?.OnReceiveRealData(e)));
         void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => BeginInvoke(new Action(() => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg[9..], "(", e.sScrNo, ")")))));
         public ConnectAPI() => InitializeComponent();
         public dynamic API
@@ -192,12 +193,21 @@ namespace ShareInvest.OpenAPI
 
             return ctor;
         }
+        public IEnumerable<ISendSecuritiesAPI<SendSecuritiesAPI>> ConnectToReceiveRealTime
+        {
+            get
+            {
+                foreach (var ctor in API.Real)
+                    yield return ctor;
+            }
+        }
         public void StartProgress()
         {
             Start = true;
             axAPI.OnEventConnect += OnEventConnect;
             axAPI.OnReceiveMsg += OnReceiveMessage;
             axAPI.OnReceiveTrData += OnReceiveTrData;
+            axAPI.OnReceiveRealData += OnReceiveRealData;
             API = Connect.GetInstance(axAPI);
         }
         public event EventHandler<SendSecuritiesAPI> Send;
