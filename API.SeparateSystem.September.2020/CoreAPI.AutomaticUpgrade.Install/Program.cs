@@ -5,6 +5,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.Versioning;
 
+using Microsoft.Win32;
+
 namespace ShareInvest
 {
     class Program
@@ -13,8 +15,6 @@ namespace ShareInvest
         {
             get; set;
         }
-        const string core_api = ".zip";
-        const string path = @"C:\ShareInvest\";
         [STAThread, SupportedOSPlatform("windows")]
         static void Main()
         {
@@ -22,33 +22,47 @@ namespace ShareInvest
 
             if (IsDebug && Security.IsAdministrator)
             {
-                string name = Console.ReadLine(), version = string.Empty;
+                string name = Console.ReadLine(), version = string.Empty, generate_file;
                 var address = Security.ChooseTheInstallationPath(name);
                 var files = new List<string>();
 
                 foreach (var file in new DirectoryInfo(address.Item2).GetFiles("*.*", SearchOption.AllDirectories))
                 {
-                    if (file.Name.Equals("CoreAPI.exe"))
+                    if (file.Name.Equals(Security.CoreAPI))
                     {
                         var temp = FileVersionInfo.GetVersionInfo(file.FullName).FileVersion.Replace(".", string.Empty)[2..];
-                        version = string.Concat(temp[4..], temp[0..^4]);
+                        version = string.Concat(temp[^4..], temp[0..^4]);
                     }
                     files.Add(file.FullName);
                 }
-                using (var zip = ZipFile.Open(string.Concat(path, name, version, core_api), ZipArchiveMode.Create))
+                generate_file = string.Concat(Security.ShareInvest, name, version, Security.Zip);
+
+                using (var zip = ZipFile.Open(generate_file, ZipArchiveMode.Create))
                     foreach (var file in files)
                         zip.CreateEntryFromFile(file, Path.GetFileName(file), CompressionLevel.Optimal);
 
                 Console.WriteLine(new Client().TransmitTheDataToUpdate(), address);
+                new FileInfo(generate_file).Delete();
+                GC.Collect();
+                Process.GetCurrentProcess().Kill();
             }
             else
             {
+                foreach (var name in Security.Names)
+                    using (var registry = Registry.CurrentUser.OpenSubKey(Security.Run))
+                        if (registry.GetValue(name) != null)
+                        {
+                            registry.Close();
+                            Registry.CurrentUser.OpenSubKey(Security.Run, true).DeleteValue(name);
+                        }
+                using (var registry = Registry.CurrentUser.OpenSubKey(Security.Run))
+                    if (registry.GetValue(Security.Names[2]) == null)
+                    {
+                        registry.Close();
+                        Registry.CurrentUser.OpenSubKey(Security.Run, true).SetValue(Security.Names[2], string.Concat(Security.ShareInvest, Security.Names[2], ".exe"));
+                    }
                 new Server();
-
-                return;
             }
-            GC.Collect();
-            Process.GetCurrentProcess().Kill();
         }
         [Conditional("DEBUG")]
         static void ChangePropertyToDebugMode() => IsDebug = true;
