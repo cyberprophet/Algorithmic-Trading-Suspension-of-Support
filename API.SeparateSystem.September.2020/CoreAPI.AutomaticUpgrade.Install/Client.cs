@@ -1,14 +1,10 @@
 ﻿namespace ShareInvest
 {
-    class Client
+    static class Client
     {
-        internal string TransmitTheDataToUpdate()
+        internal static string TransmitTheDataToUpdate()
         {
             return message;
-        }
-        internal Client()
-        {
-
         }
         const string message = @"Installation is complete on {0}.\a";
     }

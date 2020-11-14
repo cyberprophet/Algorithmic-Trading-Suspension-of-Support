@@ -41,7 +41,7 @@ namespace ShareInvest
                     foreach (var file in files)
                         zip.CreateEntryFromFile(file, Path.GetFileName(file), CompressionLevel.Optimal);
 
-                Console.WriteLine(new Client().TransmitTheDataToUpdate(), address);
+                Console.WriteLine(Client.TransmitTheDataToUpdate(), address);
                 new FileInfo(generate_file).Delete();
                 GC.Collect();
                 Process.GetCurrentProcess().Kill();
@@ -61,7 +61,8 @@ namespace ShareInvest
                         registry.Close();
                         Registry.CurrentUser.OpenSubKey(Security.Run, true).SetValue(Security.Names[2], string.Concat(Security.ShareInvest, Security.Names[2], ".exe"));
                     }
-                new Server();
+                var path = Security.ChooseTheInstallationPath();
+                Server.StartProgress(path.Item1, path.Item2);
             }
         }
         [Conditional("DEBUG")]
