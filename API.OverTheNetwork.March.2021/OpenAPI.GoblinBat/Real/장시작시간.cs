@@ -1,19 +1,16 @@
-﻿using System;
+﻿using System.IO;
 
 using AxKHOpenAPILib;
 
 using ShareInvest.DelayRequest;
-using ShareInvest.EventHandler;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
     class 장시작시간 : Real
     {
-        public override event EventHandler<SendSecuritiesAPI> Send;
         internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
             var param = base.OnReceiveRealData(e, Fid);
-            Send?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, string>(param[0], param[1], param[^1])));
 
             if (char.TryParse(param[0], out char operation))
                 switch (operation)
@@ -36,8 +33,14 @@ namespace ShareInvest.OpenAPI.Catalog
                         Delay.Milliseconds = 0xE11;
                         break;
                 }
+            if (string.IsNullOrEmpty(param[2]) == false && string.IsNullOrEmpty(param[1]) == false && string.IsNullOrEmpty(param[0]) == false)
+                Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', param[0], ';', param[1], ';', param[^1]));
         }
         internal override AxKHOpenAPI API
+        {
+            get; set;
+        }
+        internal override StreamWriter Server
         {
             get; set;
         }

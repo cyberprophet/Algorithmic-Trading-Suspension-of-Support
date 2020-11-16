@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
 
 using ShareInvest.Catalog.Models;
 
@@ -7,13 +6,13 @@ namespace ShareInvest.Statistical.OpenAPI
 {
     public class Stocks : Analysis
     {
-        public override Task<object> AnalyzeTheDataAsync(Conclusion param)
+        public override void AnalyzeTheConclusion(string[] param)
         {
-            return null;
+
         }
-        public override Task<object> AnalyzeTheDataAsync(Quotes param)
+        public override void AnalyzeTheQuotes(string[] param)
         {
-            return null;
+
         }
         public override string Code
         {

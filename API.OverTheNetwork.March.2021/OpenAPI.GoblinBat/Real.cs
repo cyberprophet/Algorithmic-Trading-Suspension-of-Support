@@ -1,15 +1,11 @@
-﻿using System;
+﻿using System.IO;
 
 using AxKHOpenAPILib;
 
-using ShareInvest.EventHandler;
-using ShareInvest.Interface.OpenAPI;
-
 namespace ShareInvest.OpenAPI
 {
-    abstract class Real : ISendSecuritiesAPI<SendSecuritiesAPI>
+    abstract class Real
     {
-        public abstract event EventHandler<SendSecuritiesAPI> Send;
         protected internal virtual string[] OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e, int[] fid)
         {
             var param = new string[fid.Length];
@@ -24,6 +20,10 @@ namespace ShareInvest.OpenAPI
             get;
         }
         internal abstract AxKHOpenAPI API
+        {
+            get; set;
+        }
+        internal abstract StreamWriter Server
         {
             get; set;
         }

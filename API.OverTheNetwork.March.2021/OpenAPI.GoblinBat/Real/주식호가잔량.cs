@@ -1,15 +1,12 @@
-﻿using System;
+﻿using System.IO;
 using System.Text;
 
 using AxKHOpenAPILib;
-
-using ShareInvest.EventHandler;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
     class 주식호가잔량 : Real
     {
-        public override event EventHandler<SendSecuritiesAPI> Send;
         internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
         {
             var index = 0;
@@ -18,7 +15,12 @@ namespace ShareInvest.OpenAPI.Catalog
             for (index = 0; index < 0x40; index++)
                 sb.Append(';').Append(API.GetCommRealData(e.sRealKey, Fid[index + 1]));
 
-            Send?.Invoke(this, new SendSecuritiesAPI(e.sRealKey, sb));
+            if (sb.Length > 0x1F)
+                Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', sb));
+        }
+        internal override StreamWriter Server
+        {
+            get; set;
         }
         internal override AxKHOpenAPI API
         {

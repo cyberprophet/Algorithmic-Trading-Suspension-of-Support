@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -109,21 +112,25 @@ namespace ShareInvest.OpenAPI
                 yield return new Tuple<string, string>("Opt50001", code);
         }
         void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => (API as Connect)?.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name[1..].Equals(e.sTrCode[1..]))?.OnReceiveTrData(e);
-        void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e) => BeginInvoke(new Action(() =>
+        void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
             if (e.nErrCode == 0)
             {
                 foreach (var code in GetInformationOfCode(new List<string> { axAPI.GetFutureCodeByIndex(0) }, axAPI.GetCodeListByMarket(string.Empty).Split(';')))
                     Send?.Invoke(this, new SendSecuritiesAPI(code));
 
-                Send?.Invoke(this, new SendSecuritiesAPI(GetType().Name, axAPI.GetLoginInfo("ACCLIST").Split(';')));
+                Send?.Invoke(this, new SendSecuritiesAPI(axAPI.GetLoginInfo("ACCLIST").Split(';')));
             }
             else
                 Send?.Invoke(this, new SendSecuritiesAPI(API?.SendErrorMessage(e.nErrCode)));
-        }));
-        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => BeginInvoke(new Action(() => (API as Connect)?.Real.FirstOrDefault(o => o.GetType().Name.Replace("_", string.Empty).Equals(e.sRealType))?.OnReceiveRealData(e)));
-        void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => BeginInvoke(new Action(() => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg[9..], "(", e.sScrNo, ")")))));
-        public ConnectAPI() => InitializeComponent();
+        }
+        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => (API as Connect)?.Real.FirstOrDefault(o => o.GetType().Name.Replace("_", string.Empty).Equals(e.sRealType, StringComparison.Ordinal))?.OnReceiveRealData(e);
+        void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg[9..], "(", e.sScrNo, ")")));
+        public ConnectAPI()
+        {
+            InitializeComponent();
+            ConnectToReceiveRealTime = new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName.Split(' ')[2], PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+        }
         public dynamic API
         {
             get; private set;
@@ -193,23 +200,28 @@ namespace ShareInvest.OpenAPI
 
             return ctor;
         }
-        public IEnumerable<ISendSecuritiesAPI<SendSecuritiesAPI>> ConnectToReceiveRealTime
+        public StreamWriter Writer
         {
-            get
-            {
-                foreach (var ctor in API.Real)
-                    yield return ctor;
-            }
+            get; private set;
         }
-        public void StartProgress()
+        public NamedPipeServerStream ConnectToReceiveRealTime
+        {
+            get;
+        }
+        public void StartProgress() => BeginInvoke(new Action(async () =>
         {
             Start = true;
             axAPI.OnEventConnect += OnEventConnect;
             axAPI.OnReceiveMsg += OnReceiveMessage;
             axAPI.OnReceiveTrData += OnReceiveTrData;
             axAPI.OnReceiveRealData += OnReceiveRealData;
-            API = Connect.GetInstance(axAPI);
-        }
+            await ConnectToReceiveRealTime.WaitForConnectionAsync();
+            Writer = new StreamWriter(ConnectToReceiveRealTime)
+            {
+                AutoFlush = true
+            };
+            API = Connect.GetInstance(axAPI, Writer);
+        }));
         public event EventHandler<SendSecuritiesAPI> Send;
     }
 }

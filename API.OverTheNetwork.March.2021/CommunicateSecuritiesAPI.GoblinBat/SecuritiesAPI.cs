@@ -15,77 +15,36 @@ namespace ShareInvest
         {
             get; private set;
         }
-        internal SecuritiesAPI(ISecuritiesAPI<SendSecuritiesAPI> connect)
+        internal SecuritiesAPI(dynamic param, ISecuritiesAPI<SendSecuritiesAPI> connect)
         {
             InitializeComponent();
             this.connect = connect;
             timer.Start();
             client = GoblinBat.GetInstance();
+            random = new Random(Guid.NewGuid().GetHashCode());
             Codes = new Queue<string>();
+            GetTheCorrectAnswer = new int[Security.Initialize(param)];
         }
         void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(async () =>
         {
             switch (e.Convey)
             {
                 case Tuple<string, string, string, string> conclusion:
-                    var conclusion_order = await client.PostContextAsync(sender.GetType(), new Catalog.Models.Conclusion
-                    {
-                        Code = conclusion.Item1,
-                        Time = conclusion.Item2,
-                        Price = conclusion.Item3,
-                        Volume = conclusion.Item4
-                    });
-                    if (conclusion_order is not null)
-                    {
 
-                    }
                     return;
 
                 case Tuple<string, StringBuilder> quotes:
-                    var quotes_order = await client.PostContextAsync(sender.GetType(), new Catalog.Models.Quotes
-                    {
-                        Code = quotes.Item1,
-                        Datum = quotes.Item2.ToString()
-                    });
-                    if (quotes_order is not null)
-                    {
 
-                    }
                     return;
 
-                case Tuple<string, double, double, double> futures:
-                    await client.PutContextAsync(new Catalog.Models.Priority
-                    {
-                        Code = futures.Item1,
-                        Current = futures.Item2,
-                        Offer = futures.Item3,
-                        Bid = futures.Item4
-                    });
+                case Catalog.Models.Priority priority:
+
                     return;
 
-                case Tuple<string, int, int, int> stocks:
-                    await client.PutContextAsync(new Catalog.Models.Priority
-                    {
-                        Code = stocks.Item1,
-                        Current = stocks.Item2,
-                        Offer = stocks.Item3,
-                        Bid = stocks.Item4
-                    });
-                    return;
-
-                case Tuple<string, int, int> bs:
-                    await client.PutContextAsync(new Catalog.Models.Priority
-                    {
-                        Code = bs.Item1,
-                        Current = int.MinValue,
-                        Offer = bs.Item2,
-                        Bid = bs.Item3
-                    });
-                    return;
-
-                case Tuple<string, string[]> account:
-                    foreach (var ctor in (sender as OpenAPI.ConnectAPI)?.ConnectToReceiveRealTime)
-                        ctor.Send += OnReceiveSecuritiesAPI;
+                case string[] accounts:
+                    foreach (var str in accounts)
+                        if (str.Length == 10 && str[^2..].CompareTo("32") < 0)
+                            connect.Writer.WriteLine(str);
 
                     return;
 
@@ -132,7 +91,6 @@ namespace ShareInvest
                     return;
 
                 case short error:
-                    Repeat = error == -0x6A;
                     Dispose((Control)connect);
                     return;
             }
@@ -142,15 +100,38 @@ namespace ShareInvest
             if (connect == null)
             {
                 timer.Stop();
+                strip.ItemClicked -= StripItemClicked;
                 Dispose((Control)connect);
             }
             else if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) == false)
             {
+                for (int i = 0; i < GetTheCorrectAnswer.Length; i++)
+                {
+                    var temp = 1 + random.Next(0, 0x4B0) * (i + 1);
+                    GetTheCorrectAnswer[i] = temp < 0x4B1 ? temp : 0x4B0 - i;
+                }
                 WindowState = FormWindowState.Minimized;
+            }
+            else if (connect.Start)
+            {
+
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
             {
+                var now = DateTime.Now;
+                now = now.DayOfWeek switch
+                {
+                    DayOfWeek.Sunday => now.AddDays(1),
+                    DayOfWeek.Saturday => now.AddDays(2),
+                    DayOfWeek weeks when weeks.Equals(DayOfWeek.Friday) && now.Hour > 8 => now.AddDays(3),
+                    _ => now.Hour > 8 || Array.Exists(Base.Holidays, o => o.Equals(now.ToString("yyMMdd"))) ? now.AddDays(1) : now,
+                };
+                var remain = new DateTime(now.Year, now.Month, now.Day, 9, 0, 0) - DateTime.Now;
+                notifyIcon.Text = Base.GetRemainingTime(remain);
 
+                if (connect.Start == false && remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E &&
+                    (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
+                    StartProgress((Control)connect);
             }
         }
         void SecuritiesResize(object sender, EventArgs e) => BeginInvoke(new Action(() =>
@@ -200,7 +181,12 @@ namespace ShareInvest
         {
             get; set;
         }
+        int[] GetTheCorrectAnswer
+        {
+            get;
+        }
         const string instance = "ShareInvest.OpenAPI.Catalog.";
+        readonly Random random;
         readonly GoblinBat client;
         readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
     }

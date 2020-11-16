@@ -1,16 +1,23 @@
-﻿using System;
+﻿using System.IO;
 
 using AxKHOpenAPILib;
-
-using ShareInvest.EventHandler;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
     class 선물시세 : Real
     {
-        public override event EventHandler<SendSecuritiesAPI> Send;
-        internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e) => Send?.Invoke(this, new SendSecuritiesAPI(e.sRealKey, API.GetCommRealData(e.sRealKey, Fid[0]), API.GetCommRealData(e.sRealKey, Fid[1]), API.GetCommRealData(e.sRealKey, Fid[6])));
+        internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
+        {
+            string time = API.GetCommRealData(e.sRealKey, Fid[0]), current = API.GetCommRealData(e.sRealKey, Fid[1]), volume = API.GetCommRealData(e.sRealKey, Fid[6]);
+
+            if (string.IsNullOrEmpty(volume) == false && string.IsNullOrEmpty(current) == false && string.IsNullOrEmpty(time) == false)
+                Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', time, ';', current, ';', volume));
+        }
         internal override AxKHOpenAPI API
+        {
+            get; set;
+        }
+        internal override StreamWriter Server
         {
             get; set;
         }

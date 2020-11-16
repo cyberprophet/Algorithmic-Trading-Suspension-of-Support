@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.IO.Pipes;
 
 namespace ShareInvest.Interface
 {
@@ -10,6 +12,14 @@ namespace ShareInvest.Interface
             get;
         }
         bool Start
+        {
+            get;
+        }
+        NamedPipeServerStream ConnectToReceiveRealTime
+        {
+            get;
+        }
+        StreamWriter Writer
         {
             get;
         }

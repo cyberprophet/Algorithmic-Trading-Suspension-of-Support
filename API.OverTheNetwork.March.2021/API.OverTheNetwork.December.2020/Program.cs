@@ -1,30 +1,22 @@
-using System;
-using System.Diagnostics;
+using System.Runtime.Versioning;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
 using ShareInvest;
-using ShareInvest.Catalog.Models;
 
 namespace ShareInvet
 {
     public class Program
     {
+        [SupportedOSPlatform("windows")]
         public static void Main(string[] args)
         {
-            if (new Security(args).GrantAccess)
-            {
-                if (Security.Client.GetContextAsync(args).Result is Privacies privacy)
-                    Security.SetPrivacy(privacy);
+            Security.ChangePropertyToDebugMode();
+            var host = CreateHostBuilder().Build();
 
-                CreateHostBuilder().Build().Run();
-            }
-            else
-            {
-                GC.Collect();
-                Process.GetCurrentProcess().Kill();
-            }
+            if (new Security(args).GetContextAsync(args, host).Result.GrantAccess)
+                host.Run();
         }
         public static IWebHostBuilder CreateHostBuilder() => WebHost.CreateDefaultBuilder().UseStartup<Startup>();
     }

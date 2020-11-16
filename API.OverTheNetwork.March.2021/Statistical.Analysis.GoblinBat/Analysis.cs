@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Threading.Tasks;
 
 using ShareInvest.Catalog.Models;
 
@@ -7,8 +6,8 @@ namespace ShareInvest.Statistical
 {
     public abstract class Analysis
     {
-        public abstract Task<object> AnalyzeTheDataAsync(Conclusion param);
-        public abstract Task<object> AnalyzeTheDataAsync(Quotes param);
+        public abstract void AnalyzeTheConclusion(string[] param);
+        public abstract void AnalyzeTheQuotes(string[] param);
         public abstract string Code
         {
             get; set;

@@ -6,15 +6,15 @@
         {
             get; set;
         }
-        public dynamic Current
+        public string Current
         {
             get; set;
         }
-        public dynamic Offer
+        public string Offer
         {
             get; set;
         }
-        public dynamic Bid
+        public string Bid
         {
             get; set;
         }
