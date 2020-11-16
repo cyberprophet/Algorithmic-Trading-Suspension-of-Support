@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Security.Principal;
@@ -17,6 +18,10 @@ namespace ShareInvest
         {
             private get; set;
         }
+        internal static StreamWriter Client
+        {
+            get; private set;
+        }
         internal static string Key
         {
             private get; set;
@@ -30,13 +35,13 @@ namespace ShareInvest
             if (client.IsConnected)
                 OnReceivePipeClientMessage(client);
         }).Start();
-        static bool Collection
-        {
-            get; set;
-        }
         static void OnReceivePipeClientMessage(NamedPipeClientStream client)
         {
-            bool repeat = true;
+            bool repeat = true, collection = false, stocks = false;
+            Client = new StreamWriter(client)
+            {
+                AutoFlush = true
+            };
             using (var sr = new StreamReader(client))
                 try
                 {
@@ -48,10 +53,10 @@ namespace ShareInvest
                         {
                             string[] temp = param.Split('|'), price;
 
-                            if (temp[0].Length != 5 && temp[0].Length != 0xA && Collection && Security.Collection.TryGetValue(temp[1], out Statistical.Analysis analysis))
+                            if (temp[0].Length != 5 && temp[0].Length != 0xA && collection && Security.Collection.TryGetValue(temp[1], out Statistical.Analysis analysis))
                                 switch (temp[0].Length)
                                 {
-                                    case 4 when temp[0].Equals("주식시세") == false:
+                                    case 4 when temp[0].Equals("주식시세") == false && (stocks && temp[1].Length == 6 || temp[1].Length == 8):
                                         price = temp[^1].Split(';');
                                         new Task(() => analysis.AnalyzeTheConclusion(price)).Start();
                                         analysis.Collection.Enqueue(new Collect
@@ -59,9 +64,10 @@ namespace ShareInvest
                                             Time = price[0],
                                             Datum = temp[^1][7..]
                                         });
+                                        analysis.Collector = true;
                                         break;
 
-                                    case 6 when temp[0].Equals("주식우선호가") == false:
+                                    case 6 when temp[0].Equals("주식우선호가") == false && analysis.Collector:
                                         price = temp[^1].Split(';');
                                         new Task(() => analysis.AnalyzeTheQuotes(price)).Start();
                                         analysis.Collection.Enqueue(new Collect
@@ -100,29 +106,39 @@ namespace ShareInvest
                                     switch (Enum.ToObject(typeof(Operation), number))
                                     {
                                         case Operation.장시작:
-                                            Collection = operation[1].Equals("090000") && operation[^1].Equals("000000");
+                                            collection = operation[1].Equals("090000") && operation[^1].Equals("000000");
+                                            stocks = true;
+                                            break;
+
+                                        case Operation.장마감:
+                                            stocks = false;
                                             break;
 
                                         case Operation.장시작전 when operation[1].Equals("085500"):
+                                            Client.WriteLine(string.Concat(temp[1], '_', temp[^1]));
+                                            break;
 
+                                        case Operation.장마감전_동시호가:
+                                            Console.WriteLine(temp[1] + "\t" + temp[^1]);
                                             break;
                                     }
                                 else if (char.TryParse(operation[0], out char charactor))
                                     switch (Enum.ToObject(typeof(Operation), charactor))
                                     {
                                         case Operation.선옵_장마감전_동시호가_종료:
-
+                                            Console.WriteLine(temp[1] + "\t" + temp[^1]);
                                             break;
 
                                         case Operation.시간외_단일가_매매종료:
                                             repeat = false;
+                                            Process.Start("shutdown.exe", "-r");
                                             Host.Dispose();
                                             break;
                                     }
                             }
-                            else if (temp[0].Length == 0xA)
+                            else if (temp.Length == 1 && param.Length == 0xA)
                             {
-
+                                Console.WriteLine(param);
                             }
                         }
                     }
@@ -133,6 +149,9 @@ namespace ShareInvest
                 }
                 finally
                 {
+                    Client.Close();
+                    Client.Dispose();
+                    Client = null;
                     client.Close();
                     client.Dispose();
                     TellTheClientConnectionStatus(client.IsConnected);

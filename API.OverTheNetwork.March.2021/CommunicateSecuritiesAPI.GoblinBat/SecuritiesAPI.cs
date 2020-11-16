@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.ComponentModel;
+using System.IO;
+using System.IO.Pipes;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Client;
@@ -24,28 +27,21 @@ namespace ShareInvest
             random = new Random(Guid.NewGuid().GetHashCode());
             Codes = new Queue<string>();
             GetTheCorrectAnswer = new int[Security.Initialize(param)];
+            miss = new Stack<Catalog.Models.Codes>();
         }
         void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(async () =>
         {
             switch (e.Convey)
             {
-                case Tuple<string, string, string, string> conclusion:
-
-                    return;
-
-                case Tuple<string, StringBuilder> quotes:
-
-                    return;
-
-                case Catalog.Models.Priority priority:
-
-                    return;
-
-                case string[] accounts:
-                    foreach (var str in accounts)
-                        if (str.Length == 10 && str[^2..].CompareTo("32") < 0)
-                            connect.Writer.WriteLine(str);
-
+                case Tuple<string, string, string, string, int> tr:
+                    await RegisterStocksItems(new Catalog.Models.Codes
+                    {
+                        Code = tr.Item1,
+                        Name = tr.Item2,
+                        MaturityMarketCap = tr.Item3,
+                        Price = tr.Item4,
+                        MarginRate = tr.Item5
+                    }, sender);
                     return;
 
                 case Tuple<string, string> request:
@@ -55,39 +51,22 @@ namespace ShareInvest
                     (sender as OpenAPI.ConnectAPI).InputValueRqData(string.Concat(instance, request.Item1), request.Item2).Send += OnReceiveSecuritiesAPI;
                     return;
 
-                case Tuple<string, string, string> operation:
-
-                    return;
-
-                case Tuple<string, string, string, string, int> tr:
-                    await client.PutContextAsync(new Catalog.Models.Codes
-                    {
-                        Code = tr.Item1,
-                        Name = tr.Item2,
-                        MaturityMarketCap = tr.Item3,
-                        Price = tr.Item4,
-                        MarginRate = tr.Item5
-                    });
-                    if (tr.Item1.Length == 8)
-                    {
-                        if (Codes.TryPeek(out string param) && param.Length > 8)
-                        {
-                            var temp = Codes.Dequeue().Split('_');
-                            (connect as OpenAPI.ConnectAPI).RemoveValueRqData(temp[0], temp[^1]).Send -= OnReceiveSecuritiesAPI;
-                        }
-                        (connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, tr.Item1).Send -= OnReceiveSecuritiesAPI;
-                    }
-                    if (tr.Item1.Length == 6 || tr.Item1.Length == 8 && tr.Item1[1] == '0')
-                        Codes.Enqueue(tr.Item1);
-
-                    return;
-
                 case Catalog.Models.Codes codes:
-                    await client.PutContextAsync(codes);
+                    if (string.IsNullOrEmpty(await client.PutContextAsync(codes) as string))
+                        Base.SendMessage(sender.GetType(), codes.Name, codes.MaturityMarketCap);
+
                     return;
 
                 case string message:
                     notifyIcon.Text = message;
+                    return;
+
+                case string[] accounts:
+                    foreach (var str in accounts)
+                        if (str.Length == 10 && str[^2..].CompareTo("32") < 0)
+                            connect.Writer.WriteLine(str);
+
+                    worker.RunWorkerAsync(connect.ConnectToReceiveRealTime);
                     return;
 
                 case short error:
@@ -95,6 +74,53 @@ namespace ShareInvest
                     return;
             }
         }));
+        async Task RegisterStocksItems(Catalog.Models.Codes register, object sender)
+        {
+            if (await client.PutContextAsync(register) is string name && register.Name.Equals(name))
+            {
+                if (register.Code.Length == 8)
+                {
+                    if (Codes.TryPeek(out string param) && param.Length > 8)
+                    {
+                        var temp = Codes.Dequeue().Split('_');
+                        (connect as OpenAPI.ConnectAPI).RemoveValueRqData(temp[0], temp[^1]).Send -= OnReceiveSecuritiesAPI;
+                    }
+                    (connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, register.Code).Send -= OnReceiveSecuritiesAPI;
+                }
+                if (register.Code.Length == 6 || register.Code.Length == 8 && register.Code[1] == '0')
+                    Codes.Enqueue(register.Code);
+            }
+            else
+            {
+                Base.SendMessage(sender.GetType(), register.Name);
+                miss.Push(register);
+            }
+        }
+        void WorkerDoWork(object sender, DoWorkEventArgs e)
+        {
+            if (e.Argument is NamedPipeServerStream server)
+                using (var sr = new StreamReader(server))
+                    try
+                    {
+                        while (server.IsConnected)
+                        {
+                            var param = sr.ReadLine();
+
+                            if (string.IsNullOrEmpty(param) == false)
+                            {
+                                Base.SendMessage(sender.GetType(), param);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Base.SendMessage(sender.GetType(), ex.StackTrace);
+                    }
+                    finally
+                    {
+                        Dispose((Control)connect);
+                    }
+        }
         void TimerTick(object sender, EventArgs e)
         {
             if (connect == null)
@@ -114,7 +140,11 @@ namespace ShareInvest
             }
             else if (connect.Start)
             {
+                if (miss.Count > 0 && Codes.Count == Miss)
+                    BeginInvoke(new Action(async () => await RegisterStocksItems(miss.Pop(), this)));
 
+                else
+                    Miss = Codes.Count;
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
             {
@@ -179,15 +209,20 @@ namespace ShareInvest
         }
         Queue<string> Codes
         {
-            get; set;
+            get;
         }
         int[] GetTheCorrectAnswer
         {
             get;
         }
+        int Miss
+        {
+            get; set;
+        }
         const string instance = "ShareInvest.OpenAPI.Catalog.";
         readonly Random random;
         readonly GoblinBat client;
+        readonly Stack<Catalog.Models.Codes> miss;
         readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
     }
 }

@@ -46,19 +46,20 @@ namespace ShareInvest.Client
             }
             return null;
         }
-        public async Task PutContextAsync<T>(T param) where T : struct
+        public async Task<object> PutContextAsync<T>(T param) where T : struct
         {
             try
             {
                 var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ? security.RequestTheIntegratedAddress(param) : Security.RequestTheIntegratedAddress(param.GetType()), Method.PUT).AddJsonBody(param, Security.content_type), source.Token);
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
-                    Base.SendMessage(GetType(), JsonConvert.DeserializeObject<string>(response.Content));
+                    return JsonConvert.DeserializeObject<string>(response.Content);
             }
             catch (Exception ex)
             {
                 Base.SendMessage(GetType(), ex.StackTrace);
             }
+            return null;
         }
         GoblinBat()
         {

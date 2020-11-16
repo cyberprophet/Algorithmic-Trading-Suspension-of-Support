@@ -14,6 +14,10 @@ namespace ShareInvest.Statistical.OpenAPI
         {
 
         }
+        public override bool Collector
+        {
+            get; set;
+        }
         public override string Code
         {
             get; set;

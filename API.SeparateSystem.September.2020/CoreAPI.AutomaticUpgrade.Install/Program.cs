@@ -15,7 +15,7 @@ namespace ShareInvest
         {
             get; set;
         }
-        [STAThread, SupportedOSPlatform("windows")]
+        [SupportedOSPlatform("windows")]
         static void Main()
         {
             ChangePropertyToDebugMode();
@@ -30,7 +30,7 @@ namespace ShareInvest
                 {
                     if (file.Name.Equals(Security.CoreAPI))
                     {
-                        var temp = FileVersionInfo.GetVersionInfo(file.FullName).FileVersion.Replace(".", string.Empty)[2..];
+                        var temp = FileVersionInfo.GetVersionInfo(file.FullName).ProductVersion.Replace(".", string.Empty)[2..];
                         version = string.Concat(temp[^4..], temp[0..^4]);
                     }
                     files.Add(file.FullName);

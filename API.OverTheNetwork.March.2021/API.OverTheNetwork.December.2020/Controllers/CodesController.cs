@@ -11,10 +11,13 @@ namespace ShareInvest.Controllers
     [ApiController, Route(Security.route), Produces(Security.produces)]
     public class CodesController : ControllerBase
     {
-        [HttpPut, ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPut, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PutContextAsync([FromBody] Codes param)
         {
-            if (Security.Collection.ContainsKey(param.Code) == false)
+            if (Security.Collection.ContainsKey(param.Code))
+                return Ok(param.Name);
+
+            else
             {
                 if (Security.SecuritiesCompany == 0x4F && (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[0] > '1'))
                     await Security.Client.PutContextAsync(param);
@@ -59,7 +62,7 @@ namespace ShareInvest.Controllers
                     return Ok(param.Name);
                 }
             }
-            return NoContent();
+            return Ok();
         }
         const string transaction_suspension = "거래정지";
     }
