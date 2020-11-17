@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Runtime.Versioning;
 using System.Security.Principal;
 using System.Threading.Tasks;
 
@@ -18,30 +19,43 @@ namespace ShareInvest
         {
             private get; set;
         }
-        internal static StreamWriter Client
-        {
-            get; private set;
-        }
         internal static string Key
         {
             private get; set;
         }
-        internal static void TryToConnectThePipeStream() => new Task(async () =>
+        internal static StreamWriter Server
         {
-            var client = new NamedPipeClientStream(".", Key, PipeDirection.InOut, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
-            await client.ConnectAsync();
-            TellTheClientConnectionStatus(client.IsConnected);
+            get; private set;
+        }
+        [SupportedOSPlatform("windows")]
+        internal static void TryToConnectThePipeStream()
+        {
+            var server = new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName, PipeDirection.Out, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            var client = new NamedPipeClientStream(".", Key, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+            new Task(async () =>
+            {
+                await server.WaitForConnectionAsync();
+                TellTheClientConnectionStatus(server.GetType().Name, server.IsConnected);
 
-            if (client.IsConnected)
-                OnReceivePipeClientMessage(client);
-        }).Start();
-        static void OnReceivePipeClientMessage(NamedPipeClientStream client)
+                if (server.IsConnected)
+                    Server = new StreamWriter(server)
+                    {
+                        AutoFlush = true
+                    };
+            }).Start();
+            new Task(async () =>
+            {
+                await client.ConnectAsync();
+                TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected);
+
+                if (client.IsConnected)
+                    OnReceivePipeClientMessage(client, server);
+            }).Start();
+        }
+        [SupportedOSPlatform("windows")]
+        static void OnReceivePipeClientMessage(NamedPipeClientStream client, NamedPipeServerStream server)
         {
             bool repeat = true, collection = false, stocks = false;
-            Client = new StreamWriter(client)
-            {
-                AutoFlush = true
-            };
             using (var sr = new StreamReader(client))
                 try
                 {
@@ -112,10 +126,11 @@ namespace ShareInvest
 
                                         case Operation.장마감:
                                             stocks = false;
+                                            Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
                                             break;
 
                                         case Operation.장시작전 when operation[1].Equals("085500"):
-                                            Client.WriteLine(string.Concat(temp[1], '_', temp[^1]));
+                                            Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
                                             break;
 
                                         case Operation.장마감전_동시호가:
@@ -136,9 +151,15 @@ namespace ShareInvest
                                             break;
                                     }
                             }
-                            else if (temp.Length == 1 && param.Length == 0xA)
+                            else if (temp.Length == 1)
                             {
-                                Console.WriteLine(param);
+                                if (param.Equals("조회"))
+                                {
+                                    collection = true;
+                                    stocks = true;
+                                }
+                                else if (param.Length == 0xA)
+                                    Console.WriteLine(param);
                             }
                         }
                     }
@@ -149,16 +170,30 @@ namespace ShareInvest
                 }
                 finally
                 {
-                    Client.Close();
-                    Client.Dispose();
-                    Client = null;
                     client.Close();
                     client.Dispose();
-                    TellTheClientConnectionStatus(client.IsConnected);
+                    Server.Close();
+                    Server.Dispose();
+
+                    if (server.IsConnected)
+                        server.Disconnect();
+
+                    server.Close();
+                    server.Dispose();
+                    TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected);
+                    TellTheClientConnectionStatus(server.GetType().Name, server.IsConnected);
                 }
             if (repeat && Console.ReadLine().Equals("Try to Connect"))
+            {
                 TryToConnectThePipeStream();
+                Console.WriteLine("Wait for the {0}API to Restart. . .", Security.SecuritiesCompany == 'O' ? "Open" : "Xing");
+            }
+            else
+            {
+                Process.Start("shutdown.exe", "-r");
+                Host.Dispose();
+            }
         }
-        static void TellTheClientConnectionStatus(bool is_connected) => Console.WriteLine("Client is connected on {0}", is_connected);
+        static void TellTheClientConnectionStatus(string name, bool is_connected) => Console.WriteLine("{0} is connected on {1}", name, is_connected);
     }
 }

@@ -15,6 +15,7 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
+        internal static Connect GetInstance() => API;
         internal static Connect GetInstance(AxKHOpenAPI axAPI, StreamWriter writer)
         {
             if (API == null && axAPI.CommConnect() == 0)
