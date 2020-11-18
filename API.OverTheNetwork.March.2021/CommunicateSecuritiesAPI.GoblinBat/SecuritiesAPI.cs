@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,6 +18,8 @@ namespace ShareInvest
 {
     sealed partial class SecuritiesAPI : Form
     {
+        [Conditional("DEBUG")]
+        static void PreventsFromRunningAgain(FormClosingEventArgs e) => e.Cancel = true;
         internal SecuritiesAPI(dynamic param, ISecuritiesAPI<SendSecuritiesAPI> connect)
         {
             InitializeComponent();
@@ -43,7 +47,7 @@ namespace ShareInvest
                 OnReceiveInformationTheDay();
             }
             else
-                Dispose((Control)connect);
+                Dispose(0x1CE3);
         }));
         void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(async () =>
         {
@@ -100,7 +104,7 @@ namespace ShareInvest
                     return;
 
                 case short error:
-                    Dispose((Control)connect);
+                    Dispose(connect as Control);
                     return;
             }
         }));
@@ -140,18 +144,25 @@ namespace ShareInvest
                             {
                                 var temp = param.Split('|');
 
-                                switch (temp[0])
-                                {
-                                    case "Operation":
-                                        if (temp[^1].Equals("085500"))
-                                        {
+                                if (temp[0].Equals("Operation"))
+                                    switch (temp[^1])
+                                    {
+                                        case "085500":
+                                            miss.Clear();
+                                            break;
 
-                                        }
-                                        else if (temp[^1].Equals("153000"))
+                                        case "152000":
+                                            break;
+
+                                        case "8":
                                             OnReceiveInformationTheDay();
+                                            break;
 
-                                        break;
-                                }
+                                        case "d":
+                                            Dispose(connect as Control);
+                                            break;
+                                    }
+                                Base.SendMessage(sender.GetType(), temp[0], temp[^1]);
                             }
                         }
                     }
@@ -171,7 +182,7 @@ namespace ShareInvest
             {
                 timer.Stop();
                 strip.ItemClicked -= StripItemClicked;
-                Dispose((Control)connect);
+                Dispose(connect as Control);
             }
             else if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) == false)
             {
@@ -189,6 +200,12 @@ namespace ShareInvest
 
                 else
                     Miss = Codes.Count;
+
+                if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
+                {
+                    notifyIcon.Text = connect.SecuritiesName;
+                    timer.Interval = 0x3E15;
+                }
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
             {
@@ -205,7 +222,7 @@ namespace ShareInvest
 
                 if (connect.Start == false && remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E &&
                     (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
-                    StartProgress((Control)connect);
+                    StartProgress(connect as Control);
             }
         }
         void SecuritiesResize(object sender, EventArgs e) => BeginInvoke(new Action(() =>
@@ -226,12 +243,13 @@ namespace ShareInvest
                 if (e.ClickedItem.Text.Equals("연결"))
                 {
                     e.ClickedItem.Text = "조회";
-                    StartProgress((Control)connect);
+                    StartProgress(connect as Control);
                 }
                 else
-                    switch (MessageBox.Show("", "", MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1))
+                    switch (MessageBox.Show(look_up, connect.SecuritiesName, MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
                     {
                         case DialogResult.Abort:
+
                             break;
 
                         case DialogResult.Retry:
@@ -239,6 +257,7 @@ namespace ShareInvest
                             break;
 
                         case DialogResult.Ignore:
+                            RequestTheMissingInformation();
                             break;
                     }
             }
@@ -248,32 +267,71 @@ namespace ShareInvest
         void JustBeforeFormClosing(object sender, FormClosingEventArgs e)
         {
             if (CloseReason.UserClosing.Equals(e.CloseReason))
-                switch (MessageBox.Show("", "", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
+                switch (MessageBox.Show(form_exit, connect.SecuritiesName, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
                 {
                     case DialogResult.OK:
+                        PreventsFromRunningAgain(e);
 
+                        if (e.Cancel == false)
+                        {
+                            if (connect.Writer != null)
+                            {
+                                Dispose(0xF75);
+
+                                return;
+                            }
+                            Process.Start("shutdown.exe", "-r");
+
+                            foreach (var process in Process.GetProcesses())
+                                if (Security.API.Equals(process.ProcessName))
+                                    process.Kill();
+                        }
                         break;
 
                     case DialogResult.Cancel:
                         e.Cancel = e.CloseReason.Equals(CloseReason.UserClosing);
                         return;
                 }
-            Dispose((Control)connect);
+            Dispose(connect as Control);
         }
         void StartProgress(Control connect)
         {
-            Controls.Add(connect);
-            connect.Dock = DockStyle.Fill;
-            connect.Show();
-            FormBorderStyle = FormBorderStyle.None;
-            CenterToScreen();
-            this.connect.Send += OnReceiveSecuritiesAPI;
-            this.connect.StartProgress();
+            if (connect is Control)
+            {
+                Controls.Add(connect);
+                connect.Dock = DockStyle.Fill;
+                connect.Show();
+                FormBorderStyle = FormBorderStyle.None;
+                CenterToScreen();
+                this.connect.Send += OnReceiveSecuritiesAPI;
+                this.connect.StartProgress();
+            }
+            else
+                Close();
         }
         void Dispose(Control connect)
         {
-            connect.Dispose();
+            if (connect is Control)
+                connect.Dispose();
+
             Dispose();
+        }
+        void Dispose(int milliseconds)
+        {
+            connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), "|d;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation)));
+            Thread.Sleep(milliseconds);
+            Dispose(connect as Control);
+        }
+        [Conditional("DEBUG")]
+        void RequestTheMissingInformation()
+        {
+            if (MessageBox.Show(GetType().AssemblyQualifiedName, Name, MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2).Equals(DialogResult.OK))
+                switch (connect)
+                {
+                    case OpenAPI.ConnectAPI o:
+                        o.Writer.WriteLine(string.Concat("장시작시간|", GetType(), "|8;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation)));
+                        break;
+                }
         }
         Queue<string> Codes
         {
@@ -287,6 +345,8 @@ namespace ShareInvest
         {
             get; set;
         }
+        const string look_up = "'조회'는 장시작 5분전 자동으로 실행됩니다.\n\n강제로 프로그램을 실행하지 않았다면\n사용을 '중단'할 것을 권장합니다.\n\n(중단)\n'조회'를 취소합니다.\n\n(재시도)\n'조회'가 실행되면 장시작 설정으로 초기화됩니다.\n\n(무시)\n'관리자'만 실행가능합니다.";
+        const string form_exit = "사용자 종료시 데이터 소실 및 오류를 초래합니다.\n\n그래도 종료하시겠습니까?\n\n프로그램 종료후 자동으로 재부팅됩니다.";
         const string instance = "ShareInvest.OpenAPI.Catalog.";
         readonly string normalize;
         readonly Random random;

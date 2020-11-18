@@ -11,6 +11,10 @@ namespace ShareInvest.Interface
         {
             get;
         }
+        string SecuritiesName
+        {
+            get;
+        }
         bool Start
         {
             get;

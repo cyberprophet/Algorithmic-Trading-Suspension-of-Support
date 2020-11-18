@@ -55,6 +55,7 @@ namespace ShareInvest.Client
             catch (Exception ex)
             {
                 Base.SendMessage(GetType(), ex.StackTrace);
+                Base.SendMessage(ex.StackTrace, GetType());
             }
             return new Retention
             {
@@ -74,6 +75,7 @@ namespace ShareInvest.Client
             catch (Exception ex)
             {
                 Base.SendMessage(GetType(), ex.StackTrace);
+                Base.SendMessage(ex.StackTrace, GetType());
             }
             return null;
         }
@@ -102,6 +104,7 @@ namespace ShareInvest.Client
             catch (Exception ex)
             {
                 Base.SendMessage(GetType(), ex.StackTrace);
+                Base.SendMessage(ex.StackTrace, GetType());
             }
             return null;
         }
@@ -114,13 +117,14 @@ namespace ShareInvest.Client
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
                     switch (param)
                     {
-                        case Retention:
+                        case Retention when string.IsNullOrEmpty(response.Content) == false:
                             return JsonConvert.DeserializeObject<Retention>(response.Content);
                     }
             }
             catch (Exception ex)
             {
                 Base.SendMessage(GetType(), ex.StackTrace);
+                Base.SendMessage(ex.StackTrace, GetType());
             }
             return null;
         }
@@ -158,6 +162,7 @@ namespace ShareInvest.Client
             catch (Exception ex)
             {
                 Base.SendMessage(GetType(), ex.StackTrace);
+                Base.SendMessage(ex.StackTrace, GetType());
             }
             return int.MinValue;
         }
@@ -173,6 +178,7 @@ namespace ShareInvest.Client
             catch (Exception ex)
             {
                 Base.SendMessage(GetType(), ex.StackTrace);
+                Base.SendMessage(ex.StackTrace, GetType());
             }
             return null;
         }

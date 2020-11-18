@@ -41,6 +41,7 @@ namespace ShareInvest.DelayRequest
                     catch (Exception ex)
                     {
                         Base.SendMessage(GetType(), ex.StackTrace, ex.TargetSite.Name);
+                        Base.SendMessage(ex.StackTrace, ex.TargetSite.Name, GetType());
                     }
             });
         }

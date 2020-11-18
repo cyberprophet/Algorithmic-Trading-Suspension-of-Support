@@ -121,7 +121,8 @@ namespace ShareInvest.Client
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.StackTrace);
+                Base.SendMessage(GetType(), ex.StackTrace);
+                Base.SendMessage(ex.StackTrace, GetType());
             }
             finally
             {

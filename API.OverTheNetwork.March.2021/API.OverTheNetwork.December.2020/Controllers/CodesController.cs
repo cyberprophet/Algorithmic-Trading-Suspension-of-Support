@@ -19,8 +19,8 @@ namespace ShareInvest.Controllers
 
             else
             {
-                if (Security.SecuritiesCompany == 0x4F && (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[0] > '1') && await Security.Client.PutContextAsync(param) is string code && code.Length == 6)
-                    Base.SendMessage(GetType(), code);
+                if (Security.SecuritiesCompany == 0x4F && (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[0] > '1') && await Security.Client.PutContextAsync(param) is string code)
+                    Base.SendMessage(code, Security.Collection.Count, GetType());
 
                 if (param.MaturityMarketCap.Contains(transaction_suspension) == false)
                 {

@@ -17,7 +17,7 @@ namespace ShareInvest.Controllers
             if (await Security.Client.PostContextAsync(param) > 0xC8)
             {
                 var peek = param.Peek();
-                Base.SendMessage(GetType(), peek.Code, peek.Retention);
+                Base.SendMessage(peek.Code, peek.Retention, GetType());
             }
             return Ok();
         }

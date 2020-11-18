@@ -135,6 +135,7 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
+        public string SecuritiesName => axAPI.GetLoginInfo("USER_NAME").Trim();
         public bool Start
         {
             get; private set;

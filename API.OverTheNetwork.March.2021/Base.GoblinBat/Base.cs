@@ -8,12 +8,15 @@ namespace ShareInvest
     {
         [Conditional("DEBUG")]
         public static void ChangePropertyToDebugMode() => IsDebug = true;
+        public static void SendMessage(string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', message));
         [Conditional("DEBUG")]
         public static void SendMessage(Type type, string message) => Debug.WriteLine(string.Concat(type.Name, '_', message));
         [Conditional("DEBUG")]
         public static void SendMessage(Type type, string code, string message) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', message));
+        public static void SendMessage(string code, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', message));
         [Conditional("DEBUG")]
         public static void SendMessage(Type type, string code, int status) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', status));
+        public static void SendMessage(string code, int status, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', status));
         public static string GetRemainingTime(TimeSpan span) => span.Days == 0 ?
             string.Concat("장시작 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .") :
             string.Concat("장시작 ", span.Days, "일 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .");

@@ -38,10 +38,13 @@ namespace ShareInvest
                 TellTheClientConnectionStatus(server.GetType().Name, server.IsConnected);
 
                 if (server.IsConnected)
+                {
                     Server = new StreamWriter(server)
                     {
                         AutoFlush = true
                     };
+                    Server.WriteLine("{0}API Connects via Pipe. . .", Security.SecuritiesCompany == 'O' ? "Open" : "Xing");
+                }
             }).Start();
             new Task(async () =>
             {
@@ -117,6 +120,7 @@ namespace ShareInvest
                                 var operation = temp[^1].Split(';');
 
                                 if (int.TryParse(operation[0], out int number))
+                                {
                                     switch (Enum.ToObject(typeof(Operation), number))
                                     {
                                         case Operation.장시작:
@@ -126,30 +130,43 @@ namespace ShareInvest
 
                                         case Operation.장마감:
                                             stocks = false;
-                                            Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
+
+                                            Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[0]));
                                             break;
 
                                         case Operation.장시작전 when operation[1].Equals("085500"):
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
                                             break;
 
-                                        case Operation.장마감전_동시호가:
-                                            Console.WriteLine(temp[1] + "\t" + temp[^1]);
+                                        case Operation.장마감전_동시호가 when operation[1].Equals("152000"):
+                                            new Task(() =>
+                                            {
+                                                foreach (var stop in Security.Collection)
+                                                    if (stop.Key.Length == 6)
+                                                        stop.Value.Collector = false;
+                                            }).Start();
+                                            Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
                                             break;
                                     }
+                                    Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', Enum.GetName(typeof(Operation), number), '_', operation[1]), typeof(Operation));
+                                }
                                 else if (char.TryParse(operation[0], out char charactor))
+                                {
                                     switch (Enum.ToObject(typeof(Operation), charactor))
                                     {
                                         case Operation.선옵_장마감전_동시호가_종료:
-                                            Console.WriteLine(temp[1] + "\t" + temp[^1]);
+
                                             break;
 
                                         case Operation.시간외_단일가_매매종료:
+                                            Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[0]));
                                             repeat = false;
                                             Process.Start("shutdown.exe", "-r");
                                             Host.Dispose();
                                             break;
                                     }
+                                    Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', Enum.GetName(typeof(Operation), charactor), '_', operation[1]), typeof(Operation));
+                                }
                             }
                             else if (temp.Length == 1)
                             {
@@ -159,14 +176,14 @@ namespace ShareInvest
                                     stocks = true;
                                 }
                                 else if (param.Length == 0xA)
-                                    Console.WriteLine(param);
+                                    Base.SendMessage(param, typeof(AnalyzeStatistics));
                             }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.StackTrace);
+                    Base.SendMessage(ex.StackTrace, typeof(AnalyzeStatistics));
                 }
                 finally
                 {
@@ -180,8 +197,8 @@ namespace ShareInvest
 
                     server.Close();
                     server.Dispose();
-                    TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected);
                     TellTheClientConnectionStatus(server.GetType().Name, server.IsConnected);
+                    TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected);
                 }
             if (repeat && Console.ReadLine().Equals("Try to Connect"))
             {

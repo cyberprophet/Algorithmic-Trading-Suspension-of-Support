@@ -41,21 +41,21 @@ namespace ShareInvest.Controllers
                             status = await Security.Client.PostContextAsync(queue);
 
                             if (i == 0)
-                                context = Security.Summary.GetContext(retention.Code);
+                                context = new Client.Summary(Security.Key).GetContext(retention.Code);
 
                             if (i == 1 && context != null)
                                 status = await Security.Client.PostContextAsync(context);
                         }
-                        Base.SendMessage(GetType(), retention.Code, status);
+                        Base.SendMessage(retention.Code, status, GetType());
                     }
                 }
                 else if (await Security.Client.GetContextAsync(new IncorporatedStocks { Market = 'P' }) is int next &&
-                    await Security.Client.PostContextAsync(Security.IncorporatedStocks.OnReceiveSequentially(next)) != 0xC8)
-                    Base.SendMessage(GetType(), retention.Code, next);
+                    await Security.Client.PostContextAsync(new Client.IncorporatedStocks(Security.Key).OnReceiveSequentially(next)) != 0xC8)
+                    Base.SendMessage(retention.Code, next, GetType());
             }
             catch (Exception ex)
             {
-                Base.SendMessage(GetType(), ex.StackTrace);
+                Base.SendMessage(ex.StackTrace, GetType());
             }
             return Ok(retention);
         }
