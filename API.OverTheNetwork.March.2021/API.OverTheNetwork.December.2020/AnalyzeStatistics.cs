@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
 
+using Newtonsoft.Json;
+
 using ShareInvest.Catalog.Models;
 using ShareInvest.Catalog.OpenAPI;
 
@@ -130,7 +132,15 @@ namespace ShareInvest
 
                                         case Operation.장마감:
                                             stocks = false;
-
+                                            new Task(() =>
+                                            {
+                                                foreach (var collect in Security.Collection)
+                                                    if (collect.Key.Length == 6)
+                                                    {
+                                                        var convert = collect.Value.SortTheRecordedInformation;
+                                                        Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3);
+                                                    }
+                                            }).Start();
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[0]));
                                             break;
 
@@ -154,13 +164,21 @@ namespace ShareInvest
                                 {
                                     switch (Enum.ToObject(typeof(Operation), charactor))
                                     {
-                                        case Operation.선옵_장마감전_동시호가_종료:
-
+                                        case Operation.선옵_장마감전_동시호가_종료 when repeat:
+                                            repeat = false;
+                                            new Task(() =>
+                                            {
+                                                foreach (var collect in Security.Collection)
+                                                    if (collect.Key.Length == 8)
+                                                    {
+                                                        var convert = collect.Value.SortTheRecordedInformation;
+                                                        Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3);
+                                                    }
+                                            }).Start();
                                             break;
 
                                         case Operation.시간외_단일가_매매종료:
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[0]));
-                                            repeat = false;
                                             Process.Start("shutdown.exe", "-r");
                                             Host.Dispose();
                                             break;

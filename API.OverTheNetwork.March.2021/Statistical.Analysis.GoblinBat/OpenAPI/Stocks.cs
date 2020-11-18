@@ -14,6 +14,7 @@ namespace ShareInvest.Statistical.OpenAPI
         {
 
         }
+        public override (IEnumerable<Collect>, uint, uint) SortTheRecordedInformation => base.SortTheRecordedInformation;
         public override bool Collector
         {
             get; set;

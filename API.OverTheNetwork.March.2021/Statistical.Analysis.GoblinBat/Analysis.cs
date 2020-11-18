@@ -7,28 +7,41 @@ namespace ShareInvest.Statistical
 {
     public abstract class Analysis
     {
-        public virtual void SortTheRecordedInformation()
+        public virtual (IEnumerable<Collect>, uint, uint) SortTheRecordedInformation
         {
-            uint count = 0;
-            var temp = new Dictionary<string, uint>();
-
-            while (Collection.Count > 0)
+            get
             {
-                var c = Collection.Dequeue();
-                string index = 0.ToString("D3"), peek = Collection.Peek().Time;
+                uint count = 0;
+                var queue = new Queue<Collect>(Collection.Count);
+                var temp = new Dictionary<string, uint>(0x400);
+                var storage = new Dictionary<uint, string>(0x800);
 
-                if (c.Time.CompareTo(peek) == 0)
+                while (Collection.Count > 0)
                 {
-                    temp[c.Time] = count;
-                    index = count++.ToString("D3");
+                    var c = Collection.Dequeue();
+                    string index = 0.ToString("D3"), peek = Collection.Peek().Time;
+
+                    if (c.Time.CompareTo(peek) == 0)
+                    {
+                        temp[c.Time] = count;
+                        index = count++.ToString("D3");
+                    }
+                    else
+                    {
+                        temp[c.Time] = count;
+                        index = count.ToString("D3");
+                        count = temp.Any(o => o.Key.Equals(peek)) ? temp.First(o => o.Key.Equals(peek)).Value + 1 : 0;
+                    }
+                    if (uint.TryParse(string.Concat(c.Time, index), out uint time))
+                        storage[time] = c.Datum;
                 }
-                else
-                {
-                    temp[c.Time] = count;
-                    index = count.ToString("D3");
-                    count = temp.Any(o => o.Key.Equals(peek)) ? temp.First(o => o.Key.Equals(peek)).Value + 1 : 0;
-                }
-                var time = string.Concat(c.Time, index);
+                foreach (var collect in storage.OrderBy(o => o.Key))
+                    queue.Enqueue(new Collect
+                    {
+                        Time = collect.Key.ToString("D9"),
+                        Datum = collect.Value
+                    });
+                return (queue, storage.Min(o => o.Key), storage.Max(o => o.Key));
             }
         }
         public abstract void AnalyzeTheConclusion(string[] param);
