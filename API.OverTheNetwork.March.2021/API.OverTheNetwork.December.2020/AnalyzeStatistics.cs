@@ -60,7 +60,7 @@ namespace ShareInvest
         [SupportedOSPlatform("windows")]
         static void OnReceivePipeClientMessage(NamedPipeClientStream client, NamedPipeServerStream server)
         {
-            bool repeat = true, collection = false, stocks = false;
+            bool repeat = true, collection = false, stocks = false, futures = false;
             using (var sr = new StreamReader(client))
                 try
                 {
@@ -72,10 +72,10 @@ namespace ShareInvest
                         {
                             string[] temp = param.Split('|'), price;
 
-                            if (temp[0].Length != 5 && temp[0].Length != 0xA && collection && Security.Collection.TryGetValue(temp[1], out Statistical.Analysis analysis))
+                            if (temp[0].Length != 2 && temp[0].Length != 5 && temp[0].Length != 0xA && collection && Security.Collection.TryGetValue(temp[1], out Statistical.Analysis analysis))
                                 switch (temp[0].Length)
                                 {
-                                    case 4 when temp[0].Equals("주식시세") == false && (stocks && temp[1].Length == 6 || temp[1].Length == 8):
+                                    case 4 when temp[0].Equals("주식시세") == false && (stocks && temp[1].Length == 6 || temp[1].Length == 8 && futures):
                                         price = temp[^1].Split(';');
                                         new Task(() => analysis.AnalyzeTheConclusion(price)).Start();
                                         analysis.Collection.Enqueue(new Collect
@@ -83,7 +83,9 @@ namespace ShareInvest
                                             Time = price[0],
                                             Datum = temp[^1][7..]
                                         });
-                                        analysis.Collector = true;
+                                        if (price[0][0] == '0')
+                                            analysis.Collector = true;
+
                                         break;
 
                                     case 6 when temp[0].Equals("주식우선호가") == false && analysis.Collector:
@@ -128,23 +130,31 @@ namespace ShareInvest
                                         case Operation.장시작:
                                             collection = operation[1].Equals("090000") && operation[^1].Equals("000000");
                                             stocks = true;
+                                            futures = true;
                                             break;
 
-                                        case Operation.장마감:
+                                        case Operation.장마감 when stocks:
                                             stocks = false;
                                             new Task(() =>
                                             {
                                                 foreach (var collect in Security.Collection)
-                                                    if (collect.Key.Length == 6)
-                                                    {
-                                                        var convert = collect.Value.SortTheRecordedInformation;
-                                                        Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3);
-                                                    }
+                                                    if (collect.Key.Length == 6 && collect.Value.Collection.Count > 0)
+                                                        try
+                                                        {
+                                                            var convert = collect.Value.SortTheRecordedInformation;
+                                                            Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3, convert.Item4);
+                                                        }
+                                                        catch (Exception ex)
+                                                        {
+                                                            Base.SendMessage(collect.Value.GetType(), ex.StackTrace, collect.Key);
+                                                            Base.SendMessage(ex.StackTrace, collect.Key, collect.Value.GetType());
+                                                        }
                                             }).Start();
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[0]));
                                             break;
 
                                         case Operation.장시작전 when operation[1].Equals("085500"):
+                                            Server.WriteLine(string.Concat(typeof(Security).Name, '|', Security.Account));
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
                                             break;
 
@@ -152,7 +162,7 @@ namespace ShareInvest
                                             new Task(() =>
                                             {
                                                 foreach (var stop in Security.Collection)
-                                                    if (stop.Key.Length == 6)
+                                                    if (stop.Key.Length == 6 && stop.Value.Collector)
                                                         stop.Value.Collector = false;
                                             }).Start();
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
@@ -164,16 +174,39 @@ namespace ShareInvest
                                 {
                                     switch (Enum.ToObject(typeof(Operation), charactor))
                                     {
-                                        case Operation.선옵_장마감전_동시호가_종료 when repeat:
-                                            repeat = false;
+                                        case Operation.선옵_장마감전_동시호가_종료 when futures && collection:
+                                            if (repeat && futures && collection)
+                                            {
+                                                repeat = false;
+                                                new Task(() =>
+                                                {
+                                                    foreach (var collect in Security.Collection)
+                                                        if (collect.Key.Length == 8 && collect.Value.Collection.Count > 0)
+                                                            try
+                                                            {
+                                                                var convert = collect.Value.SortTheRecordedInformation;
+                                                                Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3, convert.Item4);
+                                                            }
+                                                            catch (Exception ex)
+                                                            {
+                                                                Base.SendMessage(collect.Value.GetType(), ex.StackTrace, collect.Key);
+                                                                Base.SendMessage(ex.StackTrace, collect.Key, collect.Value.GetType());
+                                                            }
+                                                }).Start();
+                                            }
+                                            else
+                                            {
+                                                futures = false;
+                                                collection = false;
+                                            }
+                                            break;
+
+                                        case Operation.선옵_장마감전_동시호가_시작:
                                             new Task(() =>
                                             {
-                                                foreach (var collect in Security.Collection)
-                                                    if (collect.Key.Length == 8)
-                                                    {
-                                                        var convert = collect.Value.SortTheRecordedInformation;
-                                                        Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3);
-                                                    }
+                                                foreach (var stop in Security.Collection)
+                                                    if (stop.Key.Length == 8 && stop.Value.Collector)
+                                                        stop.Value.Collector = false;
                                             }).Start();
                                             break;
 
@@ -186,21 +219,36 @@ namespace ShareInvest
                                     Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', Enum.GetName(typeof(Operation), charactor), '_', operation[1]), typeof(Operation));
                                 }
                             }
-                            else if (temp.Length == 1)
+                            else if (temp[0].Length == 2)
                             {
-                                if (param.Equals("조회"))
+                                var balance = temp[^1].Split(';');
+
+                                if (balance.Length > 2)
                                 {
-                                    collection = true;
-                                    stocks = true;
+
                                 }
-                                else if (param.Length == 0xA)
-                                    Base.SendMessage(param, typeof(AnalyzeStatistics));
+                                else
+                                {
+                                    var now = DateTime.Now;
+
+                                    if (now.Hour > 8 || now.Hour < 5)
+                                    {
+                                        collection = true;
+                                        stocks = true;
+                                        futures = true;
+                                    }
+
+                                }
+                                Console.WriteLine(temp[^1]);
                             }
+                            else if (temp.Length == 1 && param.Length == 0xA)
+                                Security.SetAccount(repeat, param);
                         }
                     }
                 }
                 catch (Exception ex)
                 {
+                    Base.SendMessage(typeof(AnalyzeStatistics), ex.StackTrace);
                     Base.SendMessage(ex.StackTrace, typeof(AnalyzeStatistics));
                 }
                 finally
@@ -218,7 +266,7 @@ namespace ShareInvest
                     TellTheClientConnectionStatus(server.GetType().Name, server.IsConnected);
                     TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected);
                 }
-            if (repeat && Console.ReadLine().Equals("Try to Connect"))
+            if (repeat)
             {
                 TryToConnectThePipeStream();
                 Console.WriteLine("Wait for the {0}API to Restart. . .", Security.SecuritiesCompany == 'O' ? "Open" : "Xing");

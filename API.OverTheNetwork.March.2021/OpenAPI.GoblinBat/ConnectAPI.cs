@@ -135,6 +135,10 @@ namespace ShareInvest.OpenAPI
         {
             get; private set;
         }
+        public string Account
+        {
+            get; set;
+        }
         public string SecuritiesName => axAPI.GetLoginInfo("USER_NAME").Trim();
         public bool Start
         {
@@ -188,6 +192,13 @@ namespace ShareInvest.OpenAPI
                         ctor.Value = string.Concat(param.Substring(0, 6), ';', str);
                         API?.InputValueRqData(ctor);
                         Count++;
+                        break;
+
+                    case CatalogTR.Opw00005:
+                    case CatalogTR.OPW20007:
+                    case CatalogTR.OPW20010:
+                        ctor.Value = param;
+                        API?.InputValueRqData(ctor);
                         break;
                 }
             return ctor;

@@ -26,6 +26,10 @@
         {
             get; set;
         }
+        public string Price
+        {
+            get; set;
+        }
         public long Length
         {
             get; set;

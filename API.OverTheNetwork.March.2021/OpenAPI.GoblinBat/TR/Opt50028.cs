@@ -53,7 +53,7 @@ namespace ShareInvest.OpenAPI.Catalog
                 var temp = OnReceiveTrData(opSingle, opMutiple, e);
                 var tr = Connect.GetInstance().TR.First(o => o.GetType().Name[1..].Equals(e.sTrCode[1..]) && o.RQName.Equals(e.sRQName));
 
-                while (temp.Item2.Count > 0)
+                while (temp.Item2 != null && temp.Item2.Count > 0)
                 {
                     var param = temp.Item2.Dequeue();
                     storage.Push(string.Concat(param[2][2..], ";", param[0], ";", param[1]));

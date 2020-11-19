@@ -26,32 +26,35 @@ namespace ShareInvest.Controllers
 
             try
             {
-                if (Security.Consensus.GrantAccess && retention.Code.Length == 6)
+                if (retention.Code.Length == 6)
                 {
-                    Queue<ConvertConsensus> queue;
-                    Queue<FinancialStatement> context = null;
-
-                    for (int i = 0; i < retention.Code.Length / 3; i++)
+                    if (Security.Consensus.GrantAccess)
                     {
-                        queue = await Security.Consensus.GetContextAsync(i, retention.Code);
-                        int status = int.MinValue;
+                        Queue<ConvertConsensus> queue;
+                        Queue<FinancialStatement> context = null;
 
-                        if (queue != null && queue.Count > 0)
+                        for (int i = 0; i < retention.Code.Length / 3; i++)
                         {
-                            status = await Security.Client.PostContextAsync(queue);
+                            queue = await Security.Consensus.GetContextAsync(i, retention.Code);
+                            int status = int.MinValue;
 
-                            if (i == 0)
-                                context = new Client.Summary(Security.Key).GetContext(retention.Code);
+                            if (queue != null && queue.Count > 0)
+                            {
+                                status = await Security.Client.PostContextAsync(queue);
 
-                            if (i == 1 && context != null)
-                                status = await Security.Client.PostContextAsync(context);
+                                if (i == 0)
+                                    context = new Client.Summary(Security.Key.Security).GetContext(retention.Code);
+
+                                if (i == 1 && context != null)
+                                    status = await Security.Client.PostContextAsync(context);
+                            }
+                            Base.SendMessage(retention.Code, status, GetType());
                         }
-                        Base.SendMessage(retention.Code, status, GetType());
                     }
+                    else if (await Security.Client.GetContextAsync(new IncorporatedStocks { Market = 'P' }) is int next &&
+                        await Security.Client.PostContextAsync(new Client.IncorporatedStocks(Security.Key.Security).OnReceiveSequentially(next)) != 0xC8)
+                        Base.SendMessage(retention.Code, next, GetType());
                 }
-                else if (await Security.Client.GetContextAsync(new IncorporatedStocks { Market = 'P' }) is int next &&
-                    await Security.Client.PostContextAsync(new Client.IncorporatedStocks(Security.Key).OnReceiveSequentially(next)) != 0xC8)
-                    Base.SendMessage(retention.Code, next, GetType());
             }
             catch (Exception ex)
             {

@@ -18,7 +18,11 @@ namespace ShareInvest
         {
             get;
         }
-        public void ConfigureServices(IServiceCollection services) => services.Configure<KestrelServerOptions>(o => o.Limits.MaxRequestBodySize = int.MaxValue).AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
+        public void ConfigureServices(IServiceCollection services) => services.Configure<KestrelServerOptions>(o =>
+        {
+            o.ListenAnyIP(7135);
+            o.Limits.MaxRequestBodySize = int.MaxValue;
+        }).AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -28,6 +32,7 @@ namespace ShareInvest
                 app.UseMvc();
         }
         public Startup(IConfiguration configuration) => Configuration = configuration;
-        static NewtonsoftJsonInputFormatter GetJsonPatchInputformatter() => new ServiceCollection().AddLogging().AddMvc().AddNewtonsoftJson().Services.BuildServiceProvider().GetRequiredService<IOptions<MvcOptions>>().Value.InputFormatters.OfType<NewtonsoftJsonPatchInputFormatter>().First();
+        static NewtonsoftJsonInputFormatter GetJsonPatchInputformatter() => new ServiceCollection().AddLogging().AddMvc().AddNewtonsoftJson()
+            .Services.BuildServiceProvider().GetRequiredService<IOptions<MvcOptions>>().Value.InputFormatters.OfType<NewtonsoftJsonPatchInputFormatter>().First();
     }
 }

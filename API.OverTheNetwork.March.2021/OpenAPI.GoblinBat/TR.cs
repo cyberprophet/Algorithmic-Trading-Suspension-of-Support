@@ -96,7 +96,9 @@ namespace ShareInvest.OpenAPI
         Opt50028,
         Opt50066,
         OPTKWFID,
-        Opw00005
+        Opw00005,
+        OPW20007,
+        OPW20010
     }
     enum Market
     {

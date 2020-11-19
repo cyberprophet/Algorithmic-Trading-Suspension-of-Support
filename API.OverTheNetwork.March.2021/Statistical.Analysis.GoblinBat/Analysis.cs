@@ -7,7 +7,7 @@ namespace ShareInvest.Statistical
 {
     public abstract class Analysis
     {
-        public virtual (IEnumerable<Collect>, uint, uint) SortTheRecordedInformation
+        public virtual (IEnumerable<Collect>, uint, uint, string) SortTheRecordedInformation
         {
             get
             {
@@ -19,7 +19,7 @@ namespace ShareInvest.Statistical
                 while (Collection.Count > 0)
                 {
                     var c = Collection.Dequeue();
-                    string index = 0.ToString("D3"), peek = Collection.Peek().Time;
+                    string index = 0.ToString("D3"), peek = Collection.Count > 0 ? Collection.Peek().Time : c.Time;
 
                     if (c.Time.CompareTo(peek) == 0)
                     {
@@ -41,7 +41,9 @@ namespace ShareInvest.Statistical
                         Time = collect.Key.ToString("D9"),
                         Datum = collect.Value
                     });
-                return (queue, storage.Min(o => o.Key), storage.Max(o => o.Key));
+                var max = storage.Max(o => o.Key);
+
+                return (queue, storage.Min(o => o.Key), max, max > 152959 && Code.Length == 6 || max > 154459 && Code.Length == 8 ? storage[max].Split(';')[0][1..] : string.Empty);
             }
         }
         public abstract void AnalyzeTheConclusion(string[] param);
