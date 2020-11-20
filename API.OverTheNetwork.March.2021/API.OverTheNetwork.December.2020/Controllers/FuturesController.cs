@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using ShareInvest.Catalog.Models;
+using ShareInvest.Client;
 
 namespace ShareInvest.Controllers
 {
@@ -19,6 +21,11 @@ namespace ShareInvest.Controllers
                 var peek = param.Peek();
                 Base.SendMessage(peek.Code, peek.Retention, GetType());
             }
+            var now = DateTime.Now;
+
+            if (await Security.Client.PostContextAsync(await new ConstituentStocks(Security.Key.Security).GetConstituentStocks(now.Second % 2 == 0 ? 2 : 1, now)) > 0xC8)
+                Base.SendMessage(now.ToLongTimeString(), typeof(ConstituentStocks));
+
             return Ok();
         }
     }

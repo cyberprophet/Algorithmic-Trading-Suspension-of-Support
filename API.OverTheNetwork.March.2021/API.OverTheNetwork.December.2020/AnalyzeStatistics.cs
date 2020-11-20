@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Runtime.Versioning;
 using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Hosting;
@@ -32,7 +33,7 @@ namespace ShareInvest
         [SupportedOSPlatform("windows")]
         internal static void TryToConnectThePipeStream()
         {
-            var server = new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName, PipeDirection.Out, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            var server = new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName, PipeDirection.Out, 0x11, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
             var client = new NamedPipeClientStream(".", Key, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
             new Task(async () =>
             {
@@ -255,19 +256,20 @@ namespace ShareInvest
                 {
                     client.Close();
                     client.Dispose();
-                    Server.Close();
-                    Server.Dispose();
 
                     if (server.IsConnected)
-                        server.Disconnect();
-
-                    server.Close();
-                    server.Dispose();
+                    {
+                        Server.Close();
+                        Server.Dispose();
+                        server.Close();
+                        server.Dispose();
+                    }
                     TellTheClientConnectionStatus(server.GetType().Name, server.IsConnected);
                     TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected);
                 }
             if (repeat)
             {
+                Thread.Sleep(0xC67);
                 TryToConnectThePipeStream();
                 Console.WriteLine("Wait for the {0}API to Restart. . .", Security.SecuritiesCompany == 'O' ? "Open" : "Xing");
             }

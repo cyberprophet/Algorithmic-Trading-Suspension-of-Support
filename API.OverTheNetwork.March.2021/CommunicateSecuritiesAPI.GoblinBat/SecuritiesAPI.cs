@@ -319,7 +319,7 @@ namespace ShareInvest
                     case DialogResult.OK:
                         PreventsFromRunningAgain(e);
 
-                        if (e.Cancel == false)
+                        if (e.Cancel == false && MessageBox.Show(api_exit, connect.SecuritiesName, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1).Equals(DialogResult.OK))
                         {
                             if (connect.Writer != null)
                             {
@@ -330,7 +330,7 @@ namespace ShareInvest
                             Process.Start("shutdown.exe", "-r");
 
                             foreach (var process in Process.GetProcesses())
-                                if (Security.API.Equals(process.ProcessName))
+                                if (process.ProcessName.Equals(normalize))
                                     process.Kill();
                         }
                         break;
@@ -369,22 +369,21 @@ namespace ShareInvest
             Thread.Sleep(milliseconds);
             Dispose(connect as Control);
         }
-        [Conditional("DEBUG")]
         void RequestTheMissingInformation()
         {
             var message = string.Empty;
 
-            switch (MessageBox.Show(GetType().AssemblyQualifiedName, Name, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button3))
+            switch (MessageBox.Show(administrator, Text, MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
             {
-                case DialogResult.Yes:
+                case DialogResult.Ignore when DateTime.Now.Hour > 0xF:
                     message = string.Concat("장시작시간|", GetType(), "|8;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation));
                     break;
 
-                case DialogResult.No:
+                case DialogResult.Retry:
                     message = string.Concat("장시작시간|", GetType(), "|0;085500;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation));
                     break;
 
-                case DialogResult.Cancel:
+                case DialogResult.Abort:
                     return;
             }
             if (string.IsNullOrEmpty(message) == false)
@@ -402,7 +401,9 @@ namespace ShareInvest
         {
             get; set;
         }
-        const string look_up = "'조회'는 장시작 5분전 자동으로 실행됩니다.\n\n강제로 프로그램을 실행하지 않았다면\n사용을 '중단'할 것을 권장합니다.\n\n(중단)\n'조회'를 취소합니다.\n\n(재시도)\n'조회'가 실행되면 장시작 설정으로 초기화됩니다.\n\n(무시)\n'관리자'만 실행가능합니다.";
+        const string administrator = "☞중단\n'실행'을 취소합니다.\n\n☞재시도\n임의로 '계좌번호'를 불러옵니다.\n\n☞무시\n프로그램을 '장마감'이후로 변경합니다.";
+        const string api_exit = "해당 프로그램과 연결된 모든 프로세스를 종료합니다.";
+        const string look_up = "'조회'는 장시작 5분전 자동으로 실행됩니다.\n\n강제로 프로그램을 실행하지 않았다면\n사용을 '중단'할 것을 권장합니다.\n\n☞중단\n'조회'를 취소합니다.\n\n☞재시도\n'조회'가 실행되면 장시작 설정으로 초기화됩니다.\n\n☞무시\n'관리자'기능입니다.\n임의로 사용할 경우 프로그램 '오작동'을 유발합니다.";
         const string form_exit = "사용자 종료시 데이터 소실 및 오류를 초래합니다.\n\n그래도 종료하시겠습니까?\n\n프로그램 종료후 자동으로 재부팅됩니다.";
         const string instance = "ShareInvest.OpenAPI.Catalog.";
         const string password = ";;00";

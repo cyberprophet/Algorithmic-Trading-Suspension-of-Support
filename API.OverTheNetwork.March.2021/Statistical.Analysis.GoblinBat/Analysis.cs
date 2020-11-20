@@ -43,7 +43,8 @@ namespace ShareInvest.Statistical
                     });
                 var max = storage.Max(o => o.Key);
 
-                return (queue, storage.Min(o => o.Key), max, max > 152959 && Code.Length == 6 || max > 154459 && Code.Length == 8 ? storage[max].Split(';')[0][1..] : string.Empty);
+                return (queue, storage.Min(o => o.Key), max, max > 152959 && Code.Length == 6 || max > 154459 && Code.Length == 8 ?
+                    storage[max].Split(';')[0][1..] : string.Empty);
             }
         }
         public abstract void AnalyzeTheConclusion(string[] param);

@@ -112,7 +112,8 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.POST).AddJsonBody(param, Security.content_type), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.POST)
+                    .AddJsonBody(param, Security.content_type), source.Token);
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
                     switch (param)
@@ -170,7 +171,9 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ? security.RequestTheIntegratedAddress(param) : Security.RequestTheIntegratedAddress(param.GetType()), Method.PUT).AddJsonBody(param, Security.content_type), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ?
+                    security.RequestTheIntegratedAddress(param) : Security.RequestTheIntegratedAddress(param.GetType()), Method.PUT)
+                    .AddJsonBody(param, Security.content_type), source.Token);
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
                     return JsonConvert.DeserializeObject<string>(response.Content);
