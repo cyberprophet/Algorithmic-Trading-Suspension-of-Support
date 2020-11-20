@@ -1,34 +1,32 @@
-﻿using ShareInvest.Interface;
-
-namespace ShareInvest.Catalog.OpenAPI
+﻿namespace ShareInvest.Interface
 {
-    public struct Order : ISendOrder
+    public interface ISendOrder
     {
-        public string AccNo
+        string AccNo
         {
             get; set;
         }
-        public int OrderType
+        int OrderType
         {
             get; set;
         }
-        public string Code
+        string Code
         {
             get; set;
         }
-        public int Qty
+        int Qty
         {
             get; set;
         }
-        public int Price
+        int Price
         {
             get; set;
         }
-        public string HogaGb
+        string HogaGb
         {
             get; set;
         }
-        public string OrgOrderNo
+        string OrgOrderNo
         {
             get; set;
         }

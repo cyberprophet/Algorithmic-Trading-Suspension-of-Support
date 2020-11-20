@@ -212,14 +212,6 @@ namespace ShareInvest.OpenAPI
 
             return ctor;
         }
-        public StreamWriter Writer
-        {
-            get; private set;
-        }
-        public NamedPipeServerStream ConnectToReceiveRealTime
-        {
-            get;
-        }
         public void StartProgress() => BeginInvoke(new Action(async () =>
         {
             Start = true;
@@ -234,6 +226,15 @@ namespace ShareInvest.OpenAPI
             };
             API = Connect.GetInstance(axAPI, Writer);
         }));
+        public void SendOrder(ISendOrder order) => API?.SendOrder(order);
+        public StreamWriter Writer
+        {
+            get; private set;
+        }
+        public NamedPipeServerStream ConnectToReceiveRealTime
+        {
+            get;
+        }
         public event EventHandler<SendSecuritiesAPI> Send;
     }
 }

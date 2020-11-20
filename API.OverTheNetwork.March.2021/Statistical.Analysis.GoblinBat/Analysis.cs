@@ -69,6 +69,10 @@ namespace ShareInvest.Statistical
         {
             get; set;
         }
+        public abstract Balance Balance
+        {
+            get; set;
+        }
         public abstract Queue<Collect> Collection
         {
             get; set;

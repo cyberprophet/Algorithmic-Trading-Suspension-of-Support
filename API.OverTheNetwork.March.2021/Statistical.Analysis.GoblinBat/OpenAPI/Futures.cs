@@ -35,6 +35,10 @@ namespace ShareInvest.Statistical.OpenAPI
         {
             get; set;
         }
+        public override Balance Balance
+        {
+            get; set;
+        }
         public override Queue<Collect> Collection
         {
             get; set;

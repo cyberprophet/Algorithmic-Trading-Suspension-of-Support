@@ -73,7 +73,7 @@ namespace ShareInvest
                         {
                             string[] temp = param.Split('|'), price;
 
-                            if (temp[0].Length != 2 && temp[0].Length != 5 && temp[0].Length != 0xA && collection && Security.Collection.TryGetValue(temp[1], out Statistical.Analysis analysis))
+                            if ((temp[0].Length < 5 || temp[0].Length > 5 && temp[0].Length < 0xA) && collection && Security.Collection.TryGetValue(temp[1], out Statistical.Analysis analysis))
                                 switch (temp[0].Length)
                                 {
                                     case 4 when temp[0].Equals("주식시세") == false && (stocks && temp[1].Length == 6 || temp[1].Length == 8 && futures):
@@ -157,6 +157,7 @@ namespace ShareInvest
                                         case Operation.장시작전 when operation[1].Equals("085500"):
                                             Server.WriteLine(string.Concat(typeof(Security).Name, '|', Security.Account));
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
+                                            GC.Collect();
                                             break;
 
                                         case Operation.장마감전_동시호가 when operation[1].Equals("152000"):
@@ -220,14 +221,13 @@ namespace ShareInvest
                                     Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', Enum.GetName(typeof(Operation), charactor), '_', operation[1]), typeof(Operation));
                                 }
                             }
-                            else if (temp[0].Length == 2)
+                            else if (temp[0].Length == 0xD)
                             {
                                 var balance = temp[^1].Split(';');
 
-                                if (balance.Length > 2)
-                                {
+                                if (balance.Length > 2 && Security.Collection.TryGetValue(balance[0], out Statistical.Analysis bal))
+                                    bal.Balance = new Statistical.Balance(balance);
 
-                                }
                                 else
                                 {
                                     var now = DateTime.Now;
@@ -238,9 +238,8 @@ namespace ShareInvest
                                         stocks = true;
                                         futures = true;
                                     }
-
+                                    Console.WriteLine(temp[^1]);
                                 }
-                                Console.WriteLine(temp[^1]);
                             }
                             else if (temp.Length == 1 && param.Length == 0xA)
                                 Security.SetAccount(repeat, param);

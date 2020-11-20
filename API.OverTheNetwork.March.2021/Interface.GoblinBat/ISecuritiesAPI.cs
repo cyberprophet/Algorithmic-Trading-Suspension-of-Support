@@ -31,6 +31,7 @@ namespace ShareInvest.Interface
         {
             get;
         }
+        void SendOrder(ISendOrder order);
         void StartProgress();
     }
 }

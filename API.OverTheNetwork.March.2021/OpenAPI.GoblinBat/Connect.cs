@@ -5,13 +5,28 @@ using System.Threading.Tasks;
 using AxKHOpenAPILib;
 
 using ShareInvest.DelayRequest;
+using ShareInvest.Interface;
 using ShareInvest.OpenAPI.Catalog;
 
 namespace ShareInvest.OpenAPI
 {
     class Connect
     {
+        static string LookupScreenNo
+        {
+            get
+            {
+                if (Count++ == 0x95)
+                    Count = 0;
+
+                return (0xBB8 + Count).ToString("D4");
+            }
+        }
         static Connect API
+        {
+            get; set;
+        }
+        static uint Count
         {
             get; set;
         }
@@ -49,6 +64,9 @@ namespace ShareInvest.OpenAPI
                 Base.SendMessage(tr.GetType(), param, error);
             }
         }
+        internal void SendOrder(ISendOrder o) =>
+            request.RequestTrData(new Task(() =>
+            SendErrorMessage(axAPI.SendOrder(axAPI.GetMasterCodeName(o.Code), LookupScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
         internal string SendErrorMessage(int code) => error[code];
         internal HashSet<TR> TR
         {
@@ -64,7 +82,59 @@ namespace ShareInvest.OpenAPI
             this.axAPI = axAPI;
             request = Delay.GetInstance(0xC9);
             request.Run();
-            Real = new HashSet<Real> { new 주식체결 { API = axAPI, Server = server }, new 주식호가잔량 { API = axAPI, Server = server }, new 주식시세 { API = axAPI, Server = server }, new 주식우선호가 { API = axAPI, Server = server }, new 장시작시간 { API = axAPI, Server = server }, new 선물시세 { API = axAPI, Server = server }, new 선물옵션우선호가 { API = axAPI, Server = server }, new 선물호가잔량 { API = axAPI, Server = server }, new 옵션시세 { API = axAPI, Server = server }, new 옵션호가잔량 { API = axAPI, Server = server } };
+            Real = new HashSet<Real>
+            {
+                new 주식체결
+                {
+                    API = axAPI,
+                    Server = server
+                },
+                new 주식호가잔량
+                {
+                    API = axAPI,
+                    Server = server
+                },
+                new 주식시세
+                {
+                    API = axAPI,
+                    Server = server
+                },
+                new 주식우선호가
+                {
+                    API = axAPI,
+                    Server = server
+                },
+                new 장시작시간
+                {
+                    API = axAPI,
+                    Server = server
+                },
+                new 선물시세
+                {
+                    API = axAPI,
+                    Server = server
+                },
+                new 선물옵션우선호가
+                {
+                    API = axAPI,
+                    Server = server
+                },
+                new 선물호가잔량
+                {
+                    API = axAPI,
+                    Server = server
+                },
+                new 옵션시세
+                {
+                    API = axAPI,
+                    Server = server
+                },
+                new 옵션호가잔량
+                {
+                    API = axAPI,
+                    Server = server
+                }
+            };
         }
         readonly Delay request;
         readonly AxKHOpenAPI axAPI;

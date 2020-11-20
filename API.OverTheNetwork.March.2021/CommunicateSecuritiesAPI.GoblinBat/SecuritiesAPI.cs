@@ -91,10 +91,10 @@ namespace ShareInvest
                         var convey = string.Empty;
 
                         if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate) && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase))
-                            convey = string.Concat(inquiry, ing[0], ';', ing[1].Equals(ing[0]) && collection.TryGetValue(ing[1], out Codes c) ? c.Name : ing[1], ';', ing[2].Equals("1") ? -quantity : quantity, ';', fPurchase, ';', fCurrent, ';', fValuation, ';', fRate * 1e-2);
+                            convey = string.Concat(sender.GetType().Name, inquiry, ing[0], ';', ing[1].Equals(ing[0]) && collection.TryGetValue(ing[1], out Codes c) ? c.Name : ing[1], ';', ing[2].Equals("1") ? -quantity : quantity, ';', fPurchase, ';', fCurrent, ';', fValuation, ';', fRate * 1e-2);
 
                         else if (ing[3].Length > 0 && ing[3][0] == 'A' && double.TryParse(ing[0xC]?.Insert(6, "."), out double ratio) && long.TryParse(ing[0xB], out long valuation) && int.TryParse(ing[6], out int reserve) && uint.TryParse(ing[8], out uint purchase) && uint.TryParse(ing[7], out uint current))
-                            convey = string.Concat(inquiry, ing[3][1..].Trim(), ';', ing[4].Trim(), ';', reserve, ';', purchase, ';', current, ';', valuation, ';', ratio);
+                            convey = string.Concat(sender.GetType().Name, inquiry, ing[3][1..].Trim(), ';', ing[4].Trim(), ';', reserve, ';', purchase, ';', current, ';', valuation, ';', ratio);
 
                         connect.Writer.WriteLine(convey);
                     }
@@ -102,7 +102,7 @@ namespace ShareInvest
                     return;
 
                 case Tuple<long, long> balance:
-                    connect.Writer.WriteLine(string.Concat(inquiry, balance.Item1, ';', balance.Item2));
+                    connect.Writer.WriteLine(string.Concat(sender.GetType().Name, inquiry, balance.Item1, ';', balance.Item2));
                     return;
 
                 case Tuple<string, Stack<string>> charts:
@@ -181,7 +181,28 @@ namespace ShareInvest
                             {
                                 var temp = param.Split('|');
 
-                                if (temp[0].Equals("Operation"))
+                                if (temp[0].Length == 5)
+                                {
+                                    var order = temp[^1].Split(';');
+
+                                    switch (connect)
+                                    {
+                                        case OpenAPI.ConnectAPI o:
+                                            if (int.TryParse(order[1], out int type) && int.TryParse(order[2], out int price) && int.TryParse(order[3], out int quantity))
+                                                o.SendOrder(new Catalog.OpenAPI.Order
+                                                {
+                                                    AccNo = connect.Account,
+                                                    Code = order[0],
+                                                    OrderType = type,
+                                                    Price = price,
+                                                    Qty = quantity,
+                                                    HogaGb = order[4],
+                                                    OrgOrderNo = order[5]
+                                                });
+                                            break;
+                                    }
+                                }
+                                else if (temp[0].Length == 9)
                                     switch (temp[^1])
                                     {
                                         case "085500":
@@ -200,7 +221,7 @@ namespace ShareInvest
                                             Dispose(connect as Control);
                                             break;
                                     }
-                                else if (temp[0].Equals("Security"))
+                                else if (temp[0].Length == 8)
                                 {
                                     if (string.IsNullOrEmpty(temp[^1]))
                                     {
@@ -407,7 +428,7 @@ namespace ShareInvest
         const string form_exit = "사용자 종료시 데이터 소실 및 오류를 초래합니다.\n\n그래도 종료하시겠습니까?\n\n프로그램 종료후 자동으로 재부팅됩니다.";
         const string instance = "ShareInvest.OpenAPI.Catalog.";
         const string password = ";;00";
-        const string inquiry = "조회|";
+        const string inquiry = @"_잔고조회|";
         readonly string normalize;
         readonly Random random;
         readonly GoblinBat client;
