@@ -111,7 +111,9 @@ namespace ShareInvest.OpenAPI
             foreach (var code in list.OrderBy(o => Guid.NewGuid()))
                 yield return new Tuple<string, string>("Opt50001", code);
         }
-        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => (API as Connect)?.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name[1..].Equals(e.sTrCode[1..]))?.OnReceiveTrData(e);
+        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
+            => (API as Connect)?.TR.FirstOrDefault(o
+                => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name[1..].Equals(e.sTrCode[1..]))?.OnReceiveTrData(e);
         void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
         {
             if (e.nErrCode == 0)
@@ -124,12 +126,16 @@ namespace ShareInvest.OpenAPI
             else
                 Send?.Invoke(this, new SendSecuritiesAPI(API?.SendErrorMessage(e.nErrCode)));
         }
-        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => (API as Connect)?.Real.FirstOrDefault(o => o.GetType().Name.Replace("_", string.Empty).Equals(e.sRealType, StringComparison.Ordinal))?.OnReceiveRealData(e);
-        void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg[9..], "(", e.sScrNo, ")")));
+        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
+            => (API as Connect)?.Real.FirstOrDefault(o
+                => o.GetType().Name.Replace("_", string.Empty).Equals(e.sRealType, StringComparison.Ordinal))?.OnReceiveRealData(e);
+        void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
+            => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg[9..], "(", e.sScrNo, ")")));
         public ConnectAPI()
         {
             InitializeComponent();
-            ConnectToReceiveRealTime = new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName.Split(' ')[2], PipeDirection.Out, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            ConnectToReceiveRealTime
+                = new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName.Split(' ')[2], PipeDirection.Out, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
         }
         public dynamic API
         {

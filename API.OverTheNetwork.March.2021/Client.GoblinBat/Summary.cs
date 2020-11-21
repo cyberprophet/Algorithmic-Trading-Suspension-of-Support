@@ -34,7 +34,9 @@ namespace ShareInvest.Client
                         {
                             var array = num.ToCharArray();
 
-                            if (index < 0xA && (string.IsNullOrEmpty(num) || num.StartsWith("-") && char.IsDigit(array[1]) || char.IsDigit(array[0]) || char.IsLetter(array[0])) && (string.IsNullOrEmpty(num) == false || empty))
+                            if (index < 0xA
+                                && (string.IsNullOrEmpty(num) || num.StartsWith("-") && char.IsDigit(array[1]) || char.IsDigit(array[0]) || char.IsLetter(array[0]))
+                                && (string.IsNullOrEmpty(num) == false || empty))
                             {
                                 param = num.Replace(security.Replace[2], string.Empty);
 

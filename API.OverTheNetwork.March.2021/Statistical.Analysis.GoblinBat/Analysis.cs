@@ -53,6 +53,10 @@ namespace ShareInvest.Statistical
         {
             get; set;
         }
+        public abstract bool Wait
+        {
+            get; set;
+        }
         public abstract string Code
         {
             get; set;
@@ -70,6 +74,10 @@ namespace ShareInvest.Statistical
             get; set;
         }
         public abstract Balance Balance
+        {
+            get; set;
+        }
+        public abstract Interface.IStrategics Strategics
         {
             get; set;
         }

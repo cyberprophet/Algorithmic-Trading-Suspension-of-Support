@@ -90,10 +90,13 @@ namespace ShareInvest
                         var ing = hold.Dequeue();
                         var convey = string.Empty;
 
-                        if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate) && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase))
+                        if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate)
+                            && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase))
                             convey = string.Concat(sender.GetType().Name, inquiry, ing[0], ';', ing[1].Equals(ing[0]) && collection.TryGetValue(ing[1], out Codes c) ? c.Name : ing[1], ';', ing[2].Equals("1") ? -quantity : quantity, ';', fPurchase, ';', fCurrent, ';', fValuation, ';', fRate * 1e-2);
 
-                        else if (ing[3].Length > 0 && ing[3][0] == 'A' && double.TryParse(ing[0xC]?.Insert(6, "."), out double ratio) && long.TryParse(ing[0xB], out long valuation) && int.TryParse(ing[6], out int reserve) && uint.TryParse(ing[8], out uint purchase) && uint.TryParse(ing[7], out uint current))
+                        else if (ing[3].Length > 0 && ing[3][0] == 'A' && double.TryParse(ing[0xC]?.Insert(6, "."), out double ratio)
+                            && long.TryParse(ing[0xB], out long valuation) && int.TryParse(ing[6], out int reserve)
+                            && uint.TryParse(ing[8], out uint purchase) && uint.TryParse(ing[7], out uint current))
                             convey = string.Concat(sender.GetType().Name, inquiry, ing[3][1..].Trim(), ';', ing[4].Trim(), ';', reserve, ';', purchase, ';', current, ';', valuation, ';', ratio);
 
                         connect.Writer.WriteLine(convey);
@@ -112,7 +115,10 @@ namespace ShareInvest
                             o.RemoveValueRqData(sender.GetType().Name, charts.Item1).Send -= OnReceiveSecuritiesAPI;
                             break;
                     }
-                    if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1' ? await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2)) : await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2))) : await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
+                    if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1'
+                        ? await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2))
+                        : await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2)))
+                        : await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
                         OnReceiveInformationTheDay();
 
                     break;
@@ -205,7 +211,7 @@ namespace ShareInvest
                                 else if (temp[0].Length == 9)
                                     switch (temp[^1])
                                     {
-                                        case "085500":
+                                        case "085000":
                                             miss.Clear();
                                             RequestBalanceInquiry();
                                             break;

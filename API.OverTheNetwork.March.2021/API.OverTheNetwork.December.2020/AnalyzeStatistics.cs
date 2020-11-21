@@ -33,7 +33,8 @@ namespace ShareInvest
         [SupportedOSPlatform("windows")]
         internal static void TryToConnectThePipeStream()
         {
-            var server = new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName, PipeDirection.Out, 0x11, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+            var server
+                = new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName, PipeDirection.Out, 0x11, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
             var client = new NamedPipeClientStream(".", Key, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
             new Task(async () =>
             {
@@ -73,7 +74,8 @@ namespace ShareInvest
                         {
                             string[] temp = param.Split('|'), price;
 
-                            if ((temp[0].Length < 5 || temp[0].Length > 5 && temp[0].Length < 0xA) && collection && Security.Collection.TryGetValue(temp[1], out Statistical.Analysis analysis))
+                            if ((temp[0].Length < 5 || temp[0].Length > 5 && temp[0].Length < 0xA) && collection
+                                && Security.Collection.TryGetValue(temp[1], out Statistical.Analysis analysis))
                                 switch (temp[0].Length)
                                 {
                                     case 4 when temp[0].Equals("주식시세") == false && (stocks && temp[1].Length == 6 || temp[1].Length == 8 && futures):
@@ -84,9 +86,11 @@ namespace ShareInvest
                                             Time = price[0],
                                             Datum = temp[^1][7..]
                                         });
-                                        if (price[0][0] == '0')
+                                        if (price[0][0] == '0' && analysis.Collector == false)
+                                        {
                                             analysis.Collector = true;
-
+                                            analysis.Wait = true;
+                                        }
                                         break;
 
                                     case 6 when temp[0].Equals("주식우선호가") == false && analysis.Collector:
@@ -154,10 +158,29 @@ namespace ShareInvest
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[0]));
                                             break;
 
-                                        case Operation.장시작전 when operation[1].Equals("085500"):
-                                            Server.WriteLine(string.Concat(typeof(Security).Name, '|', Security.Account));
-                                            Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
-                                            GC.Collect();
+                                        case Operation.장시작전:
+                                            if (operation[1].Equals("085500"))
+                                                new Task(() =>
+                                                {
+                                                    foreach (var reservation in Security.Collection)
+                                                        switch (reservation.Value.Strategics)
+                                                        {
+                                                            case Catalog.SatisfyConditionsAccordingToTrends:
+                                                                Statistical.Strategics.Reservation.Enqueue(reservation.Value);
+                                                                break;
+                                                        }
+                                                    var stack = Statistical.Strategics.SetReservation();
+
+                                                    while (stack.Count > 0)
+                                                        Server.WriteLine(string.Concat("Order|", stack.Pop()));
+
+                                                }).Start();
+                                            else if (operation[1].Equals("085000"))
+                                            {
+                                                Server.WriteLine(string.Concat(typeof(Security).Name, '|', Security.Account));
+                                                Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
+                                                GC.Collect();
+                                            }
                                             break;
 
                                         case Operation.장마감전_동시호가 when operation[1].Equals("152000"):
@@ -166,6 +189,7 @@ namespace ShareInvest
                                                 foreach (var stop in Security.Collection)
                                                     if (stop.Key.Length == 6 && stop.Value.Collector)
                                                         stop.Value.Collector = false;
+
                                             }).Start();
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
                                             break;
@@ -209,6 +233,7 @@ namespace ShareInvest
                                                 foreach (var stop in Security.Collection)
                                                     if (stop.Key.Length == 8 && stop.Value.Collector)
                                                         stop.Value.Collector = false;
+
                                             }).Start();
                                             break;
 
@@ -238,8 +263,10 @@ namespace ShareInvest
                                         stocks = true;
                                         futures = true;
                                     }
-                                    Console.WriteLine(temp[^1]);
+                                    if (long.TryParse(balance[1], out long cash))
+                                        Statistical.Strategics.Cash = cash;
                                 }
+                                Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', temp[^1]), typeof(Statistical.Balance));
                             }
                             else if (temp.Length == 1 && param.Length == 0xA)
                                 Security.SetAccount(repeat, param);

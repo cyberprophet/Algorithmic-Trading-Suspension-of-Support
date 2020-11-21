@@ -19,6 +19,10 @@ namespace ShareInvest.Statistical.OpenAPI
         {
             get; set;
         }
+        public override bool Wait
+        {
+            get; set;
+        }
         public override string Code
         {
             get; set;
@@ -36,6 +40,10 @@ namespace ShareInvest.Statistical.OpenAPI
             get; set;
         }
         public override Balance Balance
+        {
+            get; set;
+        }
+        public override Interface.IStrategics Strategics
         {
             get; set;
         }

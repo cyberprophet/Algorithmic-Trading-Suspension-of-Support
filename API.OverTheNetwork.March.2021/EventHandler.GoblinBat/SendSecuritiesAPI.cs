@@ -19,7 +19,8 @@ namespace ShareInvest.EventHandler
             if (long.TryParse(sEvaluation, out long evaluation) && long.TryParse(sDeposit, out long deposit) && long.TryParse(sAvailable, out long available))
                 Convey = new Tuple<long, long>(evaluation + deposit, available);
         }
-        public SendSecuritiesAPI(string code, string name, string retention, string price, int market) => Convey = new Tuple<string, string, string, string, int>(code, name, retention, price, market);
+        public SendSecuritiesAPI(string code, string name, string retention, string price, int market)
+            => Convey = new Tuple<string, string, string, string, int>(code, name, retention, price, market);
         public object Convey
         {
             get; private set;

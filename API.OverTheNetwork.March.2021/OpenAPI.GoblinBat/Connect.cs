@@ -64,9 +64,9 @@ namespace ShareInvest.OpenAPI
                 Base.SendMessage(tr.GetType(), param, error);
             }
         }
-        internal void SendOrder(ISendOrder o) =>
-            request.RequestTrData(new Task(() =>
-            SendErrorMessage(axAPI.SendOrder(axAPI.GetMasterCodeName(o.Code), LookupScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
+        internal void SendOrder(ISendOrder o)
+            => request.RequestTrData(new Task(()
+                => SendErrorMessage(axAPI.SendOrder(axAPI.GetMasterCodeName(o.Code), LookupScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
         internal string SendErrorMessage(int code) => error[code];
         internal HashSet<TR> TR
         {

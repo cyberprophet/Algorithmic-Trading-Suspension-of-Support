@@ -45,9 +45,9 @@ namespace ShareInvest
                     {
                         var split = pf.Name.Split('.')[0].Split('_');
 
-                        if (pf.Length > loading.Length && uint.TryParse(split[1], out uint start) && start < loading.Start && start > 0x55D4A80 - 1 &&
-                            uint.TryParse(split[^2], out uint end) && end > loading.End && (loading.Code.Length == 6 ? end > 0x91E9840 - 1 : end > 0x9357BA0 - 0x1) &&
-                            ReadTheFile(pf.FullName))
+                        if (pf.Length > loading.Length && uint.TryParse(split[1], out uint start) && start < loading.Start && start > 0x55D4A80 - 1
+                            && uint.TryParse(split[^2], out uint end) && end > loading.End && (loading.Code.Length == 6 ? end > 0x91E9840 - 1 : end > 0x9357BA0 - 0x1)
+                            && ReadTheFile(pf.FullName))
                         {
                             using (var sr = new StreamReader(pf.FullName))
                                 material = Decompress(sr.ReadToEnd());
