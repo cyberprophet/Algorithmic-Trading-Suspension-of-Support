@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Security.Principal;
 
 namespace ShareInvest
 {
@@ -8,14 +7,9 @@ namespace ShareInvest
     {
         static void Main()
         {
-            if (Firewall.IsInboundRuleExist(Firewall.Name, Protocol.Tcp, Firewall.Port))
+            if (Security.DirectoryInfo && Firewall.AddInboudRule(Firewall.Name, Protocol.Tcp, Firewall.Port) && Security.UpdateToVersion(DateTime.Now.AddDays(-1)))
                 StartProgress();
 
-            else if (new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator) && Firewall.AddInboudRule(Firewall.Name, Protocol.Tcp, Firewall.Port))
-            {
-
-                StartProgress();
-            }
             else
                 Process.Start(Security.StartInfo);
         }

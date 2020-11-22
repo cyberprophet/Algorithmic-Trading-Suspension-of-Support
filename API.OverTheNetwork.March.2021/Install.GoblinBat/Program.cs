@@ -1,20 +1,27 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.Versioning;
+
+using ShareInvest.Client;
+using ShareInvest.Verify;
 
 namespace ShareInvest
 {
+    [SupportedOSPlatform("windows")]
     class Program
     {
         static void Main()
         {
-            ChooseTheInstallationPath(Security.Commands);
+            var client = GoblinBat.GetInstance(Security.GetUserInformation(KeyDecoder.ProductKeyFromRegistry));
+            var security = new dynamic[] { Security.Commands, Security.Compress, Security.Release };
 
-            GC.Collect();
-            Process.GetCurrentProcess().Kill();
+            for (int i = 0; i < security.Length; i++)
+                ChooseTheInstallationPath(i == 1 ? client : null, security[i]);
         }
-        static void ChooseTheInstallationPath(dynamic param)
+        static void ChooseTheInstallationPath(dynamic client, dynamic param)
         {
             foreach (var str in param)
+            {
                 using (var process = new Process
                 {
                     StartInfo = new ProcessStartInfo
@@ -35,6 +42,11 @@ namespace ShareInvest
                         Console.WriteLine(process.StandardOutput.ReadToEnd());
                         process.WaitForExit();
                     }
+                if (client is GoblinBat)
+                {
+
+                }
+            }
         }
         const string cmd = @"cmd";
     }
