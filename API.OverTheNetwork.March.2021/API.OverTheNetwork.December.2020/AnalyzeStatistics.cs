@@ -62,6 +62,7 @@ namespace ShareInvest
         [SupportedOSPlatform("windows")]
         static void OnReceivePipeClientMessage(NamedPipeClientStream client, NamedPipeServerStream server)
         {
+            Task stocks_task = null, futures_task = null;
             bool repeat = true, collection = false, stocks = false, futures = false;
             using (var sr = new StreamReader(client))
                 try
@@ -140,7 +141,7 @@ namespace ShareInvest
 
                                         case Operation.장마감 when stocks:
                                             stocks = false;
-                                            new Task(() =>
+                                            stocks_task = new Task(() =>
                                             {
                                                 foreach (var collect in Security.Collection)
                                                     if (collect.Key.Length == 6 && collect.Value.Collection.Count > 0)
@@ -154,7 +155,8 @@ namespace ShareInvest
                                                             Base.SendMessage(collect.Value.GetType(), ex.StackTrace, collect.Key);
                                                             Base.SendMessage(ex.StackTrace, collect.Key, collect.Value.GetType());
                                                         }
-                                            }).Start();
+                                            });
+                                            stocks_task.Start();
                                             Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[0]));
                                             break;
 
@@ -163,12 +165,13 @@ namespace ShareInvest
                                                 new Task(() =>
                                                 {
                                                     foreach (var reservation in Security.Collection)
-                                                        switch (reservation.Value.Strategics)
-                                                        {
-                                                            case Catalog.SatisfyConditionsAccordingToTrends:
-                                                                Statistical.Strategics.Reservation.Enqueue(reservation.Value);
-                                                                break;
-                                                        }
+                                                        if (reservation.Value.Balance is Statistical.Balance b && b.Quantity > 0)
+                                                            switch (reservation.Value.Strategics)
+                                                            {
+                                                                case Catalog.SatisfyConditionsAccordingToTrends:
+                                                                    Statistical.Strategics.Reservation.Enqueue(reservation.Value);
+                                                                    break;
+                                                            }
                                                     var stack = Statistical.Strategics.SetReservation();
 
                                                     while (stack.Count > 0)
@@ -204,7 +207,7 @@ namespace ShareInvest
                                             if (repeat && futures && collection)
                                             {
                                                 repeat = false;
-                                                new Task(() =>
+                                                futures_task = new Task(() =>
                                                 {
                                                     foreach (var collect in Security.Collection)
                                                         if (collect.Key.Length == 8 && collect.Value.Collection.Count > 0)
@@ -218,7 +221,8 @@ namespace ShareInvest
                                                                 Base.SendMessage(collect.Value.GetType(), ex.StackTrace, collect.Key);
                                                                 Base.SendMessage(ex.StackTrace, collect.Key, collect.Value.GetType());
                                                             }
-                                                }).Start();
+                                                });
+                                                futures_task.Start();
                                             }
                                             else
                                             {
@@ -238,7 +242,21 @@ namespace ShareInvest
                                             break;
 
                                         case Operation.시간외_단일가_매매종료:
-                                            Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[0]));
+                                            if (stocks_task != null && stocks_task.IsCompleted == false)
+                                            {
+                                                Base.SendMessage("Waiting to receive Stocks. . .", typeof(Repository));
+                                                stocks_task.Wait();
+                                            }
+                                            if (futures_task != null && futures_task.IsCompleted == false)
+                                            {
+                                                Base.SendMessage("Waiting to receive Futures. . .", typeof(Repository));
+                                                futures_task.Wait();
+                                            }
+                                            if (server.IsConnected)
+                                            {
+                                                Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[0]));
+                                                server.Disconnect();
+                                            }
                                             Process.Start("shutdown.exe", "-r");
                                             Host.Dispose();
                                             break;

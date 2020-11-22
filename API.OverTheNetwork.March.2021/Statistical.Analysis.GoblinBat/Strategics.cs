@@ -12,10 +12,7 @@ namespace ShareInvest.Statistical
 
             Parallel.ForEach(Reservation, new Action<Analysis>((r) =>
             {
-                if (r.Balance is Balance b && b.Quantity > 0)
-                {
-
-                }
+                
             }));
             return stack;
         }

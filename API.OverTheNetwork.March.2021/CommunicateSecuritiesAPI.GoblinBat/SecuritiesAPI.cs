@@ -42,7 +42,9 @@ namespace ShareInvest
                     switch (connect)
                     {
                         case OpenAPI.ConnectAPI o when string.IsNullOrEmpty(retention.Code) == false:
-                            o.InputValueRqData(string.Concat(instance, retention.Code.Length == 8 ? (retention.Code[0] > '1' ? "Opt50066" : "Opt50028") : "Opt10079"), string.Concat(retention.Code, ';', retention.LastDate)).Send += OnReceiveSecuritiesAPI;
+                            o.InputValueRqData(string.Concat(instance, retention.Code.Length == 8
+                                ? (retention.Code[0] > '1' ? "Opt50066" : "Opt50028") : "Opt10079"), string.Concat(retention.Code, ';', retention.LastDate)).Send
+                                    += OnReceiveSecuritiesAPI;
                             return;
                     }
                 OnReceiveInformationTheDay();
@@ -92,7 +94,8 @@ namespace ShareInvest
 
                         if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate)
                             && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase))
-                            convey = string.Concat(sender.GetType().Name, inquiry, ing[0], ';', ing[1].Equals(ing[0]) && collection.TryGetValue(ing[1], out Codes c) ? c.Name : ing[1], ';', ing[2].Equals("1") ? -quantity : quantity, ';', fPurchase, ';', fCurrent, ';', fValuation, ';', fRate * 1e-2);
+                            convey = string.Concat(sender.GetType().Name, inquiry, ing[0], ';', ing[1].Equals(ing[0]) && collection.TryGetValue(ing[1], out Codes c)
+                                ? c.Name : ing[1], ';', ing[2].Equals("1") ? -quantity : quantity, ';', fPurchase, ';', fCurrent, ';', fValuation, ';', fRate * 1e-2);
 
                         else if (ing[3].Length > 0 && ing[3][0] == 'A' && double.TryParse(ing[0xC]?.Insert(6, "."), out double ratio)
                             && long.TryParse(ing[0xB], out long valuation) && int.TryParse(ing[6], out int reserve)
@@ -407,7 +410,7 @@ namespace ShareInvest
                     break;
 
                 case DialogResult.Retry:
-                    message = string.Concat("장시작시간|", GetType(), "|0;085500;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation));
+                    message = string.Concat("장시작시간|", GetType(), "|0;085000;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation));
                     break;
 
                 case DialogResult.Abort:

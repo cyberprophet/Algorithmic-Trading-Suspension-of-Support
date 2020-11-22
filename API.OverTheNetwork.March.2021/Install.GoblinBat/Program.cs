@@ -1,35 +1,41 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.Versioning;
-using System.Security.Principal;
 
 namespace ShareInvest
 {
-    [SupportedOSPlatform("windows")]
     class Program
     {
         static void Main()
         {
-            if (Firewall.IsInboundRuleExist(Firewall.Name, Protocol.Tcp, Firewall.Port))
-                StartProgress();
-
-            else if (new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator) && Firewall.AddInboudRule(Firewall.Name, Protocol.Tcp, Firewall.Port))
-            {
-
-                StartProgress();
-            }
-            else
-                Process.Start(Security.StartInfo);
-        }
-        static void StartProgress()
-        {
-            var security = new Security(Verify.KeyDecoder.ProductKeyFromRegistry);
-
-            if (security.GrantAccess && security.CheckTheSystemPeriodically(DateTime.Now))
-                security.StartProgress();
+            ChooseTheInstallationPath(Security.Commands);
 
             GC.Collect();
             Process.GetCurrentProcess().Kill();
         }
+        static void ChooseTheInstallationPath(dynamic param)
+        {
+            foreach (var str in param)
+                using (var process = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = cmd,
+                        CreateNoWindow = true,
+                        UseShellExecute = false,
+                        RedirectStandardInput = true,
+                        RedirectStandardError = true,
+                        RedirectStandardOutput = true,
+                        WorkingDirectory = str.Item1
+                    }
+                })
+                    if (process.Start())
+                    {
+                        process.StandardInput.Write(str.Item2 + Environment.NewLine);
+                        process.StandardInput.Close();
+                        Console.WriteLine(process.StandardOutput.ReadToEnd());
+                        process.WaitForExit();
+                    }
+        }
+        const string cmd = @"cmd";
     }
 }
