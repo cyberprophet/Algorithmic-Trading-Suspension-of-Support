@@ -14,7 +14,7 @@ namespace ShareInvest
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 
-                if (args.Length >= 0)
+                if (Security.CheckAccessRights(args))
                     StartProgress(args);
             }
             GC.Collect();

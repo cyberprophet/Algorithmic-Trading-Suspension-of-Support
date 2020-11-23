@@ -6,6 +6,10 @@ namespace ShareInvest.Statistical.OpenAPI
 {
     public class Futures : Analysis
     {
+        public override double MarginRate
+        {
+            get; set;
+        }
         public override void AnalyzeTheConclusion(string[] param)
         {
 
@@ -22,7 +26,7 @@ namespace ShareInvest.Statistical.OpenAPI
         public override bool Wait
         {
             get; set;
-        }
+        }     
         public override string Code
         {
             get; set;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
@@ -58,6 +59,35 @@ namespace ShareInvest
                 if (client.IsConnected)
                     OnReceivePipeClientMessage(client, server);
             }).Start();
+        }
+        static void SetReservation()
+        {
+            foreach (var reservation in Security.Collection)
+                if (reservation.Value.Balance is Statistical.Balance b && b.Quantity > 0)
+                    switch (reservation.Value.Strategics)
+                    {
+                        case Catalog.SatisfyConditionsAccordingToTrends:
+                            Statistical.Strategics.Reservation.Enqueue(reservation.Value);
+                            break;
+                    }
+            var stack = Statistical.Strategics.SetReservation();
+
+            while (stack.Item1.Count > 0 || stack.Item2.Count > 0)
+            {
+                if (stack.Item1.Count > 0)
+                {
+                    var order = string.Concat("Order|", stack.Item1.Pop());
+                    Server.WriteLine(order);
+                    Base.SendMessage(order, typeof(Statistical.Strategics));
+                }
+                if (stack.Item2.Count > 0)
+                {
+                    var order = string.Concat("Order|", stack.Item2.Pop());
+                    Server.WriteLine(order);
+                    Base.SendMessage(order, typeof(Statistical.Strategics));
+                }
+            }
+            Statistical.Strategics.Reservation.Clear();
         }
         [SupportedOSPlatform("windows")]
         static void OnReceivePipeClientMessage(NamedPipeClientStream client, NamedPipeServerStream server)
@@ -162,28 +192,34 @@ namespace ShareInvest
 
                                         case Operation.장시작전:
                                             if (operation[1].Equals("085500"))
-                                                new Task(() =>
-                                                {
-                                                    foreach (var reservation in Security.Collection)
-                                                        if (reservation.Value.Balance is Statistical.Balance b && b.Quantity > 0)
-                                                            switch (reservation.Value.Strategics)
-                                                            {
-                                                                case Catalog.SatisfyConditionsAccordingToTrends:
-                                                                    Statistical.Strategics.Reservation.Enqueue(reservation.Value);
-                                                                    break;
-                                                            }
-                                                    var stack = Statistical.Strategics.SetReservation();
+                                                new Task(() => SetReservation()).Start();
 
-                                                    while (stack.Count > 0)
-                                                        Server.WriteLine(string.Concat("Order|", stack.Pop()));
-
-                                                }).Start();
                                             else if (operation[1].Equals("085000"))
                                             {
                                                 Server.WriteLine(string.Concat(typeof(Security).Name, '|', Security.Account));
                                                 Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
                                                 GC.Collect();
                                             }
+                                            else if (operation[1].Equals("084500"))
+                                                new Task(async () =>
+                                                {
+                                                    foreach (var length in new int[] { 6, 8 })
+                                                        foreach (var ch in await Security.Client.GetContextAsync(new Codes { }, length) as List<Codes>)
+                                                            if (Security.Collection.TryGetValue(ch.Code, out Statistical.Analysis select) && double.TryParse(ch.Price, out double price))
+                                                            {
+                                                                if (length == 6)
+                                                                {
+                                                                    select.Market = 1 == (int)ch.MarginRate;
+                                                                    select.Current = (int)price;
+                                                                }
+                                                                else if (length == 8)
+                                                                {
+                                                                    var fo = ch.Code[1] == '0';
+                                                                    select.MarginRate = fo ? ch.MarginRate : ch.MarginRate * 0.1;
+                                                                    select.Current = fo ? price : (int)price;
+                                                                }
+                                                            }
+                                                }).Start();
                                             break;
 
                                         case Operation.장마감전_동시호가 when operation[1].Equals("152000"):
@@ -193,8 +229,9 @@ namespace ShareInvest
                                                     if (stop.Key.Length == 6 && stop.Value.Collector)
                                                         stop.Value.Collector = false;
 
+                                                SetReservation();
+
                                             }).Start();
-                                            Server.WriteLine(string.Concat(typeof(Operation).Name, '|', operation[1]));
                                             break;
                                     }
                                     Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', Enum.GetName(typeof(Operation), number), '_', operation[1]), typeof(Operation));
@@ -268,9 +305,11 @@ namespace ShareInvest
                             {
                                 var balance = temp[^1].Split(';');
 
-                                if (balance.Length > 2 && Security.Collection.TryGetValue(balance[0], out Statistical.Analysis bal))
+                                if (balance.Length > 2 && Security.Collection.TryGetValue(balance[0], out Statistical.Analysis bal) && double.TryParse(balance[4], out double current))
+                                {
                                     bal.Balance = new Statistical.Balance(balance);
-
+                                    bal.Current = balance[0].Length == 8 && balance[0][1] == '0' ? current : (int)current;
+                                }
                                 else
                                 {
                                     var now = DateTime.Now;

@@ -197,7 +197,7 @@ namespace ShareInvest
                                     switch (connect)
                                     {
                                         case OpenAPI.ConnectAPI o:
-                                            if (int.TryParse(order[1], out int type) && int.TryParse(order[2], out int price) && int.TryParse(order[3], out int quantity))
+                                            if (order[0].Length == 6 && int.TryParse(order[1], out int type) && int.TryParse(order[2], out int price) && int.TryParse(order[3], out int quantity))
                                                 o.SendOrder(new Catalog.OpenAPI.Order
                                                 {
                                                     AccNo = connect.Account,
@@ -217,9 +217,6 @@ namespace ShareInvest
                                         case "085000":
                                             miss.Clear();
                                             RequestBalanceInquiry();
-                                            break;
-
-                                        case "152000":
                                             break;
 
                                         case "8":

@@ -7,6 +7,22 @@ namespace ShareInvest.Statistical
 {
     public abstract class Analysis
     {
+        public virtual bool Market
+        {
+            get; set;
+        }
+        public virtual dynamic SellPrice
+        {
+            protected internal get; set;
+        }
+        public virtual dynamic BuyPrice
+        {
+            protected internal get; set;
+        }
+        public virtual double MarginRate
+        {
+            get; set;
+        }
         public virtual (IEnumerable<Collect>, uint, uint, string) SortTheRecordedInformation
         {
             get
@@ -47,6 +63,26 @@ namespace ShareInvest.Statistical
                     storage[max].Split(';')[0][1..] : string.Empty);
             }
         }
+        public virtual int GetQuoteUnit(int price, bool info) => price switch
+        {
+            int n when n >= 0 && n < 0x3E8 => 1,
+            int n when n >= 0x3E8 && n < 0x1388 => 5,
+            int n when n >= 0x1388 && n < 0x2710 => 0xA,
+            int n when n >= 0x2710 && n < 0xC350 => 0x32,
+            int n when n >= 0x186A0 && n < 0x7A120 && info => 0x1F4,
+            int n when n >= 0x7A120 && info => 0x3E8,
+            _ => 0x64,
+        };
+        public virtual int GetStartingPrice(int price, bool info) => price switch
+        {
+            int n when n >= 0 && n < 0x3E8 => price,
+            int n when n >= 0x3E8 && n < 0x1388 => (price / 5 + 1) * 5,
+            int n when n >= 0x1388 && n < 0x2710 => (price / 0xA + 1) * 0xA,
+            int n when n >= 0x2710 && n < 0xC350 => (price / 0x32 + 1) * 0x32,
+            int n when n >= 0x186A0 && n < 0x7A120 && info => (price / 0x1F4 + 1) * 0x1F4,
+            int n when n >= 0x7A120 && info => (price / 0x3E8 + 1) * 0x3E8,
+            _ => (price / 0x64 + 1) * 0x64,
+        };
         public abstract void AnalyzeTheConclusion(string[] param);
         public abstract void AnalyzeTheQuotes(string[] param);
         public abstract bool Collector

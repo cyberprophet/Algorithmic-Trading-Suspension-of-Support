@@ -6,6 +6,20 @@ namespace ShareInvest.Statistical.OpenAPI
 {
     public class Stocks : Analysis
     {
+        public override bool Market
+        {
+            get; set;
+        }
+        public override dynamic SellPrice
+        {
+            protected internal get; set;
+        }
+        public override dynamic BuyPrice
+        {
+            protected internal get; set;
+        }
+        public override int GetQuoteUnit(int price, bool info) => base.GetQuoteUnit(price, info);
+        public override int GetStartingPrice(int price, bool info) => base.GetStartingPrice(price, info);
         public override void AnalyzeTheConclusion(string[] param)
         {
 

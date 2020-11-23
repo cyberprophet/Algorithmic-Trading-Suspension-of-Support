@@ -14,9 +14,20 @@ namespace ShareInvest.Controllers
         [HttpPut, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PutContextAsync([FromBody] Codes param)
         {
-            if (Security.Collection.ContainsKey(param.Code))
-                return Ok(param.Name);
+            if (param.MaturityMarketCap.Contains(transaction_suspension) == false && Security.Collection.TryGetValue(param.Code, out Statistical.Analysis st))
+            {
+                switch (st)
+                {
+                    case Statistical.OpenAPI.Stocks:
 
+                        break;
+
+                    case Statistical.OpenAPI.Futures:
+
+                        break;
+                }
+                return Ok(param.Name);
+            }
             else
             {
                 if (Security.SecuritiesCompany == 0x4F && (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[0] > '1')
@@ -66,6 +77,8 @@ namespace ShareInvest.Controllers
 
                     return Ok(param.Name);
                 }
+                else
+                    Base.SendMessage(string.Concat(Security.Collection.Remove(param.Code), param.Code), param.MaturityMarketCap, GetType());
             }
             return Ok();
         }

@@ -79,6 +79,22 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<object> GetContextAsync(Codes param, int length)
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, length), Method.GET), source.Token);
+
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    return JsonConvert.DeserializeObject<List<Codes>>(response.Content);
+            }
+            catch (Exception ex)
+            {
+                Base.SendMessage(GetType(), ex.StackTrace);
+                Base.SendMessage(ex.StackTrace, GetType());
+            }
+            return null;
+        }
         public async Task<object> GetContextAsync<T>(T param) where T : struct
         {
             try
