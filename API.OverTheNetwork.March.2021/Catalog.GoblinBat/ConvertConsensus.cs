@@ -3,6 +3,24 @@ using System.Collections.Generic;
 
 namespace ShareInvest.Catalog
 {
+    public enum AnalysisType
+    {
+        TFFF = 1,
+        FTFF = 2,
+        FFTF = 3,
+        FFFT = 4,
+        TTFF = 5,
+        TFTF = 6,
+        TFFT = 7,
+        FTTF = 8,
+        FTFT = 9,
+        FFTT = 0xA,
+        TTTF = 0xB,
+        TTFT = 0xC,
+        TFTT = 0xD,
+        FTTT = 0xE,
+        TTTT = 0xF
+    }
     public struct ConvertConsensus
     {
         public static Tuple<List<ConvertConsensus>, List<ConvertConsensus>> PresumeToConsensus(IEnumerable<ConvertConsensus> consensus)

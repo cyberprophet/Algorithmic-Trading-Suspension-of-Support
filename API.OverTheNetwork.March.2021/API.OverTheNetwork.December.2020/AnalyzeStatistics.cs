@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Security.Principal;
 using System.Threading;
@@ -31,6 +32,27 @@ namespace ShareInvest
         {
             get; private set;
         }
+        internal static void TrendsToValuation(dynamic privacy) => new Task(async () =>
+        {
+            if (await Security.Client.GetContextAsync(new Catalog.TrendsToCashflow()) is IEnumerable<Catalog.TrendsToCashflow> enumerable)
+                foreach (var ch in (await Security.Client.GetContextAsync(new Codes(), 6) as List<Codes>).OrderBy(o => Guid.NewGuid()))
+                    if (string.IsNullOrEmpty(ch.Price) == false && (ch.MarginRate == 1 || ch.MarginRate == 2) && ch.MaturityMarketCap.StartsWith("증거금")
+                        && ch.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
+                        foreach (var analysis in enumerable)
+                        {
+                            var now = DateTime.Now;
+
+                            if (await Security.Client.PostConfirmAsync(new Catalog.ConfirmStrategics
+                            {
+                                Code = ch.Code,
+                                Date = now.Hour > 0xF ? now.ToString(Base.DateFormat) : now.AddDays(-1).ToString(Base.DateFormat),
+                                Strategics = string.Concat("TC.", analysis.AnalysisType)
+                            }) is bool confirm && confirm == false)
+                            {
+
+                            }
+                        }
+        }).Start();
         [SupportedOSPlatform("windows")]
         internal static void TryToConnectThePipeStream()
         {
@@ -70,21 +92,21 @@ namespace ShareInvest
                             Statistical.Strategics.Reservation.Enqueue(reservation.Value);
                             break;
                     }
-            var stack = Statistical.Strategics.SetReservation();
+            var order = Statistical.Strategics.SetReservation();
 
-            while (stack.Item1.Count > 0 || stack.Item2.Count > 0)
+            while (order.Item1.Count > 0 || order.Item2.Count > 0)
             {
-                if (stack.Item1.Count > 0)
+                if (order.Item1.Count > 0)
                 {
-                    var order = string.Concat("Order|", stack.Item1.Pop());
-                    Server.WriteLine(order);
-                    Base.SendMessage(order, typeof(Statistical.Strategics));
+                    var sell = string.Concat("Order|", order.Item1.Dequeue());
+                    Server.WriteLine(sell);
+                    Base.SendMessage(sell, typeof(Statistical.Strategics));
                 }
-                if (stack.Item2.Count > 0)
+                if (order.Item2.Count > 0)
                 {
-                    var order = string.Concat("Order|", stack.Item2.Pop());
-                    Server.WriteLine(order);
-                    Base.SendMessage(order, typeof(Statistical.Strategics));
+                    var buy = string.Concat("Order|", order.Item2.Pop());
+                    Server.WriteLine(buy);
+                    Base.SendMessage(buy, typeof(Statistical.Strategics));
                 }
             }
             Statistical.Strategics.Reservation.Clear();

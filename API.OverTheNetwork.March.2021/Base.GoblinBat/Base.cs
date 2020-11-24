@@ -17,6 +17,7 @@ namespace ShareInvest
         [Conditional("DEBUG")]
         public static void SendMessage(Type type, string code, int status) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', status));
         public static void SendMessage(string code, int status, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', status));
+        public static void SendMessage(DateTime now, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', now, '_', message));
         public static string GetRemainingTime(TimeSpan span) => span.Days == 0 ?
             string.Concat("장시작 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .") :
             string.Concat("장시작 ", span.Days, "일 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .");
@@ -37,7 +38,10 @@ namespace ShareInvest
         {
             get; private set;
         }
+        public static string DateFormat => "yyMMdd";
+        public static string TransactionSuspension => transaction_suspension;
         public static string[] Holidays => new string[] { "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
         const string distinctDate = "yyyyMM";
+        const string transaction_suspension = "거래정지";
     }
 }

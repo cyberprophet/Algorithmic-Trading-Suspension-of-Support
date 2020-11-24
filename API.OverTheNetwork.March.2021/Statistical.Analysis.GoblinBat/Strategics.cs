@@ -6,9 +6,10 @@ namespace ShareInvest.Statistical
 {
     public static class Strategics
     {
-        public static (Stack<string>, Stack<string>) SetReservation()
+        public static (Queue<string>, Stack<string>) SetReservation()
         {
-            Stack<string> sell_stack = new Stack<string>(), buy_stack = new Stack<string>();
+            var sell_queue = new Queue<string>();
+            var buy_stack = new Stack<string>();
             Parallel.ForEach(Reservation, new Action<Analysis>((r) =>
             {
                 switch (r.Strategics)
@@ -27,7 +28,7 @@ namespace ShareInvest.Statistical
                             while (sPrice < upper && quantity-- > 0)
                             {
                                 Base.SendMessage(r.Code, sPrice.ToString("C0"), typeof(Strategics));
-                                sell_stack.Push(SetOrder(r.Code, (int)Interface.OpenAPI.OrderType.신규매도, sPrice, sc.ReservationSellQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty));
+                                sell_queue.Enqueue(SetOrder(r.Code, (int)Interface.OpenAPI.OrderType.신규매도, sPrice, sc.ReservationSellQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty));
 
                                 for (int i = 0; i < sc.ReservationSellUnit; i++)
                                     sPrice += r.GetQuoteUnit(sPrice, stock);
@@ -52,7 +53,7 @@ namespace ShareInvest.Statistical
                         break;
                 }
             }));
-            return (sell_stack, buy_stack);
+            return (sell_queue, buy_stack);
         }
         public static string SetOrder(string code, int type, int price, int quantity, string hoga, string number)
             => string.Concat(code, ';', type, ';', price, ';', quantity, ';', hoga, ';', number);

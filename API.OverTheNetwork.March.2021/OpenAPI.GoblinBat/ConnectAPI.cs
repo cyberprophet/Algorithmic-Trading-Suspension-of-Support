@@ -20,7 +20,6 @@ namespace ShareInvest.OpenAPI
 {
     public sealed partial class ConnectAPI : UserControl, ISecuritiesAPI<SendSecuritiesAPI>
     {
-        const string transaction_suspension = "거래정지";
         Stack<string> CatalogStocksCode(IEnumerable<string> market)
         {
             int index = 0;
@@ -28,7 +27,7 @@ namespace ShareInvest.OpenAPI
             var stack = new Stack<string>(0x10);
 
             foreach (var str in market)
-                if (string.IsNullOrEmpty(str) == false && axAPI.GetMasterStockState(str).Contains(transaction_suspension) == false)
+                if (string.IsNullOrEmpty(str) == false && axAPI.GetMasterStockState(str).Contains(Base.TransactionSuspension) == false)
                 {
                     if (index++ % 0x63 == 0x62)
                     {
@@ -67,7 +66,7 @@ namespace ShareInvest.OpenAPI
                             {
                                 var state = axAPI.GetMasterStockState(market[i]);
 
-                                if (state.Contains(transaction_suspension))
+                                if (state.Contains(Base.TransactionSuspension))
                                 {
                                     Send?.Invoke(this, new SendSecuritiesAPI(new Codes
                                     {

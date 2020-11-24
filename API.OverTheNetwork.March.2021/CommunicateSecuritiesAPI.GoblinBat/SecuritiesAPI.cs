@@ -83,7 +83,9 @@ namespace ShareInvest
                     return;
 
                 case string message:
-                    notifyIcon.Text = string.Concat(DateTime.Now.ToLongTimeString(), " ", message);
+                    if (await this.client.PostContextAsync(new Catalog.Models.Message { Convey = message }) is int)
+                        notifyIcon.Text = string.Concat(DateTime.Now.ToLongTimeString(), " ", message);
+
                     return;
 
                 case Queue<string[]> hold:

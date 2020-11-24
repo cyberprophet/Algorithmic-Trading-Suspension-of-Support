@@ -14,7 +14,7 @@ namespace ShareInvest.Controllers
         [HttpPut, ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> PutContextAsync([FromBody] Codes param)
         {
-            if (param.MaturityMarketCap.Contains(transaction_suspension) == false && Security.Collection.TryGetValue(param.Code, out Statistical.Analysis st))
+            if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) == false && Security.Collection.TryGetValue(param.Code, out Statistical.Analysis st))
             {
                 switch (st)
                 {
@@ -34,7 +34,7 @@ namespace ShareInvest.Controllers
                     && await Security.Client.PutContextAsync(param) is string code)
                     Base.SendMessage(code, Security.Collection.Count, GetType());
 
-                if (param.MaturityMarketCap.Contains(transaction_suspension) == false)
+                if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
                 {
                     switch (Security.SecuritiesCompany)
                     {
@@ -82,6 +82,5 @@ namespace ShareInvest.Controllers
             }
             return Ok();
         }
-        const string transaction_suspension = "거래정지";
     }
 }

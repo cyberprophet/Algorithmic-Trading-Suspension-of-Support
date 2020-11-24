@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using RestSharp;
 
@@ -103,6 +105,29 @@ namespace ShareInvest.Client
 
                 switch (param)
                 {
+                    case TrendsToCashflow:
+                        var stack = new Stack<Interface.IStrategics>();
+
+                        foreach (var content in JArray.Parse(response.Content))
+                            if (int.TryParse(content.Values().ToArray()[0].ToString(), out int analysis))
+                                stack.Push(new TrendsToCashflow
+                                {
+                                    Code = string.Empty,
+                                    Short = 5,
+                                    Long = 0x3C,
+                                    Trend = 0x14,
+                                    Unit = 1,
+                                    ReservationQuantity = 0,
+                                    ReservationRevenue = 0xA,
+                                    Addition = 0xB,
+                                    Interval = 1,
+                                    TradingQuantity = 1,
+                                    PositionRevenue = 5.25e-3,
+                                    PositionAddition = 7.25e-3,
+                                    AnalysisType = Enum.GetName(typeof(AnalysisType), analysis)
+                                });
+                        return stack.OrderBy(o => Guid.NewGuid());
+
                     case Catalog.IncorporatedStocks stocks:
                         if (string.IsNullOrEmpty(stocks.Date))
                         {
@@ -124,6 +149,23 @@ namespace ShareInvest.Client
             }
             return null;
         }
+        public async Task<object> PostConfirmAsync<T>(T param) where T : struct
+        {
+            try
+            {
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.POST)
+                    .AddHeader(Security.content_type, Security.json)
+                    .AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+
+                if (response.StatusCode.Equals(HttpStatusCode.OK))
+                    return JsonConvert.DeserializeObject<bool>(response.Content);
+            }
+            catch (Exception ex)
+            {
+                Base.SendMessage(ex.StackTrace, GetType());
+            }
+            return null;
+        }
         public async Task<object> PostContextAsync<T>(T param) where T : struct
         {
             try
@@ -136,6 +178,9 @@ namespace ShareInvest.Client
                     {
                         case Retention when string.IsNullOrEmpty(response.Content) == false:
                             return JsonConvert.DeserializeObject<Retention>(response.Content);
+
+                        case Message:
+                            return (int)response.StatusCode;
                     }
             }
             catch (Exception ex)
