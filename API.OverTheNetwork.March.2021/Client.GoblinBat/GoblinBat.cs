@@ -105,6 +105,29 @@ namespace ShareInvest.Client
 
                 switch (param)
                 {
+                    case FinancialStatement:
+                        var list = JsonConvert.DeserializeObject<List<FinancialStatement>>(response.Content);
+                        var remove = new Queue<FinancialStatement>();
+                        var str = string.Empty;
+
+                        foreach (var fs in list.OrderBy(o => o.Date))
+                        {
+                            var date = fs.Date.Substring(0, 5);
+
+                            if (date.Equals(str))
+                                remove.Enqueue(fs);
+
+                            str = date;
+                        }
+                        while (remove.Count > 0)
+                        {
+                            var fs = remove.Dequeue();
+
+                            if (list.Remove(fs))
+                                Base.SendMessage(fs.Date, list.Count, param.GetType());
+                        }
+                        return list;
+
                     case TrendsToCashflow:
                         var stack = new Stack<Interface.IStrategics>();
 
@@ -237,7 +260,12 @@ namespace ShareInvest.Client
                     .AddJsonBody(param, Security.content_type), source.Token);
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
-                    return JsonConvert.DeserializeObject<string>(response.Content);
+                    return param switch
+                    {
+                        StocksStrategics => JsonConvert.DeserializeObject<double>(response.Content),
+                        Catalog.Models.Consensus => (int)response.StatusCode,
+                        _ => JsonConvert.DeserializeObject<string>(response.Content),
+                    };
             }
             catch (Exception ex)
             {

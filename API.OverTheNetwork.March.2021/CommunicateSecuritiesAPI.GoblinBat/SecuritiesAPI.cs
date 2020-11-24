@@ -30,7 +30,7 @@ namespace ShareInvest
             Codes = new Queue<string>();
             var normalize = Security.Initialize(param);
             GetTheCorrectAnswer = new int[normalize.Item1];
-            miss = new Stack<Codes>();
+            miss = new Stack<Tuple<Codes, string>>();
             collection = new Dictionary<string, Codes>();
             this.normalize = normalize.Item2;
         }
@@ -65,7 +65,7 @@ namespace ShareInvest
                         Price = tr.Item4,
                         MarginRate = tr.Item5
                     };
-                    await RegisterStocksItems(param, sender);
+                    await RegisterStocksItems(param, sender.GetType().Name);
                     collection[tr.Item1] = param;
                     return;
 
@@ -143,7 +143,7 @@ namespace ShareInvest
                     return;
             }
         }));
-        async Task RegisterStocksItems(Codes register, object sender)
+        async Task RegisterStocksItems(Codes register, string sender)
         {
             if (await client.PutContextAsync(register) is string name && register.Name.Equals(name))
             {
@@ -154,16 +154,13 @@ namespace ShareInvest
                         var temp = Codes.Dequeue().Split('_');
                         (connect as OpenAPI.ConnectAPI).RemoveValueRqData(temp[0], temp[^1]).Send -= OnReceiveSecuritiesAPI;
                     }
-                    (connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, register.Code).Send -= OnReceiveSecuritiesAPI;
+                    (connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender, register.Code).Send -= OnReceiveSecuritiesAPI;
                 }
                 if (register.Code.Length == 6 || register.Code.Length == 8 && register.Code[1] == '0')
                     Codes.Enqueue(register.Code);
             }
             else
-            {
-                Base.SendMessage(sender.GetType(), register.Name);
-                miss.Push(register);
-            }
+                miss.Push(new Tuple<Codes, string>(register, sender));
         }
         void RequestBalanceInquiry()
         {
@@ -272,15 +269,18 @@ namespace ShareInvest
             else if (connect.Start)
             {
                 if (miss.Count > 0 && Codes.Count == Miss)
-                    BeginInvoke(new Action(async () => await RegisterStocksItems(miss.Pop(), this)));
-
+                    BeginInvoke(new Action(async () =>
+                    {
+                        var miss = this.miss.Pop();
+                        await RegisterStocksItems(miss.Item1, miss.Item2);
+                    }));
                 else
                     Miss = Codes.Count;
 
                 if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
                 {
                     notifyIcon.Text = connect.SecuritiesName;
-                    timer.Interval = 0x3E15;
+                    timer.Interval = 0x173C;
                 }
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
@@ -440,7 +440,7 @@ namespace ShareInvest
         readonly string normalize;
         readonly Random random;
         readonly GoblinBat client;
-        readonly Stack<Codes> miss;
+        readonly Stack<Tuple<Codes, string>> miss;
         readonly Dictionary<string, Codes> collection;
         readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
     }

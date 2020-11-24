@@ -2,6 +2,7 @@
 using System.Linq;
 
 using ShareInvest.Catalog.Models;
+using ShareInvest.Interface;
 
 namespace ShareInvest.Statistical
 {
@@ -113,7 +114,7 @@ namespace ShareInvest.Statistical
         {
             get; set;
         }
-        public abstract Interface.IStrategics Strategics
+        public abstract IStrategics Strategics
         {
             get; set;
         }
@@ -121,7 +122,7 @@ namespace ShareInvest.Statistical
         {
             get; set;
         }
-        protected internal Dictionary<string, string> Record
+        protected internal virtual double Commission
         {
             get; set;
         }

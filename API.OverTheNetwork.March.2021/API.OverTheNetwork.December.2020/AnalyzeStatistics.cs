@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
@@ -34,11 +35,11 @@ namespace ShareInvest
         }
         internal static void TrendsToValuation(dynamic privacy) => new Task(async () =>
         {
-            if (await Security.Client.GetContextAsync(new Catalog.TrendsToCashflow()) is IEnumerable<Catalog.TrendsToCashflow> enumerable)
+            if (privacy is Privacies p && await Security.Client.GetContextAsync(new Catalog.TrendsToCashflow()) is IEnumerable<Interface.IStrategics> enumerable)
                 foreach (var ch in (await Security.Client.GetContextAsync(new Codes(), 6) as List<Codes>).OrderBy(o => Guid.NewGuid()))
                     if (string.IsNullOrEmpty(ch.Price) == false && (ch.MarginRate == 1 || ch.MarginRate == 2) && ch.MaturityMarketCap.StartsWith("증거금")
                         && ch.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
-                        foreach (var analysis in enumerable)
+                        foreach (Catalog.TrendsToCashflow analysis in enumerable)
                         {
                             var now = DateTime.Now;
 
@@ -49,7 +50,42 @@ namespace ShareInvest
                                 Strategics = string.Concat("TC.", analysis.AnalysisType)
                             }) is bool confirm && confirm == false)
                             {
+                                var estimate = Statistical.Strategics.AnalyzeFinancialStatements(await Security.Client.GetContextAsync(new Catalog.FinancialStatement { Code = ch.Code }) as List<Catalog.FinancialStatement>, analysis.AnalysisType.ToCharArray());
+                                var statistics = new Statistical.Indicators.TrendsToCashflow { Code = ch.Code, Strategics = analysis }.StartProgress(p.Commission);
 
+                                if (estimate != null && estimate.Count > 3)
+                                    try
+                                    {
+                                        var normalize = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(statistics.Date)).Value;
+                                        var near = Base.FindTheNearestQuarter(DateTime.TryParseExact(statistics.Date, Base.FullDateFormat.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
+
+                                        if (await Security.Client.PutContextAsync(new Consensus
+                                        {
+                                            Code = ch.Code,
+                                            Strategics = statistics.Key,
+                                            Date = statistics.Date,
+                                            FirstQuarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[0])).Value - normalize,
+                                            SecondQuarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[1])).Value - normalize,
+                                            ThirdQuarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[2])).Value - normalize,
+                                            Quarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[3])).Value - normalize,
+                                            TheNextYear = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[4])).Value - normalize,
+                                            TheYearAfterNext = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[5])).Value - normalize
+                                        }) is int status && status == 0xC8 && statistics.Base > 0 && await Security.Client.PutContextAsync(new StocksStrategics
+                                        {
+                                            Code = ch.Code,
+                                            Strategics = statistics.Key,
+                                            Date = statistics.Date,
+                                            MaximumInvestment = (long)statistics.Base,
+                                            CumulativeReturn = statistics.Cumulative / statistics.Base,
+                                            WeightedAverageDailyReturn = statistics.Statistic / statistics.Base,
+                                            DiscrepancyRateFromExpectedStockPrice = statistics.Price
+                                        }) is double coin && double.IsNaN(coin))
+                                            Base.SendMessage(ch.Code, typeof(StocksStrategics));
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Base.SendMessage(ex.StackTrace, typeof(AnalyzeStatistics));
+                                    }
                             }
                         }
         }).Start();
