@@ -17,12 +17,10 @@ namespace ShareInvest
                 file = string.Concat(storage, @"\", now.Day.ToString("D2"), '_', start.ToString("D9"), '_', end.ToString("D9"), '_', string.IsNullOrEmpty(price) ? "Empty" : price, extension);
             CreateTheDirectory(new DirectoryInfo(storage));
             using (var sw = new StreamWriter(file, false))
-                sw.WriteLine(compress.Item1);
+                sw.Write(compress.Item1);
 
             if (compress.Item2 == 0)
                 Base.SendMessage(code, typeof(Repository));
-
-            RecodeToEncryption(file);
         }
         public static (string, bool) RetrieveSavedMaterial(Catalog.Models.Loading loading)
         {
@@ -34,8 +32,6 @@ namespace ShareInvest
             {
                 using (var sr = new StreamReader(file))
                     material = Decompress(sr.ReadToEnd());
-
-                RecodeToEncryption(file);
 
                 return (material, true);
             }
@@ -52,29 +48,22 @@ namespace ShareInvest
                             using (var sr = new StreamReader(pf.FullName))
                                 material = Decompress(sr.ReadToEnd());
 
-                            RecodeToEncryption(pf.FullName);
-
                             return (material, false);
                         }
                     }
             return (string.Empty, false);
         }
-        static void RecodeToEncryption(string name) => new FileInfo(name).Encrypt();
-        static bool ReadTheFile(string name)
+        public static void Save(string path, string file, string param)
         {
-            var info = new FileInfo(name);
+            var directory = new DirectoryInfo(path);
 
-            if (info.Exists)
-                info.Decrypt();
+            if (directory.Exists == false)
+                directory.Create();
 
-            return info.Exists;
+            using var sw = new StreamWriter(file, false);
+            sw.Write(Compress(param).Item1);
         }
-        static void CreateTheDirectory(DirectoryInfo info)
-        {
-            if (info.Exists == false)
-                info.Create();
-        }
-        static string Decompress(string param)
+        public static string Decompress(string param)
         {
             byte[] sourceArray = Convert.FromBase64String(param), targetArray = new byte[BitConverter.ToInt32(sourceArray, 0)];
             using (var memoryStream = new MemoryStream())
@@ -100,6 +89,12 @@ namespace ShareInvest
             Buffer.BlockCopy(BitConverter.GetBytes(sourceArray.Length), 0, targetArray, 0, 4);
 
             return (Convert.ToBase64String(targetArray), length);
+        }
+        static bool ReadTheFile(string name) => new FileInfo(name).Exists;
+        static void CreateTheDirectory(DirectoryInfo info)
+        {
+            if (info.Exists == false)
+                info.Create();
         }
         const string path = @"C:\Algorithmic Trading\Res";
         const string extension = ".res";

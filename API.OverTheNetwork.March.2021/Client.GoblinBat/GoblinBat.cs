@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -105,6 +106,9 @@ namespace ShareInvest.Client
 
                 switch (param)
                 {
+                    case Catalog.Strategics.RevisedStockPrice when response.StatusCode.Equals(HttpStatusCode.OK):
+                        return JsonConvert.DeserializeObject<Queue<Catalog.Strategics.ConfirmRevisedStockPrice>>(response.Content);
+
                     case FinancialStatement:
                         var list = JsonConvert.DeserializeObject<List<FinancialStatement>>(response.Content);
                         var remove = new Queue<FinancialStatement>();
@@ -170,6 +174,44 @@ namespace ShareInvest.Client
                 Base.SendMessage(GetType(), ex.StackTrace);
                 Base.SendMessage(ex.StackTrace, GetType());
             }
+            return null;
+        }
+        [SupportedOSPlatform("windows")]
+        public async Task<object> GetChartsAsync<T>(T param) where T : struct
+        {
+            if (param is Charts chart)
+                try
+                {
+                    var request = security.RequestCharts(param);
+
+                    if (request.Item2)
+                    {
+                        if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
+                            return JsonConvert.DeserializeObject<string>(request.Item1);
+
+                        else
+                            return JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(request.Item1);
+                    }
+                    else if (string.IsNullOrEmpty(request.Item1) == false)
+                    {
+                        var response = await client.ExecuteAsync(new RestRequest(request.Item1, Method.GET), source.Token);
+
+                        if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString("yyMMdd")) < 0 || chart.End.Length < 6)
+                        {
+                            var save = Security.Save(chart);
+                            Repository.Save(save.Item1, save.Item2, response.Content);
+                        }
+                        if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
+                            return JsonConvert.DeserializeObject<string>(response.Content);
+
+                        else
+                            return JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(response.Content);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Base.SendMessage(chart.Code, ex.StackTrace, param.GetType());
+                }
             return null;
         }
         public async Task<object> PostConfirmAsync<T>(T param) where T : struct

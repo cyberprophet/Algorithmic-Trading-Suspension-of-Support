@@ -1,63 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 using ShareInvest.SecondaryIndicators;
 
 namespace ShareInvest.Statistical
 {
-    public static class Strategics
+    public class Strategics
     {
-        public static (Queue<string>, Stack<string>) SetReservation()
-        {
-            var sell_queue = new Queue<string>();
-            var buy_stack = new Stack<string>();
-            Parallel.ForEach(Reservation, new Action<Analysis>((r) =>
-            {
-                switch (r.Strategics)
-                {
-                    case Catalog.SatisfyConditionsAccordingToTrends sc:
-                        int sell, buy, price = r.Current, upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice, sPrice, quantity = r.Balance.Quantity;
-                        var stock = r.Market;
-
-                        if (sc.ReservationSellQuantity > 0)
-                        {
-                            sell = (int)(r.Balance.Purchase * (1 + sc.ReservationSellRate));
-                            sPrice = r.GetStartingPrice(sell, stock);
-                            sPrice = sPrice < lower ? lower + r.GetQuoteUnit(sPrice, stock) : sPrice;
-                            r.SellPrice = sPrice;
-
-                            while (sPrice < upper && quantity-- > 0)
-                            {
-                                Base.SendMessage(r.Code, sPrice.ToString("C0"), typeof(Strategics));
-                                sell_queue.Enqueue(SetOrder(r.Code, (int)Interface.OpenAPI.OrderType.신규매도, sPrice, sc.ReservationSellQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty));
-
-                                for (int i = 0; i < sc.ReservationSellUnit; i++)
-                                    sPrice += r.GetQuoteUnit(sPrice, stock);
-                            }
-                        }
-                        if (sc.ReservationBuyQuantity > 0)
-                        {
-                            buy = (int)(r.Balance.Purchase * (1 - sc.ReservationBuyRate));
-                            r.BuyPrice = r.GetStartingPrice(buy, stock);
-                            bPrice = r.GetStartingPrice(lower, stock);
-
-                            while (bPrice < upper && bPrice < buy && Cash > bPrice * (1.5e-4 + 1))
-                            {
-                                buy_stack.Push(SetOrder(r.Code, (int)Interface.OpenAPI.OrderType.신규매수, bPrice, sc.ReservationBuyQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty));
-                                Cash -= (long)(bPrice * (1.5e-4 + 1));
-                                Base.SendMessage(r.Code, string.Concat(bPrice.ToString("C0"), Cash.ToString("C0")), typeof(Strategics));
-
-                                for (int i = 0; i < sc.ReservationBuyUnit; i++)
-                                    bPrice += r.GetQuoteUnit(bPrice, stock);
-                            }
-                        }
-                        break;
-                }
-            }));
-            return (sell_queue, buy_stack);
-        }
         public static string SetOrder(string code, int type, int price, int quantity, string hoga, string number)
             => string.Concat(code, ';', type, ';', price, ';', quantity, ';', hoga, ';', number);
         public static IEnumerable<Interface.IStrategics> SetStrategics(string[] param)
@@ -206,7 +156,6 @@ namespace ShareInvest.Statistical
         {
             get; set;
         }
-        public static readonly Queue<Analysis> Reservation = new Queue<Analysis>();
         static Dictionary<DateTime, double> EstimateThePrice(Dictionary<DateTime, double> estimate, int year)
         {
             var dictionary = new Dictionary<DateTime, double>(estimate);

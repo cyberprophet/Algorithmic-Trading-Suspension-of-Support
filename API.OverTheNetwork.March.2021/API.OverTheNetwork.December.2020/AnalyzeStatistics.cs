@@ -19,6 +19,7 @@ using ShareInvest.Catalog.OpenAPI;
 
 namespace ShareInvest
 {
+    [SupportedOSPlatform("windows")]
     static class AnalyzeStatistics
     {
         internal static IWebHost Host
@@ -50,10 +51,23 @@ namespace ShareInvest
                                 Strategics = string.Concat("TC.", analysis.AnalysisType)
                             }) is bool confirm && confirm == false)
                             {
-                                var estimate = Statistical.Strategics.AnalyzeFinancialStatements(await Security.Client.GetContextAsync(new Catalog.FinancialStatement { Code = ch.Code }) as List<Catalog.FinancialStatement>, analysis.AnalysisType.ToCharArray());
-                                var statistics = new Statistical.Indicators.TrendsToCashflow { Code = ch.Code, Strategics = analysis }.StartProgress(p.Commission);
+                                var estimate = Statistical.Strategics.AnalyzeFinancialStatements(await Security.Client.GetContextAsync(new Catalog.FinancialStatement
+                                {
+                                    Code = ch.Code
+                                }) as List<Catalog.FinancialStatement>, analysis.AnalysisType.ToCharArray());
+                                var cf = new Statistical.Indicators.TrendsToCashflow
+                                {
+                                    Code = ch.Code,
+                                    Strategics = analysis,
+                                    Balance = new Statistical.Balance(ch.Name)
+                                };
+                                var bring = new BringInInformation(ch);
+                                bring.Send += cf.OnReceiveDrawChart;
+                                cf.StartProgress(p.Commission);
+                                var name = await bring.StartProgress();
+                                var statistics = cf.SendMessage;
 
-                                if (estimate != null && estimate.Count > 3)
+                                if (estimate != null && estimate.Count > 3 && string.IsNullOrEmpty(statistics.Key) == false)
                                     try
                                     {
                                         var normalize = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(statistics.Date)).Value;
@@ -86,10 +100,10 @@ namespace ShareInvest
                                     {
                                         Base.SendMessage(ex.StackTrace, typeof(AnalyzeStatistics));
                                     }
+                                Base.SendMessage(name, statistics.Key, typeof(BringInInformation));
                             }
                         }
         }).Start();
-        [SupportedOSPlatform("windows")]
         internal static void TryToConnectThePipeStream()
         {
             var server
@@ -120,15 +134,17 @@ namespace ShareInvest
         }
         static void SetReservation()
         {
+            var set = new Reservation();
+
             foreach (var reservation in Security.Collection)
                 if (reservation.Value.Balance is Statistical.Balance b && b.Quantity > 0)
                     switch (reservation.Value.Strategics)
                     {
                         case Catalog.SatisfyConditionsAccordingToTrends:
-                            Statistical.Strategics.Reservation.Enqueue(reservation.Value);
+                            set.Append.Enqueue(reservation.Value);
                             break;
                     }
-            var order = Statistical.Strategics.SetReservation();
+            var order = set.Stocks;
 
             while (order.Item1.Count > 0 || order.Item2.Count > 0)
             {
@@ -145,9 +161,7 @@ namespace ShareInvest
                     Base.SendMessage(buy, typeof(Statistical.Strategics));
                 }
             }
-            Statistical.Strategics.Reservation.Clear();
         }
-        [SupportedOSPlatform("windows")]
         static void OnReceivePipeClientMessage(NamedPipeClientStream client, NamedPipeServerStream server)
         {
             Task stocks_task = null, futures_task = null;

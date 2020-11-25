@@ -30,6 +30,23 @@ namespace ShareInvest
 
             return month.AddDays((dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 2 : 1) * 7 + (DayOfWeek.Thursday - dt));
         }
+        public static int GetStartingPrice(int price, bool info) => price switch
+        {
+            int n when n >= 0 && n < 0x3E8 => price,
+            int n when n >= 0x3E8 && n < 0x1388 => (price / 5 + 1) * 5,
+            int n when n >= 0x1388 && n < 0x2710 => (price / 0xA + 1) * 0xA,
+            int n when n >= 0x2710 && n < 0xC350 => (price / 0x32 + 1) * 0x32,
+            int n when n >= 0x186A0 && n < 0x7A120 && info => (price / 0x1F4 + 1) * 0x1F4,
+            int n when n >= 0x7A120 && info => (price / 0x3E8 + 1) * 0x3E8,
+            _ => (price / 0x64 + 1) * 0x64,
+        };
+        public static string CallUpTheChart(Catalog.Models.Codes cm, string start)
+        {
+            if (string.IsNullOrEmpty(start) && DateTime.TryParseExact(cm.MaturityMarketCap, ConvertDateTime(cm.MaturityMarketCap.Length), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
+                return Array.Exists(new string[] { "111Q8000" }, o => o.Equals(cm.Code)) ? unique : date.AddYears(-3).ToString(ConvertDateTime(6));
+
+            return start;
+        }
         public static string[] FindTheNearestQuarter(DateTime now)
         {
             DateTime near;
@@ -73,6 +90,15 @@ namespace ShareInvest
             }
             return quarter;
         }
+        public static string GetOrderNumber(int type)
+        {
+            if (Count++ > 0x270E)
+                Count = 0;
+
+            return string.Concat(type, Count.ToString("D4"));
+        }
+        public static DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);
+        public static DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
         public static string DistinctDate
         {
             get
@@ -90,11 +116,29 @@ namespace ShareInvest
         {
             get; private set;
         }
+        public static double Tax => tax;
         public static string FullDateFormat => "yyMMddHHmmss";
         public static string DateFormat => "yyMMdd";
+        public static string LongDateFormat => "yyyyMMdd";
         public static string TransactionSuspension => transaction_suspension;
+        public static string Transmit => transmit;
+        public static string Start => start;
         public static string[] Holidays => new string[] { "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
+        static string ConvertDateTime(int length) => length switch
+        {
+            6 => DateFormat,
+            8 => LongDateFormat,
+            _ => null,
+        };
+        static uint Count
+        {
+            get; set;
+        }
         const string distinctDate = "yyyyMM";
+        const string unique = "200611";
+        const string start = "0859";
+        const string transmit = "1529";
         const string transaction_suspension = "거래정지";
+        const double tax = 2.5e-3;
     }
 }

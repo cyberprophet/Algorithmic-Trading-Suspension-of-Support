@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using ShareInvest.Catalog.Models;
+using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 
 namespace ShareInvest.Statistical
@@ -74,18 +76,9 @@ namespace ShareInvest.Statistical
             int n when n >= 0x7A120 && info => 0x3E8,
             _ => 0x64,
         };
-        public virtual int GetStartingPrice(int price, bool info) => price switch
-        {
-            int n when n >= 0 && n < 0x3E8 => price,
-            int n when n >= 0x3E8 && n < 0x1388 => (price / 5 + 1) * 5,
-            int n when n >= 0x1388 && n < 0x2710 => (price / 0xA + 1) * 0xA,
-            int n when n >= 0x2710 && n < 0xC350 => (price / 0x32 + 1) * 0x32,
-            int n when n >= 0x186A0 && n < 0x7A120 && info => (price / 0x1F4 + 1) * 0x1F4,
-            int n when n >= 0x7A120 && info => (price / 0x3E8 + 1) * 0x3E8,
-            _ => (price / 0x64 + 1) * 0x64,
-        };
         public abstract void AnalyzeTheConclusion(string[] param);
         public abstract void AnalyzeTheQuotes(string[] param);
+        public abstract void OnReceiveDrawChart(object sender, SendConsecutive e);
         public abstract bool Collector
         {
             get; set;
@@ -110,6 +103,10 @@ namespace ShareInvest.Statistical
         {
             get; set;
         }
+        public abstract double Capital
+        {
+            get; protected internal set;
+        }
         public abstract Balance Balance
         {
             get; set;
@@ -122,9 +119,43 @@ namespace ShareInvest.Statistical
         {
             get; set;
         }
+        public abstract Dictionary<string, dynamic> OrderNumber
+        {
+            get; set;
+        }
+        protected internal abstract Tuple<int, int, int> Line
+        {
+            get; set;
+        }
+        protected internal abstract Stack<double> Short
+        {
+            get; set;
+        }
+        protected internal abstract Stack<double> Long
+        {
+            get; set;
+        }
+        protected internal abstract Stack<double> Trend
+        {
+            get; set;
+        }
+        protected internal abstract DateTime NextOrderTime
+        {
+            get; set;
+        }
+        protected internal abstract string DateChange
+        {
+            get; set;
+        }
         protected internal virtual double Commission
         {
             get; set;
         }
+        protected internal virtual uint CumulativeFee
+        {
+            get; set;
+        }        
+        protected internal abstract bool GetCheckOnDate(string date);
+        protected internal abstract bool GetCheckOnDeadline(string time);
     }
 }
