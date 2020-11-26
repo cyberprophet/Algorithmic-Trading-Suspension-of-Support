@@ -77,7 +77,8 @@ namespace ShareInvest.XingAPI.Catalog
             if (api != null)
                 Send?.Invoke(this, api);
         }
-        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+            => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
         public void QueryExcute() => QueryExcute(gubun[Repeat++]);
         void QueryExcute(string property)
         {

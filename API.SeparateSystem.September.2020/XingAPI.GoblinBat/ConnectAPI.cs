@@ -139,27 +139,6 @@ namespace ShareInvest.XingAPI
             }
             return Connect.HoldingStock.Count;
         }
-        public Collect SetToCollect(string code)
-        {
-            var access = new Secrecy().GetGrantAccess(privacy.Security);
-
-            if (string.IsNullOrEmpty(access) == false)
-            {
-                if (Connect.Collection == null)
-                {
-                    Connect.Collection = new Dictionary<string, Collect>();
-                    Access = access;
-                }
-                if (code.Length == 8 && Connect.Collection.ContainsKey(code) == false)
-                {
-                    var collect = new Collect(code);
-                    Connect.Collection[code] = collect;
-
-                    return collect;
-                }
-            }
-            return null;
-        }
         public void SendTransmitCommand()
         {
             if (Connect.Collection != null)
@@ -292,10 +271,6 @@ namespace ShareInvest.XingAPI
             get; private set;
         }
         public static HashSet<Codes> Codes
-        {
-            get; private set;
-        }
-        public string Access
         {
             get; private set;
         }

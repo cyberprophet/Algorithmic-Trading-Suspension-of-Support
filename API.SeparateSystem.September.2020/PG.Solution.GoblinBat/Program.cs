@@ -10,7 +10,7 @@ namespace ShareInvest
         [STAThread]
         static void Main()
         {
-            if (string.IsNullOrEmpty(secrecy.Key) == false)
+            if (string.IsNullOrEmpty(secrecy.Key) == false && secrecy.Term)
             {
                 secrecy.CheckTheSystemPeriodically(DateTime.Now);
                 secrecy.PublishTheDebuggedProgram();

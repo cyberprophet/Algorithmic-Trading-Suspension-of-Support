@@ -17,7 +17,13 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestMKD99000001, Method.POST).AddHeader(security.ContentType, security.Form).AddParameter(security.CD[0], market).AddParameter(security.CD[1], security.GetMarket(market)).AddParameter(security.Language[0], security.Language[1]).AddParameter(security.Param[2], now.ToString(format)).AddParameter(security.Param[3], (await client.ExecuteAsync(new RestRequest(security.RequestOTP, Method.GET))).Content), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestMKD99000001, Method.POST)
+                    .AddHeader(security.ContentType, security.Form)
+                    .AddParameter(security.CD[0], market)
+                    .AddParameter(security.CD[1], security.GetMarket(market))
+                    .AddParameter(security.Language[0], security.Language[1])
+                    .AddParameter(security.Param[2], now.ToString(format))
+                    .AddParameter(security.Param[3], (await client.ExecuteAsync(new RestRequest(security.RequestOTP, Method.GET))).Content), source.Token);
                 var stack = new Stack<Catalog.Request.IncorporatedStocks>();
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))

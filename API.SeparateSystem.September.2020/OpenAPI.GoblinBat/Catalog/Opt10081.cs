@@ -55,7 +55,8 @@ namespace ShareInvest.OpenAPI.Catalog
                     var param = temp.Item2.Dequeue();
                     var date = DateTime.Now.AddYears(-1).ToString(format);
 
-                    if (string.IsNullOrEmpty(param[8]) == false && param[4].CompareTo(date) > 0 && int.TryParse(param[8], out int revise) && param[9].Equals("0.00") == false)
+                    if (string.IsNullOrEmpty(param[8]) == false && param[4].CompareTo(date) > 0
+                        && int.TryParse(param[8], out int revise) && param[9].Equals("0.00") == false)
                         storage.Push(new ShareInvest.Catalog.OpenAPI.RevisedStockPrice
                         {
                             Code = temp.Item1[0],
@@ -100,7 +101,8 @@ namespace ShareInvest.OpenAPI.Catalog
         }
         readonly Stack<ShareInvest.Catalog.OpenAPI.RevisedStockPrice> storage = new Stack<ShareInvest.Catalog.OpenAPI.RevisedStockPrice>();
         readonly string[] opSingle = { "종목코드" };
-        readonly string[] opMutiple = { "종목코드", "현재가", "거래량", "거래대금", "일자", "시가", "고가", "저가", "수정주가구분", "수정비율", "대업종구분", "소업종구분", "종목정보", "수정주가이벤트", "전일종가" };
+        readonly string[] opMutiple
+            = { "종목코드", "현재가", "거래량", "거래대금", "일자", "시가", "고가", "저가", "수정주가구분", "수정비율", "대업종구분", "소업종구분", "종목정보", "수정주가이벤트", "전일종가" };
         const string code = "opt10081";
         const string id = "종목코드;기준일자;수정주가구분";
         const string rqName = "주식일봉차트조회요청";

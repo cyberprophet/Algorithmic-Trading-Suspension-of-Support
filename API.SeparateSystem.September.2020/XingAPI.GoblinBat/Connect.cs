@@ -72,7 +72,8 @@ namespace ShareInvest.XingAPI
 
             string jangubun = Enum.GetName(typeof(Attribute), gubun), jstatus = Enum.GetName(typeof(Attribute), status);
 
-            if (TimerBox.Show(jstatus, jangubun, MessageBoxButtons.YesNo, MessageBoxIcon.Information, gubun == 5 && status == 0x29 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 0x3B7).Equals(DialogResult.Yes))
+            if (TimerBox.Show(jstatus, jangubun, MessageBoxButtons.YesNo, MessageBoxIcon.Information, gubun == 5 && status == 0x29 ? MessageBoxDefaultButton.Button1 : MessageBoxDefaultButton.Button2, 0x3B7)
+                .Equals(DialogResult.Yes))
                 SendMessage(jangubun, jstatus);
         }
         void OnEventConnect(string szCode, string szMsg)
@@ -89,7 +90,9 @@ namespace ShareInvest.XingAPI
         void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         Connect(Privacies privacy, ShareInvest.Catalog.XingAPI.LoadServer load)
         {
-            if (ConnectServer(load.Server, 0x4E21) && Login(privacy.Identity, privacy.Password, privacy.Certificate, 0, string.IsNullOrEmpty(privacy.Certificate) == false) && IsLoadAPI())
+            if (ConnectServer(load.Server, 0x4E21)
+                && Login(privacy.Identity, privacy.Password, privacy.Certificate, 0, string.IsNullOrEmpty(privacy.Certificate) == false)
+                && IsLoadAPI())
             {
                 _IXASessionEvents_Event_Login += OnEventConnect;
                 Disconnect += Dispose;

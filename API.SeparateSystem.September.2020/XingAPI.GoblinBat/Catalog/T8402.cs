@@ -46,9 +46,12 @@ namespace ShareInvest.XingAPI.Catalog
                 MaturityMarketCap = temp[0x16].Substring(2),
                 Price = temp[1]
             };
-            if (ConnectAPI.Codes.Remove(codes) && ConnectAPI.Codes.Add(refresh) && GoblinBatClient.GetInstance().PutContext<Codes>(refresh).Result is int statusCode && statusCode == 0xC8 && GetTRCountRequest(szTrCode) == 1)
+            if (ConnectAPI.Codes.Remove(codes) && ConnectAPI.Codes.Add(refresh)
+                && GoblinBatClient.GetInstance().PutContext<Codes>(refresh).Result is int statusCode && statusCode == 0xC8
+                && GetTRCountRequest(szTrCode) == 1)
                 Delay.Milliseconds = 0x3E8 / GetTRCountPerSec(szTrCode);
         }
-        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+            => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
     }
 }

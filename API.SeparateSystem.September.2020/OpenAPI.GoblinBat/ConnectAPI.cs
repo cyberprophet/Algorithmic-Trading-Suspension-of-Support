@@ -44,9 +44,13 @@ namespace ShareInvest.OpenAPI
             if (Connect.Chejan.TryGetValue(e.sGubun, out Chejan chejan))
                 chejan.OnReceiveChejanData(e);
         }
-        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => Connect.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name.Substring(1).Equals(e.sTrCode.Substring(1)))?.OnReceiveTrData(e);
-        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => Connect.Real.FirstOrDefault(o => o.GetType().Name.Replace('_', ' ').Equals(e.sRealType))?.OnReceiveRealData(e);
-        void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.BeginInvoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg.Substring(9), "(", e.sScrNo, ")")), null, null);
+        void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
+            => Connect.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name.Substring(1).Equals(e.sTrCode.Substring(1)))?
+                .OnReceiveTrData(e);
+        void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
+            => Connect.Real.FirstOrDefault(o => o.GetType().Name.Replace('_', ' ').Equals(e.sRealType))?.OnReceiveRealData(e);
+        void OnReceiveMsg(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
+            => Send?.BeginInvoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg.Substring(9), "(", e.sScrNo, ")")), null, null);
         void OnReceiveConditionVersion(object sender, _DKHOpenAPIEvents_OnReceiveConditionVerEvent e)
         {
             if (e.lRet == 1)
@@ -62,7 +66,8 @@ namespace ShareInvest.OpenAPI
         }
         void OnReceiveRealConditions(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e)
         {
-            if (e.strType.Equals("I") && Pick.Contains(e.sTrCode) && Ban.Contains(e.sTrCode) == false && Strategics.Any(o => o.Code.Equals(e.sTrCode)) == false && Connect.HoldingStock.ContainsKey(e.sTrCode) == false && int.TryParse(axAPI.GetMasterLastPrice(e.sTrCode), out int price))
+            if (e.strType.Equals("I") && Pick.Contains(e.sTrCode) && Ban.Contains(e.sTrCode) == false && Strategics.Any(o => o.Code.Equals(e.sTrCode)) == false
+                && Connect.HoldingStock.ContainsKey(e.sTrCode) == false && int.TryParse(axAPI.GetMasterLastPrice(e.sTrCode), out int price))
                 new Task(() =>
                 {
                     var sc = new SatisfyConditionsAccordingToTrends
@@ -98,7 +103,8 @@ namespace ShareInvest.OpenAPI
             SendMessage(string.Concat(e.strConditionName, '_', list.Length), e.sScrNo);
 
             foreach (var code in list)
-                if (Ban.Contains(code) == false && string.IsNullOrEmpty(code) == false && Pick.Contains(code) && int.TryParse(axAPI.GetMasterLastPrice(code), out int price))
+                if (Ban.Contains(code) == false && string.IsNullOrEmpty(code) == false && Pick.Contains(code)
+                    && int.TryParse(axAPI.GetMasterLastPrice(code), out int price))
                 {
                     var sc = new SatisfyConditionsAccordingToTrends
                     {
@@ -127,17 +133,19 @@ namespace ShareInvest.OpenAPI
                     }
                 }
         }).Start();
-        ShareInvest.Catalog.Request.SatisfyConditions SetSatisfyConditions(SatisfyConditionsAccordingToTrends condition) => SatisfyConditions = new ShareInvest.Catalog.Request.SatisfyConditions
-        {
-            Security = SatisfyConditions.Security,
-            SettingValue = SatisfyConditions.SettingValue,
-            Strategics = SatisfyConditions.Strategics,
-            Ban = SatisfyConditions.Ban,
-            TempStorage = GetSatisfyConditions(condition)
-        };
+        ShareInvest.Catalog.Request.SatisfyConditions SetSatisfyConditions(SatisfyConditionsAccordingToTrends condition)
+            => SatisfyConditions = new ShareInvest.Catalog.Request.SatisfyConditions
+            {
+                Security = SatisfyConditions.Security,
+                SettingValue = SatisfyConditions.SettingValue,
+                Strategics = SatisfyConditions.Strategics,
+                Ban = SatisfyConditions.Ban,
+                TempStorage = GetSatisfyConditions(condition)
+            };
         string GetSatisfyConditions(SatisfyConditionsAccordingToTrends condition)
         {
-            var storage = string.Concat("SC|", condition.Code, '|', condition.Short, '|', condition.Long, '|', condition.Trend, '|', condition.ReservationSellUnit, '|', condition.ReservationSellQuantity, '|', condition.ReservationSellRate * 0x64, '|', condition.ReservationBuyUnit, '|', condition.ReservationBuyQuantity, '|', condition.ReservationBuyRate * 0x64, '|', (uint)(condition.TradingSellInterval * 1e-3), '|', condition.TradingSellQuantity, '|', condition.TradingSellRate * 0x64, '|', (uint)(condition.TradingBuyInterval * 1e-3), '|', condition.TradingBuyQuantity, '|', condition.TradingBuyRate * 0x64);
+            var storage
+                = string.Concat("SC|", condition.Code, '|', condition.Short, '|', condition.Long, '|', condition.Trend, '|', condition.ReservationSellUnit, '|', condition.ReservationSellQuantity, '|', condition.ReservationSellRate * 0x64, '|', condition.ReservationBuyUnit, '|', condition.ReservationBuyQuantity, '|', condition.ReservationBuyRate * 0x64, '|', (uint)(condition.TradingSellInterval * 1e-3), '|', condition.TradingSellQuantity, '|', condition.TradingSellRate * 0x64, '|', (uint)(condition.TradingBuyInterval * 1e-3), '|', condition.TradingBuyQuantity, '|', condition.TradingBuyRate * 0x64);
 
             if (string.IsNullOrEmpty(SatisfyConditions.TempStorage))
                 return storage;
@@ -148,50 +156,6 @@ namespace ShareInvest.OpenAPI
         [Conditional("DEBUG")]
         void SendMessage(string code, string message) => Console.WriteLine(code + "\t" + message);
         TR GetRequestTR(string name) => Connect.TR.FirstOrDefault(o => o.GetType().Name.Equals(name)) ?? null;
-        public IEnumerable<Collect> SetToCollect(string code)
-        {
-            var access = new Security().GetGrantAccess(privacy.Security);
-
-            if (string.IsNullOrEmpty(access) == false)
-            {
-                if (Connect.Collection == null)
-                {
-                    Connect.Collection = new Dictionary<string, Collect>();
-                    Access = access;
-                }
-                if (code.Length == 8)
-                {
-                    if (Connect.Collection.ContainsKey(code) == false)
-                    {
-                        var collect = new Collect(code);
-                        Connect.Collection[code] = collect;
-
-                        yield return collect;
-                    }
-                }
-                else
-                    foreach (var param in code.Split(';'))
-                        if (Connect.Collection.ContainsKey(param) == false)
-                        {
-                            var collect = new Collect(param);
-                            Connect.Collection[param] = collect;
-
-                            yield return collect;
-                        }
-            }
-        }
-        public void SendTransmitCommand(string code)
-        {
-            if (Connect.Collection != null && Connect.Collection.TryGetValue(code, out Collect collect) && collect.Count > 0)
-                collect.SendTransmitCommand(code);
-        }
-        public void SendTransmitCommand()
-        {
-            if (Connect.Collection != null)
-                foreach (var kv in Connect.Collection)
-                    if (kv.Value.Count > 0)
-                        kv.Value.SendTransmitCommand(kv.Key);
-        }
         public IAccountInformation SetPrivacy(IAccountInformation privacy)
         {
             if (Connect.TR.Add(new OPT50010
@@ -267,7 +231,8 @@ namespace ShareInvest.OpenAPI
         }
         public IEnumerable<string> InputValueRqData()
         {
-            foreach (var code in (API as Connect)?.GetInformationOfCode(new List<string> { axAPI.GetFutureCodeByIndex(0) }, axAPI.GetCodeListByMarket(string.Empty).Split(';')))
+            foreach (var code in (API as Connect)?
+                .GetInformationOfCode(new List<string> { axAPI.GetFutureCodeByIndex(0) }, axAPI.GetCodeListByMarket(string.Empty).Split(';')))
                 yield return code;
         }
         public ISendSecuritiesAPI<SendSecuritiesAPI> InputValueRqData(string name, string param)
@@ -345,7 +310,8 @@ namespace ShareInvest.OpenAPI
             string[] benchmark = condition.SettingValue.Split(';'), strategics = condition.Strategics.Split(';'), ban = condition.Ban.Split(';');
             Pick = new HashSet<string>();
             SatisfyConditions = condition;
-            Ban = codes == null && string.IsNullOrEmpty(condition.Ban) ? new HashSet<string>() : new HashSet<string>(codes != null && string.IsNullOrEmpty(condition.Ban) == false ? codes.Union(ban) : (codes != null && string.IsNullOrEmpty(condition.Ban) ? codes : ban));
+            Ban = codes == null
+                && string.IsNullOrEmpty(condition.Ban) ? new HashSet<string>() : new HashSet<string>(codes != null && string.IsNullOrEmpty(condition.Ban) == false ? codes.Union(ban) : (codes != null && string.IsNullOrEmpty(condition.Ban) ? codes : ban));
             axAPI.OnReceiveTrCondition += OnReceiveTrConditions;
             axAPI.OnReceiveRealCondition += OnReceiveRealConditions;
             var count = 0x56E;
@@ -354,10 +320,25 @@ namespace ShareInvest.OpenAPI
             {
                 var consensus = stack.Pop();
 
-                if (double.TryParse(benchmark[0xA], out double fifthRate) && consensus.TheNextYear + fifthRate * 1e-2 < consensus.TheYearAfterNext && double.TryParse(benchmark[9], out double fourthRate) && consensus.Quarter + fourthRate * 1e-2 < consensus.TheNextYear && double.TryParse(benchmark[8], out double thirdRate) && consensus.ThirdQuarter + thirdRate * 1e-2 < consensus.Quarter && double.TryParse(benchmark[7], out double secondRate) && consensus.SecondQuarter + secondRate * 1e-2 < consensus.ThirdQuarter && double.TryParse(benchmark[6], out double firstRate) && consensus.FirstQuarter + firstRate * 1e-2 < consensus.SecondQuarter && double.TryParse(benchmark[5], out double sixth) && consensus.TheYearAfterNext > sixth * 1e-2 && double.TryParse(benchmark[4], out double fifth) && consensus.TheNextYear > fifth * 1e-2 && double.TryParse(benchmark[3], out double fourth) && consensus.Quarter > fourth * 1e-2 && double.TryParse(benchmark[2], out double third) && consensus.ThirdQuarter > third * 1e-2 && double.TryParse(benchmark[1], out double second) && consensus.SecondQuarter > second * 1e-2 && double.TryParse(benchmark[0], out double first) && consensus.FirstQuarter > first * 1e-2 && Pick.Add(consensus.Code))
+                if (double.TryParse(benchmark[0xA], out double fifthRate) && consensus.TheNextYear + fifthRate * 1e-2 < consensus.TheYearAfterNext
+                    && double.TryParse(benchmark[9], out double fourthRate) && consensus.Quarter + fourthRate * 1e-2 < consensus.TheNextYear
+                    && double.TryParse(benchmark[8], out double thirdRate) && consensus.ThirdQuarter + thirdRate * 1e-2 < consensus.Quarter
+                    && double.TryParse(benchmark[7], out double secondRate) && consensus.SecondQuarter + secondRate * 1e-2 < consensus.ThirdQuarter
+                    && double.TryParse(benchmark[6], out double firstRate) && consensus.FirstQuarter + firstRate * 1e-2 < consensus.SecondQuarter
+                    && double.TryParse(benchmark[5], out double sixth) && consensus.TheYearAfterNext > sixth * 1e-2
+                    && double.TryParse(benchmark[4], out double fifth) && consensus.TheNextYear > fifth * 1e-2
+                    && double.TryParse(benchmark[3], out double fourth) && consensus.Quarter > fourth * 1e-2
+                    && double.TryParse(benchmark[2], out double third) && consensus.ThirdQuarter > third * 1e-2
+                    && double.TryParse(benchmark[1], out double second) && consensus.SecondQuarter > second * 1e-2
+                    && double.TryParse(benchmark[0], out double first) && consensus.FirstQuarter > first * 1e-2 && Pick.Add(consensus.Code))
                     SendMessage(Pick.Count.ToString("N0"), consensus.Code);
             }
-            if (double.TryParse(strategics[0xF], out double tbRate) && int.TryParse(strategics[0xE], out int tbQuantity) && double.TryParse(strategics[0xD], out double bInterval) && double.TryParse(strategics[0xC], out double tsRate) && int.TryParse(strategics[0xB], out int tsQuantity) && double.TryParse(strategics[0xA], out double sInterval) && double.TryParse(strategics[9], out double bRate) && int.TryParse(strategics[8], out int bQuantity) && int.TryParse(strategics[7], out int bUnit) && double.TryParse(strategics[6], out double sRate) && int.TryParse(strategics[5], out int sQuantity) && int.TryParse(strategics[4], out int sUnit) && int.TryParse(strategics[3], out int trend) && int.TryParse(strategics[2], out int cLong) && int.TryParse(strategics[1], out int cShort))
+            if (double.TryParse(strategics[0xF], out double tbRate) && int.TryParse(strategics[0xE], out int tbQuantity)
+                && double.TryParse(strategics[0xD], out double bInterval) && double.TryParse(strategics[0xC], out double tsRate)
+                && int.TryParse(strategics[0xB], out int tsQuantity) && double.TryParse(strategics[0xA], out double sInterval)
+                && double.TryParse(strategics[9], out double bRate) && int.TryParse(strategics[8], out int bQuantity) && int.TryParse(strategics[7], out int bUnit)
+                && double.TryParse(strategics[6], out double sRate) && int.TryParse(strategics[5], out int sQuantity) && int.TryParse(strategics[4], out int sUnit)
+                && int.TryParse(strategics[3], out int trend) && int.TryParse(strategics[2], out int cLong) && int.TryParse(strategics[1], out int cShort))
             {
                 AccordingToTrends = new SatisfyConditionsAccordingToTrends
                 {
@@ -564,10 +545,6 @@ namespace ShareInvest.OpenAPI
             }
         }
         public dynamic API
-        {
-            get; private set;
-        }
-        public string Access
         {
             get; private set;
         }

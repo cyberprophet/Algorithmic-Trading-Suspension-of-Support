@@ -11,7 +11,8 @@ namespace ShareInvest.Client
         {
             try
             {
-                driver.Navigate().GoToUrl(security.RequestShareInvestBlog(random.Next(0, now.Day + now.Month + now.Year + DateTime.DaysInMonth(now.Year, now.Month) + now.Second - 0x7D0)));
+                driver.Navigate()
+                    .GoToUrl(security.RequestShareInvestBlog(random.Next(0, now.Day + now.Month + now.Year + DateTime.DaysInMonth(now.Year, now.Month) + now.Second - 0x7D0)));
                 driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(0xA);
                 await Task.Delay(0x2715);
             }

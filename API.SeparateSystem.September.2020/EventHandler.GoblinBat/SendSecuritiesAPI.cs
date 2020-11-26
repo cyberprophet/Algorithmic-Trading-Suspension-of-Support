@@ -33,18 +33,23 @@ namespace ShareInvest.EventHandler
             else
                 Convey = cme;
         }
-        public SendSecuritiesAPI(string code, Stack<Catalog.Request.Collect> collection) => Convey = new Tuple<string, Stack<Catalog.Request.Collect>>(code, collection);
-        public SendSecuritiesAPI(Queue<Catalog.Request.Collect> collection, string code) => Convey = new Tuple<Queue<Catalog.Request.Collect>, string>(collection, code);
+        public SendSecuritiesAPI(string code, Stack<Catalog.Request.Collect> collection)
+            => Convey = new Tuple<string, Stack<Catalog.Request.Collect>>(code, collection);
+        public SendSecuritiesAPI(Queue<Catalog.Request.Collect> collection, string code)
+            => Convey = new Tuple<Queue<Catalog.Request.Collect>, string>(collection, code);
         public SendSecuritiesAPI(Catalog.XingAPI.Order order) => Convey = order;
-        public SendSecuritiesAPI(Stack<Catalog.OpenAPI.RevisedStockPrice> days, string code) => Convey = new Tuple<string, Stack<Catalog.OpenAPI.RevisedStockPrice>>(code, days);
+        public SendSecuritiesAPI(Stack<Catalog.OpenAPI.RevisedStockPrice> days, string code)
+            => Convey = new Tuple<string, Stack<Catalog.OpenAPI.RevisedStockPrice>>(code, days);
         public SendSecuritiesAPI(Tuple<int, string, int, int, string> order) => Convey = order;
         public SendSecuritiesAPI(Tuple<string, int, string, string, int, string, string> order) => Convey = order;
-        public SendSecuritiesAPI(string code, string name, string retention, string price, int market) => Convey = new Tuple<string, string, string, string, int>(code, name, retention, price, market);
+        public SendSecuritiesAPI(string code, string name, string retention, string price, int market)
+            => Convey = new Tuple<string, string, string, string, int>(code, name, retention, price, market);
         public SendSecuritiesAPI(Tuple<string[], string[], string[], string[]> tuple) => Convey = tuple;
         public SendSecuritiesAPI(string code, Stack<string> stack) => Convey = new Tuple<string, Stack<string>>(code, stack);
         public SendSecuritiesAPI(Tuple<string, string, string> tuple)
         {
-            if ((tuple.Item1.StartsWith("106") || tuple.Item1.StartsWith("105") || tuple.Item1.StartsWith("301") || tuple.Item1.StartsWith("201")) && tuple.Item1.Length == 8)
+            if ((tuple.Item1.StartsWith("106") || tuple.Item1.StartsWith("105") || tuple.Item1.StartsWith("301") || tuple.Item1.StartsWith("201"))
+                && tuple.Item1.Length == 8)
                 convert[tuple.Item1] = tuple.Item2;
 
             Convey = tuple;
@@ -100,13 +105,16 @@ namespace ShareInvest.EventHandler
                             dic[key] = new Tuple<string, string>(name[name.Length - 1], temp[5]);
 
                         else if (temp[4].Equals("KOSPI200"))
-                            dic[convert.First(o => o.Key.StartsWith("101") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
+                            dic[convert.First(o => o.Key.StartsWith("101") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key]
+                                = new Tuple<string, string>(temp[4], temp[5]);
 
                         else if (temp[4].Equals("미니KOSPI200"))
-                            dic[convert.First(o => o.Key.StartsWith("105") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
+                            dic[convert.First(o => o.Key.StartsWith("105") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key]
+                                = new Tuple<string, string>(temp[4], temp[5]);
 
                         else if (temp[4].Equals("코스닥150"))
-                            dic[convert.First(o => o.Key.StartsWith("106") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
+                            dic[convert.First(o => o.Key.StartsWith("106") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key]
+                                = new Tuple<string, string>(temp[4], temp[5]);
 
                         else
                         {
@@ -138,11 +146,16 @@ namespace ShareInvest.EventHandler
         }
         public SendSecuritiesAPI(string[] param)
         {
-            if (param[0].Length == 8 && int.TryParse(param[4], out int quantity) && double.TryParse(param[9], out double fRate) && long.TryParse(param[8], out long fValuation) && double.TryParse(param[6], out double fCurrent) && double.TryParse(param[5], out double fPurchase))
-                Convey = new Tuple<string, string, int, dynamic, dynamic, long, double>(param[0], param[1].Equals(param[0]) && convert.TryGetValue(param[1], out string name) ? name : param[1], param[2].Equals("1") ? -quantity : quantity, fPurchase, fCurrent, fValuation, fRate * 0.01);
+            if (param[0].Length == 8 && int.TryParse(param[4], out int quantity) && double.TryParse(param[9], out double fRate)
+                && long.TryParse(param[8], out long fValuation) && double.TryParse(param[6], out double fCurrent) && double.TryParse(param[5], out double fPurchase))
+                Convey
+                    = new Tuple<string, string, int, dynamic, dynamic, long, double>(param[0], param[1].Equals(param[0]) && convert.TryGetValue(param[1], out string name) ? name : param[1], param[2].Equals("1") ? -quantity : quantity, fPurchase, fCurrent, fValuation, fRate * 0.01);
 
-            else if (param[3].Length > 0 && param[3].Substring(0, 1).Equals("A") && double.TryParse(param[12]?.Insert(6, "."), out double ratio) && long.TryParse(param[11], out long valuation) && int.TryParse(param[6], out int reserve) && uint.TryParse(param[8], out uint purchase) && uint.TryParse(param[7], out uint current))
-                Convey = new Tuple<string, string, int, dynamic, dynamic, long, double>(param[3].Substring(1).Trim(), param[4].Trim(), reserve, purchase, current, valuation, ratio);
+            else if (param[3].Length > 0 && param[3].Substring(0, 1).Equals("A") && double.TryParse(param[0xC]?.Insert(6, "."), out double ratio)
+                && long.TryParse(param[0xB], out long valuation) && int.TryParse(param[6], out int reserve)
+                && uint.TryParse(param[8], out uint purchase) && uint.TryParse(param[7], out uint current))
+                Convey
+                    = new Tuple<string, string, int, dynamic, dynamic, long, double>(param[3].Substring(1).Trim(), param[4].Trim(), reserve, purchase, current, valuation, ratio);
         }
         public SendSecuritiesAPI(uint price, dynamic stategics, double trend) => Convey = new Tuple<dynamic, double, uint>(stategics, trend, price);
         public SendSecuritiesAPI(dynamic stategics, Catalog.Statistics statistics) => Convey = new Tuple<dynamic, Catalog.Statistics>(stategics, statistics);
@@ -153,7 +166,8 @@ namespace ShareInvest.EventHandler
         public SendSecuritiesAPI(Tuple<string, string, int, dynamic, dynamic, long, double> tuple)
         {
             if (tuple.Item1.Equals(tuple.Item2))
-                Convey = new Tuple<string, string, int, dynamic, dynamic, long, double>(tuple.Item1, convert[tuple.Item1], tuple.Item3, tuple.Item4, tuple.Item5, tuple.Item6, tuple.Item7);
+                Convey
+                    = new Tuple<string, string, int, dynamic, dynamic, long, double>(tuple.Item1, convert[tuple.Item1], tuple.Item3, tuple.Item4, tuple.Item5, tuple.Item6, tuple.Item7);
 
             else
                 Convey = tuple;
@@ -163,7 +177,8 @@ namespace ShareInvest.EventHandler
             var convey = code.ToString().Split(';');
             Convey = new Tuple<string, string>(convey[0], convey[1]);
         }
-        public SendSecuritiesAPI(Catalog.Request.SatisfyConditions satisfy, Catalog.SatisfyConditionsAccordingToTrends condition) => Convey = new Tuple<Catalog.Request.SatisfyConditions, Catalog.SatisfyConditionsAccordingToTrends>(satisfy, condition);
+        public SendSecuritiesAPI(Catalog.Request.SatisfyConditions satisfy, Catalog.SatisfyConditionsAccordingToTrends condition)
+            => Convey = new Tuple<Catalog.Request.SatisfyConditions, Catalog.SatisfyConditionsAccordingToTrends>(satisfy, condition);
         public SendSecuritiesAPI(int index, string name) => Convey = new Tuple<int, string>(index, name);
         static DateTime Span
         {

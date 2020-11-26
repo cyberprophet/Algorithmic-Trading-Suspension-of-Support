@@ -16,13 +16,20 @@ namespace ShareInvest.Client
 {
     public class Disclosure
     {
-        public async Task GetDisclosureInformation(string code, string name) => Process.Start(security.GetUrl(await GetDocumentNumber(code), name));
+        public async Task GetDisclosureInformation(string code, string name)
+            => Process.Start(security.GetUrl(await GetDocumentNumber(code), name));
         public async Task<List<MKD30015>> GetMarketCap(dynamic key, int page)
         {
             try
             {
                 var now = DateTime.Now;
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestMKD99000001, Method.POST).AddHeader(security.ContentType, security.Form).AddParameter(security.Param[0], (Path)key).AddParameter(security.Param[1], Path.ALL).AddParameter(security.Param[2], now.Hour > 15 ? now.ToString(format) : now.AddDays(-1).ToString(format)).AddParameter(security.Param[3], (await client.ExecuteAsync(new RestRequest(security.RequestMarketCap, Method.GET))).Content).AddParameter(security.Param[4], page), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestMKD99000001, Method.POST)
+                    .AddHeader(security.ContentType, security.Form)
+                    .AddParameter(security.Param[0], (Path)key)
+                    .AddParameter(security.Param[1], Path.ALL)
+                    .AddParameter(security.Param[2], now.Hour > 15 ? now.ToString(format) : now.AddDays(-1).ToString(format))
+                    .AddParameter(security.Param[3], (await client.ExecuteAsync(new RestRequest(security.RequestMarketCap, Method.GET))).Content)
+                    .AddParameter(security.Param[4], page), source.Token);
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
                     return JsonConvert.DeserializeObject<List<MKD30015>>(JObject.Parse(response.Content)[security.MKD99000001].ToString());
@@ -42,7 +49,9 @@ namespace ShareInvest.Client
                 var index = 0;
                 Dictionary<string, long> dp = new Dictionary<string, long>(), lp = new Dictionary<string, long>(), p = new Dictionary<string, long>();
 
-                foreach (var str in (await client.ExecuteAsync(new RestRequest(security.SearchCorp, Method.POST).AddHeader(security.ContentType, security.Form).AddParameter(security.Text, code))).Content.Split(security.Exception))
+                foreach (var str in (await client.ExecuteAsync(new RestRequest(security.SearchCorp, Method.POST)
+                    .AddHeader(security.ContentType, security.Form)
+                    .AddParameter(security.Text, code))).Content.Split(security.Exception))
                     if (str.StartsWith(security.Filter[0]))
                     {
                         var split = str.Split('=');
@@ -96,7 +105,8 @@ namespace ShareInvest.Client
                                             index = 1;
                                             break;
                                     }
-                                else if (long.TryParse((sTrim.StartsWith("(") ? sTrim.Replace("(", "-").Replace(")", string.Empty) : sTrim).Replace(",", string.Empty), out long num) && assets)
+                                else if (long.TryParse((sTrim.StartsWith("(") ? sTrim.Replace("(", "-").Replace(")", string.Empty) : sTrim).Replace(",", string.Empty), out long num)
+                                    && assets)
                                 {
                                     if (turn < 3)
                                         temp[turn] = num * index;
@@ -168,13 +178,15 @@ namespace ShareInvest.Client
                                             default:
                                                 continue;
                                         }
-                                        if (dp.ContainsKey(non) && lp.ContainsKey(non) && p.ContainsKey(non) && dp.ContainsKey(current) && lp.ContainsKey(current) && p.ContainsKey(current))
+                                        if (dp.ContainsKey(non) && lp.ContainsKey(non) && p.ContainsKey(non) && dp.ContainsKey(current)
+                                            && lp.ContainsKey(current) && p.ContainsKey(current))
                                         {
                                             sheet = JsonConvert.DeserializeObject<Catalog.Dart.BalanceSheet>(serialize);
                                             sheet.Code = code;
                                             sheet.Date = array[index].ToString("D4");
                                         }
-                                        else if (dp.ContainsKey(cost) && lp.ContainsKey(cost) && p.ContainsKey(cost) && dp.ContainsKey(profit) && lp.ContainsKey(profit) && p.ContainsKey(profit))
+                                        else if (dp.ContainsKey(cost) && lp.ContainsKey(cost) && p.ContainsKey(cost) && dp.ContainsKey(profit)
+                                            && lp.ContainsKey(profit) && p.ContainsKey(profit))
                                         {
                                             income = JsonConvert.DeserializeObject<Catalog.Dart.IncomeStatement>(serialize);
                                             income.Code = code;
@@ -189,7 +201,9 @@ namespace ShareInvest.Client
                                                 Np = income.NetIncome
                                             });
                                         }
-                                        else if (dp.ContainsKey(finance) && lp.ContainsKey(finance) && p.ContainsKey(finance) && dp.ContainsKey(invest) && lp.ContainsKey(invest) && p.ContainsKey(invest) && dp.ContainsKey(operate) && lp.ContainsKey(operate) && p.ContainsKey(operate))
+                                        else if (dp.ContainsKey(finance) && lp.ContainsKey(finance) && p.ContainsKey(finance) && dp.ContainsKey(invest)
+                                            && lp.ContainsKey(invest) && p.ContainsKey(invest) && dp.ContainsKey(operate)
+                                            && lp.ContainsKey(operate) && p.ContainsKey(operate))
                                         {
                                             flow = JsonConvert.DeserializeObject<Catalog.Dart.CashFlowStatement>(serialize);
                                             flow.Code = code;
@@ -251,7 +265,10 @@ namespace ShareInvest.Client
                 source = new CancellationTokenSource();
             }
         }
-        async Task<string> GetDocumentNumber(string code) => (await client.ExecuteAsync(new RestRequest(security.RequestSearchExistAll, Method.POST).AddHeader(security.ContentType, security.Form).AddParameter(security.Text, code), source.Token)).Content;
+        async Task<string> GetDocumentNumber(string code)
+            => (await client.ExecuteAsync(new RestRequest(security.RequestSearchExistAll, Method.POST)
+            .AddHeader(security.ContentType, security.Form)
+            .AddParameter(security.Text, code), source.Token)).Content;
         readonly string cookie;
         readonly CancellationTokenSource source;
         readonly Security security;

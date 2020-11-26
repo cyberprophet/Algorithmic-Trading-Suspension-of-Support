@@ -17,7 +17,8 @@ namespace ShareInvest.XingAPI.Catalog
         }
         protected internal override void OnReceiveRealData(string szTrCode)
         {
-            string jangubun = GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jangubun)), jstatus = GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jstatus));
+            string jangubun = GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jangubun)),
+                jstatus = GetFieldData(OutBlock, Enum.GetName(typeof(J), J.jstatus));
 
             if (int.TryParse(jangubun, out int gubun) && int.TryParse(jstatus, out int status))
             {

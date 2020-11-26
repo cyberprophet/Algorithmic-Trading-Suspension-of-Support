@@ -29,9 +29,13 @@ namespace ShareInvest.OpenAPI.Catalog
                 {
                     var param = new SendSecuritiesAPI(temp.Item2.Dequeue());
 
-                    if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs) && API.GetMasterStockState(balance.Item1).Contains(transactionSuspension) == false)
+                    if (param.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance
+                        && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs)
+                        && API.GetMasterStockState(balance.Item1).Contains(transactionSuspension) == false)
                     {
-                        if (hs.Quantity == 0 && Connect.Cash > 0 && now.Hour == 8 && now.Minute > 0x35)
+                        if (hs.Quantity == 0 && Connect.Cash > 0
+                            && now.Hour == (Array.Exists(Connect.SAT, o => o.Equals(now.ToString("yyMMdd"))) ? 9 : 8)
+                            && now.Minute > 0x35)
                         {
                             int sell, buy, upper, lower, bPrice, sPrice;
                             uint quantity = (uint)balance.Item3, price = uint.TryParse(API.GetMasterLastPrice(hs.Code), out uint before) ? before : 0;
@@ -295,8 +299,10 @@ namespace ShareInvest.OpenAPI.Catalog
         const string name = "체결잔고요청";
         const string id = "계좌번호;비밀번호;비밀번호입력매체구분";
         const string transactionSuspension = "거래정지";
-        readonly string[] opSingle = { "예수금", "예수금D+1", "예수금D+2", "출금가능금액", "미수확보금", "대용금", "권리대용금", "주문가능현금", "현금미수금", "신용이자미납금", "기타대여금", "미상환융자금", "증거금현금", "증거금대용", "주식매수총액", "평가금액합계", "총손익합계", "총손익률", "총재매수가능금액", "20주문가능금액", "30주문가능금액", "40주문가능금액", "50주문가능금액", "60주문가능금액", "100주문가능금액", "신용융자합계", "신용융자대주합계", "신용담보비율", "예탁담보대출금액", "매도담보대출금액", "조회건수" };
-        readonly string[] opMultiple = { "신용구분", "대출일", "만기일", "종목번호", "종목명", "결제잔고", "현재잔고", "현재가", "매입단가", "매입금액", "평가금액", "평가손익", "손익률" };
+        readonly string[] opSingle
+            = { "예수금", "예수금D+1", "예수금D+2", "출금가능금액", "미수확보금", "대용금", "권리대용금", "주문가능현금", "현금미수금", "신용이자미납금", "기타대여금", "미상환융자금", "증거금현금", "증거금대용", "주식매수총액", "평가금액합계", "총손익합계", "총손익률", "총재매수가능금액", "20주문가능금액", "30주문가능금액", "40주문가능금액", "50주문가능금액", "60주문가능금액", "100주문가능금액", "신용융자합계", "신용융자대주합계", "신용담보비율", "예탁담보대출금액", "매도담보대출금액", "조회건수" };
+        readonly string[] opMultiple
+            = { "신용구분", "대출일", "만기일", "종목번호", "종목명", "결제잔고", "현재잔고", "현재가", "매입단가", "매입금액", "평가금액", "평가손익", "손익률" };
         public override event EventHandler<SendSecuritiesAPI> Send;
     }
 }

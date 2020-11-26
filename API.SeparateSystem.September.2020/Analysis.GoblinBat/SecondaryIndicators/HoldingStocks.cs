@@ -14,9 +14,12 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 {
     public class HoldingStocks : Holding
     {
-        public override void OnReceiveConclusion(string[] param) => Console.WriteLine(param[0] + " Q_" + param[1] + " P_" + param[2] + " C_" + param[3] + " R_" + param[4] + " N_" + param[5]);
-        public override void OnReceiveBalance(string[] param) => Console.WriteLine(param[0] + " N_" + param[1] + " P_" + param[2]);
-        public override void OnReceiveEvent(string[] param) => Console.WriteLine(param[0] + " B_" + param[1] + " S_" + param[2]);
+        public override void OnReceiveConclusion(string[] param)
+            => Console.WriteLine(param[0] + " Q_" + param[1] + " P_" + param[2] + " C_" + param[3] + " R_" + param[4] + " N_" + param[5]);
+        public override void OnReceiveBalance(string[] param)
+            => Console.WriteLine(param[0] + " N_" + param[1] + " P_" + param[2]);
+        public override void OnReceiveEvent(string[] param)
+            => Console.WriteLine(param[0] + " B_" + param[1] + " S_" + param[2]);
         internal void OnReceiveTrendsInPrices(SendConsecutive e, double gap, double sShort, double sLong, double trend)
         {
             var date = e.Date.Substring(6, 4);
@@ -31,7 +34,10 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     {
                         var condition = (strategics.Code as string)[1].Equals('0');
 
-                        if (date.CompareTo(start) > 0 && date.CompareTo(condition ? end : transmit) < 0 && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume))
+                        if (date.CompareTo(start) > 0 && date.CompareTo(condition ? end : transmit) < 0
+                            && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0)
+                            && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort)
+                            && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume))
                         {
                             Quantity += gap > 0 ? 1 : -1;
                             CumulativeFee += (uint)(e.Price * TransactionMultiplier * Commission);
@@ -75,12 +81,14 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     break;
 
                 case TrendsInValuation tv:
-                    if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0 && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime vInterval))
+                    if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0
+                        && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime vInterval))
                     {
                         if (NextOrderTime == null)
                             NextOrderTime = vInterval;
 
-                        else if (Quantity > tv.ReservationSubtractionalQuantity - 1 && (Offer ?? int.MaxValue) < e.Price && OrderNumber.Any(o => o.Key.StartsWith("8") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
+                        else if (Quantity > tv.ReservationSubtractionalQuantity - 1 && (Offer ?? int.MaxValue) < e.Price
+                            && OrderNumber.Any(o => o.Key.StartsWith("8") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
                         {
                             CumulativeFee += (uint)(e.Price * tv.ReservationSubtractionalQuantity * (Commission + tax));
                             Revenue += (long)((e.Price - (Purchase ?? 0D)) * tv.ReservationSubtractionalQuantity);
@@ -95,7 +103,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                         else if ((Bid ?? int.MinValue) > e.Price && OrderNumber.Any(o => o.Key.StartsWith("7") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
                         {
                             CumulativeFee += (uint)(e.Price * Commission * tv.ReservationAddtionalQuantity);
-                            Purchase = (double)((e.Price * tv.ReservationAddtionalQuantity + (Purchase ?? 0D) * Quantity) / (Quantity + tv.ReservationAddtionalQuantity));
+                            Purchase
+                                = (double)((e.Price * tv.ReservationAddtionalQuantity + (Purchase ?? 0D) * Quantity) / (Quantity + tv.ReservationAddtionalQuantity));
                             Quantity += tv.ReservationAddtionalQuantity;
                             var profit = OrderNumber.First(o => o.Key.StartsWith("7") && o.Value == e.Price + GetQuoteUnit(e.Price, Market));
                             Base += profit.Value * tv.ReservationAddtionalQuantity;
@@ -104,7 +113,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (OrderNumber.Remove(profit.Key) && Verify)
                                 OnReceiveBalance(new string[] { string.Concat(vInterval.ToShortDateString(), " ", vInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
                         }
-                        else if (Quantity > tv.TradingSubtractionalQuantity - 1 && OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
+                        else if (Quantity > tv.TradingSubtractionalQuantity - 1
+                            && OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
                         {
                             CumulativeFee += (uint)(e.Price * tv.TradingSubtractionalQuantity * (Commission + tax));
                             Revenue += (long)((e.Price - (Purchase ?? 0D)) * tv.TradingSubtractionalQuantity);
@@ -126,7 +136,9 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (OrderNumber.Remove(profit.Key) && Verify)
                                 OnReceiveBalance(new string[] { string.Concat(vInterval.ToShortDateString(), " ", vInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
                         }
-                        else if (Quantity > tv.TradingSubtractionalQuantity - 1 && OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + tv.SubtractionalPosition) && e.Price > (Purchase ?? 0D) && gap < 0 && (tv.SubtractionalInterval == 0 || tv.SubtractionalInterval > 0 && vInterval.CompareTo(NextOrderTime) > 0))
+                        else if (Quantity > tv.TradingSubtractionalQuantity - 1 && OrderNumber.ContainsValue(e.Price) == false
+                            && e.Price > trend * (1 + tv.SubtractionalPosition) && e.Price > (Purchase ?? 0D)
+                            && gap < 0 && (tv.SubtractionalInterval == 0 || tv.SubtractionalInterval > 0 && vInterval.CompareTo(NextOrderTime) > 0))
                         {
                             var unit = GetQuoteUnit(e.Price, Market);
 
@@ -141,11 +153,14 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (tv.SubtractionalInterval > 0)
                                 NextOrderTime = MeasureTheDelayTime(tv.SubtractionalInterval, vInterval);
                         }
-                        else if (tv.TradingAddtionalQuantity > 0 && OrderNumber.ContainsValue(e.Price) == false && e.Price < trend * (1 - tv.AdditionalPosition) && gap > 0 && (tv.AddtionalInterval == 0 || tv.AddtionalInterval > 0 && vInterval.CompareTo(NextOrderTime) > 0))
+                        else if (tv.TradingAddtionalQuantity > 0 && OrderNumber.ContainsValue(e.Price) == false
+                            && e.Price < trend * (1 - tv.AdditionalPosition) && gap > 0
+                            && (tv.AddtionalInterval == 0 || tv.AddtionalInterval > 0 && vInterval.CompareTo(NextOrderTime) > 0))
                         {
                             var unit = GetQuoteUnit(e.Price, Market);
 
-                            if (Verify && VerifyAmount < Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (Verify && VerifyAmount < Quantity
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                             {
                                 OnReceiveConclusion(new string[] { string.Concat(OpenOrderType.신규매수, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString(), " ", NextOrderTime), Quantity.ToString("N0"), (Purchase ?? 0D).ToString("N2"), (e.Price - unit).ToString("N0"), (Revenue - CumulativeFee).ToString("C0"), OrderNumber.Where(o => o.Key.StartsWith("1")).Max(o => o.Key) });
                                 VerifyAmount = Quantity;
@@ -179,7 +194,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                 for (int i = 0; i < tv.SubtractionalUnit; i++)
                                     sPrice += GetQuoteUnit(sPrice, stock);
                             }
-                            Offer = OrderNumber.Count > 0 && OrderNumber.Any(o => o.Key.StartsWith("8")) ? OrderNumber.Where(o => o.Key.StartsWith("8")).Min(o => o.Value) : 0;
+                            Offer = OrderNumber.Count > 0
+                                && OrderNumber.Any(o => o.Key.StartsWith("8")) ? OrderNumber.Where(o => o.Key.StartsWith("8")).Min(o => o.Value) : 0;
                         }
                         if (tv.ReservationAddtionalQuantity > 0)
                         {
@@ -193,7 +209,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                 for (int i = 0; i < tv.AdditionalUnit; i++)
                                     bPrice += GetQuoteUnit(bPrice, stock);
                             }
-                            Bid = OrderNumber.Count > 0 && OrderNumber.Any(o => o.Key.StartsWith("7")) ? OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Value) : 0;
+                            Bid = OrderNumber.Count > 0
+                                && OrderNumber.Any(o => o.Key.StartsWith("7")) ? OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Value) : 0;
                         }
                         if (Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                             OnReceiveEvent(new string[] { string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()), OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Key), OrderNumber.Where(o => o.Key.StartsWith("8")).Max(o => o.Key) });
@@ -214,12 +231,14 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     break;
 
                 case TrendToCashflow tc:
-                    if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0 && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime cInterval))
+                    if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0
+                        && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime cInterval))
                     {
                         if (NextOrderTime == null)
                             NextOrderTime = cInterval;
 
-                        else if (Quantity > tc.ReservationQuantity - 1 && (Offer ?? int.MaxValue) < e.Price && OrderNumber.Any(o => o.Key.StartsWith("8") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
+                        else if (Quantity > tc.ReservationQuantity - 1 && (Offer ?? int.MaxValue) < e.Price
+                            && OrderNumber.Any(o => o.Key.StartsWith("8") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
                         {
                             CumulativeFee += (uint)(e.Price * tc.ReservationQuantity * (Commission + tax));
                             Revenue += (long)((e.Price - (Purchase ?? 0D)) * tc.ReservationQuantity);
@@ -231,7 +250,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (OrderNumber.Remove(profit.Key) && Verify)
                                 OnReceiveBalance(new string[] { string.Concat(cInterval.ToShortDateString(), " ", cInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
                         }
-                        else if ((Bid ?? int.MinValue) > e.Price && OrderNumber.Any(o => o.Key.StartsWith("7") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
+                        else if ((Bid ?? int.MinValue) > e.Price
+                            && OrderNumber.Any(o => o.Key.StartsWith("7") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
                         {
                             CumulativeFee += (uint)(e.Price * Commission * tc.ReservationQuantity);
                             Purchase = (double)((e.Price * tc.ReservationQuantity + (Purchase ?? 0D) * Quantity) / (Quantity + tc.ReservationQuantity));
@@ -243,7 +263,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (OrderNumber.Remove(profit.Key) && Verify)
                                 OnReceiveBalance(new string[] { string.Concat(cInterval.ToShortDateString(), " ", cInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
                         }
-                        else if (Quantity > tc.TradingQuantity - 1 && OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
+                        else if (Quantity > tc.TradingQuantity - 1
+                            && OrderNumber.Any(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market)))
                         {
                             CumulativeFee += (uint)(e.Price * tc.TradingQuantity * (Commission + tax));
                             Revenue += (long)((e.Price - (Purchase ?? 0D)) * tc.TradingQuantity);
@@ -265,11 +286,14 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (OrderNumber.Remove(profit.Key) && Verify)
                                 OnReceiveBalance(new string[] { string.Concat(cInterval.ToShortDateString(), " ", cInterval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
                         }
-                        else if (Quantity > tc.TradingQuantity - 1 && OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + tc.PositionRevenue) && e.Price > (Purchase ?? 0D) && gap < 0 && (tc.Interval == 0 || tc.Interval > 0 && cInterval.CompareTo(NextOrderTime) > 0))
+                        else if (Quantity > tc.TradingQuantity - 1 && OrderNumber.ContainsValue(e.Price) == false
+                            && e.Price > trend * (1 + tc.PositionRevenue) && e.Price > (Purchase ?? 0D)
+                            && gap < 0 && (tc.Interval == 0 || tc.Interval > 0 && cInterval.CompareTo(NextOrderTime) > 0))
                         {
                             var unit = GetQuoteUnit(e.Price, Market);
 
-                            if (Verify && VerifyAmount > Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (Verify && VerifyAmount > Quantity
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                             {
                                 OnReceiveConclusion(new string[] { string.Concat(OpenOrderType.신규매도, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString(), " ", NextOrderTime), Quantity.ToString("N0"), (Purchase ?? 0D).ToString("N2"), (e.Price + unit).ToString("N0"), (Revenue - CumulativeFee).ToString("C0"), OrderNumber.Max(o => o.Key) });
                                 VerifyAmount = Quantity;
@@ -280,11 +304,14 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (tc.Interval > 0)
                                 NextOrderTime = MeasureTheDelayTime(tc.Interval, cInterval);
                         }
-                        else if (tc.TradingQuantity > 0 && OrderNumber.ContainsValue(e.Price) == false && e.Price < trend * (1 - tc.PositionAddition) && gap > 0 && (tc.Interval == 0 || tc.Interval > 0 && cInterval.CompareTo(NextOrderTime) > 0))
+                        else if (tc.TradingQuantity > 0 && OrderNumber.ContainsValue(e.Price) == false
+                            && e.Price < trend * (1 - tc.PositionAddition) && gap > 0
+                            && (tc.Interval == 0 || tc.Interval > 0 && cInterval.CompareTo(NextOrderTime) > 0))
                         {
                             var unit = GetQuoteUnit(e.Price, Market);
 
-                            if (Verify && VerifyAmount < Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (Verify && VerifyAmount < Quantity
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                             {
                                 OnReceiveConclusion(new string[] { string.Concat(OpenOrderType.신규매수, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString(), " ", NextOrderTime), Quantity.ToString("N0"), (Purchase ?? 0D).ToString("N2"), (e.Price - unit).ToString("N0"), (Revenue - CumulativeFee).ToString("C0"), OrderNumber.Where(o => o.Key.StartsWith("1")).Max(o => o.Key) });
                                 VerifyAmount = Quantity;
@@ -306,7 +333,9 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                         if (tc.ReservationQuantity > 0 && Quantity > tc.ReservationQuantity - 1)
                         {
                             var stock = Market;
-                            int quantity = Quantity / tc.ReservationQuantity, price = e.Price, sell = (int)((Purchase ?? 0D) * (1 + tc.ReservationRevenue)), buy = (int)((Purchase ?? 0D) * (1 - tc.Addition)), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
+                            int quantity = Quantity / tc.ReservationQuantity, price = e.Price, sell = (int)((Purchase ?? 0D) * (1 + tc.ReservationRevenue)),
+                                buy = (int)((Purchase ?? 0D) * (1 - tc.Addition)), upper = (int)(price * 1.3), lower = (int)(price * 0.7),
+                                bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
                             sPrice = sPrice < lower ? lower + GetQuoteUnit(sPrice, stock) : sPrice;
 
                             while (sPrice < upper && quantity-- > 0)
@@ -323,11 +352,14 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                 for (int i = 0; i < tc.Unit; i++)
                                     bPrice += GetQuoteUnit(bPrice, stock);
                             }
-                            if (Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (Verify
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                                 OnReceiveEvent(new string[] { string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()), OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Key), OrderNumber.Where(o => o.Key.StartsWith("8")).Max(o => o.Key) });
 
-                            Bid = OrderNumber.Count > 0 && OrderNumber.Any(o => o.Key.StartsWith("7")) ? OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Value) : 0;
-                            Offer = OrderNumber.Count > 0 && OrderNumber.Any(o => o.Key.StartsWith("8")) ? OrderNumber.Where(o => o.Key.StartsWith("8")).Min(o => o.Value) : 0;
+                            Bid = OrderNumber.Count > 0
+                                && OrderNumber.Any(o => o.Key.StartsWith("7")) ? OrderNumber.Where(o => o.Key.StartsWith("7")).Max(o => o.Value) : 0;
+                            Offer = OrderNumber.Count > 0
+                                && OrderNumber.Any(o => o.Key.StartsWith("8")) ? OrderNumber.Where(o => o.Key.StartsWith("8")).Min(o => o.Value) : 0;
                         }
                         SendMessage = new Statistics
                         {
@@ -345,7 +377,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     break;
 
                 case ScenarioAccordingToTrend st:
-                    if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0 && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime interval))
+                    if (e.Date.Length > 8 && date.CompareTo(start) > 0 && date.CompareTo(transmit) < 0
+                        && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime interval))
                     {
                         if (NextOrderTime == null)
                             NextOrderTime = interval;
@@ -372,11 +405,14 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (OrderNumber.Remove(profit.Key) && Verify)
                                 OnReceiveBalance(new string[] { string.Concat(interval.ToShortDateString(), " ", interval.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
                         }
-                        else if (Quantity > st.Quantity - 1 && OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + st.ErrorRange) && e.Price > (Purchase ?? 0D) && gap < 0 && (st.IntervalInSeconds == 0 || st.IntervalInSeconds > 0 && interval.CompareTo(NextOrderTime) > 0))
+                        else if (Quantity > st.Quantity - 1 && OrderNumber.ContainsValue(e.Price) == false
+                            && e.Price > trend * (1 + st.ErrorRange) && e.Price > (Purchase ?? 0D)
+                            && gap < 0 && (st.IntervalInSeconds == 0 || st.IntervalInSeconds > 0 && interval.CompareTo(NextOrderTime) > 0))
                         {
                             var unit = GetQuoteUnit(e.Price, Market);
 
-                            if (Verify && VerifyAmount > Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (Verify && VerifyAmount > Quantity
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                             {
                                 OnReceiveConclusion(new string[] { string.Concat(OpenOrderType.신규매도, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString(), " ", NextOrderTime), Quantity.ToString("N0"), (Purchase ?? 0D).ToString("N2"), (e.Price + unit).ToString("N0"), (Revenue - CumulativeFee).ToString("C0"), OrderNumber.Max(o => o.Key) });
                                 VerifyAmount = Quantity;
@@ -387,11 +423,13 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             if (st.IntervalInSeconds > 0)
                                 NextOrderTime = MeasureTheDelayTime(st.IntervalInSeconds, interval);
                         }
-                        else if (OrderNumber.ContainsValue(e.Price) == false && e.Price < trend * (1 - st.ErrorRange) && gap > 0 && (st.IntervalInSeconds == 0 || st.IntervalInSeconds > 0 && interval.CompareTo(NextOrderTime) > 0))
+                        else if (OrderNumber.ContainsValue(e.Price) == false && e.Price < trend * (1 - st.ErrorRange)
+                            && gap > 0 && (st.IntervalInSeconds == 0 || st.IntervalInSeconds > 0 && interval.CompareTo(NextOrderTime) > 0))
                         {
                             var unit = GetQuoteUnit(e.Price, Market);
 
-                            if (Verify && VerifyAmount < Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (Verify && VerifyAmount < Quantity
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                             {
                                 OnReceiveConclusion(new string[] { string.Concat(OpenOrderType.신규매수, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString(), " ", NextOrderTime), Quantity.ToString("N0"), (Purchase ?? 0D).ToString("N2"), (e.Price - unit).ToString("N0"), (Revenue - CumulativeFee).ToString("C0"), OrderNumber.Where(o => o.Key.StartsWith("1")).Max(o => o.Key) });
                                 VerifyAmount = Quantity;
@@ -435,7 +473,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             var profit = OrderNumber.First(o => o.Key.StartsWith("2") && o.Value == e.Price - GetQuoteUnit(e.Price, Market));
                             Base -= profit.Value * ts.Quantity;
 
-                            if (OrderNumber.Remove(profit.Key) && Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (OrderNumber.Remove(profit.Key) && Verify
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                                 OnReceiveBalance(new string[] { string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
                         }
                         else if (OrderNumber.Any(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market)))
@@ -446,17 +485,20 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             var profit = OrderNumber.First(o => o.Key.StartsWith("1") && o.Value == e.Price + GetQuoteUnit(e.Price, Market));
                             Base += profit.Value * ts.Quantity;
 
-                            if (OrderNumber.Remove(profit.Key) && Verify && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (OrderNumber.Remove(profit.Key) && Verify
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                                 OnReceiveBalance(new string[] { string.Concat(dt.ToShortDateString(), " ", dt.ToLongTimeString()), profit.Key, profit.Value.ToString("N0") });
                         }
-                        else if (Quantity > ts.Quantity - 1 && OrderNumber.ContainsValue(e.Price) == false && e.Price > trend * (1 + ts.RealizeProfit) && e.Price > (Purchase ?? 0D) && gap < 0)
+                        else if (Quantity > ts.Quantity - 1 && OrderNumber.ContainsValue(e.Price) == false
+                            && e.Price > trend * (1 + ts.RealizeProfit) && e.Price > (Purchase ?? 0D) && gap < 0)
                         {
                             var quote = 0;
 
                             for (int i = 0; i < ts.QuoteUnit; i++)
                                 quote += GetQuoteUnit(e.Price, Market);
 
-                            if (Verify && VerifyAmount > Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (Verify && VerifyAmount > Quantity
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                             {
                                 OnReceiveConclusion(new string[] { string.Concat(OpenOrderType.신규매도, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString()), Quantity.ToString("N0"), (Purchase ?? 0D).ToString("N2"), (e.Price + quote).ToString("N0"), (Revenue - CumulativeFee).ToString("C0"), OrderNumber.Max(o => o.Key) });
                                 VerifyAmount = Quantity;
@@ -471,7 +513,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                             for (int i = 0; i < ts.QuoteUnit; i++)
                                 quote += GetQuoteUnit(e.Price, Market);
 
-                            if (Verify && VerifyAmount < Quantity && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
+                            if (Verify && VerifyAmount < Quantity
+                                && DateTime.TryParseExact(e.Date.Substring(0, 12), format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt))
                             {
                                 OnReceiveConclusion(new string[] { string.Concat(OpenOrderType.신규매수, " ", dt.ToShortDateString(), " ", dt.ToLongTimeString()), Quantity.ToString("N0"), (Purchase ?? 0D).ToString("N2"), (e.Price - quote).ToString("N0"), (Revenue - CumulativeFee).ToString("C0"), OrderNumber.Where(o => o.Key.StartsWith("1")).Max(o => o.Key) });
                                 VerifyAmount = Quantity;
@@ -490,7 +533,9 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                         if (ts.Setting.Equals(Setting.Reservation) && Quantity > ts.Quantity - 1)
                         {
                             var stock = Market;
-                            int quantity = Quantity / ts.Quantity, price = e.Price, sell = (int)((Purchase ?? 0D) * (1 + ts.RealizeProfit)), buy = (int)((Purchase ?? 0D) * (1 - ts.AdditionalPurchase)), upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
+                            int quantity = Quantity / ts.Quantity, price = e.Price, sell = (int)((Purchase ?? 0D) * (1 + ts.RealizeProfit)),
+                                buy = (int)((Purchase ?? 0D) * (1 - ts.AdditionalPurchase)), upper = (int)(price * 1.3),
+                                lower = (int)(price * 0.7), bPrice = GetStartingPrice(lower, stock), sPrice = GetStartingPrice(sell, stock);
                             sPrice = sPrice < lower ? lower + GetQuoteUnit(sPrice, stock) : sPrice;
 
                             while (sPrice < upper && quantity-- > 0)
@@ -549,12 +594,14 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
                     if (StartProgress(strategics.Code as string) > 0)
                     {
-                        if (string.IsNullOrEmpty(SendMessage.Date) == false && EstimatedPrice != null && EstimatedPrice.Count > 3 && EstimatedPrice.Any(o => double.IsNaN(o.Value) || double.IsInfinity(o.Value)) == false)
+                        if (string.IsNullOrEmpty(SendMessage.Date) == false && EstimatedPrice != null && EstimatedPrice.Count > 3
+                            && EstimatedPrice.Any(o => double.IsNaN(o.Value) || double.IsInfinity(o.Value)) == false)
                         {
                             var price = SendMessage.Price;
                             var estimate = EstimatedPrice.Where(o => o.Key.ToString(format.Substring(0, 6)).CompareTo(SendMessage.Date) > 0);
                             var find = FindTheNearestQuarter(SendMessage.Date);
-                            var key = string.Concat("ST.", st.Calendar.Substring(0, 4), "15.", st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', st.Sales * 0x64, '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', st.OperatingProfit * 0x64, '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', st.NetIncome * 0x64);
+                            var key
+                                = string.Concat("ST.", st.Calendar.Substring(0, 4), "15.", st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', st.Sales * 0x64, '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', st.OperatingProfit * 0x64, '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', st.NetIncome * 0x64);
 
                             if (client.PutContext(new Catalog.Request.Consensus
                             {
@@ -881,7 +928,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                 try
                 {
                     var normalize = EstimatedPrice.Last(o => o.Key.ToString(format).StartsWith(SendMessage.Date)).Value;
-                    var near = FindTheNearestQuarter(DateTime.TryParseExact(SendMessage.Date, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
+                    var near
+                        = FindTheNearestQuarter(DateTime.TryParseExact(SendMessage.Date, format.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
 
                     if (client.PutContext(new Catalog.Request.Consensus
                     {
@@ -940,7 +988,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                                 continue;
                         }
                 if (int.TryParse(date[0], out int year) && int.TryParse(date[1], out int month))
-                    FinancialStatement[IsTheSecondThursday(new DateTime(0x7D0 + year, month, DateTime.DaysInMonth(year + 0x7D0, month), 0xF, 0x1E, 0))] = new Tuple<long, long, long, long>(sales, operation, net, cash);
+                    FinancialStatement[IsTheSecondThursday(new DateTime(0x7D0 + year, month, DateTime.DaysInMonth(year + 0x7D0, month), 0xF, 0x1E, 0))]
+                        = new Tuple<long, long, long, long>(sales, operation, net, cash);
             }
             List<long> sale = new List<long>(), oper = new List<long>(), netincome = new List<long>(), flow = new List<long>();
             var list = new List<long>[] { sale, oper, netincome, flow };

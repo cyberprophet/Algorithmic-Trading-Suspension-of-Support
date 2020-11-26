@@ -53,7 +53,8 @@ namespace ShareInvest.OpenAPI.Catalog
         const string name = "선옵호가잔량추이요청";
         const string code = "OPT50010";
         readonly string[] single = { "시가", "고가", "저가" };
-        readonly string[] multi = { "호가시간", "매도호가수량", "최우선매도호가", "매수호가수량", "최우선매수호가", "호가순잔량", "매도호가총잔량", "매수호가총잔량", "순매수잔량" };
+        readonly string[] multi
+            = { "호가시간", "매도호가수량", "최우선매도호가", "매수호가수량", "최우선매수호가", "호가순잔량", "매도호가총잔량", "매수호가총잔량", "순매수잔량" };
         public override event EventHandler<SendSecuritiesAPI> Send;
     }
 }

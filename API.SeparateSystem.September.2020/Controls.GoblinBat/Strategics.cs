@@ -53,12 +53,14 @@ namespace ShareInvest.Controls
         }
         void DataSortCompare(object sender, DataGridViewSortCompareEventArgs e)
         {
-            if (e.Column.Index < data.Columns.Count - 1 && e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x) && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
+            if (e.Column.Index < data.Columns.Count - 1 && e.Column.Index > 1 && double.TryParse(e.CellValue1.ToString().Replace("%", string.Empty), out double x)
+                && double.TryParse(e.CellValue2.ToString().Replace("%", string.Empty), out double y))
             {
                 e.SortResult = x.CompareTo(y);
                 e.Handled = true;
             }
-            else if (e.Column.Index == data.Columns.Count - 1 && int.TryParse(e.CellValue2.ToString().Replace(",", string.Empty), out int ca) && int.TryParse(e.CellValue1.ToString().Replace(",", string.Empty), out int cb))
+            else if (e.Column.Index == data.Columns.Count - 1 && int.TryParse(e.CellValue2.ToString().Replace(",", string.Empty), out int ca)
+                && int.TryParse(e.CellValue1.ToString().Replace(",", string.Empty), out int cb))
             {
                 e.SortResult = cb.CompareTo(ca);
                 e.Handled = true;
@@ -69,16 +71,20 @@ namespace ShareInvest.Controls
             if (e.Argument is Dictionary<string, Tuple<int, double, double, double, double, double, double>> dictionary)
                 foreach (var kv in dictionary)
                 {
-                    if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1575e-3 < kv.Value.Item7 && kv.Value.Item5 * 1575e-3 < kv.Value.Item6 && kv.Value.Item4 * 1575e-3 < kv.Value.Item5 && kv.Value.Item3 * 1575e-3 < kv.Value.Item4 && kv.Value.Item2 * 1575e-3 < kv.Value.Item3)
+                    if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1575e-3 < kv.Value.Item7 && kv.Value.Item5 * 1575e-3 < kv.Value.Item6
+                        && kv.Value.Item4 * 1575e-3 < kv.Value.Item5 && kv.Value.Item3 * 1575e-3 < kv.Value.Item4 && kv.Value.Item2 * 1575e-3 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Wheat));
 
-                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1525e-3 < kv.Value.Item7 && kv.Value.Item5 * 1525e-3 < kv.Value.Item6 && kv.Value.Item4 * 1525e-3 < kv.Value.Item5 && kv.Value.Item3 * 1525e-3 < kv.Value.Item4 && kv.Value.Item2 * 1525e-3 < kv.Value.Item3)
+                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1525e-3 < kv.Value.Item7 && kv.Value.Item5 * 1525e-3 < kv.Value.Item6
+                        && kv.Value.Item4 * 1525e-3 < kv.Value.Item5 && kv.Value.Item3 * 1525e-3 < kv.Value.Item4 && kv.Value.Item2 * 1525e-3 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Moccasin));
 
-                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1475e-3 < kv.Value.Item7 && kv.Value.Item5 * 1475e-3 < kv.Value.Item6 && kv.Value.Item4 * 1475e-3 < kv.Value.Item5 && kv.Value.Item3 * 1475e-3 < kv.Value.Item4 && kv.Value.Item2 * 1475e-3 < kv.Value.Item3)
+                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1475e-3 < kv.Value.Item7 && kv.Value.Item5 * 1475e-3 < kv.Value.Item6
+                        && kv.Value.Item4 * 1475e-3 < kv.Value.Item5 && kv.Value.Item3 * 1475e-3 < kv.Value.Item4 && kv.Value.Item2 * 1475e-3 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.PapayaWhip));
 
-                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1425e-3 < kv.Value.Item7 && kv.Value.Item5 * 1425e-3 < kv.Value.Item6 && kv.Value.Item4 * 1425e-3 < kv.Value.Item5 && kv.Value.Item3 * 1425e-3 < kv.Value.Item4 && kv.Value.Item2 * 1425e-3 < kv.Value.Item3)
+                    else if (kv.Value.Item2 > 0 && kv.Value.Item6 * 1425e-3 < kv.Value.Item7 && kv.Value.Item5 * 1425e-3 < kv.Value.Item6
+                        && kv.Value.Item4 * 1425e-3 < kv.Value.Item5 && kv.Value.Item3 * 1425e-3 < kv.Value.Item4 && kv.Value.Item2 * 1425e-3 < kv.Value.Item3)
                         SendSize?.Invoke(this, new SendHoldingStocks(kv.Key, Color.Cornsilk));
                 }
             else if (e.Argument is Tuple<List<Codes>, IEnumerable<Catalog.Request.Consensus>> tuple)
@@ -87,7 +93,8 @@ namespace ShareInvest.Controls
                     var next = cs.TheNextYear * 0.85;
                     var trends = new int[] { 0xF0, 0x1E0, 0x2D0 };
 
-                    if (cs.FirstQuarter < cs.SecondQuarter && cs.SecondQuarter < cs.ThirdQuarter && cs.ThirdQuarter < cs.Quarter && next > cs.FirstQuarter && next > cs.SecondQuarter && next > cs.ThirdQuarter && next > cs.Quarter)
+                    if (cs.FirstQuarter < cs.SecondQuarter && cs.SecondQuarter < cs.ThirdQuarter && cs.ThirdQuarter < cs.Quarter
+                        && next > cs.FirstQuarter && next > cs.SecondQuarter && next > cs.ThirdQuarter && next > cs.Quarter)
                         foreach (var trend in trends)
                             SendSize?.Invoke(this, new SendHoldingStocks(tuple.Item1.First(o => o.Code.Equals(cs.Code)).Price, new Catalog.TrendsInStockPrices
                             {
@@ -108,7 +115,8 @@ namespace ShareInvest.Controls
         void OnReceiveCellContentDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex > -1)
-                BeginInvoke(new Action(async () => await disclosure.GetDisclosureInformation(data.Rows[e.RowIndex].Cells[0].Value.ToString(), data.Rows[e.RowIndex].Cells[1].Value.ToString())));
+                BeginInvoke(new Action(async ()
+                    => await disclosure.GetDisclosureInformation(data.Rows[e.RowIndex].Cells[0].Value.ToString(), data.Rows[e.RowIndex].Cells[1].Value.ToString())));
         }
         void InitializeComponent(Stack<Catalog.Request.Consensus> stack, int count, List<Codes> codes, Dictionary<string, int> rank)
         {
@@ -139,7 +147,8 @@ namespace ShareInvest.Controls
             while (stack.Count > 0)
             {
                 var pop = stack.Pop();
-                var index = data.Rows.Add(new string[] { pop.Code, codes.First(o => o.Code.Equals(pop.Code)).Name, Math.Abs(pop.FirstQuarter).ToString("P2"), Math.Abs(pop.SecondQuarter).ToString("P2"), Math.Abs(pop.ThirdQuarter).ToString("P2"), Math.Abs(pop.Quarter).ToString("P2"), Math.Abs(pop.TheNextYear).ToString("P2"), Math.Abs(pop.TheYearAfterNext).ToString("P2"), rank.TryGetValue(pop.Code, out int choice) ? choice.ToString("N0") : string.Empty });
+                var index = data.Rows.Add(new string[] { pop.Code, codes.First(o
+                    => o.Code.Equals(pop.Code)).Name, Math.Abs(pop.FirstQuarter).ToString("P2"), Math.Abs(pop.SecondQuarter).ToString("P2"), Math.Abs(pop.ThirdQuarter).ToString("P2"), Math.Abs(pop.Quarter).ToString("P2"), Math.Abs(pop.TheNextYear).ToString("P2"), Math.Abs(pop.TheYearAfterNext).ToString("P2"), rank.TryGetValue(pop.Code, out int choice) ? choice.ToString("N0") : string.Empty });
                 data.Rows[index].Cells[2].Style.ForeColor = pop.FirstQuarter > 0 ? Color.Maroon : Color.Navy;
                 data.Rows[index].Cells[2].Style.SelectionForeColor = pop.FirstQuarter > 0 ? Color.FromArgb(0xB9062F) : Color.DeepSkyBlue;
                 data.Rows[index].Cells[3].Style.ForeColor = pop.SecondQuarter > 0 ? Color.Maroon : Color.Navy;
@@ -226,7 +235,8 @@ namespace ShareInvest.Controls
                     if (string.IsNullOrEmpty(context.Code) == false && context.Code.Length == 6)
                         stack.Push(context);
 
-                if (stack.Count > 0 && await client.GetContextAsync() is Dictionary<string, int> rank && rank.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
+                if (stack.Count > 0 && await client.GetContextAsync() is Dictionary<string, int> rank && rank.Count > 0
+                    && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
                     InitializeComponent(stack, 0, codes, rank);
             }
         }));
@@ -248,10 +258,12 @@ namespace ShareInvest.Controls
                 foreach (var context in await client.GetContext(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", this.strategics[i]) }))
                 {
                     if (strategics.TryGetValue(context.Code, out Tuple<int, double, double, double, double, double, double> tuple))
-                        strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(tuple.Item1 + 1, tuple.Item2 + context.FirstQuarter, tuple.Item3 + context.SecondQuarter, tuple.Item4 + context.ThirdQuarter, tuple.Item5 + context.Quarter, tuple.Item6 + context.TheNextYear, tuple.Item7 + context.TheYearAfterNext);
+                        strategics[context.Code]
+                            = new Tuple<int, double, double, double, double, double, double>(tuple.Item1 + 1, tuple.Item2 + context.FirstQuarter, tuple.Item3 + context.SecondQuarter, tuple.Item4 + context.ThirdQuarter, tuple.Item5 + context.Quarter, tuple.Item6 + context.TheNextYear, tuple.Item7 + context.TheYearAfterNext);
 
                     else
-                        strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(1, context.FirstQuarter, context.SecondQuarter, context.ThirdQuarter, context.Quarter, context.TheNextYear, context.TheYearAfterNext);
+                        strategics[context.Code]
+                            = new Tuple<int, double, double, double, double, double, double>(1, context.FirstQuarter, context.SecondQuarter, context.ThirdQuarter, context.Quarter, context.TheNextYear, context.TheYearAfterNext);
                 }
             foreach (var incorporate in strategics.Where(o => o.Key.Length == 8))
                 if (await client.GetContext(new Catalog.Request.IncorporatedStocks
@@ -332,10 +344,12 @@ namespace ShareInvest.Controls
                         foreach (var context in await client.GetContext(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", this.strategics[i]) }))
                         {
                             if (strategics.TryGetValue(context.Code, out Tuple<int, double, double, double, double, double, double> tuple))
-                                strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(tuple.Item1 + 1, tuple.Item2 + context.FirstQuarter, tuple.Item3 + context.SecondQuarter, tuple.Item4 + context.ThirdQuarter, tuple.Item5 + context.Quarter, tuple.Item6 + context.TheNextYear, tuple.Item7 + context.TheYearAfterNext);
+                                strategics[context.Code]
+                                    = new Tuple<int, double, double, double, double, double, double>(tuple.Item1 + 1, tuple.Item2 + context.FirstQuarter, tuple.Item3 + context.SecondQuarter, tuple.Item4 + context.ThirdQuarter, tuple.Item5 + context.Quarter, tuple.Item6 + context.TheNextYear, tuple.Item7 + context.TheYearAfterNext);
 
                             else
-                                strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(1, context.FirstQuarter, context.SecondQuarter, context.ThirdQuarter, context.Quarter, context.TheNextYear, context.TheYearAfterNext);
+                                strategics[context.Code]
+                                    = new Tuple<int, double, double, double, double, double, double>(1, context.FirstQuarter, context.SecondQuarter, context.ThirdQuarter, context.Quarter, context.TheNextYear, context.TheYearAfterNext);
                         }
                     foreach (var kv in strategics.OrderByDescending(o => o.Key))
                         if (string.IsNullOrEmpty(kv.Key) == false && kv.Key.Length == 6)
@@ -349,7 +363,8 @@ namespace ShareInvest.Controls
                                 TheNextYear = kv.Value.Item6 / kv.Value.Item1,
                                 TheYearAfterNext = kv.Value.Item7 / kv.Value.Item1,
                             });
-                    if (stack.Count > 0 && await client.GetContextAsync() is Dictionary<string, int> rank && rank.Count > 0 && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
+                    if (stack.Count > 0 && await client.GetContextAsync() is Dictionary<string, int> rank && rank.Count > 0
+                        && await client.GetContext(new Codes { }, 6) is List<Codes> codes && codes.Count > 0)
                     {
                         InitializeComponent(stack, 0, codes, rank);
 
@@ -494,7 +509,8 @@ namespace ShareInvest.Controls
                 if (string.IsNullOrEmpty(privacy.CodeStrategics) == false)
                     InitializeComponent(privacy.CodeStrategics.Split(';'));
 
-                if (await client.GetContext(new Catalog.Request.SatisfyConditions { Security = privacy.Security }) is Catalog.Request.SatisfyConditions condition && string.IsNullOrEmpty(condition.TempStorage) == false)
+                if (await client.GetContext(new Catalog.Request.SatisfyConditions { Security = privacy.Security }) is Catalog.Request.SatisfyConditions condition
+                    && string.IsNullOrEmpty(condition.TempStorage) == false)
                     InitializeComponent(condition.TempStorage.Split(';'));
             }
             return str;
@@ -545,7 +561,7 @@ namespace ShareInvest.Controls
                                 var view = new TrendFollowingBasicFutures(select);
                                 tab.TabPages[tab.TabPages.Count - 1].Controls.Add(view);
                                 view.Dock = DockStyle.Fill;
-                                view.TransmuteStrategics(strategics.Substring(10, 1).Equals("1"), strategics.Substring(11).Split('.'));
+                                view.TransmuteStrategics(strategics.Substring(0xA, 1).Equals("1"), strategics.Substring(0xB).Split('.'));
                                 panel.RowStyles[0].Height = 0x83 + 0x23;
                             }
                             break;
@@ -586,7 +602,8 @@ namespace ShareInvest.Controls
                     var lasttabrect = tab.GetTabRect(tab.TabPages.Count - 1);
                     tab.TabPages[tab.TabPages.Count - 1].BackColor = color;
                     tab.SelectTab(tab.TabPages.Count - 1);
-                    tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
+                    tab.CreateGraphics()
+                        .FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
                 }
             }
             ResumeLayout();
@@ -651,7 +668,9 @@ namespace ShareInvest.Controls
                                 check = tf.TransmuteStrategics();
                                 stParam = tf.TransmuteStrategics(tabPage.Text).Split('.');
 
-                                if (check && int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
+                                if (check && int.TryParse(stParam[0].Substring(0xB), out int ds) && int.TryParse(stParam[1], out int dl) && int.TryParse(stParam[2], out int m)
+                                    && int.TryParse(stParam[3], out int ms) && int.TryParse(stParam[4], out int ml) && int.TryParse(stParam[5], out int rs)
+                                    && int.TryParse(stParam[6], out int rl) && int.TryParse(stParam[7], out int qs) && int.TryParse(stParam[8], out int ql))
                                     verify = new SendHoldingStocks(new Catalog.TrendFollowingBasicFutures
                                     {
                                         Code = stParam[0].Substring(2, 8),
@@ -672,7 +691,11 @@ namespace ShareInvest.Controls
                                 check = ts.TransmuteStrategics();
                                 stParam = ts.TransmuteStrategics(tabPage.Text).Split('.');
 
-                                if (check && char.TryParse(stParam[stParam.Length - 1], out char setting) && char.TryParse(stParam[8], out char tTrend) && char.TryParse(stParam[7], out char longShort) && int.TryParse(stParam[6], out int quoteUnit) && int.TryParse(stParam[5], out int quantity) && double.TryParse(stParam[4].Insert(stParam[4].Length - 2, "."), out double additionalPurchase) && double.TryParse(stParam[3].Insert(stParam[3].Length - 2, "."), out double realizeProfit) && int.TryParse(stParam[2], out int trend) && int.TryParse(stParam[1], out int l) && int.TryParse(stParam[0].Substring(8), out int s))
+                                if (check && char.TryParse(stParam[stParam.Length - 1], out char setting) && char.TryParse(stParam[8], out char tTrend)
+                                    && char.TryParse(stParam[7], out char longShort) && int.TryParse(stParam[6], out int quoteUnit)
+                                    && int.TryParse(stParam[5], out int quantity) && double.TryParse(stParam[4].Insert(stParam[4].Length - 2, "."), out double additionalPurchase)
+                                    && double.TryParse(stParam[3].Insert(stParam[3].Length - 2, "."), out double realizeProfit) && int.TryParse(stParam[2], out int trend)
+                                    && int.TryParse(stParam[1], out int l) && int.TryParse(stParam[0].Substring(8), out int s))
                                     verify = new SendHoldingStocks(new Catalog.TrendsInStockPrices
                                     {
                                         Code = stParam[0].Substring(2, 6),
@@ -693,7 +716,11 @@ namespace ShareInvest.Controls
                                 check = tc.TransmuteStrategics();
                                 stParam = tc.TransmuteStrategics(tabPage.Text)?.Split('|');
 
-                                if (check && stParam.Length == 0xD && double.TryParse(stParam[0xC], out double cpAddition) && double.TryParse(stParam[0xB], out double cpRevenue) && int.TryParse(stParam[0xA], out int ctQuantity) && int.TryParse(stParam[9], out int cInterval) && double.TryParse(stParam[8], out double cAddition) && double.TryParse(stParam[7], out double crRevenue) && int.TryParse(stParam[6], out int crQuantity) && int.TryParse(stParam[5], out int cUnit) && int.TryParse(stParam[4], out int cTrend) && int.TryParse(stParam[3], out int cLong) && int.TryParse(stParam[2], out int cShort))
+                                if (check && stParam.Length == 0xD && double.TryParse(stParam[0xC], out double cpAddition) && double.TryParse(stParam[0xB], out double cpRevenue)
+                                    && int.TryParse(stParam[0xA], out int ctQuantity) && int.TryParse(stParam[9], out int cInterval)
+                                    && double.TryParse(stParam[8], out double cAddition) && double.TryParse(stParam[7], out double crRevenue)
+                                    && int.TryParse(stParam[6], out int crQuantity) && int.TryParse(stParam[5], out int cUnit) && int.TryParse(stParam[4], out int cTrend)
+                                    && int.TryParse(stParam[3], out int cLong) && int.TryParse(stParam[2], out int cShort))
                                     verify = new SendHoldingStocks(new Catalog.TrendToCashflow
                                     {
                                         Code = stParam[1],
@@ -716,7 +743,12 @@ namespace ShareInvest.Controls
                                 check = tv.TransmuteStrategics();
                                 stParam = tv.TransmuteStrategics(tabPage.Text)?.Split('|');
 
-                                if (check && stParam.Length == 0x11 && int.TryParse(stParam[2], out int vShort) && int.TryParse(stParam[3], out int vLong) && int.TryParse(stParam[4], out int vTrend) && int.TryParse(stParam[5], out int su) && int.TryParse(stParam[6], out int sq) && double.TryParse(stParam[7], out double vSubtraction) && int.TryParse(stParam[8], out int au) && int.TryParse(stParam[9], out int aq) && double.TryParse(stParam[0xA], out double vAddition) && int.TryParse(stParam[0xB], out int si) && int.TryParse(stParam[0xC], out int tsq) && double.TryParse(stParam[0xD], out double sp) && int.TryParse(stParam[0xE], out int ai) && int.TryParse(stParam[0xF], out int taq) && double.TryParse(stParam[0x10], out double ap))
+                                if (check && stParam.Length == 0x11 && int.TryParse(stParam[2], out int vShort) && int.TryParse(stParam[3], out int vLong)
+                                    && int.TryParse(stParam[4], out int vTrend) && int.TryParse(stParam[5], out int su) && int.TryParse(stParam[6], out int sq)
+                                    && double.TryParse(stParam[7], out double vSubtraction) && int.TryParse(stParam[8], out int au) && int.TryParse(stParam[9], out int aq)
+                                    && double.TryParse(stParam[0xA], out double vAddition) && int.TryParse(stParam[0xB], out int si)
+                                    && int.TryParse(stParam[0xC], out int tsq) && double.TryParse(stParam[0xD], out double sp) && int.TryParse(stParam[0xE], out int ai)
+                                    && int.TryParse(stParam[0xF], out int taq) && double.TryParse(stParam[0x10], out double ap))
                                     verify = new SendHoldingStocks(new Catalog.TrendsInValuation
                                     {
                                         Code = stParam[1],
@@ -744,7 +776,10 @@ namespace ShareInvest.Controls
                                 var item = st.TransmuteStrategics(tabPage.Text);
                                 stParam = item.Item1.Split('.');
 
-                                if (check && int.TryParse(stParam[11], out int stNet) && int.TryParse(stParam[9], out int stOperating) && int.TryParse(stParam[7], out int stSales) && int.TryParse(stParam[5], out int stRange) && int.TryParse(stParam[4], out int stInterval) && int.TryParse(stParam[3], out int stQuantity) && int.TryParse(stParam[2], out int stTrend) && int.TryParse(stParam[1], out int stLong) && int.TryParse(stParam[0].Substring(8), out int stShort))
+                                if (check && int.TryParse(stParam[11], out int stNet) && int.TryParse(stParam[9], out int stOperating)
+                                    && int.TryParse(stParam[7], out int stSales) && int.TryParse(stParam[5], out int stRange) && int.TryParse(stParam[4], out int stInterval)
+                                    && int.TryParse(stParam[3], out int stQuantity) && int.TryParse(stParam[2], out int stTrend) && int.TryParse(stParam[1], out int stLong)
+                                    && int.TryParse(stParam[0].Substring(8), out int stShort))
                                     verify = new SendHoldingStocks(item.Item2, new Catalog.ScenarioAccordingToTrend
                                     {
                                         Code = stParam[0].Substring(2, 6),
@@ -773,7 +808,8 @@ namespace ShareInvest.Controls
                     else
                         buttonChart.ForeColor = Color.Maroon;
                 }
-                else if (buttonSave.Name.Equals(bfn.Name) && buttonProgress.ForeColor.Equals(Color.Ivory) && bfn.ForeColor.Equals(Color.Ivory) && double.TryParse(str.Remove(str.Length - 1, 1), out double commission))
+                else if (buttonSave.Name.Equals(bfn.Name) && buttonProgress.ForeColor.Equals(Color.Ivory) && bfn.ForeColor.Equals(Color.Ivory)
+                    && double.TryParse(str.Remove(str.Length - 1, 1), out double commission))
                 {
                     var sb = new StringBuilder();
 
@@ -836,7 +872,8 @@ namespace ShareInvest.Controls
                     }
                 }
             }
-            else if (sender is ComboBox box && buttonSave.ForeColor.Equals(Color.Ivory) && comboStrategics.Name.Equals(box.Name) && textCode.TextLength == Length && tab.TabPages.ContainsKey(textCode.Text) == false)
+            else if (sender is ComboBox box && buttonSave.ForeColor.Equals(Color.Ivory) && comboStrategics.Name.Equals(box.Name) && textCode.TextLength == Length
+                && tab.TabPages.ContainsKey(textCode.Text) == false)
             {
                 IEnumerable<ConvertConsensus> consensus = null;
 
@@ -959,14 +996,16 @@ namespace ShareInvest.Controls
                         }
                         break;
                 }
-                if ((select.Code.Length == 6 && string.IsNullOrEmpty(select.MaturityMarketCap) == false || select.Code.Length == 8 && select.MarginRate > 0) && string.IsNullOrEmpty(select.Price) == false)
+                if ((select.Code.Length == 6 && string.IsNullOrEmpty(select.MaturityMarketCap) == false || select.Code.Length == 8 && select.MarginRate > 0)
+                    && string.IsNullOrEmpty(select.Price) == false)
                     buttonSave.ForeColor = Color.Maroon;
 
                 this.link.LinkVisited = false;
                 var lasttabrect = tab.GetTabRect(tab.TabPages.Count - 1);
                 tab.TabPages[tab.TabPages.Count - 1].BackColor = color;
                 tab.SelectTab(tab.TabPages.Count - 1);
-                tab.CreateGraphics().FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
+                tab.CreateGraphics()
+                    .FillRectangle(new SolidBrush(color), new RectangleF(lasttabrect.X + lasttabrect.Width + tab.Left, tab.Top + lasttabrect.Y, tab.Width - (lasttabrect.X + lasttabrect.Width), lasttabrect.Height));
                 ResumeLayout();
             }
             else if (sender is ComboBox condition && condition.Text.Equals(sc) && string.IsNullOrEmpty(textCode.Text) && Privacy.SecuritiesAPI.Equals("O") && Length == 6)

@@ -157,7 +157,9 @@ namespace ShareInvest.Analysis
 
                     switch (ts)
                     {
-                        case TrendsInStockPrices sp when sp.LongShort.Equals(LongShort.Minute) && sp.TrendType.Equals(Interface.Trend.Minute) || sp.LongShort.Equals(LongShort.Day) && sp.TrendType.Equals(Interface.Trend.Day):
+                        case TrendsInStockPrices sp when sp.LongShort.Equals(LongShort.Minute)
+                            && sp.TrendType.Equals(Interface.Trend.Minute) || sp.LongShort.Equals(LongShort.Day)
+                            && sp.TrendType.Equals(Interface.Trend.Day):
                             if (GetCheckOnDate(e.Date, sp.LongShort.Equals(LongShort.Minute) && sp.TrendType.Equals(Interface.Trend.Minute) ? 1 : 0x5A0))
                             {
                                 Short.Pop();
@@ -208,7 +210,8 @@ namespace ShareInvest.Analysis
                     tLong = st.Long;
                     trend = st.Trend;
 
-                    if (e.Date.Length > 6 && double.IsNaN(Compare) && Trend.Count > 0 && string.IsNullOrEmpty(st.Calendar) == false && (e.Date.Length == 8 ? e.Date.Substring(2) : e.Date.Substring(0, 6)).CompareTo(st.Calendar) >= 0)
+                    if (e.Date.Length > 6 && double.IsNaN(Compare) && Trend.Count > 0 && string.IsNullOrEmpty(st.Calendar) == false
+                        && (e.Date.Length == 8 ? e.Date.Substring(2) : e.Date.Substring(0, 6)).CompareTo(st.Calendar) >= 0)
                     {
                         Compare = Trend.Pop();
 
@@ -279,7 +282,9 @@ namespace ShareInvest.Analysis
         }
         double CalculateTheEstimatedPrice(string date)
         {
-            if (ho.EstimatedPrice != null && ho.EstimatedPrice.Count > 3 && DateTime.TryParseExact(date.Substring(0, 6), memorize, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt) && (TempStorage == null || TempStorage.CompareTo(dt) < 0))
+            if (ho.EstimatedPrice != null && ho.EstimatedPrice.Count > 3
+                && DateTime.TryParseExact(date.Substring(0, 6), memorize, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt)
+                && (TempStorage == null || TempStorage.CompareTo(dt) < 0))
             {
                 TempStorage = dt;
                 Compare = ho.EstimatedPrice.Last(o => o.Key.Year == dt.Year && o.Key.Month == dt.Month && o.Key.Day == dt.Day).Value;
@@ -292,7 +297,8 @@ namespace ShareInvest.Analysis
             {
                 if (minute < 0x5A0)
                 {
-                    if ((date.Substring(0, 4).Equals(Check) || string.IsNullOrEmpty(Check)) && DateTime.TryParseExact(date, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
+                    if ((date.Substring(0, 4).Equals(Check) || string.IsNullOrEmpty(Check))
+                        && DateTime.TryParseExact(date, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
                     {
                         Check = (time + TimeSpan.FromMinutes(minute)).ToString(hm);
 
@@ -313,7 +319,8 @@ namespace ShareInvest.Analysis
                 if (date.Length > 8 && int.TryParse(date.Substring(6, 2), out int hour))
                     CME = hour > 17 || hour < 5;
 
-                return date.Length > 8 && (strategics.Code.Length == 6 || strategics.Code.Length == 8 && strategics.Code[1].Equals('0') == false ? GetCheckOnDeadline(date) : date.Substring(6).Equals(onTime) == false);
+                return date.Length > 8 && (strategics.Code.Length == 6 || strategics.Code.Length == 8
+                    && strategics.Code[1].Equals('0') == false ? GetCheckOnDeadline(date) : date.Substring(6).Equals(onTime) == false);
             }
             else
                 return date.Length > 8 && GetCheckOnTime(date, minute);
@@ -322,12 +329,15 @@ namespace ShareInvest.Analysis
         {
             string check = time.Substring(6, 6), on = time.Substring(6);
 
-            if ((string.IsNullOrEmpty(Check) || Check.Equals(check.Substring(0, 4)) || GetCheckOnDeadline(check) || on.Equals(onTime) || on.Equals(nTime)) && DateTime.TryParseExact(check, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
+            if ((string.IsNullOrEmpty(Check) || Check.Equals(check.Substring(0, 4)) || GetCheckOnDeadline(check) || on.Equals(onTime) || on.Equals(nTime))
+                && DateTime.TryParseExact(check, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
             {
-                if ((strategics.Code.Length == 6 || strategics.Code.Length == 8 && strategics.Code[1].Equals('0') == false) && string.IsNullOrEmpty(Check) == false && string.Compare(check.Substring(0, 4), end) > 0)
+                if ((strategics.Code.Length == 6 || strategics.Code.Length == 8 && strategics.Code[1].Equals('0') == false)
+                    && string.IsNullOrEmpty(Check) == false && string.Compare(check.Substring(0, 4), end) > 0)
                     Check = string.Empty;
 
-                else if ((strategics.Code.Length == 6 || strategics.Code.Length == 8 && strategics.Code[1].Equals('0') == false) && string.Compare(check.Substring(0, 4), end) > 0)
+                else if ((strategics.Code.Length == 6 || strategics.Code.Length == 8 && strategics.Code[1].Equals('0') == false)
+                    && string.Compare(check.Substring(0, 4), end) > 0)
                     return string.IsNullOrEmpty(Check);
 
                 Check = (date + TimeSpan.FromMinutes(minute)).ToString(hm);

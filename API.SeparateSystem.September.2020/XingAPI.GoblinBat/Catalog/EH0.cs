@@ -26,7 +26,9 @@ namespace ShareInvest.XingAPI.Catalog
             }
             var str = sb.ToString().Split(';');
 
-            if (Connect.HoldingStock.TryGetValue(str[0x22], out Holding hs) && double.TryParse(str[5], out double bid) && double.TryParse(str[4], out double offer))
+            if (Connect.HoldingStock.TryGetValue(str[0x22], out Holding hs)
+                && double.TryParse(str[5], out double bid)
+                && double.TryParse(str[4], out double offer))
             {
                 hs.Offer = offer;
                 hs.Bid = bid;
@@ -37,7 +39,8 @@ namespace ShareInvest.XingAPI.Catalog
                     if (index > 1 && index < 8 || index > 0xB && index < 0x12 || index == 0x1E || index == 0x1F)
                         collection.Append(str[index]).Append(';');
 
-                string hotime = GetFieldData(OutBlock, string.Concat(EH.hotime, 1)), time = string.Concat(hotime, collect.GetTime(hotime[hotime.Length - 1]).ToString("D3"));
+                string hotime = GetFieldData(OutBlock, string.Concat(EH.hotime, 1)),
+                    time = string.Concat(hotime, collect.GetTime(hotime[hotime.Length - 1]).ToString("D3"));
                 collect.ToCollect(time, collection.Remove(collection.Length - 1, 1));
             }
         }

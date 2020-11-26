@@ -178,7 +178,9 @@ namespace ShareInvest
                                         futures = price;
                                 }
                             foreach (var kv in infoCodes)
-                                if (futures > double.MinValue && kv.Key.StartsWith("2") && double.TryParse(kv.Key.Substring(kv.Key.Length - 3), out double oPrice) && oPrice < futures + 0x14 && oPrice > futures - 0x14 && index++ < 0xF && infoCodes.TryGetValue(string.Concat("3", kv.Key.Substring(1)), out Codes codes))
+                                if (futures > double.MinValue && kv.Key.StartsWith("2") && double.TryParse(kv.Key.Substring(kv.Key.Length - 3), out double oPrice)
+                                    && oPrice < futures + 0x14 && oPrice > futures - 0x14 && index++ < 0xF
+                                    && infoCodes.TryGetValue(string.Concat("3", kv.Key.Substring(1)), out Codes codes))
                                 {
                                     var option = com as XingAPI.ConnectAPI;
                                     option?.StartProgress(kv.Value);
@@ -251,7 +253,8 @@ namespace ShareInvest
                             if (axAPI.Count < 0x3B7 && DateTime.Now.Minute < 0x31)
                             {
                                 retention = await SelectDaysCodeAsync();
-                                axAPI.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate)).Send += OnReceiveSecuritiesAPI;
+                                axAPI.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate))
+                                    .Send += OnReceiveSecuritiesAPI;
                             }
                             else
                             {
@@ -261,7 +264,8 @@ namespace ShareInvest
                             return;
 
                         case Tuple<Catalog.Request.SatisfyConditions, SatisfyConditionsAccordingToTrends> satisfy when com is OpenAPI.ConnectAPI api:
-                            Balance.ToolTipDictionary[satisfy.Item2.Code] = string.Concat("Short_", satisfy.Item2.Short, "\r\nLong_", satisfy.Item2.Long, "\r\nTrend_", satisfy.Item2.Trend, "\r\n☞매도예약\r\n호가단위_", satisfy.Item2.ReservationSellUnit, "틱\r\n예약수량_", satisfy.Item2.ReservationSellQuantity, "주\r\n수익실현_", satisfy.Item2.ReservationSellRate * 0x64, "%\r\n☞매수예약\r\n호가단위_", satisfy.Item2.ReservationBuyUnit, "틱\r\n예약수량_", satisfy.Item2.ReservationBuyQuantity, "주\r\n추가매수_", satisfy.Item2.ReservationBuyRate * 0x64, "%\r\n☞매도\r\n매매간격_", (uint)(satisfy.Item2.TradingSellInterval * 1e-3), "초\r\n매매수량_", satisfy.Item2.TradingSellQuantity, "주\r\n수익실현_", satisfy.Item2.TradingSellRate * 0x64, "%\r\n☞매수\r\n매매간격_", (uint)(satisfy.Item2.TradingBuyInterval * 1e-3), "초\r\n매매수량_", satisfy.Item2.TradingBuyQuantity, "주\r\n추가매수_", satisfy.Item2.TradingBuyRate * 0x64, "%");
+                            Balance.ToolTipDictionary[satisfy.Item2.Code]
+                                = string.Concat("Short_", satisfy.Item2.Short, "\r\nLong_", satisfy.Item2.Long, "\r\nTrend_", satisfy.Item2.Trend, "\r\n☞매도예약\r\n호가단위_", satisfy.Item2.ReservationSellUnit, "틱\r\n예약수량_", satisfy.Item2.ReservationSellQuantity, "주\r\n수익실현_", satisfy.Item2.ReservationSellRate * 0x64, "%\r\n☞매수예약\r\n호가단위_", satisfy.Item2.ReservationBuyUnit, "틱\r\n예약수량_", satisfy.Item2.ReservationBuyQuantity, "주\r\n추가매수_", satisfy.Item2.ReservationBuyRate * 0x64, "%\r\n☞매도\r\n매매간격_", (uint)(satisfy.Item2.TradingSellInterval * 1e-3), "초\r\n매매수량_", satisfy.Item2.TradingSellQuantity, "주\r\n수익실현_", satisfy.Item2.TradingSellRate * 0x64, "%\r\n☞매수\r\n매매간격_", (uint)(satisfy.Item2.TradingBuyInterval * 1e-3), "초\r\n매매수량_", satisfy.Item2.TradingBuyQuantity, "주\r\n추가매수_", satisfy.Item2.TradingBuyRate * 0x64, "%");
 
                             if (WindowState.Equals(FormWindowState.Minimized) == false)
                             {
@@ -289,13 +293,15 @@ namespace ShareInvest
                         case Tuple<byte, byte> tuple:
                             switch (tuple)
                             {
-                                case Tuple<byte, byte> tp when (tp.Item1 == 1 || tp.Item1 == 5 || tp.Item1 == 7 || tp.Item1 == 8) && tp.Item2 == 0x15 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && (tp.Item1 == 0 && tp.Item2 == 8 || tp.Item1 == 3 && tp.Item2 == 9):
+                                case Tuple<byte, byte> tp when (tp.Item1 == 1 || tp.Item1 == 5 || tp.Item1 == 7 || tp.Item1 == 8) && tp.Item2 == 0x15
+                                    && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && (tp.Item1 == 0 && tp.Item2 == 8 || tp.Item1 == 3 && tp.Item2 == 9):
                                     if (WindowState.Equals(FormWindowState.Minimized))
                                         strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
 
                                     return;
 
-                                case Tuple<byte, byte> tp when tp.Item2 == 0x29 && tp.Item1 == 1 && com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI && tp.Item1 == 8 && tp.Item2 == 0x58:
+                                case Tuple<byte, byte> tp when tp.Item2 == 0x29 && tp.Item1 == 1 && com is XingAPI.ConnectAPI
+                                    || com is OpenAPI.ConnectAPI && tp.Item1 == 8 && tp.Item2 == 0x58:
                                     retention = await SelectStocksCodeAsync();
                                     chart = (com as XingAPI.ConnectAPI)?.Stocks;
                                     param = opt10079;
@@ -324,10 +330,8 @@ namespace ShareInvest
                                     param = opt50028;
                                     break;
 
-                                case Tuple<byte, byte> tp when (tp.Item2 == 0x19 || tp.Item2 == 0x29) && (tp.Item1 == 7 || tp.Item1 == 8) && com is XingAPI.ConnectAPI || tp.Item1 == 0x64 && tp.Item2 > 0x10 && com is OpenAPI.ConnectAPI:
-                                    if (com is XingAPI.ConnectAPI x && string.IsNullOrEmpty(x.Access) == false)
-                                        x.SendTransmitCommand();
-
+                                case Tuple<byte, byte> tp when (tp.Item2 == 0x19 || tp.Item2 == 0x29) && (tp.Item1 == 7 || tp.Item1 == 8) && com is XingAPI.ConnectAPI
+                                    || tp.Item1 == 0x64 && tp.Item2 > 0x10 && com is OpenAPI.ConnectAPI:
                                     Dispose(WindowState);
                                     return;
 
@@ -335,7 +339,8 @@ namespace ShareInvest
                                     GetSettleTheFare();
                                     return;
                             }
-                            if (WindowState.Equals(FormWindowState.Minimized) == false && ((tuple.Item1 == 0x65 && tuple.Item2 == 0xF || tuple.Item1 == 5 && tuple.Item2 == 0x29) && Info.Name.Equals("선물옵션") || Info.Name.Equals("위탁종합") && (tuple.Item1 == 8 && tuple.Item2 == 0x58 || tuple.Item1 == 1 && tuple.Item2 == 0x29)))
+                            if (WindowState.Equals(FormWindowState.Minimized) == false && ((tuple.Item1 == 0x65 && tuple.Item2 == 0xF || tuple.Item1 == 5 && tuple.Item2 == 0x29)
+                                && Info.Name.Equals("선물옵션") || Info.Name.Equals("위탁종합") && (tuple.Item1 == 8 && tuple.Item2 == 0x58 || tuple.Item1 == 1 && tuple.Item2 == 0x29)))
                                 WindowState = FormWindowState.Minimized;
 
                             break;
@@ -354,7 +359,8 @@ namespace ShareInvest
                                         os.InputValueRqData(opt10079, charts.Item1).Send -= OnReceiveSecuritiesAPI;
                                         param = opt10079;
                                     }
-                                    retention = await client.PostContext((await SelectStocksCodeAsync()).Code, new Catalog.Convert().ToStoreInStocks(charts.Item1, charts.Item2));
+                                    retention
+                                        = await client.PostContext((await SelectStocksCodeAsync()).Code, new Catalog.Convert().ToStoreInStocks(charts.Item1, charts.Item2));
 
                                     break;
 
@@ -380,7 +386,8 @@ namespace ShareInvest
                                             param = opt50066;
                                             break;
                                     }
-                                    retention = await client.PostContext((await SelectOptionsCodeAsync()).Code, new Catalog.Convert().ToStoreInOptions(charts.Item1, charts.Item2));
+                                    retention
+                                        = await client.PostContext((await SelectOptionsCodeAsync()).Code, new Catalog.Convert().ToStoreInOptions(charts.Item1, charts.Item2));
 
                                     if (com is XingAPI.ConnectAPI && (string.IsNullOrEmpty(retention.Code) || retention.Code.Equals(noMatch)))
                                         return;
@@ -389,7 +396,8 @@ namespace ShareInvest
                                     {
                                         var now = DateTime.Now;
 
-                                        if (random.Next(0, int.MaxValue) == await client.PostContext(await new ConstituentStocks(privacy.Security).GetConstituentStocks(privacy.Account.Equals("S") ? 2 : 1, now)))
+                                        if (random.Next(0, int.MaxValue)
+                                            == await client.PostContext(await new ConstituentStocks(privacy.Security).GetConstituentStocks(privacy.Account.Equals("S") ? 2 : 1, now)))
                                             await new Advertise(privacy.Security).StartAdvertisingInTheDataCollectionSection(now);
 
                                         Dispose(WindowState);
@@ -522,7 +530,12 @@ namespace ShareInvest
                         {
                             case Strategics.TV:
                             case Strategics.SC:
-                                if (stParam.Length == 0x11 && int.TryParse(stParam[2], out int vShort) && int.TryParse(stParam[3], out int vLong) && int.TryParse(stParam[4], out int vTrend) && int.TryParse(stParam[5], out int su) && int.TryParse(stParam[6], out int sq) && double.TryParse(stParam[7], out double vSubtraction) && int.TryParse(stParam[8], out int au) && int.TryParse(stParam[9], out int aq) && double.TryParse(stParam[0xA], out double vAddition) && int.TryParse(stParam[0xB], out int si) && int.TryParse(stParam[0xC], out int tsq) && double.TryParse(stParam[0xD], out double sp) && int.TryParse(stParam[0xE], out int ai) && int.TryParse(stParam[0xF], out int taq) && double.TryParse(stParam[0x10], out double ap))
+                                if (stParam.Length == 0x11 && int.TryParse(stParam[2], out int vShort) && int.TryParse(stParam[3], out int vLong)
+                                    && int.TryParse(stParam[4], out int vTrend) && int.TryParse(stParam[5], out int su) && int.TryParse(stParam[6], out int sq)
+                                    && double.TryParse(stParam[7], out double vSubtraction) && int.TryParse(stParam[8], out int au) && int.TryParse(stParam[9], out int aq)
+                                    && double.TryParse(stParam[0xA], out double vAddition) && int.TryParse(stParam[0xB], out int si)
+                                    && int.TryParse(stParam[0xC], out int tsq) && double.TryParse(stParam[0xD], out double sp) && int.TryParse(stParam[0xE], out int ai)
+                                    && int.TryParse(stParam[0xF], out int taq) && double.TryParse(stParam[0x10], out double ap))
                                 {
                                     if (initial.Equals(Strategics.TV))
                                         catalog[stParam[1]] = new TrendsInValuation
@@ -564,12 +577,17 @@ namespace ShareInvest
                                             TradingBuyQuantity = taq,
                                             TradingBuyRate = ap * 1e-2
                                         };
-                                    Balance.ToolTipDictionary[stParam[1]] = string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n☞매도예약\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n☞매수예약\r\n호가단위_", stParam[8], "틱\r\n예약수량_", stParam[9], "주\r\n추가매수_", stParam[0xA], "%\r\n☞매도\r\n매매간격_", stParam[0xB], "초\r\n매매수량_", stParam[0xC], "주\r\n수익실현_", stParam[0xD], "%\r\n☞매수\r\n매매간격_", stParam[0xE], "초\r\n매매수량_", stParam[0xF], "주\r\n추가매수_", stParam[0x10], "%");
+                                    Balance.ToolTipDictionary[stParam[1]]
+                                        = string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n☞매도예약\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n☞매수예약\r\n호가단위_", stParam[8], "틱\r\n예약수량_", stParam[9], "주\r\n추가매수_", stParam[0xA], "%\r\n☞매도\r\n매매간격_", stParam[0xB], "초\r\n매매수량_", stParam[0xC], "주\r\n수익실현_", stParam[0xD], "%\r\n☞매수\r\n매매간격_", stParam[0xE], "초\r\n매매수량_", stParam[0xF], "주\r\n추가매수_", stParam[0x10], "%");
                                 }
                                 break;
 
                             case Strategics.TC:
-                                if (stParam.Length == 0xD && double.TryParse(stParam[0xC], out double cpAddition) && double.TryParse(stParam[0xB], out double cpRevenue) && int.TryParse(stParam[0xA], out int ctQuantity) && int.TryParse(stParam[9], out int cInterval) && double.TryParse(stParam[8], out double cAddition) && double.TryParse(stParam[7], out double crRevenue) && int.TryParse(stParam[6], out int crQuantity) && int.TryParse(stParam[5], out int cUnit) && int.TryParse(stParam[4], out int cTrend) && int.TryParse(stParam[3], out int cLong) && int.TryParse(stParam[2], out int cShort))
+                                if (stParam.Length == 0xD && double.TryParse(stParam[0xC], out double cpAddition) && double.TryParse(stParam[0xB], out double cpRevenue)
+                                    && int.TryParse(stParam[0xA], out int ctQuantity) && int.TryParse(stParam[9], out int cInterval)
+                                    && double.TryParse(stParam[8], out double cAddition) && double.TryParse(stParam[7], out double crRevenue)
+                                    && int.TryParse(stParam[6], out int crQuantity) && int.TryParse(stParam[5], out int cUnit) && int.TryParse(stParam[4], out int cTrend)
+                                    && int.TryParse(stParam[3], out int cLong) && int.TryParse(stParam[2], out int cShort))
                                 {
                                     code = stParam[1];
                                     catalog[code] = new TrendToCashflow
@@ -587,12 +605,15 @@ namespace ShareInvest
                                         PositionRevenue = cpRevenue * 1e-2,
                                         PositionAddition = cpAddition * 1e-2
                                     };
-                                    Balance.ToolTipDictionary[code] = string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n추가매수_", stParam[8], "%\r\n매매간격_", stParam[9], "초\r\n매매수량_", stParam[10], "주\r\n수익실현_", stParam[11], "%\r\n추가매수_", stParam[12], "%");
+                                    Balance.ToolTipDictionary[code]
+                                        = string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n추가매수_", stParam[8], "%\r\n매매간격_", stParam[9], "초\r\n매매수량_", stParam[10], "주\r\n수익실현_", stParam[11], "%\r\n추가매수_", stParam[12], "%");
                                 }
                                 break;
 
                             case Strategics.TF:
-                                if (int.TryParse(stParam[0].Substring(0xB), out int ds) & int.TryParse(stParam[1], out int dl) & int.TryParse(stParam[2], out int m) & int.TryParse(stParam[3], out int ms) & int.TryParse(stParam[4], out int ml) & int.TryParse(stParam[5], out int rs) & int.TryParse(stParam[6], out int rl) & int.TryParse(stParam[7], out int qs) & int.TryParse(stParam[8], out int ql))
+                                if (int.TryParse(stParam[0].Substring(0xB), out int ds) && int.TryParse(stParam[1], out int dl) && int.TryParse(stParam[2], out int m)
+                                    && int.TryParse(stParam[3], out int ms) && int.TryParse(stParam[4], out int ml) && int.TryParse(stParam[5], out int rs)
+                                    && int.TryParse(stParam[6], out int rl) && int.TryParse(stParam[7], out int qs) && int.TryParse(stParam[8], out int ql))
                                 {
                                     code = strategics.Substring(2, 8);
                                     catalog[strategics.Substring(2, 8)] = new TrendFollowingBasicFutures
@@ -609,12 +630,17 @@ namespace ShareInvest
                                         QuantityShort = qs,
                                         QuantityLong = ql
                                     };
-                                    Balance.ToolTipDictionary[code] = string.Concat("RollOver_", stParam[0].Substring(0xA, 1).Equals("1"), "\r\nDayShort_", ds, "\r\nDayLong_", dl, "\r\nMinute_", m, "\r\nMinuteShort_", ms, "\r\nMinuteLong_", ml, "\r\nShortReaction_", rs, "\r\nLongReaction_", rl, "\r\nShortQuantity_", qs, "\r\nLongQuantity_", ql);
+                                    Balance.ToolTipDictionary[code]
+                                        = string.Concat("RollOver_", stParam[0].Substring(0xA, 1).Equals("1"), "\r\nDayShort_", ds, "\r\nDayLong_", dl, "\r\nMinute_", m, "\r\nMinuteShort_", ms, "\r\nMinuteLong_", ml, "\r\nShortReaction_", rs, "\r\nLongReaction_", rl, "\r\nShortQuantity_", qs, "\r\nLongQuantity_", ql);
                                 }
                                 break;
 
                             case Strategics.TS:
-                                if (char.TryParse(stParam[stParam.Length - 1], out char setting) && char.TryParse(stParam[8], out char tTrend) && char.TryParse(stParam[7], out char longShort) && int.TryParse(stParam[6], out int quoteUnit) && int.TryParse(stParam[5], out int quantity) && double.TryParse(stParam[4].Insert(stParam[4].Length - 2, "."), out double additionalPurchase) && double.TryParse(stParam[3].Insert(stParam[3].Length - 2, "."), out double realizeProfit) && int.TryParse(stParam[2], out int trend) && int.TryParse(stParam[1], out int l) && int.TryParse(stParam[0].Substring(8), out int s))
+                                if (char.TryParse(stParam[stParam.Length - 1], out char setting) && char.TryParse(stParam[8], out char tTrend)
+                                    && char.TryParse(stParam[7], out char longShort) && int.TryParse(stParam[6], out int quoteUnit) && int.TryParse(stParam[5], out int quantity)
+                                    && double.TryParse(stParam[4].Insert(stParam[4].Length - 2, "."), out double additionalPurchase)
+                                    && double.TryParse(stParam[3].Insert(stParam[3].Length - 2, "."), out double realizeProfit)
+                                    && int.TryParse(stParam[2], out int trend) && int.TryParse(stParam[1], out int l) && int.TryParse(stParam[0].Substring(8), out int s))
                                 {
                                     code = strategics.Substring(2, 6);
                                     catalog[strategics.Substring(2, 6)] = new TrendsInStockPrices
@@ -631,7 +657,8 @@ namespace ShareInvest
                                         TrendType = (Trend)tTrend,
                                         Setting = (Setting)setting
                                     };
-                                    Balance.ToolTipDictionary[code] = string.Concat("Short_", s, "\r\nLong_", l, "\r\nTrend_", trend, "\r\nRealize_", (realizeProfit * 0.01).ToString("P2"), "\r\nAddition_", (additionalPurchase * 0.01).ToString("P2"), "\r\nQuantity_", quantity, "\r\nQuoteUnit_", quoteUnit, "\r\nLongShort_", Enum.GetName(typeof(LongShort), longShort), "\r\nTrendType_", Enum.GetName(typeof(Trend), tTrend), "\r\nSetting_", Enum.GetName(typeof(Setting), setting));
+                                    Balance.ToolTipDictionary[code]
+                                        = string.Concat("Short_", s, "\r\nLong_", l, "\r\nTrend_", trend, "\r\nRealize_", (realizeProfit * 0.01).ToString("P2"), "\r\nAddition_", (additionalPurchase * 0.01).ToString("P2"), "\r\nQuantity_", quantity, "\r\nQuoteUnit_", quoteUnit, "\r\nLongShort_", Enum.GetName(typeof(LongShort), longShort), "\r\nTrendType_", Enum.GetName(typeof(Trend), tTrend), "\r\nSetting_", Enum.GetName(typeof(Setting), setting));
                                 }
                                 break;
                         }
@@ -643,12 +670,14 @@ namespace ShareInvest
                     double basePrice = double.MinValue;
 
                     foreach (var code in o.InputValueRqData())
-                        if ((code.Length == 8 && (code.StartsWith("2") || code.StartsWith("3")) && double.TryParse(code.Substring(code.Length - 3), out double oPrice) && (oPrice > basePrice + 0x41 || oPrice < basePrice - 0x41)) == false)
+                        if ((code.Length == 8 && (code.StartsWith("2") || code.StartsWith("3"))
+                            && double.TryParse(code.Substring(code.Length - 3), out double oPrice) && (oPrice > basePrice + 0x41 || oPrice < basePrice - 0x41)) == false)
                         {
                             if (code.Length == 8 && (code.StartsWith("106") || code.StartsWith("105")))
                                 futures.Add(code);
 
-                            else if (code.Length == 8 && code.StartsWith("101") && double.TryParse((await client.GetContext(new Codes { Code = code })).Price, out double price))
+                            else if (code.Length == 8 && code.StartsWith("101")
+                                && double.TryParse((await client.GetContext(new Codes { Code = code })).Price, out double price))
                             {
                                 basePrice = price;
                                 futures.Add(code);
@@ -656,7 +685,8 @@ namespace ShareInvest
                             Stack.Push(code);
                             o.InputValueRqData(string.Concat(instance, code.Length == 8 ? opt50001 : optkwFID), code).Send += OnReceiveSecuritiesAPI;
                         }
-                    if (string.IsNullOrEmpty(privacy.Account) == false && privacy.Account.Equals("S") && await client.GetContext(new Catalog.Request.SatisfyConditions { Security = privacy.Security }) is Catalog.Request.SatisfyConditions condition)
+                    if (string.IsNullOrEmpty(privacy.Account) == false && privacy.Account.Equals("S")
+                        && await client.GetContext(new Catalog.Request.SatisfyConditions { Security = privacy.Security }) is Catalog.Request.SatisfyConditions condition)
                     {
                         var strategics = new Dictionary<string, Tuple<int, double, double, double, double, double, double>>();
                         var stack = new Stack<Catalog.Request.Consensus>();
@@ -665,10 +695,12 @@ namespace ShareInvest
                             foreach (var context in await client.GetContext(new Catalog.Request.Consensus { Strategics = string.Concat("TC.", this.strategics[i]) }))
                             {
                                 if (strategics.TryGetValue(context.Code, out Tuple<int, double, double, double, double, double, double> tuple))
-                                    strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(tuple.Item1 + 1, tuple.Item2 + context.FirstQuarter, tuple.Item3 + context.SecondQuarter, tuple.Item4 + context.ThirdQuarter, tuple.Item5 + context.Quarter, tuple.Item6 + context.TheNextYear, tuple.Item7 + context.TheYearAfterNext);
+                                    strategics[context.Code]
+                                        = new Tuple<int, double, double, double, double, double, double>(tuple.Item1 + 1, tuple.Item2 + context.FirstQuarter, tuple.Item3 + context.SecondQuarter, tuple.Item4 + context.ThirdQuarter, tuple.Item5 + context.Quarter, tuple.Item6 + context.TheNextYear, tuple.Item7 + context.TheYearAfterNext);
 
                                 else
-                                    strategics[context.Code] = new Tuple<int, double, double, double, double, double, double>(1, context.FirstQuarter, context.SecondQuarter, context.ThirdQuarter, context.Quarter, context.TheNextYear, context.TheYearAfterNext);
+                                    strategics[context.Code]
+                                        = new Tuple<int, double, double, double, double, double, double>(1, context.FirstQuarter, context.SecondQuarter, context.ThirdQuarter, context.Quarter, context.TheNextYear, context.TheYearAfterNext);
                             }
                         foreach (var kv in strategics.OrderByDescending(order => order.Key))
                             if (string.IsNullOrEmpty(kv.Key) == false && kv.Key.Length == 6)
@@ -712,7 +744,8 @@ namespace ShareInvest
                 if (connect.Strategics.Add(kv.Value) && connect?.SetStrategics(kv.Value) > 0 && com is XingAPI.ConnectAPI xing)
                     RegisterRealTimeReceivingCode(xing?.Reals, kv.Key);
 
-            if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8 && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1FAC7U : (uint)(catalog.Count * 0x4BAF)).Equals(DialogResult.OK))
+            if (com is OpenAPI.ConnectAPI api && DateTime.Now.Hour == 8
+                && TimerBox.Show(info, si, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1, string.IsNullOrEmpty(privacy.CodeStrategics) ? 0x1FAC7U : (uint)(catalog.Count * 0x4BAF)).Equals(DialogResult.OK))
             {
                 Stocks = new Stack<string>(GetRevisedStockPrices(stocks));
                 var retention = await SelectDaysCodeAsync();
@@ -843,14 +876,15 @@ namespace ShareInvest
             else if (Controls.Contains((Control)com) == false && WindowState.Equals(FormWindowState.Minimized))
                 strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
 
-            else if (Visible && ShowIcon && notifyIcon.Visible == false && FormBorderStyle.Equals(FormBorderStyle.None) && WindowState.Equals(FormWindowState.Normal) && (com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI))
+            else if (Visible && ShowIcon && notifyIcon.Visible == false && FormBorderStyle.Equals(FormBorderStyle.None)
+                && WindowState.Equals(FormWindowState.Normal) && (com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI))
             {
                 DateTime now = DateTime.Now, today = DateTime.Now;
 
                 switch (now.DayOfWeek)
                 {
                     case DayOfWeek.Sunday:
-                        if (now.Hour < 3 && now.Minute > 15 && privacy.Security.Equals(admin) == false)
+                        if (now.Hour < 3 && now.Minute > 0xF && privacy.Security.Equals(admin) == false)
                         {
                             foreach (var process in Process.GetProcessesByName(program, Dns.GetHostName()))
                                 process.Kill();
@@ -875,10 +909,15 @@ namespace ShareInvest
                         now = now.Hour > 8 || Array.Exists(holidays, o => o.Equals(now.ToString(dFormat))) ? now.AddDays(1) : now;
                         break;
                 }
-                var remain = new DateTime(now.Year, now.Month, now.Day, 9, 0, 0) - DateTime.Now;
+                var remain = new DateTime(now.Year, now.Month, now.Day, Array.Exists(sat, o => o.Equals(now.ToString(dFormat))) ? 0xA : 9, 0, 0) - DateTime.Now;
                 com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
 
-                if (com.Start == false && (remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E || Array.Exists(holidays, o => o.Equals(today.ToString(dFormat))) == false && today.DayOfWeek.Equals(DayOfWeek.Sunday) == false && today.DayOfWeek.Equals(DayOfWeek.Saturday) == false && now.Hour == 0x11 && now.Minute > 0x31 && com is XingAPI.ConnectAPI && char.TryParse(privacy.SecuritiesAPI, out char api) && ((char)SecuritiesCOM.XingAPI).Equals(api) && char.TryParse(privacy.Account, out char account) && ((char)Strategics.TF).Equals(account)) && (Connect > 0x4A9 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B2))))
+                if (com.Start == false && (remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E
+                    || Array.Exists(holidays, o => o.Equals(today.ToString(dFormat))) == false && today.DayOfWeek.Equals(DayOfWeek.Sunday) == false
+                    && today.DayOfWeek.Equals(DayOfWeek.Saturday) == false && now.Hour == 0x11 && now.Minute > 0x31 && com is XingAPI.ConnectAPI
+                    && char.TryParse(privacy.SecuritiesAPI, out char api) && ((char)SecuritiesCOM.XingAPI).Equals(api) && char.TryParse(privacy.Account, out char account)
+                    && ((char)Strategics.TF).Equals(account))
+                    && (Connect > 0x4A9 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(Connect++, 0x4B2))))
                     com.StartProgress();
             }
             else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
@@ -889,7 +928,7 @@ namespace ShareInvest
                     notifyIcon.Text = UserName;
             }
         }
-        void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(async () =>
+        void OnItemClick(object sender, ToolStripItemClickedEventArgs e) => BeginInvoke(new Action(() =>
         {
             if (e.ClickedItem.Name.Equals(st))
             {
@@ -911,31 +950,8 @@ namespace ShareInvest
                             ctor.WaitOrder = true;
                         }
                         if (Connect == int.MaxValue)
-                        {
                             foreach (var convert in xingAPI.ConvertTheCodeToName)
                                 convert.Send -= OnReceiveSecuritiesAPI;
-
-                            if (xingAPI.ConvertTheCodeToName.Length == 1 && infoCodes.Count > 0)
-                                foreach (var ce in infoCodes)
-                                {
-                                    var collect = xingAPI.SetToCollect(ce.Key);
-
-                                    if (collect != null)
-                                    {
-                                        if (xingAPI.Strategics.Any(o => o.Code.Equals(ce.Key)) == false)
-                                            RegisterRealTimeReceivingCode(xingAPI.Reals, ce.Key);
-
-                                        collect.Send += OnReceiveSecuritiesAPI;
-                                    }
-                                }
-                            if (string.IsNullOrEmpty(xingAPI.Access) == false)
-                            {
-                                Collection = new Collect(xingAPI.Access);
-
-                                if (await Collection.GetContextAsync(new Catalog.Request.Collect()) is string str)
-                                    SendMessage(str);
-                            }
-                        }
                     }
                     else if (com is OpenAPI.ConnectAPI openAPI)
                     {
@@ -957,23 +973,11 @@ namespace ShareInvest
                             ctor.WaitOrder = true;
                         }
                         if (Connect == int.MaxValue)
-                        {
                             while (Stack.Count > 0)
                             {
                                 var pop = Stack.Pop();
                                 openAPI.InputValueRqData(pop.Length == 8 ? opt50001 : optkwFID, pop).Send -= OnReceiveSecuritiesAPI;
-
-                                foreach (var ctor in openAPI.SetToCollect(pop))
-                                    ctor.Send += OnReceiveSecuritiesAPI;
                             }
-                            if (string.IsNullOrEmpty(openAPI.Access) == false)
-                            {
-                                Collection = new Collect(openAPI.Access);
-
-                                if (await Collection.GetContextAsync(new Catalog.Request.Collect()) is string str)
-                                    SendMessage(str);
-                            }
-                        }
                     }
                     Connect = int.MinValue;
                     Size = new Size(0x3B8, 0x63 + 0x28);
@@ -1037,9 +1041,6 @@ namespace ShareInvest
                 while (futures.Count > 0 && string.IsNullOrEmpty(code))
                     code = futures[random.Next(0, futures.Count)];
 
-                if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(code) == false)
-                    api.SendTransmitCommand(code);
-
                 return code;
             }
         }
@@ -1049,12 +1050,9 @@ namespace ShareInvest
             {
                 var retention = await client.GetContext(options[random.Next(0, options.Count)]);
 
-                if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(retention.Code) == false)
-                    api.SendTransmitCommand(retention.Code);
-
                 if (options.Remove(retention.Code))
                 {
-                    if (string.IsNullOrEmpty(retention.LastDate) == false && retention.LastDate.Substring(0, 6).Equals(DateTime.Now.ToString("yyMMdd")))
+                    if (string.IsNullOrEmpty(retention.LastDate) == false && retention.LastDate.Substring(0, 6).Equals(DateTime.Now.ToString(dFormat)))
                         return await SelectOptionsCodeAsync();
 
                     else if (string.IsNullOrEmpty(retention.Code) == false && retention.LastDate == null)
@@ -1079,12 +1077,9 @@ namespace ShareInvest
                 var retention = await client.GetContext(stocks[random.Next(0, stocks.Count)]);
                 var now = DateTime.Now;
 
-                if (com is OpenAPI.ConnectAPI api && string.IsNullOrEmpty(retention.Code) == false)
-                    api.SendTransmitCommand(retention.Code);
-
                 if (stocks.Remove(retention.Code))
                 {
-                    if (string.IsNullOrEmpty(retention.LastDate) == false && retention.LastDate.Substring(0, 6).Equals(now.ToString("yyMMdd")))
+                    if (string.IsNullOrEmpty(retention.LastDate) == false && retention.LastDate.Substring(0, 6).Equals(now.ToString(dFormat)))
                         return await SelectStocksCodeAsync();
 
                     else if ((await client.GetContext(new Codes { Code = retention.Code })).MaturityMarketCap.Contains("거래정지"))
@@ -1123,7 +1118,8 @@ namespace ShareInvest
                                     SendMessage(status);
                                 }
                             }
-                            else if (await client.GetContext(new Catalog.Request.IncorporatedStocks { Market = 'P' }) is int next && random.Next(0, await client.PostContext(new IncorporatedStocks(privacy.Security).OnReceiveSequentially(next))) == 0)
+                            else if (await client.GetContext(new Catalog.Request.IncorporatedStocks { Market = 'P' }) is int next
+                                && random.Next(0, await client.PostContext(new IncorporatedStocks(privacy.Security).OnReceiveSequentially(next))) == 0)
                                 await new Advertise(privacy.Security).StartAdvertisingInTheDataCollectionSection(now);
                         }
                         catch (Exception ex)
@@ -1175,9 +1171,6 @@ namespace ShareInvest
             switch (com)
             {
                 case OpenAPI.ConnectAPI o:
-                    if (string.IsNullOrEmpty(o.Access) == false)
-                        o.SendTransmitCommand();
-
                     o.ConnectChapterOperation.Send -= OnReceiveSecuritiesAPI;
                     break;
 
@@ -1225,7 +1218,8 @@ namespace ShareInvest
             else if (result.Equals(DialogResult.Cancel))
             {
                 var retention = await SelectDaysCodeAsync();
-                ((com as OpenAPI.ConnectAPI)?.InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate))).Send += OnReceiveSecuritiesAPI;
+                ((com as OpenAPI.ConnectAPI)?
+                    .InputValueRqData(string.Concat(instance, opt10081), string.Concat(retention.Code, ';', retention.LastDate))).Send += OnReceiveSecuritiesAPI;
             }
         }));
         Balance Balance

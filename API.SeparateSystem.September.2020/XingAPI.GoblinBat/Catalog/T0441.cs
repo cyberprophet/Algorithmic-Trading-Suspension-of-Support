@@ -36,9 +36,11 @@ namespace ShareInvest.XingAPI.Catalog
                 if (sb != null)
                 {
                     var param = sb.ToString().Split(';');
-                    var sAPI = new SendSecuritiesAPI(new string[] { param[0], param[0], param[6], string.Empty, param[2], param[4], param[9], string.Empty, param[11], param[12] });
+                    var sAPI
+                        = new SendSecuritiesAPI(new string[] { param[0], param[0], param[6], string.Empty, param[2], param[4], param[9], string.Empty, param[11], param[12] });
 
-                    if (sAPI.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs))
+                    if (sAPI.Convey is Tuple<string, string, int, dynamic, dynamic, long, double> balance
+                        && Connect.HoldingStock.TryGetValue(balance.Item1, out Holding hs))
                     {
                         hs.Quantity = balance.Item3;
                         hs.Purchase = (double)balance.Item4;

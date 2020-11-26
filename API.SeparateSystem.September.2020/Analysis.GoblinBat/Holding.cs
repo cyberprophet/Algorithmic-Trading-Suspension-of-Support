@@ -16,7 +16,8 @@ namespace ShareInvest.Analysis
         }
         IEnumerable<Queue<Charts>> FindTheOldestDueDate(string code)
         {
-            if (code.Length == 8 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.Length == 8 && o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))))
+            if (code.Length == 8 && Temporary.CodeStorage != null
+                && Temporary.CodeStorage.Any(o => o.Code.Length == 8 && o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))))
             {
                 var stack = new Stack<Codes>();
 
@@ -25,12 +26,14 @@ namespace ShareInvest.Analysis
                     MarginRate = Temporary.CodeStorage.First(o => o.Code.Equals(code)).MarginRate;
                     TransactionMultiplier = GetTransactionMultiplier(code);
                 }
-                foreach (var arg in Temporary.CodeStorage.Where(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5))).OrderByDescending(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap))
+                foreach (var arg in Temporary.CodeStorage.Where(o => o.Code.StartsWith(code.Substring(0, 3)) && o.Code.EndsWith(code.Substring(5)))
+                    .OrderByDescending(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap.Substring(2) : o.MaturityMarketCap))
                 {
                     stack.Push(arg);
                     Days = new Queue<Charts>();
 
-                    if (uint.TryParse(arg.MaturityMarketCap.Length == 8 ? arg.MaturityMarketCap.Substring(2) : arg.MaturityMarketCap, out uint remain) && Temporary.RemainingDay.Add(remain - 1))
+                    if (uint.TryParse(arg.MaturityMarketCap.Length == 8 ? arg.MaturityMarketCap.Substring(2) : arg.MaturityMarketCap, out uint remain)
+                        && Temporary.RemainingDay.Add(remain - 1))
                         Console.WriteLine(code + "_" + Temporary.RemainingDay.Count + "_" + (remain - 1));
                 }
                 foreach (var day in Temporary.CallUpTheChartAsync(code).Result)
@@ -57,7 +60,8 @@ namespace ShareInvest.Analysis
             else if (code.Length == 6 && Temporary.CodeStorage != null && Temporary.CodeStorage.Any(o => o.Code.Equals(code)))
             {
                 Market = Temporary.CodeStorage.First(o => o.Code.Equals(code)).MarginRate == 1;
-                string sDate = Temporary.FindTheChartStartsAsync(code).Result, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(format) : sDate.Substring(0, 6);
+                string sDate = Temporary.FindTheChartStartsAsync(code).Result,
+                    date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(format) : sDate.Substring(0, 6);
                 Days = new Queue<Charts>();
 
                 foreach (var day in Temporary.CallUpTheChartAsync(code).Result)
@@ -71,7 +75,9 @@ namespace ShareInvest.Analysis
 
                     while (string.IsNullOrEmpty(end) || string.Compare(end, DateTime.Now.ToString(format)) <= 0)
                     {
-                        if (string.IsNullOrEmpty(end) == false && end.Substring(2).CompareTo(excluding.Substring(2)) > 0 && end.Substring(2).CompareTo(theDate.Substring(2)) < 0)
+                        if (string.IsNullOrEmpty(end) == false
+                            && end.Substring(2).CompareTo(excluding.Substring(2)) > 0
+                            && end.Substring(2).CompareTo(theDate.Substring(2)) < 0)
                             for (int i = 0; i < 0x1C; i++)
                                 count++;
 

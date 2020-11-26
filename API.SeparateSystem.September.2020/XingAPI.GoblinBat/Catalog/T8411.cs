@@ -128,7 +128,8 @@ namespace ShareInvest.XingAPI.Catalog
                     Send?.Invoke(this, new SendSecuritiesAPI(code, Charts));
             }).Start();
         }
-        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+            => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
         HashSet<InBlock> InBlock
         {
             get; set;

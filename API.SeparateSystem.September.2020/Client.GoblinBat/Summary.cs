@@ -21,7 +21,8 @@ namespace ShareInvest.Client
                 var queue = new Queue<Catalog.Request.FinancialStatement>();
                 int count = 0, index;
 
-                foreach (var str in driver.PageSource.Split(security.Summary, StringSplitOptions.RemoveEmptyEntries)[1].Split(security.T1, StringSplitOptions.RemoveEmptyEntries))
+                foreach (var str in driver.PageSource.Split(security.Summary, StringSplitOptions.RemoveEmptyEntries)[1]
+                    .Split(security.T1, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var param = str.Replace("\t", string.Empty).Replace("\r\n", string.Empty).Replace(security.Replace[0], string.Empty);
                     var empty = false;
@@ -32,7 +33,9 @@ namespace ShareInvest.Client
                         {
                             var array = num.ToCharArray();
 
-                            if (index < 0xA && (string.IsNullOrEmpty(num) || num.StartsWith("-") && char.IsDigit(array[1]) || char.IsDigit(array[0]) || char.IsLetter(array[0])) && (string.IsNullOrEmpty(num) == false || empty))
+                            if (index < 0xA
+                                && (string.IsNullOrEmpty(num) || num.StartsWith("-") && char.IsDigit(array[1]) || char.IsDigit(array[0]) || char.IsLetter(array[0]))
+                                && (string.IsNullOrEmpty(num) == false || empty))
                             {
                                 param = num.Replace(security.Replace[2], string.Empty);
 

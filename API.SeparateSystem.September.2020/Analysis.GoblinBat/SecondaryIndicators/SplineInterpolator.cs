@@ -14,7 +14,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
                     double deltaX = (double)k / resolution * H[i];
                     int interpolatedIndex = i * resolution + k;
                     InterpolatedXs[interpolatedIndex] = deltaX + GivenXs[i];
-                    InterpolatedYs[interpolatedIndex] = A[i] + (B[i] * deltaX) + (C[i] * deltaX * deltaX) + (D[i] * deltaX * deltaX * deltaX);
+                    InterpolatedYs[interpolatedIndex]
+                        = A[i] + (B[i] * deltaX) + (C[i] * deltaX * deltaX) + (D[i] * deltaX * deltaX * deltaX);
                 }
             int pointsToKeep = resolution * (n - 1) + 1;
             double[] interpolatedXsCopy = new double[pointsToKeep];
@@ -33,7 +34,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
             double integral = 0;
 
             for (int i = 0; i < H.Length; i++)
-                integral += (A[i] * H[i]) + (B[i] * Math.Pow(H[i], 2) / 2D) + (C[i] * Math.Pow(H[i], 3) / 3D) + (D[i] * Math.Pow(H[i], 4) / 4D);
+                integral
+                    += (A[i] * H[i]) + (B[i] * Math.Pow(H[i], 2) / 2D) + (C[i] * Math.Pow(H[i], 3) / 3D) + (D[i] * Math.Pow(H[i], 4) / 4D);
 
             return this;
         }

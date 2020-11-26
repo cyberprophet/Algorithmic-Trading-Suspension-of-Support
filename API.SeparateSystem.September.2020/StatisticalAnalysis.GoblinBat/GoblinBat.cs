@@ -33,7 +33,8 @@ namespace ShareInvest.Strategics
             switch (param.Code.Length)
             {
                 case int length when length == 6 && int.TryParse(param.Price, out int price) && param.MaturityMarketCap.StartsWith("증거금"):
-                    return (param.MarginRate == 1 || param.MarginRate == 2) && price > 0 && (param.MaturityMarketCap.Contains("거래정지") || string.IsNullOrEmpty(param.Price)) == false;
+                    return (param.MarginRate == 1 || param.MarginRate == 2) && price > 0
+                        && (param.MaturityMarketCap.Contains("거래정지") || string.IsNullOrEmpty(param.Price)) == false;
 
                 default:
                     return false;
@@ -107,12 +108,13 @@ namespace ShareInvest.Strategics
                                     case Catalog.ScenarioAccordingToTrend st:
                                         var consensus = client.GetContext(new Catalog.ConvertConsensus { Code = w.Code }).Result;
 
-                                        if (consensus != null && consensus.Any(o => o.Date.EndsWith("(E)") && o.Date.StartsWith(now.AddYears(2).ToString("yy"))) && client.PostContext(new ConfirmStrategics
-                                        {
-                                            Code = w.Code,
-                                            Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
-                                            Strategics = string.Concat("ST.", st.Calendar, '.', st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', (uint)(st.Sales * 0x64), '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', (uint)(st.OperatingProfit * 0x64), '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', (uint)(st.NetIncome * 0x64))
-                                        }).Result == false)
+                                        if (consensus != null && consensus.Any(o => o.Date.EndsWith("(E)") && o.Date.StartsWith(now.AddYears(2).ToString("yy")))
+                                            && client.PostContext(new ConfirmStrategics
+                                            {
+                                                Code = w.Code,
+                                                Date = now.Hour > 0xF ? now.ToString(format) : now.AddDays(-1).ToString(format),
+                                                Strategics = string.Concat("ST.", st.Calendar, '.', st.Trend, '.', st.CheckSales.ToString().Substring(0, 1), '.', (uint)(st.Sales * 0x64), '.', st.CheckOperatingProfit.ToString().Substring(0, 1), '.', (uint)(st.OperatingProfit * 0x64), '.', st.CheckNetIncome.ToString().Substring(0, 1), '.', (uint)(st.NetIncome * 0x64))
+                                            }).Result == false)
                                         {
                                             st.Code = w.Code;
                                             hs = new HoldingStocks(st, new Catalog.ConvertConsensus().PresumeToConsensus(consensus), client)
@@ -324,7 +326,8 @@ namespace ShareInvest.Strategics
                             Size = new Size(0x2B9, height);
                             return;
 
-                        case Tuple<int, Catalog.Privacies> tuple when tuple.Item2 is Catalog.Privacies privacy && (string.IsNullOrEmpty(privacy.Account) || string.IsNullOrEmpty(privacy.SecuritiesAPI) || string.IsNullOrEmpty(privacy.SecurityAPI)) == false:
+                        case Tuple<int, Catalog.Privacies> tuple when tuple.Item2 is Catalog.Privacies privacy
+                            && (string.IsNullOrEmpty(privacy.Account) || string.IsNullOrEmpty(privacy.SecuritiesAPI) || string.IsNullOrEmpty(privacy.SecurityAPI)) == false:
                             if (tuple.Item1 == 0)
                                 backgroundWorker.RunWorkerAsync();
 
@@ -483,7 +486,8 @@ namespace ShareInvest.Strategics
         {
             GetSettleTheFare();
 
-            if (MessageBox.Show(notifyIcon.Text.Equals(text) ? nExit : rExit, notifyIcon.Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning).Equals(DialogResult.Cancel))
+            if (MessageBox.Show(notifyIcon.Text.Equals(text) ? nExit : rExit, notifyIcon.Text, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning)
+                .Equals(DialogResult.Cancel))
             {
                 e.Cancel = true;
                 WindowState = FormWindowState.Minimized;
@@ -502,7 +506,9 @@ namespace ShareInvest.Strategics
                 FormBorderStyle = FormBorderStyle.FixedSingle;
                 WindowState = FormWindowState.Minimized;
             }
-            else if (DateTime.Now.Hour < 3 && backgroundWorker.IsBusy == false && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday) && (cookie as string).Equals(admin) == false)
+            else if (DateTime.Now.Hour < 3 && backgroundWorker.IsBusy == false
+                && DateTime.Now.DayOfWeek.Equals(DayOfWeek.Sunday)
+                && (cookie as string).Equals(admin) == false)
             {
                 timer.Stop();
                 strip.ItemClicked -= OnItemClick;
@@ -514,7 +520,8 @@ namespace ShareInvest.Strategics
                 notifyIcon.Icon = (Icon)resources.GetObject(Change ? upload : download);
                 Change = !Change;
 
-                if (IsApplicationAlreadyRunning(Privacy.Security) == false && backgroundWorker.IsBusy == false && string.IsNullOrEmpty(Privacy.Account) && string.IsNullOrEmpty(Privacy.SecuritiesAPI) && string.IsNullOrEmpty(Privacy.SecurityAPI))
+                if (IsApplicationAlreadyRunning(Privacy.Security) == false && backgroundWorker.IsBusy == false
+                    && string.IsNullOrEmpty(Privacy.Account) && string.IsNullOrEmpty(Privacy.SecuritiesAPI) && string.IsNullOrEmpty(Privacy.SecurityAPI))
                     strip.Items.Find(st, false).First(o => o.Name.Equals(st)).PerformClick();
             }
             else
@@ -530,13 +537,15 @@ namespace ShareInvest.Strategics
                     Controls.Add(Statistical);
                     Statistical.Dock = DockStyle.Fill;
                 }
-                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0 && await client.GetContext<Catalog.Privacies>(Privacy) is Catalog.Privacies privacy && privacy.Coin > 0)
+                if (Statistical.Controls.Find("tab", true).First().Controls.Count == 0
+                    && await client.GetContext<Catalog.Privacies>(Privacy) is Catalog.Privacies privacy && privacy.Coin > 0)
                 {
                     Privacy = privacy;
                     Text = await Statistical.SetPrivacy(privacy);
                     notifyIcon.Text = ConvertTheFare(privacy.Coin);
 
-                    if (backgroundWorker.IsBusy == false && string.IsNullOrEmpty(Privacy.Account) == false && string.IsNullOrEmpty(Privacy.SecuritiesAPI) == false && string.IsNullOrEmpty(Privacy.SecurityAPI) == false)
+                    if (backgroundWorker.IsBusy == false && string.IsNullOrEmpty(Privacy.Account) == false
+                        && string.IsNullOrEmpty(Privacy.SecuritiesAPI) == false && string.IsNullOrEmpty(Privacy.SecurityAPI) == false)
                     {
                         backgroundWorker.RunWorkerAsync();
                         Statistical.SetProgressRate();

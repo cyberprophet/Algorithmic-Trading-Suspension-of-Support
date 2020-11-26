@@ -24,7 +24,7 @@ namespace ShareInvest.OpenAPI.Catalog
                 switch (param[0])
                 {
                     case "0":
-                        if (param[1].Equals(reservation))
+                        if (Reservation.Equals(param[1]))
                         {
                             arg = (int)Operation.장시작전;
                             Delay.Milliseconds = 0xE7;
@@ -57,7 +57,7 @@ namespace ShareInvest.OpenAPI.Catalog
                         break;
 
                     case "2":
-                        if (param[1].Equals(quote))
+                        if (Quote.Equals(param[1]))
                         {
                             int bPrice, sPrice, quantity, price, upper, lower;
                             bool stock;
@@ -223,6 +223,9 @@ namespace ShareInvest.OpenAPI.Catalog
         {
             get; set;
         }
+        bool SAT => Array.Exists(Connect.SAT, o => o.Equals(DateTime.Now.ToString("yyMMdd")));
+        string Reservation => SAT ? "095500" : reservation;
+        string Quote => SAT ? "162000" : quote;
         const string market = "거래소";
         const string info = "GetMasterStockInfo";
         const string reservation = "085500";

@@ -18,7 +18,8 @@ namespace ShareInvest.Analysis.SecondaryIndicators
 
             for (int i = 0; i < ys.Length; i++)
             {
-                double thisY = ys[i], distanceFromMeanSquared = Math.Pow(thisY - meanY, 2), modelY = slope * xs[i] + offset, distanceFromModelSquared = Math.Pow(thisY - modelY, 2);
+                double thisY = ys[i], distanceFromMeanSquared = Math.Pow(thisY - meanY, 2),
+                    modelY = slope * xs[i] + offset, distanceFromModelSquared = Math.Pow(thisY - modelY, 2);
                 ssTot += distanceFromMeanSquared;
                 ssRes += distanceFromModelSquared;
             }

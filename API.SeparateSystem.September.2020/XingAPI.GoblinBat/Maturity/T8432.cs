@@ -50,7 +50,8 @@ namespace ShareInvest.XingAPI.Maturity
             }
             Send?.Invoke(this, new SendSecuritiesAPI(new StringBuilder(code[0]).Append(';').Append(code[1])));
         }
-        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+            => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
         public void QueryExcute()
         {
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))

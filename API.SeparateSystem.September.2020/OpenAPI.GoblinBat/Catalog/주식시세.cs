@@ -16,7 +16,9 @@ namespace ShareInvest.OpenAPI.Catalog
             {
                 var param = base.OnReceiveRealData(e, fid);
 
-                if (int.TryParse(param[3].StartsWith("-") ? param[3].Substring(1) : param[3], out int offer) && int.TryParse(param[4].StartsWith("-") ? param[4].Substring(1) : param[4], out int bid) && int.TryParse(param[0].StartsWith("-") ? param[0].Substring(1) : param[0], out int current))
+                if (int.TryParse(param[3][0] == '-' ? param[3].Substring(1) : param[3], out int offer)
+                    && int.TryParse(param[4][0] == '-' ? param[4].Substring(1) : param[4], out int bid)
+                    && int.TryParse(param[0][0] == '-' ? param[0].Substring(1) : param[0], out int current))
                 {
                     hs.Current = current;
                     hs.Offer = offer;

@@ -30,8 +30,13 @@ namespace ShareInvest.Client
         {
             get; private set;
         }
-        public async Task<int> EmergencyContext<T>(Codes param) => (int)(await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT).AddJsonBody(param, security.ContentType), source.Token)).StatusCode;
-        public async Task<Retention> EmergencyContext<T>(Queue<T> param) where T : struct => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token)).Content);
+        public async Task<int> EmergencyContext<T>(Codes param)
+            => (int)(await client.ExecuteAsync<T>(new RestRequest(string.Concat(security.CoreAPI, param.GetType().Name, "/", param.Code), Method.PUT)
+                .AddJsonBody(param, security.ContentType), source.Token)).StatusCode;
+        public async Task<Retention> EmergencyContext<T>(Queue<T> param) where T : struct
+            => JsonConvert.DeserializeObject<Retention>((await client.ExecuteAsync(new RestRequest(string.Concat(security.CoreAPI, param.GetType().GetGenericArguments()[0].Name), Method.POST)
+                .AddHeader(security.ContentType, security.Json)
+                .AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token)).Content);
         public async Task<Dictionary<string, int>> GetContextAsync()
         {
             try
@@ -515,7 +520,10 @@ namespace ShareInvest.Client
                         {
                             var param = content.Values().ToArray();
 
-                            if (double.TryParse(param[7].ToString(), out double net) && double.TryParse(param[5].ToString(), out double profit) && int.TryParse(param[3].ToString(), out int sales) && int.TryParse(param[1].ToString(), out int sTrend))
+                            if (double.TryParse(param[7].ToString(), out double net)
+                                && double.TryParse(param[5].ToString(), out double profit)
+                                && int.TryParse(param[3].ToString(), out int sales)
+                                && int.TryParse(param[1].ToString(), out int sTrend))
                                 stack.Push(new ScenarioAccordingToTrend
                                 {
                                     Code = string.Empty,
@@ -541,7 +549,15 @@ namespace ShareInvest.Client
                         {
                             var param = content.Values().ToArray();
 
-                            if (int.TryParse(param[5].ToString(), out int unit) && double.TryParse(param[4].ToString(), out double purchase) && double.TryParse(param[3].ToString(), out double profit) && int.TryParse(param[2].ToString(), out int trend) && int.TryParse(param[1].ToString(), out int jLong) && int.TryParse(param[0].ToString(), out int jShort) && char.TryParse(param[8].ToString(), out char setting) && char.TryParse(param[6].ToString(), out char ls) && char.TryParse(param[7].ToString(), out char type))
+                            if (int.TryParse(param[5].ToString(), out int unit)
+                                && double.TryParse(param[4].ToString(), out double purchase)
+                                && double.TryParse(param[3].ToString(), out double profit)
+                                && int.TryParse(param[2].ToString(), out int trend)
+                                && int.TryParse(param[1].ToString(), out int jLong)
+                                && int.TryParse(param[0].ToString(), out int jShort)
+                                && char.TryParse(param[8].ToString(), out char setting)
+                                && char.TryParse(param[6].ToString(), out char ls)
+                                && char.TryParse(param[7].ToString(), out char type))
                                 stack.Push(new TrendsInStockPrices
                                 {
                                     Code = string.Empty,
@@ -598,7 +614,8 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestConditions(conditions.GetType().Name), Method.POST).AddJsonBody(conditions, security.ContentType), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestConditions(conditions.GetType().Name), Method.POST)
+                    .AddJsonBody(conditions, security.ContentType), source.Token);
 
                 if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -619,7 +636,9 @@ namespace ShareInvest.Client
 
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestIncorporatedStocks(stocks.Peek()), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(stocks), ParameterType.RequestBody), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestIncorporatedStocks(stocks.Peek()), Method.POST)
+                    .AddHeader(security.ContentType, security.Json)
+                    .AddParameter(security.Json, JsonConvert.SerializeObject(stocks), ParameterType.RequestBody), source.Token);
 
                 if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -638,7 +657,9 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestConfirm(confirm), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(confirm), ParameterType.RequestBody), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestConfirm(confirm), Method.POST)
+                    .AddHeader(security.ContentType, security.Json)
+                    .AddParameter(security.Json, JsonConvert.SerializeObject(confirm), ParameterType.RequestBody), source.Token);
 
                 if (response != null && (int)response.StatusCode == 0xC8 && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -659,7 +680,9 @@ namespace ShareInvest.Client
 
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestCode(), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestCode(), Method.POST)
+                    .AddHeader(security.ContentType, security.Json)
+                    .AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -678,7 +701,9 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().GetGenericArguments()[0].Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().GetGenericArguments()[0].Name), Method.POST)
+                    .AddHeader(security.ContentType, security.Json)
+                    .AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -694,7 +719,8 @@ namespace ShareInvest.Client
         }
         public async Task<Tuple<int, double>> PostContext<T>(IParameters param)
         {
-            var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
+            var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.POST)
+                .AddJsonBody(param, security.ContentType), source.Token);
 
             try
             {
@@ -736,7 +762,9 @@ namespace ShareInvest.Client
                     default:
                         return int.MinValue;
                 }
-                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().GetGenericArguments()[0].Name.Substring(index)), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().GetGenericArguments()[0].Name.Substring(index)), Method.POST)
+                    .AddHeader(security.ContentType, security.Json)
+                    .AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -757,7 +785,8 @@ namespace ShareInvest.Client
 
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.POST).AddJsonBody(param, security.ContentType), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.POST)
+                    .AddJsonBody(param, security.ContentType), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -778,7 +807,9 @@ namespace ShareInvest.Client
 
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.POST).AddHeader(security.ContentType, security.Json).AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.Request(param.GetType().Name), Method.POST)
+                    .AddHeader(security.ContentType, security.Json)
+                    .AddParameter(security.Json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -797,7 +828,8 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestConsensus(consensus), Method.PUT).AddJsonBody(consensus, security.ContentType), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestConsensus(consensus), Method.PUT)
+                    .AddJsonBody(consensus, security.ContentType), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -816,7 +848,8 @@ namespace ShareInvest.Client
         {
             try
             {
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestStrategics(param), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestStrategics(param), Method.PUT)
+                    .AddJsonBody(param, security.ContentType), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {
@@ -835,7 +868,8 @@ namespace ShareInvest.Client
         }
         public async Task<int> PutContext<T>(Codes param)
         {
-            var response = await client.ExecuteAsync<T>(new RestRequest(security.RequestCodes(param), Method.PUT).AddJsonBody(param, security.ContentType), source.Token);
+            var response = await client.ExecuteAsync<T>(new RestRequest(security.RequestCodes(param), Method.PUT)
+                .AddJsonBody(param, security.ContentType), source.Token);
 
             try
             {
@@ -858,7 +892,8 @@ namespace ShareInvest.Client
             try
             {
                 Coin = 0;
-                var response = await client.ExecuteAsync(new RestRequest(security.RequestCodes(param), Method.PUT, DataFormat.Json).AddJsonBody(param, security.ContentType), source.Token);
+                var response = await client.ExecuteAsync(new RestRequest(security.RequestCodes(param), Method.PUT, DataFormat.Json)
+                    .AddJsonBody(param, security.ContentType), source.Token);
 
                 if (response != null && response.RawBytes != null && response.RawBytes.Length > 0)
                 {

@@ -73,12 +73,16 @@ namespace ShareInvest.Client
 
                 foreach (var str in (await client.ExecuteAsync(new RestRequest(security.RequestParameter(code, quarter, param, id), Method.GET), source.Token)).Content.Split(security.Exception))
                 {
-                    param = str.Replace("&nbsp;", string.Empty).Replace("tr", string.Empty).Replace("tbody", string.Empty).Replace("th", string.Empty).Replace("br", string.Empty).Replace("span", string.Empty).Replace("td", string.Empty).Replace("/", string.Empty).Trim();
+                    param
+                        = str.Replace("&nbsp;", string.Empty).Replace("tr", string.Empty).Replace("tbody", string.Empty).Replace("th", string.Empty).Replace("br", string.Empty).Replace("span", string.Empty).Replace("td", string.Empty).Replace("/", string.Empty).Trim();
 
                     if (read == false)
                         read = param.Equals("주요재무정보");
 
-                    else if (string.IsNullOrWhiteSpace(param) == false && read && param.Length > 0 && param.StartsWith("caption") == false && param.StartsWith("row=") == false && param.StartsWith("주요재무정보") == false && param.StartsWith("ead") == false && param.StartsWith("table") == false && param.StartsWith("(IFRS별도)") == false && param.StartsWith("(GAAP개별)") == false && param.StartsWith("(IFRS연결)") == false && param.StartsWith("class=") == false)
+                    else if (string.IsNullOrWhiteSpace(param) == false && read && param.Length > 0
+                        && param.StartsWith("caption") == false && param.StartsWith("row=") == false && param.StartsWith("주요재무정보") == false
+                        && param.StartsWith("ead") == false && param.StartsWith("table") == false && param.StartsWith("(IFRS별도)") == false
+                        && param.StartsWith("(GAAP개별)") == false && param.StartsWith("(IFRS연결)") == false && param.StartsWith("class=") == false)
                     {
                         if (char.IsLetter(param[0]))
                         {
@@ -100,7 +104,8 @@ namespace ShareInvest.Client
                         { "종목코드", code }
                     };
                     foreach (var kv in dictionary)
-                        serialize[kv.Key] = kv.Key.Equals("연간") ? (kv.Value[index].EndsWith("(E)") ? kv.Value[index].Insert(4, ".") : kv.Value[index].Insert(kv.Value[index].Length, "(A)").Insert(4, ".")).Substring(2) : kv.Value[index].Replace(",", string.Empty);
+                        serialize[kv.Key]
+                            = kv.Key.Equals("연간") ? (kv.Value[index].EndsWith("(E)") ? kv.Value[index].Insert(4, ".") : kv.Value[index].Insert(kv.Value[index].Length, "(A)").Insert(4, ".")).Substring(2) : kv.Value[index].Replace(",", string.Empty);
 
                     queue.Enqueue(JsonConvert.DeserializeObject<Catalog.Dart.FinancialStatement>(JsonConvert.SerializeObject(serialize)));
                 }

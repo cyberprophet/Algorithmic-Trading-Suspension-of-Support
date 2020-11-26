@@ -19,7 +19,7 @@ namespace ShareInvest.Controls
         {
             InitializeComponent();
             textIdentity.Text = info.Identity;
-            textAccount.Text = (info.Account.Length == 11 ? info.Account : info.Account?.Insert(4, "-")).Insert(9, "-");
+            textAccount.Text = (info.Account.Length == 0xB ? info.Account : info.Account?.Insert(4, "-")).Insert(9, "-");
             textName.Text = info.Name;
             textServer.Text = info.Server.ToString();
             textServer.ForeColor = info.Server ? Color.Navy : Color.Maroon;
@@ -94,7 +94,8 @@ namespace ShareInvest.Controls
                         strategics = tv;
                         break;
                 }
-                dIndex[balance.Item1] = data.Rows.Add(new string[] { balance.Item1, OrganizeDisplayNames(balance.Item2.Trim()), balance.Item3.ToString("N0"), balance.Item4.ToString("N0"), balance.Item5.ToString("N0"), balance.Item6.ToString("C0"), balance.Item7.ToString("P2"), string.Empty, string.Empty, strategics });
+                dIndex[balance.Item1]
+                    = data.Rows.Add(new string[] { balance.Item1, OrganizeDisplayNames(balance.Item2.Trim()), balance.Item3.ToString("N0"), balance.Item4.ToString("N0"), balance.Item5.ToString("N0"), balance.Item6.ToString("C0"), balance.Item7.ToString("P2"), string.Empty, string.Empty, strategics });
                 data.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
                 data.RowsDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
                 data.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
@@ -132,7 +133,8 @@ namespace ShareInvest.Controls
         }
         void ChangeToCurrent(string code, bool hasRows, dynamic current, long revenue, double rate, int quantity, dynamic purchase)
         {
-            if (dIndex.TryGetValue(code, out int index) && (Math.Abs(quantity).ToString("N0").Equals(data.Rows[index].Cells[2].Value.ToString()) && current.ToString("N0").Equals(data.Rows[index].Cells[4].Value.ToString()) && hasRows) == false)
+            if (dIndex.TryGetValue(code, out int index) && (Math.Abs(quantity).ToString("N0").Equals(data.Rows[index].Cells[2].Value.ToString())
+                && current.ToString("N0").Equals(data.Rows[index].Cells[4].Value.ToString()) && hasRows) == false)
             {
                 if (revenue > 0)
                 {
@@ -172,8 +174,10 @@ namespace ShareInvest.Controls
             {
                 data.Rows[index].Cells[7].Value = Math.Abs(e.Base).ToString(e.Code.Length == 6 ? "N0" : "N2");
                 data.Rows[index].Cells[8].Value = Math.Abs(e.Secondary).ToString("N2");
-                data.Rows[index].Cells[7].Style.ForeColor = e.Code.Length == 6 ? (e.Base > e.Current ? Color.Maroon : Color.Navy) : (e.Base > 0 ? Color.Maroon : Color.Navy);
-                data.Rows[index].Cells[7].Style.SelectionForeColor = e.Code.Length == 6 ? (e.Base < e.Current ? Color.DeepSkyBlue : Color.FromArgb(0xB9062F)) : (e.Base < 0 ? Color.DeepSkyBlue : Color.FromArgb(0xB9062F));
+                data.Rows[index].Cells[7].Style.ForeColor
+                    = e.Code.Length == 6 ? (e.Base > e.Current ? Color.Maroon : Color.Navy) : (e.Base > 0 ? Color.Maroon : Color.Navy);
+                data.Rows[index].Cells[7].Style.SelectionForeColor
+                    = e.Code.Length == 6 ? (e.Base < e.Current ? Color.DeepSkyBlue : Color.FromArgb(0xB9062F)) : (e.Base < 0 ? Color.DeepSkyBlue : Color.FromArgb(0xB9062F));
                 data.Rows[index].Cells[8].Style.ForeColor = e.Secondary > 0 ? Color.Maroon : Color.Navy;
                 data.Rows[index].Cells[8].Style.SelectionForeColor = e.Secondary < 0 ? Color.DeepSkyBlue : Color.FromArgb(0xB9062F);
             }

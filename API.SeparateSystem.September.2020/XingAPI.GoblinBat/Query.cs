@@ -151,10 +151,12 @@ namespace ShareInvest.XingAPI
         protected internal void SendMessage(TimeSpan span) => Console.WriteLine(span.TotalSeconds);
 
         [Conditional("DEBUG")]
-        protected internal void SendMessage(string code, string temp, string retention) => Console.WriteLine("Code_" + code + "\t" + ConvertDateTime(temp) + "\t" + ConvertDateTime(retention));
+        protected internal void SendMessage(string code, string temp, string retention)
+            => Console.WriteLine("Code_" + code + "\t" + ConvertDateTime(temp) + "\t" + ConvertDateTime(retention));
         string ConvertDateTime(string date)
         {
-            if (string.IsNullOrEmpty(date) == false && date.Length >= 0xC && DateTime.TryParseExact(date.Substring(0, 0xC), "yyMMddHHmmss", CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
+            if (string.IsNullOrEmpty(date) == false && date.Length >= 0xC
+                && DateTime.TryParseExact(date.Substring(0, 0xC), "yyMMddHHmmss", CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
                 return string.Concat(time.ToLongDateString(), " ", time.ToLongTimeString());
 
             return string.Empty;

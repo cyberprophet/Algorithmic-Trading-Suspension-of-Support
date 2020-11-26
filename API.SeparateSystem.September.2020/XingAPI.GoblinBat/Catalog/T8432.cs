@@ -49,7 +49,8 @@ namespace ShareInvest.XingAPI.Catalog
             }
             Send?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, string>(code[0], name[0], price[0])));
         }
-        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+        protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
+            => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
         public void QueryExcute()
         {
             if (LoadFromResFile(Secrecy.GetResFileName(GetType().Name)))

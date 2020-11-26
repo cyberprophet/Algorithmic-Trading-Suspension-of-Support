@@ -94,7 +94,8 @@ namespace ShareInvest.OpenAPI.Catalog
         }
         readonly Stack<string> storage = new Stack<string>();
         readonly string[] opSingle = { "종목코드", "마지막틱갯수" };
-        readonly string[] opMutiple = { "현재가", "거래량", "체결시간", "시가", "고가", "저가", "수정주가구분", "수정비율", "대업종구분", "소업종구분", "종목정보", "수정주가이벤트", "전일종가" };
+        readonly string[] opMutiple
+            = { "현재가", "거래량", "체결시간", "시가", "고가", "저가", "수정주가구분", "수정비율", "대업종구분", "소업종구분", "종목정보", "수정주가이벤트", "전일종가" };
         const string code = "opt10079";
         const string id = "종목코드;틱범위;수정주가구분";
         const string tick = ";1;1";

@@ -20,8 +20,10 @@ namespace ShareInvest.OpenAPI
 {
     class Connect : ISendSecuritiesAPI<SendSecuritiesAPI>
     {
-        internal void SendOrder(SendOrder o) => request.RequestTrData(new Task(() => SendErrorMessage(axAPI.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
-        internal void SendOrder(SendOrderFO fo) => request.RequestTrData(new Task(() => SendErrorMessage(axAPI.SendOrderFO(fo.RQName, fo.ScreenNo, fo.AccNo, fo.Code, fo.OrdKind, fo.SlbyTp, fo.OrdTp, fo.Qty, fo.Price, fo.OrgOrdNo))));
+        internal void SendOrder(SendOrder o) => request.RequestTrData(new Task(()
+            => SendErrorMessage(axAPI.SendOrder(o.RQName, o.ScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
+        internal void SendOrder(SendOrderFO fo) => request.RequestTrData(new Task(()
+            => SendErrorMessage(axAPI.SendOrderFO(fo.RQName, fo.ScreenNo, fo.AccNo, fo.Code, fo.OrdKind, fo.SlbyTp, fo.OrdTp, fo.Qty, fo.Price, fo.OrgOrdNo))));
         internal void InputValueRqData(TR param) => request.RequestTrData(new Task(() =>
         {
             string[] count = param.ID.Split(';'), value = param.Value.Split(';');
@@ -47,7 +49,11 @@ namespace ShareInvest.OpenAPI
 
                     list.Add(exclusion);
                 }
-            Parallel.ForEach(Enum.GetNames(typeof(Market)), new ParallelOptions { MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.5) }, new Action<string>(async (sMarket) =>
+            Parallel.ForEach(Enum.GetNames(typeof(Market)), new ParallelOptions
+            {
+                MaxDegreeOfParallelism = (int)(Environment.ProcessorCount * 0.5)
+
+            }, new Action<string>(async (sMarket) =>
             {
                 if (Enum.TryParse(sMarket, out Market param))
                     switch (param)
@@ -101,7 +107,8 @@ namespace ShareInvest.OpenAPI
             foreach (var code in list)
                 yield return code;
         }
-        internal void InputValueRqData(int nCodeCount, TR param) => request.RequestTrData(new Task(() => SendErrorMessage(axAPI.CommKwRqData(param.Value, 0, nCodeCount, param.PrevNext, param.RQName, param.ScreenNo))));
+        internal void InputValueRqData(int nCodeCount, TR param) => request.RequestTrData(new Task(()
+            => SendErrorMessage(axAPI.CommKwRqData(param.Value, 0, nCodeCount, param.PrevNext, param.RQName, param.ScreenNo))));
         internal void SendErrorMessage(int error)
         {
             if (error < 0 && new Error().Message.TryGetValue(error, out string param))
@@ -156,9 +163,11 @@ namespace ShareInvest.OpenAPI
             get
             {
                 DayOfWeek dt = DateTime.Now.AddDays(1 - DateTime.Now.Day).DayOfWeek;
-                int check = dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 3 : 2, usWeekNumber = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1;
+                int check = dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 3 : 2,
+                    usWeekNumber = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1;
 
-                return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString(distinctDate) : DateTime.Now.ToString(distinctDate);
+                return usWeekNumber > check || usWeekNumber == check
+                    && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString(distinctDate) : DateTime.Now.ToString(distinctDate);
             }
         }
         uint Count
@@ -195,10 +204,6 @@ namespace ShareInvest.OpenAPI
         internal static Dictionary<string, Chejan> Chejan
         {
             get; private set;
-        }
-        internal static Dictionary<string, Analysis.OpenAPI.Collect> Collection
-        {
-            get; set;
         }
         internal static Dictionary<string, Holding> HoldingStock
         {
@@ -269,6 +274,7 @@ namespace ShareInvest.OpenAPI
         {
             get; set;
         }
+        internal static string[] SAT => new string[] { "201203" };
         const string distinctDate = "yyyyMM";
         readonly Delay request;
         readonly AxKHOpenAPI axAPI;

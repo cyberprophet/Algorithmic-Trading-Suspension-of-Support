@@ -16,9 +16,11 @@ namespace ShareInvest.Analysis.OpenAPI
             switch (strategics)
             {
                 case SatisfyConditionsAccordingToTrends sc:
-                    interval = e.Date.Length == 6 ? new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day, int.TryParse(e.Date.Substring(0, 2), out int cHour) ? cHour : DateTime.Now.Hour, int.TryParse(e.Date.Substring(2, 2), out int cMinute) ? cMinute : DateTime.Now.Minute, int.TryParse(e.Date.Substring(4), out int cSecond) ? cSecond : DateTime.Now.Second) : DateTime.Now;
+                    interval
+                        = e.Date.Length == 6 ? new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day, int.TryParse(e.Date.Substring(0, 2), out int cHour) ? cHour : DateTime.Now.Hour, int.TryParse(e.Date.Substring(2, 2), out int cMinute) ? cMinute : DateTime.Now.Minute, int.TryParse(e.Date.Substring(4), out int cSecond) ? cSecond : DateTime.Now.Second) : DateTime.Now;
 
-                    if (sc.TradingBuyQuantity > 0 && Bid < peek * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder && (sc.TradingBuyInterval == 0 || sc.TradingBuyInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                    if (sc.TradingBuyQuantity > 0 && Bid < peek * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) == false
+                        && WaitOrder && (sc.TradingBuyInterval == 0 || sc.TradingBuyInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
                     {
                         SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, sc.Code, sc.TradingBuyQuantity, Bid, string.Empty)));
                         WaitOrder = false;
@@ -28,7 +30,9 @@ namespace ShareInvest.Analysis.OpenAPI
                     }
                     else if (Quantity > 0)
                     {
-                        if (sc.TradingSellQuantity > 0 && Offer > peek * (1 + sc.TradingSellRate) && Offer > Purchase + tax * Offer && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder && (sc.TradingSellInterval == 0 || sc.TradingSellInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                        if (sc.TradingSellQuantity > 0 && Offer > peek * (1 + sc.TradingSellRate) && Offer > Purchase + tax * Offer
+                            && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder
+                            && (sc.TradingSellInterval == 0 || sc.TradingSellInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
                         {
                             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, sc.Code, sc.TradingSellQuantity, Offer, string.Empty)));
                             WaitOrder = false;
@@ -61,9 +65,11 @@ namespace ShareInvest.Analysis.OpenAPI
                     break;
 
                 case TrendsInValuation tv:
-                    interval = e.Date.Length == 6 ? new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day, int.TryParse(e.Date.Substring(0, 2), out int hour) ? hour : DateTime.Now.Hour, int.TryParse(e.Date.Substring(2, 2), out int minute) ? minute : DateTime.Now.Minute, int.TryParse(e.Date.Substring(4), out int second) ? second : DateTime.Now.Second) : DateTime.Now;
+                    interval
+                        = e.Date.Length == 6 ? new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day, int.TryParse(e.Date.Substring(0, 2), out int hour) ? hour : DateTime.Now.Hour, int.TryParse(e.Date.Substring(2, 2), out int minute) ? minute : DateTime.Now.Minute, int.TryParse(e.Date.Substring(4), out int second) ? second : DateTime.Now.Second) : DateTime.Now;
 
-                    if (tv.TradingAddtionalQuantity > 0 && Bid < peek * (1 - tv.AdditionalPosition) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder && (tv.AddtionalInterval == 0 || tv.AddtionalInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                    if (tv.TradingAddtionalQuantity > 0 && Bid < peek * (1 - tv.AdditionalPosition) && gap > 0 && OrderNumber.ContainsValue(Bid) == false
+                        && WaitOrder && (tv.AddtionalInterval == 0 || tv.AddtionalInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
                     {
                         SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, tv.Code, tv.TradingAddtionalQuantity, Bid, string.Empty)));
                         WaitOrder = false;
@@ -71,7 +77,9 @@ namespace ShareInvest.Analysis.OpenAPI
                         if (tv.AddtionalInterval > 0)
                             NextOrderTime = MeasureTheDelayTime(tv.AddtionalInterval, interval);
                     }
-                    else if (tv.TradingSubtractionalQuantity > 0 && Offer > peek * (1 + tv.SubtractionalPosition) && Offer > Purchase && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder && (tv.SubtractionalInterval == 0 || tv.SubtractionalInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+                    else if (tv.TradingSubtractionalQuantity > 0 && Offer > peek * (1 + tv.SubtractionalPosition) && Offer > Purchase
+                        && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder
+                        && (tv.SubtractionalInterval == 0 || tv.SubtractionalInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
                     {
                         SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, tv.Code, tv.TradingSubtractionalQuantity, Offer, string.Empty)));
                         WaitOrder = false;
@@ -82,12 +90,14 @@ namespace ShareInvest.Analysis.OpenAPI
                     break;
 
                 case TrendsInStockPrices ts:
-                    if (ts.Setting.Equals(Interface.Setting.Short) == false && Bid < peek * (1 - ts.AdditionalPurchase) && gap > 0 && OrderNumber.ContainsValue(Bid) == false && WaitOrder)
+                    if (ts.Setting.Equals(Interface.Setting.Short) == false && Bid < peek * (1 - ts.AdditionalPurchase) && gap > 0
+                        && OrderNumber.ContainsValue(Bid) == false && WaitOrder)
                     {
                         SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, ts.Code, ts.Quantity, Bid, string.Empty)));
                         WaitOrder = false;
                     }
-                    else if (ts.Setting.Equals(Interface.Setting.Long) == false && Offer > peek * (1 + ts.RealizeProfit) && Offer > Purchase && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder)
+                    else if (ts.Setting.Equals(Interface.Setting.Long) == false && Offer > peek * (1 + ts.RealizeProfit) && Offer > Purchase
+                        && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder)
                     {
                         SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, ts.Code, ts.Quantity, Offer, string.Empty)));
                         WaitOrder = false;
@@ -100,7 +110,8 @@ namespace ShareInvest.Analysis.OpenAPI
                         SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매수, tc.Code, tc.TradingQuantity, Bid, string.Empty)));
                         WaitOrder = false;
                     }
-                    else if (tc.TradingQuantity > 0 && Offer > peek * (1 + tc.PositionRevenue) && Offer > Purchase && gap < 0 && OrderNumber.ContainsValue(Offer) == false && WaitOrder)
+                    else if (tc.TradingQuantity > 0 && Offer > peek * (1 + tc.PositionRevenue) && Offer > Purchase && gap < 0
+                        && OrderNumber.ContainsValue(Offer) == false && WaitOrder)
                     {
                         SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<int, string, int, int, string>((int)OpenOrderType.신규매도, tc.Code, tc.TradingQuantity, Offer, string.Empty)));
                         WaitOrder = false;
@@ -110,7 +121,10 @@ namespace ShareInvest.Analysis.OpenAPI
                 case TrendFollowingBasicFutures tf:
                     if (0x5A0 == (int)peek)
                     {
-                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume) && OrderNumber.Count == 0)
+                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0
+                            && (gap > 0 ? tf.QuantityLong - Quantity > 0 : tf.QuantityShort + Quantity > 0) 
+                            && (gap > 0 ? e.Volume > tf.ReactionLong : e.Volume < -tf.ReactionShort) 
+                            && (gap > 0 ? e.Volume + Secondary > e.Volume : e.Volume + Secondary < e.Volume) && OrderNumber.Count == 0)
                         {
                             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, int, string, string, int, string, string>(Code, 1, gap > 0 ? "2" : "1", ((int)Catalog.OpenAPI.OrderType.지정가).ToString(), 1, (gap > 0 ? Offer : Bid).ToString("F2"), string.Empty)));
                             WaitOrder = false;
@@ -119,7 +133,9 @@ namespace ShareInvest.Analysis.OpenAPI
                     }
                     else
                     {
-                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 && (tf.QuantityShort + Quantity < 0 && Base < 0 || Base > 0 && Quantity - tf.QuantityLong > 0) && Revenue / Math.Abs(Quantity) > 0x927C)
+                        if (WaitOrder && e.Date.CompareTo(start) > 0 && e.Date.CompareTo(end) < 0 
+                            && (tf.QuantityShort + Quantity < 0 && Base < 0 || Base > 0 && Quantity - tf.QuantityLong > 0)
+                            && Revenue / Math.Abs(Quantity) > 0x927C)
                         {
                             SendBalance?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, int, string, string, int, string, string>(Code, 1, Quantity > 0 ? "1" : "2", ((int)Catalog.OpenAPI.OrderType.시장가).ToString(), 1, string.Empty, string.Empty)));
                             WaitOrder = false;
@@ -205,7 +221,12 @@ namespace ShareInvest.Analysis.OpenAPI
         }
         public override void OnReceiveBalance(string[] param)
         {
-            if (param.Length == 0x13 && long.TryParse(param[7], out long active) && double.TryParse(param[0xC].StartsWith("-") ? param[0xC].Substring(1) : param[0xC], out double offer) && double.TryParse(param[0xD].StartsWith("-") ? param[0xD].Substring(1) : param[0xD], out double bid) && double.TryParse(param[5].StartsWith("-") ? param[5].Substring(1) : param[5], out double unit) && double.TryParse(param[0x10], out double transaction) && int.TryParse(param[4], out int amount) && double.TryParse(param[3].StartsWith("-") ? param[3].Substring(1) : param[3], out double price))
+            if (param.Length == 0x13 && long.TryParse(param[7], out long active)
+                && double.TryParse(param[0xC].StartsWith("-") ? param[0xC].Substring(1) : param[0xC], out double offer)
+                && double.TryParse(param[0xD].StartsWith("-") ? param[0xD].Substring(1) : param[0xD], out double bid) 
+                && double.TryParse(param[5].StartsWith("-") ? param[5].Substring(1) : param[5], out double unit) 
+                && double.TryParse(param[0x10], out double transaction) && int.TryParse(param[4], out int amount) 
+                && double.TryParse(param[3].StartsWith("-") ? param[3].Substring(1) : param[3], out double price))
             {
                 var classification = param[9].Equals("1") ? -1 : 1;
                 Current = price;
@@ -218,7 +239,9 @@ namespace ShareInvest.Analysis.OpenAPI
                 WaitOrder = true;
                 SendBalance?.Invoke(this, new SendSecuritiesAPI((long)(active * transaction * MarginRate * classification * price)));
             }
-            else if (long.TryParse(param[9], out long available) && int.TryParse(param[7], out int purchase) && int.TryParse(param[5].StartsWith("-") ? param[5].Substring(1) : param[5], out int current) && int.TryParse(param[6], out int quantity))
+            else if (long.TryParse(param[9], out long available) && int.TryParse(param[7], out int purchase) 
+                && int.TryParse(param[5].StartsWith("-") ? param[5].Substring(1) : param[5], out int current) 
+                && int.TryParse(param[6], out int quantity))
             {
                 Current = current;
                 Quantity = quantity;
