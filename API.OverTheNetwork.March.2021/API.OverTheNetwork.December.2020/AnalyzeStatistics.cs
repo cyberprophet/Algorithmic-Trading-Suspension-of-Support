@@ -38,37 +38,37 @@ namespace ShareInvest
         {
             if (privacy is Privacies p && await Security.Client.GetContextAsync(new Catalog.TrendsToCashflow()) is IEnumerable<Interface.IStrategics> enumerable)
                 foreach (var ch in (await Security.Client.GetContextAsync(new Codes(), 6) as List<Codes>).OrderBy(o => Guid.NewGuid()))
-                    if (string.IsNullOrEmpty(ch.Price) == false && (ch.MarginRate == 1 || ch.MarginRate == 2) && ch.MaturityMarketCap.StartsWith("증거금")
-                        && ch.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
-                        foreach (Catalog.TrendsToCashflow analysis in enumerable)
-                        {
-                            var now = DateTime.Now;
+                    try
+                    {
+                        var now = DateTime.Now;
 
-                            if (await Security.Client.PostConfirmAsync(new Catalog.ConfirmStrategics
-                            {
-                                Code = ch.Code,
-                                Date = now.Hour > 0xF ? now.ToString(Base.DateFormat) : now.AddDays(-1).ToString(Base.DateFormat),
-                                Strategics = string.Concat("TC.", analysis.AnalysisType)
-                            }) is bool confirm && confirm == false)
-                            {
-                                var estimate = Statistical.Strategics.AnalyzeFinancialStatements(await Security.Client.GetContextAsync(new Catalog.FinancialStatement
-                                {
-                                    Code = ch.Code
-                                }) as List<Catalog.FinancialStatement>, analysis.AnalysisType.ToCharArray());
-                                var cf = new Statistical.Indicators.TrendsToCashflow
+                        if (string.IsNullOrEmpty(ch.Price) == false && (ch.MarginRate == 1 || ch.MarginRate == 2) && ch.MaturityMarketCap.StartsWith("증거금")
+                        && ch.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
+                            foreach (Catalog.TrendsToCashflow analysis in enumerable)
+                                if (await Security.Client.PostConfirmAsync(new Catalog.ConfirmStrategics
                                 {
                                     Code = ch.Code,
-                                    Strategics = analysis,
-                                    Balance = new Statistical.Balance(ch.Name)
-                                };
-                                var bring = new BringInInformation(ch);
-                                bring.Send += cf.OnReceiveDrawChart;
-                                cf.StartProgress(p.Commission);
-                                var name = await bring.StartProgress();
-                                var statistics = cf.SendMessage;
+                                    Date = now.Hour > 0xF ? now.ToString(Base.DateFormat) : now.AddDays(-1).ToString(Base.DateFormat),
+                                    Strategics = string.Concat("TC.", analysis.AnalysisType)
+                                }) is bool confirm && confirm == false)
+                                {
+                                    var estimate = Statistical.Strategics.AnalyzeFinancialStatements(await Security.Client.GetContextAsync(new Catalog.FinancialStatement
+                                    {
+                                        Code = ch.Code
+                                    }) as List<Catalog.FinancialStatement>, analysis.AnalysisType.ToCharArray());
+                                    var cf = new Statistical.Indicators.TrendsToCashflow
+                                    {
+                                        Code = ch.Code,
+                                        Strategics = analysis,
+                                        Balance = new Statistical.Balance(ch.Name)
+                                    };
+                                    var bring = new BringInInformation(ch);
+                                    bring.Send += cf.OnReceiveDrawChart;
+                                    cf.StartProgress(p.Commission);
+                                    var name = await bring.StartProgress();
+                                    var statistics = cf.SendMessage;
 
-                                if (estimate != null && estimate.Count > 3 && string.IsNullOrEmpty(statistics.Key) == false)
-                                    try
+                                    if (estimate != null && estimate.Count > 3 && string.IsNullOrEmpty(statistics.Key) == false)
                                     {
                                         var normalize = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(statistics.Date)).Value;
                                         var near = Base.FindTheNearestQuarter(DateTime.TryParseExact(statistics.Date, Base.FullDateFormat.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
@@ -96,13 +96,13 @@ namespace ShareInvest
                                         }) is double coin && double.IsNaN(coin))
                                             Base.SendMessage(ch.Code, typeof(StocksStrategics));
                                     }
-                                    catch (Exception ex)
-                                    {
-                                        Base.SendMessage(ex.StackTrace, typeof(AnalyzeStatistics));
-                                    }
-                                Base.SendMessage(name, statistics.Key, typeof(BringInInformation));
-                            }
-                        }
+                                    Base.SendMessage(name, statistics.Key, typeof(BringInInformation));
+                                }
+                    }
+                    catch (Exception ex)
+                    {
+                        Base.SendMessage(ex.StackTrace, typeof(AnalyzeStatistics));
+                    }
         }).Start();
         internal static void TryToConnectThePipeStream()
         {

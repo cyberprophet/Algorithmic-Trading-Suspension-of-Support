@@ -16,16 +16,9 @@ namespace ShareInvest.Controllers
         {
             if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) == false && Security.Collection.TryGetValue(param.Code, out Statistical.Analysis st))
             {
-                switch (st)
-                {
-                    case Statistical.OpenAPI.Stocks:
+                if (st.Collection == null)
+                    st.Collection = new Queue<Collect>(0x800);
 
-                        break;
-
-                    case Statistical.OpenAPI.Futures:
-
-                        break;
-                }
                 return Ok(param.Name);
             }
             else
@@ -78,7 +71,7 @@ namespace ShareInvest.Controllers
                     return Ok(param.Name);
                 }
                 else
-                    Base.SendMessage(string.Concat(Security.Collection.Remove(param.Code), param.Code), param.MaturityMarketCap, GetType());
+                    Base.SendMessage(param.Name, Security.Collection.Remove(param.Code), param.Code, param.MaturityMarketCap, GetType());
             }
             return Ok();
         }

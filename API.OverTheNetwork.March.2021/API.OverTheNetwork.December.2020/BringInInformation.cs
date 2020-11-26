@@ -28,71 +28,76 @@ namespace ShareInvest
             var response = string.Empty;
 
             while (await tick.MoveNextAsync())
-            {
-                var enumerable = tick.Current.OrderBy(o => o.Date);
-                var before = enumerable.First().Date.Substring(0, 6);
-
-                while (revise != null && revise.Count > 0)
+                try
                 {
-                    var param = revise.Dequeue();
+                    var enumerable = tick.Current.OrderBy(o => o.Date);
+                    var before = enumerable.First().Date.Substring(0, 6);
 
-                    if (param.Date.CompareTo(Days.Count > 0 ? Days.Max(o => o.Date)[2..] : before) > 0)
+                    while (revise != null && revise.Count > 0)
                     {
-                        if (revise.Count == 0)
+                        var param = revise.Dequeue();
+
+                        if (param.Date.CompareTo(Days.Count > 0 ? Days.Max(o => o.Date)[2..] : before) > 0)
                         {
-                            modify[index] = param;
+                            if (revise.Count == 0)
+                            {
+                                modify[index] = param;
 
-                            break;
+                                break;
+                            }
+                            var peek = revise.Peek();
+
+                            if (param.Rate != peek.Rate)
+                                modify[index++] = param;
                         }
-                        var peek = revise.Peek();
-
-                        if (param.Rate != peek.Rate)
-                            modify[index++] = param;
                     }
-                }
-                while (Days.Count > 0)
-                {
-                    var day = Days.Dequeue();
+                    while (Days.Count > 0)
+                    {
+                        var day = Days.Dequeue();
 
-                    if (string.Compare(day.Date[2..], before) < 0)
+                        if (string.Compare(day.Date[2..], before) < 0)
+                        {
+                            SendConsecutive convey;
+
+                            if (modify != null && int.TryParse(day.Price, out int price))
+                            {
+                                var rate = 1D;
+
+                                foreach (var param in Array.FindAll(modify, o => string.IsNullOrEmpty(o.Date) == false && o.Date.CompareTo(day.Date[2..]) > 0))
+                                    rate *= param.Rate;
+
+                                convey = new SendConsecutive(day.Date, Base.GetStartingPrice((int)((1 + rate * 1e-2) * price), cm.MarginRate == 1), day.Volume);
+                            }
+                            else
+                                convey = new SendConsecutive(day);
+
+                            Send?.Invoke(this, convey);
+                        }
+                    }
+                    foreach (var consecutive in enumerable)
                     {
                         SendConsecutive convey;
+                        response = consecutive.Date;
 
-                        if (modify != null && int.TryParse(day.Price, out int price))
+                        if (modify != null && int.TryParse(consecutive.Price, out int price))
                         {
                             var rate = 1D;
 
-                            foreach (var param in Array.FindAll(modify, o => string.IsNullOrEmpty(o.Date) == false && o.Date.CompareTo(day.Date[2..]) > 0))
+                            foreach (var param in Array.FindAll(modify, o => string.IsNullOrEmpty(o.Date) == false && o.Date.CompareTo(consecutive.Date.Substring(0, 6)) > 0))
                                 rate *= param.Rate;
 
-                            convey = new SendConsecutive(day.Date, Base.GetStartingPrice((int)((1 + rate * 1e-2) * price), cm.MarginRate == 1), day.Volume);
+                            convey = new SendConsecutive(consecutive.Date, Base.GetStartingPrice((int)((1 + rate * 1e-2) * price), cm.MarginRate == 1), consecutive.Volume);
                         }
                         else
-                            convey = new SendConsecutive(day);
+                            convey = new SendConsecutive(consecutive);
 
                         Send?.Invoke(this, convey);
                     }
                 }
-                foreach (var consecutive in enumerable)
+                catch (Exception ex)
                 {
-                    SendConsecutive convey;
-                    response = consecutive.Date;
-
-                    if (modify != null && int.TryParse(consecutive.Price, out int price))
-                    {
-                        var rate = 1D;
-
-                        foreach (var param in Array.FindAll(modify, o => string.IsNullOrEmpty(o.Date) == false && o.Date.CompareTo(consecutive.Date.Substring(0, 6)) > 0))
-                            rate *= param.Rate;
-
-                        convey = new SendConsecutive(consecutive.Date, Base.GetStartingPrice((int)((1 + rate * 1e-2) * price), cm.MarginRate == 1), consecutive.Volume);
-                    }
-                    else
-                        convey = new SendConsecutive(consecutive);
-
-                    Send?.Invoke(this, convey);
+                    Base.SendMessage(ex.StackTrace, cm.Name, GetType());
                 }
-            }
             return string.Concat(cm.Name, '_', response);
         }
         async IAsyncEnumerable<IEnumerable<Catalog.Strategics.Charts>> FindTheOldestDueDate()
