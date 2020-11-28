@@ -139,13 +139,6 @@ namespace ShareInvest.XingAPI
             }
             return Connect.HoldingStock.Count;
         }
-        public void SendTransmitCommand()
-        {
-            if (Connect.Collection != null)
-                foreach (var kv in Connect.Collection)
-                    if (kv.Value.Count > 0)
-                        kv.Value.SendTransmitCommand(kv.Key);
-        }
         public ICharts<SendSecuritiesAPI> Stocks
         {
             get;
