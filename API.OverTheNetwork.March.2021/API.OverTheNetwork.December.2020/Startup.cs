@@ -18,19 +18,31 @@ namespace ShareInvest
         {
             get;
         }
-        public void ConfigureServices(IServiceCollection services) => services.Configure<KestrelServerOptions>(o =>
+        public void ConfigureServices(IServiceCollection services)
         {
-            o.ListenAnyIP(7135);
-            o.Limits.MaxRequestBodySize = int.MaxValue;
-        }).AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o
-            => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
+            services.Configure<KestrelServerOptions>(o =>
+            {
+                o.ListenAnyIP(7135);
+                o.Limits.MaxRequestBodySize = int.MaxValue;
+            })
+                .AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter()))
+                .AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
+            services.AddRazorPages();
+            services.AddServerSideBlazor();
+        }
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
-                app.UseMvc();
+                app.UseMvc().UseDeveloperExceptionPage();
 
             else
                 app.UseMvc();
+
+            app.UseHttpsRedirection().UseStaticFiles().UseRouting().UseEndpoints(ep =>
+            {
+                ep.MapBlazorHub();
+                ep.MapFallbackToPage("/_Host");
+            });
         }
         public Startup(IConfiguration configuration) => Configuration = configuration;
         static NewtonsoftJsonInputFormatter GetJsonPatchInputformatter()

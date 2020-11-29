@@ -38,7 +38,8 @@ namespace ShareInvest.Controllers
                                 Current = 0,
                                 Offer = 0,
                                 Bid = 0,
-                                Collection = new Queue<Collect>(0x800)
+                                Collection = new Queue<Collect>(0x800),
+                                Market = param.MarginRate == 1
                             };
                             break;
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 
 using ShareInvest.Client;
 using ShareInvest.Verify;
@@ -16,9 +17,9 @@ namespace ShareInvest
             var security = new dynamic[] { Security.Commands, Security.Compress, Security.Release };
 
             for (int i = 0; i < security.Length; i++)
-                ChooseTheInstallationPath(i == 1 ? client : null, security[i]);
+                ChooseTheInstallationPath(i == 1 ? client : null, security[i]).Wait();
         }
-        static void ChooseTheInstallationPath(dynamic client, dynamic param)
+        static async Task ChooseTheInstallationPath(dynamic client, dynamic param)
         {
             foreach (var str in param)
             {
@@ -42,10 +43,8 @@ namespace ShareInvest
                         Console.WriteLine(process.StandardOutput.ReadToEnd());
                         process.WaitForExit();
                     }
-                if (client is GoblinBat)
-                {
-
-                }
+                if (client is GoblinBat request && await request.PostConfirmAsync(await Security.GetFile(str.Item2)) is not null)
+                    Base.SendMessage(str.Item1, str.Item2, typeof(GoblinBat));
             }
         }
         const string cmd = @"cmd";

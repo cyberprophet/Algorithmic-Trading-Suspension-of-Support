@@ -10,7 +10,7 @@ using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 using Newtonsoft.Json;
 
@@ -22,7 +22,7 @@ namespace ShareInvest
     [SupportedOSPlatform("windows")]
     static class AnalyzeStatistics
     {
-        internal static IWebHost Host
+        internal static IHost Host
         {
             private get; set;
         }
@@ -130,6 +130,7 @@ namespace ShareInvest
 
                 if (client.IsConnected)
                     OnReceivePipeClientMessage(client, server);
+
             }).Start();
         }
         static void SetReservation()
@@ -137,13 +138,14 @@ namespace ShareInvest
             var set = new Reservation();
 
             foreach (var reservation in Security.Collection)
-                if (reservation.Value.Balance is Statistical.Balance b && b.Quantity > 0)
+                if (reservation.Value.Balance != null && reservation.Value.Balance.Quantity > 0)
                     switch (reservation.Value.Strategics)
                     {
                         case Catalog.SatisfyConditionsAccordingToTrends:
                             set.Append.Enqueue(reservation.Value);
                             break;
                     }
+            Base.SendMessage("Order", set.Append.Count, typeof(Reservation));
             var order = set.Stocks;
 
             while (order.Item1.Count > 0 || order.Item2.Count > 0)
@@ -264,8 +266,12 @@ namespace ShareInvest
 
                                         case Operation.장시작전:
                                             if (operation[1].Equals("085500"))
-                                                new Task(() => SetReservation()).Start();
+                                                new Task(() =>
+                                                {
+                                                    SetReservation();
+                                                    Base.SendMessage(operation[1], Security.Collection.Count, typeof(Statistical.Balance));
 
+                                                }).Start();
                                             else if (operation[1].Equals("085000"))
                                             {
                                                 Server.WriteLine(string.Concat(typeof(Security).Name, '|', Security.Account));
@@ -291,6 +297,8 @@ namespace ShareInvest
                                                                     select.Current = fo ? price : (int)price;
                                                                 }
                                                             }
+                                                    Base.SendMessage(operation[1], Security.Collection.Count, typeof(Statistical.Analysis));
+
                                                 }).Start();
                                             break;
 
@@ -302,6 +310,7 @@ namespace ShareInvest
                                                         stop.Value.Collector = false;
 
                                                 SetReservation();
+                                                Base.SendMessage(operation[1], Security.Collection.Count, typeof(Statistical.Balance));
 
                                             }).Start();
                                             break;

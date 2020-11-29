@@ -223,7 +223,19 @@ namespace ShareInvest.Client
                     .AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
                 if (response.StatusCode.Equals(HttpStatusCode.OK))
-                    return JsonConvert.DeserializeObject<bool>(response.Content);
+                    switch (param)
+                    {
+                        case ConfirmStrategics:
+                            return JsonConvert.DeserializeObject<bool>(response.Content);
+
+                        case Files:
+                            if (response.RawBytes != null && response.RawBytes.Length > 0)
+                            {
+
+                                return null;
+                            }
+                            break;
+                    }
             }
             catch (Exception ex)
             {

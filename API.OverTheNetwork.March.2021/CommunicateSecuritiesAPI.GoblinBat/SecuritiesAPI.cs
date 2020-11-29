@@ -165,6 +165,7 @@ namespace ShareInvest
         void RequestBalanceInquiry()
         {
             if (string.IsNullOrEmpty(connect.Account) == false)
+            {
                 if (connect is OpenAPI.ConnectAPI o)
                 {
                     if (connect.Account[^2..].Equals("31"))
@@ -174,6 +175,14 @@ namespace ShareInvest
                     else
                         o.InputValueRqData(string.Concat(instance, "Opw00005"), string.Concat(connect.Account, password)).Send += OnReceiveSecuritiesAPI;
                 }
+                SendReservation(MessageBox.Show("Time to go back 5 minutes from the early start bell.", "Temporary Code for Debugging", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
+            }
+        }
+        [Conditional("DEBUG")]
+        void SendReservation(DialogResult result)
+        {
+            if (DialogResult.OK.Equals(result))
+                connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), "|0;085500;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation)));
         }
         void WorkerDoWork(object sender, DoWorkEventArgs e)
         {
