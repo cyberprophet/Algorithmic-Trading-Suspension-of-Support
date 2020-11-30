@@ -36,9 +36,9 @@ namespace ShareInvest
                 app.UseMvc().UseDeveloperExceptionPage();
 
             else
-                app.UseMvc();
+                app.UseMvc().UseExceptionHandler("/Error");
 
-            app.UseHttpsRedirection().UseStaticFiles().UseRouting().UseEndpoints(ep =>
+            app.UseStaticFiles().UseRouting().UseEndpoints(ep =>
             {
                 ep.MapBlazorHub();
                 ep.MapFallbackToPage("/_Host");

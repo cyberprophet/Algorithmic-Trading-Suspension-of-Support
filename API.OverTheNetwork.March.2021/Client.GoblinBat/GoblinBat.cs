@@ -36,19 +36,19 @@ namespace ShareInvest.Client
         {
             get; set;
         }
-        public async Task<Retention> GetContextAsync(string code)
+        public async Task<Retention> GetContextAsync(string param)
         {
             try
             {
-                if (string.IsNullOrEmpty(code) == false)
+                if (string.IsNullOrEmpty(param) == false)
                 {
-                    var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(code), Method.GET), source.Token);
+                    var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.GET), source.Token);
                     var retention = JsonConvert.DeserializeObject<Retention>(response.Content);
 
                     if (string.IsNullOrEmpty(retention.Code) == false && string.IsNullOrEmpty(retention.FirstDate) && string.IsNullOrEmpty(retention.LastDate))
                         return new Retention
                         {
-                            Code = code,
+                            Code = param,
                             FirstDate = string.Empty,
                             LastDate = string.Empty
                         };
