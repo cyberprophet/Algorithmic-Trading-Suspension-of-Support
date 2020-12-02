@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.EventHandler;
@@ -76,8 +78,9 @@ namespace ShareInvest
 			int n when n >= 0x7A120 && info => 0x3E8,
 			_ => 0x64,
 		};
-		public abstract void AnalyzeTheConclusion(string[] param);
-		public abstract void AnalyzeTheQuotes(string[] param);
+		public abstract event EventHandler<SendConsecutive> Send;
+		public abstract Task AnalyzeTheConclusionAsync(string[] param);
+		public abstract Task AnalyzeTheQuotesAsync(string[] param);
 		public abstract void OnReceiveDrawChart(object sender, SendConsecutive e);
 		public abstract bool Collector
 		{
@@ -142,6 +145,14 @@ namespace ShareInvest
 		protected internal abstract DateTime NextOrderTime
 		{
 			get; set;
+		}
+		protected internal abstract SemaphoreSlim Slim
+		{
+			get;
+		}
+		protected internal abstract SemaphoreSlim Quote
+		{
+			get;
 		}
 		protected internal abstract string DateChange
 		{

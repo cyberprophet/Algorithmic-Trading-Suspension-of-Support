@@ -124,8 +124,11 @@ namespace ShareInvest
 						? await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2))
 						: await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2)))
 						: await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
+					{
 						OnReceiveInformationTheDay();
-
+						notifyIcon.Text
+							= string.Format("Collecting Datum on {0}.", charts.Item1.Length == 6 && collection.TryGetValue(charts.Item1, out Codes mc) ? mc.Name : charts.Item1);
+					}
 					break;
 
 				case string[] accounts:

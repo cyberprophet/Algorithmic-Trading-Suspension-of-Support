@@ -59,7 +59,7 @@ namespace ShareInvest
 						{
 							SendConsecutive convey;
 
-							if (modify != null && int.TryParse(day.Price, out int price))
+							if (modify != null && int.TryParse(day.Price[0] is '-' ? day.Price[1..] : day.Price, out int price))
 							{
 								var rate = 1D;
 
@@ -79,7 +79,7 @@ namespace ShareInvest
 						SendConsecutive convey;
 						response = consecutive.Date;
 
-						if (modify != null && int.TryParse(consecutive.Price, out int price))
+						if (modify != null && int.TryParse(consecutive.Price[0] is '-' ? consecutive.Price[1..] : consecutive.Price, out int price))
 						{
 							var rate = 1D;
 

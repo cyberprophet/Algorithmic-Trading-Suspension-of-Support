@@ -14,7 +14,7 @@ namespace ShareInvest.Controllers
 		public IActionResult PostContextAsync([FromBody] Message param)
 		{
 			Base.SendMessage(DateTime.Now, param.Convey, GetType());
-
+			
 			return Ok();
 		}
 	}

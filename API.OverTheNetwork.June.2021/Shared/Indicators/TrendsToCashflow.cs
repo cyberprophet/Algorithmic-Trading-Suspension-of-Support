@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.EventHandler;
@@ -29,9 +31,40 @@ namespace ShareInvest.Indicators
 		{
 			get; set;
 		}
-		protected internal override uint CumulativeFee
+		public override event EventHandler<SendConsecutive> Send;
+		public override async Task AnalyzeTheConclusionAsync(string[] param)
 		{
-			get; set;
+			try
+			{
+				await Slim.WaitAsync();
+				Send?.Invoke(this, new SendConsecutive(param));
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(Code, ex.StackTrace, GetType());
+			}
+			finally
+			{
+				if (Slim.Release() > 0)
+					Base.SendMessage(Code, param[0], GetType());
+			}
+		}
+		public override async Task AnalyzeTheQuotesAsync(string[] param)
+		{
+			try
+			{
+				await Quote.WaitAsync();
+				Send?.Invoke(this, new SendConsecutive(param));
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(Code, ex.StackTrace, GetType());
+			}
+			finally
+			{
+				if (Quote.Release() > 0)
+					Base.SendMessage(Code, param[0], GetType());
+			}
 		}
 		public override void OnReceiveDrawChart(object sender, SendConsecutive e)
 		{
@@ -234,14 +267,6 @@ namespace ShareInvest.Indicators
 		{
 			get; set;
 		}
-		public override void AnalyzeTheConclusion(string[] param)
-		{
-
-		}
-		public override void AnalyzeTheQuotes(string[] param)
-		{
-
-		}
 		protected internal override Stack<double> Short
 		{
 			get; set;
@@ -258,11 +283,17 @@ namespace ShareInvest.Indicators
 		{
 			get; set;
 		}
+		protected internal override SemaphoreSlim Quote => new SemaphoreSlim(1, 1);
+		protected internal override SemaphoreSlim Slim => new SemaphoreSlim(1, 1);
 		protected internal override DateTime NextOrderTime
 		{
 			get; set;
 		}
 		protected internal override string DateChange
+		{
+			get; set;
+		}
+		protected internal override uint CumulativeFee
 		{
 			get; set;
 		}

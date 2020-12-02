@@ -42,7 +42,7 @@ namespace ShareInvest
 
 			else
 				app.UseMvc().UseExceptionHandler("/Error");
-			
+
 			app.UseBlazorFrameworkFiles().UseStaticFiles().UseRouting().UseEndpoints(ep =>
 			{
 				ep.MapRazorPages();
