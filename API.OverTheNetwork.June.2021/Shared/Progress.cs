@@ -37,7 +37,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		public static int SecuritiesCompany
+		public static char Company
 		{
 			get; private set;
 		}
@@ -149,20 +149,20 @@ namespace ShareInvest
 		public static void SetPrivacy(Privacies privacy)
 		{
 			Collection = new Dictionary<string, Analysis>();
-			SecuritiesCompany = char.TryParse(privacy.SecuritiesAPI, out char company) ? company : int.MinValue;
+			Company = char.TryParse(privacy.SecuritiesAPI, out char company) ? company : char.MaxValue;
 			Consensus = new Client.Consensus(privacy.Security);
 			Library = new Dictionary<string, IStrategics>();
 			Key = privacy;
 
-			if (string.IsNullOrEmpty(privacy.CodeStrategics) == false && privacy.CodeStrategics[2] == '|')
+			if (string.IsNullOrEmpty(privacy.CodeStrategics) == false && privacy.CodeStrategics[2] is '|')
 				foreach (var strategics in Strategics.SetStrategics(privacy.CodeStrategics.Split(';')))
-					Library[privacy.CodeStrategics.Substring(3, privacy.Account[0] == 'S' ? 6 : 8)] = strategics;
+					Library[strategics.Code] = strategics;
 		}
 		[SupportedOSPlatform("windows")]
-		public static void TryToConnectThePipeStream()
+		public static void TryToConnectThePipeStream(dynamic name)
 		{
 			var server
-				= new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName, PipeDirection.Out, 0x11, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+				= new NamedPipeServerStream(name is string ? name : Process.GetCurrentProcess().ProcessName, PipeDirection.Out, 0x11, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
 			var client = new NamedPipeClientStream(".", Access, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
 			new Task(async () =>
 			{
@@ -175,7 +175,7 @@ namespace ShareInvest
 					{
 						AutoFlush = true
 					};
-					Pipe.Server.WriteLine("{0}API Connects via Pipe. . .", SecuritiesCompany == 'O' ? "Open" : "Xing");
+					Pipe.Server.WriteLine("{0}API Connects via Pipe. . .", Company is 'O' ? "Open" : "Xing");
 				}
 			}).Start();
 			new Task(async () =>

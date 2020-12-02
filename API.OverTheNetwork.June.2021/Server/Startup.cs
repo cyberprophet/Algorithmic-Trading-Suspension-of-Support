@@ -25,16 +25,15 @@ namespace ShareInvest
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddSignalR();
+			services.AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" }));
+			services.AddRazorPages();
 			services.Configure<KestrelServerOptions>(o =>
 			{
 				o.ListenAnyIP(7135);
 				o.Limits.MaxRequestBodySize = int.MaxValue;
-
 			})
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter()))
 				.AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
-			services.AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" }));
-			services.AddRazorPages();
 		}
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 		{
@@ -43,12 +42,12 @@ namespace ShareInvest
 
 			else
 				app.UseMvc().UseExceptionHandler("/Error");
-
+			
 			app.UseBlazorFrameworkFiles().UseStaticFiles().UseRouting().UseEndpoints(ep =>
 			{
 				ep.MapRazorPages();
 				ep.MapControllers();
-				ep.MapHub<AppHub>("/chathub");
+				ep.MapHub<AppHub>("/message");
 				ep.MapFallbackToFile("index.html");
 			});
 		}

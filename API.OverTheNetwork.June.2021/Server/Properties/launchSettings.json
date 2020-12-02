@@ -37,8 +37,7 @@
 			},
 			"sqlDebugging": true,
 			"nativeDebugging": true,
-			"use64Bit": true,
-			"applicationUrl": "http://localhost:5000"
+			"use64Bit": true
 		}
 	}
 }

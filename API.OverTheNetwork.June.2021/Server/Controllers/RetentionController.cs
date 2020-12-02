@@ -21,7 +21,7 @@ namespace ShareInvest.Controllers
 
 			if (string.IsNullOrEmpty(retention.LastDate) == false && retention.LastDate.Substring(0, 6).Equals(now.ToString("yyMMdd")) ||
 				string.IsNullOrEmpty(retention.Code) == false && retention.LastDate == null ||
-				Progress.SecuritiesCompany == 'X' && string.IsNullOrEmpty(retention.Code) == false && string.IsNullOrEmpty(retention.LastDate))
+				Progress.Company is 'X' && string.IsNullOrEmpty(retention.Code) == false && string.IsNullOrEmpty(retention.LastDate))
 				return Ok();
 
 			try

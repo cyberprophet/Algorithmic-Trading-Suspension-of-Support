@@ -6,8 +6,6 @@ namespace ShareInvest
 {
 	public static class Base
 	{
-		[Conditional("DEBUG")]
-		public static void ChangePropertyToDebugMode() => IsDebug = true;
 		public static void SendMessage(string sender, object convey, string message, object param, Type type)
 			=> Console.WriteLine(string.Concat(type.Name, '_', sender, '_', convey, '_', message, '_', param));
 		public static void SendMessage(string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', message));
@@ -97,6 +95,26 @@ namespace ShareInvest
 
 			return string.Concat(type, Count.ToString("D4"));
 		}
+		public static string CheckTheSAT(string date)
+		{
+			switch (date.Length)
+			{
+				case 6:
+					var now = DateTime.Now;
+
+					if (Array.Exists(SAT, o => o.Equals(now.ToString(DateFormat))) && now.Hour < 0x12 && uint.TryParse(date, out uint sat))
+						return (sat - 0x2710).ToString("D6");
+
+					break;
+
+				case 0xF:
+					if (Array.Exists(SAT, o => o.Equals(date.Substring(0, 6))) && date.Substring(6, 2).CompareTo("18") < 0 && ulong.TryParse(date, out ulong convert))
+						return (convert - 0x989680).ToString("D15");
+
+					break;
+			}
+			return date;
+		}
 		public static DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);
 		public static DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
 		public static string DistinctDate
@@ -114,7 +132,12 @@ namespace ShareInvest
 		}
 		public static bool IsDebug
 		{
-			get; private set;
+			get
+			{
+				ChangePropertyToDebugMode();
+
+				return ToDebug;
+			}
 		}
 		public static double Tax => tax;
 		public static string FullDateFormat => "yyMMddHHmmss";
@@ -123,13 +146,20 @@ namespace ShareInvest
 		public static string TransactionSuspension => transaction_suspension;
 		public static string Transmit => transmit;
 		public static string Start => start;
-		public static string[] Holidays => new string[] { "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
+		public static string[] SAT => new[] { "201203" };
+		public static string[] Holidays => new[] { "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
 		static string ConvertDateTime(int length) => length switch
 		{
 			6 => DateFormat,
 			8 => LongDateFormat,
 			_ => null,
 		};
+		[Conditional("DEBUG")]
+		static void ChangePropertyToDebugMode() => ToDebug = true;
+		static bool ToDebug
+		{
+			get; set;
+		}
 		static uint Count
 		{
 			get; set;

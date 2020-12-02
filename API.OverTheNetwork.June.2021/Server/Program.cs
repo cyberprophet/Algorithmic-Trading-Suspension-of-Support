@@ -12,27 +12,18 @@ namespace ShareInvest
 		[SupportedOSPlatform("windows")]
 		public static void Main(string[] args)
 		{
-			var security = new Security(args);			
+			var security = new Security(args);
 
 			if (Progress.GetUpdateVisionAsync().Result)
 				Process.Start("shutdown.exe", "-r");
 
-			else
-			{
-				var connect = CreateHostBuilder().Build();
+			else if (security.GetContextAsync(args).Result.GrantAccess)
+				CreateHostBuilder().Build().Run();
 
-				if (security.GetContextAsync(args, connect).Result.GrantAccess)
-					connect.Run();
-
-				if (connect != null)
-				{
-					connect.StopAsync(new TimeSpan(0x3E8)).Wait();
-					connect.Dispose();
-				}
-			}
 			GC.Collect();
 			Process.GetCurrentProcess().Kill();
 		}
-		public static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder().ConfigureWebHostDefaults(web => web.UseStartup<Startup>());
+		public static IHostBuilder CreateHostBuilder()
+			=> Host.CreateDefaultBuilder().ConfigureWebHostDefaults(web => web.UseStartup<Startup>());
 	}
 }

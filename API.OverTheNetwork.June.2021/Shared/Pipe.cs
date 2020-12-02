@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
@@ -24,7 +25,9 @@ namespace ShareInvest
 		internal static void OnReceivePipeClientMessage(NamedPipeClientStream client, NamedPipeServerStream server)
 		{
 			Task stocks_task = null, futures_task = null;
-			bool repeat = true, collection = false, stocks = false, futures = false;
+			DateTime today = DateTime.Now, now = today.Hour > 0xF ? today.AddDays(Base.IsDebug ? 0 : 1) : today;
+			bool repeat = true, collection = false, stocks = false, futures = false,
+				sat = Array.Exists(Base.SAT, o => o.Equals(now.ToString(Base.DateFormat)));
 			using (var sr = new StreamReader(client))
 				try
 				{
@@ -95,7 +98,7 @@ namespace ShareInvest
 									switch (Enum.ToObject(typeof(Catalog.OpenAPI.Operation), number))
 									{
 										case Catalog.OpenAPI.Operation.장시작:
-											collection = operation[1].Equals("090000") && operation[^1].Equals("000000");
+											collection = operation[1].Equals(sat ? "100000" : "090000") && operation[^1].Equals("000000");
 											stocks = true;
 											futures = true;
 											break;
@@ -122,20 +125,20 @@ namespace ShareInvest
 											break;
 
 										case Catalog.OpenAPI.Operation.장시작전:
-											if (operation[1].Equals("085500"))
+											if (operation[1].Equals(sat ? "095500" : "085500"))
 												new Task(() =>
 												{
 													SetReservation();
 													Base.SendMessage(operation[1], Progress.Collection.Count, typeof(Balance));
 
 												}).Start();
-											else if (operation[1].Equals("085000"))
+											else if (operation[1].Equals(sat ? "095000" : "085000"))
 											{
 												Server.WriteLine(string.Concat(typeof(Crypto.Security).Name, '|', Progress.Account));
 												Server.WriteLine(string.Concat(typeof(Catalog.OpenAPI.Operation).Name, '|', operation[1]));
 												GC.Collect();
 											}
-											else if (operation[1].Equals("084500"))
+											else if (operation[1].Equals(sat ? "094500" : "084500"))
 												new Task(async () =>
 												{
 													foreach (var length in new int[] { 6, 8 })
@@ -159,7 +162,7 @@ namespace ShareInvest
 												}).Start();
 											break;
 
-										case Catalog.OpenAPI.Operation.장마감전_동시호가 when operation[1].Equals("152000"):
+										case Catalog.OpenAPI.Operation.장마감전_동시호가 when operation[1].Equals(sat ? "162000" : "152000"):
 											new Task(() =>
 											{
 												foreach (var stop in Progress.Collection)
@@ -233,7 +236,6 @@ namespace ShareInvest
 												server.Disconnect();
 											}
 											Process.Start("shutdown.exe", "-r");
-											Dispose();
 											break;
 									}
 									Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', Enum.GetName(typeof(Catalog.OpenAPI.Operation), charactor), '_', operation[1]), typeof(Catalog.OpenAPI.Operation));
@@ -250,9 +252,9 @@ namespace ShareInvest
 								}
 								else
 								{
-									var now = DateTime.Now;
+									var look = DateTime.Now;
 
-									if (now.Hour > 8 || now.Hour < 5)
+									if (look.Hour > 8 || look.Hour < 5)
 									{
 										collection = true;
 										stocks = true;
@@ -264,9 +266,7 @@ namespace ShareInvest
 								Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', temp[^1]), typeof(Balance));
 							}
 							else if (temp.Length == 1 && param.Length == 0xA)
-							{
-
-							}
+								Base.SendMessage(param, typeof(Balance));
 						}
 					}
 				}
@@ -293,14 +293,11 @@ namespace ShareInvest
 			if (repeat)
 			{
 				Thread.Sleep(0xC67);
-				Progress.TryToConnectThePipeStream();
-				Console.WriteLine("Wait for the {0}API to Restart. . .", Progress.SecuritiesCompany == 'O' ? "Open" : "Xing");
+				Progress.TryToConnectThePipeStream(null);
+				Console.WriteLine("Wait for the {0}API to Restart. . .", Progress.Company is 'O' ? "Open" : "Xing");
 			}
 			else
-			{
 				Process.Start("shutdown.exe", "-r");
-				Dispose();
-			}
 		}
 		internal static void TellTheClientConnectionStatus(string name, bool is_connected) => Console.WriteLine("{0} is connected on {1}", name, is_connected);
 		static void SetAccount(bool check, string account)
@@ -317,18 +314,8 @@ namespace ShareInvest
 		}
 		static void SetReservation()
 		{
-			var set = new Reservation();
-
-			foreach (var reservation in Progress.Collection)
-				if (reservation.Value.Balance != null && reservation.Value.Balance.Quantity > 0)
-					switch (reservation.Value.Strategics)
-					{
-						case Catalog.SatisfyConditionsAccordingToTrends:
-							set.Append.Enqueue(reservation.Value);
-							break;
-					}
-			Base.SendMessage("Order", set.Append.Count, typeof(Reservation));
-			var order = set.Stocks;
+			var order = new Reservation(Progress.Collection
+				.Where(o => o.Value.Balance is Balance bal && bal.Quantity > 0 && o.Value.Strategics is Catalog.SatisfyConditionsAccordingToTrends).ToArray()).Stocks;
 
 			while (order.Item1.Count > 0 || order.Item2.Count > 0)
 			{
@@ -345,10 +332,6 @@ namespace ShareInvest
 					Base.SendMessage(buy, typeof(Strategics));
 				}
 			}
-		}
-		static void Dispose()
-		{
-
 		}
 		static List<string> Storage
 		{

@@ -23,13 +23,13 @@ namespace ShareInvest.Controllers
 			}
 			else
 			{
-				if (Progress.SecuritiesCompany == 0x4F && (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[0] > '1')
+				if (Progress.Company is 'O' && (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[0] > '1')
 					&& await Progress.Client.PutContextAsync(param) is string code)
 					Base.SendMessage(code, Progress.Collection.Count, GetType());
 
 				if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
 				{
-					switch (Progress.SecuritiesCompany)
+					switch (Progress.Company)
 					{
 						case 'O' when param.Code.Length == 6:
 							Progress.Collection[param.Code] = new OpenAPI.Stocks
@@ -67,8 +67,10 @@ namespace ShareInvest.Controllers
 					}
 					if (Progress.Library.TryGetValue(param.Code, out Interface.IStrategics strategics)
 						&& Progress.Collection.TryGetValue(param.Code, out Analysis analysis))
+					{
 						analysis.Strategics = strategics;
-
+						Base.SendMessage(param.Name, analysis.Strategics.Code, analysis.Strategics.GetType());
+					}
 					return Ok(param.Name);
 				}
 				else
