@@ -43,7 +43,7 @@ namespace ShareInvest.OpenAPI
 				finally
 				{
 					if (Slim.Release() > 0)
-						Base.SendMessage(Code, param[0], GetType());
+						Base.SendMessage(Code, param.Length, GetType());
 				}
 		}
 		public override async Task AnalyzeTheQuotesAsync(string[] param)
@@ -60,7 +60,7 @@ namespace ShareInvest.OpenAPI
 			finally
 			{
 				if (Quote.Release() > 0)
-					Base.SendMessage(Code, param[0], GetType());
+					Base.SendMessage(Code, param.Length, GetType());
 			}
 		}
 		public override (IEnumerable<Collect>, uint, uint, string) SortTheRecordedInformation => base.SortTheRecordedInformation;

@@ -26,8 +26,7 @@ namespace ShareInvest
 		{
 			Task stocks_task = null, futures_task = null;
 			DateTime today = DateTime.Now, now = today.Hour > 0xF ? today.AddDays(Base.IsDebug ? 0 : 1) : today;
-			bool repeat = true, collection = false, stocks = false, futures = false,
-				sat = Array.Exists(Base.SAT, o => o.Equals(now.ToString(Base.DateFormat)));
+			bool repeat = true, collection = false, stocks = false, futures = false, sat = Base.CheckIfMarketDelay(now);
 			using (var sr = new StreamReader(client))
 				try
 				{
@@ -53,9 +52,10 @@ namespace ShareInvest
 										});
 										if (analysis.Collector == false)
 										{
-											analysis.Send += analysis.OnReceiveDrawChart;
 											analysis.Collector = true;
+											analysis.Send += analysis.OnReceiveDrawChart;
 											analysis.Wait = true;
+											Base.SendMessage(analysis.Code, price[0], analysis.GetType());
 										}
 										break;
 
@@ -237,6 +237,7 @@ namespace ShareInvest
 												server.Disconnect();
 											}
 											Process.Start("shutdown.exe", "-r");
+											Process.GetCurrentProcess().Kill();
 											break;
 									}
 									Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', Enum.GetName(typeof(Catalog.OpenAPI.Operation), charactor), '_', operation[1]), typeof(Catalog.OpenAPI.Operation));
@@ -298,7 +299,10 @@ namespace ShareInvest
 				Console.WriteLine("Wait for the {0}API to Restart. . .", Progress.Company is 'O' ? "Open" : "Xing");
 			}
 			else
+			{
 				Process.Start("shutdown.exe", "-r");
+				Process.GetCurrentProcess().Kill();
+			}
 		}
 		internal static void TellTheClientConnectionStatus(string name, bool is_connected) => Console.WriteLine("{0} is connected on {1}", name, is_connected);
 		static void SetAccount(bool check, string account)
@@ -315,23 +319,12 @@ namespace ShareInvest
 		}
 		static void SetReservation()
 		{
-			var order = new Reservation(Progress.Collection
-				.Where(o => o.Value.Balance is Balance bal && bal.Quantity > 0 && o.Value.Strategics is Catalog.SatisfyConditionsAccordingToTrends).ToArray()).Stocks;
-
-			while (order.Item1.Count > 0 || order.Item2.Count > 0)
+			foreach (var kv in new Reservation(Progress.Collection
+				.Where(o => o.Value.Balance is Balance bal && bal.Quantity > 0 && o.Value.Strategics is Catalog.SatisfyConditionsAccordingToTrends).ToArray()).Stocks)
 			{
-				if (order.Item1.Count > 0)
-				{
-					var sell = string.Concat("Order|", order.Item1.Dequeue());
-					Server.WriteLine(sell);
-					Base.SendMessage(sell, typeof(Strategics));
-				}
-				if (order.Item2.Count > 0)
-				{
-					var buy = string.Concat("Order|", order.Item2.Pop());
-					Server.WriteLine(buy);
-					Base.SendMessage(buy, typeof(Strategics));
-				}
+				var order = string.Concat("Order|", kv.Value);
+				Server.WriteLine(order);
+				Base.SendMessage(order, (int)(long.MaxValue - kv.Key), kv.Key.GetType());
 			}
 		}
 		static List<string> Storage

@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace ShareInvest
 {
@@ -18,57 +17,63 @@ namespace ShareInvest
 					Base.SendMessage(kv.Value.Balance.Name, kv.Value.Balance.Quantity, GetType());
 				}
 		}
-		internal (Queue<string>, Stack<string>) Stocks
+		internal IEnumerable<KeyValuePair<ulong, string>> Stocks
 		{
 			get
 			{
-				var sell_queue = new Queue<string>();
-				var buy_stack = new Stack<string>();
+				var reservation = new Dictionary<ulong, string>();
+				var index = ulong.MaxValue;
 
-				if (list is List<Analysis>)
-					Parallel.ForEach(list, new Action<Analysis>((r) =>
+				foreach (var r in list)
+				{
+					var stock = r.Market;
+					int type, price = (int)r.Current, upper = (int)(price * 1.3), lower = (int)(price * 0.7), buy, sell, quantity = r.Balance.Quantity;
+
+					switch (r.Strategics)
 					{
-						switch (r.Strategics)
-						{
-							case Catalog.SatisfyConditionsAccordingToTrends sc:
-								int sell, buy, price = (int)r.Current, upper = (int)(price * 1.3), lower = (int)(price * 0.7), bPrice, sPrice, quantity = r.Balance.Quantity;
-								var stock = r.Market;
+						case Catalog.SatisfyConditionsAccordingToTrends sc:
+							if (sc.ReservationSellQuantity > 0)
+							{
+								sell = Base.GetStartingPrice((int)(r.Balance.Purchase * (1 + sc.ReservationSellRate)), stock);
+								sell = sell < lower ? lower + r.GetQuoteUnit(sell, stock) : sell;
+								r.SellPrice = sell;
+								type = (int)Interface.OpenAPI.OrderType.신규매도;
 
-								if (sc.ReservationSellQuantity > 0)
+								while (sell < upper && quantity-- > 0)
 								{
-									sell = (int)(r.Balance.Purchase * (1 + sc.ReservationSellRate));
-									sPrice = Base.GetStartingPrice(sell, stock);
-									sPrice = sPrice < lower ? lower + r.GetQuoteUnit(sPrice, stock) : sPrice;
-									r.SellPrice = sPrice;
+									reservation[Base.MakeKey(index, type, r.Code)]
+										= Strategics.SetOrder(r.Code, type, sell, sc.ReservationSellQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty);
+									index -= 0x989680;
 
-									while (sPrice < upper && quantity-- > 0)
-									{
-										sell_queue.Enqueue(Strategics.SetOrder(r.Code, (int)Interface.OpenAPI.OrderType.신규매도, sPrice, sc.ReservationSellQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty));
-
-										for (int i = 0; i < sc.ReservationSellUnit; i++)
-											sPrice += r.GetQuoteUnit(sPrice, stock);
-									}
+									for (int i = 0; i < sc.ReservationSellUnit; i++)
+										sell += r.GetQuoteUnit(sell, stock);
 								}
-								if (sc.ReservationBuyQuantity > 0)
+								index = ulong.MaxValue;
+							}
+							if (sc.ReservationBuyQuantity > 0)
+							{
+								buy = Base.GetStartingPrice((int)(r.Balance.Purchase * (1 - sc.ReservationBuyRate)), stock);
+								buy = buy > upper ? upper - r.GetQuoteUnit(buy, stock) : buy;
+								r.BuyPrice = buy;
+								type = (int)Interface.OpenAPI.OrderType.신규매수;
+
+								while (buy > lower && Strategics.Cash > buy * (1.5e-4 + 1))
 								{
-									buy = (int)(r.Balance.Purchase * (1 - sc.ReservationBuyRate));
-									r.BuyPrice = Base.GetStartingPrice(buy, stock);
-									bPrice = Base.GetStartingPrice(lower, stock);
+									Strategics.Cash -= (long)(buy * (1.5e-4 + 1));
+									reservation[Base.MakeKey(index, type, r.Code)]
+										= Strategics.SetOrder(r.Code, type, buy, sc.ReservationBuyQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty);
+									index -= 0x989680;
 
-									while (bPrice < upper && bPrice < buy && Strategics.Cash > bPrice * (1.5e-4 + 1))
-									{
-										buy_stack.Push(Strategics.SetOrder(r.Code, (int)Interface.OpenAPI.OrderType.신규매수, bPrice, sc.ReservationBuyQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty));
-										Strategics.Cash -= (long)(bPrice * (1.5e-4 + 1));
-
-										for (int i = 0; i < sc.ReservationBuyUnit; i++)
-											bPrice += r.GetQuoteUnit(bPrice, stock);
-									}
+									for (int i = 0; i < sc.ReservationBuyUnit; i++)
+										buy -= r.GetQuoteUnit(buy, stock);
 								}
-								Base.SendMessage(r.Balance.Name, sell_queue.Count, Strategics.Cash.ToString("C0"), buy_stack.Count, GetType());
-								break;
-						}
-					}));
-				return (sell_queue, buy_stack);
+								index = ulong.MaxValue;
+							}
+							Base.SendMessage(r.Balance.Name, reservation.Count, sc.GetType());
+							break;
+					}
+				}
+				return reservation.OrderByDescending(o => o.Key);
 			}
 		}
 		readonly List<Analysis> list;

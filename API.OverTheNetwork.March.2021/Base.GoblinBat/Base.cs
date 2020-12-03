@@ -18,6 +18,11 @@ namespace ShareInvest
 		public static void SendMessage(Type type, string code, int status) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', status));
 		public static void SendMessage(string code, int status, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', status));
 		public static void SendMessage(DateTime now, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', now, '_', message));
+		public static void SendMessage(string name)
+		{
+			foreach (var process in Process.GetProcessesByName(name))
+				process.Kill();
+		}
 		public static string GetRemainingTime(TimeSpan span) => span.Days == 0 ?
 			string.Concat("장시작 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .") :
 			string.Concat("장시작 ", span.Days, "일 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .");
@@ -38,6 +43,21 @@ namespace ShareInvest
 			int n when n >= 0x7A120 && info => (price / 0x3E8 + 1) * 0x3E8,
 			_ => (price / 0x64 + 1) * 0x64,
 		};
+		public static ulong MakeKey(ulong index, int type, string code)
+		{
+			var letter = 1;
+			var exist = code.ToCharArray();
+
+			if (Array.Exists(exist, o => char.IsLetter(o)))
+			{
+				for (int i = 0; i < exist.Length; i++)
+					if (char.IsLetter(exist[i]))
+						code = code.Replace(exist[i], '0');
+
+				letter = 2;
+			}
+			return uint.TryParse(code, out uint count) ? index - count - (uint)(type * 0xF4240 * letter) : index;
+		}
 		public static string CallUpTheChart(Catalog.Models.Codes cm, string start)
 		{
 			if (string.IsNullOrEmpty(start) && DateTime.TryParseExact(cm.MaturityMarketCap, ConvertDateTime(cm.MaturityMarketCap.Length), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date))
@@ -115,6 +135,7 @@ namespace ShareInvest
 			}
 			return date;
 		}
+		public static bool CheckIfMarketDelay(DateTime now) => Array.Exists(SAT, o => o.Equals(now.ToString(DateFormat)));
 		public static DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);
 		public static DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
 		public static string DistinctDate
@@ -146,7 +167,6 @@ namespace ShareInvest
 		public static string TransactionSuspension => transaction_suspension;
 		public static string Transmit => transmit;
 		public static string Start => start;
-		public static string[] SAT => new[] { "201203" };
 		public static string[] Holidays => new[] { "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
 		static string ConvertDateTime(int length) => length switch
 		{
@@ -164,6 +184,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		static string[] SAT => new[] { "201203" };
 		const string distinctDate = "yyyyMM";
 		const string unique = "200611";
 		const string start = "0859";

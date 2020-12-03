@@ -46,6 +46,6 @@ namespace ShareInvest.OpenAPI.Catalog
 			get; set;
 		}
 		protected internal override int[] Fid => new int[] { 215, 20, 214 };
-		readonly string reservation = Array.Exists(Base.SAT, o => o.Equals(DateTime.Now.ToString(Base.DateFormat))) ? "095500" : "085500";
+		readonly string reservation = Base.CheckIfMarketDelay(DateTime.Now) ? "095500" : "085500";
 	}
 }

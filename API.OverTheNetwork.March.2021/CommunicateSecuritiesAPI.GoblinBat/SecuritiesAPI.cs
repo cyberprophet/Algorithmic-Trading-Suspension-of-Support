@@ -126,8 +126,9 @@ namespace ShareInvest
 						: await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
 					{
 						OnReceiveInformationTheDay();
-						notifyIcon.Text
-							= string.Format("Collecting Datum on {0}.", charts.Item1.Length == 6 && collection.TryGetValue(charts.Item1, out Codes mc) ? mc.Name : charts.Item1);
+						var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.",
+							charts.Item1.Length == 6 && collection.TryGetValue(charts.Item1, out Codes mc) ? mc.Name : charts.Item1, Codes.Count.ToString("N0"));
+						notifyIcon.Text = message.Length < 0x40 ? message : string.Format("Still {0} Stocks to be Collect.", Codes.Count.ToString("N0"));
 					}
 					break;
 
@@ -181,11 +182,14 @@ namespace ShareInvest
 				SendReservation(MessageBox.Show("Time to go back 5 minutes from the early start bell.", "Temporary Code for Debugging", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
 			}
 		}
-		[Conditional("DEBUG")]
 		void SendReservation(DialogResult result)
 		{
 			if (DialogResult.OK.Equals(result))
-				connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), "|0;085500;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation)));
+			{
+				var now = DateTime.Now;
+				connect.Writer
+					.WriteLine(string.Concat("장시작시간|", GetType(), now.Hour < 0x11 && Base.CheckIfMarketDelay(now) ? "|0;095500;" : "|0;085500;", now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation)));
+			}
 		}
 		void WorkerDoWork(object sender, DoWorkEventArgs e)
 		{
@@ -226,6 +230,7 @@ namespace ShareInvest
 									switch (temp[^1])
 									{
 										case "085000":
+										case "095000":
 											miss.Clear();
 											RequestBalanceInquiry();
 											break;
@@ -303,13 +308,13 @@ namespace ShareInvest
 					DayOfWeek.Sunday => now.AddDays(1),
 					DayOfWeek.Saturday => now.AddDays(2),
 					DayOfWeek weeks when weeks.Equals(DayOfWeek.Friday) && now.Hour > 8 => now.AddDays(3),
-					_ => now.Hour > 8 || Array.Exists(Base.Holidays, o => o.Equals(now.ToString("yyMMdd"))) ? now.AddDays(1) : now,
+					_ => now.Hour > 8 || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))) ? now.AddDays(1) : now,
 				};
-				var remain
-					= new DateTime(now.Year, now.Month, now.Day, Array.Exists(Base.SAT, o => o.Equals(now.ToString(Base.DateFormat))) ? 0xA : 9, 0, 0) - DateTime.Now;
+				var sat = Base.CheckIfMarketDelay(now);
+				var remain = new DateTime(now.Year, now.Month, now.Day, sat ? 0xA : 9, 0, 0) - DateTime.Now;
 				notifyIcon.Text = Base.GetRemainingTime(remain);
 
-				if (connect.Start == false && remain.TotalMinutes < 0x1F && now.Hour == 8 && now.Minute > 0x1E &&
+				if (connect.Start == false && remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E &&
 					(remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
 					StartProgress(connect as Control);
 			}
@@ -328,13 +333,12 @@ namespace ShareInvest
 		void StripItemClicked(object sender, ToolStripItemClickedEventArgs e)
 		{
 			if (e.ClickedItem.Name.Equals(reference.Name))
-			{
 				if (e.ClickedItem.Text.Equals("연결"))
 				{
-					e.ClickedItem.Text = "조회";
+					e.ClickedItem.Text = Base.IsDebug ? "조회" : "조회";
 					StartProgress(connect as Control);
 				}
-				else
+				else if (e.ClickedItem.Text.Equals("조회"))
 					switch (MessageBox.Show(look_up, connect.SecuritiesName, MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
 					{
 						case DialogResult.Abort:
@@ -349,7 +353,15 @@ namespace ShareInvest
 							RequestTheMissingInformation();
 							break;
 					}
-			}
+				else
+					switch (MessageBox.Show("", "", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
+					{
+						case DialogResult.OK:
+							break;
+
+						case DialogResult.Cancel:
+							break;
+					}
 			else
 				Close();
 		}
@@ -370,10 +382,7 @@ namespace ShareInvest
 								return;
 							}
 							Process.Start("shutdown.exe", "-r");
-
-							foreach (var process in Process.GetProcesses())
-								if (process.ProcessName.Equals(normalize))
-									process.Kill();
+							Base.SendMessage(normalize);
 						}
 						break;
 
@@ -414,15 +423,17 @@ namespace ShareInvest
 		void RequestTheMissingInformation()
 		{
 			var message = string.Empty;
+			var now = DateTime.Now;
 
 			switch (MessageBox.Show(administrator, Text, MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
 			{
-				case DialogResult.Ignore when DateTime.Now.Hour > 0xF:
-					message = string.Concat("장시작시간|", GetType(), "|8;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation));
+				case DialogResult.Ignore when now.Hour > 0xF:
+					message = string.Concat("장시작시간|", GetType(), "|8;", now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation));
 					break;
 
 				case DialogResult.Retry:
-					message = string.Concat("장시작시간|", GetType(), "|0;085000;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation));
+					message
+						= string.Concat("장시작시간|", GetType(), now.Hour < 0x11 && Base.CheckIfMarketDelay(now) ? "|0;095000;" : "|0;085000;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation));
 					break;
 
 				case DialogResult.Abort:
