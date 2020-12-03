@@ -1,0 +1,38 @@
+﻿@page "/log"
+@inject HttpClient http
+
+@if (Logs is Catalog.Models.Log[] && Logs.Length > 0)
+{
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Time</th>
+				<th>Message</th>
+				<th>Code</th>
+				<th>Screen</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var log in Logs)
+			{
+				<tr>
+					<td>@log.Time.ToLongTimeString()</td>
+					<td>@log.Message</td>
+					<td>@log.Code</td>
+					<td>@log.Screen</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+else
+{
+	<p><em>Loading...</em></p>
+}
+@code{
+	Catalog.Models.Log[] Logs
+	{
+		get; set;
+	}
+	protected override async Task OnInitializedAsync() => Logs = await http.GetFromJsonAsync<Catalog.Models.Log[]>(Security.GetRoute("Message"));
+}

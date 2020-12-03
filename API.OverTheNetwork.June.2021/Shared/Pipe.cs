@@ -79,9 +79,12 @@ namespace ShareInvest
 
 									case 8 when temp[1][1] == '0':
 										price = temp[^1].Split(';');
-										analysis.Current = double.TryParse(price[0][0] == '-' ? price[0][1..] : price[0], out double options_current) ? options_current : 0D;
-										analysis.Offer = double.TryParse(price[1][0] == '-' ? price[1][1..] : price[1], out double options_offer) ? options_offer : 0D;
-										analysis.Bid = double.TryParse(price[^1][0] == '-' ? price[^1][1..] : price[^1], out double options_bid) ? options_bid : 0D;
+										analysis.Current
+											= double.TryParse(price[0][0] == '-' ? price[0][1..] : price[0], out double options_current) ? options_current : 0D;
+										analysis.Offer
+											= double.TryParse(price[1][0] == '-' ? price[1][1..] : price[1], out double options_offer) ? options_offer : 0D;
+										analysis.Bid
+											= double.TryParse(price[^1][0] == '-' ? price[^1][1..] : price[^1], out double options_bid) ? options_bid : 0D;
 										break;
 
 									case 6 when temp[0].Equals("주식우선호가"):
@@ -113,7 +116,8 @@ namespace ShareInvest
 														try
 														{
 															var convert = collect.Value.SortTheRecordedInformation;
-															Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3, convert.Item4);
+															Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1),
+																collect.Key, convert.Item2, convert.Item3, convert.Item4);
 														}
 														catch (Exception ex)
 														{
@@ -144,7 +148,8 @@ namespace ShareInvest
 												{
 													foreach (var length in new int[] { 6, 8 })
 														foreach (var ch in await Progress.Client.GetContextAsync(new Codes { }, length) as List<Codes>)
-															if (Progress.Collection.TryGetValue(ch.Code, out Analysis select) && double.TryParse(ch.Price, out double price))
+															if (Progress.Collection.TryGetValue(ch.Code, out Analysis select)
+																&& double.TryParse(ch.Price, out double price))
 															{
 																if (length == 6)
 																{
@@ -176,7 +181,8 @@ namespace ShareInvest
 											}).Start();
 											break;
 									}
-									Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', Enum.GetName(typeof(Catalog.OpenAPI.Operation), number), '_', operation[1]), typeof(Catalog.OpenAPI.Operation));
+									Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_',
+										Enum.GetName(typeof(Catalog.OpenAPI.Operation), number), '_', operation[1]), typeof(Catalog.OpenAPI.Operation));
 								}
 								else if (char.TryParse(operation[0], out char charactor))
 								{
@@ -193,7 +199,8 @@ namespace ShareInvest
 															try
 															{
 																var convert = collect.Value.SortTheRecordedInformation;
-																Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3, convert.Item4);
+																Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1),
+																	collect.Key, convert.Item2, convert.Item3, convert.Item4);
 															}
 															catch (Exception ex)
 															{
@@ -240,14 +247,16 @@ namespace ShareInvest
 											Process.GetCurrentProcess().Kill();
 											break;
 									}
-									Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_', Enum.GetName(typeof(Catalog.OpenAPI.Operation), charactor), '_', operation[1]), typeof(Catalog.OpenAPI.Operation));
+									Base.SendMessage(string.Concat(DateTime.Now.ToString("HH:mm:ss.ffff"), '_',
+										Enum.GetName(typeof(Catalog.OpenAPI.Operation), charactor), '_', operation[1]), typeof(Catalog.OpenAPI.Operation));
 								}
 							}
 							else if (temp[0].Length == 0xD)
 							{
 								var balance = temp[^1].Split(';');
 
-								if (balance.Length > 2 && Progress.Collection.TryGetValue(balance[0], out Analysis bal) && double.TryParse(balance[4], out double current))
+								if (balance.Length > 2 && Progress.Collection.TryGetValue(balance[0], out Analysis bal)
+									&& double.TryParse(balance[4], out double current))
 								{
 									bal.Balance = new Balance(balance);
 									bal.Current = balance[0].Length == 8 && balance[0][1] == '0' ? current : (int)current;
@@ -304,19 +313,7 @@ namespace ShareInvest
 				Process.GetCurrentProcess().Kill();
 			}
 		}
-		internal static void TellTheClientConnectionStatus(string name, bool is_connected) => Console.WriteLine("{0} is connected on {1}", name, is_connected);
-		static void SetAccount(bool check, string account)
-		{
-			if (Storage == null)
-				Storage = new List<string>();
-
-			var sb = new StringBuilder();
-
-			foreach (int str in account.ToCharArray())
-				sb.Append(str.ToString("D3"));
-
-			Storage.Add(Crypto.Security.ConvertCrypto(check, Encoding.ASCII.GetBytes(Progress.Key.Security.Substring(Progress.Key.SecuritiesAPI.Length, account.Length - 0b10)), sb.ToString()));
-		}
+		internal static void TellTheClientConnectionStatus(string name, bool is_connected) => Console.WriteLine("{0} is connected on {1}", name, is_connected);		
 		static void SetReservation()
 		{
 			foreach (var kv in new Reservation(Progress.Collection
@@ -326,10 +323,6 @@ namespace ShareInvest
 				Server.WriteLine(order);
 				Base.SendMessage(order, (int)(long.MaxValue - kv.Key), kv.Key.GetType());
 			}
-		}
-		static List<string> Storage
-		{
-			get; set;
-		}
+		}		
 	}
 }

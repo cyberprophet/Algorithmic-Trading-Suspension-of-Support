@@ -134,7 +134,8 @@ namespace ShareInvest.OpenAPI
 		{
 			InitializeComponent();
 			ConnectToReceiveRealTime
-				= new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName.Split(' ')[2], PipeDirection.Out, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+				= new NamedPipeServerStream(Process.GetCurrentProcess().ProcessName.Split(' ')[2],
+					PipeDirection.Out, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
 		}
 		public dynamic API
 		{
