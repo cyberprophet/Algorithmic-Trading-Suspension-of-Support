@@ -5,7 +5,6 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Runtime.Versioning;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -313,7 +312,7 @@ namespace ShareInvest
 				Process.GetCurrentProcess().Kill();
 			}
 		}
-		internal static void TellTheClientConnectionStatus(string name, bool is_connected) => Console.WriteLine("{0} is connected on {1}", name, is_connected);		
+		internal static void TellTheClientConnectionStatus(string name, bool is_connected) => Console.WriteLine("{0} is connected on {1}", name, is_connected);
 		static void SetReservation()
 		{
 			foreach (var kv in new Reservation(Progress.Collection
@@ -321,8 +320,8 @@ namespace ShareInvest
 			{
 				var order = string.Concat("Order|", kv.Value);
 				Server.WriteLine(order);
-				Base.SendMessage(order, (int)(long.MaxValue - kv.Key), kv.Key.GetType());
+				Base.SendMessage(order, (int)(long.MaxValue - kv.Key > int.MaxValue ? int.MaxValue : long.MaxValue - kv.Key), kv.Key.GetType());
 			}
-		}		
+		}
 	}
 }

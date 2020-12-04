@@ -112,7 +112,8 @@ namespace ShareInvest.OpenAPI
 		}
 		void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
 			=> (API as Connect)?.TR.FirstOrDefault(o
-				=> (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name[1..].Equals(e.sTrCode[1..]))?.OnReceiveTrData(e);
+				=> (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name[1..].Equals(e.sTrCode[1..]))?
+					.OnReceiveTrData(e);
 		void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
 		{
 			if (e.nErrCode == 0)
@@ -130,6 +131,11 @@ namespace ShareInvest.OpenAPI
 				=> o.GetType().Name.Replace("_", string.Empty).Equals(e.sRealType, StringComparison.Ordinal))?.OnReceiveRealData(e);
 		void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
 			=> Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg[9..], "(", e.sScrNo, ")")));
+		void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
+		{
+			if (API.Chejan.TryGetValue(e.sGubun, out Chejan chejan))
+				chejan.OnReceiveChejanData(e);
+		}
 		public ConnectAPI()
 		{
 			InitializeComponent();
@@ -225,6 +231,7 @@ namespace ShareInvest.OpenAPI
 			axAPI.OnReceiveMsg += OnReceiveMessage;
 			axAPI.OnReceiveTrData += OnReceiveTrData;
 			axAPI.OnReceiveRealData += OnReceiveRealData;
+			axAPI.OnReceiveChejanData += OnReceiveChejanData;
 			await ConnectToReceiveRealTime.WaitForConnectionAsync();
 			Writer = new StreamWriter(ConnectToReceiveRealTime)
 			{
@@ -236,6 +243,14 @@ namespace ShareInvest.OpenAPI
 		public StreamWriter Writer
 		{
 			get; private set;
+		}
+		public IEnumerable<ISendSecuritiesAPI<SendSecuritiesAPI>> Chejan
+		{
+			get
+			{
+				foreach (var ctor in API.Chejan)
+					yield return ctor.Value;
+			}
 		}
 		public NamedPipeServerStream ConnectToReceiveRealTime
 		{

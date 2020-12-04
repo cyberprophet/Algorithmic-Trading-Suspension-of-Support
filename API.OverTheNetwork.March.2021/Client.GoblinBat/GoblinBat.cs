@@ -303,6 +303,24 @@ namespace ShareInvest.Client
 			}
 			return int.MinValue;
 		}
+		public async Task<object> PutContextAsync(Type type, Dictionary<string, string> param)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(type), Method.PUT)
+					.AddHeader(Security.content_type, Security.json)
+					.AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+
+				if (response.StatusCode.Equals(HttpStatusCode.OK) == false)
+					return (int)response.StatusCode;
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+				Base.SendMessage(ex.StackTrace, GetType());
+			}
+			return null;
+		}
 		public async Task<object> PutContextAsync<T>(T param) where T : struct
 		{
 			try

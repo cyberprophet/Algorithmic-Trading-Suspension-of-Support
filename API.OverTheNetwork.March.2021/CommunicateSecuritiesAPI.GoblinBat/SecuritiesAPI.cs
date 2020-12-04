@@ -56,6 +56,12 @@ namespace ShareInvest
 		{
 			switch (e.Convey)
 			{
+				case Dictionary<string, string> chejan:
+					if (await this.client.PutContextAsync(sender.GetType(), chejan) is int status)
+						Base.SendMessage(chejan["종목명"], status, sender.GetType());
+
+					return;
+
 				case Tuple<string, string, string, string, int> tr:
 					var param = new Codes
 					{
@@ -137,6 +143,9 @@ namespace ShareInvest
 						if (str.Length == 0xA && str[^2..].CompareTo("32") < 0)
 							connect.Writer.WriteLine(str);
 
+					foreach (var ctor in (connect as OpenAPI.ConnectAPI)?.Chejan)
+						ctor.Send += OnReceiveSecuritiesAPI;
+
 					var client = new NamedPipeClientStream(".", normalize, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
 					await client.ConnectAsync();
 					worker.RunWorkerAsync(client);
@@ -182,6 +191,7 @@ namespace ShareInvest
 				SendReservation(MessageBox.Show("Time to go back 5 minutes from the early start bell.", "Temporary Code for Debugging", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
 			}
 		}
+		[Conditional("DEBUG")]
 		void SendReservation(DialogResult result)
 		{
 			if (DialogResult.OK.Equals(result))
