@@ -68,8 +68,14 @@ namespace ShareInvest.Controllers
 					if (Progress.Library.TryGetValue(param.Code, out Interface.IStrategics strategics)
 						&& Progress.Collection.TryGetValue(param.Code, out Analysis analysis))
 					{
+						if (Progress.Storage.TryGetValue(param.Code, out (Stack<double>, Stack<double>, Stack<double>) stack))
+						{
+							analysis.Short = stack.Item1;
+							analysis.Long = stack.Item2;
+							analysis.Trend = stack.Item3;
+						}
 						analysis.Strategics = strategics;
-						Base.SendMessage(param.Name, analysis.Strategics.Code, analysis.Strategics.GetType());
+						Base.SendMessage(param.Name, stack.Item3.Count, analysis.Strategics.GetType());
 					}
 					return Ok(param.Name);
 				}

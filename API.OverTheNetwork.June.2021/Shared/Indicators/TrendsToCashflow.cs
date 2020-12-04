@@ -31,7 +31,66 @@ namespace ShareInvest.Indicators
 		{
 			get; set;
 		}
+		internal Catalog.Strategics.Statistics SendMessage
+		{
+			get; private set;
+		}
+		internal (Stack<double>, Stack<double>, Stack<double>) ReturnTheUsedStack
+		{
+			get
+			{
+				Stack<double> st = new Stack<double>(), lg = new Stack<double>(), td = new Stack<double>(),
+					short_stack = new Stack<double>(), long_stack = new Stack<double>(), trend_stack = new Stack<double>();
+
+				if (Strategics is Catalog.TrendsToCashflow tc)
+				{
+					while (st.Count <= tc.Short)
+						st.Push(Short.Pop());
+
+					while (lg.Count <= tc.Long)
+						lg.Push(Long.Pop());
+
+					while (td.Count <= tc.Trend)
+						td.Push(Trend.Pop());
+
+					while (st.Count > 0)
+						short_stack.Push(st.Pop());
+
+					while (lg.Count > 0)
+						long_stack.Push(lg.Pop());
+
+					while (td.Count > 0)
+						trend_stack.Push(td.Pop());
+				}
+				return (short_stack, long_stack, trend_stack);
+			}
+		}
+		internal void StartProgress(double commission)
+		{
+			if (Strategics is Catalog.TrendsToCashflow cf)
+			{
+				Commission = commission;
+				Short = new Stack<double>();
+				Long = new Stack<double>();
+				Trend = new Stack<double>();
+				OrderNumber = new Dictionary<string, dynamic>();
+				NextOrderTime = DateTime.MinValue;
+				Line = new Tuple<int, int, int>(cf.Short, cf.Long, cf.Trend);
+			}
+		}
 		public override event EventHandler<SendConsecutive> Send;
+		public override async Task<Balance> OnReceiveBalance<T>(T param) where T : struct
+		{
+			await Slim.WaitAsync();
+
+			return Balance;
+		}
+		public override async Task<Tuple<dynamic, bool, int>> OnReceiveConclusion<T>(T param) where T : struct
+		{
+			await Slim.WaitAsync();
+
+			return null;
+		}
 		public override async Task AnalyzeTheConclusionAsync(string[] param)
 		{
 			try
@@ -206,23 +265,6 @@ namespace ShareInvest.Indicators
 				}
 			}
 		}
-		public void StartProgress(double commission)
-		{
-			if (Strategics is Catalog.TrendsToCashflow cf)
-			{
-				Commission = commission;
-				Short = new Stack<double>();
-				Long = new Stack<double>();
-				Trend = new Stack<double>();
-				OrderNumber = new Dictionary<string, dynamic>();
-				NextOrderTime = DateTime.MinValue;
-				Line = new Tuple<int, int, int>(cf.Short, cf.Long, cf.Trend);
-			}
-		}
-		public Catalog.Strategics.Statistics SendMessage
-		{
-			get; private set;
-		}
 		public override bool Collector
 		{
 			get; set;
@@ -267,17 +309,17 @@ namespace ShareInvest.Indicators
 		{
 			get; set;
 		}
-		protected internal override Stack<double> Short
+		public override Stack<double> Short
 		{
-			get; set;
+			protected internal get; set;
 		}
-		protected internal override Stack<double> Long
+		public override Stack<double> Long
 		{
-			get; set;
+			protected internal get; set;
 		}
-		protected internal override Stack<double> Trend
+		public override Stack<double> Trend
 		{
-			get; set;
+			protected internal get; set;
 		}
 		protected internal override Tuple<int, int, int> Line
 		{

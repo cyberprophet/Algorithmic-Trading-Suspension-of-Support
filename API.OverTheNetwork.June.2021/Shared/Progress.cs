@@ -33,6 +33,10 @@ namespace ShareInvest
 		{
 			get; private set;
 		}
+		public static Dictionary<string, (Stack<double>, Stack<double>, Stack<double>)> Storage
+		{
+			get; private set;
+		}
 		public static Privacies Key
 		{
 			get; set;
@@ -79,29 +83,45 @@ namespace ShareInvest
 		public static void TrendsToValuation(dynamic privacy) => new Task(async () =>
 		{
 			if (privacy is Privacies p && await Client.GetContextAsync(new Catalog.TrendsToCashflow()) is IEnumerable<IStrategics> enumerable)
-				foreach (var ch in (await Client.GetContextAsync(new Codes(), 6) as List<Codes>).OrderBy(o => Guid.NewGuid()))
-					try
-					{
-						var now = DateTime.Now;
+				foreach (Catalog.TrendsToCashflow analysis in enumerable)
+					foreach (var ch in (await Client.GetContextAsync(new Codes(), 6) as List<Codes>).OrderBy(o => Guid.NewGuid()))
+						try
+						{
+							var now = DateTime.Now;
 
-						if (string.IsNullOrEmpty(ch.Price) == false && (ch.MarginRate == 1 || ch.MarginRate == 2) && ch.MaturityMarketCap.StartsWith("증거금")
-						&& ch.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
-							foreach (Catalog.TrendsToCashflow analysis in enumerable)
+							if (string.IsNullOrEmpty(ch.Price) == false && (ch.MarginRate == 1 || ch.MarginRate == 2)
+								&& ch.MaturityMarketCap.StartsWith("증거금") && ch.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
 								if (await Client.PostConfirmAsync(new Catalog.ConfirmStrategics
 								{
 									Code = ch.Code,
 									Date = now.Hour > 0xF ? now.ToString(Base.DateFormat) : now.AddDays(-1).ToString(Base.DateFormat),
 									Strategics = string.Concat("TC.", analysis.AnalysisType)
-								}) is bool confirm && confirm == false)
+								}) is bool confirm && (confirm == false || Library.ContainsKey(ch.Code) && Storage.ContainsKey(ch.Code) == false))
 								{
 									var estimate = Strategics.AnalyzeFinancialStatements(await Client.GetContextAsync(new Catalog.FinancialStatement
 									{
 										Code = ch.Code
 									}) as List<Catalog.FinancialStatement>, analysis.AnalysisType.ToCharArray());
+									var library = Library.TryGetValue(ch.Code, out IStrategics st);
 									var cf = new Indicators.TrendsToCashflow
 									{
 										Code = ch.Code,
-										Strategics = analysis,
+										Strategics = library && st is Catalog.SatisfyConditionsAccordingToTrends sc ? new Catalog.TrendsToCashflow
+										{
+											Code = sc.Code,
+											Short = sc.Short,
+											Long = sc.Long,
+											Trend = sc.Trend,
+											Unit = 1,
+											ReservationQuantity = 0,
+											ReservationRevenue = 0xA,
+											Addition = 0xB,
+											Interval = 1,
+											TradingQuantity = 1,
+											PositionRevenue = 5.25e-3,
+											PositionAddition = 7.25e-3,
+											AnalysisType = analysis.AnalysisType
+										} : analysis,
 										Balance = new Balance(ch.Name)
 									};
 									var bring = new BringInInformation(ch);
@@ -109,6 +129,9 @@ namespace ShareInvest
 									cf.StartProgress(p.Commission);
 									var name = await bring.StartProgress();
 									var statistics = cf.SendMessage;
+
+									if (library)
+										Storage[ch.Code] = cf.ReturnTheUsedStack;
 
 									if (estimate != null && estimate.Count > 3 && string.IsNullOrEmpty(statistics.Key) == false)
 									{
@@ -140,11 +163,11 @@ namespace ShareInvest
 									}
 									Base.SendMessage(name, statistics.Key, typeof(BringInInformation));
 								}
-					}
-					catch (Exception ex)
-					{
-						Base.SendMessage(ex.StackTrace, typeof(Progress));
-					}
+						}
+						catch (Exception ex)
+						{
+							Base.SendMessage(ex.StackTrace, typeof(Progress));
+						}
 		}).Start();
 		public static void SetPrivacy(Privacies privacy)
 		{
@@ -152,6 +175,7 @@ namespace ShareInvest
 			Company = char.TryParse(privacy.SecuritiesAPI, out char company) ? company : char.MaxValue;
 			Consensus = new Client.Consensus(privacy.Security);
 			Library = new Dictionary<string, IStrategics>();
+			Storage = new Dictionary<string, (Stack<double>, Stack<double>, Stack<double>)>();
 			Key = privacy;
 
 			if (string.IsNullOrEmpty(privacy.CodeStrategics) == false && privacy.CodeStrategics[2] is '|')

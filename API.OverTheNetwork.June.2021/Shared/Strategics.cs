@@ -6,11 +6,15 @@ using ShareInvest.SecondaryIndicators;
 
 namespace ShareInvest
 {
-	static class Strategics
+	public static class Strategics
 	{
-		public static string SetOrder(string code, int type, int price, int quantity, string hoga, string number)
+		public static long Cash
+		{
+			get; set;
+		}
+		internal static string SetOrder(string code, int type, int price, int quantity, string hoga, string number)
 			 => string.Concat(code, ';', type, ';', price, ';', quantity, ';', hoga, ';', number);
-		public static IEnumerable<Interface.IStrategics> SetStrategics(string[] param)
+		internal static IEnumerable<Interface.IStrategics> SetStrategics(string[] param)
 		{
 			foreach (var str in param)
 				if (str[2] == '|')
@@ -50,7 +54,7 @@ namespace ShareInvest
 						}
 				}
 		}
-		public static Dictionary<DateTime, double> AnalyzeFinancialStatements(List<Catalog.FinancialStatement> statement, char[] analysis)
+		internal static Dictionary<DateTime, double> AnalyzeFinancialStatements(List<Catalog.FinancialStatement> statement, char[] analysis)
 		{
 			List<long> sale = new List<long>(), oper = new List<long>(), netincome = new List<long>(), flow = new List<long>();
 			var financial_statement = new Dictionary<DateTime, Tuple<long, long, long, long>>();
@@ -151,11 +155,7 @@ namespace ShareInvest
 					}
 			}
 			return null;
-		}
-		public static long Cash
-		{
-			get; set;
-		}
+		}		
 		static Dictionary<DateTime, double> EstimateThePrice(Dictionary<DateTime, double> estimate, int year)
 		{
 			var dictionary = new Dictionary<DateTime, double>(estimate);

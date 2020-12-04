@@ -81,6 +81,8 @@ namespace ShareInvest
 		public abstract event EventHandler<SendConsecutive> Send;
 		public abstract Task AnalyzeTheConclusionAsync(string[] param);
 		public abstract Task AnalyzeTheQuotesAsync(string[] param);
+		public abstract Task<Balance> OnReceiveBalance<T>(T param) where T : struct;
+		public abstract Task<Tuple<dynamic, bool, int>> OnReceiveConclusion<T>(T param) where T : struct;
 		public abstract void OnReceiveDrawChart(object sender, SendConsecutive e);
 		public abstract bool Collector
 		{
@@ -118,6 +120,18 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		public abstract Stack<double> Short
+		{
+			protected internal get; set;
+		}
+		public abstract Stack<double> Long
+		{
+			protected internal get; set;
+		}
+		public abstract Stack<double> Trend
+		{
+			protected internal get; set;
+		}
 		public abstract Queue<Collect> Collection
 		{
 			get; set;
@@ -127,18 +141,6 @@ namespace ShareInvest
 			get; set;
 		}
 		protected internal abstract Tuple<int, int, int> Line
-		{
-			get; set;
-		}
-		protected internal abstract Stack<double> Short
-		{
-			get; set;
-		}
-		protected internal abstract Stack<double> Long
-		{
-			get; set;
-		}
-		protected internal abstract Stack<double> Trend
 		{
 			get; set;
 		}
@@ -168,5 +170,12 @@ namespace ShareInvest
 		}
 		protected internal abstract bool GetCheckOnDate(string date);
 		protected internal abstract bool GetCheckOnDeadline(string time);
+		protected internal const string conclusion = "체결";
+		protected internal const string acceptance = "접수";
+		protected internal const string confirmation = "확인";
+		protected internal const string cancellantion = "취소";
+		protected internal const string correction = "정정";
+		protected internal const string open_market = "OpenMarket";
+		protected internal const double tax = 25e-4 + 15e-5 + 15e-5;
 	}
 }
