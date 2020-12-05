@@ -15,7 +15,7 @@
 		<input @bind="messageInput" size="50" />
 	</label>
 </div>
-<button @onclick="Send" disabled="@(!IsConnected)">Send</button>
+<button @onclick="Send" disabled="@(IsConnected is false)">Send</button>
 
 <hr>
 
@@ -35,7 +35,7 @@
 	protected override async Task OnInitializedAsync()
 	{
 		hubConnection = new HubConnectionBuilder()
-			.WithUrl(NavigationManager.ToAbsoluteUri("/message"))
+			.WithUrl(NavigationManager.ToAbsoluteUri("/hub/message"))
 			.Build();
 
 		hubConnection.On<string, string>("ReceiveMessage", (user, message) =>

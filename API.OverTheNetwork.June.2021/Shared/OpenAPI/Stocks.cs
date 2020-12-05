@@ -115,6 +115,7 @@ namespace ShareInvest.OpenAPI
 				{
 					await Slim.WaitAsync();
 					Current = current;
+					Balance.Price = current;
 					Balance.Quantity = quantity;
 					Balance.Purchase = purchase;
 					Balance.Revenue = (current - purchase) * quantity;
@@ -142,6 +143,7 @@ namespace ShareInvest.OpenAPI
 					var cash = 0;
 					var remove = true;
 					await Slim.WaitAsync();
+					Current = current;
 
 					switch (con.OrderState)
 					{
@@ -183,12 +185,14 @@ namespace ShareInvest.OpenAPI
 				try
 				{
 					await Slim.WaitAsync();
-					Send?.Invoke(this, new SendConsecutive(new Catalog.Strategics.Charts
-					{
-						Date = param[0],
-						Price = param[1],
-						Volume = volume
-					}));
+
+					if (Strategics is Catalog.SatisfyConditionsAccordingToTrends sc && Short is not null && Long is not null && Trend is not null)
+						Send?.Invoke(this, new SendConsecutive(new Catalog.Strategics.Charts
+						{
+							Date = param[0],
+							Price = param[1],
+							Volume = volume
+						}));
 				}
 				catch (Exception ex)
 				{
@@ -202,6 +206,7 @@ namespace ShareInvest.OpenAPI
 			if (Balance is Balance bal && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int current))
 			{
 				Current = current;
+				bal.Price = current;
 				bal.Revenue = (current - bal.Purchase) * bal.Quantity;
 				bal.Rate = current / (double)bal.Purchase - 1;
 			}

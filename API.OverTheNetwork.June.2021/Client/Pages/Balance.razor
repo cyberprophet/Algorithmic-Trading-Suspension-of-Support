@@ -1,0 +1,62 @@
+﻿@page "/balance"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Manager
+@implements IAsyncDisposable
+
+@if (balance.Count > 0)
+{
+	<table class="table">
+		<thead>
+			<tr>
+				<th>종목코드</th>
+				<th>종목명</th>
+				<th>수량</th>
+				<th>매입가</th>
+				<th>현재가</th>
+				<th>평가손익</th>
+				<th>손익률</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var bal in balance)
+			{
+				<tr>
+					<td>@bal.Key</td>
+					<td>@bal.Value.Name</td>
+					<td>@bal.Value.Quantity</td>
+					<td>@bal.Value.Purchase</td>
+					<td>@bal.Value.Price</td>
+					<td>@bal.Value.Revenue</td>
+					<td>@bal.Value.Rate</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+else
+{
+	<p><em>Empty...</em></p>
+}
+@code
+{
+	HubConnection Hub
+	{
+		get; set;
+	}
+	Dictionary<string, ShareInvest.Balance> balance = new Dictionary<string, ShareInvest.Balance>();
+	protected override async Task OnInitializedAsync()
+	{
+		Hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
+		Hub.On<string, ShareInvest.Balance>("ReceiveBalanceMessage", (code, balance) =>
+		{
+			this.balance[code] = balance;
+
+			if (balance.Quantity == 0 && this.balance.Remove(code))
+				Base.SendMessage(code, balance.Quantity, GetType());
+
+			StateHasChanged();
+		});
+		await Hub.StartAsync();
+	}
+	public async ValueTask DisposeAsync() => await Hub.DisposeAsync();
+}

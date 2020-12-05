@@ -35,5 +35,5 @@ else
 	{
 		get; set;
 	}
-	protected override async Task OnInitializedAsync() => Logs = await http.GetFromJsonAsync<Catalog.Models.Log[]>(Security.GetRoute("Message"));
+	protected override async Task OnInitializedAsync() => Logs = await http.GetFromJsonAsync<Catalog.Models.Log[]>(Crypto.Security.GetRoute("Message"));
 }

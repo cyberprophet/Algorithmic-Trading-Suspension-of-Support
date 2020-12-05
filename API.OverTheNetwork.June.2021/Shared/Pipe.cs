@@ -254,11 +254,11 @@ namespace ShareInvest
 							{
 								var balance = temp[^1].Split(';');
 
-								if (balance.Length > 2 && Progress.Collection.TryGetValue(balance[0], out Analysis bal)
-									&& double.TryParse(balance[4], out double current))
+								if (balance.Length > 2 && Progress.Collection.TryGetValue(balance[0], out Analysis bal))
 								{
 									bal.Balance = new Balance(balance);
-									bal.Current = balance[0].Length == 8 && balance[0][1] == '0' ? current : (int)current;
+									bal.Current = bal.Balance.Price;
+									Client.Local.Instance.PostContext("Balance", balance[0], bal.Balance);
 								}
 								else
 								{

@@ -82,87 +82,87 @@ namespace ShareInvest
 		[SupportedOSPlatform("windows")]
 		public static void TrendsToValuation(dynamic privacy) => new Task(async () =>
 		{
-			if (privacy is Privacies p && await Client.GetContextAsync(new Catalog.TrendsToCashflow()) is IEnumerable<IStrategics> enumerable)
-				foreach (Catalog.TrendsToCashflow analysis in enumerable)
-					foreach (var ch in (await Client.GetContextAsync(new Codes(), 6) as List<Codes>).OrderBy(o => Guid.NewGuid()))
+			if (privacy is Privacies p && await Client.GetContextAsync(new Codes(), 6) is List<Codes> list)
+				foreach (Catalog.TrendsToCashflow analysis in await Client.GetContextAsync(new Catalog.TrendsToCashflow()) as IEnumerable<IStrategics>)
+					foreach (var ch in list.OrderBy(o => Guid.NewGuid()))
 						try
 						{
 							var now = DateTime.Now;
 
 							if (string.IsNullOrEmpty(ch.Price) == false && (ch.MarginRate == 1 || ch.MarginRate == 2)
-								&& ch.MaturityMarketCap.StartsWith("증거금") && ch.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
-								if (await Client.PostConfirmAsync(new Catalog.ConfirmStrategics
-								{
-									Code = ch.Code,
-									Date = now.Hour > 0xF ? now.ToString(Base.DateFormat) : now.AddDays(-1).ToString(Base.DateFormat),
-									Strategics = string.Concat("TC.", analysis.AnalysisType)
-								}) is bool confirm && (confirm == false || Library.ContainsKey(ch.Code) && Storage.ContainsKey(ch.Code) == false))
-								{
-									var estimate = Strategics.AnalyzeFinancialStatements(await Client.GetContextAsync(new Catalog.FinancialStatement
-									{
-										Code = ch.Code
-									}) as List<Catalog.FinancialStatement>, analysis.AnalysisType.ToCharArray());
-									var library = Library.TryGetValue(ch.Code, out IStrategics st);
-									var cf = new Indicators.TrendsToCashflow
+								&& ch.MaturityMarketCap.StartsWith("증거금") && ch.MaturityMarketCap.Contains(Base.TransactionSuspension) == false
+									&& await Client.PostConfirmAsync(new Catalog.ConfirmStrategics
 									{
 										Code = ch.Code,
-										Strategics = library && st is Catalog.SatisfyConditionsAccordingToTrends sc ? new Catalog.TrendsToCashflow
-										{
-											Code = sc.Code,
-											Short = sc.Short,
-											Long = sc.Long,
-											Trend = sc.Trend,
-											Unit = 1,
-											ReservationQuantity = 0,
-											ReservationRevenue = 0xA,
-											Addition = 0xB,
-											Interval = 1,
-											TradingQuantity = 1,
-											PositionRevenue = 5.25e-3,
-											PositionAddition = 7.25e-3,
-											AnalysisType = analysis.AnalysisType
-										} : analysis,
-										Balance = new Balance(ch.Name)
-									};
-									var bring = new BringInInformation(ch);
-									bring.Send += cf.OnReceiveDrawChart;
-									cf.StartProgress(p.Commission);
-									var name = await bring.StartProgress();
-									var statistics = cf.SendMessage;
-
-									if (library)
-										Storage[ch.Code] = cf.ReturnTheUsedStack;
-
-									if (estimate != null && estimate.Count > 3 && string.IsNullOrEmpty(statistics.Key) == false)
+										Date = now.Hour > 0xF ? now.ToString(Base.DateFormat) : now.AddDays(-1).ToString(Base.DateFormat),
+										Strategics = string.Concat("TC.", analysis.AnalysisType)
+									}) is bool confirm && (confirm == false || Library.ContainsKey(ch.Code) && Storage.ContainsKey(ch.Code) == false))
+							{
+								var estimate = Strategics.AnalyzeFinancialStatements(await Client.GetContextAsync(new Catalog.FinancialStatement
+								{
+									Code = ch.Code
+								}) as List<Catalog.FinancialStatement>, analysis.AnalysisType.ToCharArray());
+								var library = Library.TryGetValue(ch.Code, out IStrategics st);
+								var cf = new Indicators.TrendsToCashflow
+								{
+									Code = ch.Code,
+									Strategics = library && st is Catalog.SatisfyConditionsAccordingToTrends sc ? new Catalog.TrendsToCashflow
 									{
-										var normalize = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(statistics.Date)).Value;
-										var near = Base.FindTheNearestQuarter(DateTime.TryParseExact(statistics.Date, Base.FullDateFormat.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
+										Code = sc.Code,
+										Short = sc.Short,
+										Long = sc.Long,
+										Trend = sc.Trend,
+										Unit = 1,
+										ReservationQuantity = 0,
+										ReservationRevenue = 0xA,
+										Addition = 0xB,
+										Interval = 1,
+										TradingQuantity = 1,
+										PositionRevenue = 5.25e-3,
+										PositionAddition = 7.25e-3,
+										AnalysisType = analysis.AnalysisType
+									} : analysis,
+									Balance = new Balance(ch.Name)
+								};
+								var bring = new BringInInformation(ch);
+								bring.Send += cf.OnReceiveDrawChart;
+								cf.StartProgress(p.Commission);
+								var name = await bring.StartProgress();
+								var statistics = cf.SendMessage;
 
-										if (await Client.PutContextAsync(new Catalog.Models.Consensus
-										{
-											Code = ch.Code,
-											Strategics = statistics.Key,
-											Date = statistics.Date,
-											FirstQuarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[0])).Value - normalize,
-											SecondQuarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[1])).Value - normalize,
-											ThirdQuarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[2])).Value - normalize,
-											Quarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[3])).Value - normalize,
-											TheNextYear = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[4])).Value - normalize,
-											TheYearAfterNext = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[5])).Value - normalize
-										}) is int status && status == 0xC8 && statistics.Base > 0 && await Client.PutContextAsync(new StocksStrategics
-										{
-											Code = ch.Code,
-											Strategics = statistics.Key,
-											Date = statistics.Date,
-											MaximumInvestment = (long)statistics.Base,
-											CumulativeReturn = statistics.Cumulative / statistics.Base,
-											WeightedAverageDailyReturn = statistics.Statistic / statistics.Base,
-											DiscrepancyRateFromExpectedStockPrice = statistics.Price
-										}) is double coin && double.IsNaN(coin))
-											Base.SendMessage(ch.Code, typeof(StocksStrategics));
-									}
-									Base.SendMessage(name, statistics.Key, typeof(BringInInformation));
+								if (library)
+									Storage[ch.Code] = cf.ReturnTheUsedStack;
+
+								if (estimate != null && estimate.Count > 3 && string.IsNullOrEmpty(statistics.Key) == false)
+								{
+									var normalize = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(statistics.Date)).Value;
+									var near = Base.FindTheNearestQuarter(DateTime.TryParseExact(statistics.Date, Base.FullDateFormat.Substring(0, 6), CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime date) ? date : DateTime.Now);
+
+									if (await Client.PutContextAsync(new Catalog.Models.Consensus
+									{
+										Code = ch.Code,
+										Strategics = statistics.Key,
+										Date = statistics.Date,
+										FirstQuarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[0])).Value - normalize,
+										SecondQuarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[1])).Value - normalize,
+										ThirdQuarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[2])).Value - normalize,
+										Quarter = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[3])).Value - normalize,
+										TheNextYear = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[4])).Value - normalize,
+										TheYearAfterNext = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(near[5])).Value - normalize
+									}) is int status && status == 0xC8 && statistics.Base > 0 && await Client.PutContextAsync(new StocksStrategics
+									{
+										Code = ch.Code,
+										Strategics = statistics.Key,
+										Date = statistics.Date,
+										MaximumInvestment = (long)statistics.Base,
+										CumulativeReturn = statistics.Cumulative / statistics.Base,
+										WeightedAverageDailyReturn = statistics.Statistic / statistics.Base,
+										DiscrepancyRateFromExpectedStockPrice = statistics.Price
+									}) is double coin && double.IsNaN(coin))
+										Base.SendMessage(ch.Code, typeof(StocksStrategics));
 								}
+								Base.SendMessage(name, statistics.Key, typeof(BringInInformation));
+							}
 						}
 						catch (Exception ex)
 						{
