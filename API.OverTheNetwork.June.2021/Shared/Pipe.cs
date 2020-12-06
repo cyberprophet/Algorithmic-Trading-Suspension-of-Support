@@ -258,7 +258,7 @@ namespace ShareInvest
 								{
 									bal.Balance = new Balance(balance);
 									bal.Current = bal.Balance.Market ? current : (int)current;
-									Client.Local.Instance.PostContext("Balance", new Catalog.Models.Balance
+									Client.Local.Instance.PostContext(new Catalog.Models.Balance
 									{
 										Code = balance[0],
 										Name = bal.Balance.Name,

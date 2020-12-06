@@ -25,16 +25,16 @@ namespace ShareInvest.Client
 		{
 			get; set;
 		}
-		public void PostContext<T>(string route, T param) where T : struct => new Task(async () =>
+		public void PostContext<T>(T param) where T : struct => new Task(async () =>
 		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(Crypto.Security.GetRoute(route), Method.POST)
+				var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.POST)
 					.AddHeader(Security.content_type, Security.json)
 					.AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK) == false)
-					Base.SendMessage(route, param.GetType());
+					Base.SendMessage(response.Content, (int)response.StatusCode, param.GetType());
 			}
 			catch (Exception ex)
 			{
