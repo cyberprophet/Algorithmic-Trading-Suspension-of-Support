@@ -81,7 +81,7 @@ namespace ShareInvest
 		public abstract event EventHandler<SendConsecutive> Send;
 		public abstract Task AnalyzeTheConclusionAsync(string[] param);
 		public abstract Task AnalyzeTheQuotesAsync(string[] param);
-		public abstract Task<Balance> OnReceiveBalance<T>(T param) where T : struct;
+		public abstract Task<Catalog.Models.Balance> OnReceiveBalance<T>(T param) where T : struct;
 		public abstract Task<Tuple<dynamic, bool, int>> OnReceiveConclusion<T>(T param) where T : struct;
 		public abstract void OnReceiveDrawChart(object sender, SendConsecutive e);
 		public abstract bool Collector

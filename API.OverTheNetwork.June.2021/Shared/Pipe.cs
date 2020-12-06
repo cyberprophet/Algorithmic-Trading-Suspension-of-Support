@@ -254,11 +254,20 @@ namespace ShareInvest
 							{
 								var balance = temp[^1].Split(';');
 
-								if (balance.Length > 2 && Progress.Collection.TryGetValue(balance[0], out Analysis bal))
+								if (balance.Length > 2 && Progress.Collection.TryGetValue(balance[0], out Analysis bal) && double.TryParse(balance[4], out double current))
 								{
 									bal.Balance = new Balance(balance);
-									bal.Current = bal.Balance.Price;
-									Client.Local.Instance.PostContext("Balance", balance[0], bal.Balance);
+									bal.Current = bal.Balance.Market ? current : (int)current;
+									Client.Local.Instance.PostContext("Balance", new Catalog.Models.Balance
+									{
+										Code = balance[0],
+										Name = bal.Balance.Name,
+										Quantity = bal.Balance.Quantity.ToString("N0"),
+										Purchase = bal.Balance.Purchase.ToString(bal.Balance.Market ? "N2" : "N0"),
+										Current = bal.Current.ToString(bal.Balance.Market ? "N2" : "N0"),
+										Revenue = bal.Balance.Revenue.ToString("C0"),
+										Rate = bal.Balance.Rate.ToString("P2")
+									});
 								}
 								else
 								{

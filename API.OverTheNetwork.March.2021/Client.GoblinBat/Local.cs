@@ -25,16 +25,16 @@ namespace ShareInvest.Client
 		{
 			get; set;
 		}
-		public void PostContext<T>(string route, string code, T param) where T : class => new Task(async () =>
+		public void PostContext<T>(string route, T param) where T : struct => new Task(async () =>
 		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(Crypto.Security.GetRoute(route, code), Method.POST)
+				var response = await client.ExecuteAsync(new RestRequest(Crypto.Security.GetRoute(route), Method.POST)
 					.AddHeader(Security.content_type, Security.json)
 					.AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK) == false)
-					Base.SendMessage(route, code, param.GetType());
+					Base.SendMessage(route, param.GetType());
 			}
 			catch (Exception ex)
 			{
@@ -49,6 +49,7 @@ namespace ShareInvest.Client
 			{
 				Timeout = -1
 			};
+			Base.SendMessage(security.Url, GetType());
 			source = new CancellationTokenSource();
 		}
 		readonly CancellationTokenSource source;

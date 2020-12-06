@@ -19,7 +19,7 @@ namespace ShareInvest.OpenAPI
 				return;
 			}
 		}
-		public override async Task<Balance> OnReceiveBalance<T>(T param) where T : struct
+		public override async Task<Catalog.Models.Balance> OnReceiveBalance<T>(T param) where T : struct
 		{
 			if (param is Catalog.OpenAPI.Derivatives bal
 				&& double.TryParse(bal.Offer[0] is '-' ? bal.Offer[1..] : bal.Offer, out double offer)
@@ -49,7 +49,16 @@ namespace ShareInvest.OpenAPI
 					if (Slim.Release() > 0)
 						Base.SendMessage(bal.Name, bal.Account, param.GetType());
 				}
-			return Balance;
+			return new Catalog.Models.Balance
+			{
+				Code = Code,
+				Name = Balance.Name,
+				Quantity = Balance.Quantity.ToString("N0"),
+				Purchase = Balance.Purchase.ToString("N2"),
+				Current = Current.ToString("N2"),
+				Revenue = Balance.Revenue.ToString("C0"),
+				Rate = Balance.Rate.ToString("P2")
+			};
 		}
 		public override async Task<Tuple<dynamic, bool, int>> OnReceiveConclusion<T>(T param) where T : struct
 		{

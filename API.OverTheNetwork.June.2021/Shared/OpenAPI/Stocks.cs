@@ -105,7 +105,7 @@ namespace ShareInvest.OpenAPI
 			}
 		}
 		public override int GetQuoteUnit(int price, bool info) => base.GetQuoteUnit(price, info);
-		public override async Task<Balance> OnReceiveBalance<T>(T param) where T : struct
+		public override async Task<Catalog.Models.Balance> OnReceiveBalance<T>(T param) where T : struct
 		{
 			if (param is Catalog.OpenAPI.Balance bal && int.TryParse(bal.Purchase, out int purchase) && int.TryParse(bal.Quantity, out int quantity)
 				&& int.TryParse(bal.Current[0] is '-' ? bal.Current[1..] : bal.Current, out int current)
@@ -115,7 +115,6 @@ namespace ShareInvest.OpenAPI
 				{
 					await Slim.WaitAsync();
 					Current = current;
-					Balance.Price = current;
 					Balance.Quantity = quantity;
 					Balance.Purchase = purchase;
 					Balance.Revenue = (current - purchase) * quantity;
@@ -133,7 +132,16 @@ namespace ShareInvest.OpenAPI
 					if (Slim.Release() > 0)
 						Base.SendMessage(bal.Name, bal.Account, param.GetType());
 				}
-			return Balance;
+			return new Catalog.Models.Balance
+			{
+				Code = Code,
+				Name = Balance.Name,
+				Quantity = Balance.Quantity.ToString("N0"),
+				Purchase = Balance.Purchase.ToString("N0"),
+				Current = Current.ToString("N0"),
+				Revenue = Balance.Revenue.ToString("C0"),
+				Rate = Balance.Rate.ToString("P2")
+			};
 		}
 		public override async Task<Tuple<dynamic, bool, int>> OnReceiveConclusion<T>(T param) where T : struct
 		{
@@ -206,7 +214,6 @@ namespace ShareInvest.OpenAPI
 			if (Balance is Balance bal && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int current))
 			{
 				Current = current;
-				bal.Price = current;
 				bal.Revenue = (current - bal.Purchase) * bal.Quantity;
 				bal.Rate = current / (double)bal.Purchase - 1;
 			}

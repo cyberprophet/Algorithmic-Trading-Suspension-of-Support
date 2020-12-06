@@ -25,7 +25,7 @@
 					<td>@bal.Value.Name</td>
 					<td>@bal.Value.Quantity</td>
 					<td>@bal.Value.Purchase</td>
-					<td>@bal.Value.Price</td>
+					<td>@bal.Value.Current</td>
 					<td>@bal.Value.Revenue</td>
 					<td>@bal.Value.Rate</td>
 				</tr>
@@ -35,28 +35,26 @@
 }
 else
 {
-	<p><em>Empty...</em></p>
+	<p><em>Empty...(@balance.Count)</em></p>
 }
 @code
 {
-	HubConnection Hub
-	{
-		get; set;
-	}
-	Dictionary<string, ShareInvest.Balance> balance = new Dictionary<string, ShareInvest.Balance>();
 	protected override async Task OnInitializedAsync()
 	{
-		Hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
-		Hub.On<string, ShareInvest.Balance>("ReceiveBalanceMessage", (code, balance) =>
+		balance = new Dictionary<string, Catalog.Models.Balance>();
+		hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
+		hub.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) =>
 		{
-			this.balance[code] = balance;
+			this.balance[balance.Code] = balance;
 
-			if (balance.Quantity == 0 && this.balance.Remove(code))
-				Base.SendMessage(code, balance.Quantity, GetType());
+			if (balance.Quantity.Equals("0") && this.balance.Remove(balance.Code))
+				Base.SendMessage(balance.Code, balance.Quantity, GetType());
 
 			StateHasChanged();
 		});
-		await Hub.StartAsync();
+		await hub.StartAsync();
 	}
-	public async ValueTask DisposeAsync() => await Hub.DisposeAsync();
+	public async ValueTask DisposeAsync() => await hub.DisposeAsync();
+	Dictionary<string, Catalog.Models.Balance> balance;
+	HubConnection hub;
 }

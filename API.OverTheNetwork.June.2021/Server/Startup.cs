@@ -35,6 +35,7 @@ namespace ShareInvest
 				.AddTransient<BalanceHub>()
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter()))
 				.AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
+			Base.SendMessage(GetType().Name, services.GetType());
 		}
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 		{
@@ -42,8 +43,10 @@ namespace ShareInvest
 				app.UseMvc().UseDeveloperExceptionPage().UseWebAssemblyDebugging();
 
 			else
+			{
 				app.UseMvc().UseExceptionHandler("/Error");
-
+				Base.SendMessage(app.GetType().Name, env.GetType());
+			}
 			app.UseBlazorFrameworkFiles().UseStaticFiles().UseRouting().UseEndpoints(ep =>
 			{
 				ep.MapRazorPages();

@@ -6,6 +6,6 @@ namespace ShareInvest.Hubs
 {
 	public class BalanceHub : Hub
 	{
-		public async Task SendMessage(string code, Balance balance) => await Clients.All.SendAsync("ReceiveBalanceMessage", code, balance);
+		public async Task SendBalanceMessage(Catalog.Models.Balance balance) => await Clients.All.SendAsync("ReceiveBalanceMessage", balance);
 	}
 }

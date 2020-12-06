@@ -13,11 +13,14 @@ namespace ShareInvest.Controllers
 	[ApiController, Route(Security.route), Produces(Security.produces)]
 	public class BalanceController : ControllerBase
 	{
-		[HttpPost(Security.code)]
-		public async Task PostContextAsync(string code, [FromBody] Balance balance)
+		[HttpPost]
+		public async Task PostContextAsync([FromBody] Catalog.Models.Balance balance)
 		{
-			if (hub is BalanceHub)
-				await hub.Clients.All.SendAsync(message, code, balance);
+			if (hub is not null)
+				await hub.Clients.All.SendAsync(message, balance);
+
+			else
+				Base.SendMessage(message, balance.Name, GetType());
 		}
 		[HttpPut, ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<IActionResult> PutContextAsync([FromBody] Catalog.OpenAPI.Balance balance)
@@ -27,10 +30,18 @@ namespace ShareInvest.Controllers
 				if (Progress.Collection.TryGetValue(balance.Code[0] is 'A' ? balance.Code[1..] : balance.Code, out Analysis analysis))
 				{
 					if (analysis.Balance is null)
-						analysis.Balance = new Balance(balance.Name);
-
-					if (hub is BalanceHub)
-						await hub.Clients.All.SendAsync(message, balance.Code, await analysis.OnReceiveBalance(balance));
+						analysis.Balance = new Balance(new string[]
+						{
+							balance.Code,
+							balance.Name,
+							balance.Quantity,
+							balance.Purchase,
+							balance.Current,
+							string.Empty,
+							balance.Rate
+						});
+					if (hub is not null)
+						await hub.Clients.All.SendAsync(message, await analysis.OnReceiveBalance(balance));
 				}
 			}
 			catch (Exception ex)

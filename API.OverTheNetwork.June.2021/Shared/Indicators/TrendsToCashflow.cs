@@ -79,11 +79,11 @@ namespace ShareInvest.Indicators
 			}
 		}
 		public override event EventHandler<SendConsecutive> Send;
-		public override async Task<Balance> OnReceiveBalance<T>(T param) where T : struct
+		public override async Task<Catalog.Models.Balance> OnReceiveBalance<T>(T param) where T : struct
 		{
 			await Slim.WaitAsync();
 
-			return Balance;
+			return new Catalog.Models.Balance { };
 		}
 		public override async Task<Tuple<dynamic, bool, int>> OnReceiveConclusion<T>(T param) where T : struct
 		{

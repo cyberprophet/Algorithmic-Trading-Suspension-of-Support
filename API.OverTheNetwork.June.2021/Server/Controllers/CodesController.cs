@@ -67,9 +67,10 @@ namespace ShareInvest.Controllers
 						analysis.Short = stack.Item1;
 						analysis.Long = stack.Item2;
 						analysis.Trend = stack.Item3;
-						Base.SendMessage(param.Name, stack.Item3.Count, analysis.Strategics.GetType());
+						Base.SendMessage(param.Name, stack.Item3.Count, analysis.GetType());
 					}
 					analysis.Strategics = strategics;
+					Base.SendMessage(param.Name, strategics.GetType());
 				}
 				return Ok(param.Name);
 			}

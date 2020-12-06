@@ -1,7 +1,7 @@
 ﻿@page "/log"
 @inject HttpClient http
 
-@if (Logs is Catalog.Models.Log[] && Logs.Length > 0)
+@if (logs is Catalog.Models.Log[] && logs.Length > 0)
 {
 	<table class="table">
 		<thead>
@@ -13,7 +13,7 @@
 			</tr>
 		</thead>
 		<tbody>
-			@foreach (var log in Logs)
+			@foreach (var log in logs)
 			{
 				<tr>
 					<td>@log.Time.ToLongTimeString()</td>
@@ -31,9 +31,6 @@ else
 }
 @code
 {
-	Catalog.Models.Log[] Logs
-	{
-		get; set;
-	}
-	protected override async Task OnInitializedAsync() => Logs = await http.GetFromJsonAsync<Catalog.Models.Log[]>(Crypto.Security.GetRoute("Message"));
+	Catalog.Models.Log[] logs;
+	protected override async Task OnInitializedAsync() => logs = await http.GetFromJsonAsync<Catalog.Models.Log[]>(Crypto.Security.GetRoute("Message"));
 }
