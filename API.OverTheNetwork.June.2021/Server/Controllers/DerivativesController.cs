@@ -19,7 +19,7 @@ namespace ShareInvest.Controllers
 					if (analysis.Balance is null)
 						analysis.Balance = new Balance(derivatives.Name.Split(' ')[0].Trim());
 
-					await analysis.OnReceiveBalance(derivatives);
+					await new Task(() => analysis.OnReceiveBalance(derivatives));
 				}
 			}
 			catch (Exception ex)

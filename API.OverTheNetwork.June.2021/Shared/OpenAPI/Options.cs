@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.EventHandler;
@@ -11,15 +9,7 @@ namespace ShareInvest.OpenAPI
 	public class Options : Analysis
 	{
 		public override event EventHandler<SendConsecutive> Send;
-		public override void OnReceiveDrawChart(object sender, SendConsecutive e)
-		{
-			if (e.Matrix is null)
-			{
-
-				return;
-			}
-		}
-		public override async Task<Catalog.Models.Balance> OnReceiveBalance<T>(T param) where T : struct
+		public override Catalog.Models.Balance OnReceiveBalance<T>(T param) where T : struct
 		{
 			if (param is Catalog.OpenAPI.Derivatives bal
 				&& double.TryParse(bal.Offer[0] is '-' ? bal.Offer[1..] : bal.Offer, out double offer)
@@ -27,28 +17,17 @@ namespace ShareInvest.OpenAPI
 				&& double.TryParse(bal.Purchase[0] is '-' ? bal.Purchase[1..] : bal.Purchase, out double unit)
 				&& double.TryParse(bal.Unit, out double transaction) && int.TryParse(bal.Quantity, out int amount)
 				&& double.TryParse(bal.Current[0] is '-' ? bal.Current[1..] : bal.Current, out double price))
-				try
-				{
-					await Slim.WaitAsync();
-					var classification = bal.TradingClassification[0] is '1' ? -1 : 1;
-					Current = price;
-					Balance.Quantity = amount * classification;
-					Balance.Purchase = unit;
-					Balance.Revenue = (long)((price - unit) * classification * amount * transaction);
-					Balance.Rate = price / unit - 1;
-					Bid = bid;
-					Offer = offer;
-					Wait = true;
-				}
-				catch (Exception ex)
-				{
-					Base.SendMessage(bal.Name, ex.StackTrace, param.GetType());
-				}
-				finally
-				{
-					if (Slim.Release() > 0)
-						Base.SendMessage(bal.Name, bal.Account, param.GetType());
-				}
+			{
+				var classification = bal.TradingClassification[0] is '1' ? -1 : 1;
+				Current = price;
+				Balance.Quantity = amount * classification;
+				Balance.Purchase = unit;
+				Balance.Revenue = (long)((price - unit) * classification * amount * transaction);
+				Balance.Rate = price / unit - 1;
+				Bid = bid;
+				Offer = offer;
+				Wait = true;
+			}
 			return new Catalog.Models.Balance
 			{
 				Code = Code,
@@ -60,83 +39,33 @@ namespace ShareInvest.OpenAPI
 				Rate = Balance.Rate.ToString("P2")
 			};
 		}
-		public override async Task<Tuple<dynamic, bool, int>> OnReceiveConclusion<T>(T param) where T : struct
+		public override void OnReceiveConclusion<T>(T param) where T : struct
 		{
-			if (param is Catalog.OpenAPI.Conclusion con && double.TryParse(con.CurrentPrice[0] is '-' ? con.CurrentPrice[1..] : con.CurrentPrice, out double current))
-				try
-				{
-					var remove = true;
-					await Slim.WaitAsync();
-
-					switch (con.OrderState)
-					{
-						case conclusion:
-							if (OrderNumber.Remove(con.OrderNumber))
-								remove = false;
-
-							break;
-
-						case acceptance when con.UnsettledQuantity[0] is not '0':
-							if (double.TryParse(con.OrderPrice, out double price) && price > 0)
-								OrderNumber[con.OrderNumber] = price;
-
-							break;
-
-						case confirmation when con.OrderClassification.EndsWith(cancellantion) || con.OrderClassification.EndsWith(correction):
-							remove = OrderNumber.Remove(con.OriginalOrderNumber);
-							break;
-					}
-					return new Tuple<dynamic, bool, int>(current, remove, 0);
-				}
-				catch (Exception ex)
-				{
-					Base.SendMessage(con.Name, ex.StackTrace, param.GetType());
-				}
-				finally
-				{
-					if (Slim.Release() > 0)
-						Base.SendMessage(con.Name, con.Account, param.GetType());
-				}
-			return null;
-		}
-		public override async Task AnalyzeTheConclusionAsync(string[] param)
-		{
-			if (int.TryParse(param[^1], out int volume))
-				try
-				{
-					await Slim.WaitAsync();
-					Send?.Invoke(this, new SendConsecutive(new Catalog.Strategics.Charts
-					{
-						Date = param[0],
-						Price = param[1],
-						Volume = volume
-					}));
-				}
-				catch (Exception ex)
-				{
-					Base.SendMessage(Code, ex.StackTrace, GetType());
-				}
-				finally
-				{
-					if (Slim.Release() > 0)
-						Base.SendMessage(Code, param.Length, GetType());
-				}
-		}
-		public override async Task AnalyzeTheQuotesAsync(string[] param)
-		{
-			try
+			if (param is Catalog.OpenAPI.Conclusion con
+				&& double.TryParse(con.CurrentPrice[0] is '-' ? con.CurrentPrice[1..] : con.CurrentPrice, out double current))
 			{
-				await Quote.WaitAsync();
-				Send?.Invoke(this, new SendConsecutive(param));
-			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(Code, ex.StackTrace, GetType());
-			}
-			finally
-			{
-				if (Quote.Release() > 0)
-					Base.SendMessage(Code, param.Length, GetType());
+				var remove = true;
+				Current = current;
+
+				switch (con.OrderState)
+				{
+					case conclusion:
+						if (OrderNumber.Remove(con.OrderNumber))
+							remove = false;
+
+						break;
+
+					case acceptance when con.UnsettledQuantity[0] is not '0':
+						if (double.TryParse(con.OrderPrice, out double price) && price > 0)
+							OrderNumber[con.OrderNumber] = price;
+
+						break;
+
+					case confirmation when con.OrderClassification.EndsWith(cancellantion) || con.OrderClassification.EndsWith(correction):
+						remove = OrderNumber.Remove(con.OriginalOrderNumber);
+						break;
+				}
+				Wait = remove;
 			}
 		}
 		public override (IEnumerable<Collect>, uint, uint, string) SortTheRecordedInformation => base.SortTheRecordedInformation;
@@ -200,8 +129,6 @@ namespace ShareInvest.OpenAPI
 		{
 			get; set;
 		}
-		protected internal override SemaphoreSlim Quote => new SemaphoreSlim(1, 1);
-		protected internal override SemaphoreSlim Slim => new SemaphoreSlim(1, 1);
 		protected internal override DateTime NextOrderTime
 		{
 			get; set;
@@ -210,13 +137,29 @@ namespace ShareInvest.OpenAPI
 		{
 			get; set;
 		}
-		protected internal override bool GetCheckOnDate(string date)
+		protected internal override bool GetCheckOnDate(string date) => throw new NotImplementedException();
+		protected internal override bool GetCheckOnDeadline(string time) => throw new NotImplementedException();
+		public override void AnalyzeTheConclusion(string[] param)
 		{
-			return true;
+			if (int.TryParse(param[^1], out int volume))
+				Send?.Invoke(this, new SendConsecutive(new Catalog.Strategics.Charts
+				{
+					Date = param[0],
+					Price = param[1],
+					Volume = volume
+				}));
 		}
-		protected internal override bool GetCheckOnDeadline(string time)
+		public override void AnalyzeTheQuotes(string[] param)
 		{
-			return true;
+			//?.Invoke(this, new SendConsecutive(param));
+		}
+		public override void OnReceiveMatrix(object sender, SendConsecutive e)
+		{
+
+		}
+		public override void OnReceiveDrawChart(object sender, SendConsecutive e)
+		{
+
 		}
 	}
 }

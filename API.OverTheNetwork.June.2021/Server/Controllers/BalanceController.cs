@@ -41,7 +41,7 @@ namespace ShareInvest.Controllers
 							balance.Rate
 						});
 					if (hub is not null)
-						await hub.Clients.All.SendAsync(message, await analysis.OnReceiveBalance(balance));
+						await hub.Clients.All.SendAsync(message, analysis.OnReceiveBalance(balance));
 				}
 			}
 			catch (Exception ex)

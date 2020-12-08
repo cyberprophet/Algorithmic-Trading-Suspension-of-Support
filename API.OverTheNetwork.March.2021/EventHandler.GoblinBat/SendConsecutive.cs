@@ -18,7 +18,7 @@ namespace ShareInvest.EventHandler
 		{
 			get; private set;
 		}
-		public object Matrix
+		public string[] Matrix
 		{
 			get; private set;
 		}

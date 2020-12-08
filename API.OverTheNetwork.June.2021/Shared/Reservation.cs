@@ -14,7 +14,7 @@ namespace ShareInvest
 						this.list = new List<Analysis>();
 
 					this.list.Add(reservation);
-					Base.SendMessage(kv.Value.Balance.Name, kv.Value.Balance.Quantity, GetType());
+					Base.SendMessage(GetType(), kv.Value.Balance.Name as string, (int)kv.Value.Balance.Quantity);
 				}
 		}
 		internal IEnumerable<KeyValuePair<ulong, string>> Stocks
@@ -35,7 +35,7 @@ namespace ShareInvest
 							if (sc.ReservationSellQuantity > 0)
 							{
 								sell = Base.GetStartingPrice((int)(r.Balance.Purchase * (1 + sc.ReservationSellRate)), stock);
-								sell = sell < lower ? lower + r.GetQuoteUnit(sell, stock) : sell;
+								sell = sell < lower ? lower + Base.GetQuoteUnit(sell, stock) : sell;
 								r.SellPrice = sell;
 								type = (int)Interface.OpenAPI.OrderType.신규매도;
 
@@ -46,14 +46,14 @@ namespace ShareInvest
 									index -= 0x989680;
 
 									for (int i = 0; i < sc.ReservationSellUnit; i++)
-										sell += r.GetQuoteUnit(sell, stock);
+										sell += Base.GetQuoteUnit(sell, stock);
 								}
 								index = ulong.MaxValue;
 							}
 							if (sc.ReservationBuyQuantity > 0)
 							{
 								buy = Base.GetStartingPrice((int)(r.Balance.Purchase * (1 - sc.ReservationBuyRate)), stock);
-								buy = buy > upper ? upper - r.GetQuoteUnit(buy, stock) : buy;
+								buy = buy > upper ? upper - Base.GetQuoteUnit(buy, stock) : buy;
 								r.BuyPrice = buy;
 								type = (int)Interface.OpenAPI.OrderType.신규매수;
 
@@ -65,7 +65,7 @@ namespace ShareInvest
 									index -= 0x989680;
 
 									for (int i = 0; i < sc.ReservationBuyUnit; i++)
-										buy -= r.GetQuoteUnit(buy, stock);
+										buy -= Base.GetQuoteUnit(buy, stock);
 								}
 								index = ulong.MaxValue;
 							}

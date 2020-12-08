@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
-using System.Threading;
-using System.Threading.Tasks;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.EventHandler;
@@ -26,112 +24,22 @@ namespace ShareInvest.OpenAPI
 		{
 			protected internal get; set;
 		}
-		[SupportedOSPlatform("windows")]
-		public override void OnReceiveDrawChart(object sender, SendConsecutive e)
-		{
-			if (e.Matrix is null)
-			{
-				if (GetCheckOnDate(e.Date))
-				{
-					Short.Pop();
-					Long.Pop();
-					Trend.Pop();
-				}
-				Trend.Push(Trend.Count > 0 ? EMA.Make(Line.Item3, Trend.Count, e.Price, Trend.Peek()) : EMA.Make(e.Price));
-				Short.Push(Short.Count > 0 ? EMA.Make(Line.Item1, Short.Count, e.Price, Short.Peek()) : EMA.Make(e.Price));
-				Long.Push(Long.Count > 0 ? EMA.Make(Line.Item2, Long.Count, e.Price, Long.Peek()) : EMA.Make(e.Price));
-
-				if (GetCheckOnDeadline(e.Date) && Short.Count > 1 && Long.Count > 1 && Strategics is Catalog.SatisfyConditionsAccordingToTrends sc)
-				{
-					double popShort = Short.Pop(), popLong = Long.Pop(), gap = popShort - popLong - (Short.Peek() - Long.Peek());
-					Short.Push(popShort);
-					Long.Push(popLong);
-					var interval = new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day,
-						int.TryParse(e.Date.Substring(0, 2), out int cHour) ? cHour : DateTime.Now.Hour,
-							int.TryParse(e.Date.Substring(2, 2), out int cMinute) ? cMinute : DateTime.Now.Minute,
-								int.TryParse(e.Date[4..], out int cSecond) ? cSecond : DateTime.Now.Second);
-
-					if (sc.TradingBuyQuantity > 0 && Bid < Trend.Peek() * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) == false
-						&& Wait && (sc.TradingBuyInterval == 0 || sc.TradingBuyInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
-					{
-						Pipe.Server.WriteLine(string.Concat(order,
-							ShareInvest.Strategics.SetOrder(sc.Code, (int)OrderType.신규매수, Bid, sc.TradingBuyQuantity, ((int)HogaGb.지정가).ToString("D2"), string.Empty)));
-						Wait = false;
-
-						if (sc.TradingBuyInterval > 0)
-							NextOrderTime
-								= Base.MeasureTheDelayTime(sc.TradingBuyInterval * (Balance.Purchase > 0 && Bid > 0 ? Balance.Purchase / (double)Bid : 1), interval);
-					}
-					else if (Balance.Quantity > 0)
-					{
-						if (sc.TradingSellQuantity > 0 && Offer > Trend.Peek() * (1 + sc.TradingSellRate) && Offer > Balance.Purchase + tax * Offer
-							&& gap < 0 && OrderNumber.ContainsValue(Offer) == false && Wait
-							&& (sc.TradingSellInterval == 0 || sc.TradingSellInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
-						{
-							Pipe.Server.WriteLine(string.Concat(order,
-								ShareInvest.Strategics.SetOrder(sc.Code, (int)OrderType.신규매도, Offer, sc.TradingSellQuantity, ((int)HogaGb.지정가).ToString("D2"), string.Empty)));
-							Wait = false;
-
-							if (sc.TradingSellInterval > 0)
-								NextOrderTime
-									= Base.MeasureTheDelayTime(sc.TradingSellInterval * (Balance.Purchase > 0 && Offer > 0 ? Offer / (double)Balance.Purchase : 1), interval);
-						}
-						else if (SellPrice > 0 && sc.ReservationSellQuantity > 0 && Offer > SellPrice && OrderNumber.ContainsValue(Offer) == false && Wait)
-						{
-							for (int i = 0; i < sc.ReservationSellUnit; i++)
-								SellPrice += GetQuoteUnit(SellPrice, Market);
-
-							Pipe.Server.WriteLine(string.Concat(order,
-								ShareInvest.Strategics.SetOrder(sc.Code, (int)OrderType.신규매도, Offer, sc.ReservationSellQuantity, ((int)HogaGb.지정가).ToString("D2"), string.Empty)));
-							Wait = false;
-						}
-						else if (BuyPrice > 0 && sc.ReservationBuyQuantity > 0 && Bid < BuyPrice && OrderNumber.ContainsValue(Bid) == false && Wait)
-						{
-							for (int i = 0; i < sc.ReservationBuyUnit; i++)
-								BuyPrice -= GetQuoteUnit(BuyPrice, Market);
-
-							Pipe.Server.WriteLine(string.Concat(order,
-								ShareInvest.Strategics.SetOrder(sc.Code, (int)OrderType.신규매수, Bid, sc.ReservationBuyQuantity, ((int)HogaGb.지정가).ToString("D2"), string.Empty)));
-							Wait = false;
-						}
-						else if (SellPrice == 0 && Balance.Purchase > 0)
-							SellPrice = Base.GetStartingPrice((int)((1 + sc.ReservationSellRate) * Balance.Purchase), Market);
-
-						else if (BuyPrice == 0 && Balance.Purchase > 0)
-							BuyPrice = Base.GetStartingPrice((int)(Balance.Purchase * (1 - sc.ReservationBuyRate)), Market);
-					}
-				}
-				return;
-			}
-		}
-		public override int GetQuoteUnit(int price, bool info) => base.GetQuoteUnit(price, info);
-		public override async Task<Catalog.Models.Balance> OnReceiveBalance<T>(T param) where T : struct
+		public override Catalog.Models.Balance OnReceiveBalance<T>(T param) where T : struct
 		{
 			if (param is Catalog.OpenAPI.Balance bal && int.TryParse(bal.Purchase, out int purchase) && int.TryParse(bal.Quantity, out int quantity)
 				&& int.TryParse(bal.Current[0] is '-' ? bal.Current[1..] : bal.Current, out int current)
 				&& int.TryParse(bal.Offer[0] is '-' ? bal.Offer[1..] : bal.Offer, out int offer)
 				&& int.TryParse(bal.Bid[0] is '-' ? bal.Bid[1..] : bal.Bid, out int bid))
-				try
-				{
-					await Slim.WaitAsync();
-					Current = current;
-					Balance.Quantity = quantity;
-					Balance.Purchase = purchase;
-					Balance.Revenue = (current - purchase) * quantity;
-					Balance.Rate = current / (double)purchase - 1;
-					Bid = bid;
-					Offer = offer;
-					Wait = true;
-				}
-				catch (Exception ex)
-				{
-					Base.SendMessage(bal.Name, ex.StackTrace, param.GetType());
-				}
-				finally
-				{
-					if (Slim.Release() > 0)
-						Base.SendMessage(bal.Name, bal.Account, param.GetType());
-				}
+			{
+				Current = current;
+				Balance.Quantity = quantity;
+				Balance.Purchase = purchase;
+				Balance.Revenue = (current - purchase) * quantity;
+				Balance.Rate = current / (double)purchase - 1;
+				Bid = bid;
+				Offer = offer;
+				Wait = true;
+			}
 			return new Catalog.Models.Balance
 			{
 				Code = Code,
@@ -143,96 +51,38 @@ namespace ShareInvest.OpenAPI
 				Rate = Balance.Rate.ToString("P2")
 			};
 		}
-		public override async Task<Tuple<dynamic, bool, int>> OnReceiveConclusion<T>(T param) where T : struct
+		public override void OnReceiveConclusion<T>(T param) where T : struct
 		{
-			if (param is Catalog.OpenAPI.Conclusion con && int.TryParse(con.CurrentPrice[0] is '-' ? con.CurrentPrice[1..] : con.CurrentPrice, out int current))
-				try
-				{
-					var cash = 0;
-					var remove = true;
-					await Slim.WaitAsync();
-					Current = current;
-
-					switch (con.OrderState)
-					{
-						case conclusion:
-							if (OrderNumber.Remove(con.OrderNumber))
-								remove = false;
-
-							break;
-
-						case acceptance when con.UnsettledQuantity[0] is not '0':
-							if (int.TryParse(con.OrderPrice, out int price) && price > 0)
-								OrderNumber[con.OrderNumber] = price;
-
-							break;
-
-						case confirmation when con.OrderClassification.EndsWith(cancellantion) || con.OrderClassification.EndsWith(correction):
-							if (con.OrderClassification.EndsWith(cancellantion) && OrderNumber.TryGetValue(con.OriginalOrderNumber, out dynamic order_price))
-								cash = (order_price < Current ? order_price : 0) * (int.TryParse(con.OrderQuantity, out int volume) ? volume : 0);
-
-							remove = OrderNumber.Remove(con.OriginalOrderNumber);
-							break;
-					}
-					return new Tuple<dynamic, bool, int>(current, remove, cash);
-				}
-				catch (Exception ex)
-				{
-					Base.SendMessage(con.Name, ex.StackTrace, param.GetType());
-				}
-				finally
-				{
-					if (Slim.Release() > 0)
-						Base.SendMessage(con.Name, con.Account, param.GetType());
-				}
-			return null;
-		}
-		public override async Task AnalyzeTheConclusionAsync(string[] param)
-		{
-			if (int.TryParse(param[^1], out int volume))
-				try
-				{
-					await Slim.WaitAsync();
-
-					if (Strategics is Catalog.SatisfyConditionsAccordingToTrends sc && Short is not null && Long is not null && Trend is not null)
-						Send?.Invoke(this, new SendConsecutive(new Catalog.Strategics.Charts
-						{
-							Date = param[0],
-							Price = param[1],
-							Volume = volume
-						}));
-				}
-				catch (Exception ex)
-				{
-					Base.SendMessage(Code, ex.StackTrace, GetType());
-				}
-				finally
-				{
-					if (Slim.Release() > 0)
-						Base.SendMessage(Code, param.Length, GetType());
-				}
-			if (Balance is Balance bal && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int current))
+			if (param is Catalog.OpenAPI.Conclusion con
+				&& int.TryParse(con.CurrentPrice[0] is '-' ? con.CurrentPrice[1..] : con.CurrentPrice, out int current))
 			{
+				var cash = 0;
+				var remove = true;
 				Current = current;
-				bal.Revenue = (current - bal.Purchase) * bal.Quantity;
-				bal.Rate = current / (double)bal.Purchase - 1;
-			}
-		}
-		public override async Task AnalyzeTheQuotesAsync(string[] param)
-		{
-			try
-			{
-				await Quote.WaitAsync();
-				Send?.Invoke(this, new SendConsecutive(param));
-			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(Code, ex.StackTrace, GetType());
-			}
-			finally
-			{
-				if (Quote.Release() > 0)
-					Base.SendMessage(Code, param.Length, GetType());
+
+				switch (con.OrderState)
+				{
+					case conclusion:
+						if (OrderNumber.Remove(con.OrderNumber))
+							remove = false;
+
+						break;
+
+					case acceptance when con.UnsettledQuantity[0] is not '0':
+						if (int.TryParse(con.OrderPrice, out int price) && price > 0)
+							OrderNumber[con.OrderNumber] = price;
+
+						break;
+
+					case confirmation when con.OrderClassification.EndsWith(cancellantion) || con.OrderClassification.EndsWith(correction):
+						if (con.OrderClassification.EndsWith(cancellantion) && OrderNumber.TryGetValue(con.OriginalOrderNumber, out dynamic order_price))
+							cash = (order_price < Current ? order_price : 0) * (int.TryParse(con.OrderQuantity, out int volume) ? volume : 0);
+
+						remove = OrderNumber.Remove(con.OriginalOrderNumber);
+						break;
+				}
+				Wait = remove;
+				ShareInvest.Strategics.Cash += cash;
 			}
 		}
 		public override (IEnumerable<Collect>, uint, uint, string) SortTheRecordedInformation => base.SortTheRecordedInformation;
@@ -296,8 +146,6 @@ namespace ShareInvest.OpenAPI
 		{
 			get; set;
 		}
-		protected internal override SemaphoreSlim Quote => new SemaphoreSlim(1, 1);
-		protected internal override SemaphoreSlim Slim => new SemaphoreSlim(1, 1);
 		protected internal override DateTime NextOrderTime
 		{
 			get; set;
@@ -313,6 +161,123 @@ namespace ShareInvest.OpenAPI
 			NextOrderTime = DateTime.Now;
 
 			return true;
+		}
+		public override void AnalyzeTheConclusion(string[] param)
+		{
+			if (int.TryParse(param[^1], out int volume))
+				switch (Strategics)
+				{
+					case Catalog.SatisfyConditionsAccordingToTrends sc:
+						if (Line is null)
+							Line = new Tuple<int, int, int>(sc.Short, sc.Long, sc.Trend);
+
+						Send?.Invoke(this, new SendConsecutive(new Catalog.Strategics.Charts
+						{
+							Date = param[0],
+							Price = param[1],
+							Volume = volume
+						}));
+						break;
+				}
+			if (Balance is Balance bal && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int current))
+				if (Current != current)
+				{
+					bal.Revenue = (long)((current - bal.Purchase) * bal.Quantity);
+					bal.Rate = current / (double)bal.Purchase - 1;
+					Current = current;
+					Client.Local.Instance.PostContext(new Catalog.Models.Balance
+					{
+						Code = Code,
+						Name = bal.Name,
+						Quantity = bal.Quantity.ToString("N0"),
+						Purchase = bal.Purchase.ToString("N0"),
+						Current = current.ToString("N0"),
+						Revenue = bal.Revenue.ToString("C0"),
+						Rate = bal.Rate.ToString("P2")
+					});
+				}
+		}
+		public override void AnalyzeTheQuotes(string[] param)
+		{
+			//?.Invoke(this, new SendConsecutive(param));
+		}
+		public override void OnReceiveMatrix(object sender, SendConsecutive e)
+		{
+
+		}
+		[SupportedOSPlatform("windows")]
+		public override void OnReceiveDrawChart(object sender, SendConsecutive e)
+		{
+			if (GetCheckOnDate(e.Date))
+			{
+				Short.Pop();
+				Long.Pop();
+				Trend.Pop();
+			}
+			Trend.Push(Trend.Count > 0 ? EMA.Make(Line.Item3, Trend.Count, (int)e.Price, Trend.Peek()) : EMA.Make((int)e.Price));
+			Short.Push(Short.Count > 0 ? EMA.Make(Line.Item1, Short.Count, (int)e.Price, Short.Peek()) : EMA.Make((int)e.Price));
+			Long.Push(Long.Count > 0 ? EMA.Make(Line.Item2, Long.Count, (int)e.Price, Long.Peek()) : EMA.Make((int)e.Price));
+
+			if (GetCheckOnDeadline(e.Date) && Short.Count > 1 && Long.Count > 1 && Strategics is Catalog.SatisfyConditionsAccordingToTrends sc)
+			{
+				double popShort = Short.Pop(), popLong = Long.Pop(), gap = popShort - popLong - (Short.Peek() - Long.Peek());
+				Short.Push(popShort);
+				Long.Push(popLong);
+				var interval = new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day,
+					int.TryParse(e.Date.Substring(0, 2), out int cHour) ? cHour : DateTime.Now.Hour,
+						int.TryParse(e.Date.Substring(2, 2), out int cMinute) ? cMinute : DateTime.Now.Minute,
+							int.TryParse(e.Date[4..], out int cSecond) ? cSecond : DateTime.Now.Second);
+
+				if (sc.TradingBuyQuantity > 0 && Bid < Trend.Peek() * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) == false
+					&& Wait && (sc.TradingBuyInterval == 0 || sc.TradingBuyInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+				{
+					Pipe.Server.WriteLine(string.Concat(order,
+						ShareInvest.Strategics.SetOrder(sc.Code, (int)OrderType.신규매수, Bid, sc.TradingBuyQuantity, ((int)HogaGb.지정가).ToString("D2"), string.Empty)));
+					Wait = false;
+
+					if (sc.TradingBuyInterval > 0)
+						NextOrderTime
+							= Base.MeasureTheDelayTime(sc.TradingBuyInterval * (Balance.Purchase > 0 && Bid > 0 ? Balance.Purchase / (double)Bid : 1), interval);
+				}
+				else if (Balance.Quantity > 0)
+				{
+					if (sc.TradingSellQuantity > 0 && Offer > Trend.Peek() * (1 + sc.TradingSellRate) && Offer > Balance.Purchase + tax * Offer
+						&& gap < 0 && OrderNumber.ContainsValue(Offer) == false && Wait
+						&& (sc.TradingSellInterval == 0 || sc.TradingSellInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
+					{
+						Pipe.Server.WriteLine(string.Concat(order,
+							ShareInvest.Strategics.SetOrder(sc.Code, (int)OrderType.신규매도, Offer, sc.TradingSellQuantity, ((int)HogaGb.지정가).ToString("D2"), string.Empty)));
+						Wait = false;
+
+						if (sc.TradingSellInterval > 0)
+							NextOrderTime
+								= Base.MeasureTheDelayTime(sc.TradingSellInterval * (Balance.Purchase > 0 && Offer > 0 ? Offer / (double)Balance.Purchase : 1), interval);
+					}
+					else if (SellPrice > 0 && sc.ReservationSellQuantity > 0 && Offer > SellPrice && OrderNumber.ContainsValue(Offer) == false && Wait)
+					{
+						for (int i = 0; i < sc.ReservationSellUnit; i++)
+							SellPrice += Base.GetQuoteUnit(SellPrice, Market);
+
+						Pipe.Server.WriteLine(string.Concat(order,
+							ShareInvest.Strategics.SetOrder(sc.Code, (int)OrderType.신규매도, Offer, sc.ReservationSellQuantity, ((int)HogaGb.지정가).ToString("D2"), string.Empty)));
+						Wait = false;
+					}
+					else if (BuyPrice > 0 && sc.ReservationBuyQuantity > 0 && Bid < BuyPrice && OrderNumber.ContainsValue(Bid) == false && Wait)
+					{
+						for (int i = 0; i < sc.ReservationBuyUnit; i++)
+							BuyPrice -= Base.GetQuoteUnit(BuyPrice, Market);
+
+						Pipe.Server.WriteLine(string.Concat(order,
+							ShareInvest.Strategics.SetOrder(sc.Code, (int)OrderType.신규매수, Bid, sc.ReservationBuyQuantity, ((int)HogaGb.지정가).ToString("D2"), string.Empty)));
+						Wait = false;
+					}
+					else if (SellPrice == 0 && Balance.Purchase > 0)
+						SellPrice = Base.GetStartingPrice((int)((1 + sc.ReservationSellRate) * Balance.Purchase), Market);
+
+					else if (BuyPrice == 0 && Balance.Purchase > 0)
+						BuyPrice = Base.GetStartingPrice((int)(Balance.Purchase * (1 - sc.ReservationBuyRate)), Market);
+				}
+			}
 		}
 		const string order = "Order|";
 	}

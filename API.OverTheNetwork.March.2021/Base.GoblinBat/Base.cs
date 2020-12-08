@@ -6,16 +6,18 @@ namespace ShareInvest
 {
 	public static class Base
 	{
-		public static void SendMessage(string sender, object convey, string message, object param, Type type)
-			=> Console.WriteLine(string.Concat(type.Name, '_', sender, '_', convey, '_', message, '_', param));
-		public static void SendMessage(string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', message));
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string message) => Debug.WriteLine(string.Concat(type.Name, '_', message));
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string code, string message) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', message));
-		public static void SendMessage(string code, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', message));
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string code, int status) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', status));
+		[Conditional("DEBUG")]
+		public static void SendMessage(Type type, object code, object message) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', message));
+		public static void SendMessage(string sender, object convey, string message, object param, Type type)
+			=> Console.WriteLine(string.Concat(type.Name, '_', sender, '_', convey, '_', message, '_', param));
+		public static void SendMessage(string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', message));
+		public static void SendMessage(string code, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', message));
 		public static void SendMessage(string code, int status, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', status));
 		public static void SendMessage(DateTime now, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', now, '_', message));
 		public static void SendMessage(string name)
@@ -42,6 +44,16 @@ namespace ShareInvest
 			int n when n >= 0x186A0 && n < 0x7A120 && info => (price / 0x1F4 + 1) * 0x1F4,
 			int n when n >= 0x7A120 && info => (price / 0x3E8 + 1) * 0x3E8,
 			_ => (price / 0x64 + 1) * 0x64,
+		};
+		public static int GetQuoteUnit(int price, bool info) => price switch
+		{
+			int n when n >= 0 && n < 0x3E8 => 1,
+			int n when n >= 0x3E8 && n < 0x1388 => 5,
+			int n when n >= 0x1388 && n < 0x2710 => 0xA,
+			int n when n >= 0x2710 && n < 0xC350 => 0x32,
+			int n when n >= 0x186A0 && n < 0x7A120 && info => 0x1F4,
+			int n when n >= 0x7A120 && info => 0x3E8,
+			_ => 0x64,
 		};
 		public static ulong MakeKey(ulong index, int type, string code)
 		{

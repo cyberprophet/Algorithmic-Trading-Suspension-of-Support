@@ -20,12 +20,7 @@ namespace ShareInvest.Controllers
 					if (analysis.OrderNumber is null)
 						analysis.OrderNumber = new Dictionary<string, dynamic>();
 
-					if (await analysis.OnReceiveConclusion(conclusion) is Tuple<dynamic, bool, int> response)
-					{
-						analysis.Current = response.Item1;
-						analysis.Wait = response.Item2;
-						Strategics.Cash += response.Item3;
-					}
+					await new Task(() => analysis.OnReceiveConclusion(conclusion));
 				}
 			}
 			catch (Exception ex)

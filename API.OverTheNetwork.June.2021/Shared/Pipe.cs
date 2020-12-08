@@ -43,24 +43,23 @@ namespace ShareInvest
 								{
 									case 4 when temp[0].Equals("주식시세") == false && (stocks && temp[1].Length == 6 || temp[1].Length == 8 && futures):
 										price = temp[^1].Split(';');
-										analysis.AnalyzeTheConclusionAsync(price);
+										new Task(() => analysis.AnalyzeTheConclusion(price)).Start();
 										analysis.Collection.Enqueue(new Collect
 										{
 											Time = price[0],
 											Datum = temp[^1][7..]
 										});
-										if (analysis.Collector == false)
+										if (analysis.Collector == false && analysis.Collection.Count < 2)
 										{
 											analysis.Collector = true;
 											analysis.Send += analysis.OnReceiveDrawChart;
 											analysis.Wait = true;
-											Base.SendMessage(analysis.Code, price[0], analysis.GetType());
 										}
 										break;
 
 									case 6 when temp[0].Equals("주식우선호가") == false && analysis.Collector:
 										price = temp[^1].Split(';');
-										analysis.AnalyzeTheQuotesAsync(price);
+										new Task(() => analysis.AnalyzeTheQuotes(price)).Start();
 										analysis.Collection.Enqueue(new Collect
 										{
 											Time = price[0],

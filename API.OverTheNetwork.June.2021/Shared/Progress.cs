@@ -84,7 +84,7 @@ namespace ShareInvest
 		{
 			if (privacy is Privacies p && await Client.GetContextAsync(new Codes(), 6) is List<Codes> list)
 				foreach (Catalog.TrendsToCashflow analysis in await Client.GetContextAsync(new Catalog.TrendsToCashflow()) as IEnumerable<IStrategics>)
-					foreach (var ch in list.OrderBy(o => Guid.NewGuid()))
+					foreach (var ch in list.FindAll(o => Library.Keys.ToArray().Contains(o.Code)).Union(list.OrderBy(o => Guid.NewGuid())))
 						try
 						{
 							var now = DateTime.Now;
@@ -106,6 +106,7 @@ namespace ShareInvest
 								var cf = new Indicators.TrendsToCashflow
 								{
 									Code = ch.Code,
+									Market = ch.MarginRate == 1,
 									Strategics = library && st is Catalog.SatisfyConditionsAccordingToTrends sc ? new Catalog.TrendsToCashflow
 									{
 										Code = sc.Code,
@@ -131,8 +132,10 @@ namespace ShareInvest
 								var statistics = cf.SendMessage;
 
 								if (library)
+								{
 									Storage[ch.Code] = cf.ReturnTheUsedStack;
-
+									Base.SendMessage(name, statistics.Key, typeof(BringInInformation));
+								}
 								if (estimate != null && estimate.Count > 3 && string.IsNullOrEmpty(statistics.Key) == false)
 								{
 									var normalize = estimate.Last(o => o.Key.ToString(Base.FullDateFormat).StartsWith(statistics.Date)).Value;
@@ -161,7 +164,6 @@ namespace ShareInvest
 									}) is double coin && double.IsNaN(coin))
 										Base.SendMessage(ch.Code, typeof(StocksStrategics));
 								}
-								Base.SendMessage(name, statistics.Key, typeof(BringInInformation));
 							}
 						}
 						catch (Exception ex)
