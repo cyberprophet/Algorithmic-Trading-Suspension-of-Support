@@ -142,10 +142,6 @@ namespace ShareInvest.OpenAPI
 		{
 			protected internal get; set;
 		}
-		protected internal override Tuple<int, int, int> Line
-		{
-			get; set;
-		}
 		protected internal override DateTime NextOrderTime
 		{
 			get; set;
@@ -165,20 +161,12 @@ namespace ShareInvest.OpenAPI
 		public override void AnalyzeTheConclusion(string[] param)
 		{
 			if (int.TryParse(param[^1], out int volume))
-				switch (Strategics)
+				Send?.Invoke(this, new SendConsecutive(new Catalog.Strategics.Charts
 				{
-					case Catalog.SatisfyConditionsAccordingToTrends sc:
-						if (Line is null)
-							Line = new Tuple<int, int, int>(sc.Short, sc.Long, sc.Trend);
-
-						Send?.Invoke(this, new SendConsecutive(new Catalog.Strategics.Charts
-						{
-							Date = param[0],
-							Price = param[1],
-							Volume = volume
-						}));
-						break;
-				}
+					Date = param[0],
+					Price = param[1],
+					Volume = volume
+				}));
 			if (Balance is Balance bal && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int current))
 				if (Current != current)
 				{
@@ -214,9 +202,9 @@ namespace ShareInvest.OpenAPI
 				Long.Pop();
 				Trend.Pop();
 			}
-			Trend.Push(Trend.Count > 0 ? EMA.Make(Line.Item3, Trend.Count, (int)e.Price, Trend.Peek()) : EMA.Make((int)e.Price));
-			Short.Push(Short.Count > 0 ? EMA.Make(Line.Item1, Short.Count, (int)e.Price, Short.Peek()) : EMA.Make((int)e.Price));
-			Long.Push(Long.Count > 0 ? EMA.Make(Line.Item2, Long.Count, (int)e.Price, Long.Peek()) : EMA.Make((int)e.Price));
+			Trend.Push(Trend.Count > 0 ? EMA.Make(Strategics is null ? 0x14 : Strategics.Trend, Trend.Count, (int)e.Price, Trend.Peek()) : EMA.Make((int)e.Price));
+			Short.Push(Short.Count > 0 ? EMA.Make(Strategics is null ? 3 : Strategics.Short, Short.Count, (int)e.Price, Short.Peek()) : EMA.Make((int)e.Price));
+			Long.Push(Long.Count > 0 ? EMA.Make(Strategics is null ? 0x5A : Strategics.Long, Long.Count, (int)e.Price, Long.Peek()) : EMA.Make((int)e.Price));
 
 			if (GetCheckOnDeadline(e.Date) && Short.Count > 1 && Long.Count > 1 && Strategics is Catalog.SatisfyConditionsAccordingToTrends sc)
 			{
@@ -228,7 +216,7 @@ namespace ShareInvest.OpenAPI
 						int.TryParse(e.Date.Substring(2, 2), out int cMinute) ? cMinute : DateTime.Now.Minute,
 							int.TryParse(e.Date[4..], out int cSecond) ? cSecond : DateTime.Now.Second);
 
-				if (sc.TradingBuyQuantity > 0 && Bid < Trend.Peek() * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) == false
+				if (Bid > 0 && sc.TradingBuyQuantity > 0 && Bid < Trend.Peek() * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) == false
 					&& Wait && (sc.TradingBuyInterval == 0 || sc.TradingBuyInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
 				{
 					Pipe.Server.WriteLine(string.Concat(order,
@@ -262,7 +250,7 @@ namespace ShareInvest.OpenAPI
 							ShareInvest.Strategics.SetOrder(sc.Code, (int)OrderType.신규매도, Offer, sc.ReservationSellQuantity, ((int)HogaGb.지정가).ToString("D2"), string.Empty)));
 						Wait = false;
 					}
-					else if (BuyPrice > 0 && sc.ReservationBuyQuantity > 0 && Bid < BuyPrice && OrderNumber.ContainsValue(Bid) == false && Wait)
+					else if (Bid > 0 && BuyPrice > 0 && sc.ReservationBuyQuantity > 0 && Bid < BuyPrice && OrderNumber.ContainsValue(Bid) == false && Wait)
 					{
 						for (int i = 0; i < sc.ReservationBuyUnit; i++)
 							BuyPrice -= Base.GetQuoteUnit(BuyPrice, Market);

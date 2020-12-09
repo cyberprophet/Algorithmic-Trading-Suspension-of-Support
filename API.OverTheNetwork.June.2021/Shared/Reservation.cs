@@ -44,6 +44,7 @@ namespace ShareInvest
 									reservation[Base.MakeKey(index, type, r.Code)]
 										= Strategics.SetOrder(r.Code, type, sell, sc.ReservationSellQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty);
 									index -= 0x989680;
+									r.Offer = sell;
 
 									for (int i = 0; i < sc.ReservationSellUnit; i++)
 										sell += Base.GetQuoteUnit(sell, stock);
@@ -63,6 +64,7 @@ namespace ShareInvest
 									reservation[Base.MakeKey(index, type, r.Code)]
 										= Strategics.SetOrder(r.Code, type, buy, sc.ReservationBuyQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty);
 									index -= 0x989680;
+									r.Bid = buy;
 
 									for (int i = 0; i < sc.ReservationBuyUnit; i++)
 										buy -= Base.GetQuoteUnit(buy, stock);

@@ -43,26 +43,24 @@ namespace ShareInvest.Indicators
 				Stack<double> st = new Stack<double>(), lg = new Stack<double>(), td = new Stack<double>(),
 					short_stack = new Stack<double>(), long_stack = new Stack<double>(), trend_stack = new Stack<double>();
 
-				if (Strategics is Catalog.TrendsToCashflow tc)
-				{
-					while (st.Count <= tc.Short)
-						st.Push(Short.Pop());
+				while (Short.Count > 0 && Short.Count < 0x3E9)
+					st.Push(Short.Pop());
 
-					while (lg.Count <= tc.Long)
-						lg.Push(Long.Pop());
+				while (Long.Count > 0 && Long.Count < 0x3E9)
+					lg.Push(Long.Pop());
 
-					while (td.Count <= tc.Trend)
-						td.Push(Trend.Pop());
+				while (Trend.Count > 0 && Trend.Count < 0x3E9)
+					td.Push(Trend.Pop());
 
-					while (st.Count > 0)
-						short_stack.Push(st.Pop());
+				while (st.Count > 0)
+					short_stack.Push(st.Pop());
 
-					while (lg.Count > 0)
-						long_stack.Push(lg.Pop());
+				while (lg.Count > 0)
+					long_stack.Push(lg.Pop());
 
-					while (td.Count > 0)
-						trend_stack.Push(td.Pop());
-				}
+				while (td.Count > 0)
+					trend_stack.Push(td.Pop());
+
 				return (short_stack, long_stack, trend_stack);
 			}
 		}

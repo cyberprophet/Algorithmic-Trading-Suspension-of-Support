@@ -125,10 +125,6 @@ namespace ShareInvest.OpenAPI
 		{
 			protected internal get; set;
 		}
-		protected internal override Tuple<int, int, int> Line
-		{
-			get; set;
-		}
 		protected internal override DateTime NextOrderTime
 		{
 			get; set;

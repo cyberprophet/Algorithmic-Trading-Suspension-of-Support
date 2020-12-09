@@ -9,7 +9,7 @@ using ShareInvest.Interface;
 namespace ShareInvest
 {
 	public abstract class Analysis
-	{		
+	{
 		public virtual dynamic SellPrice
 		{
 			protected internal get; set;
@@ -65,7 +65,7 @@ namespace ShareInvest
 				return (queue, storage.Min(o => o.Key), max, max > 152959 && Code.Length == 6 || max > 154459 && Code.Length == 8 ?
 					storage[max].Split(';')[0][1..] : string.Empty);
 			}
-		}	
+		}
 		public abstract event EventHandler<SendConsecutive> Send;
 		public abstract void AnalyzeTheConclusion(string[] param);
 		public abstract void AnalyzeTheQuotes(string[] param);
@@ -80,7 +80,7 @@ namespace ShareInvest
 		public abstract bool Wait
 		{
 			get; set;
-		}		
+		}
 		public abstract string Code
 		{
 			get; set;
@@ -129,10 +129,6 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		protected internal abstract Tuple<int, int, int> Line
-		{
-			get; set;
-		}
 		protected internal abstract DateTime NextOrderTime
 		{
 			get; set;
@@ -140,7 +136,7 @@ namespace ShareInvest
 		protected internal abstract string DateChange
 		{
 			get; set;
-		}		
+		}
 		protected internal abstract bool GetCheckOnDate(string date);
 		protected internal abstract bool GetCheckOnDeadline(string time);
 		protected internal const string conclusion = "체결";

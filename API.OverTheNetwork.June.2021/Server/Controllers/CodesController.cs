@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -64,17 +65,24 @@ namespace ShareInvest.Controllers
 							};
 							break;
 					}
-					if (Progress.Library.TryGetValue(param.Code, out Interface.IStrategics strategics)
-						&& Progress.Collection.TryGetValue(param.Code, out Analysis analysis))
+					if (Progress.Collection.TryGetValue(param.Code, out Analysis analysis) && double.TryParse(param.Price, out double current))
 					{
+						if (Progress.Library.TryGetValue(param.Code, out Interface.IStrategics strategics))
+							analysis.Strategics = strategics;
+
 						if (Progress.Storage.TryGetValue(param.Code, out (Stack<double>, Stack<double>, Stack<double>) stack))
 						{
-							analysis.Short = stack.Item1;
-							analysis.Long = stack.Item2;
-							analysis.Trend = stack.Item3;
+							analysis.Short = stack.Item1.Count > 1 ? stack.Item1 : new Stack<double>(new double[] { current, current, current, current, current });
+							analysis.Long = stack.Item2.Count > 1 ? stack.Item2 : new Stack<double>(new double[] { current, current, current, current, current });
+							analysis.Trend = stack.Item3.Count > 1 ? stack.Item3 : new Stack<double>(new double[] { current, current, current, current, current });
 						}
-						analysis.Strategics = strategics;
-						Base.SendMessage(analysis.GetType(), param.Name, Progress.Library.Remove(param.Code));
+						else
+						{
+							analysis.Short = new Stack<double>(new double[] { current, current, current, current, current });
+							analysis.Long = new Stack<double>(new double[] { current, current, current, current, current });
+							analysis.Trend = new Stack<double>(new double[] { current, current, current, current, current });
+						}
+						Base.SendMessage(param.Name, Progress.Library.Remove(param.Code), Progress.Collection.Any(o => o.Key is null).ToString(), Progress.Storage.Remove(param.Code), analysis.GetType());
 					}
 					return Ok(param.Name);
 				}

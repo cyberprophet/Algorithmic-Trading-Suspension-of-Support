@@ -324,7 +324,7 @@ namespace ShareInvest
 		static void SetReservation()
 		{
 			foreach (var kv in new Reservation(Progress.Collection
-				.Where(o => o.Value.Balance is Balance bal && bal.Quantity > 0 && o.Value.Strategics is Catalog.SatisfyConditionsAccordingToTrends).ToArray()).Stocks)
+				.Where(o => o.Key is not null && o.Value.Balance is Balance bal && bal.Quantity > 0 && o.Value.Strategics is Catalog.SatisfyConditionsAccordingToTrends).ToArray()).Stocks)
 			{
 				var order = string.Concat("Order|", kv.Value);
 				Server.WriteLine(order);

@@ -96,18 +96,17 @@ namespace ShareInvest
 										Code = ch.Code,
 										Date = now.Hour > 0xF ? now.ToString(Base.DateFormat) : now.AddDays(-1).ToString(Base.DateFormat),
 										Strategics = string.Concat("TC.", analysis.AnalysisType)
-									}) is bool confirm && (confirm == false || Library.ContainsKey(ch.Code) && Storage.ContainsKey(ch.Code) == false))
+									}) is bool confirm && (confirm == false || Storage.ContainsKey(ch.Code) == false))
 							{
 								var estimate = Strategics.AnalyzeFinancialStatements(await Client.GetContextAsync(new Catalog.FinancialStatement
 								{
 									Code = ch.Code
 								}) as List<Catalog.FinancialStatement>, analysis.AnalysisType.ToCharArray());
-								var library = Library.TryGetValue(ch.Code, out IStrategics st);
 								var cf = new Indicators.TrendsToCashflow
 								{
 									Code = ch.Code,
 									Market = ch.MarginRate == 1,
-									Strategics = library && st is Catalog.SatisfyConditionsAccordingToTrends sc ? new Catalog.TrendsToCashflow
+									Strategics = Library.TryGetValue(ch.Code, out IStrategics st) && st is Catalog.SatisfyConditionsAccordingToTrends sc ? new Catalog.TrendsToCashflow
 									{
 										Code = sc.Code,
 										Short = sc.Short,
@@ -131,10 +130,10 @@ namespace ShareInvest
 								var name = await bring.StartProgress();
 								var statistics = cf.SendMessage;
 
-								if (library)
+								if (Storage.ContainsKey(ch.Code) == false)
 								{
 									Storage[ch.Code] = cf.ReturnTheUsedStack;
-									Base.SendMessage(name, statistics.Key, typeof(BringInInformation));
+									Base.SendMessage(name, Storage.Count, typeof(BringInInformation));
 								}
 								if (estimate != null && estimate.Count > 3 && string.IsNullOrEmpty(statistics.Key) == false)
 								{
