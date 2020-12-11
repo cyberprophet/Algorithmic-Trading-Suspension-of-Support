@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 
+using Newtonsoft.Json;
+
 using ShareInvest.Hubs;
 
 namespace ShareInvest.Controllers
@@ -30,23 +32,23 @@ namespace ShareInvest.Controllers
 				if (Progress.Collection.TryGetValue(balance.Code[0] is 'A' ? balance.Code[1..] : balance.Code, out Analysis analysis))
 				{
 					if (analysis.Balance is null)
-						analysis.Balance = new Balance(new string[]
+						analysis.Balance = new Balance
 						{
-							balance.Code,
-							balance.Name,
-							balance.Quantity,
-							balance.Purchase,
-							balance.Current,
-							string.Empty,
-							balance.Rate
-						});
+							Market = balance.Code.Length == 8,
+							Name = balance.Name,
+							Purchase = 0,
+							Quantity = 0,
+							Revenue = 0,
+							Rate = 0D
+						};
 					if (hub is not null)
 						await hub.Clients.All.SendAsync(message, analysis.OnReceiveBalance(balance));
 				}
 			}
 			catch (Exception ex)
 			{
-				Base.SendMessage(ex.StackTrace, GetType());
+				Base.SendMessage(GetType(), ex.StackTrace, balance);
+				Base.SendMessage(JsonConvert.SerializeObject(balance), balance.GetType());
 			}
 			return Ok();
 		}

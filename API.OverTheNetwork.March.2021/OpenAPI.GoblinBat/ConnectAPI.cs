@@ -124,7 +124,7 @@ namespace ShareInvest.OpenAPI
 				Send?.Invoke(this, new SendSecuritiesAPI(axAPI.GetLoginInfo("ACCLIST").Split(';')));
 			}
 			else
-				Send?.Invoke(this, new SendSecuritiesAPI((short)(API?.SendErrorMessage(e.nErrCode))));
+				Send?.Invoke(this, new SendSecuritiesAPI((short)e.nErrCode));
 		}
 		void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
 			=> (API as Connect)?.Real.FirstOrDefault(o

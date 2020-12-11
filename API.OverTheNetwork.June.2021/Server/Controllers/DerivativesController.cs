@@ -17,8 +17,11 @@ namespace ShareInvest.Controllers
 				if (Progress.Collection.TryGetValue(derivatives.Code, out Analysis analysis))
 				{
 					if (analysis.Balance is null)
-						analysis.Balance = new Balance(derivatives.Name.Split(' ')[0].Trim());
-
+						analysis.Balance = new Balance
+						{
+							Market = derivatives.Code.Length == 8 && derivatives.Code[1] is '0',
+							Name = derivatives.Name.Split(' ')[0].Trim()
+						};
 					await new Task(() => analysis.OnReceiveBalance(derivatives));
 				}
 			}

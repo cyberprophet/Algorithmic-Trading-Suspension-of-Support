@@ -66,16 +66,12 @@ namespace ShareInvest.Indicators
 		}
 		internal void StartProgress(double commission)
 		{
-			if (Strategics is Catalog.TrendsToCashflow cf)
-			{
-				Commission = commission;
-				Short = new Stack<double>();
-				Long = new Stack<double>();
-				Trend = new Stack<double>();
-				OrderNumber = new Dictionary<string, dynamic>();
-				NextOrderTime = DateTime.MinValue;
-				Line = new Tuple<int, int, int>(cf.Short, cf.Long, cf.Trend);
-			}
+			Commission = commission;
+			Short = new Stack<double>();
+			Long = new Stack<double>();
+			Trend = new Stack<double>();
+			OrderNumber = new Dictionary<string, dynamic>();
+			NextOrderTime = DateTime.MinValue;
 		}
 		public void OnReceiveDrawChart(object sender, SendConsecutive e)
 		{
@@ -85,9 +81,9 @@ namespace ShareInvest.Indicators
 				Long.Pop();
 				Trend.Pop();
 			}
-			Trend.Push(Trend.Count > 0 ? EMA.Make(Line.Item3, Trend.Count, e.Price, Trend.Peek()) : EMA.Make(e.Price));
-			Short.Push(Short.Count > 0 ? EMA.Make(Line.Item1, Short.Count, e.Price, Short.Peek()) : EMA.Make(e.Price));
-			Long.Push(Long.Count > 0 ? EMA.Make(Line.Item2, Long.Count, e.Price, Long.Peek()) : EMA.Make(e.Price));
+			Trend.Push(Trend.Count > 0 ? EMA.Make(Strategics.Trend, Trend.Count, e.Price, Trend.Peek()) : EMA.Make(e.Price));
+			Short.Push(Short.Count > 0 ? EMA.Make(Strategics.Short, Short.Count, e.Price, Short.Peek()) : EMA.Make(e.Price));
+			Long.Push(Long.Count > 0 ? EMA.Make(Strategics.Long, Long.Count, e.Price, Long.Peek()) : EMA.Make(e.Price));
 
 			if (e.Volume != 0 && e.Date.Length > 8 && Short.Count > 1 && Long.Count > 1)
 			{
@@ -100,12 +96,12 @@ namespace ShareInvest.Indicators
 					&& DateTime.TryParseExact(e.Date.Substring(0, 12), Base.FullDateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime cInterval))
 				{
 					if (Balance.Quantity > tc.ReservationQuantity - 1 && (Offer ?? int.MaxValue) < e.Price
-						&& OrderNumber.Any(o => o.Key[0] == '8' && o.Value == e.Price - Base.GetQuoteUnit(e.Price, Market)))
+						&& OrderNumber.Any(o => o.Key[0] == '8' && o.Value == e.Price - Base.GetQuoteUnit(e.Price, Balance.Market)))
 					{
 						CumulativeFee += (uint)(e.Price * tc.ReservationQuantity * (Commission + Base.Tax));
 						Balance.Revenue += (long)((e.Price - (Balance.Purchase ?? 0D)) * tc.ReservationQuantity);
 						Balance.Quantity -= tc.ReservationQuantity;
-						var profit = OrderNumber.First(o => o.Key.StartsWith("8") && o.Value == e.Price - Base.GetQuoteUnit(e.Price, Market));
+						var profit = OrderNumber.First(o => o.Key.StartsWith("8") && o.Value == e.Price - Base.GetQuoteUnit(e.Price, Balance.Market));
 
 						if (OrderNumber.Remove(profit.Key))
 						{
@@ -113,13 +109,13 @@ namespace ShareInvest.Indicators
 							Offer = profit.Value;
 						}
 					}
-					else if ((Bid ?? int.MinValue) > e.Price && OrderNumber.Any(o => o.Key[0] == '7' && o.Value == e.Price + Base.GetQuoteUnit(e.Price, Market)))
+					else if ((Bid ?? int.MinValue) > e.Price && OrderNumber.Any(o => o.Key[0] == '7' && o.Value == e.Price + Base.GetQuoteUnit(e.Price, Balance.Market)))
 					{
 						CumulativeFee += (uint)(e.Price * Commission * tc.ReservationQuantity);
 						Balance.Purchase
 							= (double)((e.Price * tc.ReservationQuantity + (Balance.Purchase ?? 0D) * Balance.Quantity) / (Balance.Quantity + tc.ReservationQuantity));
 						Balance.Quantity += tc.ReservationQuantity;
-						var profit = OrderNumber.First(o => o.Key.StartsWith("7") && o.Value == e.Price + Base.GetQuoteUnit(e.Price, Market));
+						var profit = OrderNumber.First(o => o.Key.StartsWith("7") && o.Value == e.Price + Base.GetQuoteUnit(e.Price, Balance.Market));
 
 						if (OrderNumber.Remove(profit.Key))
 						{
@@ -127,22 +123,22 @@ namespace ShareInvest.Indicators
 							Bid = profit.Value;
 						}
 					}
-					else if (Balance.Quantity > tc.TradingQuantity - 1 && OrderNumber.Any(o => o.Key[0] == '2' && o.Value == e.Price - Base.GetQuoteUnit(e.Price, Market)))
+					else if (Balance.Quantity > tc.TradingQuantity - 1 && OrderNumber.Any(o => o.Key[0] == '2' && o.Value == e.Price - Base.GetQuoteUnit(e.Price, Balance.Market)))
 					{
 						CumulativeFee += (uint)(e.Price * tc.TradingQuantity * (Commission + Base.Tax));
 						Balance.Revenue += (long)((e.Price - (Balance.Purchase ?? 0D)) * tc.TradingQuantity);
 						Balance.Quantity -= tc.TradingQuantity;
-						var profit = OrderNumber.First(o => o.Key.StartsWith("2") && o.Value == e.Price - Base.GetQuoteUnit(e.Price, Market));
+						var profit = OrderNumber.First(o => o.Key.StartsWith("2") && o.Value == e.Price - Base.GetQuoteUnit(e.Price, Balance.Market));
 
 						if (OrderNumber.Remove(profit.Key))
 							Capital -= profit.Value * tc.TradingQuantity;
 					}
-					else if (OrderNumber.Any(o => o.Key.StartsWith("1") && o.Value == e.Price + Base.GetQuoteUnit(e.Price, Market)))
+					else if (OrderNumber.Any(o => o.Key.StartsWith("1") && o.Value == e.Price + Base.GetQuoteUnit(e.Price, Balance.Market)))
 					{
 						CumulativeFee += (uint)(e.Price * Commission * tc.TradingQuantity);
 						Balance.Purchase = (double)((e.Price * tc.TradingQuantity + (Balance.Purchase ?? 0D) * Balance.Quantity) / (Balance.Quantity + tc.TradingQuantity));
 						Balance.Quantity += tc.TradingQuantity;
-						var profit = OrderNumber.First(o => o.Key.StartsWith("1") && o.Value == e.Price + Base.GetQuoteUnit(e.Price, Market));
+						var profit = OrderNumber.First(o => o.Key.StartsWith("1") && o.Value == e.Price + Base.GetQuoteUnit(e.Price, Balance.Market));
 
 						if (OrderNumber.Remove(profit.Key))
 							Capital += profit.Value * tc.TradingQuantity;
@@ -151,7 +147,7 @@ namespace ShareInvest.Indicators
 						&& e.Price > Trend.Peek() * (1 + tc.PositionRevenue) && e.Price > (Balance.Purchase ?? 0D)
 						&& gap < 0 && (tc.Interval == 0 || tc.Interval > 0 && cInterval.CompareTo(NextOrderTime) > 0))
 					{
-						var unit = Base.GetQuoteUnit(e.Price, Market);
+						var unit = Base.GetQuoteUnit(e.Price, Balance.Market);
 
 						if (OrderNumber.ContainsValue(e.Price + unit) == false)
 							OrderNumber[Base.GetOrderNumber((int)OrderType.신규매도)] = e.Price + unit;
@@ -162,7 +158,7 @@ namespace ShareInvest.Indicators
 					else if (tc.TradingQuantity > 0 && OrderNumber.ContainsValue(e.Price) == false && e.Price < Trend.Peek() * (1 - tc.PositionAddition)
 						&& gap > 0 && (tc.Interval == 0 || tc.Interval > 0 && cInterval.CompareTo(NextOrderTime) > 0))
 					{
-						var unit = Base.GetQuoteUnit(e.Price, Market);
+						var unit = Base.GetQuoteUnit(e.Price, Balance.Market);
 
 						if (OrderNumber.ContainsValue(e.Price - unit) == false)
 							OrderNumber[Base.GetOrderNumber((int)OrderType.신규매수)] = e.Price - unit;
@@ -179,7 +175,7 @@ namespace ShareInvest.Indicators
 
 					if (cf.ReservationQuantity > 0 && Balance.Quantity > cf.ReservationQuantity - 1)
 					{
-						var stock = Market;
+						var stock = Balance.Market;
 						int quantity = Balance.Quantity / cf.ReservationQuantity, price = e.Price, sell = (int)((Balance.Purchase ?? 0D) * (1 + cf.ReservationRevenue)),
 							buy = (int)((Balance.Purchase ?? 0D) * (1 - cf.Addition)), upper = (int)(price * 1.3), lower = (int)(price * 0.7),
 							bPrice = Base.GetStartingPrice(lower, stock), sPrice = Base.GetStartingPrice(sell, stock);
@@ -216,10 +212,6 @@ namespace ShareInvest.Indicators
 					TodayUnrealize = unrealize;
 				}
 			}
-		}
-		public bool Market
-		{
-			get; set;
 		}
 		public string Code
 		{
@@ -258,10 +250,6 @@ namespace ShareInvest.Indicators
 			get; set;
 		}
 		Stack<double> Trend
-		{
-			get; set;
-		}
-		Tuple<int, int, int> Line
 		{
 			get; set;
 		}

@@ -43,7 +43,7 @@ namespace ShareInvest
 								{
 									case 4 when temp[0].Equals("주식시세") == false && (stocks && temp[1].Length == 6 || temp[1].Length == 8 && futures):
 										price = temp[^1].Split(';');
-										new Task(() => analysis.AnalyzeTheConclusion(price)).Start();
+										analysis.AnalyzeTheConclusion(price);
 										analysis.Collection.Enqueue(new Collect
 										{
 											Time = price[0],
@@ -252,21 +252,34 @@ namespace ShareInvest
 							else if (temp[0].Length == 0xD)
 							{
 								var balance = temp[^1].Split(';');
+								var market = balance[0].Length == 8 && balance[0][1] == '0';
 
 								if (balance.Length > 2 && Progress.Collection.TryGetValue(balance[0], out Analysis bal) && double.TryParse(balance[4], out double current))
 								{
-									bal.Balance = new Balance(balance);
-									bal.Current = bal.Balance.Market ? current : (int)current;
-									Client.Local.Instance.PostContext(new Catalog.Models.Balance
+									if (int.TryParse(balance[2], out int quantity) && long.TryParse(balance[5], out long revenue)
+										&& double.TryParse(balance[3], out double purchase) && double.TryParse(balance[6], out double rate))
 									{
-										Code = balance[0],
-										Name = bal.Balance.Name,
-										Quantity = bal.Balance.Quantity.ToString("N0"),
-										Purchase = bal.Balance.Purchase.ToString(bal.Balance.Market ? "N2" : "N0"),
-										Current = bal.Current.ToString(bal.Balance.Market ? "N2" : "N0"),
-										Revenue = bal.Balance.Revenue.ToString("C0"),
-										Rate = bal.Balance.Rate.ToString("P2")
-									});
+										Client.Local.Instance.PostContext(new Catalog.Models.Balance
+										{
+											Code = balance[0],
+											Name = balance[1],
+											Quantity = quantity.ToString("N0"),
+											Purchase = purchase.ToString(market ? "N2" : "N0"),
+											Current = current.ToString(market ? "N2" : "N0"),
+											Revenue = revenue.ToString("C0"),
+											Rate = rate.ToString("P2")
+										});
+										bal.Balance = new Balance
+										{
+											Market = market,
+											Name = balance[1],
+											Quantity = quantity,
+											Purchase = market ? purchase : (int)purchase,
+											Revenue = revenue,
+											Rate = rate,
+										};
+									}
+									bal.Current = market ? current : (int)current;
 								}
 								else
 								{

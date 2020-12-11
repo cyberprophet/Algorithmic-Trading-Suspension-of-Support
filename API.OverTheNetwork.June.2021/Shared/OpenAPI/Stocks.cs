@@ -72,6 +72,9 @@ namespace ShareInvest.OpenAPI
 						if (int.TryParse(con.OrderPrice, out int price) && price > 0)
 							OrderNumber[con.OrderNumber] = price;
 
+						if (string.IsNullOrEmpty(Balance.Name))
+							Balance.Name = con.Name;
+
 						break;
 
 					case confirmation when con.OrderClassification.EndsWith(cancellantion) || con.OrderClassification.EndsWith(correction):
@@ -167,7 +170,7 @@ namespace ShareInvest.OpenAPI
 					Price = param[1],
 					Volume = volume
 				}));
-			if (Balance is Balance bal && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int current))
+			if (Balance is Balance bal && bal.Quantity > 0 && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int current))
 				if (Current != current)
 				{
 					bal.Revenue = (long)((current - bal.Purchase) * bal.Quantity);
@@ -208,6 +211,15 @@ namespace ShareInvest.OpenAPI
 
 			if (GetCheckOnDeadline(e.Date) && Short.Count > 1 && Long.Count > 1 && Strategics is Catalog.SatisfyConditionsAccordingToTrends sc)
 			{
+				if (Balance is null)
+					Balance = new Balance
+					{
+						Market = Code.Length == 8,
+						Purchase = 0,
+						Quantity = 0,
+						Revenue = 0,
+						Rate = 0
+					};
 				double popShort = Short.Pop(), popLong = Long.Pop(), gap = popShort - popLong - (Short.Peek() - Long.Peek());
 				Short.Push(popShort);
 				Long.Push(popLong);

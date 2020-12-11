@@ -58,7 +58,7 @@ namespace ShareInvest
 			{
 				case Dictionary<string, string> chejan:
 					if (await this.client.PutContextAsync(sender.GetType(), chejan) is int status)
-						Base.SendMessage(chejan["종목명"], status, sender.GetType());
+						Base.SendMessage(sender.GetType(), chejan["종목명"], status);
 
 					return;
 
@@ -222,7 +222,9 @@ namespace ShareInvest
 									switch (connect)
 									{
 										case OpenAPI.ConnectAPI o:
-											if (order[0].Length == 6 && int.TryParse(order[1], out int type) && int.TryParse(order[2], out int price) && int.TryParse(order[3], out int quantity))
+											if (order[0].Length == 6 && int.TryParse(order[1], out int type)
+												&& int.TryParse(order[2], out int price)
+												&& int.TryParse(order[3], out int quantity))
 												o.SendOrder(new Catalog.OpenAPI.Order
 												{
 													AccNo = connect.Account,
@@ -383,16 +385,11 @@ namespace ShareInvest
 					case DialogResult.OK:
 						PreventsFromRunningAgain(e);
 
-						if (e.Cancel == false && MessageBox.Show(api_exit, connect.SecuritiesName, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1).Equals(DialogResult.OK))
+						if (e.Cancel == false && connect.Writer != null)
 						{
-							if (connect.Writer != null)
-							{
-								Dispose(0xF75);
+							Dispose(0xF75);
 
-								return;
-							}
-							Process.Start("shutdown.exe", "-r");
-							Base.SendMessage(normalize);
+							return;
 						}
 						break;
 

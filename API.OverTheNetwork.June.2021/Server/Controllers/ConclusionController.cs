@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
+using Newtonsoft.Json;
+
 namespace ShareInvest.Controllers
 {
 	[ApiController, Route(Security.route), Produces(Security.produces)]
@@ -25,7 +27,8 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				Base.SendMessage(ex.StackTrace, GetType());
+				Base.SendMessage(GetType(), ex.StackTrace, conclusion);
+				Base.SendMessage(JsonConvert.SerializeObject(conclusion), conclusion.GetType());
 			}
 			return Ok();
 		}

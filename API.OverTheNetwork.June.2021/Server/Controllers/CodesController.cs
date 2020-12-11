@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -20,10 +19,7 @@ namespace ShareInvest.Controllers
 				&& await Progress.Client.PutContextAsync(param) is string code)
 				Base.SendMessage(GetType(), code, Progress.Collection.Count);
 
-			if (param.MaturityMarketCap.Contains(Base.TransactionSuspension))
-				Base.SendMessage(GetType(), param.Name, Progress.Collection.Remove(param.Code));
-
-			else
+			if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
 				try
 				{
 					switch (Progress.Company)
@@ -82,7 +78,7 @@ namespace ShareInvest.Controllers
 							analysis.Long = new Stack<double>(new double[] { current, current, current, current, current });
 							analysis.Trend = new Stack<double>(new double[] { current, current, current, current, current });
 						}
-						Base.SendMessage(param.Name, Progress.Library.Remove(param.Code), Progress.Collection.Any(o => o.Key is null).ToString(), Progress.Storage.Remove(param.Code), analysis.GetType());
+						Base.SendMessage(param.Name, Progress.Library.Remove(param.Code), Progress.Collection.Count.ToString("N0"), Progress.Storage.Remove(param.Code), analysis.GetType());
 					}
 					return Ok(param.Name);
 				}

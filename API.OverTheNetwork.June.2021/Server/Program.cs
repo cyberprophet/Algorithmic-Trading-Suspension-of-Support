@@ -16,8 +16,8 @@ namespace ShareInvest
 
 			if (Progress.GetUpdateVisionAsync().Result)
 			{
+				Base.SendMessage(Security.api);
 				Process.Start("shutdown.exe", "-r");
-				Base.SendMessage(security.Dispose);
 			}
 			else if (security.GetContextAsync(args).Result.GrantAccess)
 				CreateHostBuilder().Build().Run();

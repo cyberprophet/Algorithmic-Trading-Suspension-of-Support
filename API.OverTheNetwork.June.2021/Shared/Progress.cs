@@ -105,7 +105,6 @@ namespace ShareInvest
 								var cf = new Indicators.TrendsToCashflow
 								{
 									Code = ch.Code,
-									Market = ch.MarginRate == 1,
 									Strategics = Library.TryGetValue(ch.Code, out IStrategics st) && st is Catalog.SatisfyConditionsAccordingToTrends sc ? new Catalog.TrendsToCashflow
 									{
 										Code = sc.Code,
@@ -122,7 +121,15 @@ namespace ShareInvest
 										PositionAddition = 7.25e-3,
 										AnalysisType = analysis.AnalysisType
 									} : analysis,
-									Balance = new Balance(ch.Name)
+									Balance = new Balance
+									{
+										Market = ch.MarginRate == 1,
+										Name = ch.Name,
+										Purchase = 0,
+										Quantity = 0,
+										Rate = 0,
+										Revenue = 0
+									}
 								};
 								var bring = new BringInInformation(ch);
 								bring.Send += cf.OnReceiveDrawChart;
