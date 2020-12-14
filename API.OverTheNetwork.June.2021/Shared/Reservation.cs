@@ -35,7 +35,7 @@ namespace ShareInvest
 							if (sc.ReservationSellQuantity > 0)
 							{
 								sell = Base.GetStartingPrice((int)(r.Balance.Purchase * (1 + sc.ReservationSellRate)), stock);
-								sell = sell < lower ? lower + Base.GetQuoteUnit(sell, stock) : sell;
+								sell = sell < lower ? Base.GetStartingPrice(lower, stock) + Base.GetQuoteUnit(sell, stock) : sell;
 								r.SellPrice = sell;
 								type = (int)Interface.OpenAPI.OrderType.신규매도;
 
@@ -54,7 +54,7 @@ namespace ShareInvest
 							if (sc.ReservationBuyQuantity > 0)
 							{
 								buy = Base.GetStartingPrice((int)(r.Balance.Purchase * (1 - sc.ReservationBuyRate)), stock);
-								buy = buy > upper ? upper - Base.GetQuoteUnit(buy, stock) : buy;
+								buy = buy > upper ? Base.GetStartingPrice(upper, stock) - Base.GetQuoteUnit(buy, stock) : buy;
 								r.BuyPrice = buy;
 								type = (int)Interface.OpenAPI.OrderType.신규매수;
 

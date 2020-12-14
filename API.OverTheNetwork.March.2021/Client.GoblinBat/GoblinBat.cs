@@ -106,6 +106,9 @@ namespace ShareInvest.Client
 
 				switch (param)
 				{
+					case Catalog.Models.Consensus when response.StatusCode.Equals(HttpStatusCode.OK):
+						return JsonConvert.DeserializeObject<List<Catalog.Models.Consensus>>(response.Content);
+
 					case Catalog.Strategics.RevisedStockPrice when response.StatusCode.Equals(HttpStatusCode.OK):
 						return JsonConvert.DeserializeObject<Queue<Catalog.Strategics.ConfirmRevisedStockPrice>>(response.Content);
 

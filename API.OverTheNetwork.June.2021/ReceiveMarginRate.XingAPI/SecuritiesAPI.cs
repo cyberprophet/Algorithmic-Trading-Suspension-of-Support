@@ -46,9 +46,9 @@ namespace ShareInvest
 				}
 				else if (remain.TotalMinutes < 0x23)
 				{
+					API.Dispose();
 					API = null;
 					timer.Stop();
-					API.Dispose();
 					Dispose();
 				}
 			}

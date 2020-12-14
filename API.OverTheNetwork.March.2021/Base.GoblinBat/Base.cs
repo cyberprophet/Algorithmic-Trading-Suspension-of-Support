@@ -19,6 +19,7 @@ namespace ShareInvest
 		public static void SendMessage(string sender, object convey, string message, object param, Type type)
 			=> Console.WriteLine(string.Concat(type.Name, '_', sender, '_', convey, '_', message, '_', param));
 		public static void SendMessage(string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', message));
+		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string message, Catalog.OpenAPI.Conclusion conclusion)
 		{
 			Console.WriteLine(type.FullName);
@@ -55,6 +56,7 @@ namespace ShareInvest
 			Console.WriteLine(conclusion.CreditClassification);
 			Console.WriteLine(conclusion.LoanDate);
 		}
+		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string message, Catalog.OpenAPI.Balance balance)
 		{
 			Console.WriteLine(type.FullName);
@@ -89,6 +91,7 @@ namespace ShareInvest
 		}
 		public static void SendMessage(string code, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', message));
 		public static void SendMessage(string code, int status, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', status));
+		[Conditional("DEBUG")]
 		public static void SendMessage(DateTime now, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', now, '_', message));
 		public static void SendMessage(string name)
 		{

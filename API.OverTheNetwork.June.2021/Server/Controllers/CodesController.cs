@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -17,10 +16,10 @@ namespace ShareInvest.Controllers
 		{
 			if (Progress.Company is 'O' && (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[0] > '1')
 				&& await Progress.Client.PutContextAsync(param) is string code)
-				Base.SendMessage(GetType(), code, Progress.Collection.Count);
+				Base.SendMessage(code, Progress.Collection.Count, GetType());
 
 			if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
-				try
+				lock (Progress.Collection)
 				{
 					switch (Progress.Company)
 					{
@@ -78,13 +77,12 @@ namespace ShareInvest.Controllers
 							analysis.Long = new Stack<double>(new double[] { current, current, current, current, current });
 							analysis.Trend = new Stack<double>(new double[] { current, current, current, current, current });
 						}
-						Base.SendMessage(param.Name, Progress.Library.Remove(param.Code), Progress.Collection.Count.ToString("N0"), Progress.Storage.Remove(param.Code), analysis.GetType());
+						bool library = Progress.Library.Remove(param.Code), storage = Progress.Storage.Remove(param.Code);
+
+						if (library && storage)
+							Base.SendMessage(param.Name, Progress.Library.Count, Progress.Collection.Count.ToString("N0"), Progress.Storage.Count, GetType());
 					}
 					return Ok(param.Name);
-				}
-				catch (Exception ex)
-				{
-					Base.SendMessage(param.Name, ex.StackTrace, GetType());
 				}
 			return Ok();
 		}

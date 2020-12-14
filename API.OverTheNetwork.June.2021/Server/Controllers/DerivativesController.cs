@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
+using Newtonsoft.Json;
 
 namespace ShareInvest.Controllers
 {
@@ -10,10 +13,12 @@ namespace ShareInvest.Controllers
 	public class DerivativesController : ControllerBase
 	{
 		[HttpPut, ProducesResponseType(StatusCodes.Status200OK)]
-		public async Task<IActionResult> PutContextAsync([FromBody] Catalog.OpenAPI.Derivatives derivatives)
+		public async Task<IActionResult> PutContextAsync([FromBody] Dictionary<string, string> param)
 		{
 			try
 			{
+				var derivatives = JsonConvert.DeserializeObject<Catalog.OpenAPI.Derivatives>(JsonConvert.SerializeObject(param));
+
 				if (Progress.Collection.TryGetValue(derivatives.Code, out Analysis analysis))
 				{
 					if (analysis.Balance is null)

@@ -72,8 +72,8 @@ namespace ShareInvest.OpenAPI
 						if (int.TryParse(con.OrderPrice, out int price) && price > 0)
 							OrderNumber[con.OrderNumber] = price;
 
-						if (string.IsNullOrEmpty(Balance.Name))
-							Balance.Name = con.Name;
+						if (Balance is Balance bal && string.IsNullOrEmpty(bal.Name))
+							bal.Name = con.Name.Trim();
 
 						break;
 

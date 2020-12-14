@@ -1,32 +1,95 @@
 ﻿@page "/portfolio"
+@using ShareInvest.Catalog.Models;
+@inject HttpClient http
 
-<div class="" id="">
-	<h5>
-		<span><b>종목명</b></span>
-		<span>종목코드</span>
-	</h5>
-	<table class="table">
-		<thead>
-			<tr class="">
-				<th scope="col"><div></div></th>
-				<th scope="col"><div>2017/12</div></th>
-				<th scope="col"><div>2018/12</div></th>
-				<th scope="col"><div>2019/12</div></th>
-				<th scope="col"><div>2020/03</div></th>
-				<th scope="col"><div>2020/06</div></th>
-				<th scope="col"><div>2020/09</div></th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr>
-				<th scope="row"><div>매출액</div></th>
-				<td>2,395,754</td>
-				<td>2,437,714</td>
-				<td>2,304,009</td>
-				<td>553,252</td>
-				<td>529,661</td>
-				<td>669,642</td>
-			</tr>
-		</tbody>
-	</table>
-</div>
+@if (dictionary.Count > 0)
+{
+	@foreach (var kv in dictionary)
+	{
+		<div class="" id="">
+			<p>
+				@{
+					var value = kv.Value;
+					var param = value.Dequeue();
+					<h5>
+						<span><strong><b>@param.Date</b></strong></span>
+						<span><small><i>@kv.Key</i></small></span>
+					</h5>
+					<table class="table">
+						<thead>
+							<tr class="">
+								<th scope="col" title="매출, 영업이익, 순이익, 현금흐름 ( T : 사용 )"><div></div></th>
+								<th scope="col"><div>@quarter[0]</div></th>
+								<th scope="col"><div>@quarter[1]</div></th>
+								<th scope="col"><div>@quarter[2]</div></th>
+								<th scope="col"><div>@quarter[3]</div></th>
+								<th scope="col"><div>@quarter[4]</div></th>
+								<th scope="col"><div>@quarter[5]</div></th>
+							</tr>
+						</thead>
+
+						@while (value.Count > 0)
+						{
+							<tbody>
+								<tr>
+									<th scope="row"><div>@param.Strategics</div></th>
+									@{
+										var convert = ConvertFormat(param.FirstQuarter);
+										<td style="color: @convert.Item2">@convert.Item1</td>
+										convert = ConvertFormat(param.SecondQuarter);
+										<td style="color: @convert.Item2">@convert.Item1</td>
+										convert = ConvertFormat(param.ThirdQuarter);
+										<td style="color: @convert.Item2">@convert.Item1</td>
+										convert = ConvertFormat(param.Quarter);
+										<td style="color: @convert.Item2">@convert.Item1</td>
+										convert = ConvertFormat(param.TheNextYear);
+										<td style="color: @convert.Item2">@convert.Item1</td>
+										convert = ConvertFormat(param.TheYearAfterNext);
+										<td style="color: @convert.Item2">@convert.Item1</td>
+									}
+								</tr>
+							</tbody>
+							param = value.Dequeue();
+						}
+					</table>
+				}
+				<br />
+			</p>
+		</div>
+
+	}
+}
+else
+{
+	<p><em>Loading...</em></p>
+}
+@code
+{
+	string ConvertFormat(string param) => string.Format("’{0}. {1}.", param.Substring(0, 2), param.Substring(2, 2));
+	(string, ConsoleColor) ConvertFormat(double param) => (param > 0 ? param.ToString("P2") : param.ToString("P2")[1..], param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
+	protected override async Task OnInitializedAsync()
+	{
+		dictionary = new Dictionary<string, Queue<Consensus>>();
+		quarter = new string[6];
+		var index = 0;
+
+		foreach (var near in Base.FindTheNearestQuarter(DateTime.Now))
+			quarter[index++] = ConvertFormat(near);
+
+		foreach (var con in await http.GetFromJsonAsync<Consensus[]>
+		(Crypto.Security.GetRoute("Consensus")))
+		{
+			if (dictionary.TryGetValue(con.Code, out Queue<Consensus>
+				queue))
+			{
+				queue.Enqueue(con);
+				dictionary[con.Code] = queue;
+			}
+			else
+				dictionary[con.Code] = new Queue<Consensus>
+					(new Consensus[] { con });
+		}
+	}
+	string[] quarter;
+	Dictionary<string, Queue<Consensus>> dictionary;
+}

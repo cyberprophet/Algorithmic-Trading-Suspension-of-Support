@@ -110,7 +110,7 @@ namespace ShareInvest
 											stocks_task = new Task(() =>
 											{
 												foreach (var collect in Progress.Collection)
-													if (collect.Key.Length == 6 && collect.Value.Collection.Count > 0)
+													if (collect.Key is not null && collect.Key.Length == 6 && collect.Value.Collection.Count > 0)
 														try
 														{
 															var convert = collect.Value.SortTheRecordedInformation;
@@ -156,9 +156,8 @@ namespace ShareInvest
 																}
 																else if (length == 8)
 																{
-																	var fo = ch.Code[1] == '0';
-																	select.MarginRate = fo ? ch.MarginRate : ch.MarginRate * 0.1;
-																	select.Current = fo ? price : (int)price;
+																	select.MarginRate = ch.MarginRate;
+																	select.Current = ch.Code[1] is '0' ? price : (int)price;
 																}
 															}
 													Base.SendMessage(operation[1], Progress.Collection.Count, typeof(Analysis));

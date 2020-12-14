@@ -307,10 +307,7 @@ namespace ShareInvest
 					Miss = Codes.Count;
 
 				if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
-				{
 					notifyIcon.Text = connect.SecuritiesName;
-					timer.Interval = 0x173C;
-				}
 			}
 			else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
 			{

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -25,17 +26,19 @@ namespace ShareInvest.Controllers
 				Base.SendMessage(message, balance.Name, GetType());
 		}
 		[HttpPut, ProducesResponseType(StatusCodes.Status200OK)]
-		public async Task<IActionResult> PutContextAsync([FromBody] Catalog.OpenAPI.Balance balance)
+		public async Task<IActionResult> PutContextAsync([FromBody] Dictionary<string, string> param)
 		{
 			try
 			{
+				var balance = JsonConvert.DeserializeObject<Catalog.OpenAPI.Balance>(JsonConvert.SerializeObject(param));
+
 				if (Progress.Collection.TryGetValue(balance.Code[0] is 'A' ? balance.Code[1..] : balance.Code, out Analysis analysis))
 				{
 					if (analysis.Balance is null)
 						analysis.Balance = new Balance
 						{
 							Market = balance.Code.Length == 8,
-							Name = balance.Name,
+							Name = balance.Name.Trim(),
 							Purchase = 0,
 							Quantity = 0,
 							Revenue = 0,
@@ -47,8 +50,7 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				Base.SendMessage(GetType(), ex.StackTrace, balance);
-				Base.SendMessage(JsonConvert.SerializeObject(balance), balance.GetType());
+				Base.SendMessage(GetType(), ex.StackTrace);
 			}
 			return Ok();
 		}
