@@ -18,7 +18,7 @@
 					<table class="table">
 						<thead>
 							<tr class="">
-								<th scope="col" title="매출, 영업이익, 순이익, 현금흐름 ( T : 사용 )"><div></div></th>
+								<th scope="col" title="매출, 영업이익, 순이익, 현금흐름 ( ● : 사용)"><div></div></th>
 								<th scope="col"><div>@quarter[0]</div></th>
 								<th scope="col"><div>@quarter[1]</div></th>
 								<th scope="col"><div>@quarter[2]</div></th>
@@ -32,7 +32,7 @@
 						{
 							<tbody>
 								<tr>
-									<th scope="row"><div>@param.Strategics</div></th>
+									<th scope="row"><div>@param.Strategics.Replace("T", "●").Replace("F", "·")</div></th>
 									@{
 										var convert = ConvertFormat(param.FirstQuarter);
 										<td style="color: @convert.Item2">@convert.Item1</td>
@@ -65,31 +65,28 @@ else
 }
 @code
 {
-	string ConvertFormat(string param) => string.Format("’{0}. {1}.", param.Substring(0, 2), param.Substring(2, 2));
-	(string, ConsoleColor) ConvertFormat(double param) => (param > 0 ? param.ToString("P2") : param.ToString("P2")[1..], param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
 	protected override async Task OnInitializedAsync()
 	{
 		dictionary = new Dictionary<string, Queue<Consensus>>();
 		quarter = new string[6];
 		var index = 0;
 
-		foreach (var near in Base.FindTheNearestQuarter(DateTime.Now))
-			quarter[index++] = ConvertFormat(near);
-
-		foreach (var con in await http.GetFromJsonAsync<Consensus[]>
-		(Crypto.Security.GetRoute("Consensus")))
+		foreach (var con in await http.GetFromJsonAsync<Consensus[]>(Crypto.Security.GetRoute("Consensus")))
 		{
-			if (dictionary.TryGetValue(con.Code, out Queue<Consensus>
-				queue))
+			if (dictionary.TryGetValue(con.Code, out Queue<Consensus> queue))
 			{
 				queue.Enqueue(con);
 				dictionary[con.Code] = queue;
 			}
 			else
-				dictionary[con.Code] = new Queue<Consensus>
-					(new Consensus[] { con });
+				dictionary[con.Code] = new Queue<Consensus>(new Consensus[] { con });
 		}
+		foreach (var near in Base.FindTheNearestQuarter(DateTime.Now))
+			quarter[index++] = ConvertFormat(near);
 	}
+	string ConvertFormat(string param) => string.Format("’{0}. {1}.", param.Substring(0, 2), param.Substring(2, 2));
+	(string, ConsoleColor) ConvertFormat(double param)
+		=> (param < 0 ? param.ToString("P2")[1..] : param.ToString("P2"), param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
 	string[] quarter;
 	Dictionary<string, Queue<Consensus>> dictionary;
 }
