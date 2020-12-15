@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Mvc;
@@ -16,12 +17,15 @@ namespace ShareInvest.Controllers
 			var list = await Progress.Client.GetContextAsync(new Codes(), 6) as List<Codes>;
 			var queue = new Queue<Consensus>();
 
-			foreach (var st in strategics)
+			foreach (var st in Enum.GetNames(typeof(Catalog.AnalysisType)))
 				foreach (var con in await Progress.Client.GetContextAsync(new Consensus { Strategics = string.Concat("TC.", st) }) as List<Consensus>)
 				{
 					var key = list.Find(o => o.Code.Equals(con.Code));
 
-					if (key.MaturityMarketCap.Contains(Base.TransactionSuspension) == false)
+					if (key.MaturityMarketCap.Contains(Base.TransactionSuspension) || string.IsNullOrEmpty(con.Code))
+						Base.SendMessage(GetType(), key.Code, key.MaturityMarketCap);
+
+					else
 						queue.Enqueue(new Consensus
 						{
 							Code = con.Code,
@@ -37,6 +41,5 @@ namespace ShareInvest.Controllers
 				}
 			return queue.ToArray();
 		}
-		readonly string[] strategics = new[] { "TTTT", "TFFF", "FTFF", "FFTF", "FFFT", "TTFF", "TFTF", "TFFT", "FTTF", "FTFT", "FFTT", "TTTF", "TTFT", "TFTT", "FTTT" };
 	}
 }

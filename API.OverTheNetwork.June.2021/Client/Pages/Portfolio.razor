@@ -4,13 +4,13 @@
 
 @if (dictionary.Count > 0)
 {
-	@foreach (var kv in dictionary)
+	@foreach (var kv in dictionary.OrderBy(o => o.Key))
 	{
 		<div class="" id="">
 			<p>
 				@{
 					var value = kv.Value;
-					var param = value.Dequeue();
+					var param = value.Peek();
 					<h5>
 						<span><strong><b>@param.Date</b></strong></span>
 						<span><small><i>@kv.Key</i></small></span>
@@ -30,6 +30,7 @@
 
 						@while (value.Count > 0)
 						{
+							param = value.Dequeue();
 							<tbody>
 								<tr>
 									<th scope="row"><div>@param.Strategics.Replace("T", "●").Replace("F", "·")</div></th>
@@ -49,7 +50,6 @@
 									}
 								</tr>
 							</tbody>
-							param = value.Dequeue();
 						}
 					</table>
 				}
