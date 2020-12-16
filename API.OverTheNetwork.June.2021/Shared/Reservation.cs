@@ -41,11 +41,13 @@ namespace ShareInvest
 
 								while (sell < upper && quantity-- > 0)
 								{
-									reservation[Base.MakeKey(index, type, r.Code)]
-										= Strategics.SetOrder(r.Code, type, sell, sc.ReservationSellQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty);
-									index -= 0x989680;
-									r.Offer = sell;
-
+									if (r.OrderNumber is null || r.OrderNumber.ContainsValue(sell) is false)
+									{
+										reservation[Base.MakeKey(index, type, r.Code)]
+											= Strategics.SetOrder(r.Code, type, sell, sc.ReservationSellQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty);
+										index -= 0x989680;
+										r.Offer = sell;
+									}
 									for (int i = 0; i < sc.ReservationSellUnit; i++)
 										sell += Base.GetQuoteUnit(sell, stock);
 								}
@@ -60,12 +62,14 @@ namespace ShareInvest
 
 								while (buy > lower && Strategics.Cash > buy * (1.5e-4 + 1))
 								{
-									Strategics.Cash -= (long)(buy * (1.5e-4 + 1));
-									reservation[Base.MakeKey(index, type, r.Code)]
-										= Strategics.SetOrder(r.Code, type, buy, sc.ReservationBuyQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty);
-									index -= 0x989680;
-									r.Bid = buy;
-
+									if (r.OrderNumber is null || r.OrderNumber.ContainsValue(buy) is false)
+									{
+										Strategics.Cash -= (long)(buy * (1.5e-4 + 1));
+										reservation[Base.MakeKey(index, type, r.Code)]
+											= Strategics.SetOrder(r.Code, type, buy, sc.ReservationBuyQuantity, ((int)Interface.OpenAPI.HogaGb.지정가).ToString("D2"), string.Empty);
+										index -= 0x989680;
+										r.Bid = buy;
+									}
 									for (int i = 0; i < sc.ReservationBuyUnit; i++)
 										buy -= Base.GetQuoteUnit(buy, stock);
 								}

@@ -47,7 +47,7 @@ namespace ShareInvest
 		}
 		public static string Account
 		{
-			internal get; set;
+			get; set;
 		}
 		public static string Access
 		{

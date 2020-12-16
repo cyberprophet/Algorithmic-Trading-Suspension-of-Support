@@ -139,16 +139,19 @@ namespace ShareInvest
 					break;
 
 				case string[] accounts:
-					foreach (var str in accounts)
-						if (str.Length == 0xA && str[^2..].CompareTo("32") < 0)
-							connect.Writer.WriteLine(str);
+					if (await client.PostContextAsync(new Account { Length = accounts.Length, Number = accounts }) is 0xC8)
+					{
+						foreach (var str in accounts)
+							if (str.Length == 0xA && str[^2..].CompareTo("32") < 0)
+								connect.Writer.WriteLine(str);
 
-					foreach (var ctor in (connect as OpenAPI.ConnectAPI)?.Chejan)
-						ctor.Send += OnReceiveSecuritiesAPI;
+						foreach (var ctor in (connect as OpenAPI.ConnectAPI)?.Chejan)
+							ctor.Send += OnReceiveSecuritiesAPI;
 
-					var client = new NamedPipeClientStream(".", normalize, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
-					await client.ConnectAsync();
-					worker.RunWorkerAsync(client);
+						var client = new NamedPipeClientStream(".", normalize, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+						await client.ConnectAsync();
+						worker.RunWorkerAsync(client);
+					}
 					return;
 
 				case short error:

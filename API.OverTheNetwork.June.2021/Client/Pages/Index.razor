@@ -1,61 +1,114 @@
 ﻿@page "/index"
-@using Microsoft.AspNetCore.SignalR.Client
-@inject NavigationManager NavigationManager
-@implements IAsyncDisposable
+@inject HttpClient http
 
-<div class="form-group">
-	<label>
-		User:
-		<input @bind="userInput" />
-	</label>
-</div>
-<div class="form-group">
-	<label>
-		Message:
-		<input @bind="messageInput" size="50" />
-	</label>
-</div>
-<button @onclick="Send" disabled="@(IsConnected is false)">Send</button>
-
-<hr>
-
-<ul id="messagesList">
-	@foreach (var message in messages)
-	{
-		<li>@message</li>
-	}
-</ul>
-
-@code {
-	private HubConnection hubConnection;
-	private List<string> messages = new List<string>();
-	private string userInput;
-	private string messageInput;
-
+@if (this.accounts is not null && this.accounts.Count > 0)
+{
+	<div class="form-group">
+		<form>
+			<fieldset class="flex-container">
+				<legend class="legend"><strong>Choose the Stock Account</strong></legend>
+				<ul>
+					@foreach (var str in this.accounts)
+					{
+						@if (str.Length == 0xA && str[^2..].CompareTo("31") < 0)
+						{
+							<li>
+								<label for="stocks">
+									<input type="radio" id="stocks" name="stocks" value="@str" @onchange="OnReceiveTheSelectedButton" checked="@str.Equals(stock)">
+									@ConvertFormat(str)
+								</label>
+							</li>
+						}
+					}
+				</ul>
+			</fieldset>
+			<br />
+			<fieldset class="flex-container">
+				<legend class="legend"><strong>Choose the Futures Account</strong></legend>
+				<ul>
+					@foreach (var str in this.accounts)
+					{
+						@if (str.Length == 0xA && str[^2..].CompareTo("31") == 0)
+						{
+							<li>
+								<label for="futures">
+									<input type="radio" id="futures" name="futures" value="@str" @onchange="OnReceiveTheSelectedButton" checked="@str.Equals(futures)">
+									@ConvertFormat(str)
+								</label>
+							</li>
+						}
+					}
+				</ul>
+			</fieldset>
+		</form>
+		<br />
+		<div>
+			<button class="style" @onclick="Send" disabled="@IsClicked">Submit</button>
+		</div>
+	</div>
+}
+else
+{
+	<p><em>The Account don’t Exist...</em></p>
+	<p><em>Connect the OpenAPI</em></p>
+	<p><em>Load the Account Information.</em></p>
+}
+@code
+{
 	protected override async Task OnInitializedAsync()
 	{
-		hubConnection = new HubConnectionBuilder()
-			.WithUrl(NavigationManager.ToAbsoluteUri("/hub/message"))
-			.Build();
+		var accounts = await http.GetFromJsonAsync<string[]>(Crypto.Security.GetRoute("Account"));
+		this.accounts = new List<string>();
 
-		hubConnection.On<string, string>("ReceiveMessage", (user, message) =>
+		foreach (var str in accounts)
 		{
-			var encodedMsg = $"{user}: {message}";
-			messages.Add(encodedMsg);
-			StateHasChanged();
-		});
+			if (str.Equals("Separation"))
+			{
+				IsClicked = true;
 
-		await hubConnection.StartAsync();
+				break;
+			}
+			this.accounts.Add(str);
+		}
+		if (IsClicked)
+		{
+			var index = Array.FindIndex(accounts, o => o.Equals("Separation"));
+
+			stock = accounts[index + 1];
+
+			if (accounts.Length - index == 3)
+				futures = accounts[index + 2];
+		}
 	}
-
-	Task Send() =>
-		hubConnection.SendAsync("SendMessage", userInput, messageInput);
-
-	public bool IsConnected =>
-		hubConnection.State == HubConnectionState.Connected;
-
-	public async ValueTask DisposeAsync()
+	bool IsClicked
 	{
-		await hubConnection.DisposeAsync();
+		get; set;
 	}
+	async Task Send()
+	{
+		if (string.IsNullOrEmpty(stock) is false && await http.PutAsJsonAsync(Crypto.Security.GetRoute("Account"), new Privacies
+		{
+			Account = string.IsNullOrEmpty(futures) ? stock : string.Concat(stock, ';', futures)
+		}) is HttpResponseMessage response)
+		{
+			IsClicked = HttpStatusCode.OK.Equals(response.StatusCode);
+			Base.SendMessage(stock, (int)response.StatusCode, GetType());
+		}
+	}
+	void OnReceiveTheSelectedButton(ChangeEventArgs e)
+	{
+		if (e.Value is string account)
+		{
+			if (account[^2..].CompareTo("31") == 0)
+				futures = account;
+
+			else
+				stock = account;
+
+			IsClicked = false;
+		}
+	}
+	string ConvertFormat(string account) => string.Format("{0}­ ─ ­{1} ­─ {2}", account.Substring(0, 4), account.Substring(4, 4), account[^2..]);
+	string stock, futures;
+	List<string> accounts;
 }

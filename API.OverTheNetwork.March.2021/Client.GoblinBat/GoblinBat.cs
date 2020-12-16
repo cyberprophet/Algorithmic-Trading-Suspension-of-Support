@@ -248,16 +248,20 @@ namespace ShareInvest.Client
 		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.POST)
+				var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ? security.RequestTheIntegratedAddress(param, Method.POST) : Security.RequestTheIntegratedAddress(param.GetType()), Method.POST)
 					.AddJsonBody(param, Security.content_type), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 					switch (param)
 					{
+						case Privacies:
+							return response;
+
 						case Retention when string.IsNullOrEmpty(response.Content) == false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
 
 						case Message:
+						case Account:
 							return (int)response.StatusCode;
 					}
 			}
@@ -328,6 +332,10 @@ namespace ShareInvest.Client
 		{
 			try
 			{
+				if (param is Privacies)
+					return await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, Method.PUT), Method.PUT, DataFormat.Json)
+					   .AddJsonBody(param, Security.content_type), source.Token);
+
 				var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ?
 					security.RequestTheIntegratedAddress(param) : Security.RequestTheIntegratedAddress(param.GetType()), Method.PUT)
 					.AddJsonBody(param, Security.content_type), source.Token);

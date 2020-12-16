@@ -25,7 +25,12 @@ namespace ShareInvest
 			if (api is OpenAPI.ConnectAPI)
 				Application.Run(new SecuritiesAPI(param, api));
 
-			if (Base.IsDebug == false)
+			var now = DateTime.Now;
+
+			if (Base.CheckIfMarketDelay(now))
+				now = now.AddHours(-1);
+
+			if (Base.IsDebug == false && (now.Hour < 0xF || now.Hour > 0x10))
 			{
 				Process.Start("shutdown.exe", "-r");
 				Base.SendMessage(Security.Initialize(param).Item2);

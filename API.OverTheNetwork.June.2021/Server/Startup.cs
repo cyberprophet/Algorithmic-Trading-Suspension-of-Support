@@ -52,7 +52,6 @@ namespace ShareInvest
 				ep.MapRazorPages();
 				ep.MapControllers();
 				ep.MapHub<BalanceHub>("/hub/balance");
-				ep.MapHub<AppHub>("/hub/message");
 				ep.MapFallbackToFile("index.html");
 			});
 		}
