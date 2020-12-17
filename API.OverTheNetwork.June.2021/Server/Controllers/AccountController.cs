@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -35,26 +37,35 @@ namespace ShareInvest.Controllers
 			return Ok();
 		}
 		[HttpPut, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
-		public async Task<IActionResult> PutContextAsync([FromBody] Catalog.Models.Privacies param)
+		public async Task<HttpStatusCode> PutContextAsync([FromBody] Catalog.Models.Privacies param)
 		{
 			try
 			{
-				if (string.IsNullOrEmpty(Progress.Account))
-					return Ok(await Progress.Client.PostContextAsync(new Catalog.Models.Privacies
+				var encrypt = Crypto.Security.Encrypt(Progress.Key, param.Account, string.IsNullOrEmpty(param.Account) is false);
+
+				if (string.IsNullOrEmpty(encrypt) is false)
+				{
+					var privacy = new Catalog.Models.Privacies
 					{
-						Account = param.Account
-					}));
-				else
-					return Ok(await Progress.Client.PutContextAsync(new Catalog.Models.Privacies
-					{
-						Account = param.Account
-					}));
+						Security = Progress.Key.Security,
+						SecuritiesAPI = Progress.Key.SecuritiesAPI,
+						SecurityAPI = encrypt,
+						Account = param.Account.Contains(";") ? "B" : Progress.Key.Account,
+						Commission = Progress.Key.Commission,
+						CodeStrategics = Progress.Key.CodeStrategics,
+						Coin = Progress.Key.Coin
+					};
+					var response = string.IsNullOrEmpty(Progress.Account) ? await Progress.Client.PostContextAsync(privacy) : await Progress.Client.PutContextAsync(privacy);
+					Progress.Account = param.Account;
+
+					return (HttpStatusCode)response;
+				}
 			}
 			catch (Exception ex)
 			{
 				Base.SendMessage(ex.StackTrace, GetType());
 			}
-			return BadRequest();
+			return HttpStatusCode.BadRequest;
 		}
 		[HttpGet]
 		public IEnumerable<string> GetContext()

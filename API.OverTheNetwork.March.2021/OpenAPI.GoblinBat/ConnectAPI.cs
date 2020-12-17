@@ -147,7 +147,7 @@ namespace ShareInvest.OpenAPI
 		{
 			get; private set;
 		}
-		public string Account
+		public string[] Account
 		{
 			get; set;
 		}

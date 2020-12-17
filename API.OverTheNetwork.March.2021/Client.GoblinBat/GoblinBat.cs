@@ -255,7 +255,7 @@ namespace ShareInvest.Client
 					switch (param)
 					{
 						case Privacies:
-							return response;
+							return response.StatusCode;
 
 						case Retention when string.IsNullOrEmpty(response.Content) == false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
@@ -333,8 +333,8 @@ namespace ShareInvest.Client
 			try
 			{
 				if (param is Privacies)
-					return await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, Method.PUT), Method.PUT, DataFormat.Json)
-					   .AddJsonBody(param, Security.content_type), source.Token);
+					return (await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, Method.PUT), Method.PUT, DataFormat.Json)
+					   .AddJsonBody(param, Security.content_type), source.Token)).StatusCode;
 
 				var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ?
 					security.RequestTheIntegratedAddress(param) : Security.RequestTheIntegratedAddress(param.GetType()), Method.PUT)

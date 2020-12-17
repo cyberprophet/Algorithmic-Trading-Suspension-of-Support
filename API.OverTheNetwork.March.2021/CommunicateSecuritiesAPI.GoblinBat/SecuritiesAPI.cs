@@ -112,7 +112,8 @@ namespace ShareInvest
 
 						connect.Writer.WriteLine(convey);
 					}
-					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, string.Concat(connect.Account, password)).Send -= OnReceiveSecuritiesAPI;
+					var name = sender.GetType().Name;
+					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(name, string.Concat(connect.Account[name.EndsWith("Opw00005") ? 0 : ^1], password)).Send -= OnReceiveSecuritiesAPI;
 					return;
 
 				case Tuple<long, long> balance:
@@ -180,16 +181,15 @@ namespace ShareInvest
 		}
 		void RequestBalanceInquiry()
 		{
-			if (string.IsNullOrEmpty(connect.Account) == false)
+			if (connect.Account is not null)
 			{
 				if (connect is OpenAPI.ConnectAPI o)
 				{
-					if (connect.Account[^2..].Equals("31"))
+					if (connect.Account[^1][^2..].Equals("31"))
 					{
 
 					}
-					else
-						o.InputValueRqData(string.Concat(instance, "Opw00005"), string.Concat(connect.Account, password)).Send += OnReceiveSecuritiesAPI;
+					o.InputValueRqData(string.Concat(instance, "Opw00005"), string.Concat(connect.Account[0], password)).Send += OnReceiveSecuritiesAPI;
 				}
 				SendReservation(MessageBox.Show("Time to go back 5 minutes from the early start bell.", "Temporary Code for Debugging", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
 			}
@@ -230,7 +230,7 @@ namespace ShareInvest
 												&& int.TryParse(order[3], out int quantity))
 												o.SendOrder(new Catalog.OpenAPI.Order
 												{
-													AccNo = connect.Account,
+													AccNo = connect.Account[0],
 													Code = order[0],
 													OrderType = type,
 													Price = price,
@@ -265,7 +265,7 @@ namespace ShareInvest
 
 									}
 									else
-										connect.Account = temp[^1];
+										connect.Account = temp[^1].Split(';');
 								}
 								Base.SendMessage(sender.GetType(), temp[0], temp[^1]);
 							}
