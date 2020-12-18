@@ -128,9 +128,9 @@ namespace ShareInvest
 							break;
 					}
 					if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1'
-						? await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2))
-						: await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2)))
-						: await this.client.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
+						? await client.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2))
+						: await client.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2)))
+						: await client.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
 					{
 						OnReceiveInformationTheDay();
 						var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.",
@@ -347,8 +347,13 @@ namespace ShareInvest
 			if (e.ClickedItem.Name.Equals(reference.Name))
 				if (e.ClickedItem.Text.Equals("연결"))
 				{
-					e.ClickedItem.Text = Base.IsDebug ? "조회" : "조회";
-					StartProgress(connect as Control);
+					e.ClickedItem.Text = Base.IsDebug ? "조회" : "설정";
+
+					if (connect.Start)
+						Process.Start(new ProcessStartInfo(Local.Url) { UseShellExecute = connect.Start });
+
+					else
+						StartProgress(connect as Control);
 				}
 				else if (e.ClickedItem.Text.Equals("조회"))
 					switch (MessageBox.Show(look_up, connect.SecuritiesName, MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
@@ -366,14 +371,8 @@ namespace ShareInvest
 							break;
 					}
 				else
-					switch (MessageBox.Show("", "", MessageBoxButtons.OKCancel, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2))
-					{
-						case DialogResult.OK:
-							break;
+					Process.Start(new ProcessStartInfo(Local.Url) { UseShellExecute = connect.Start });
 
-						case DialogResult.Cancel:
-							break;
-					}
 			else
 				Close();
 		}

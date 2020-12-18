@@ -11,6 +11,7 @@ namespace ShareInvest.Client
 {
 	public class Local
 	{
+		public static string Url => new Security(short.MaxValue).Url;
 		public static Local Instance
 		{
 			get

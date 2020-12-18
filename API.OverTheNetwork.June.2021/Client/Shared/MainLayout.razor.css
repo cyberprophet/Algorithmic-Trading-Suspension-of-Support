@@ -37,7 +37,7 @@
 		text-overflow: ellipsis;
 	}
 
-@media (max-width: 720.98px)
+@media only screen and (max-width: 850.98px) and (orientation: landscape)
 {
 	.top-row:not(.auth)
 	{
@@ -55,7 +55,7 @@
 	}
 }
 
-@media (min-width: 721px)
+@media only screen and (min-width: 851px) and (orientation: landscape)
 {
 	.page
 	{

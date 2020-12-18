@@ -7,17 +7,22 @@
 	{
 		<div class="" id="">
 			<p>
-				@{
+				@if (kv.Value.Count > 0)
+				{
 					var value = kv.Value;
 					var param = value.Peek();
-					<h5>
+					<h5 class="original_consensus" @onclick="(e => OnReceiveTheSelectedDisplay(kv.Key, e))">
 						<span><strong><b>@param.Date</b></strong></span>
 						<span><small><i>@kv.Key</i></small></span>
 					</h5>
-					<table class="table">
+					<table class="table" name="@kv.Key" style="display: ">
 						<thead>
 							<tr class="">
-								<th scope="col" title="매출, 영업이익, 순이익, 현금흐름 ( ● : 사용)"><div></div></th>
+								<th scope="col" title="매출, 영업이익, 순이익, 현금흐름 ( ● : 사용)" style="color: gainsboro">
+									<div>
+										<small><i>Original</i></small>
+									</div>
+								</th>
 								<th scope="col"><div>@quarter[0]</div></th>
 								<th scope="col"><div>@quarter[1]</div></th>
 								<th scope="col"><div>@quarter[2]</div></th>
@@ -55,12 +60,13 @@
 				<br />
 			</p>
 		</div>
-
 	}
 }
 else
 {
-	<p><em>Loading...</em></p>
+	<p>
+		<em>Loading...</em>
+	</p>
 }
 @code
 {
@@ -83,9 +89,24 @@ else
 		foreach (var near in Base.FindTheNearestQuarter(DateTime.Now))
 			quarter[index++] = ConvertFormat(near);
 	}
+	protected override bool ShouldRender()
+	{
+		if (render)
+		{
+			render = false;
+
+			return true;
+		}
+		return render;
+	}
+	void OnReceiveTheSelectedDisplay(object sender, MouseEventArgs e)
+	{
+		Base.SendMessage(sender as string, GetType());
+	}
 	string ConvertFormat(string param) => string.Format("’{0}. {1}.", param.Substring(0, 2), param.Substring(2, 2));
 	(string, ConsoleColor) ConvertFormat(double param)
 		=> (param < 0 ? param.ToString("P2")[1..] : param.ToString("P2"), param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
 	string[] quarter;
+	bool render = true;
 	Dictionary<string, Queue<Consensus>> dictionary;
 }

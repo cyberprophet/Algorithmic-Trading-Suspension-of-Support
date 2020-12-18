@@ -4,8 +4,10 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 using ShareInvest.Catalog.Models;
+using ShareInvest.Hubs;
 
 namespace ShareInvest.Controllers
 {
@@ -29,10 +31,12 @@ namespace ShareInvest.Controllers
 					Code = message[0].Replace("[", string.Empty),
 					Screen = log[^1].Remove(log[^1].Length - 1)
 				});
+				if (hub is not null)
+					await hub.Clients.All.SendAsync(MessageController.message, log[0].Trim());
 			}
 			catch (Exception ex)
 			{
-				await new Task(() => Base.SendMessage(ex.StackTrace, GetType()));
+				Base.SendMessage(ex.StackTrace, GetType());
 			}
 			return Ok();
 		}
@@ -44,9 +48,12 @@ namespace ShareInvest.Controllers
 
 			return Logs.ToArray();
 		}
+		public MessageController(IHubContext<MessageHub> hub) => this.hub = hub;
 		static Queue<Log> Logs
 		{
 			get; set;
 		}
+		const string message = "ReceiveMessage";
+		readonly IHubContext<MessageHub> hub;
 	}
 }

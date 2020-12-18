@@ -33,6 +33,7 @@ namespace ShareInvest
 				o.Limits.MaxRequestBodySize = int.MaxValue;
 			})
 				.AddTransient<BalanceHub>()
+				.AddTransient<MessageHub>()
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter()))
 				.AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
 			Base.SendMessage(GetType().Name, services.GetType());
@@ -51,6 +52,7 @@ namespace ShareInvest
 			{
 				ep.MapRazorPages();
 				ep.MapControllers();
+				ep.MapHub<MessageHub>("/hub/message");
 				ep.MapHub<BalanceHub>("/hub/balance");
 				ep.MapFallbackToFile("index.html");
 			});
