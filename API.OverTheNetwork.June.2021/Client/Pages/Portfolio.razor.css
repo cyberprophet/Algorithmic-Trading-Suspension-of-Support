@@ -1,4 +1,55 @@
-﻿.original_consensus
+﻿.flex-container
 {
-	cursor: pointer
+	justify-content: left;
+	padding: 1em;
+	border: 2.75px ridge;
+	border-color: #d7d7d7;
+	border-style: solid;
+}
+
+.legend
+{
+	display: block;
+	padding-left: 0.75em;
+	padding-right: 0.75em;
+	text-align: left;
+	width: auto
+}
+
+.sub
+{
+	width: 100%;
+	color: lightslategrey
+}
+
+.search
+{
+	position: fixed;
+	cursor: pointer;
+	display: block;
+	right: 25px;
+	bottom: 47px;
+}
+
+.search_input
+{
+	background-color: transparent;
+	color: dimgray;
+	border: 0.75px ridge;
+	border-style: solid;
+	border-color: azure;
+	font-size: small;
+	width: 205px;
+	height: 25px;
+	text-align: center
+}
+
+@media (max-width: 644px)
+{
+	.flex-container
+	{
+		justify-content: center;
+		padding: 0.5em;
+		border: none
+	}
 }

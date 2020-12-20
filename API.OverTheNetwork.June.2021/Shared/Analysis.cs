@@ -137,6 +137,14 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		protected internal abstract double Gap
+		{
+			get; set;
+		}
+		protected internal abstract double Peek
+		{
+			get; set;
+		}
 		protected internal abstract bool GetCheckOnDate(string date);
 		protected internal abstract bool GetCheckOnDeadline(string time);
 		protected internal const string conclusion = "체결";

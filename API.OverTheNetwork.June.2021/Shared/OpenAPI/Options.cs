@@ -133,6 +133,14 @@ namespace ShareInvest.OpenAPI
 		{
 			get; set;
 		}
+		protected internal override double Gap
+		{
+			get; set;
+		}
+		protected internal override double Peek
+		{
+			get; set;
+		}
 		protected internal override bool GetCheckOnDate(string date) => throw new NotImplementedException();
 		protected internal override bool GetCheckOnDeadline(string time) => throw new NotImplementedException();
 		public override void AnalyzeTheConclusion(string[] param)

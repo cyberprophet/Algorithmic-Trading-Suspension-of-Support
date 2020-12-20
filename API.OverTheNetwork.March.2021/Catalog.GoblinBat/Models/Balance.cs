@@ -30,5 +30,13 @@
 		{
 			get; set;
 		}
+		public string Trend
+		{
+			get; set;
+		}
+		public string Separation
+		{
+			get; set;
+		}
 	}
 }

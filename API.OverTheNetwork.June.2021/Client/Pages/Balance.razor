@@ -45,22 +45,25 @@ else
 }
 @code
 {
+	public async ValueTask DisposeAsync() => await hub.DisposeAsync();
 	protected override async Task OnInitializedAsync()
 	{
 		balance = new Dictionary<string, Catalog.Models.Balance>();
 		hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
 		hub.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) =>
 		{
+			if (balance.Quantity.Length < 2 && balance.Quantity[0] is '0')
+			{
+				if (this.balance.Remove(balance.Code))
+					StateHasChanged();
+
+				return;
+			}
 			this.balance[balance.Code] = balance;
-
-			if (balance.Quantity.Equals("0") && this.balance.Remove(balance.Code))
-				Base.SendMessage(balance.Code, balance.Quantity, GetType());
-
 			StateHasChanged();
 		});
 		await hub.StartAsync();
 	}
-	public async ValueTask DisposeAsync() => await hub.DisposeAsync();
 	Dictionary<string, Catalog.Models.Balance> balance;
 	HubConnection hub;
 }

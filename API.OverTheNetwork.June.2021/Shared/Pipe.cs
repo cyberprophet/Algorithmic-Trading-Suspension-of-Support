@@ -266,7 +266,9 @@ namespace ShareInvest
 											Purchase = purchase.ToString(market ? "N2" : "N0"),
 											Current = current.ToString(market ? "N2" : "N0"),
 											Revenue = revenue.ToString("C0"),
-											Rate = rate.ToString("P2")
+											Rate = rate.ToString("P2"),
+											Trend = string.Empty,
+											Separation = string.Empty
 										});
 										bal.Balance = new Balance
 										{

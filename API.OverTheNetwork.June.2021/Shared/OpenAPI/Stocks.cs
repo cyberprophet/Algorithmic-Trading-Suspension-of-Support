@@ -153,6 +153,14 @@ namespace ShareInvest.OpenAPI
 		{
 			get; set;
 		}
+		protected internal override double Gap
+		{
+			get; set;
+		}
+		protected internal override double Peek
+		{
+			get; set;
+		}
 		protected internal override bool GetCheckOnDate(string date) => open_market.Equals(DateChange);
 		protected internal override bool GetCheckOnDeadline(string time)
 		{
@@ -170,7 +178,7 @@ namespace ShareInvest.OpenAPI
 					Price = param[1],
 					Volume = volume
 				}));
-			if (Balance is Balance bal && bal.Quantity > 0 && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int current))
+			if (Balance is Balance bal && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int current))
 				if (Current != current)
 				{
 					bal.Revenue = (long)((current - bal.Purchase) * bal.Quantity);
@@ -184,7 +192,9 @@ namespace ShareInvest.OpenAPI
 						Purchase = bal.Purchase.ToString("N0"),
 						Current = current.ToString("N0"),
 						Revenue = bal.Revenue.ToString("C0"),
-						Rate = bal.Rate.ToString("P2")
+						Rate = bal.Rate.ToString("P2"),
+						Trend = Peek.ToString("N0"),
+						Separation = Gap.ToString("N0")
 					});
 				}
 		}
@@ -209,7 +219,7 @@ namespace ShareInvest.OpenAPI
 			Short.Push(Short.Count > 0 ? EMA.Make(Strategics is null ? 3 : Strategics.Short, Short.Count, (int)e.Price, Short.Peek()) : EMA.Make((int)e.Price));
 			Long.Push(Long.Count > 0 ? EMA.Make(Strategics is null ? 0x5A : Strategics.Long, Long.Count, (int)e.Price, Long.Peek()) : EMA.Make((int)e.Price));
 
-			if (GetCheckOnDeadline(e.Date) && Short.Count > 1 && Long.Count > 1 && Strategics is Catalog.SatisfyConditionsAccordingToTrends sc)
+			if (GetCheckOnDeadline(e.Date) && Short.Count > 1 && Long.Count > 1 && Trend.Count > 1 && Strategics is Catalog.SatisfyConditionsAccordingToTrends sc)
 			{
 				if (Balance is null)
 					Balance = new Balance
@@ -220,7 +230,7 @@ namespace ShareInvest.OpenAPI
 						Revenue = 0,
 						Rate = 0
 					};
-				double popShort = Short.Pop(), popLong = Long.Pop(), gap = popShort - popLong - (Short.Peek() - Long.Peek());
+				double popShort = Short.Pop(), popLong = Long.Pop(), gap = popShort - popLong - (Short.Peek() - Long.Peek()), peek = Trend.Peek();
 				Short.Push(popShort);
 				Long.Push(popLong);
 				var interval = new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day,
@@ -228,7 +238,7 @@ namespace ShareInvest.OpenAPI
 						int.TryParse(e.Date.Substring(2, 2), out int cMinute) ? cMinute : DateTime.Now.Minute,
 							int.TryParse(e.Date[4..], out int cSecond) ? cSecond : DateTime.Now.Second);
 
-				if (Bid > 0 && sc.TradingBuyQuantity > 0 && Bid < Trend.Peek() * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) == false
+				if (Bid > 0 && sc.TradingBuyQuantity > 0 && Bid < peek * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) == false
 					&& Wait && (sc.TradingBuyInterval == 0 || sc.TradingBuyInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
 				{
 					Pipe.Server.WriteLine(string.Concat(order,
@@ -241,7 +251,7 @@ namespace ShareInvest.OpenAPI
 				}
 				else if (Balance.Quantity > 0)
 				{
-					if (sc.TradingSellQuantity > 0 && Offer > Trend.Peek() * (1 + sc.TradingSellRate) && Offer > Balance.Purchase + tax * Offer
+					if (sc.TradingSellQuantity > 0 && Offer > peek * (1 + sc.TradingSellRate) && Offer > Balance.Purchase + tax * Offer
 						&& gap < 0 && OrderNumber.ContainsValue(Offer) == false && Wait
 						&& (sc.TradingSellInterval == 0 || sc.TradingSellInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
 					{
@@ -277,6 +287,8 @@ namespace ShareInvest.OpenAPI
 					else if (BuyPrice == 0 && Balance.Purchase > 0)
 						BuyPrice = Base.GetStartingPrice((int)(Balance.Purchase * (1 - sc.ReservationBuyRate)), Market);
 				}
+				Gap = gap;
+				Peek = peek;
 			}
 		}
 		const string order = "Order|";

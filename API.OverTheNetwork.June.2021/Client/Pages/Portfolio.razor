@@ -1,66 +1,126 @@
 ﻿@page "/portfolio"
+@using Microsoft.AspNetCore.SignalR.Client
 @inject HttpClient http
+@inject NavigationManager Manager
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
-@if (dictionary.Count > 0)
+@if (enumerable.Count > 0)
 {
-	@foreach (var kv in dictionary.OrderBy(o => o.Key))
-	{
+	<Virtualize Items="enumerable" Context="kv">
 		<div class="" id="">
 			<p>
-				@if (kv.Value.Count > 0)
+				@if (kv.Value.Consensus is not null)
 				{
-					var value = kv.Value;
-					var param = value.Peek();
-					<h5 class="original_consensus" @onclick="(e => OnReceiveTheSelectedDisplay(kv.Key, e))">
-						<span><strong><b>@param.Date</b></strong></span>
-						<span><small><i>@kv.Key</i></small></span>
-					</h5>
-					<table class="table" name="@kv.Key" style="display: ">
-						<thead>
-							<tr class="">
-								<th scope="col" title="매출, 영업이익, 순이익, 현금흐름 ( ● : 사용)" style="color: gainsboro">
-									<div>
-										<small><i>Original</i></small>
-									</div>
-								</th>
-								<th scope="col"><div>@quarter[0]</div></th>
-								<th scope="col"><div>@quarter[1]</div></th>
-								<th scope="col"><div>@quarter[2]</div></th>
-								<th scope="col"><div>@quarter[3]</div></th>
-								<th scope="col"><div>@quarter[4]</div></th>
-								<th scope="col"><div>@quarter[5]</div></th>
-							</tr>
-						</thead>
+					<fieldset class="flex-container" id="@(index = kv.Key)">
+						<legend class="legend">
+							@{
+								var consensus = kv.Value.Consensus.First();
 
-						@while (value.Count > 0)
+								<span name="@consensus.Date" id="@kv.Key">
+									<strong><b>@consensus.Date</b></strong>
+								</span>
+								<span name="@consensus.Code" id="@kv.Key">
+									<small><i>@consensus.Code</i></small>
+								</span>
+							}
+						</legend>
+
+						@if (kv.Value.Balance is Catalog.Models.Balance bal && string.IsNullOrEmpty(bal.Code) is false)
 						{
-							param = value.Dequeue();
-							<tbody>
-								<tr>
-									<th scope="row"><div>@param.Strategics.Replace("T", "●").Replace("F", "·")</div></th>
-									@{
-										var convert = ConvertFormat(param.FirstQuarter);
-										<td style="color: @convert.Item2">@convert.Item1</td>
-										convert = ConvertFormat(param.SecondQuarter);
-										<td style="color: @convert.Item2">@convert.Item1</td>
-										convert = ConvertFormat(param.ThirdQuarter);
-										<td style="color: @convert.Item2">@convert.Item1</td>
-										convert = ConvertFormat(param.Quarter);
-										<td style="color: @convert.Item2">@convert.Item1</td>
-										convert = ConvertFormat(param.TheNextYear);
-										<td style="color: @convert.Item2">@convert.Item1</td>
-										convert = ConvertFormat(param.TheYearAfterNext);
-										<td style="color: @convert.Item2">@convert.Item1</td>
-									}
-								</tr>
-							</tbody>
+							<div class="sub">
+								<strong><i>Balance</i></strong>
+							</div>
+							<table class="table">
+								<thead>
+									<tr>
+										<th scope="col"><div>수량</div></th>
+										<th scope="col"><div>매입가</div></th>
+										<th scope="col"><div>현재가</div></th>
+										<th scope="col"><div>평가손익</div></th>
+										<th scope="col"><div>손익률</div></th>
+										<th scope="col"><div>추세선</div></th>
+										<th scope="col"><div>이격도</div></th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										@{
+											bool empty = bal.Quantity.Length == 1 && bal.Quantity[0] is '0', loss = bal.Revenue[0] is '-' && bal.Rate[0] is '-',
+												trend = string.IsNullOrEmpty(bal.Trend) is false && bal.Trend[0] is '-',
+												separation = string.IsNullOrEmpty(bal.Separation) is false && bal.Separation[0] is '-';
+											ConsoleColor color = loss ? ConsoleColor.Blue : ConsoleColor.Red,
+												tc = trend ? ConsoleColor.Blue : ConsoleColor.Red, sc = separation ? ConsoleColor.Blue : ConsoleColor.Red;
+											string revenue = loss ? bal.Revenue[1..] : bal.Revenue, rate = loss ? bal.Rate[1..] : bal.Rate;
+
+											<td>@(empty ? string.Empty : bal.Quantity)</td>
+											<td>@(empty ? string.Empty : bal.Purchase)</td>
+											<td>@bal.Current</td>
+											<td style="color: @color">@(empty ? string.Empty : revenue)</td>
+											<td style="color: @color">@(empty ? string.Empty : rate)</td>
+											<td style="color: @tc">@(trend ? bal.Trend[1..] : bal.Trend)</td>
+											<td style="color: @sc">@(separation ? bal.Separation[1..] : bal.Separation)</td>
+										}
+									</tr>
+								</tbody>
+							</table>
 						}
-					</table>
+						<div class="sub">
+							<strong><i>Consensus</i></strong>
+						</div>
+
+						<table class="table" style="display: ">
+							<thead>
+								<tr class="">
+									<th scope="col" title="매출, 영업이익, 순이익, 현금흐름 ( ● : 사용)" style="color: gainsboro">
+										<div>
+											<small><i>Original</i></small>
+										</div>
+									</th>
+									<th scope="col"><div>@quarter[0]</div></th>
+									<th scope="col"><div>@quarter[1]</div></th>
+									<th scope="col"><div>@quarter[2]</div></th>
+									<th scope="col"><div>@quarter[3]</div></th>
+									<th scope="col"><div>@quarter[4]</div></th>
+									<th scope="col"><div>@quarter[5]</div></th>
+								</tr>
+							</thead>
+
+							@foreach (var param in kv.Value.Consensus)
+							{
+								<tbody>
+									<tr>
+										<th scope="row">
+											<div>@param.Strategics.Replace("T", "●").Replace("F", "·")</div>
+										</th>
+										@{
+											var convert = ConvertFormat(param.FirstQuarter);
+											<td style="color: @convert.Item2">@convert.Item1</td>
+											convert = ConvertFormat(param.SecondQuarter);
+											<td style="color: @convert.Item2">@convert.Item1</td>
+											convert = ConvertFormat(param.ThirdQuarter);
+											<td style="color: @convert.Item2">@convert.Item1</td>
+											convert = ConvertFormat(param.Quarter);
+											<td style="color: @convert.Item2">@convert.Item1</td>
+											convert = ConvertFormat(param.TheNextYear);
+											<td style="color: @convert.Item2">@convert.Item1</td>
+											convert = ConvertFormat(param.TheYearAfterNext);
+											<td style="color: @convert.Item2">@convert.Item1</td>
+										}
+									</tr>
+								</tbody>
+							}
+						</table>
+					</fieldset>
 				}
 				<br />
 			</p>
 		</div>
-	}
+	</Virtualize>
+
+	<div class="search">
+		<input class="search_input" type="text" @onchange="OnReceiveKeyPress" placeholder="종목코드 or 종목명을 입력하세요." autocomplete="on">
+	</div>
 }
 else
 {
@@ -70,8 +130,11 @@ else
 }
 @code
 {
+	public async ValueTask DisposeAsync() => await hub.DisposeAsync();
 	protected override async Task OnInitializedAsync()
 	{
+		key = new Dictionary<string, int>();
+		enumerable = new Dictionary<int, Catalog.Models.Portfolio>();
 		dictionary = new Dictionary<string, Queue<Consensus>>();
 		quarter = new string[6];
 		var index = 0;
@@ -86,27 +149,56 @@ else
 			else
 				dictionary[con.Code] = new Queue<Consensus>(new Consensus[] { con });
 		}
+		foreach (var consensus in dictionary.OrderBy(o => o.Key))
+		{
+			key[consensus.Key] = index;
+			key[consensus.Value.Peek().Date] = index;
+			enumerable[index++] = new Catalog.Models.Portfolio
+			{
+				Consensus = consensus.Value
+			};
+		}
+		index = 0;
+
 		foreach (var near in Base.FindTheNearestQuarter(DateTime.Now))
 			quarter[index++] = ConvertFormat(near);
 	}
-	protected override bool ShouldRender()
+	protected override async Task OnAfterRenderAsync(bool render)
 	{
 		if (render)
 		{
-			render = false;
-
-			return true;
+			hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
+			hub.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) =>
+			{
+				if (enumerable.TryGetValue(key[balance.Code], out Catalog.Models.Portfolio port))
+				{
+					port.Balance = balance;
+					StateHasChanged();
+				}
+			});
+			await hub.StartAsync();
 		}
-		return render;
 	}
-	void OnReceiveTheSelectedDisplay(object sender, MouseEventArgs e)
+	async void OnReceiveKeyPress(ChangeEventArgs e)
 	{
-		Base.SendMessage(sender as string, GetType());
+		if (e.Value is string str && string.IsNullOrEmpty(str) is false)
+			foreach (var name in new[] { str, str.ToUpper() })
+				if (this.key.TryGetValue(name, out int index))
+				{
+					var move = index - this.index;
+					await JSRuntime.InvokeVoidAsync(string.Concat(interop, "move"), (move > 0 ? move + 7 : move - 3) * 0x3B7);
+
+					break;
+				}
 	}
 	string ConvertFormat(string param) => string.Format("’{0}. {1}.", param.Substring(0, 2), param.Substring(2, 2));
 	(string, ConsoleColor) ConvertFormat(double param)
 		=> (param < 0 ? param.ToString("P2")[1..] : param.ToString("P2"), param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
 	string[] quarter;
-	bool render = true;
+	int index;
+	Dictionary<int, Catalog.Models.Portfolio> enumerable;
 	Dictionary<string, Queue<Consensus>> dictionary;
+	Dictionary<string, int> key;
+	HubConnection hub;
+	const string interop = "JsFunctions.";
 }
