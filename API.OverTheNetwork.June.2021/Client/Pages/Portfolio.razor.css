@@ -19,16 +19,16 @@
 .sub
 {
 	width: 100%;
-	color: lightslategrey
+	color: lightslategrey;
+	cursor: pointer
 }
 
 .search
 {
 	position: fixed;
-	cursor: pointer;
 	display: block;
 	right: 25px;
-	bottom: 47px;
+	bottom: 41px;
 }
 
 .search_input
@@ -51,5 +51,14 @@
 		justify-content: center;
 		padding: 0.5em;
 		border: none
+	}
+}
+
+@media only screen and (min-width: 851px) and (orientation: landscape)
+{
+	.search
+	{
+		bottom: none;
+		top: 77px;
 	}
 }

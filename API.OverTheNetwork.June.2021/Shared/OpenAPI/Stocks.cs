@@ -194,7 +194,7 @@ namespace ShareInvest.OpenAPI
 						Revenue = bal.Revenue.ToString("C0"),
 						Rate = bal.Rate.ToString("P2"),
 						Trend = Peek.ToString("N0"),
-						Separation = Gap.ToString("N0")
+						Separation = Gap.ToString("N2")
 					});
 				}
 		}

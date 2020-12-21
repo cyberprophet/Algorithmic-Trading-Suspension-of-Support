@@ -21,7 +21,7 @@ namespace ShareInvest
 			}
 			else if (security.GetContextAsync(args).Result.GrantAccess)
 				CreateHostBuilder().Build().Run();
-
+			
 			GC.Collect();
 			Process.GetCurrentProcess().Kill();
 		}

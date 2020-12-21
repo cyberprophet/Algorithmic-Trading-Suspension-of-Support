@@ -43,24 +43,36 @@ namespace ShareInvest.Indicators
 				Stack<double> st = new Stack<double>(), lg = new Stack<double>(), td = new Stack<double>(),
 					short_stack = new Stack<double>(), long_stack = new Stack<double>(), trend_stack = new Stack<double>();
 
-				while (Short.Count > 0 && Short.Count < 0x3E9)
+				while (Short.Count > 0)
 					st.Push(Short.Pop());
 
-				while (Long.Count > 0 && Long.Count < 0x3E9)
+				while (Long.Count > 0)
 					lg.Push(Long.Pop());
 
-				while (Trend.Count > 0 && Trend.Count < 0x3E9)
+				while (Trend.Count > 0)
 					td.Push(Trend.Pop());
 
 				while (st.Count > 0)
-					short_stack.Push(st.Pop());
+				{
+					var pop = st.Pop();
 
+					if (st.Count < 0x3E9)
+						short_stack.Push(pop);
+				}
 				while (lg.Count > 0)
-					long_stack.Push(lg.Pop());
+				{
+					var pop = lg.Pop();
 
+					if (lg.Count < 0x3E9)
+						long_stack.Push(pop);
+				}
 				while (td.Count > 0)
-					trend_stack.Push(td.Pop());
+				{
+					var pop = td.Pop();
 
+					if (td.Count < 0x3E9)
+						trend_stack.Push(pop);
+				}
 				return (short_stack, long_stack, trend_stack);
 			}
 		}
