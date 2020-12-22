@@ -46,6 +46,7 @@
 											<th scope="col"><div>이격도</div></th>
 										</tr>
 									</thead>
+
 									<tbody>
 										<tr>
 											@{
@@ -67,6 +68,10 @@
 										</tr>
 									</tbody>
 								</table>
+							}
+							else
+							{
+								<br />
 							}
 						}
 						<div class="sub" @onclick="(e => OnClick(kv.Key, 'C', e))">
@@ -118,6 +123,164 @@
 								}
 							</table>
 						}
+						else
+						{
+							<br />
+						}
+						@if (kv.Value.RenderingStrategics)
+						{
+							<fieldset class="flex-container">
+								<legend class="legend">
+									<span class="sub" @onclick="(e => OnClick(kv.Key, 'S', e))">
+										<small><b><i>Strategics</i></b></small>
+									</span>
+								</legend>
+
+								<ul>
+									@{
+										switch (kv.Value.Strategics)
+										{
+											case Catalog.AccordingToTrends:
+												kv.Value.SelectStrategics = 'A';
+												break;
+										}
+										<li>
+											<div class="strategics">
+												<input type="radio" class="strategics_radio" @onclick="(e => OnClick(kv.Key, 'A', e))" />
+												<b><i>According to Trends</i></b>
+											</div>
+
+											@if (kv.Value.SelectStrategics is 'A')
+											{
+												<table class="table">
+													<thead>
+														<tr>
+															<th scope="col" style="text-align: center; color: wheat"><div><small><i>EMA</i></small></div></th>
+															<th scope="col" class="strategics_table"><div>Short</div></th>
+															<th scope="col" class="strategics_table"><div>Long</div></th>
+															<th scope="col" class="strategics_table"><div style="color: navy">매도</div></th>
+															<th scope="col" class="strategics_table"><div style="color: maroon">매수</div></th>
+														</tr>
+													</thead>
+
+													<tbody>
+														<tr>
+															<th scope="row" class="strategics_table">
+																<div>Day</div>
+															</th>
+															<td>
+																<input class="strategics_input" type="number" min=2 max=1451 placeholder=5 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=2 max=1451 placeholder=60 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=2 max=1451 placeholder=20 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=2 max=1451 placeholder=45 required />
+															</td>
+														</tr>
+													</tbody>
+
+													<thead>
+														<tr>
+															<th scope="col"></th>
+															<th class="strategics_table" colspan="2" scope="col"><div>수익실현／추가매수（％）</div></th>
+															<th class="strategics_table" scope="col"><div>수량（주）</div></th>
+															<th class="strategics_table" scope="col"><div>호가단위（틱）</div></th>
+														</tr>
+													</thead>
+
+													<tbody>
+														<tr>
+															<th rowspan="2" scope="row" class="strategics_table">
+																<div>Appoint</div>
+															</th>
+															<td class="strategics_table">
+																<div style="color: navy"><b>매도</b></div>
+															</td>
+															<td>
+																<input class="strategics_input" type="number" step="0.05" min=0 max=1000 placeholder=1.35 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=0 placeholder=1 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=1 placeholder=1 required />
+															</td>
+														</tr>
+														<tr>
+															<td class="strategics_table">
+																<div style="color: maroon"><b>매수</b></div>
+															</td>
+															<td>
+																<input class="strategics_input" type="number" step="0.05" min=0 max=1000 placeholder=1.75 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=0 placeholder=1 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=1 placeholder=1 required />
+															</td>
+														</tr>
+													</tbody>
+
+													<thead>
+														<tr>
+															<th scope="col"></th>
+															<th class="strategics_table" colspan="2" scope="col"><div>（￦）</div></th>
+															<th class="strategics_table" scope="col"><div>수량（주）</div></th>
+															<th class="strategics_table" scope="col"><div>매매간격（ms）</div></th>
+														</tr>
+													</thead>
+
+													<tbody>
+														<tr>
+															<th rowspan="2" scope="row" class="strategics_table">
+																<div>Trading</div>
+															</th>
+															<td class="strategics_table">
+																<div style="color: navy"><b>매도</b></div>
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=0 placeholder=1 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=1 placeholder=1735 required />
+															</td>
+														</tr>
+														<tr>
+															<td class="strategics_table">
+																<div style="color: maroon"><b>매수</b></div>
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=0 placeholder=1 required />
+															</td>
+															<td>
+																<input class="strategics_input" type="number" min=1 placeholder=1235 required />
+															</td>
+														</tr>
+													</tbody>
+												</table>
+											}
+										</li>
+									}
+								</ul>
+							</fieldset>
+						}
+						else
+						{
+							<div class="sub" @onclick="(e => OnClick(kv.Key, 'S', e))">
+								<strong><i>Strategics</i></strong>
+							</div>
+						}
 					</fieldset>
 				}
 				<br />
@@ -126,7 +289,7 @@
 	</Virtualize>
 
 	<div class="search">
-		<input class="search_input" type="text" @onchange="OnReceiveKeyPress" placeholder="종목코드 or 종목명을 입력하세요." autocomplete="on">
+		<input class="search_input" type="text" @onchange="OnReceiveKeyPress" placeholder="종목을 검색합니다." autocomplete="on">
 	</div>
 }
 else
@@ -192,12 +355,23 @@ else
 		if (enumerable.TryGetValue(sender, out Catalog.Models.Portfolio portfolio))
 			switch (initial)
 			{
+				case 'A':
+					portfolio.SelectStrategics = initial;
+					break;
+
 				case 'B':
 					portfolio.RenderingBalance = portfolio.RenderingBalance is false;
 					break;
 
 				case 'C':
 					portfolio.RenderingConsensus = portfolio.RenderingConsensus is false;
+					break;
+
+				case 'S':
+					if (portfolio.RenderingStrategics)
+						portfolio.SelectStrategics = char.MinValue;
+
+					portfolio.RenderingStrategics = portfolio.RenderingStrategics is false;
 					break;
 			}
 	}
@@ -207,7 +381,7 @@ else
 			foreach (var name in new[] { str, str.ToUpper() })
 				if (this.key.TryGetValue(name, out int index))
 				{
-					await WaitForTheScrollToMovement(index, 0x75);
+					await WaitForTheScrollToMovement(index, 0x95);
 
 					break;
 				}
@@ -217,7 +391,7 @@ else
 		await JSRuntime.InvokeVoidAsync(string.Concat(interop, "move"), (index - this.index) * pixel);
 		await System.Threading.Tasks.Task.Delay(0x700);
 
-		if (this.index >= index && index > this.index - 0x14)
+		if (this.index >= index && index > this.index - 0x14 || this.index < 0x18 && index < 0x18)
 			await JSRuntime.InvokeVoidAsync(string.Concat(interop, "selector"), index);
 
 		else

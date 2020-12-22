@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 
+using ShareInvest.Interface;
+
 namespace ShareInvest.Catalog.Models
 {
 	public class Portfolio
@@ -17,6 +19,18 @@ namespace ShareInvest.Catalog.Models
 			get; set;
 		}
 		public bool RenderingBalance
+		{
+			get; set;
+		}
+		public IStrategics Strategics
+		{
+			get; set;
+		}
+		public bool RenderingStrategics
+		{
+			get; set;
+		}
+		public char SelectStrategics
 		{
 			get; set;
 		}

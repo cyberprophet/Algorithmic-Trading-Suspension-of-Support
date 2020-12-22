@@ -23,6 +23,47 @@
 	cursor: pointer
 }
 
+.strategics
+{
+	color: midnightblue;
+	width: 100%;
+	font-size: 16px
+}
+
+.strategics_radio
+{
+	cursor: pointer;
+	margin-left: 7px;
+	vertical-align: -1px
+}
+
+.strategics_input
+{
+	background-color: transparent;
+	color: dimgray;
+	border: 0.75px ridge;
+	border-style: solid;
+	border-color: tan;
+	font-size: small;
+	width: 100%;
+	height: 25px;
+	text-align: end
+}
+
+	.strategics_input::placeholder
+	{
+		color: lightsteelblue;
+		font-style: italic
+	}
+
+.strategics_table
+{
+	text-align: end;
+	padding-right: 0.75em;
+	vertical-align: middle;
+	width: 15%
+}
+
 .search
 {
 	position: fixed;
@@ -39,9 +80,21 @@
 	border-style: solid;
 	border-color: azure;
 	font-size: small;
-	width: 205px;
+	width: 155px;
 	height: 25px;
 	text-align: center
+}
+
+	.search_input::placeholder
+	{
+		color: lightgrey;
+		font-style: italic
+	}
+
+ul
+{
+	padding: 0;
+	list-style-type: none
 }
 
 @media (max-width: 644px)
