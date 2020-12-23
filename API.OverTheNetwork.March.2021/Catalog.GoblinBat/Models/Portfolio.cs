@@ -30,7 +30,15 @@ namespace ShareInvest.Catalog.Models
 		{
 			get; set;
 		}
+		public bool IsClickedAmend
+		{
+			get; set;
+		}
 		public char SelectStrategics
+		{
+			get; set;
+		}
+		public char Temp
 		{
 			get; set;
 		}

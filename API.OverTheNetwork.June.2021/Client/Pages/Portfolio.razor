@@ -1,18 +1,14 @@
 ﻿@page "/portfolio"
-@using Microsoft.AspNetCore.SignalR.Client
-@inject HttpClient http
-@inject NavigationManager Manager
-@inject IJSRuntime JSRuntime
-@implements IAsyncDisposable
+@inherits PortfolioBase
 
-@if (enumerable.Count > 0)
+@if (Enumerable.Count > 0)
 {
-	<Virtualize Items="enumerable" Context="kv" OverscanCount="9">
+	<Virtualize Items="Enumerable" Context="kv" OverscanCount="9">
 		<div class="" id="@kv.Key">
 			<p>
 				@if (kv.Value.Consensus is not null)
 				{
-					<fieldset class="flex-container" id="@(index = kv.Key)">
+					<fieldset class="flex-container" id="@(Index = kv.Key)">
 						<legend class="legend">
 							@{
 								var consensus = kv.Value.Consensus.First();
@@ -51,7 +47,7 @@
 										<tr>
 											@{
 												bool empty = bal.Quantity.Length == 1 && bal.Quantity[0] is '0', loss = bal.Revenue[0] is '-' && bal.Rate[0] is '-',
-													trend = string.IsNullOrEmpty(bal.Trend) is false && bal.Trend[0] is '-',
+													trend = string.IsNullOrEmpty(bal.Trend) is false && bal.Trend.CompareTo(bal.Current) < 0,
 													separation = string.IsNullOrEmpty(bal.Separation) is false && bal.Separation[0] is '-';
 												ConsoleColor color = loss ? ConsoleColor.Blue : ConsoleColor.Red,
 													tc = trend ? ConsoleColor.Blue : ConsoleColor.Red, sc = separation ? ConsoleColor.Blue : ConsoleColor.Red;
@@ -62,7 +58,7 @@
 												<td>@bal.Current</td>
 												<td style="color: @color">@(empty ? string.Empty : revenue)</td>
 												<td style="color: @color">@(empty ? string.Empty : rate)</td>
-												<td style="color: @tc">@(trend ? bal.Trend[1..] : bal.Trend)</td>
+												<td style="color: @tc">@(trend && bal.Trend[0] is '-' ? bal.Trend[1..] : bal.Trend)</td>
 												<td style="color: @sc">@(separation ? bal.Separation[1..] : bal.Separation)</td>
 											}
 										</tr>
@@ -83,17 +79,17 @@
 							<table class="table">
 								<thead>
 									<tr class="">
-										<th scope="col" title="매출, 영업이익, 순이익, 현금흐름 ( ● : 사용)" style="color: gainsboro">
+										<th scope="col" title="매출ㆍ영업이익ㆍ순이익ㆍ현금흐름 ( ● : Use)" style="color: gainsboro">
 											<div>
 												<small><i>Original</i></small>
 											</div>
 										</th>
-										<th scope="col"><div>@quarter[0]</div></th>
-										<th scope="col"><div>@quarter[1]</div></th>
-										<th scope="col"><div>@quarter[2]</div></th>
-										<th scope="col"><div>@quarter[3]</div></th>
-										<th scope="col"><div>@quarter[4]</div></th>
-										<th scope="col"><div>@quarter[5]</div></th>
+										<th scope="col"><div>@Quarter[0]</div></th>
+										<th scope="col"><div>@Quarter[1]</div></th>
+										<th scope="col"><div>@Quarter[2]</div></th>
+										<th scope="col"><div>@Quarter[3]</div></th>
+										<th scope="col"><div>@Quarter[4]</div></th>
+										<th scope="col"><div>@Quarter[5]</div></th>
 									</tr>
 								</thead>
 
@@ -138,15 +134,9 @@
 
 								<ul>
 									@{
-										switch (kv.Value.Strategics)
-										{
-											case Catalog.AccordingToTrends:
-												kv.Value.SelectStrategics = 'A';
-												break;
-										}
 										<li>
 											<div class="strategics">
-												<input type="radio" class="strategics_radio" @onclick="(e => OnClick(kv.Key, 'A', e))" />
+												<input type="radio" class="strategics_radio" @onclick="(e => OnClick(kv.Key, 'A', e))" checked="@(kv.Value.SelectStrategics is 'A')" />
 												<b><i>According to Trends</i></b>
 											</div>
 
@@ -155,40 +145,74 @@
 												<table class="table">
 													<thead>
 														<tr>
-															<th scope="col" style="text-align: center; color: wheat"><div><small><i>EMA</i></small></div></th>
-															<th scope="col" class="strategics_table"><div>Short</div></th>
-															<th scope="col" class="strategics_table"><div>Long</div></th>
-															<th scope="col" class="strategics_table"><div style="color: navy">매도</div></th>
-															<th scope="col" class="strategics_table"><div style="color: maroon">매수</div></th>
+															<th scope="col" class="strategics_title" title="Exponential Moving Average">
+																<div><small>EMA</small></div>
+															</th>
+															<th scope="col" class="strategics_table">
+																<div style="padding-right: 5px; color: maroon">Leading­Line</div>
+															</th>
+															<th scope="col" class="strategics_table">
+																<div style="padding-right: 5px; color: navy">Lagging­Line</div>
+															</th>
+															<th scope="col" class="strategics_table">
+																<div style="padding-right: 5px; color: maroon">Leading­Trend</div>
+															</th>
+															<th scope="col" class="strategics_table">
+																<div style="padding-right: 5px; color: navy">Lagging­Trend</div>
+															</th>
 														</tr>
 													</thead>
 
 													<tbody>
 														<tr>
-															<th scope="row" class="strategics_table">
-																<div>Day</div>
-															</th>
-															<td>
-																<input class="strategics_input" type="number" min=2 max=1451 placeholder=5 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=2 max=1451 placeholder=60 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=2 max=1451 placeholder=20 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=2 max=1451 placeholder=45 required />
-															</td>
+															<th scope="row" class="strategics_table"><div>Day</div></th>
+
+															@if (kv.Value.IsClickedAmend)
+															{
+																<td>
+																	<input class="strategics_input" type="number" min=2 max=1450 placeholder=5 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min=3 max=1451 placeholder=60 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min=2 max=1450 placeholder=20 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min=3 max=1451 placeholder=45 required />
+																</td>
+															}
+															else
+															{
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
+																</td>
+															}
 														</tr>
 													</tbody>
 
 													<thead>
 														<tr>
-															<th scope="col"></th>
-															<th class="strategics_table" colspan="2" scope="col"><div>수익실현／추가매수（％）</div></th>
-															<th class="strategics_table" scope="col"><div>수량（주）</div></th>
-															<th class="strategics_table" scope="col"><div>호가단위（틱）</div></th>
+															<th scope="col" class="strategics_title" title="장중ㆍ동시호가（일 3회）">
+																<div><small>Term</small></div>
+															</th>
+															<th class="strategics_table" colspan="2" scope="col">
+																<div style="display: inline-block; color: maroon">In Gains</div>
+																<div style="display: inline-block">／</div>
+																<div style="display: inline-block; color: navy">Scale Trading</div>
+																<div style="display: inline-block">（％）</div>
+															</th>
+															<th class="strategics_table" scope="col"><div>Quantity（주）</div></th>
+															<th class="strategics_table" scope="col"><div>Unit（Tick）</div></th>
 														</tr>
 													</thead>
 
@@ -198,40 +222,74 @@
 																<div>Appoint</div>
 															</th>
 															<td class="strategics_table">
-																<div style="color: navy"><b>매도</b></div>
+																<div style="color: navy"><b>Sell</b></div>
 															</td>
-															<td>
-																<input class="strategics_input" type="number" step="0.05" min=0 max=1000 placeholder=1.35 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=0 placeholder=1 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=1 placeholder=1 required />
-															</td>
+
+															@if (kv.Value.IsClickedAmend)
+															{
+																<td>
+																	<input class="strategics_input" type="number" step="0.05" min="0.05" max="1000" placeholder=1.35 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min="1" max="30" placeholder=1 required />
+																</td>
+															}
+															else
+															{
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('T', null)</small></span>
+																</td>
+															}
 														</tr>
 														<tr>
 															<td class="strategics_table">
-																<div style="color: maroon"><b>매수</b></div>
+																<div style="color: maroon"><b>Buy</b></div>
 															</td>
-															<td>
-																<input class="strategics_input" type="number" step="0.05" min=0 max=1000 placeholder=1.75 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=0 placeholder=1 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=1 placeholder=1 required />
-															</td>
+
+															@if (kv.Value.IsClickedAmend)
+															{
+																<td>
+																	<input class="strategics_input" type="number" step="0.05" min="0.05" max="1000" placeholder=1.75 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min="1" max="30" placeholder=1 required />
+																</td>
+															}
+															else
+															{
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('T', null)</small></span>
+																</td>
+															}
 														</tr>
 													</tbody>
 
 													<thead>
 														<tr>
-															<th scope="col"></th>
+															<th scope="col" class="strategics_title" title="매매방식（도움말 참조）">
+																<div><small>Expression</small></div>
+															</th>
 															<th class="strategics_table" colspan="2" scope="col"><div>（￦）</div></th>
-															<th class="strategics_table" scope="col"><div>수량（주）</div></th>
-															<th class="strategics_table" scope="col"><div>매매간격（ms）</div></th>
+															<th class="strategics_table" scope="col"><div>Quantity（주）</div></th>
+															<th class="strategics_table" scope="col"><div>Interval（㎳）</div></th>
 														</tr>
 													</thead>
 
@@ -241,38 +299,87 @@
 																<div>Trading</div>
 															</th>
 															<td class="strategics_table">
-																<div style="color: navy"><b>매도</b></div>
+																<div style="color: navy"><b>Sell</b></div>
 															</td>
-															<td>
-																<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=0 placeholder=1 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=1 placeholder=1735 required />
-															</td>
+
+															@if (kv.Value.IsClickedAmend)
+															{
+																<td>
+																	<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min="200" max="30000000" placeholder=1735 required />
+																</td>
+															}
+															else
+															{
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('M', null)</small></span>
+																</td>
+															}
 														</tr>
 														<tr>
 															<td class="strategics_table">
-																<div style="color: maroon"><b>매수</b></div>
+																<div style="color: maroon"><b>Buy</b></div>
 															</td>
-															<td>
-																<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=0 placeholder=1 required />
-															</td>
-															<td>
-																<input class="strategics_input" type="number" min=1 placeholder=1235 required />
-															</td>
+
+															@if (kv.Value.IsClickedAmend)
+															{
+																<td>
+																	<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
+																</td>
+																<td>
+																	<input class="strategics_input" type="number" min="200" max="30000000" placeholder=1235 required />
+																</td>
+															}
+															else
+															{
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
+																</td>
+																<td class="strategics_table">
+																	<span class="strategics_cell"><small>@ConvertFormat('M', null)</small></span>
+																</td>
+															}
 														</tr>
 													</tbody>
 												</table>
 											}
+											else
+											{
+												<br />
+											}
+										</li>
+
+										<li>
+											<div class="strategics">
+												<input type="radio" class="strategics_radio" @onclick="(e => OnClick(kv.Key, 'D', e))" checked="@(kv.Value.SelectStrategics is 'D')" />
+												<b><i>Deletion</i></b>
+											</div>
 										</li>
 									}
 								</ul>
+
+								<div class="button_style">
+									<button class="button_style_amend" @onclick="(e => OnClick(kv.Key, e))" disabled="@kv.Value.IsClickedAmend">Amend</button>
+									<button class="button_style_verify">Verify</button>
+									<button class="button_style_submit" disabled="@(kv.Value.IsClickedAmend is false)">Save</button>
+								</div>
 							</fieldset>
 						}
 						else
@@ -289,7 +396,7 @@
 	</Virtualize>
 
 	<div class="search">
-		<input class="search_input" type="text" @onchange="OnReceiveKeyPress" placeholder="종목을 검색합니다." autocomplete="on">
+		<input class="search_input" type="text" @onchange="OnReceiveKeyPress" placeholder="Search for the Stocks." autocomplete="on">
 	</div>
 }
 else
@@ -297,114 +404,4 @@ else
 	<p>
 		<em>Loading...</em>
 	</p>
-}
-@code
-{
-	public async ValueTask DisposeAsync() => await hub.DisposeAsync();
-	protected override async Task OnInitializedAsync()
-	{
-		key = new Dictionary<string, int>();
-		enumerable = new Dictionary<int, Catalog.Models.Portfolio>();
-		dictionary = new Dictionary<string, Queue<Consensus>>();
-		quarter = new string[6];
-		var index = 0;
-
-		foreach (var con in await http.GetFromJsonAsync<Consensus[]>(Crypto.Security.GetRoute("Consensus")))
-		{
-			if (dictionary.TryGetValue(con.Code, out Queue<Consensus> queue))
-			{
-				queue.Enqueue(con);
-				dictionary[con.Code] = queue;
-			}
-			else
-				dictionary[con.Code] = new Queue<Consensus>(new Consensus[] { con });
-		}
-		foreach (var consensus in dictionary.OrderBy(o => o.Key))
-		{
-			key[consensus.Key] = index;
-			key[consensus.Value.Peek().Date] = index;
-			enumerable[index++] = new Catalog.Models.Portfolio
-			{
-				Consensus = consensus.Value,
-				RenderingBalance = true
-			};
-		}
-		index = 0;
-
-		foreach (var near in Base.FindTheNearestQuarter(DateTime.Now))
-			quarter[index++] = ConvertFormat(near);
-	}
-	protected override async Task OnAfterRenderAsync(bool render)
-	{
-		if (render)
-		{
-			hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
-			hub.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) =>
-			{
-				if (enumerable.TryGetValue(key[balance.Code], out Catalog.Models.Portfolio port))
-				{
-					port.Balance = balance;
-					StateHasChanged();
-				}
-			});
-			await hub.StartAsync();
-		}
-	}
-	void OnClick(int sender, char initial, MouseEventArgs e)
-	{
-		if (enumerable.TryGetValue(sender, out Catalog.Models.Portfolio portfolio))
-			switch (initial)
-			{
-				case 'A':
-					portfolio.SelectStrategics = initial;
-					break;
-
-				case 'B':
-					portfolio.RenderingBalance = portfolio.RenderingBalance is false;
-					break;
-
-				case 'C':
-					portfolio.RenderingConsensus = portfolio.RenderingConsensus is false;
-					break;
-
-				case 'S':
-					if (portfolio.RenderingStrategics)
-						portfolio.SelectStrategics = char.MinValue;
-
-					portfolio.RenderingStrategics = portfolio.RenderingStrategics is false;
-					break;
-			}
-	}
-	async void OnReceiveKeyPress(ChangeEventArgs e)
-	{
-		if (e.Value is string str && string.IsNullOrEmpty(str) is false)
-			foreach (var name in new[] { str, str.ToUpper() })
-				if (this.key.TryGetValue(name, out int index))
-				{
-					await WaitForTheScrollToMovement(index, 0x95);
-
-					break;
-				}
-	}
-	async Task WaitForTheScrollToMovement(int index, int pixel)
-	{
-		await JSRuntime.InvokeVoidAsync(string.Concat(interop, "move"), (index - this.index) * pixel);
-		await System.Threading.Tasks.Task.Delay(0x700);
-
-		if (this.index >= index && index > this.index - 0x14 || this.index < 0x18 && index < 0x18)
-			await JSRuntime.InvokeVoidAsync(string.Concat(interop, "selector"), index);
-
-		else
-			await WaitForTheScrollToMovement(index, pixel);
-	}
-	string ConvertFormat(string param) => string.Format("’{0}. {1}.", param.Substring(0, 2), param.Substring(2, 2));
-	(string, ConsoleColor) ConvertFormat(double param)
-		=> (param < 0 ? param.ToString("P2")[1..] : param.ToString("P2"), param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
-	string[] quarter;
-	int index;
-	Dictionary<int, Catalog.Models.Portfolio> enumerable;
-	Dictionary<string, Queue<Consensus>> dictionary;
-	Dictionary<string, int> key;
-	HubConnection hub;
-	const string interop = "JsFunctions.";
 }
