@@ -146,8 +146,7 @@ namespace ShareInvest
 												{
 													foreach (var length in new int[] { 6, 8 })
 														foreach (var ch in await Progress.Client.GetContextAsync(new Codes { }, length) as List<Codes>)
-															if (Progress.Collection.TryGetValue(ch.Code, out Analysis select)
-																&& double.TryParse(ch.Price, out double price))
+															if (Progress.Collection.TryGetValue(ch.Code, out Analysis select) && double.TryParse(ch.Price, out double price))
 															{
 																if (length == 6)
 																{
@@ -280,6 +279,8 @@ namespace ShareInvest
 											Rate = rate,
 										};
 									}
+									bal.SellPrice = market ? 0D : 0;
+									bal.BuyPrice = market ? 0D : 0;
 									bal.Current = market ? current : (int)current;
 								}
 								else

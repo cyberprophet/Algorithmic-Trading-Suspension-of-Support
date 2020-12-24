@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.EventHandler;
@@ -200,11 +201,11 @@ namespace ShareInvest.OpenAPI
 		}
 		public override void AnalyzeTheQuotes(string[] param)
 		{
-			//?.Invoke(this, new SendConsecutive(param));
-		}
-		public override void OnReceiveMatrix(object sender, SendConsecutive e)
-		{
-
+			if (int.TryParse(param[4][0] is '-' ? param[4][1..] : param[4], out int bid) && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int offer))
+			{
+				Offer = offer;
+				Bid = bid;
+			}
 		}
 		[SupportedOSPlatform("windows")]
 		public override void OnReceiveDrawChart(object sender, SendConsecutive e)
@@ -222,6 +223,7 @@ namespace ShareInvest.OpenAPI
 			if (GetCheckOnDeadline(e.Date) && Short.Count > 1 && Long.Count > 1 && Trend.Count > 1 && Strategics is Catalog.SatisfyConditionsAccordingToTrends sc)
 			{
 				if (Balance is null)
+				{
 					Balance = new Balance
 					{
 						Market = Code.Length == 8,
@@ -230,6 +232,9 @@ namespace ShareInvest.OpenAPI
 						Revenue = 0,
 						Rate = 0
 					};
+					SellPrice = 0;
+					BuyPrice = 0;
+				}
 				double popShort = Short.Pop(), popLong = Long.Pop(), gap = popShort - popLong - (Short.Peek() - Long.Peek()), peek = Trend.Peek();
 				Short.Push(popShort);
 				Long.Push(popLong);

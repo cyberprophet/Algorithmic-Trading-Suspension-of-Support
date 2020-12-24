@@ -18,10 +18,6 @@ namespace ShareInvest.EventHandler
 		{
 			get; private set;
 		}
-		public string[] Matrix
-		{
-			get; private set;
-		}
 		public SendConsecutive(Charts chart)
 		{
 			var str = chart.Price[0] == '-' ? chart.Price[1..] : chart.Price;
@@ -40,6 +36,5 @@ namespace ShareInvest.EventHandler
 			Price = price;
 			Volume = volume;
 		}
-		public SendConsecutive(string[] param) => Matrix = param;
 	}
 }

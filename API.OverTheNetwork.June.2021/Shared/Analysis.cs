@@ -72,7 +72,6 @@ namespace ShareInvest
 		public abstract Catalog.Models.Balance OnReceiveBalance<T>(T param) where T : struct;
 		public abstract void OnReceiveConclusion<T>(T param) where T : struct;
 		public abstract void OnReceiveDrawChart(object sender, SendConsecutive e);
-		public abstract void OnReceiveMatrix(object sender, SendConsecutive e);
 		public abstract bool Collector
 		{
 			get; set;

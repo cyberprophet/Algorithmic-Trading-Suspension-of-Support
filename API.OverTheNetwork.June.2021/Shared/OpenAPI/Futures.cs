@@ -160,13 +160,9 @@ namespace ShareInvest.OpenAPI
 		}
 		public override void AnalyzeTheQuotes(string[] param)
 		{
-			//?.Invoke(this, new SendConsecutive(param));
-		}
-		public override void OnReceiveDrawChart(object sender, SendConsecutive e)
-		{
 
 		}
-		public override void OnReceiveMatrix(object sender, SendConsecutive e)
+		public override void OnReceiveDrawChart(object sender, SendConsecutive e)
 		{
 
 		}
