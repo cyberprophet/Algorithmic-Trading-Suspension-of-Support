@@ -43,7 +43,7 @@ namespace ShareInvest.Controllers
 								status = await Progress.Client.PostContextAsync(queue);
 
 								if (i == 0)
-									context = new Client.Summary(Progress.Key.Security).GetContext(retention.Code);
+									context = new Client.Summary(Progress.Key.Security).GetContext(retention.Code, now.Day);
 
 								if (i == 1 && context != null)
 									status = await Progress.Client.PostContextAsync(context);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.Versioning;
 
 namespace ShareInvest
@@ -14,7 +15,8 @@ namespace ShareInvest
             for (int i = 0; i < security.Length; i++)
                 ChooseTheInstallationPath(security[i]);
 
-            Console.WriteLine(Security.SendUpdateToFile().Result);
+            if (Security.SendUpdateToFile().Result is string file)
+                File.Delete(file);
         }
         static void ChooseTheInstallationPath(dynamic param)
         {

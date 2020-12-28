@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,33 +14,64 @@ namespace ShareInvest.Controllers
     [ApiController, Route(Security.route), Produces(Security.produces)]
     public class PrivaciesController : ControllerBase
     {
-        [HttpGet(Security.security), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetContext(string security)
+        [HttpGet(Security.security), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetContext(string key, string security)
         {
-            var context = await this.context.Privacies.FindAsync(security);
+            if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
+            {
+                var context = await this.context.Privacies.FindAsync(security);
 
-            if (context == null)
-                return NotFound();
+                if (context == null)
+                    return NotFound();
 
-            return Ok(context);
+                return Ok(context);
+            }
+            return BadRequest();
+        }
+        [HttpGet(Security.routeKey), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetContext(string key)
+        {
+            if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
+            {
+                var dictionary = new Dictionary<string, int>();
+
+                foreach (var pv in context.Privacies.Where(o => string.IsNullOrEmpty(o.CodeStrategics) == false).AsNoTracking().Select(o => new { o.CodeStrategics }))
+                    foreach (var strategics in pv.CodeStrategics.Split(';'))
+                        if (strategics.Contains('|'))
+                        {
+                            var code = strategics.Split('|')[1];
+
+                            if (dictionary.TryGetValue(code, out int count))
+                                dictionary[code] = count + 1;
+
+                            else
+                                dictionary[code] = 1;
+                        }
+                return Ok(dictionary);
+            }
+            return BadRequest();
         }
         [HttpGet, ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> GetContext() => Ok(await context.Privacies.LongCountAsync());
-        [HttpPost, ProducesResponseType(StatusCodes.Status202Accepted), ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> PostContext([FromBody] Privacy privacy)
+        [HttpPost(Security.routeKey), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status202Accepted), ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> PostContext(string key, [FromBody] Privacy privacy)
         {
-            if (await context.Privacies.AnyAsync(o => o.Security.Equals(privacy.Security)))
-                return Accepted((await context.Privacies.FirstAsync(o => o.Security.Equals(privacy.Security))).Coin);
+            if (privacy.Security.Equals(Security.GetGrantAccess(key)))
+            {
+                if (await context.Privacies.AnyAsync(o => o.Security.Equals(privacy.Security)))
+                    return Accepted((await context.Privacies.FirstAsync(o => o.Security.Equals(privacy.Security))).Coin);
 
-            context.Privacies.Add(privacy);
-            await context.BulkSaveChangesAsync();
+                context.Privacies.Add(privacy);
+                await context.BulkSaveChangesAsync();
 
-            return Ok((await context.Privacies.FirstAsync(o => o.Security.Equals(privacy.Security))).Coin);
+                return Ok((await context.Privacies.FirstAsync(o => o.Security.Equals(privacy.Security))).Coin);
+            }
+            return BadRequest();
         }
         [HttpPut(Security.security), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> PutContext(string security, [FromBody] Privacy privacy)
+        public async Task<IActionResult> PutContext(string key, string security, [FromBody] Privacy privacy)
         {
-            if (privacy.Security.Equals(security))
+            if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
             {
                 context.Entry(privacy).State = EntityState.Modified;
                 await context.BulkSaveChangesAsync();
@@ -47,19 +80,23 @@ namespace ShareInvest.Controllers
             }
             return BadRequest();
         }
-        [HttpDelete(Security.security), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> DeleteContext(string security)
+        [HttpDelete(Security.security), ProducesResponseType(StatusCodes.Status404NotFound), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> DeleteContext(string key, string security)
         {
-            var context = await this.context.Privacies.FindAsync(security);
-
-            if (context != null)
+            if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
             {
-                this.context.Privacies.Remove(context);
-                await this.context.BulkSaveChangesAsync();
+                var context = await this.context.Privacies.FindAsync(security);
 
-                return Ok();
+                if (context != null)
+                {
+                    this.context.Privacies.Remove(context);
+                    await this.context.BulkSaveChangesAsync();
+
+                    return Ok();
+                }
+                return NotFound(security);
             }
-            return NotFound(security);
+            return BadRequest();
         }
         public PrivaciesController(CoreApiDbContext context) => this.context = context;
         readonly CoreApiDbContext context;

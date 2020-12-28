@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
@@ -40,5 +41,11 @@ namespace ShareInvest.Models
         {
             get; set;
         }
+        [ForeignKey("Security")]
+        public virtual ICollection<SatisfyConditions> Conditions
+        {
+            get; set;
+        }
+        public Privacy() => Conditions = new HashSet<SatisfyConditions>();
     }
 }
