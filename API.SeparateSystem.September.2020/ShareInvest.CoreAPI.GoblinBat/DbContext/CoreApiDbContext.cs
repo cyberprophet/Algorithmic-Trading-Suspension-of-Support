@@ -17,6 +17,7 @@ namespace ShareInvest.CoreAPI
 			modelBuilder.Entity<Consensus>().HasKey(o => new { o.Code, o.Date, o.Quarter });
 			modelBuilder.Entity<EstimatedPrice>().HasKey(o => new { o.Code, o.Strategics });
 			modelBuilder.Entity<FinancialStatement>().HasKey(o => new { o.Code, o.Date });
+			modelBuilder.Entity<QuarterlyFinancialStatements>().HasKey(o => new { o.Code, o.Date });
 		}
 		public CoreApiDbContext(DbContextOptions<CoreApiDbContext> options) : base(options)
 		{
@@ -75,6 +76,10 @@ namespace ShareInvest.CoreAPI
 			get; set;
 		}
 		public DbSet<FinancialStatement> Financials
+		{
+			get; set;
+		}
+		public DbSet<QuarterlyFinancialStatements> Quarter
 		{
 			get; set;
 		}

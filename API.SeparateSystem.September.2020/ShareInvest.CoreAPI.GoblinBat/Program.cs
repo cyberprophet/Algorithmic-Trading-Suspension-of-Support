@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-//using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace ShareInvest
 {
@@ -12,7 +12,7 @@ namespace ShareInvest
 		public static void Main(string[] args)
 		{
 			if (Security.GetGrantAccess(args))
-				CreateHostBuilder(args).Build().Run();
+				CreateHostBuilder().Build().Run();
 
 			else
 			{
@@ -21,6 +21,6 @@ namespace ShareInvest
 			}
 		}
 		public static IWebHostBuilder CreateHostBuilder(string[] args) => WebHost.CreateDefaultBuilder(args).UseStartup<Startup>();
-		//public static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder().ConfigureWebHostDefaults(web => web.UseStartup<Startup>());
+		public static IHostBuilder CreateHostBuilder() => Host.CreateDefaultBuilder().ConfigureWebHostDefaults(web => web.UseStartup<Startup>());
 	}
 }

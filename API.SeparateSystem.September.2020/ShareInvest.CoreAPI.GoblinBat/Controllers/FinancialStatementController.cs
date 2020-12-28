@@ -33,31 +33,63 @@ namespace ShareInvest.Controllers
 			}
 			return BadRequest();
 		}
-		/*
-	[HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
-	public async Task<IActionResult> PostContext([FromBody] IEnumerable<FinancialStatement> param)
-	{
-		foreach (var consensus in param.Cast<QuarterlyFinancialStatements>())
+		[HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
+		public async Task<IActionResult> PostContext([FromBody] IEnumerable<FinancialStatement> param)
 		{
-			if (await context.Quarter.AnyAsync(o => o.Code.Equals(consensus.Code) && o.Date.Equals(consensus.Date)))
-				context.Entry(consensus).State = EntityState.Modified;
+			foreach (var consensus in param)
+			{
+				var quarter = new QuarterlyFinancialStatements
+				{
+					BPS = consensus.BPS,
+					CAPEX = consensus.CAPEX,
+					Code = consensus.Code,
+					ControllingEquity = consensus.ControllingEquity,
+					ControllingNetIncome = consensus.ControllingNetIncome,
+					Date = consensus.Date,
+					DebtRatio = consensus.DebtRatio,
+					DividendYield = consensus.DividendYield,
+					DPS = consensus.DPS,
+					EPS = consensus.EPS,
+					EquityCapital = consensus.EquityCapital,
+					FCF = consensus.FCF,
+					FinancingActivities = consensus.FinancingActivities,
+					IncomeFromOperation = consensus.IncomeFromOperation,
+					IncomeFromOperations = consensus.IncomeFromOperations,
+					InterestAccruingLiabilities = consensus.InterestAccruingLiabilities,
+					InvestingActivities = consensus.InvestingActivities,
+					IssuedStocks = consensus.IssuedStocks,
+					NetIncome = consensus.NetIncome,
+					NetMargin = consensus.NetMargin,
+					NonControllingEquity = consensus.NonControllingEquity,
+					NonControllingNetIncome = consensus.NonControllingNetIncome,
+					OperatingActivities = consensus.OperatingActivities,
+					OperatingMargin = consensus.OperatingMargin,
+					PayoutRatio = consensus.PayoutRatio,
+					PBR = consensus.PBR,
+					PER = consensus.PER,
+					ProfitFromContinuingOperations = consensus.ProfitFromContinuingOperations,
+					RetentionRatio = consensus.RetentionRatio,
+					Revenues = consensus.Revenues,
+					ROA = consensus.ROA,
+					ROE = consensus.ROE,
+					TotalAssets = consensus.TotalAssets,
+					TotalEquity = consensus.TotalEquity,
+					TotalLiabilites = consensus.TotalLiabilites
+				};
+				if (await context.Quarter.AnyAsync(o => o.Code.Equals(quarter.Code) && o.Date.Equals(quarter.Date)))
+					context.Entry(quarter).State = EntityState.Modified;
 
-			else
-				context.Quarter.Add(consensus);
+				else
+					context.Quarter.Add(quarter);
 
-			await context.BulkSaveChangesAsync();
+				await context.BulkSaveChangesAsync();
+			}
+			return Ok();
 		}
-		return Ok();
-	}
-		*/
 		[HttpGet(Security.routeKey), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<IActionResult> GetContext(string key)
 		{
 			if (key.Length == 6)
-			{
-
-			}
-			/*
 				return Ok(await context.Quarter.Where(o => o.Code.Equals(key)).AsNoTracking().Select(o => new
 				{
 					o.Date,
@@ -66,7 +98,6 @@ namespace ShareInvest.Controllers
 					o.NetIncome,
 					o.OperatingActivities
 				}).ToListAsync());
-			*/
 			else if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
 				return Ok(await context.Financials.AsNoTracking().ToListAsync());
 

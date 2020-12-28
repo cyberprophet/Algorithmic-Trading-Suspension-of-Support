@@ -77,6 +77,11 @@ namespace ShareInvest.Models
 			get; set;
 		}
 		[ForeignKey("Code")]
+		public virtual ICollection<QuarterlyFinancialStatements> Quarter
+		{
+			get; set;
+		}
+		[ForeignKey("Code")]
 		public virtual ICollection<IncorporatedStocks> Incorporate
 		{
 			get; set;
@@ -92,6 +97,7 @@ namespace ShareInvest.Models
 			Consensus = new HashSet<Consensus>();
 			Estimate = new HashSet<EstimatedPrice>();
 			Financials = new HashSet<FinancialStatement>();
+			Quarter = new HashSet<QuarterlyFinancialStatements>();
 			Incorporate = new HashSet<IncorporatedStocks>();
 		}
 	}

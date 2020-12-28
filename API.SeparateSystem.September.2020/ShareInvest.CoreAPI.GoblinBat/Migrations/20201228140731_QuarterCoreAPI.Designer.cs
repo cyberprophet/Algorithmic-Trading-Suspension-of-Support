@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShareInvest.CoreAPI;
 
 namespace ShareInvest.Migrations
 {
     [DbContext(typeof(CoreApiDbContext))]
-    partial class CoreApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20201228140731_QuarterCoreAPI")]
+    partial class QuarterCoreAPI
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -319,7 +321,7 @@ namespace ShareInvest.Migrations
 
                     b.HasKey("Code", "Date");
 
-                    b.ToTable("Financials");
+                    b.ToTable("FinancialStatement");
                 });
 
             modelBuilder.Entity("ShareInvest.Models.Futures", b =>
@@ -422,120 +424,6 @@ namespace ShareInvest.Migrations
                     b.HasKey("Security");
 
                     b.ToTable("Privacies");
-                });
-
-            modelBuilder.Entity("ShareInvest.Models.QuarterlyFinancialStatements", b =>
-                {
-                    b.Property<string>("Code")
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
-
-                    b.Property<string>("Date")
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
-
-                    b.Property<string>("BPS")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CAPEX")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ControllingEquity")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ControllingNetIncome")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DPS")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DebtRatio")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DividendYield")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EPS")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EquityCapital")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FCF")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FinancingActivities")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IncomeFromOperation")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IncomeFromOperations")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InterestAccruingLiabilities")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InvestingActivities")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IssuedStocks")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NetIncome")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NetMargin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NonControllingEquity")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NonControllingNetIncome")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OperatingActivities")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OperatingMargin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PBR")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PER")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PayoutRatio")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ProfitFromContinuingOperations")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ROA")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ROE")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RetentionRatio")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Revenues")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TotalAssets")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TotalEquity")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TotalLiabilites")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Code", "Date");
-
-                    b.ToTable("Quarter");
                 });
 
             modelBuilder.Entity("ShareInvest.Models.RevisedStockPrice", b =>
@@ -715,15 +603,6 @@ namespace ShareInvest.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ShareInvest.Models.QuarterlyFinancialStatements", b =>
-                {
-                    b.HasOne("ShareInvest.Models.Codes", null)
-                        .WithMany("Quarter")
-                        .HasForeignKey("Code")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("ShareInvest.Models.RevisedStockPrice", b =>
                 {
                     b.HasOne("ShareInvest.Models.Codes", null)
@@ -788,8 +667,6 @@ namespace ShareInvest.Migrations
                     b.Navigation("Incorporate");
 
                     b.Navigation("Options");
-
-                    b.Navigation("Quarter");
 
                     b.Navigation("RevisedStockPrices");
 
