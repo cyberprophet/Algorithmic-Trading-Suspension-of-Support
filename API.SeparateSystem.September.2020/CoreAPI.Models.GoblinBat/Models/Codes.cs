@@ -86,6 +86,16 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
+		[ForeignKey("Code")]
+		public virtual ICollection<Tick> Ticks
+		{
+			get; set;
+		}
+		[ForeignKey("Code")]
+		public virtual ICollection<Security> Securities
+		{
+			get; set;
+		}
 		public Codes()
 		{
 			Days = new HashSet<Days>();
@@ -99,6 +109,8 @@ namespace ShareInvest.Models
 			Financials = new HashSet<FinancialStatement>();
 			Quarter = new HashSet<QuarterlyFinancialStatements>();
 			Incorporate = new HashSet<IncorporatedStocks>();
+			Ticks = new HashSet<Tick>();
+			Securities = new HashSet<Security>();
 		}
 	}
 }

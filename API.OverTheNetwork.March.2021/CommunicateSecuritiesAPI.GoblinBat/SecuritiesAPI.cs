@@ -41,7 +41,7 @@ namespace ShareInvest
 				if (await client.PostContextAsync(new Retention { Code = Codes.Dequeue() }) is Retention retention)
 					switch (connect)
 					{
-						case OpenAPI.ConnectAPI o when string.IsNullOrEmpty(retention.Code) == false:
+						case OpenAPI.ConnectAPI o when string.IsNullOrEmpty(retention.Code) is false:
 							o.InputValueRqData(string.Concat(instance, retention.Code.Length == 8
 								? (retention.Code[0] > '1' ? "Opt50066" : "Opt50028") : "Opt10079"), string.Concat(retention.Code, ';', retention.LastDate)).Send
 									+= OnReceiveSecuritiesAPI;

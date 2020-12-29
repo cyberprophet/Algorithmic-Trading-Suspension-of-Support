@@ -18,6 +18,8 @@ namespace ShareInvest.CoreAPI
 			modelBuilder.Entity<EstimatedPrice>().HasKey(o => new { o.Code, o.Strategics });
 			modelBuilder.Entity<FinancialStatement>().HasKey(o => new { o.Code, o.Date });
 			modelBuilder.Entity<QuarterlyFinancialStatements>().HasKey(o => new { o.Code, o.Date });
+			modelBuilder.Entity<Tick>().HasKey(o => new { o.Code, o.Date });
+			modelBuilder.Entity<Models.Security>().HasKey(o => new { o.Identify, o.Code });
 		}
 		public CoreApiDbContext(DbContextOptions<CoreApiDbContext> options) : base(options)
 		{
@@ -84,6 +86,14 @@ namespace ShareInvest.CoreAPI
 			get; set;
 		}
 		public DbSet<IncorporatedStocks> Incorporate
+		{
+			get; set;
+		}
+		public DbSet<Models.Security> Securities
+		{
+			get; set;
+		}
+		public DbSet<Tick> Ticks
 		{
 			get; set;
 		}
