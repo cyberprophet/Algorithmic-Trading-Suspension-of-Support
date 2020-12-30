@@ -57,7 +57,7 @@ namespace ShareInvest
 			switch (e.Convey)
 			{
 				case Dictionary<string, string> chejan:
-					if (await this.client.PutContextAsync(sender.GetType(), chejan) is int status)
+					if (await client.PutContextAsync(sender.GetType(), chejan) is int status)
 						Base.SendMessage(sender.GetType(), chejan["종목명"], status);
 
 					return;
@@ -83,13 +83,13 @@ namespace ShareInvest
 					return;
 
 				case Codes codes:
-					if (string.IsNullOrEmpty(await this.client.PutContextAsync(codes) as string))
+					if (string.IsNullOrEmpty(await client.PutContextAsync(codes) as string))
 						Base.SendMessage(sender.GetType(), codes.Name, codes.MaturityMarketCap);
 
 					return;
 
 				case string message:
-					if (await this.client.PostContextAsync(new Catalog.Models.Message { Convey = message }) is int)
+					if (await client.PostContextAsync(new Catalog.Models.Message { Convey = message }) is int)
 						notifyIcon.Text = string.Concat(DateTime.Now.ToLongTimeString(), " ", message);
 
 					return;

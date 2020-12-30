@@ -216,39 +216,12 @@ namespace ShareInvest.Client
 					Base.SendMessage(chart.Code, ex.StackTrace, param.GetType());
 				}
 			return null;
-		}
-		public async Task<object> PostConfirmAsync<T>(T param) where T : struct
-		{
-			try
-			{
-				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.POST)
-					.AddHeader(Security.content_type, Security.json)
-					.AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
-
-				if (response.StatusCode.Equals(HttpStatusCode.OK))
-					switch (param)
-					{
-						case ConfirmStrategics:
-							return JsonConvert.DeserializeObject<bool>(response.Content);
-
-						case Files:
-							if (response.RawBytes != null && response.RawBytes.Length > 0)
-								return JsonConvert.DeserializeObject<Files>(response.Content);
-
-							break;
-					}
-			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(ex.StackTrace, GetType());
-			}
-			return null;
-		}
+		}						
 		public async Task<object> PostContextAsync<T>(T param) where T : struct
 		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ? security.RequestTheIntegratedAddress(param, Method.POST) : Security.RequestTheIntegratedAddress(param.GetType()), Method.POST)
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, Method.POST))
 					.AddJsonBody(param, Security.content_type), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
@@ -257,7 +230,7 @@ namespace ShareInvest.Client
 						case Privacies:
 							return response.StatusCode;
 
-						case Retention when string.IsNullOrEmpty(response.Content) == false:
+						case Retention when string.IsNullOrEmpty(response.Content) is false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
 
 						case Message:
@@ -272,44 +245,6 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
-		public async Task<int> PostContextAsync<T>(IEnumerable<T> param) where T : struct
-		{
-			try
-			{
-				string resource = string.Empty;
-
-				switch (param)
-				{
-					case IEnumerable<Stocks>:
-					case IEnumerable<Options>:
-					case IEnumerable<Futures>:
-						var address = param.GetType().GetGenericArguments()[0];
-						resource = security.GrantAccess ? security.RequestTheChangeOfAddress(address) : Security.RequestTheIntegratedAddress(address);
-						break;
-
-					case IEnumerable<FinancialStatement>:
-					case IEnumerable<Catalog.IncorporatedStocks>:
-						resource = security.RequestTheIntegratedAddress(param.GetType().GetGenericArguments()[0].Name);
-						break;
-
-					case IEnumerable<ConvertConsensus>:
-						resource = security.RequestTheIntegratedAddress(param.GetType().GetGenericArguments()[0].Name[7..]);
-						break;
-
-					default:
-						return int.MinValue;
-				}
-				return (int)(await client.ExecuteAsync(new RestRequest(resource, Method.POST)
-					.AddHeader(Security.content_type, Security.json)
-					.AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token)).StatusCode;
-			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
-			}
-			return int.MinValue;
-		}
 		public async Task<object> PutContextAsync(Type type, Dictionary<string, string> param)
 		{
 			try
@@ -320,33 +255,6 @@ namespace ShareInvest.Client
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK) == false)
 					return (int)response.StatusCode;
-			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
-			}
-			return null;
-		}
-		public async Task<object> PutContextAsync<T>(T param) where T : struct
-		{
-			try
-			{
-				if (param is Privacies)
-					return (await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, Method.PUT), Method.PUT, DataFormat.Json)
-					   .AddJsonBody(param, Security.content_type), source.Token)).StatusCode;
-
-				var response = await client.ExecuteAsync(new RestRequest(security.GrantAccess ?
-					security.RequestTheIntegratedAddress(param) : Security.RequestTheIntegratedAddress(param.GetType()), Method.PUT)
-					.AddJsonBody(param, Security.content_type), source.Token);
-
-				if (response.StatusCode.Equals(HttpStatusCode.OK))
-					return param switch
-					{
-						StocksStrategics => JsonConvert.DeserializeObject<double>(response.Content),
-						Catalog.Models.Consensus => (int)response.StatusCode,
-						_ => JsonConvert.DeserializeObject<string>(response.Content),
-					};
 			}
 			catch (Exception ex)
 			{

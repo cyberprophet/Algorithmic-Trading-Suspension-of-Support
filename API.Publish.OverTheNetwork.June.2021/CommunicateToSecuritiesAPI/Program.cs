@@ -31,10 +31,7 @@ namespace ShareInvest
 				now = now.AddHours(-1);
 
 			if (Base.IsDebug == false && (now.Hour < 0xF || now.Hour > 0x10))
-			{
 				Process.Start("shutdown.exe", "-r");
-				Base.SendMessage(Security.Initialize(param).Item2);
-			}
 		}
 	}
 }

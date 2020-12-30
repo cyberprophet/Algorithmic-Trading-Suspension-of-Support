@@ -4,9 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
-using System.Security.Principal;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog.Models;
@@ -18,36 +16,30 @@ namespace ShareInvest
 {
 	sealed partial class SecuritiesAPI : Form
 	{
-		[Conditional("DEBUG")]
-		static void PreventsFromRunningAgain(FormClosingEventArgs e) => e.Cancel = true;
 		internal SecuritiesAPI(dynamic param, ISecuritiesAPI<SendSecuritiesAPI> connect)
 		{
 			InitializeComponent();
 			this.connect = connect;
-			timer.Start();
-			client = GoblinBat.GetInstance();
+			api = API.GetInstance(Security.GetAdministrator(param));
 			random = new Random(Guid.NewGuid().GetHashCode());
 			Codes = new Queue<string>();
-			var normalize = Security.Initialize(param);
-			GetTheCorrectAnswer = new int[normalize.Item1];
-			miss = new Stack<Tuple<Codes, string>>();
+			GetTheCorrectAnswer = new int[Security.Initialize(param)];
 			collection = new Dictionary<string, Codes>();
-			this.normalize = normalize.Item2;
+			timer.Start();
 		}
 		void OnReceiveInformationTheDay() => BeginInvoke(new Action(async () =>
 		{
 			if (Codes.Count > 0)
 			{
-				if (await client.PostContextAsync(new Retention { Code = Codes.Dequeue() }) is Retention retention)
+				if (await api.PostContextAsync(new Retention { Code = Codes.Dequeue() }) is Retention retention && string.IsNullOrEmpty(retention.Code) is false)
 					switch (connect)
 					{
-						case OpenAPI.ConnectAPI o when string.IsNullOrEmpty(retention.Code) is false:
-							o.InputValueRqData(string.Concat(instance, retention.Code.Length == 8
-								? (retention.Code[0] > '1' ? "Opt50066" : "Opt50028") : "Opt10079"), string.Concat(retention.Code, ';', retention.LastDate)).Send
-									+= OnReceiveSecuritiesAPI;
+						case OpenAPI.ConnectAPI o:
+							o.InputValueRqData(string.Concat(instance, retention.Code.Length == 8 ? (retention.Code[0] > '1' ? "Opt50066" : "Opt50028") : "Opt10079"), string.Concat(retention.Code, ';', retention.LastDate)).Send += OnReceiveSecuritiesAPI;
 							return;
 					}
-				OnReceiveInformationTheDay();
+				else
+					OnReceiveInformationTheDay();
 			}
 			else
 				Dispose(0x1CE3);
@@ -57,12 +49,12 @@ namespace ShareInvest
 			switch (e.Convey)
 			{
 				case Dictionary<string, string> chejan:
-					if (await this.client.PutContextAsync(sender.GetType(), chejan) is int status)
+					if (await server.PutContextAsync(sender.GetType(), chejan) is int status)
 						Base.SendMessage(sender.GetType(), chejan["종목명"], status);
 
 					return;
 
-				case Tuple<string, string, string, string, int> tr:
+				case Tuple<string, string, string, string, int> tr when string.IsNullOrEmpty(tr.Item1) is false:
 					var param = new Codes
 					{
 						Code = tr.Item1,
@@ -71,7 +63,24 @@ namespace ShareInvest
 						Price = tr.Item4,
 						MarginRate = tr.Item5
 					};
-					await RegisterStocksItems(param, sender.GetType().Name);
+					if (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[1] == '0')
+						Codes.Enqueue(param.Code);
+
+					if (param.Code.Length == 8)
+					{
+						if (Codes.TryPeek(out string code) && code.Length > 8)
+						{
+							var temp = Codes.Dequeue().Split('_');
+							(connect as OpenAPI.ConnectAPI).RemoveValueRqData(temp[0], temp[^1]).Send -= OnReceiveSecuritiesAPI;
+						}
+						(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, param.Code).Send -= OnReceiveSecuritiesAPI;
+					}
+					if ((param.Code.Length == 6 || param.Code.Length == 8 && param.Code[0] > '1') && await api.PutContextAsync(param) is string response && param.Code.Equals(response))
+						notifyIcon.Text = param.Name;
+
+					if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) is false)
+						connect.Writer.WriteLine(string.Concat(param.GetType().Name, '|', param.Code));
+
 					collection[tr.Item1] = param;
 					return;
 
@@ -83,13 +92,13 @@ namespace ShareInvest
 					return;
 
 				case Codes codes:
-					if (string.IsNullOrEmpty(await this.client.PutContextAsync(codes) as string))
+					if (string.IsNullOrEmpty(await api.PutContextAsync(codes) as string))
 						Base.SendMessage(sender.GetType(), codes.Name, codes.MaturityMarketCap);
 
 					return;
 
 				case string message:
-					if (await this.client.PostContextAsync(new Catalog.Models.Message { Convey = message }) is int)
+					if (await server.PostContextAsync(new Catalog.Models.Message { Convey = message }) is int)
 						notifyIcon.Text = string.Concat(DateTime.Now.ToLongTimeString(), " ", message);
 
 					return;
@@ -109,15 +118,13 @@ namespace ShareInvest
 							&& long.TryParse(ing[0xB], out long valuation) && int.TryParse(ing[6], out int reserve)
 							&& uint.TryParse(ing[8], out uint purchase) && uint.TryParse(ing[7], out uint current))
 							convey = string.Concat(sender.GetType().Name, inquiry, ing[3][1..].Trim(), ';', ing[4].Trim(), ';', reserve, ';', purchase, ';', current, ';', valuation, ';', ratio);
-
-						connect.Writer.WriteLine(convey);
 					}
 					var name = sender.GetType().Name;
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(name, string.Concat(connect.Account[name.EndsWith("Opw00005") ? 0 : ^1], password)).Send -= OnReceiveSecuritiesAPI;
 					return;
 
 				case Tuple<long, long> balance:
-					connect.Writer.WriteLine(string.Concat(sender.GetType().Name, inquiry, balance.Item1, ';', balance.Item2));
+					var bal = string.Concat(sender.GetType().Name, inquiry, balance.Item1, ';', balance.Item2);
 					return;
 
 				case Tuple<string, Stack<string>> charts:
@@ -128,9 +135,9 @@ namespace ShareInvest
 							break;
 					}
 					if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1'
-						? await client.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2))
-						: await client.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2)))
-						: await client.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
+						? await api.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2))
+						: await api.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2)))
+						: await api.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
 					{
 						OnReceiveInformationTheDay();
 						var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.",
@@ -140,18 +147,21 @@ namespace ShareInvest
 					break;
 
 				case string[] accounts:
-					if (await client.PostContextAsync(new Account { Length = accounts.Length, Number = accounts }) is 0xC8)
+					if (await server.PostContextAsync(new Account { Length = accounts.Length, Number = accounts }) is 0xC8)
 					{
+						connect.Account = new string[2];
+
 						foreach (var str in accounts)
 							if (str.Length == 0xA && str[^2..].CompareTo("32") < 0)
-								connect.Writer.WriteLine(str);
+							{
+								if (str[^2..].CompareTo("31") == 0)
+									connect.Account[^1] = str;
 
+								else
+									connect.Account[0] = str;
+							}
 						foreach (var ctor in (connect as OpenAPI.ConnectAPI)?.Chejan)
 							ctor.Send += OnReceiveSecuritiesAPI;
-
-						var client = new NamedPipeClientStream(".", normalize, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
-						await client.ConnectAsync();
-						worker.RunWorkerAsync(client);
 					}
 					return;
 
@@ -160,25 +170,6 @@ namespace ShareInvest
 					return;
 			}
 		}));
-		async Task RegisterStocksItems(Codes register, string sender)
-		{
-			if (await client.PutContextAsync(register) is string name && register.Name.Equals(name))
-			{
-				if (register.Code.Length == 8)
-				{
-					if (Codes.TryPeek(out string param) && param.Length > 8)
-					{
-						var temp = Codes.Dequeue().Split('_');
-						(connect as OpenAPI.ConnectAPI).RemoveValueRqData(temp[0], temp[^1]).Send -= OnReceiveSecuritiesAPI;
-					}
-					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender, register.Code).Send -= OnReceiveSecuritiesAPI;
-				}
-				if (register.Code.Length == 6 || register.Code.Length == 8 && register.Code[1] == '0')
-					Codes.Enqueue(register.Code);
-			}
-			else
-				miss.Push(new Tuple<Codes, string>(register, sender));
-		}
 		void RequestBalanceInquiry()
 		{
 			if (connect.Account is not null)
@@ -246,7 +237,6 @@ namespace ShareInvest
 									{
 										case "085000":
 										case "095000":
-											miss.Clear();
 											RequestBalanceInquiry();
 											break;
 
@@ -300,15 +290,6 @@ namespace ShareInvest
 			}
 			else if (connect.Start)
 			{
-				if (miss.Count > 0 && Codes.Count == Miss)
-					BeginInvoke(new Action(async () =>
-					{
-						var miss = this.miss.Pop();
-						await RegisterStocksItems(miss.Item1, miss.Item2);
-					}));
-				else
-					Miss = Codes.Count;
-
 				if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
 					notifyIcon.Text = connect.SecuritiesName;
 			}
@@ -456,10 +437,6 @@ namespace ShareInvest
 		{
 			get;
 		}
-		int Miss
-		{
-			get; set;
-		}
 		const string administrator = "☞중단\n'실행'을 취소합니다.\n\n☞재시도\n임의로 '계좌번호'를 불러옵니다.\n\n☞무시\n프로그램을 '장마감'이후로 변경합니다.";
 		const string api_exit = "해당 프로그램과 연결된 모든 프로세스를 종료합니다.";
 		const string look_up = "'조회'는 장시작 5분전 자동으로 실행됩니다.\n\n강제로 프로그램을 실행하지 않았다면\n사용을 '중단'할 것을 권장합니다.\n\n☞중단\n'조회'를 취소합니다.\n\n☞재시도\n'조회'가 실행되면 장시작 설정으로 초기화됩니다.\n\n☞무시\n'관리자'기능입니다.\n임의로 사용할 경우 프로그램 '오작동'을 유발합니다.";
@@ -467,11 +444,12 @@ namespace ShareInvest
 		const string instance = "ShareInvest.OpenAPI.Catalog.";
 		const string password = ";;00";
 		const string inquiry = @"_잔고조회|";
-		readonly string normalize;
 		readonly Random random;
-		readonly GoblinBat client;
-		readonly Stack<Tuple<Codes, string>> miss;
+		readonly API api;
+		readonly GoblinBat server;
 		readonly Dictionary<string, Codes> collection;
 		readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
+		[Conditional("DEBUG")]
+		static void PreventsFromRunningAgain(FormClosingEventArgs e) => e.Cancel = true;
 	}
 }
