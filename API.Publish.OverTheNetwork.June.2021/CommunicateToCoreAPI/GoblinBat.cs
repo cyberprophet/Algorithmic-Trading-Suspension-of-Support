@@ -25,13 +25,6 @@ namespace ShareInvest.Client
 
 			return Client;
 		}
-		public static GoblinBat GetInstance()
-		{
-			if (Client == null)
-				Client = new GoblinBat();
-
-			return Client;
-		}
 		static GoblinBat Client
 		{
 			get; set;
@@ -216,7 +209,7 @@ namespace ShareInvest.Client
 					Base.SendMessage(chart.Code, ex.StackTrace, param.GetType());
 				}
 			return null;
-		}						
+		}
 		public async Task<object> PostContextAsync<T>(T param) where T : struct
 		{
 			try
@@ -235,6 +228,9 @@ namespace ShareInvest.Client
 
 						case Message:
 						case Account:
+							if (Base.IsDebug)
+								Base.SendMessage(GetType(), response.Content);
+
 							return (int)response.StatusCode;
 					}
 			}
@@ -263,19 +259,11 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
-		GoblinBat()
-		{
-			security = new Security(int.MinValue);
-			client = new RestClient(security.Url)
-			{
-				Timeout = -1
-			};
-			source = new CancellationTokenSource();
-		}
+		public string Url => security.Uri;
 		GoblinBat(dynamic key)
 		{
 			security = new Security(key);
-			client = new RestClient(security.Url)
+			client = new RestClient(security.Uri)
 			{
 				Timeout = -1
 			};

@@ -16,6 +16,7 @@ namespace ShareInvest
 	{
 		internal static void OnReceivePipeClientMessage(dynamic security, NamedPipeClientStream client)
 		{
+			var api = security as Security;
 			DateTime today = DateTime.Now, now = today.Hour > 0xF ? today.AddDays(Base.IsDebug ? 0 : 1) : today;
 			bool repeat = true, collection = false, stocks = false, futures = false, sq = true, fq = true, sat = Base.CheckIfMarketDelay(now);
 			using (var sr = new StreamReader(client))
@@ -52,7 +53,7 @@ namespace ShareInvest
 										Progress.Collection[temp[^1]] = new Queue<Collect>(0x800);
 
 										if (Progress.Collection.Count % 0x400 == 0 || Progress.Collection.Count > 0x400 * 3)
-											(security as Security).SendMessage(string.Format("Total of {0} Stocks to be Collect.", Progress.Collection.Count.ToString("N0")));
+											api.SendMessage(string.Format("Total of {0} Stocks to be Collect.", Progress.Collection.Count.ToString("N0")));
 									}
 									else if (temp[0].Equals("장시작시간"))
 									{
@@ -82,7 +83,7 @@ namespace ShareInvest
 																catch (Exception ex)
 																{
 																	Base.SendMessage(collect.Value.GetType(), ex.StackTrace, collect.Key);
-																	Base.SendMessage(ex.StackTrace, collect.Key, collect.Value.GetType());
+																	api.SendMessage(ex.TargetSite.Name);
 																}
 													}).Start();
 													break;
@@ -97,7 +98,7 @@ namespace ShareInvest
 													sq = false;
 													break;
 											}
-											(security as Security).SendMessage(Enum.GetName(typeof(Catalog.OpenAPI.Operation), number));
+											api.SendMessage(Enum.GetName(typeof(Catalog.OpenAPI.Operation), number));
 										}
 										else if (char.TryParse(operation[0], out char charactor))
 										{
@@ -119,7 +120,7 @@ namespace ShareInvest
 																	catch (Exception ex)
 																	{
 																		Base.SendMessage(collect.Value.GetType(), ex.StackTrace, collect.Key);
-																		Base.SendMessage(ex.StackTrace, collect.Key, collect.Value.GetType());
+																		api.SendMessage(ex.TargetSite.Name);
 																	}
 														}).Start();
 													}
@@ -135,11 +136,10 @@ namespace ShareInvest
 													break;
 
 												case Catalog.OpenAPI.Operation.시간외_단일가_매매종료:
-													Process.Start("shutdown.exe", "-r");
-													Process.GetCurrentProcess().Kill();
+													api.ShutDown();
 													break;
 											}
-											(security as Security).SendMessage(Enum.GetName(typeof(Catalog.OpenAPI.Operation), charactor));
+											api.SendMessage(Enum.GetName(typeof(Catalog.OpenAPI.Operation), charactor));
 										}
 									}
 									break;
@@ -150,24 +150,31 @@ namespace ShareInvest
 				catch (Exception ex)
 				{
 					Base.SendMessage(typeof(Pipe), ex.StackTrace);
-					Base.SendMessage(ex.StackTrace, typeof(Pipe));
+					api.SendMessage(ex.TargetSite.Name);
 				}
 				finally
 				{
 					client.Close();
 					client.Dispose();
-					(security as Security).SendMessage(TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected));
+					api.SendMessage(TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected));
 				}
 			if (repeat)
 			{
 				Thread.Sleep(0xC67);
-				Progress.TryToConnectThePipeStream(security);
-				(security as Security).SendMessage("Wait for the CoreAPI to Restart. . .");
+
+				if (Base.IsDebug)
+					api.SendMessage(Enum.GetName(typeof(Catalog.OpenAPI.Operation), (char)Catalog.OpenAPI.Operation.시간외_단일가_매매종료));
+
+				else
+				{
+					Progress.TryToConnectThePipeStream(api);
+					api.SendMessage("Wait for the CoreAPI to Restart. . .");
+				}
 			}
 			else
 			{
-				Process.Start("shutdown.exe", "-r");
-				Process.GetCurrentProcess().Kill();
+				api.ShutDown();
+				api.SendMessage(Enum.GetName(typeof(Catalog.OpenAPI.Operation), (char)Catalog.OpenAPI.Operation.시간외_단일가_매매종료));
 			}
 		}
 		internal static string TellTheClientConnectionStatus(string name, bool is_connected) => string.Format("{0} is connected on {1}", name, is_connected);

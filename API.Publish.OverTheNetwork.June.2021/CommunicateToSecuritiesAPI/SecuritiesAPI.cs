@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
 using System.Threading;
@@ -18,13 +19,16 @@ namespace ShareInvest
 	{
 		internal SecuritiesAPI(dynamic param, ISecuritiesAPI<SendSecuritiesAPI> connect)
 		{
+			icons = new[] { Properties.Resources.sleep_adium_bird_20649, Properties.Resources.idle_adium_bird_20651, Properties.Resources.awake_adium_bird_20653, Properties.Resources.alert_adium_bird_20655, Properties.Resources.away_adium_bird_20654, Properties.Resources.invisible_adium_bird_20650 };
 			InitializeComponent();
 			this.connect = connect;
-			api = API.GetInstance(Security.GetAdministrator(param));
+			var key = Security.GetAdministrator(param);
+			api = API.GetInstance(key);
 			random = new Random(Guid.NewGuid().GetHashCode());
 			Codes = new Queue<string>();
 			GetTheCorrectAnswer = new int[Security.Initialize(param)];
 			collection = new Dictionary<string, Codes>();
+			server = GoblinBat.GetInstance(key);
 			timer.Start();
 		}
 		void OnReceiveInformationTheDay() => BeginInvoke(new Action(async () =>
@@ -273,29 +277,33 @@ namespace ShareInvest
 		}
 		void TimerTick(object sender, EventArgs e)
 		{
-			if (connect == null)
+			var now = DateTime.Now;
+
+			if (connect is null)
 			{
 				timer.Stop();
 				strip.ItemClicked -= StripItemClicked;
 				Dispose(connect as Control);
 			}
-			else if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) == false)
+			else if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) is false)
 			{
 				for (int i = 0; i < GetTheCorrectAnswer.Length; i++)
 				{
 					var temp = 1 + random.Next(0, 0x4B0) * (i + 1);
 					GetTheCorrectAnswer[i] = temp < 0x4B1 ? temp : 0x4B0 - i;
 				}
+				notifyIcon.Icon = icons[^1];
 				WindowState = FormWindowState.Minimized;
 			}
 			else if (connect.Start)
 			{
 				if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
 					notifyIcon.Text = connect.SecuritiesName;
+
+				notifyIcon.Icon = icons[now.Second % 4];
 			}
-			else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
+			else if (Visible is false && ShowIcon is false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
 			{
-				var now = DateTime.Now;
 				now = now.DayOfWeek switch
 				{
 					DayOfWeek.Sunday => now.AddDays(1),
@@ -307,9 +315,11 @@ namespace ShareInvest
 				var remain = new DateTime(now.Year, now.Month, now.Day, sat ? 0xA : 9, 0, 0) - DateTime.Now;
 				notifyIcon.Text = Base.GetRemainingTime(remain);
 
-				if (connect.Start == false && remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E &&
-					(remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
+				if (connect.Start is false && remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
+				{
+					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
+				}
 			}
 		}
 		void SecuritiesResize(object sender, EventArgs e) => BeginInvoke(new Action(() =>
@@ -352,7 +362,7 @@ namespace ShareInvest
 							break;
 					}
 				else
-					Process.Start(new ProcessStartInfo(Local.Url) { UseShellExecute = connect.Start });
+					Process.Start(new ProcessStartInfo(server.Url) { UseShellExecute = connect.Start });
 
 			else
 				Close();
@@ -365,7 +375,7 @@ namespace ShareInvest
 					case DialogResult.OK:
 						PreventsFromRunningAgain(e);
 
-						if (e.Cancel == false && connect.Writer != null)
+						if (e.Cancel is false && connect.Writer is not null)
 						{
 							Dispose(0xF75);
 
@@ -448,6 +458,7 @@ namespace ShareInvest
 		readonly API api;
 		readonly GoblinBat server;
 		readonly Dictionary<string, Codes> collection;
+		readonly Icon[] icons;
 		readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
 		[Conditional("DEBUG")]
 		static void PreventsFromRunningAgain(FormClosingEventArgs e) => e.Cancel = true;

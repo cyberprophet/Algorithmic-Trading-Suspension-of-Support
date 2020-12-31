@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.EventHandler;
@@ -26,15 +20,19 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e)
+		void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(() =>
 		{
 			switch (e.Convey)
 			{
 				case string:
 					Message = e.Convey as string;
 					return;
+
+				case short exit:
+					Dispose(exit);
+					return;
 			}
-		}
+		}));
 		void TimerTick(object sender, EventArgs e)
 		{
 			if (FormBorderStyle.Equals(FormBorderStyle.Sizable) && WindowState.Equals(FormWindowState.Minimized) is false)
@@ -57,6 +55,11 @@ namespace ShareInvest
 				}
 				notifyIcon.Text = Message;
 			}
+		}
+		void Dispose(short param)
+		{
+			if (param == -0x6A)
+				Dispose();
 		}
 		readonly dynamic security;
 		readonly Icon[] icon;
