@@ -1,0 +1,69 @@
+﻿@page "/balance"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Manager
+@implements IAsyncDisposable
+
+@if (balance.Count > 0)
+{
+	<table class="table">
+		<thead>
+			<tr>
+				<th>종목코드</th>
+				<th>종목명</th>
+				<th>수량</th>
+				<th>매입가</th>
+				<th>현재가</th>
+				<th>평가손익</th>
+				<th>손익률</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var bal in balance)
+			{
+				<tr>
+					<td>@bal.Key</td>
+					<td>@bal.Value.Name</td>
+					<td>@bal.Value.Quantity</td>
+					<td>@bal.Value.Purchase</td>
+					<td>@bal.Value.Current</td>
+					@{
+						var loss = bal.Value.Revenue[0] is '-' && bal.Value.Rate[0] is '-';
+						var color = loss ? ConsoleColor.Blue : ConsoleColor.Red;
+						string revenue = loss ? bal.Value.Revenue[1..] : bal.Value.Revenue,
+							rate = loss ? bal.Value.Rate[1..] : bal.Value.Rate;
+						<td style="color: @color">@revenue</td>
+						<td style="color: @color">@rate</td>
+					}
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+else
+{
+	<p><em>Empty...(@balance.Count)</em></p>
+}
+@code
+{
+	public async ValueTask DisposeAsync() => await hub.DisposeAsync();
+	protected override async Task OnInitializedAsync()
+	{
+		balance = new Dictionary<string, Catalog.Models.Balance>();
+		hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
+		hub.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) =>
+		{
+			if (balance.Quantity.Length < 2 && balance.Quantity[0] is '0')
+			{
+				if (this.balance.Remove(balance.Code))
+					StateHasChanged();
+
+				return;
+			}
+			this.balance[balance.Code] = balance;
+			StateHasChanged();
+		});
+		await hub.StartAsync();
+	}
+	Dictionary<string, Catalog.Models.Balance> balance;
+	HubConnection hub;
+}

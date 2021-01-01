@@ -60,7 +60,7 @@
 			color: white;
 		}
 
-@media (min-width: 641px)
+@media only screen and (min-width: 851px) and (orientation: landscape)
 {
 	.navbar-toggler
 	{
@@ -69,7 +69,6 @@
 
 	.collapse
 	{
-		/* Never collapse the sidebar for wide screens */
 		display: block;
 	}
 }

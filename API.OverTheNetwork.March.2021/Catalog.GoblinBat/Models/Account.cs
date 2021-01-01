@@ -6,6 +6,10 @@
 		{
 			get; set;
 		}
+		public string Security
+		{
+			get; set;
+		}
 		public string[] Number
 		{
 			get; set;

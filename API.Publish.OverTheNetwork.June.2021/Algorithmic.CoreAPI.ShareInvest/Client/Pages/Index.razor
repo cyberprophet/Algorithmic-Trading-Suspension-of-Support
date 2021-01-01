@@ -1,7 +1,112 @@
-﻿@page "/"
+﻿@page "/index"
+@inject HttpClient http
 
-<h1>Hello, world!</h1>
+@if (this.accounts is not null && this.accounts.Count > 0)
+{
+	<div class="form-group">
+		<form>
+			<fieldset class="flex-container">
+				<legend class="legend"><strong>Choose the Stock Account</strong></legend>
+				<ul>
+					@foreach (var str in this.accounts)
+					{
+						@if (str.Length == 0xA && str[^2..].CompareTo("31") < 0)
+						{
+							<li>
+								<label for="stocks">
+									<input type="radio" id="stocks" name="stocks" value="@str" @onchange="OnReceiveTheSelectedButton" checked="@str.Equals(stock)">
+									@ConvertFormat(str)
+								</label>
+							</li>
+						}
+					}
+				</ul>
+			</fieldset>
+			<br />
+			<fieldset class="flex-container">
+				<legend class="legend"><strong>Choose the Futures Account</strong></legend>
+				<ul>
+					@foreach (var str in this.accounts)
+					{
+						@if (str.Length == 0xA && str[^2..].CompareTo("31") == 0)
+						{
+							<li>
+								<label for="futures">
+									<input type="radio" id="futures" name="futures" value="@str" @onchange="OnReceiveTheSelectedButton" checked="@str.Equals(futures)">
+									@ConvertFormat(str)
+								</label>
+							</li>
+						}
+					}
+				</ul>
+			</fieldset>
+		</form>
+		<br />
+		<div>
+			<button class="style" @onclick="Send" disabled="@IsClicked">Submit</button>
+		</div>
+	</div>
+}
+else
+{
+	<p><em>The Account don’t Exist...</em></p>
+	<p><em>Connect the OpenAPI</em></p>
+	<p><em>Load the Account Information.</em></p>
+}
+@code
+{
+	protected override async Task OnInitializedAsync()
+	{
+		var accounts = await http.GetFromJsonAsync<string[]>(Crypto.Security.GetRoute("Account"));
+		this.accounts = new List<string>();
 
-Welcome to your new app.
+		foreach (var str in accounts)
+		{
+			if (str.Equals("Separation"))
+			{
+				IsClicked = true;
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+				break;
+			}
+			this.accounts.Add(str);
+		}
+		if (IsClicked)
+		{
+			var index = Array.FindIndex(accounts, o => o.Equals("Separation"));
+
+			stock = accounts[index + 1];
+
+			if (accounts.Length - index == 3)
+				futures = accounts[index + 2];
+		}
+	}
+	bool IsClicked
+	{
+		get; set;
+	}
+	async Task Send()
+	{
+		if (string.IsNullOrEmpty(stock) is false)
+			IsClicked = HttpStatusCode.OK.Equals((await http.PutAsJsonAsync(Crypto.Security.GetRoute("Account"), new Privacies
+			{
+				Account = string.IsNullOrEmpty(futures) ? stock : string.Concat(stock, ';', futures)
+
+			})).StatusCode);
+	}
+	void OnReceiveTheSelectedButton(ChangeEventArgs e)
+	{
+		if (e.Value is string account)
+		{
+			if (account[^2..].CompareTo("31") == 0)
+				futures = account;
+
+			else
+				stock = account;
+
+			IsClicked = false;
+		}
+	}
+	string ConvertFormat(string account) => string.Format("{0}­ ─ ­{1}", account.Substring(0, 4), account.Substring(4, 4));
+	string stock, futures;
+	List<string> accounts;
+}

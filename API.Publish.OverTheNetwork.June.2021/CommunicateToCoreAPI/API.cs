@@ -141,6 +141,7 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		public bool GrantAccess => security.GrantAccess;
 		static API Client
 		{
 			get; set;

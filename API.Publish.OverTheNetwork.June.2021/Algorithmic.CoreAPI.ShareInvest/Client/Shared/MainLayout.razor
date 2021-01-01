@@ -1,17 +1,46 @@
 ﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.SignalR.Client
+@inject NavigationManager Manager
+@implements IAsyncDisposable
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+	<div class="sidebar">
+		<NavMenu />
+	</div>
 
-    <div class="main">
-        <div class="top-row px-4">
-            <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
-        </div>
+	<div class="main">
+		<div class="top-row px-4">
+			@if (string.IsNullOrEmpty(this.message))
+			{
 
-        <div class="content px-4">
-            @Body
-        </div>
-    </div>
+			}
+			else
+			{
+				<span>@this.message</span>
+			}
+			<a href="https://sharecompany.tistory.com/46" target="_blank" class="ml-md-auto">이용약관</a>
+		</div>
+
+		<div class="content px-4">
+			@Body
+		</div>
+	</div>
 </div>
+
+@code
+{
+	public async ValueTask DisposeAsync() => await hub.DisposeAsync();
+	protected override async Task OnInitializedAsync()
+	{
+		hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/message")).Build();
+		hub.On<string>("ReceiveMessage", (message) =>
+		{
+			this.message = ConvertFormat(message);
+			StateHasChanged();
+		});
+		await hub.StartAsync();
+	}
+	string ConvertFormat(string message) => message[^1] is '.' ? message : string.Concat(message, '.');
+	HubConnection hub;
+	string message;
+}
