@@ -11,10 +11,6 @@ namespace ShareInvest.Interface
 		{
 			get;
 		}
-		string SecuritiesName
-		{
-			get;
-		}
 		string[] Account
 		{
 			get; set;
@@ -31,6 +27,7 @@ namespace ShareInvest.Interface
 		{
 			get;
 		}
+		string Securities(string param);
 		void SendOrder(ISendOrder order);
 		void StartProgress();
 	}

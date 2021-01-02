@@ -2,6 +2,8 @@ using System.Linq;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -9,8 +11,10 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using ShareInvest.Filter;
 using ShareInvest.Hubs;
 
 namespace ShareInvest
@@ -29,11 +33,12 @@ namespace ShareInvest
 			services.AddRazorPages();
 			services.Configure<KestrelServerOptions>(o =>
 			{
-				o.ListenAnyIP(7135);
+				o.ListenAnyIP(0x1BDF);
 				o.Limits.MaxRequestBodySize = int.MaxValue;
 			})
 				.AddTransient<BalanceHub>()
 				.AddTransient<MessageHub>()
+				.AddScoped(container => new ClientIpCheckActionFilter(Configuration["AdminSafeList"], container.GetRequiredService<ILoggerFactory>().CreateLogger<ClientIpCheckActionFilter>()))
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
 		}
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

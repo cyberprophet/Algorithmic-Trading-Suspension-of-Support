@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+
+using ShareInvest.Catalog.Models;
+using ShareInvest.Filter;
 
 namespace ShareInvest.Controllers
 {
@@ -13,19 +15,25 @@ namespace ShareInvest.Controllers
 	public class AccountController : ControllerBase
 	{
 		[HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
-		public async Task<IActionResult> PostContextAsync([FromBody] Catalog.Models.Account param)
+		public async Task<IActionResult> PostContextAsync([FromBody] Account param)
 		{
 			try
 			{
-				if (param.Length > 0)
+				if (param.Length > 0 && Security.Account.ContainsKey(param.Identity) is false)
 				{
-					var sb = new StringBuilder();
+					var temp = new string[param.Length];
 
-					foreach (var str in param.Number)
-						if (string.IsNullOrEmpty(str) is false && str.Length == 0xA && str[^2..].CompareTo("32") < 0)
-							sb.Append(str).Append(';');
+					for (int i = 0; i < param.Length; i++)
+						temp[i] = Crypto.Security.Decipher(param.Number[i]);
 
-					Security.Account[Crypto.Security.Decipher(param)] = sb.Remove(sb.Length - 1, 1).ToString().Split(';');
+					Security.Account[param.Identity] = new Account
+					{
+						Length = param.Length,
+						Identity = param.Identity,
+						Name = param.Name,
+						Security = param.Security,
+						Number = temp
+					};
 				}
 			}
 			catch (Exception ex)
@@ -35,13 +43,13 @@ namespace ShareInvest.Controllers
 			return Ok();
 		}
 		[HttpPut, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
-		public async Task<HttpStatusCode> PutContextAsync([FromBody] Catalog.Models.Privacies param)
+		public async Task<HttpStatusCode> PutContextAsync([FromBody] Privacies param)
 		{
 			try
 			{
 				if (string.IsNullOrEmpty(param.Account) is false)
 				{
-					var privacy = new Catalog.Models.Privacies
+					var privacy = new Privacies
 					{
 
 					};
@@ -56,7 +64,7 @@ namespace ShareInvest.Controllers
 			}
 			return HttpStatusCode.BadRequest;
 		}
-		[HttpGet]
+		[HttpGet, ServiceFilter(typeof(ClientIpCheckActionFilter))]
 		public IEnumerable<string> GetContext()
 		{
 			return null;

@@ -10,6 +10,39 @@ ul
 	list-style-type: none
 }
 
+.sub
+{
+	width: 100%;
+	color: lightslategrey
+}
+
+.user_input
+{
+	margin-right: 1.5em;
+	background-color: transparent;
+	color: dimgray;
+	border: 0.75px ridge;
+	border-style: solid;
+	border-color: azure;
+	font-size: small;
+	text-align: center
+}
+
+	.user_input::placeholder
+	{
+		color: lightgrey;
+		font-style: italic;
+		font-size: smaller
+	}
+
+.user_span
+{
+	font-style: italic;
+	font-size: small;
+	padding-left: 0.75em;
+	color: lightsteelblue
+}
+
 .legend
 {
 	display: block;

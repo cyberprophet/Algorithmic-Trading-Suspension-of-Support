@@ -58,23 +58,7 @@ namespace ShareInvest.Client
 				Code = null,
 				LastDate = null
 			};
-		}
-		public async Task<object> GetContextAsync(string[] security)
-		{
-			try
-			{
-				var response = await client.ExecuteAsync(new RestRequest(this.security.RequestTheIntegratedAddress(new Privacies { Security = security[0] }), Method.GET), source.Token);
-
-				if (response.StatusCode.Equals(HttpStatusCode.OK))
-					return JsonConvert.DeserializeObject<Privacies>(response.Content);
-			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
-			}
-			return null;
-		}
+		}	
 		public async Task<object> GetContextAsync(Codes param, int length)
 		{
 			try
@@ -214,8 +198,7 @@ namespace ShareInvest.Client
 		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, Method.POST))
-					.AddJsonBody(param, Security.content_type), source.Token);
+				var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.POST).AddJsonBody(param, Security.content_type), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 					switch (param)

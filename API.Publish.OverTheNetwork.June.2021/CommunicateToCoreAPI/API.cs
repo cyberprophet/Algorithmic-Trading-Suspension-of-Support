@@ -22,6 +22,22 @@ namespace ShareInvest.Client
 
 			return Client;
 		}
+		public async Task<object> GetContextAsync(string security)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(this.security.RequestTheIntegratedAddress(new Privacies { Security = security }), Method.GET), source.Token);
+
+				if (response.StatusCode.Equals(HttpStatusCode.OK))
+					return JsonConvert.DeserializeObject<Privacies>(response.Content);
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+				Base.SendMessage(ex.StackTrace, GetType());
+			}
+			return null;
+		}
 		public async Task<object> PostConfirmAsync<T>(T param) where T : struct
 		{
 			try
@@ -60,8 +76,7 @@ namespace ShareInvest.Client
 					case IEnumerable<Stocks>:
 					case IEnumerable<Options>:
 					case IEnumerable<Futures>:
-						var address = param.GetType().GetGenericArguments()[0];
-						resource = security.GrantAccess ? security.RequestTheChangeOfAddress(address) : Security.RequestTheIntegratedAddress(address);
+						resource = security.RequestTheChangeOfAddress(param.GetType().GetGenericArguments()[0]);
 						break;
 
 					case IEnumerable<FinancialStatement>:

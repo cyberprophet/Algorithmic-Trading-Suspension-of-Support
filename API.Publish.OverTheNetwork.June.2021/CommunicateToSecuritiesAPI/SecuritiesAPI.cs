@@ -21,8 +21,9 @@ namespace ShareInvest
 		{
 			icons = new[] { Properties.Resources.sleep_adium_bird_20649, Properties.Resources.idle_adium_bird_20651, Properties.Resources.awake_adium_bird_20653, Properties.Resources.alert_adium_bird_20655, Properties.Resources.away_adium_bird_20654, Properties.Resources.invisible_adium_bird_20650 };
 			InitializeComponent();
-			this.connect = connect;
 			var key = Security.GetAdministrator(param);
+			this.connect = connect;
+			this.key = key;
 			api = API.GetInstance(key);
 			random = new Random(Guid.NewGuid().GetHashCode());
 			Codes = new Queue<string>();
@@ -151,7 +152,14 @@ namespace ShareInvest
 					break;
 
 				case string[] accounts:
-					if (await server.PostContextAsync(new Account { Length = accounts.Length, Number = accounts }) is 0xC8)
+					if (await server.PostContextAsync(Crypto.Security.Encrypt(new Account
+					{
+						Length = accounts.Length,
+						Number = accounts,
+						Security = key,
+						Identity = connect.Securities("USER_ID"),
+						Name = connect.Securities("USER_NAME")
+					}, accounts.Length > 0)) is 0xC8)
 					{
 						connect.Account = new string[2];
 
@@ -298,7 +306,7 @@ namespace ShareInvest
 			else if (connect.Start)
 			{
 				if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
-					notifyIcon.Text = connect.SecuritiesName;
+					notifyIcon.Text = connect.Securities("USER_NAME");
 
 				notifyIcon.Icon = icons[now.Second % 4];
 			}
@@ -347,7 +355,7 @@ namespace ShareInvest
 						StartProgress(connect as Control);
 				}
 				else if (e.ClickedItem.Text.Equals("조회"))
-					switch (MessageBox.Show(look_up, connect.SecuritiesName, MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
+					switch (MessageBox.Show(look_up, connect.Securities("USER_NAME"), MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
 					{
 						case DialogResult.Abort:
 
@@ -370,7 +378,7 @@ namespace ShareInvest
 		void JustBeforeFormClosing(object sender, FormClosingEventArgs e)
 		{
 			if (CloseReason.UserClosing.Equals(e.CloseReason))
-				switch (MessageBox.Show(form_exit, connect.SecuritiesName, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
+				switch (MessageBox.Show(form_exit, connect.Securities("USER_NAME"), MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
 				{
 					case DialogResult.OK:
 						PreventsFromRunningAgain(e);
@@ -454,6 +462,7 @@ namespace ShareInvest
 		const string instance = "ShareInvest.OpenAPI.Catalog.";
 		const string password = ";;00";
 		const string inquiry = @"_잔고조회|";
+		readonly string key;
 		readonly Random random;
 		readonly API api;
 		readonly GoblinBat server;

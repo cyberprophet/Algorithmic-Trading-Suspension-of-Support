@@ -34,9 +34,14 @@ namespace ShareInvest
 				var remain = new DateTime(now.Year, now.Month, now.Day, sat ? 0xA : 9, 0, 0) - DateTime.Now;
 				notifyIcon.Text = Base.GetRemainingTime(remain);
 
-				if (API is null && Base.IsDebug == false && remain.TotalMinutes < 0x29 && now.Hour == (sat ? 9 : 8))
+				if (API is null && Base.IsDebug is false && remain.TotalMinutes < 0x29 && now.Hour == (sat ? 9 : 8))
 				{
-					API = new ConnectAPI(Base.IsDebug ? administrator : args);
+					API = new ConnectAPI(args);
+					timer.Interval = 0x3A99;
+				}
+				else if (API is null && Base.IsDebug)
+				{
+					API = new ConnectAPI(administrator);
 					timer.Interval = 0x3A99;
 				}
 				else if (API is ConnectAPI && API.TryProgress() && timer.Interval == 0x3A99)

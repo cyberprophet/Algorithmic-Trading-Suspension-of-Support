@@ -15,7 +15,13 @@ namespace ShareInvest.Pages
 		}
 		public bool ShowRequestId => string.IsNullOrEmpty(RequestId) is false;
 		public ErrorModel(ILogger<ErrorModel> logger) => this.logger = logger;
-		public void OnGet() => RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+		public void OnGet()
+		{
+			RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+
+			if (string.IsNullOrEmpty(RequestId) is false)
+				logger.LogError(HttpContext.TraceIdentifier);
+		}
 		readonly ILogger<ErrorModel> logger;
 	}
 }
