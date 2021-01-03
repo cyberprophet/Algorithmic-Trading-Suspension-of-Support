@@ -63,6 +63,13 @@ namespace ShareInvest
 			using var sw = new StreamWriter(file, false);
 			sw.Write(Compress(param).Item1);
 		}
+		public static void Delete(string param)
+		{
+			var file = new FileInfo(param);
+
+			if (file.Exists)
+				file.Delete();
+		}
 		public static string Decompress(string param)
 		{
 			byte[] sourceArray = Convert.FromBase64String(param), targetArray = new byte[BitConverter.ToInt32(sourceArray, 0)];

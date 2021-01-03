@@ -186,34 +186,38 @@ namespace ShareInvest.Client
 				try
 				{
 					var request = security.RequestCharts(param);
+					object result = null;
 
 					if (request.Item2)
 					{
 						if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
-							return JsonConvert.DeserializeObject<string>(request.Item1);
+							result = JsonConvert.DeserializeObject<string>(request.Item1);
 
 						else
-							return JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(request.Item1);
+							result = JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(request.Item1);
 					}
 					else if (string.IsNullOrEmpty(request.Item1) == false)
 					{
 						var response = await client.ExecuteAsync(new RestRequest(request.Item1, Method.GET), source.Token);
+
+						if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
+							result = JsonConvert.DeserializeObject<string>(response.Content);
+
+						else
+							result = JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(response.Content);
 
 						if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString("yyMMdd")) < 0 || chart.End.Length < 6)
 						{
 							var save = Security.Save(chart);
 							Repository.Save(save.Item1, save.Item2, response.Content);
 						}
-						if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
-							return JsonConvert.DeserializeObject<string>(response.Content);
-
-						else
-							return JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(response.Content);
 					}
+					return result;
 				}
 				catch (Exception ex)
 				{
 					Base.SendMessage(chart.Code, ex.StackTrace, param.GetType());
+					Repository.Delete(Security.Save(chart).Item2);
 				}
 			return null;
 		}

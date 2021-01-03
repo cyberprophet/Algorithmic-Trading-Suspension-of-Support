@@ -27,10 +27,10 @@ namespace ShareInvest
 
 			var now = DateTime.Now;
 
-			if (Base.CheckIfMarketDelay(now))
+			if (Base.CheckIfMarketDelay(now) && Base.CheckIfMarketDelay(now, 1))
 				now = now.AddHours(-1);
 
-			if (Base.IsDebug == false && (now.Hour < 0xF || now.Hour > 0x10))
+			if (Base.IsDebug is false && (now.Hour < 0xF || now.Hour > 0x10))
 			{
 				Process.Start("shutdown.exe", "-r");
 				Base.SendMessage(Security.Initialize(param).Item2);

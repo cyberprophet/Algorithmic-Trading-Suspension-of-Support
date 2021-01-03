@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ShareInvest.CoreAPI;
 
 namespace ShareInvest.Migrations
 {
     [DbContext(typeof(CoreApiDbContext))]
-    partial class CoreApiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210102154850_ReadyToMove")]
+    partial class ReadyToMove
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

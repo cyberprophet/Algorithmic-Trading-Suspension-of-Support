@@ -211,13 +211,13 @@ namespace ShareInvest
 				case 6:
 					var now = DateTime.Now;
 
-					if (Array.Exists(SAT, o => o.Equals(now.ToString(DateFormat))) && now.Hour < 0x12 && uint.TryParse(date, out uint sat))
+					if (CheckIfMarketDelay(now, 1) && now.Hour < 0x12 && uint.TryParse(date, out uint sat))
 						return (sat - 0x2710).ToString("D6");
 
 					break;
 
 				case 0xF:
-					if (Array.Exists(SAT, o => o.Equals(date.Substring(0, 6))) && date.Substring(6, 2).CompareTo("18") < 0 && ulong.TryParse(date, out ulong convert))
+					if (Array.FindIndex(SAT, o => o.Equals(date.Substring(0, 6))) % 2 == 1 && date.Substring(6, 2).CompareTo("18") < 0 && ulong.TryParse(date, out ulong convert))
 						return (convert - 0x989680).ToString("D15");
 
 					break;
@@ -225,6 +225,7 @@ namespace ShareInvest
 			return date;
 		}
 		public static bool CheckIfMarketDelay(DateTime now) => Array.Exists(SAT, o => o.Equals(now.ToString(DateFormat)));
+		public static bool CheckIfMarketDelay(DateTime now, int check) => Array.FindIndex(SAT, o => o.Equals(now.ToString(DateFormat))) % 2 == check;
 		public static DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);
 		public static DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
 		public static string DistinctDate
@@ -273,7 +274,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		static string[] SAT => new[] { "201203" };
+		static string[] SAT => new[] { "210104", "201203" };
 		const string distinctDate = "yyyyMM";
 		const string unique = "200611";
 		const string start = "0859";

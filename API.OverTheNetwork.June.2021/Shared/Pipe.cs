@@ -164,7 +164,7 @@ namespace ShareInvest
 												}).Start();
 											break;
 
-										case Catalog.OpenAPI.Operation.장마감전_동시호가 when operation[1].Equals(sat ? "162000" : "152000"):
+										case Catalog.OpenAPI.Operation.장마감전_동시호가 when operation[1].Equals(sat && Base.CheckIfMarketDelay(now, 1) ? "162000" : "152000"):
 											new Task(() =>
 											{
 												foreach (var stop in Progress.Collection)

@@ -310,7 +310,7 @@ namespace ShareInvest
 					Miss = Codes.Count;
 
 				if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
-					notifyIcon.Text = connect.SecuritiesName;
+					notifyIcon.Text = connect.Securities("USER_NAME");
 			}
 			else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
 			{
@@ -356,7 +356,7 @@ namespace ShareInvest
 						StartProgress(connect as Control);
 				}
 				else if (e.ClickedItem.Text.Equals("조회"))
-					switch (MessageBox.Show(look_up, connect.SecuritiesName, MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
+					switch (MessageBox.Show(look_up, connect.Securities("USER_NAME"), MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
 					{
 						case DialogResult.Abort:
 
@@ -379,7 +379,7 @@ namespace ShareInvest
 		void JustBeforeFormClosing(object sender, FormClosingEventArgs e)
 		{
 			if (CloseReason.UserClosing.Equals(e.CloseReason))
-				switch (MessageBox.Show(form_exit, connect.SecuritiesName, MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
+				switch (MessageBox.Show(form_exit, connect.Securities("USER_NAME"), MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2))
 				{
 					case DialogResult.OK:
 						PreventsFromRunningAgain(e);

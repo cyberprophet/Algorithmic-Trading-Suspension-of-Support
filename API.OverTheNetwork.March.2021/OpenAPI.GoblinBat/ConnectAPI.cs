@@ -151,7 +151,6 @@ namespace ShareInvest.OpenAPI
 		{
 			get; set;
 		}
-		public string SecuritiesName => axAPI.GetLoginInfo("USER_NAME").Trim();
 		public bool Start
 		{
 			get; private set;
@@ -160,6 +159,7 @@ namespace ShareInvest.OpenAPI
 		{
 			get; private set;
 		}
+		public string Securities(string param) => axAPI.GetLoginInfo(param).Trim();
 		public ISendSecuritiesAPI<SendSecuritiesAPI> InputValueRqData(string name, string param)
 		{
 			var ctor = Assembly.GetExecutingAssembly().CreateInstance(name) as TR;
