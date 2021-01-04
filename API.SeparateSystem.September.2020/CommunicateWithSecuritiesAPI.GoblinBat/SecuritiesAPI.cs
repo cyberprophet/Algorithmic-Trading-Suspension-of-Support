@@ -880,6 +880,7 @@ namespace ShareInvest
 				&& WindowState.Equals(FormWindowState.Normal) && (com is XingAPI.ConnectAPI || com is OpenAPI.ConnectAPI))
 			{
 				DateTime now = DateTime.Now, today = DateTime.Now;
+				var sat = Array.Exists(this.sat, o => o.Equals(today.ToString(dFormat)));
 
 				switch (now.DayOfWeek)
 				{
@@ -901,15 +902,15 @@ namespace ShareInvest
 						now = now.AddDays(2);
 						break;
 
-					case DayOfWeek weeks when weeks.Equals(DayOfWeek.Friday) && now.Hour > 8:
+					case DayOfWeek weeks when weeks.Equals(DayOfWeek.Friday) && now.Hour > (sat ? 9 : 8):
 						now = now.AddDays(3);
 						break;
 
 					default:
-						now = now.Hour > 8 || Array.Exists(holidays, o => o.Equals(now.ToString(dFormat))) ? now.AddDays(1) : now;
+						now = now.Hour > (sat ? 9 : 8) || Array.Exists(holidays, o => o.Equals(now.ToString(dFormat))) ? now.AddDays(1) : now;
 						break;
 				}
-				var sat = Array.Exists(this.sat, o => o.Equals(now.ToString(dFormat)));
+				sat = Array.Exists(this.sat, o => o.Equals(now.ToString(dFormat)));
 				var remain = new DateTime(now.Year, now.Month, now.Day, sat ? 0xA : 9, 0, 0) - DateTime.Now;
 				com.SetForeColor(colors[DateTime.Now.Second % 3], GetRemainingTime(remain));
 
