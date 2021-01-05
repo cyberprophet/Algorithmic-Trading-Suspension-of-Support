@@ -33,7 +33,7 @@ namespace ShareInvest.OpenAPI
 		internal static Connect GetInstance() => API;
 		internal static Connect GetInstance(AxKHOpenAPI axAPI, StreamWriter writer)
 		{
-			if (API == null && axAPI.CommConnect() == 0)
+			if (API is null && axAPI.CommConnect() == 0)
 				API = new Connect(axAPI, writer);
 
 			return API;

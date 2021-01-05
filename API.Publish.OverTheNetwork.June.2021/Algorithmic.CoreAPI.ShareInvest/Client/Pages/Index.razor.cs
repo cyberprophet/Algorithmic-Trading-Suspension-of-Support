@@ -14,7 +14,7 @@ namespace ShareInvest.Pages
 {
 	public partial class IndexBase : ComponentBase
 	{
-		protected override async Task OnInitializedAsync()
+		protected override void OnInitialized()
 		{
 			IsConfirm = true;
 			Accounts = new List<string>();
@@ -63,13 +63,14 @@ namespace ShareInvest.Pages
 
 					if (content.Length > 0)
 					{
-						Security = content;
+						Storage = content;
 
 						foreach (var str in content.Number)
-							if (string.IsNullOrEmpty(str) is false)
+							if (string.IsNullOrEmpty(str) is false && str.StartsWith("Test") is false)
 								Accounts.Add(str);
 					}
 				}
+				Security.Identify = InputIdentity;
 			}
 		}
 		protected internal void OnReceiveTheSelectedButton(ChangeEventArgs e)
@@ -94,11 +95,11 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
-		protected internal string InputIdentity
+		protected internal string InputName
 		{
 			get; set;
 		}
-		protected internal string InputName
+		protected internal string InputIdentity
 		{
 			get; set;
 		}
@@ -119,7 +120,7 @@ namespace ShareInvest.Pages
 		{
 			get; set;
 		}
-		Account Security
+		Account Storage
 		{
 			get; set;
 		}

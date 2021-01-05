@@ -11,19 +11,9 @@ namespace ShareInvest
 		{
 			if (Application.SetHighDpiMode(HighDpiMode.SystemAware))
 			{
-				var security = new Security(args);
-
-				if (Progress.GetUpdateVisionAsync().Result)
-					Process.Start("shutdown.exe", "-r");
-
-				else
-				{
-					Application.EnableVisualStyles();
-					Application.SetCompatibleTextRenderingDefault(false);
-
-					if (security.CheckAccessRights)
-						Application.Run(new CoreAPI(security));
-				}
+				Application.EnableVisualStyles();
+				Application.SetCompatibleTextRenderingDefault(false);
+				Application.Run(new CoreAPI(args));
 			}
 			GC.Collect();
 			Process.GetCurrentProcess().Kill();

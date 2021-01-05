@@ -27,7 +27,7 @@ namespace ShareInvest.OpenAPI
 			var stack = new Stack<string>(0x10);
 
 			foreach (var str in market)
-				if (string.IsNullOrEmpty(str) == false && axAPI.GetMasterStockState(str).Contains(Base.TransactionSuspension) == false)
+				if (string.IsNullOrEmpty(str) is false && axAPI.GetMasterStockState(str).Contains(Base.TransactionSuspension) is false)
 				{
 					if (index++ % 0x63 == 0x62)
 					{
@@ -90,7 +90,7 @@ namespace ShareInvest.OpenAPI
 							}
 							break;
 					}
-			var stack = CatalogStocksCode(market.OrderBy(o => Guid.NewGuid()));
+			var stack = CatalogStocksCode(market.Distinct().OrderBy(o => Guid.NewGuid()));
 			list[1] = axAPI.GetFutureCodeByIndex(0x18);
 			list.Add(axAPI.GetFutureCodeByIndex(0xD));
 
@@ -107,13 +107,10 @@ namespace ShareInvest.OpenAPI
 
 					date = temp[2];
 				}
-			foreach (var code in list.OrderBy(o => Guid.NewGuid()))
+			foreach (var code in list.Distinct().OrderBy(o => Guid.NewGuid()))
 				yield return new Tuple<string, string>("Opt50001", code);
 		}
-		void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
-			=> (API as Connect)?.TR.FirstOrDefault(o
-				=> (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name[1..].Equals(e.sTrCode[1..]))?
-					.OnReceiveTrData(e);
+		void OnReceiveTrData(object sender, _DKHOpenAPIEvents_OnReceiveTrDataEvent e) => (API as Connect)?.TR.FirstOrDefault(o => (o.RQName != null ? o.RQName.Equals(e.sRQName) : o.PrevNext.ToString().Equals(e.sPrevNext)) && o.GetType().Name[1..].Equals(e.sTrCode[1..]))?.OnReceiveTrData(e);
 		void OnEventConnect(object sender, _DKHOpenAPIEvents_OnEventConnectEvent e)
 		{
 			if (e.nErrCode == 0)
@@ -126,11 +123,8 @@ namespace ShareInvest.OpenAPI
 			else
 				Send?.Invoke(this, new SendSecuritiesAPI((short)e.nErrCode));
 		}
-		void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e)
-			=> (API as Connect)?.Real.FirstOrDefault(o
-				=> o.GetType().Name.Replace("_", string.Empty).Equals(e.sRealType, StringComparison.Ordinal))?.OnReceiveRealData(e);
-		void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e)
-			=> Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg[9..], "(", e.sScrNo, ")")));
+		void OnReceiveRealData(object sender, _DKHOpenAPIEvents_OnReceiveRealDataEvent e) => (API as Connect)?.Real.FirstOrDefault(o => o.GetType().Name.Replace("_", string.Empty).Equals(e.sRealType, StringComparison.Ordinal))?.OnReceiveRealData(e);
+		void OnReceiveMessage(object sender, _DKHOpenAPIEvents_OnReceiveMsgEvent e) => Send?.Invoke(this, new SendSecuritiesAPI(string.Concat("[", e.sRQName, "] ", e.sMsg[9..], "(", e.sScrNo, ")")));
 		void OnReceiveChejanData(object sender, _DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
 		{
 			if (API.Chejan.TryGetValue(e.sGubun, out Chejan chejan))
@@ -237,6 +231,12 @@ namespace ShareInvest.OpenAPI
 			};
 			API = Connect.GetInstance(axAPI, Writer);
 		}));
+		public int CorrectTheDelayMilliseconds(int milliseconds)
+		{
+			Delay.Milliseconds = milliseconds;
+
+			return axAPI.GetConnectState();
+		}
 		public void SendOrder(ISendOrder order) => API?.SendOrder(order);
 		public StreamWriter Writer
 		{
@@ -250,6 +250,7 @@ namespace ShareInvest.OpenAPI
 					yield return ctor.Value;
 			}
 		}
+		public ISendSecuritiesAPI<SendSecuritiesAPI> Real => (ISendSecuritiesAPI<SendSecuritiesAPI>)(API as Connect).Real.First(o => o.GetType().Equals(typeof(Catalog.장시작시간)));
 		public NamedPipeServerStream ConnectToReceiveRealTime
 		{
 			get;

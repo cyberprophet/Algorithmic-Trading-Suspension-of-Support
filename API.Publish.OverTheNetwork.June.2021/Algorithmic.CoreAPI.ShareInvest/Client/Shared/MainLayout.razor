@@ -1,7 +1,4 @@
-﻿@inherits LayoutComponentBase
-@using Microsoft.AspNetCore.SignalR.Client
-@inject NavigationManager Manager
-@implements IAsyncDisposable
+﻿@inherits MainLayoutBase
 
 <div class="page">
 	<div class="sidebar">
@@ -10,13 +7,13 @@
 
 	<div class="main">
 		<div class="top-row px-4">
-			@if (string.IsNullOrEmpty(this.message))
+			@if (string.IsNullOrEmpty(Message))
 			{
 
 			}
 			else
 			{
-				<span>@this.message</span>
+				<span>@Message</span>
 			}
 			<a href="https://sharecompany.tistory.com/46" target="_blank" class="ml-md-auto">이용약관</a>
 		</div>
@@ -26,21 +23,3 @@
 		</div>
 	</div>
 </div>
-
-@code
-{
-	public async ValueTask DisposeAsync() => await hub.DisposeAsync();
-	protected override async Task OnInitializedAsync()
-	{
-		hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/message")).Build();
-		hub.On<string>("ReceiveMessage", (message) =>
-		{
-			this.message = ConvertFormat(message);
-			StateHasChanged();
-		});
-		await hub.StartAsync();
-	}
-	string ConvertFormat(string message) => message[^1] is '.' ? message : string.Concat(message, '.');
-	HubConnection hub;
-	string message;
-}

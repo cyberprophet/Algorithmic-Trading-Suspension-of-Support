@@ -135,7 +135,7 @@ namespace ShareInvest
 													Base.SendMessage(operation[1], Progress.Collection.Count, typeof(Balance));
 
 												}).Start();
-											else if (operation[1].Equals(sat ? "095000" : "085000"))
+											else if (operation[1].Equals(sat && Base.IsDebug is false ? "095000" : "085000"))
 											{
 												Server.WriteLine(string.Concat(typeof(Crypto.Security).Name, '|', Progress.Account));
 												Server.WriteLine(string.Concat(typeof(Catalog.OpenAPI.Operation).Name, '|', operation[1]));

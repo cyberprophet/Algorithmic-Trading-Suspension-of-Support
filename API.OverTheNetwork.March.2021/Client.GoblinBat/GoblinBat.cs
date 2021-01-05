@@ -206,7 +206,7 @@ namespace ShareInvest.Client
 						else
 							result = JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(response.Content);
 
-						if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString("yyMMdd")) < 0 || chart.End.Length < 6)
+						if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString(Base.DateFormat)) < 0 || chart.End.Length < 6)
 						{
 							var save = Security.Save(chart);
 							Repository.Save(save.Item1, save.Item2, response.Content);

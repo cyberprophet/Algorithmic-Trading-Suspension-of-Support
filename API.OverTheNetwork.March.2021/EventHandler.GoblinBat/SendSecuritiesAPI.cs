@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 
 using ShareInvest.Catalog.Models;
+using ShareInvest.Catalog.OpenAPI;
 
 namespace ShareInvest.EventHandler
 {
@@ -14,6 +15,7 @@ namespace ShareInvest.EventHandler
 		public SendSecuritiesAPI(Codes codes) => Convey = codes;
 		public SendSecuritiesAPI(Queue<string[]> hold) => Convey = hold;
 		public SendSecuritiesAPI(Tuple<string, string> tuple) => Convey = tuple;
+		public SendSecuritiesAPI(Operation operation, string time, string remain) => Convey = new Tuple<Operation, string, string>(operation, time, remain);
 		public SendSecuritiesAPI(Dictionary<string, string> param) => Convey = param;
 		public SendSecuritiesAPI(string code, Stack<string> stack) => Convey = new Tuple<string, Stack<string>>(code, stack);
 		public SendSecuritiesAPI(string message) => Convey = message;

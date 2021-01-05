@@ -8,11 +8,16 @@ namespace ShareInvest
 	{
 		static void Main()
 		{
-			foreach (var securtiy in new[] { Security.Commands, Security.Compress })
-				ChooseTheInstallationPath(securtiy);
+			var security = new Security();
 
-			if (Security.SendUpdateToFile().Result is string file)
-				File.Delete(file);
+			for (int i = 0; i < security.Length; i++)
+			{
+				foreach (var securtiy in new[] { security.Commands(i), security.Compress(i) })
+					ChooseTheInstallationPath(securtiy);
+
+				if (security.SendUpdateToFile(i).Result is string file && i == 0)
+					File.Delete(file);
+			}
 		}
 		static void ChooseTheInstallationPath(dynamic param)
 		{

@@ -224,6 +224,7 @@ namespace ShareInvest
 			}
 			return date;
 		}
+		public static string TellTheClientConnectionStatus(string name, bool is_connected) => string.Format("{0} is connected on {1}", name, is_connected);
 		public static bool CheckIfMarketDelay(DateTime now) => Array.Exists(SAT, o => o.Equals(now.ToString(DateFormat)));
 		public static bool CheckIfMarketDelay(DateTime now, int check) => Array.FindIndex(SAT, o => o.Equals(now.ToString(DateFormat))) % 2 == check;
 		public static DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);

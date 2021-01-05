@@ -19,21 +19,26 @@ namespace ShareInvest.Controllers
 		{
 			try
 			{
-				if (param.Length > 0 && Security.Account.ContainsKey(param.Identity) is false)
+				if (param.Length > 0 && Security.User.ContainsKey(param.Identity) is false)
 				{
 					var temp = new string[param.Length];
 
 					for (int i = 0; i < param.Length; i++)
-						temp[i] = Crypto.Security.Decipher(param.Number[i]);
+						temp[i] = param.Number[i]; //Crypto.Security.Decipher(param.Number[i]);
 
-					Security.Account[param.Identity] = new Account
+					Security.User[param.Identity] = new User
 					{
-						Length = param.Length,
-						Identity = param.Identity,
-						Name = param.Name,
-						Security = param.Security,
-						Number = temp
+						Account = new Account
+						{
+							Length = param.Length,
+							Identity = param.Identity,
+							Name = param.Name,
+							Security = param.Security,
+							Number = temp
+						},
+						Logs = new Queue<Log>()
 					};
+					return Ok(temp[^1]);
 				}
 			}
 			catch (Exception ex)

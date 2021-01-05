@@ -14,8 +14,8 @@ namespace ShareInvest
 				Application.EnableVisualStyles();
 				Application.SetCompatibleTextRenderingDefault(false);
 
-				if (Security.CheckAccessRights(args))
-					StartProgress(args, new OpenAPI.ConnectAPI());
+				if (Security.GetAdministrator(args) is string str)
+					StartProgress(str, new OpenAPI.ConnectAPI());
 			}
 			GC.Collect();
 			Process.GetCurrentProcess().Kill();

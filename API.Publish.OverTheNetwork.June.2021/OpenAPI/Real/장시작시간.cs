@@ -3,38 +3,44 @@ using System.IO;
 
 using AxKHOpenAPILib;
 
+using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.DelayRequest;
+using ShareInvest.EventHandler;
+using ShareInvest.Interface.OpenAPI;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
-	class 장시작시간 : Real
+	class 장시작시간 : Real, ISendSecuritiesAPI<SendSecuritiesAPI>
 	{
 		internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
 		{
 			var param = base.OnReceiveRealData(e, Fid);
 
-			if (char.TryParse(param[0], out char operation))
+			if (Enum.TryParse(param[0], out Operation operation) && Enum.IsDefined(typeof(Operation), operation))
+			{
 				switch (operation)
 				{
-					case '0':
+					case Operation.장시작전:
 						if (reservation.Equals(param[1]))
 							Delay.Milliseconds = 0xE7;
 
 						break;
 
-					case '3':
+					case Operation.장시작:
 						Delay.Milliseconds = 0xC9;
 						break;
 
-					case 'e':
-						Delay.Milliseconds = 0xE17;
+					case Operation.선옵_장마감전_동시호가_종료:
+						Delay.Milliseconds = 0xE01;
 						break;
 
-					case '8':
+					case Operation.장마감:
 						Delay.Milliseconds = 0xE11;
 						break;
 				}
-			if (string.IsNullOrEmpty(param[2]) == false && string.IsNullOrEmpty(param[1]) == false && string.IsNullOrEmpty(param[0]) == false)
+				Send?.Invoke(this, new SendSecuritiesAPI(operation, param[1], param[^1]));
+			}
+			if (string.IsNullOrEmpty(param[2]) is false && string.IsNullOrEmpty(param[1]) is false && string.IsNullOrEmpty(param[0]) is false)
 				Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', param[0], ';', param[1], ';', param[^1]));
 		}
 		internal override AxKHOpenAPI API
@@ -45,7 +51,8 @@ namespace ShareInvest.OpenAPI.Catalog
 		{
 			get; set;
 		}
-		protected internal override int[] Fid => new int[] { 215, 20, 214 };
 		readonly string reservation = Base.CheckIfMarketDelay(DateTime.Now) ? "095500" : "085500";
+		protected internal override int[] Fid => new int[] { 215, 20, 214 };
+		public event EventHandler<SendSecuritiesAPI> Send;
 	}
 }
