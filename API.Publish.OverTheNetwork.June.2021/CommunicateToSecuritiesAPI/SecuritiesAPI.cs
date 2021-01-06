@@ -122,6 +122,10 @@ namespace ShareInvest
 						case Catalog.OpenAPI.Operation.시간외_단일가_매매종료:
 
 							break;
+
+						case Catalog.OpenAPI.Operation.장종료_시간외종료:
+
+							break;
 					}
 					notifyIcon.Text = Enum.GetName(typeof(Catalog.OpenAPI.Operation), operation.Item1);
 					return;

@@ -165,13 +165,9 @@ namespace ShareInvest
 			}
 			else if (cm.Code.Length == 6)
 			{
-				string sDate = await Progress.Client.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = empty, End = empty }) as string,
-					date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(Base.DateFormat) : sDate.Substring(0, 6);
+				string sDate = await Progress.Client.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = empty, End = empty }) as string, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(Base.DateFormat) : sDate.Substring(0, 6);
 
-				foreach (var day in from day in (await Progress.Client.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = string.Empty, End = string.Empty })
-									as IEnumerable<Catalog.Strategics.Charts>).OrderBy(o => o.Date)
-									where string.Compare(day.Date[2..], date) < 0
-									select day)
+				foreach (var day in from day in (await Progress.Client.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = string.Empty, End = string.Empty }) as IEnumerable<Catalog.Strategics.Charts>).OrderBy(o => o.Date) where string.Compare(day.Date[2..], date) < 0 select day)
 					Days.Enqueue(day);
 
 				if (DateTime.TryParseExact(date, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime start))

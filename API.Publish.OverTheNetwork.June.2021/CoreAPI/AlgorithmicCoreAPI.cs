@@ -17,7 +17,7 @@ namespace ShareInvest
 			icon = new[] { Properties.Resources.upload_server_icon_icons_com_76732, Properties.Resources.download_server_icon_icons_com_76720, Properties.Resources.data_server_icon_icons_com_76718 };
 			key = Initialize(param);
 			api = API.GetInstance(key);
-			pipe = new Pipe(api.GetType().Name);
+			pipe = new Pipe(api.GetType().Name, typeof(CoreAPI).Name);
 			timer.Start();
 		}
 		string Message
@@ -56,9 +56,10 @@ namespace ShareInvest
 					Message = pipe.Message;
 
 				else
+				{
 					notifyIcon.Icon = Message.EndsWith(false.ToString()) ? icon[^1] : icon[DateTime.Now.Second % 2];
-
-				notifyIcon.Text = Message;
+					notifyIcon.Text = Message;
+				}
 			}
 		}
 		void Dispose(short param)

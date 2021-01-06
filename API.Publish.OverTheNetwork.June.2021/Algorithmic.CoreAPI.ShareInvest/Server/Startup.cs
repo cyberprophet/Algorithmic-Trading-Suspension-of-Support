@@ -36,6 +36,7 @@ namespace ShareInvest
 			})
 				.AddTransient<BalanceHub>()
 				.AddTransient<MessageHub>()
+				.AddSingleton<HermesHub>()
 				.AddScoped(container => new ClientIpCheckActionFilter(Configuration["AdminSafeList"], container.GetRequiredService<ILoggerFactory>().CreateLogger<ClientIpCheckActionFilter>()))
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
 		}
@@ -53,6 +54,7 @@ namespace ShareInvest
 				ep.MapControllers();
 				ep.MapHub<MessageHub>("/hub/message");
 				ep.MapHub<BalanceHub>("/hub/balance");
+				ep.MapHub<HermesHub>("/hub/hermes");
 				ep.MapFallbackToFile("index.html");
 			});
 		}

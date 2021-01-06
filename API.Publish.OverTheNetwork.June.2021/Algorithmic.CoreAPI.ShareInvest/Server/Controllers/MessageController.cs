@@ -33,6 +33,8 @@ namespace ShareInvest.Controllers
 					});
 					if (hub is not null)
 						await hub.Clients.All.SendAsync(method, log[0].Trim());
+
+					return Ok(param.Convey);
 				}
 			}
 			catch (Exception ex)

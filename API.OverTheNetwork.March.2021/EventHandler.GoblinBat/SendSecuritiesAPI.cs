@@ -13,6 +13,7 @@ namespace ShareInvest.EventHandler
 		public SendSecuritiesAPI(int param) => Convey = param;
 		public SendSecuritiesAPI(short error) => Convey = error;
 		public SendSecuritiesAPI(Codes codes) => Convey = codes;
+		public SendSecuritiesAPI(Message message) => Convey = message;
 		public SendSecuritiesAPI(Queue<string[]> hold) => Convey = hold;
 		public SendSecuritiesAPI(Tuple<string, string> tuple) => Convey = tuple;
 		public SendSecuritiesAPI(Operation operation, string time, string remain) => Convey = new Tuple<Operation, string, string>(operation, time, remain);
