@@ -14,25 +14,25 @@ namespace ShareInvest
 			var temp = new Dictionary<string, uint>(0x400);
 			var storage = new Dictionary<uint, string>(0x800);
 
-			while (collection.Count > 0)
-			{
-				var c = collection.Dequeue();
-				string index = 0.ToString("D3"), peek = collection.Count > 0 ? collection.Peek().Time : c.Time;
+			while (collection.TryDequeue(out Collect c))
+				if (string.IsNullOrEmpty(c.Time) is false)
+				{
+					string index = 0.ToString("D3"), peek = collection.Count > 0 && collection.TryPeek(out Collect p) && string.IsNullOrEmpty(p.Time) is false ? p.Time : c.Time;
 
-				if (c.Time.CompareTo(peek) == 0)
-				{
-					temp[c.Time] = count;
-					index = count++.ToString("D3");
+					if (c.Time.CompareTo(peek) == 0)
+					{
+						temp[c.Time] = count;
+						index = count++.ToString("D3");
+					}
+					else
+					{
+						temp[c.Time] = count;
+						index = count.ToString("D3");
+						count = temp.Any(o => o.Key.Equals(peek)) ? temp.First(o => o.Key.Equals(peek)).Value + 1 : 0;
+					}
+					if (uint.TryParse(string.Concat(c.Time, index), out uint time))
+						storage[time] = c.Datum;
 				}
-				else
-				{
-					temp[c.Time] = count;
-					index = count.ToString("D3");
-					count = temp.Any(o => o.Key.Equals(peek)) ? temp.First(o => o.Key.Equals(peek)).Value + 1 : 0;
-				}
-				if (uint.TryParse(string.Concat(c.Time, index), out uint time))
-					storage[time] = c.Datum;
-			}
 			foreach (var collect in storage.OrderBy(o => o.Key))
 				queue.Enqueue(new Collect
 				{

@@ -6,6 +6,7 @@
 	<table class="table">
 		<thead>
 			<tr>
+				<th>Date</th>
 				<th>Time</th>
 				<th>Message</th>
 				<th>Code</th>
@@ -13,9 +14,19 @@
 			</tr>
 		</thead>
 		<tbody>
-			@foreach (var log in Logs)
+			@foreach (var log in Logs.OrderByDescending(o => o.Time))
 			{
 				<tr>
+					@if (Temp.Date.CompareTo(log.Time.Date) < 0)
+					{
+						Temp = log.Time;
+
+						<th>@log.Time.ToLongDateString()</th>
+					}
+					else
+					{
+						<td>@string.Empty</td>
+					}
 					<td>@log.Time.ToLongTimeString()</td>
 					<td>@log.Message</td>
 					<td>@log.Code</td>

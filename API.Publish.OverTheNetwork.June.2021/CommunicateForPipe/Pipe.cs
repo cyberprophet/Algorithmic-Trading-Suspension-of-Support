@@ -69,7 +69,7 @@ namespace ShareInvest
 
 										var price = temp[^1].Split(';');
 
-										if (this.price is not null && price[1].Equals(this.price[temp[1]]) is false)
+										if (this.price is not null && temp[0].Length == 4 && temp[1].Length == 6 && price[1].Equals(this.price[temp[1]]) is false)
 										{
 											this.price[temp[1]] = price[1];
 											Send?.Invoke(this, new SendSecuritiesAPI(new Message { Key = temp[1], Convey = price[1] }));
@@ -83,13 +83,15 @@ namespace ShareInvest
 									break;
 
 								case 5:
-									if (temp[0].Equals("Codes") && (temp[^1].Length == 6 || temp[^1].Length == 8))
+									if (temp[0].Equals("Codes") && (temp[1].Length == 6 || temp[1].Length == 8))
 									{
-										Collection[temp[^1]] = new Queue<Collect>(0x800);
+										Collection[temp[1]] = new Queue<Collect>(0x800);
 
-										if (price is not null)
-											price[temp[^1]] = string.Empty;
-
+										if (price is not null && temp[1].Length == 6)
+										{
+											price[temp[1]] = temp[^1];
+											Send?.Invoke(this, new SendSecuritiesAPI(new Message { Key = temp[1], Convey = temp[^1] }));
+										}
 										if (Collection.Count % 0x400 == 0 || Collection.Count > 0x400 * 3)
 											Send?.Invoke(this, new SendSecuritiesAPI(string.Format("Total of {0} Stocks to be Collect.", Collection.Count.ToString("N0"))));
 									}
@@ -171,7 +173,6 @@ namespace ShareInvest
 
 											case Catalog.OpenAPI.Operation.장종료_시간외종료:
 												Collection.Clear();
-												Send?.Invoke(this, new SendSecuritiesAPI((short)-0x6A));
 												GC.Collect();
 												break;
 										}

@@ -1,7 +1,9 @@
+using System;
 using System.Linq;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -26,7 +28,14 @@ namespace ShareInvest
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddSignalR();
+			services.AddSignalR(o =>
+			{
+				var wait = TimeSpan.FromMilliseconds(0x713);
+				o.ClientTimeoutInterval = wait;
+				o.HandshakeTimeout = wait;
+				o.KeepAliveInterval = wait;
+				o.EnableDetailedErrors = true;
+			});
 			services.AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" }));
 			services.AddRazorPages();
 			services.Configure<KestrelServerOptions>(o =>
@@ -54,7 +63,7 @@ namespace ShareInvest
 				ep.MapControllers();
 				ep.MapHub<MessageHub>("/hub/message");
 				ep.MapHub<BalanceHub>("/hub/balance");
-				ep.MapHub<HermesHub>("/hub/hermes");
+				ep.MapHub<HermesHub>("/hub/hermes", o => o.Transports = HttpTransportType.LongPolling);
 				ep.MapFallbackToFile("index.html");
 			});
 		}

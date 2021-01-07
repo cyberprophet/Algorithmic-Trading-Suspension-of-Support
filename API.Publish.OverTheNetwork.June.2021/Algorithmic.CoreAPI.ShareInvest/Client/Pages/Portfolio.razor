@@ -46,16 +46,13 @@
 									<tbody>
 										<tr>
 											@{
-												bool empty = bal.Quantity.Length == 1 && bal.Quantity[0] is '0', loss = bal.Revenue[0] is '-' && bal.Rate[0] is '-',
-													trend = string.IsNullOrEmpty(bal.Trend) is false && bal.Trend.CompareTo(bal.Current) < 0,
-													separation = string.IsNullOrEmpty(bal.Separation) is false && bal.Separation[0] is '-';
-												ConsoleColor color = loss ? ConsoleColor.Blue : ConsoleColor.Red,
-													tc = trend ? ConsoleColor.Blue : ConsoleColor.Red, sc = separation ? ConsoleColor.Blue : ConsoleColor.Red;
+												bool empty = bal.Quantity.Length == 1 && bal.Quantity[0] is '0', loss = empty is false && bal.Revenue[0] is '-' && bal.Rate[0] is '-', trend = string.IsNullOrEmpty(bal.Trend) is false && bal.Trend.CompareTo(bal.Current) < 0, separation = string.IsNullOrEmpty(bal.Separation) is false && bal.Separation[0] is '-';
+												ConsoleColor color = loss ? ConsoleColor.Blue : ConsoleColor.Red, tc = trend ? ConsoleColor.Blue : ConsoleColor.Red, sc = separation ? ConsoleColor.Blue : ConsoleColor.Red;
 												string revenue = loss ? bal.Revenue[1..] : bal.Revenue, rate = loss ? bal.Rate[1..] : bal.Rate;
 
 												<td>@(empty ? string.Empty : bal.Quantity)</td>
 												<td>@(empty ? string.Empty : bal.Purchase)</td>
-												<td>@bal.Current</td>
+												<td>@(bal.Current[0] is '-' ? bal.Current[1..] : bal.Current)</td>
 												<td style="color: @color">@(empty ? string.Empty : revenue)</td>
 												<td style="color: @color">@(empty ? string.Empty : rate)</td>
 												<td style="color: @tc">@(trend && bal.Trend[0] is '-' ? bal.Trend[1..] : bal.Trend)</td>

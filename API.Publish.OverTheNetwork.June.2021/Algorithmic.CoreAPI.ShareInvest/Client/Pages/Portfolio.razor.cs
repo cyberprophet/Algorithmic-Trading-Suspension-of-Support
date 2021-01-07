@@ -10,30 +10,31 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 
-using ShareInvest.Catalog.Models;
-
 namespace ShareInvest.Pages
 {
 	public partial class PortfolioBase : ComponentBase, IAsyncDisposable
 	{
-		public async ValueTask DisposeAsync() => await Hub.DisposeAsync();
+		public async ValueTask DisposeAsync()
+		{
+			await Balance.DisposeAsync();
+			await Hermes.DisposeAsync();
+		}
 		protected override async Task OnInitializedAsync()
 		{
-			Key = new Dictionary<string, int>();
-			Enumerable = new Dictionary<int, Catalog.Models.Portfolio>();
-			Dictionary = new Dictionary<string, Queue<Consensus>>();
-			Quarter = new string[6];
 			var index = 0;
+			Key = new Dictionary<string, int>();
+			Dictionary = new Dictionary<string, Queue<Catalog.Models.Consensus>>();
+			Enumerable = new Dictionary<int, Catalog.Models.Portfolio>();
 
-			foreach (var con in await Http.GetFromJsonAsync<Consensus[]>(Crypto.Security.GetRoute("Consensus")))
+			foreach (var con in await Http.GetFromJsonAsync<Catalog.Models.Consensus[]>(Crypto.Security.GetRoute("Consensus")))
 			{
-				if (Dictionary.TryGetValue(con.Code, out Queue<Consensus> queue))
+				if (Dictionary.TryGetValue(con.Code, out Queue<Catalog.Models.Consensus> queue))
 				{
 					queue.Enqueue(con);
 					Dictionary[con.Code] = queue;
 				}
 				else
-					Dictionary[con.Code] = new Queue<Consensus>(new Consensus[] { con });
+					Dictionary[con.Code] = new Queue<Catalog.Models.Consensus>(new Catalog.Models.Consensus[] { con });
 			}
 			foreach (var consensus in Dictionary.OrderBy(o => o.Key))
 			{
@@ -47,6 +48,7 @@ namespace ShareInvest.Pages
 				};
 			}
 			index = 0;
+			Quarter = new string[6];
 
 			foreach (var near in Base.FindTheNearestQuarter(DateTime.Now))
 				Quarter[index++] = ConvertFormat(near);
@@ -55,16 +57,12 @@ namespace ShareInvest.Pages
 		{
 			if (render)
 			{
-				Hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
-				Hub.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) =>
-				{
-					if (Enumerable.TryGetValue(Key[balance.Code], out Catalog.Models.Portfolio port))
-					{
-						port.Balance = balance;
-						StateHasChanged();
-					}
-				});
-				await Hub.StartAsync();
+				Balance = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
+				Hermes = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/hermes")).Build();
+				Balance.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) => StateHasChanged(balance));
+				Hermes.On<Catalog.Models.Message>("ReceiveCurrentMessage", (current) => StateHasChanged(current));
+				await Balance.StartAsync();
+				await Hermes.StartAsync();
 			}
 		}
 		protected internal void OnClick(int sender, MouseEventArgs _)
@@ -189,15 +187,60 @@ namespace ShareInvest.Pages
 			else
 				await WaitForTheScrollToMovement(index, pixel);
 		}
-		HubConnection Hub
+		void StateHasChanged<T>(T param) where T : struct
+		{
+			switch (param)
+			{
+				case Catalog.Models.Balance balance when Enumerable.TryGetValue(Key[balance.Code], out Catalog.Models.Portfolio port):
+					port.Balance = balance;
+					break;
+
+				case Catalog.Models.Message message when Enumerable.TryGetValue(Key[message.Key], out Catalog.Models.Portfolio port) && int.TryParse(message.Convey, out int price):
+					if (string.IsNullOrEmpty(port.Balance.Quantity) || port.Balance.Quantity[0] is '0')
+						port.Balance = new Catalog.Models.Balance
+						{
+							Code = message.Key,
+							Current = price.ToString("N0"),
+							Quantity = "0"
+						};
+					else if (int.TryParse(port.Balance.Quantity, out int quantity) && quantity > 0 && int.TryParse(port.Balance.Purchase, out int purchase))
+						port.Balance = new Catalog.Models.Balance
+						{
+							Code = message.Key,
+							Name = port.Balance.Name,
+							Quantity = port.Balance.Quantity,
+							Purchase = port.Balance.Purchase,
+							Current = price.ToString("N0"),
+							Revenue = ((Math.Abs(price) - purchase) * quantity).ToString("C0"),
+							Rate = (price / (double)purchase - 1).ToString("P2"),
+							Separation = port.Balance.Separation,
+							Trend = port.Balance.Trend
+						};
+					break;
+			}
+			if (Count++ > 0x800)
+			{
+				Count = uint.MinValue;
+				StateHasChanged();
+			}
+		}
+		HubConnection Balance
 		{
 			get; set;
 		}
-		Dictionary<string, Queue<Consensus>> Dictionary
+		HubConnection Hermes
+		{
+			get; set;
+		}
+		Dictionary<string, Queue<Catalog.Models.Consensus>> Dictionary
 		{
 			get; set;
 		}
 		Dictionary<string, int> Key
+		{
+			get; set;
+		}
+		uint Count
 		{
 			get; set;
 		}

@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
@@ -10,6 +11,10 @@ namespace ShareInvest.Pages
 	{
 		[Inject]
 		protected internal HttpClient Http
+		{
+			get; set;
+		}
+		protected internal DateTime Temp
 		{
 			get; set;
 		}

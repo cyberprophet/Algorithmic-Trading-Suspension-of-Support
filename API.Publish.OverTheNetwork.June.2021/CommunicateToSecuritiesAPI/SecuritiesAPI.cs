@@ -32,11 +32,11 @@ namespace ShareInvest
 		}
 		void OnReceiveInformationTheDay() => BeginInvoke(new Action(async () =>
 		{
-			if (Codes.Count > 0)
+			if (Codes.TryDequeue(out string str))
 			{
 				var now = DateTime.Now;
 
-				if (await api.GetContextAsync(Codes.Dequeue()) is Retention retention && string.IsNullOrEmpty(retention.Code) is false)
+				if (string.IsNullOrEmpty(str) is false && await api.GetContextAsync(str) is Retention retention && string.IsNullOrEmpty(retention.Code) is false)
 				{
 					if (string.IsNullOrEmpty(retention.LastDate) is false && now.ToString(Base.DateFormat).Equals(retention.LastDate.Substring(0, 6)) || string.IsNullOrEmpty(retention.Code) is false && retention.LastDate is null)
 						OnReceiveInformationTheDay();
@@ -141,7 +141,7 @@ namespace ShareInvest
 					};
 					if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) is false)
 					{
-						connect.Writer.WriteLine(string.Concat(param.GetType().Name, '|', param.Code));
+						connect.Writer.WriteLine(string.Concat(param.GetType().Name, '|', param.Code, '|', param.Price));
 						collection[tr.Item1] = param;
 
 						if (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[1] is '0')
@@ -440,7 +440,7 @@ namespace ShareInvest
 					return;
 
 				case DialogResult.Retry:
-					connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), Base.CheckIfMarketDelay(now) ? "|0;095000;" : "|0;085000;", now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation)));
+					connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), Base.CheckIfMarketDelay(now) ? "|3;100000;000000" : "|3;090000;000000"));
 					break;
 
 				case DialogResult.Abort:

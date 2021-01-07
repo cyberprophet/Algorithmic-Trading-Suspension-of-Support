@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,12 +10,12 @@ namespace ShareInvest.Hubs
 {
 	public class HermesHub : Hub
 	{
-		public async Task SendMessage(Message message) => await Clients.All.SendAsync("ReceiveMessage", message);
+		public async Task SendMessage(Message message) => await Clients.All.SendAsync("ReceiveCurrentMessage", message);
 		public async void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e)
 		{
 			switch (e.Convey)
 			{
-				case Message message:
+				case Message message when Clients is not null:
 					await SendMessage(message);
 					return;
 
@@ -23,9 +24,13 @@ namespace ShareInvest.Hubs
 					return;
 
 				case short:
+					Dispose();
+					Security.User.Clear();
 					Security.Host.Dispose();
 					return;
 			}
 		}
+		public override async Task OnConnectedAsync() => await base.OnConnectedAsync();
+		public override async Task OnDisconnectedAsync(Exception exception) => await base.OnDisconnectedAsync(exception);
 	}
 }
