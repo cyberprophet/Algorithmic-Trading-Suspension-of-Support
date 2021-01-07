@@ -24,7 +24,7 @@ namespace ShareInvest.Controllers
 					var temp = new string[param.Length];
 
 					for (int i = 0; i < param.Length; i++)
-						temp[i] = param.Number[i];//					Crypto.Security.Decipher();
+						temp[i] = Crypto.Security.Decipher(param.Number[i]);
 
 					Security.User[param.Identity] = new User
 					{

@@ -151,6 +151,7 @@ namespace ShareInvest.OpenAPI
 		{
 			get; private set;
 		}
+		public string SendErrorMessage(short error) => API.SendErrorMessage(error);
 		public string Securities(string param) => axAPI.GetLoginInfo(param).Trim();
 		public ISendSecuritiesAPI<SendSecuritiesAPI> InputValueRqData(string name, string param)
 		{

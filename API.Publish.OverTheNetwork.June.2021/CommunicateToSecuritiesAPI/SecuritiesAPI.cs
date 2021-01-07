@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Threading;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
@@ -88,8 +87,18 @@ namespace ShareInvest
 					OnReceiveInformationTheDay();
 			}
 			else
-				Dispose(0x1CE3);
+				Dispose(connect as Control);
 		}));
+		void CheckTheInformationReceivedOnTheDay()
+		{
+			if (Codes.TryDequeue(out string code))
+			{
+				if (string.IsNullOrEmpty(code) is false)
+					(connect as OpenAPI.ConnectAPI).InputValueRqData(string.Concat(instance, code.Length == 8 ? (code[0] > '1' ? "Opt50068" : "OPT50030") : "Opt10081"), string.Concat(code, ';', DateTime.Now.ToString(code.Length == 6 ? Base.LongDateFormat : Base.DateFormat))).Send += OnReceiveSecuritiesAPI;
+			}
+			else
+				Dispose(connect as Control);
+		}
 		void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(async () =>
 		{
 			switch (e.Convey)
@@ -124,7 +133,7 @@ namespace ShareInvest
 							break;
 
 						case Catalog.OpenAPI.Operation.장종료_시간외종료:
-
+							Dispose(connect as Control);
 							break;
 					}
 					notifyIcon.Text = Enum.GetName(typeof(Catalog.OpenAPI.Operation), operation.Item1);
@@ -149,9 +158,9 @@ namespace ShareInvest
 					}
 					if (param.Code.Length == 8)
 					{
-						if (Codes.TryPeek(out string code) && code.Length > 8)
+						if (Codes.TryPeek(out string code) && code.Length > 8 && Codes.TryDequeue(out string dequeue))
 						{
-							var temp = Codes.Dequeue().Split('_');
+							var temp = dequeue.Split('_');
 							(connect as OpenAPI.ConnectAPI).RemoveValueRqData(temp[0], temp[^1]).Send -= OnReceiveSecuritiesAPI;
 						}
 						(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, param.Code).Send -= OnReceiveSecuritiesAPI;
@@ -208,7 +217,8 @@ namespace ShareInvest
 						var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.", charts.Item1.Length == 6 && collection.TryGetValue(charts.Item1, out Codes mc) ? mc.Name : charts.Item1, Codes.Count.ToString("N0"));
 						notifyIcon.Text = message.Length < 0x40 ? message : string.Format("Still {0} Stocks to be Collect.", Codes.Count.ToString("N0"));
 					}
-					break;
+					OnReceiveInformationTheDay();
+					return;
 
 				case string[] accounts:
 					if (await server.PostContextAsync(Crypto.Security.Encrypt(new Account
@@ -221,6 +231,7 @@ namespace ShareInvest
 					}, accounts.Length > 0)) is 0xC8)
 					{
 						this.connect.Account = new string[2];
+						(this.connect.API as OpenAPI.ConnectAPI).Send += OnReceiveSecuritiesAPI;
 						var connect = this.connect as OpenAPI.ConnectAPI;
 						connect.Real.Send += OnReceiveSecuritiesAPI;
 						Security.SetKey(this.connect.Securities("USER_ID"));
@@ -240,10 +251,33 @@ namespace ShareInvest
 					return;
 
 				case short error:
-					Dispose(connect as Control);
+					var hermes = (connect as OpenAPI.ConnectAPI).SendErrorMessage(error);
+
+					if (string.IsNullOrEmpty(hermes) is false && await server.PostContextAsync(new Catalog.Models.Message { Convey = string.Concat("[Error] ", hermes, '(', Math.Abs(error), ')'), Key = Security.Key }) is int)
+						notifyIcon.Text = hermes;
+
+					if (error == -0x6A)
+						Dispose(connect as Control);
+
+					return;
+
+				case Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>> models:
+					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
+
+					while (models.Item2.TryPop(out Catalog.Models.RevisedStockPrice revise))
+						if (await api.PostContextAsync(revise) is int rsp && rsp != 0xC8)
+							Base.SendMessage(sender.GetType(), models.Item1, models.Item2.Count);
+
+					while (models.Item3.TryDequeue(out Stocks stock))
+						if (await api.PostContextAsync(stock) is string confirm && string.IsNullOrEmpty(confirm) is false)
+						{
+							Base.SendMessage(sender.GetType(), models.Item1, stock.Date);
+							var str = string.Format("{0} of the {1} data have been deleted.", collection.TryGetValue(models.Item1, out Codes codes) ? codes.Name : models.Item1, confirm);
+							notifyIcon.Text = str.Length < 0x40 ? str : string.Concat(models.Item1, '_', confirm);
+						}
+					CheckTheInformationReceivedOnTheDay();
 					return;
 			}
-			OnReceiveInformationTheDay();
 		}));
 		void RequestBalanceInquiry()
 		{
@@ -264,10 +298,7 @@ namespace ShareInvest
 		void SendReservation(DialogResult result)
 		{
 			if (DialogResult.OK.Equals(result))
-			{
-				var now = DateTime.Now;
-				connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), now.Hour < 0x11 && Base.CheckIfMarketDelay(now) ? "|0;095500;" : "|0;085500;", now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation)));
-			}
+				worker.RunWorkerAsync();
 		}
 		void WorkerDoWork(object sender, DoWorkEventArgs e)
 		{
@@ -324,7 +355,7 @@ namespace ShareInvest
 				var remain = new DateTime(now.Year, now.Month, now.Day, sat ? 0xA : 9, 0, 0) - DateTime.Now;
 				notifyIcon.Text = Base.GetRemainingTime(remain);
 
-				if (connect.Start is false && remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
+				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
 				{
 					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
@@ -383,13 +414,6 @@ namespace ShareInvest
 				{
 					case DialogResult.OK:
 						PreventsFromRunningAgain(e);
-
-						if (e.Cancel is false && connect.Writer is not null)
-						{
-							Dispose(0xF75);
-
-							return;
-						}
 						break;
 
 					case DialogResult.Cancel:
@@ -416,15 +440,13 @@ namespace ShareInvest
 		void Dispose(Control connect)
 		{
 			if (connect is Control)
-				connect.Dispose();
+			{
+				if (this.connect.ConnectToReceiveRealTime.IsConnected)
+					this.connect.Writer.WriteLine(string.Format("장시작시간|{0}|{1};{2};{3}", GetType(), (int)Catalog.OpenAPI.Operation.장종료_시간외종료, api.IsAdministrator, Catalog.OpenAPI.Operation.장종료_시간외종료));
 
+				connect.Dispose();
+			}
 			Dispose();
-		}
-		void Dispose(int milliseconds)
-		{
-			connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), "|d;", DateTime.Now.ToString("HH:mm:ss.ffff"), ';', typeof(Catalog.OpenAPI.Operation)));
-			Thread.Sleep(milliseconds);
-			Dispose(connect as Control);
 		}
 		void RequestTheMissingInformation()
 		{

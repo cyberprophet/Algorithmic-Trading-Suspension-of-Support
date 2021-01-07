@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR;
@@ -24,9 +25,22 @@ namespace ShareInvest.Hubs
 					return;
 
 				case short:
-					Dispose();
-					Security.User.Clear();
-					Security.Host.Dispose();
+					var now = DateTime.Now;
+
+					if (DayOfWeek.Sunday.Equals(now.DayOfWeek) && now.Hour < 4)
+					{
+						Dispose();
+						Security.User.Clear();
+						Security.Host.Dispose();
+					}
+					else
+					{
+						await Task.Delay(0x7CE7);
+						GC.Collect();
+
+						if (Base.IsDebug is false)
+							Process.Start(Security.StartInfo);
+					}
 					return;
 			}
 		}

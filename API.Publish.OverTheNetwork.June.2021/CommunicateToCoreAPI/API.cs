@@ -189,7 +189,7 @@ namespace ShareInvest.Client
 		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, Method.POST)).AddJsonBody(param, Security.content_type), source.Token);
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.POST).AddJsonBody(param, Security.content_type), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 					switch (param)
@@ -202,6 +202,7 @@ namespace ShareInvest.Client
 
 						case Message:
 						case Account:
+						case Catalog.Models.RevisedStockPrice:
 							return (int)response.StatusCode;
 					}
 			}

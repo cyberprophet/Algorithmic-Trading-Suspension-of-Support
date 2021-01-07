@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Runtime.Versioning;
 using System.Security.Principal;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
@@ -25,10 +26,12 @@ namespace ShareInvest
 		public Pipe(string name, string type)
 		{
 			if (type.Equals(typeof(Security).Name))
+			{
 				price = new Dictionary<string, string>();
-
+				this.name = name;
+			}
 			Collection = new Dictionary<string, Queue<Collect>>(0x800);
-			client = new NamedPipeClientStream(".", name, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+			Initialize();
 		}
 		public string Message
 		{
@@ -36,21 +39,22 @@ namespace ShareInvest
 		}
 		public void StartProgress() => new Task(async () =>
 		{
-			Message = Base.TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected);
-			await client.ConnectAsync();
+			Message = Base.TellTheClientConnectionStatus(Client.GetType().Name, Client.IsConnected);
+			await Client.ConnectAsync();
 
-			if (client.IsConnected)
-				OnReceivePipeClientMessage(client);
+			if (Client.IsConnected)
+				OnReceivePipeClientMessage();
 
 		}).Start();
-		void OnReceivePipeClientMessage(NamedPipeClientStream client)
+		void Initialize() => Client = new NamedPipeClientStream(".", name, PipeDirection.In, PipeOptions.Asynchronous, TokenImpersonationLevel.Impersonation);
+		void OnReceivePipeClientMessage()
 		{
 			DateTime today = DateTime.Now, now = today.Hour > 0xF ? today.AddDays(Base.IsDebug ? 0 : 1) : today;
 			bool collection = false, stocks = false, futures = false, sq = true, fq = true, sat = Base.CheckIfMarketDelay(now);
-			using (var sr = new StreamReader(client))
+			using (var sr = new StreamReader(Client))
 				try
 				{
-					while (client.IsConnected)
+					while (Client.IsConnected)
 					{
 						var param = sr.ReadLine();
 
@@ -172,6 +176,7 @@ namespace ShareInvest
 												break;
 
 											case Catalog.OpenAPI.Operation.장종료_시간외종료:
+												price.Clear();
 												Collection.Clear();
 												GC.Collect();
 												break;
@@ -190,13 +195,24 @@ namespace ShareInvest
 				}
 				finally
 				{
-					client.Close();
-					client.Dispose();
-					Send?.Invoke(this, new SendSecuritiesAPI(Base.TellTheClientConnectionStatus(client.GetType().Name, client.IsConnected)));
+					Client.Close();
+					Client.Dispose();
+					Send?.Invoke(this, new SendSecuritiesAPI(Base.TellTheClientConnectionStatus(Client.GetType().Name, Client.IsConnected)));
 				}
+			if (price is not null && string.IsNullOrEmpty(name) is false)
+			{
+				Thread.Sleep(0xC67);
+				Initialize();
+				Thread.Sleep(0xC97);
+				StartProgress();
+			}
 			Send?.Invoke(this, new SendSecuritiesAPI((short)-0x6A));
 		}
+		NamedPipeClientStream Client
+		{
+			get; set;
+		}
+		readonly string name;
 		readonly Dictionary<string, string> price;
-		readonly NamedPipeClientStream client;
 	}
 }

@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
 using AxKHOpenAPILib;
 
 using ShareInvest.DelayRequest;
+using ShareInvest.EventHandler;
 using ShareInvest.Interface;
 using ShareInvest.OpenAPI.Catalog;
 
@@ -46,28 +48,16 @@ namespace ShareInvest.OpenAPI
 			for (i = 0; i < l; i++)
 				axAPI.SetInputValue(count[i], value[i]);
 
-			SendErrorMessage(param, axAPI.CommRqData(param.RQName, param.TrCode, param.PrevNext, param.ScreenNo));
+			ReceiveErrorMessage(axAPI.CommRqData(param.RQName, param.TrCode, param.PrevNext, param.ScreenNo));
 		}));
-		internal void InputValueRqData(int nCodeCount, TR param)
-			=> request.RequestTrData(new Task(()
-				=> SendErrorMessage(param, axAPI.CommKwRqData(param.Value, 0, nCodeCount, param.PrevNext, param.RQName, param.ScreenNo))));
-		internal void SendErrorMessage(TR tr, int error)
+		internal void InputValueRqData(int nCodeCount, TR param) => request.RequestTrData(new Task(() => ReceiveErrorMessage(axAPI.CommKwRqData(param.Value, 0, nCodeCount, param.PrevNext, param.RQName, param.ScreenNo))));
+		internal void ReceiveErrorMessage(int error)
 		{
-			if (error < 0 && this.error.TryGetValue(error, out string param))
-			{
-				switch (error)
-				{
-					case -0x6A:
-						tr.SendErrorMessage((short)error);
-						return;
-				}
-				Base.SendMessage(tr.GetType(), param, error);
-			}
+			if (error < 0 && this.error.ContainsKey(error))
+				Send?.Invoke(this, new SendSecuritiesAPI((short)error));
 		}
-		internal void SendOrder(ISendOrder o)
-			=> request.RequestTrData(new Task(()
-				=> SendErrorMessage(axAPI.SendOrder(axAPI.GetMasterCodeName(o.Code), LookupScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
-		internal string SendErrorMessage(int code) => error[code];
+		internal void SendOrder(ISendOrder o) => request.RequestTrData(new Task(() => ReceiveErrorMessage(axAPI.SendOrder(axAPI.GetMasterCodeName(o.Code), LookupScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
+		internal string SendErrorMessage(short code) => error[code];
 		internal HashSet<TR> TR
 		{
 			get; private set;
@@ -158,7 +148,7 @@ namespace ShareInvest.OpenAPI
 			{ -103, "개인방화벽 실패" },
 			{ -104, "메모리 보호실패" },
 			{ -105, "함수입력값 오류" },
-			{ -106, "통신연결 종료" },
+			{ -0x6A, "통신연결 종료" },
 			{ -107, "보안모듈 오류" },
 			{ -108, "공인인증 로그인 필요" },
 			{ -200, "시세조회 과부하" },
@@ -186,5 +176,6 @@ namespace ShareInvest.OpenAPI
 			{ -340, "계좌정보 없음" },
 			{ -500, "종목코드 없음" }
 		};
+		public event EventHandler<SendSecuritiesAPI> Send;
 	}
 }

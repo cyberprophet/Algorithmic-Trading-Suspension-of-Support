@@ -55,7 +55,6 @@ namespace ShareInvest.OpenAPI
             }
             return (sTemp, null);
         }
-        internal abstract void SendErrorMessage(short error);
         internal abstract void OnReceiveTrData(_DKHOpenAPIEvents_OnReceiveTrDataEvent e);
         internal abstract string ID
         {
