@@ -159,6 +159,7 @@ namespace ShareInvest.OpenAPI
 			ctor.API = axAPI;
 
 			if (Enum.TryParse(name[0x1C..], out CatalogTR tr) && API?.TR.Add(ctor))
+			{
 				switch (tr)
 				{
 					case CatalogTR.Opt10079:
@@ -173,7 +174,6 @@ namespace ShareInvest.OpenAPI
 						ctor.Value = param;
 						ctor.RQName = param;
 						API?.InputValueRqData(ctor);
-						Count++;
 						break;
 
 					case CatalogTR.Opt50028:
@@ -188,7 +188,6 @@ namespace ShareInvest.OpenAPI
 					case CatalogTR.OPTKWFID:
 						ctor.Value = param;
 						API?.InputValueRqData(param.Split(';').Length, ctor);
-						Count++;
 						break;
 
 					case CatalogTR.Opt10081:
@@ -196,7 +195,6 @@ namespace ShareInvest.OpenAPI
 						ctor.RQName = str;
 						ctor.Value = string.Concat(param.Substring(0, 6), ';', str);
 						API?.InputValueRqData(ctor);
-						Count++;
 						break;
 
 					case CatalogTR.Opw00005:
@@ -205,7 +203,16 @@ namespace ShareInvest.OpenAPI
 						ctor.Value = param;
 						API?.InputValueRqData(ctor);
 						break;
+
+					case CatalogTR.OPT50030:
+					case CatalogTR.Opt50068:
+						ctor.Value = param;
+						ctor.RQName = param[9..];
+						API?.InputValueRqData(ctor);
+						break;
 				}
+				Count++;
+			}
 			return ctor;
 		}
 		public ISendSecuritiesAPI<SendSecuritiesAPI> RemoveValueRqData(string name, string param)

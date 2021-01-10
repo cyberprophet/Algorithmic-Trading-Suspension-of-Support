@@ -28,12 +28,12 @@ namespace ShareInvest
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddSignalR(o =>
+			services.AddSignalR().AddHubOptions<HermesHub>(o =>
 			{
-				var wait = TimeSpan.FromMilliseconds(0x713);
-				o.ClientTimeoutInterval = wait;
-				o.HandshakeTimeout = wait;
-				o.KeepAliveInterval = wait;
+				var wait = 0x2800 * 3;
+				o.ClientTimeoutInterval = TimeSpan.FromMilliseconds(wait);
+				o.HandshakeTimeout = TimeSpan.FromMilliseconds(wait / 3);
+				o.KeepAliveInterval = TimeSpan.FromMilliseconds(wait / 3);
 				o.EnableDetailedErrors = true;
 			});
 			services.AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" }));
@@ -43,9 +43,9 @@ namespace ShareInvest
 				o.ListenAnyIP(0x1BDF);
 				o.Limits.MaxRequestBodySize = int.MaxValue;
 			})
-				.AddTransient<BalanceHub>()
-				.AddTransient<MessageHub>()
 				.AddSingleton<HermesHub>()
+				.AddSingleton<BalanceHub>()
+				.AddSingleton<MessageHub>()
 				.AddScoped(container => new ClientIpCheckActionFilter(Configuration["AdminSafeList"], container.GetRequiredService<ILoggerFactory>().CreateLogger<ClientIpCheckActionFilter>()))
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
 		}
@@ -57,13 +57,13 @@ namespace ShareInvest
 			else
 				app.UseMvc().UseExceptionHandler("/Error");
 
-			app.UseBlazorFrameworkFiles().UseStaticFiles().UseRouting().UseEndpoints(ep =>
+			app.UseResponseCompression().UseBlazorFrameworkFiles().UseStaticFiles().UseRouting().UseEndpoints(ep =>
 			{
 				ep.MapRazorPages();
 				ep.MapControllers();
 				ep.MapHub<MessageHub>("/hub/message");
 				ep.MapHub<BalanceHub>("/hub/balance");
-				ep.MapHub<HermesHub>("/hub/hermes", o => o.Transports = HttpTransportType.LongPolling);
+				ep.MapHub<HermesHub>("/hub/hermes", o => o.Transports = HttpTransportType.WebSockets | HttpTransportType.LongPolling);
 				ep.MapFallbackToFile("index.html");
 			});
 		}

@@ -15,7 +15,7 @@ namespace ShareInvest
 			var storage = new Dictionary<uint, string>(0x800);
 
 			while (collection.TryDequeue(out Collect c))
-				if (string.IsNullOrEmpty(c.Time) is false)
+				if (string.IsNullOrEmpty(c.Time) is false && string.IsNullOrEmpty(c.Datum) is false)
 				{
 					string index = 0.ToString("D3"), peek = collection.Count > 0 && collection.TryPeek(out Collect p) && string.IsNullOrEmpty(p.Time) is false ? p.Time : c.Time;
 
@@ -41,7 +41,7 @@ namespace ShareInvest
 				});
 			var max = storage.Max(o => o.Key);
 
-			return (queue, storage.Min(o => o.Key), max, max > 152959 && code.Length == 6 || max > 154459 && code.Length == 8 ? storage[max].Split(';')[0][1..] : string.Empty);
+			return (queue, storage.Min(o => o.Key), max, max > 0x91DF818 && code.Length == 6 || max > 0x934DB78 && code.Length == 8 ? (storage[max] is null ? string.Empty : storage[max].Split(';')[0][1..]) : string.Empty);
 		}
 		internal Sort(string code) => this.code = code;
 		readonly string code;

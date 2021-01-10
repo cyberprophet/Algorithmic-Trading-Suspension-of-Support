@@ -1,4 +1,6 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
+﻿@inherits NavMenuBase
+
+<div class="top-row pl-4 navbar navbar-dark">
 	<a class="navbar-brand" href="">Algorithmic Trading</a>
 	<button class="navbar-toggler" @onclick="ToggleNavMenu">
 		<span class="navbar-toggler-icon"></span>
@@ -8,7 +10,7 @@
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
 	<ul class="nav flex-column">
 		<li class="nav-item px-3">
-			<NavLink class="nav-link" href="index">
+			<NavLink class="nav-link" href="" Match="NavLinkMatch.All">
 				<span class="oi oi-account-login" aria-hidden="true"></span> Account
 			</NavLink>
 		</li>
@@ -18,7 +20,7 @@
 			</NavLink>
 		</li>
 		<li class="nav-item px-3">
-			<NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+			<NavLink class="nav-link" href="index">
 				<span class="oi oi-action-redo" aria-hidden="true"></span> Log
 			</NavLink>
 		</li>
@@ -29,9 +31,3 @@
 		</li>
 	</ul>
 </div>
-
-@code {
-	bool collapseNavMenu = true;
-	string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-	void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
-}

@@ -50,12 +50,11 @@ namespace ShareInvest.OpenAPI.Catalog
 			{
 				var temp = base.OnReceiveTrData(opSingle, opMutiple, e);
 				var tr = Connect.GetInstance().TR.First(o => o.GetType().Name[1..].Equals(e.sTrCode[1..]) && o.RQName.Equals(e.sRQName));
+				var date = DateTime.Now;
 
 				while (temp.Item2.TryDequeue(out string[] param))
 				{
-					var date = DateTime.Now.AddYears(-1).ToString(Base.LongDateFormat);
-
-					if (param[4].CompareTo(date) > 0)
+					if (param[4].CompareTo(date.AddYears(-1).ToString(Base.LongDateFormat)) > 0)
 					{
 						if (string.IsNullOrEmpty(param[8]) is false && int.TryParse(param[8], out int revise) && param[9].Equals("0.00") is false)
 							storage.Push(new RevisedStockPrice
@@ -67,16 +66,17 @@ namespace ShareInvest.OpenAPI.Catalog
 								Date = param[4][2..],
 								Price = param[1]
 							});
-						confirm.Enqueue(new Stocks
-						{
-							Code = temp.Item1[0],
-							Date = param[4][2..],
-							Price = param[6],
-							Retention = param[7],
-							Volume = int.TryParse(param[9], out int rate) ? rate : 0
-						});
+						if (param[4].CompareTo(date.AddMonths(-3).ToString(Base.LongDateFormat)) > 0)
+							confirm.Enqueue(new Stocks
+							{
+								Code = temp.Item1[0],
+								Date = param[4][2..],
+								Price = param[6],
+								Retention = param[7],
+								Volume = int.TryParse(param[9].Replace(".", string.Empty), out int rate) ? rate : 0
+							});
 					}
-					else if (param[4].CompareTo(date) < 0)
+					else if (param[4].CompareTo(date.AddYears(-1).ToString(Base.LongDateFormat)) < 0)
 						next = 0;
 				}
 				if (next > 0)

@@ -37,11 +37,13 @@ namespace ShareInvest.OpenAPI.Catalog
 					Delay.Milliseconds = 0xE11;
 					break;
 			}
-			if (operation is not null)
-				Send?.Invoke(this, new SendSecuritiesAPI((Operation)operation, param[1], param[^1]));
-
 			if (string.IsNullOrEmpty(param[2]) is false && string.IsNullOrEmpty(param[1]) is false && string.IsNullOrEmpty(param[0]) is false)
+			{
+				if (operation is not null)
+					Send?.Invoke(this, new SendSecuritiesAPI((Operation)operation, param[1], param[^1]));
+
 				Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', param[0], ';', param[1], ';', param[^1]));
+			}
 		}
 		internal override AxKHOpenAPI API
 		{

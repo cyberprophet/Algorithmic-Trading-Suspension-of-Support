@@ -26,10 +26,9 @@ namespace ShareInvest
 		public Pipe(string name, string type)
 		{
 			if (type.Equals(typeof(Security).Name))
-			{
 				price = new Dictionary<string, string>();
-				this.name = name;
-			}
+
+			this.name = name;
 			Collection = new Dictionary<string, Queue<Collect>>(0x800);
 			Initialize();
 		}
@@ -176,7 +175,9 @@ namespace ShareInvest
 												break;
 
 											case Catalog.OpenAPI.Operation.장종료_시간외종료:
-												price.Clear();
+												if (price is not null)
+													price.Clear();
+
 												Collection.Clear();
 												GC.Collect();
 												break;

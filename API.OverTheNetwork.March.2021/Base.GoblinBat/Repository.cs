@@ -22,6 +22,11 @@ namespace ShareInvest
 			if (compress.Item2 == 0)
 				Base.SendMessage(code, typeof(Repository));
 		}
+		public static void KeepOrganizedInStorage(Catalog.Models.Stocks stocks, int count)
+		{
+			using var sw = new StreamWriter(string.Concat(path, @"\", stocks.Code, '_', stocks.Date, extension));
+			sw.WriteLine(string.Concat(stocks.Price, '_', stocks.Retention, '_', count));
+		}
 		public static (string, bool) RetrieveSavedMaterial(Catalog.Models.Loading loading)
 		{
 			string storage = Path.Combine(path, loading.Code, loading.Year.ToString("D4"), loading.Month.ToString("D2")), material,

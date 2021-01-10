@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
@@ -10,6 +11,7 @@ using ShareInvest.Catalog.Models;
 using ShareInvest.Client;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
+using ShareInvest.Interface.OpenAPI;
 
 namespace ShareInvest
 {
@@ -93,7 +95,10 @@ namespace ShareInvest
 		{
 			if (Codes.TryDequeue(out string code))
 			{
-				if (string.IsNullOrEmpty(code) is false)
+				if (string.IsNullOrEmpty(code))
+					CheckTheInformationReceivedOnTheDay();
+
+				else
 					(connect as OpenAPI.ConnectAPI).InputValueRqData(string.Concat(instance, code.Length == 8 ? (code[0] > '1' ? "Opt50068" : "OPT50030") : "Opt10081"), string.Concat(code, ';', DateTime.Now.ToString(code.Length == 6 ? Base.LongDateFormat : Base.DateFormat))).Send += OnReceiveSecuritiesAPI;
 			}
 			else
@@ -101,6 +106,8 @@ namespace ShareInvest
 		}
 		void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(async () =>
 		{
+			var now = DateTime.Now;
+
 			switch (e.Convey)
 			{
 				case Dictionary<string, string> chejan:
@@ -113,15 +120,23 @@ namespace ShareInvest
 					switch (operation.Item1)
 					{
 						case Catalog.OpenAPI.Operation.장시작전:
+							switch (operation.Item2[2..])
+							{
+								case reservation:
+									RequestBalanceInquiry();
+									return;
 
+								case construction:
+									return;
+							}
 							break;
 
 						case Catalog.OpenAPI.Operation.장시작:
 
 							break;
 
-						case Catalog.OpenAPI.Operation.장마감전_동시호가:
-
+						case Catalog.OpenAPI.Operation.장마감전_동시호가 when before_market_closing.Equals(operation.Item2[2..]):
+							RequestBalanceInquiry();
 							break;
 
 						case Catalog.OpenAPI.Operation.장마감:
@@ -231,9 +246,9 @@ namespace ShareInvest
 					}, accounts.Length > 0)) is 0xC8)
 					{
 						this.connect.Account = new string[2];
-						(this.connect.API as OpenAPI.ConnectAPI).Send += OnReceiveSecuritiesAPI;
 						var connect = this.connect as OpenAPI.ConnectAPI;
 						connect.Real.Send += OnReceiveSecuritiesAPI;
+						((ISendSecuritiesAPI<SendSecuritiesAPI>)connect.API).Send += OnReceiveSecuritiesAPI;
 						Security.SetKey(this.connect.Securities("USER_ID"));
 
 						foreach (var str in accounts)
@@ -251,9 +266,10 @@ namespace ShareInvest
 					return;
 
 				case short error:
-					var hermes = (connect as OpenAPI.ConnectAPI).SendErrorMessage(error);
+					var send = connect as OpenAPI.ConnectAPI;
+					var hermes = send.SendErrorMessage(error);
 
-					if (string.IsNullOrEmpty(hermes) is false && await server.PostContextAsync(new Catalog.Models.Message { Convey = string.Concat("[Error] ", hermes, '(', Math.Abs(error), ')'), Key = Security.Key }) is int)
+					if (string.IsNullOrEmpty(hermes) is false && await server.PostContextAsync(new Catalog.Models.Message { Convey = string.Format("[{0}] {1}({2})", Math.Abs(error).ToString("D6"), hermes, send.Count.ToString("D4")), Key = Security.Key }) is int)
 						notifyIcon.Text = hermes;
 
 					if (error == -0x6A)
@@ -268,12 +284,27 @@ namespace ShareInvest
 						if (await api.PostContextAsync(revise) is int rsp && rsp != 0xC8)
 							Base.SendMessage(sender.GetType(), models.Item1, models.Item2.Count);
 
-					while (models.Item3.TryDequeue(out Stocks stock))
+					while (models.Item3.TryDequeue(out Stocks stock) && stock.Volume == 0)
 						if (await api.PostContextAsync(stock) is string confirm && string.IsNullOrEmpty(confirm) is false)
 						{
+							Repository.KeepOrganizedInStorage(stock, models.Item3.Count);
 							Base.SendMessage(sender.GetType(), models.Item1, stock.Date);
 							var str = string.Format("{0} of the {1} data have been deleted.", collection.TryGetValue(models.Item1, out Codes codes) ? codes.Name : models.Item1, confirm);
 							notifyIcon.Text = str.Length < 0x40 ? str : string.Concat(models.Item1, '_', confirm);
+						}
+					CheckTheInformationReceivedOnTheDay();
+					return;
+
+				case Tuple<string, Queue<Stocks>> confirm:
+					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, confirm.Item1).Send -= OnReceiveSecuritiesAPI;
+
+					while (confirm.Item2.TryDequeue(out Stocks stock))
+						if (await api.PostContextAsync(stock) is string model && string.IsNullOrEmpty(model) is false)
+						{
+							Repository.KeepOrganizedInStorage(stock, confirm.Item2.Count);
+							Base.SendMessage(sender.GetType(), confirm.Item1, stock.Date);
+							var str = string.Format("{0} of the {1} data have been deleted.", collection.TryGetValue(confirm.Item1, out Codes codes) ? codes.Name : confirm.Item1, model);
+							notifyIcon.Text = str.Length < 0x40 ? str : string.Concat(confirm.Item1, '_', model);
 						}
 					CheckTheInformationReceivedOnTheDay();
 					return;
@@ -336,9 +367,21 @@ namespace ShareInvest
 			}
 			else if (connect.Start)
 			{
-				if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
-					notifyIcon.Text = connect.Securities("USER_NAME");
+				if (now.Hour == 5 && now.Minute < 0xA)
+				{
+					timer.Stop();
+					strip.ItemClicked -= StripItemClicked;
+					Dispose(connect as Control);
 
+					return;
+				}
+				else if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
+				{
+					if (api.IsAdministrator && now.Hour == 0x12)
+						CheckTheInformationReceivedOnTheDay(now, 0xEA61);
+
+					notifyIcon.Text = connect.Securities("USER_NAME");
+				}
 				notifyIcon.Icon = icons[now.Second % 4];
 			}
 			else if (Visible is false && ShowIcon is false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
@@ -448,6 +491,40 @@ namespace ShareInvest
 			}
 			Dispose();
 		}
+		void CheckTheInformationReceivedOnTheDay(DateTime now, int delay) => BeginInvoke(new Action(async () =>
+		{
+			foreach (var key in new[] { "10100000", "20100000" })
+			{
+				await Task.Delay(delay);
+
+				if (await api.PostContextAsync(new Stocks
+				{
+					Code = key,
+					Price = key,
+					Date = now.ToString(Base.DateFormat),
+					Volume = int.MaxValue,
+					Retention = null
+
+				}) is string remove && string.IsNullOrEmpty(remove) is false)
+					Base.SendMessage(GetType(), key[0], remove);
+			}
+			await Task.Delay(delay * (Base.IsDebug ? 1 : 5));
+
+			foreach (var str in collection)
+				if (str.Key.Length == 6 && await api.PostContextAsync(new Stocks
+				{
+					Code = str.Key,
+					Price = str.Value.Price,
+					Date = now.ToString(Base.DateFormat),
+					Volume = int.MaxValue,
+					Retention = null
+
+				}) is string remove && string.IsNullOrEmpty(remove) is false)
+					Base.SendMessage(GetType(), str.Value.Name, remove);
+
+			await Task.Delay(delay);
+			CheckTheInformationReceivedOnTheDay();
+		}));
 		void RequestTheMissingInformation()
 		{
 			var now = DateTime.Now;
@@ -455,19 +532,19 @@ namespace ShareInvest
 			switch (MessageBox.Show(administrator, Text, MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
 			{
 				case DialogResult.Ignore when now.Hour > 0xF:
-					if (Base.IsDebug is false && api.IsAdministrator)
-						(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(0xE11);
-
 					OnReceiveInformationTheDay();
-					return;
+					break;
 
 				case DialogResult.Retry:
 					connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), Base.CheckIfMarketDelay(now) ? "|3;100000;000000" : "|3;090000;000000"));
-					break;
+					return;
 
 				case DialogResult.Abort:
-					return;
+					CheckTheInformationReceivedOnTheDay(now, 0x3000);
+					break;
 			}
+			if (Base.IsDebug is false && api.IsAdministrator)
+				(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(0xE11);
 		}
 		Queue<string> Codes
 		{

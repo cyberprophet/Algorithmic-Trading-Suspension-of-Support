@@ -218,7 +218,7 @@ namespace ShareInvest.Pages
 						};
 					break;
 			}
-			if (Count++ > 0x800)
+			if (Count++ > 0x300)
 			{
 				Count = uint.MinValue;
 				StateHasChanged();

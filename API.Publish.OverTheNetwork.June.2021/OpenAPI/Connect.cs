@@ -8,11 +8,12 @@ using AxKHOpenAPILib;
 using ShareInvest.DelayRequest;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface;
+using ShareInvest.Interface.OpenAPI;
 using ShareInvest.OpenAPI.Catalog;
 
 namespace ShareInvest.OpenAPI
 {
-	class Connect
+	class Connect : ISendSecuritiesAPI<SendSecuritiesAPI>
 	{
 		static string LookupScreenNo
 		{

@@ -204,6 +204,9 @@ namespace ShareInvest.Client
 						case Account:
 						case Catalog.Models.RevisedStockPrice:
 							return (int)response.StatusCode;
+
+						case Stocks:
+							return JsonConvert.DeserializeObject<string>(response.Content);
 					}
 			}
 			catch (Exception ex)
