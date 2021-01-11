@@ -149,7 +149,7 @@ namespace ShareInvest
 
 						case Catalog.OpenAPI.Operation.장종료_시간외종료:
 							Dispose(connect as Control);
-							break;
+							return;
 					}
 					notifyIcon.Text = Enum.GetName(typeof(Catalog.OpenAPI.Operation), operation.Item1);
 					return;
@@ -316,7 +316,7 @@ namespace ShareInvest
 			{
 				if (connect is OpenAPI.ConnectAPI o)
 				{
-					if (connect.Account[^1][^2..].Equals("31"))
+					if (connect.Account[^1] is not null && connect.Account[^1][^2..].Equals("31"))
 					{
 
 					}
@@ -377,7 +377,7 @@ namespace ShareInvest
 				}
 				else if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
 				{
-					if (api.IsAdministrator && now.Hour == 0x12)
+					if (Base.IsDebug is false && api.IsAdministrator && now.Hour > 0x11)
 						CheckTheInformationReceivedOnTheDay(now, 0xEA61);
 
 					notifyIcon.Text = connect.Securities("USER_NAME");
@@ -392,13 +392,13 @@ namespace ShareInvest
 					DayOfWeek.Sunday => now.AddDays(1),
 					DayOfWeek.Saturday => now.AddDays(2),
 					DayOfWeek weeks when weeks.Equals(DayOfWeek.Friday) && now.Hour > (sat ? 9 : 8) => now.AddDays(3),
-					_ => now.Hour > (sat ? 9 : 8) || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))) ? now.AddDays(1) : now,
+					_ => now.Hour > (sat ? 9 : 8) || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))) ? now.AddDays(1) : now
 				};
 				sat = Base.CheckIfMarketDelay(now);
 				var remain = new DateTime(now.Year, now.Month, now.Day, sat ? 0xA : 9, 0, 0) - DateTime.Now;
 				notifyIcon.Text = Base.GetRemainingTime(remain);
 
-				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
+				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12 && Base.IsDebug) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
 				{
 					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
@@ -493,37 +493,45 @@ namespace ShareInvest
 		}
 		void CheckTheInformationReceivedOnTheDay(DateTime now, int delay) => BeginInvoke(new Action(async () =>
 		{
-			foreach (var key in new[] { "10100000", "20100000" })
+			if (Base.IsDebug)
 			{
+				foreach (var key in new[] { "10100000", "20100000" })
+				{
+					await Task.Delay(delay);
+
+					if (await api.PostContextAsync(new Stocks
+					{
+						Code = key,
+						Price = key,
+						Date = now.ToString(Base.DateFormat),
+						Volume = int.MaxValue,
+						Retention = null
+
+					}) is string remove && string.IsNullOrEmpty(remove) is false)
+						Base.SendMessage(GetType(), key[0], remove);
+				}
+				await Task.Delay(delay * (Base.IsDebug ? 1 : 5));
+
+				foreach (var str in collection)
+					if (str.Key.Length == 6 && await api.PostContextAsync(new Stocks
+					{
+						Code = str.Key,
+						Price = str.Value.Price,
+						Date = now.ToString(Base.DateFormat),
+						Volume = int.MaxValue,
+						Retention = null
+
+					}) is string remove && string.IsNullOrEmpty(remove) is false)
+						Base.SendMessage(GetType(), str.Value.Name, remove);
+
 				await Task.Delay(delay);
-
-				if (await api.PostContextAsync(new Stocks
-				{
-					Code = key,
-					Price = key,
-					Date = now.ToString(Base.DateFormat),
-					Volume = int.MaxValue,
-					Retention = null
-
-				}) is string remove && string.IsNullOrEmpty(remove) is false)
-					Base.SendMessage(GetType(), key[0], remove);
+				CheckTheInformationReceivedOnTheDay();
 			}
-			await Task.Delay(delay * (Base.IsDebug ? 1 : 5));
-
-			foreach (var str in collection)
-				if (str.Key.Length == 6 && await api.PostContextAsync(new Stocks
-				{
-					Code = str.Key,
-					Price = str.Value.Price,
-					Date = now.ToString(Base.DateFormat),
-					Volume = int.MaxValue,
-					Retention = null
-
-				}) is string remove && string.IsNullOrEmpty(remove) is false)
-					Base.SendMessage(GetType(), str.Value.Name, remove);
-
-			await Task.Delay(delay);
-			CheckTheInformationReceivedOnTheDay();
+			else
+			{
+				await Task.Delay(delay * (Base.IsDebug ? 1 : 5));
+				OnReceiveInformationTheDay();
+			}
 		}));
 		void RequestTheMissingInformation()
 		{

@@ -27,7 +27,7 @@ namespace ShareInvest
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.Configure<KestrelServerOptions>(o => o.Limits.MaxRequestBodySize = int.MaxValue)
-				.AddSingleton(container => new ClientIpCheckActionFilter(Configuration["AdminSafeList"], container.GetRequiredService<ILoggerFactory>().CreateLogger<ClientIpCheckActionFilter>()))
+				.AddScoped(container => new ClientIpCheckActionFilter(Configuration["AdminSafeList"], container.GetRequiredService<ILoggerFactory>().CreateLogger<ClientIpCheckActionFilter>()))
 				.AddDbContext<CoreAPI.CoreApiDbContext>(o => o.UseSqlServer(Configuration[Security.Connection]))
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter()))
 				.AddMvcOptions(o => o.EnableEndpointRouting = false)
