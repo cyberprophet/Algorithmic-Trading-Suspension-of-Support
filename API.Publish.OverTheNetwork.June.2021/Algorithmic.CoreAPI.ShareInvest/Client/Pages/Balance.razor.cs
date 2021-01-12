@@ -29,11 +29,12 @@ namespace ShareInvest.Pages
 				{
 					if (Balance.Remove(balance.Code))
 						StateHasChanged();
-
-					return;
 				}
-				Balance[balance.Code] = balance;
-				StateHasChanged();
+				else
+				{
+					Balance[balance.Code] = balance;
+					StateHasChanged();
+				}
 			});
 			await Hub.StartAsync();
 		}

@@ -71,6 +71,10 @@ namespace ShareInvest.OpenAPI
 		{
 			get; private set;
 		}
+		internal Dictionary<string, Analysis> StocksHeld
+		{
+			get; private set;
+		}
 		Connect(AxKHOpenAPI axAPI, StreamWriter server)
 		{
 			TR = new HashSet<TR>();
@@ -130,6 +134,7 @@ namespace ShareInvest.OpenAPI
 					Server = server
 				}
 			};
+			StocksHeld = new Dictionary<string, Analysis>();
 			Chejan = new Dictionary<string, Chejan>() { { ((int)ChejanType.주문체결).ToString("D1"), new 주문체결 { API = axAPI } }, { ((int)ChejanType.잔고).ToString("D1"), new 잔고 { API = axAPI } }, { ((int)ChejanType.파생잔고).ToString("D1"), new 파생잔고 { API = axAPI } } };
 		}
 		readonly Delay request;

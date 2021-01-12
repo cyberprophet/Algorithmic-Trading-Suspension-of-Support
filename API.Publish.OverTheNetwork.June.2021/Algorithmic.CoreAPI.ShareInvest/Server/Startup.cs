@@ -44,8 +44,8 @@ namespace ShareInvest
 				o.Limits.MaxRequestBodySize = int.MaxValue;
 			})
 				.AddSingleton<HermesHub>()
-				.AddSingleton<BalanceHub>()
-				.AddSingleton<MessageHub>()
+				.AddScoped<BalanceHub>()
+				.AddScoped<MessageHub>()
 				.AddScoped(container => new ClientIpCheckActionFilter(Configuration["AdminSafeList"], container.GetRequiredService<ILoggerFactory>().CreateLogger<ClientIpCheckActionFilter>()))
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
 		}

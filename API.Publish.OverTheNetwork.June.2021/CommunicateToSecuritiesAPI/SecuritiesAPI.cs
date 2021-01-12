@@ -27,7 +27,6 @@ namespace ShareInvest
 			random = new Random(Guid.NewGuid().GetHashCode());
 			Codes = new Queue<string>();
 			GetTheCorrectAnswer = new int[(key as string).Length];
-			collection = new Dictionary<string, Codes>();
 			server = GoblinBat.GetInstance(key);
 			timer.Start();
 		}
@@ -123,10 +122,15 @@ namespace ShareInvest
 							switch (operation.Item2[2..])
 							{
 								case reservation:
-									RequestBalanceInquiry();
+									foreach (var order in Reservation.Stocks)
+									{
+										connect.SendOrder(order.Value);
+										Base.SendMessage(sender.GetType(), order.Key.ToString("N0"), order.Value.Code);
+									}
 									return;
 
 								case construction:
+									RequestBalanceInquiry();
 									return;
 							}
 							break;
@@ -135,8 +139,21 @@ namespace ShareInvest
 
 							break;
 
-						case Catalog.OpenAPI.Operation.장마감전_동시호가 when before_market_closing.Equals(operation.Item2[2..]):
-							RequestBalanceInquiry();
+						case Catalog.OpenAPI.Operation.장마감전_동시호가:
+							switch (operation.Item2[2..])
+							{
+								case before_market_closing:
+									RequestBalanceInquiry();
+									return;
+
+								case market_closing_reservation:
+									foreach (var order in Reservation.Stocks)
+									{
+										connect.SendOrder(order.Value);
+										Base.SendMessage(sender.GetType(), order.Key.ToString("N0"), order.Value.Code);
+									}
+									return;
+							}
 							break;
 
 						case Catalog.OpenAPI.Operation.장마감:
@@ -163,11 +180,19 @@ namespace ShareInvest
 						Price = tr.Item4,
 						MarginRate = tr.Item5
 					};
-					if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) is false)
+					if (param.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && double.TryParse(tr.Item4, out double price))
 					{
 						connect.Writer.WriteLine(string.Concat(param.GetType().Name, '|', param.Code, '|', param.Price));
-						collection[tr.Item1] = param;
-
+						var classfication = param.Code.Length == 6 || param.Code.Length == 8 && param.Code[1].CompareTo('0') > 0;
+						(connect as OpenAPI.ConnectAPI).Append(tr.Item1, new SecondaryIndicators.OpenAPI.Stocks
+						{
+							Code = tr.Item1,
+							Name = tr.Item2,
+							Current = classfication ? (int)price : price,
+							MarketMarginRate = tr.Item5,
+							Offer = classfication ? 0 : 0D,
+							Bid = classfication ? 0 : 0D
+						});
 						if (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[1] is '0')
 							Codes.Enqueue(param.Code);
 					}
@@ -205,23 +230,51 @@ namespace ShareInvest
 					return;
 
 				case Queue<string[]> hold:
-					while (hold.Count > 0)
-					{
-						var ing = hold.Dequeue();
-						var convey = string.Empty;
-
-						if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate) && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase))
-							convey = string.Concat(sender.GetType().Name, inquiry, ing[0], ';', ing[1].Equals(ing[0]) && collection.TryGetValue(ing[1], out Codes c) ? c.Name : ing[1], ';', ing[2].Equals("1") ? -quantity : quantity, ';', fPurchase, ';', fCurrent, ';', fValuation, ';', fRate * 1e-2);
-
-						else if (ing[3].Length > 0 && ing[3][0] == 'A' && double.TryParse(ing[0xC]?.Insert(6, "."), out double ratio) && long.TryParse(ing[0xB], out long valuation) && int.TryParse(ing[6], out int reserve) && uint.TryParse(ing[8], out uint purchase) && uint.TryParse(ing[7], out uint current))
-							convey = string.Concat(sender.GetType().Name, inquiry, ing[3][1..].Trim(), ';', ing[4].Trim(), ';', reserve, ';', purchase, ';', current, ';', valuation, ';', ratio);
-					}
 					var name = sender.GetType().Name;
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(name, string.Concat(connect.Account[name.EndsWith("Opw00005") ? 0 : ^1], password)).Send -= OnReceiveSecuritiesAPI;
+
+					while (hold.TryDequeue(out string[] ing))
+						if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate) && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase) && await server.PostContextAsync(new Balance
+						{
+							Code = ing[0],
+							Name = ing[1].Equals(ing[0]) && (connect as OpenAPI.ConnectAPI).TryGetValue(ing[1], out Analysis analysis) ? analysis.Name : ing[1],
+							Quantity = (ing[2].Equals("1") ? -quantity : quantity).ToString("N0"),
+							Purchase = fPurchase.ToString(ing[0][1] is '0' ? "N2" : "N0"),
+							Current = fCurrent.ToString(ing[0][1] is '0' ? "N2" : "N0"),
+							Revenue = fValuation.ToString("C0"),
+							Rate = (fRate * 1e-2).ToString("P2"),
+							Separation = string.Empty,
+							Trend = string.Empty
+						}) is 0xC8)
+						{
+							Base.SendMessage(sender.GetType(), ing[0], quantity);
+						}
+						else if (ing[3].Length > 0 && ing[3][0] is 'A' && double.TryParse(ing[0xC]?.Insert(6, "."), out double ratio) && long.TryParse(ing[0xB], out long valuation) && int.TryParse(ing[6], out int amount) && uint.TryParse(ing[8], out uint purchase) && uint.TryParse(ing[7], out uint current) && await server.PostContextAsync(new Balance
+						{
+							Code = ing[3][1..].Trim(),
+							Name = ing[4].Trim(),
+							Quantity = amount.ToString("N0"),
+							Purchase = purchase.ToString("N0"),
+							Current = current.ToString("N0"),
+							Revenue = valuation.ToString("C0"),
+							Rate = ratio.ToString("P2"),
+							Trend = string.Empty,
+							Separation = string.Empty
+						}) is 0xC8)
+						{
+							if (Reservation is not null && (connect as OpenAPI.ConnectAPI).TryGetValue(ing[3][1..].Trim(), out Analysis held))
+							{
+								held.Quantity = amount;
+								held.Purchase = purchase;
+								held.Current = current;
+								Reservation.Push((connect as OpenAPI.ConnectAPI).Append(held.Code, held));
+							}
+							Base.SendMessage(sender.GetType(), ing[4].Trim(), amount);
+						}
 					return;
 
-				case Tuple<long, long> balance:
-					var bal = string.Concat(sender.GetType().Name, inquiry, balance.Item1, ';', balance.Item2);
+				case Tuple<long, long> balance when now.Hour == 8 || now.Hour == 0xF:
+					Reservation = new Reservation(balance.Item2, connect.Account);
 					return;
 
 				case Tuple<string, Stack<string>> charts:
@@ -229,7 +282,7 @@ namespace ShareInvest
 
 					if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1' ? await api.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2)) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2))) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
 					{
-						var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.", charts.Item1.Length == 6 && collection.TryGetValue(charts.Item1, out Codes mc) ? mc.Name : charts.Item1, Codes.Count.ToString("N0"));
+						var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.", charts.Item1.Length == 6 && (connect as OpenAPI.ConnectAPI).TryGetValue(charts.Item1, out Analysis analysis) ? analysis.Name : charts.Item1, Codes.Count.ToString("N0"));
 						notifyIcon.Text = message.Length < 0x40 ? message : string.Format("Still {0} Stocks to be Collect.", Codes.Count.ToString("N0"));
 					}
 					OnReceiveInformationTheDay();
@@ -249,7 +302,6 @@ namespace ShareInvest
 						var connect = this.connect as OpenAPI.ConnectAPI;
 						connect.Real.Send += OnReceiveSecuritiesAPI;
 						((ISendSecuritiesAPI<SendSecuritiesAPI>)connect.API).Send += OnReceiveSecuritiesAPI;
-						Security.SetKey(this.connect.Securities("USER_ID"));
 
 						foreach (var str in accounts)
 							if (str.Length == 0xA && str[^2..].CompareTo("32") < 0)
@@ -262,6 +314,9 @@ namespace ShareInvest
 							}
 						foreach (var ctor in connect?.Chejan)
 							ctor.Send += OnReceiveSecuritiesAPI;
+
+						Security.SetKey(this.connect.Securities("USER_ID"));
+						RequestBalanceInquiry();
 					}
 					return;
 
@@ -289,7 +344,7 @@ namespace ShareInvest
 						{
 							Repository.KeepOrganizedInStorage(stock, models.Item3.Count);
 							Base.SendMessage(sender.GetType(), models.Item1, stock.Date);
-							var str = string.Format("{0} of the {1} data have been deleted.", collection.TryGetValue(models.Item1, out Codes codes) ? codes.Name : models.Item1, confirm);
+							var str = string.Format("{0} of the {1} data have been deleted.", (connect as OpenAPI.ConnectAPI).TryGetValue(models.Item1, out Analysis analysis) ? analysis.Name : models.Item1, confirm);
 							notifyIcon.Text = str.Length < 0x40 ? str : string.Concat(models.Item1, '_', confirm);
 						}
 					CheckTheInformationReceivedOnTheDay();
@@ -303,7 +358,7 @@ namespace ShareInvest
 						{
 							Repository.KeepOrganizedInStorage(stock, confirm.Item2.Count);
 							Base.SendMessage(sender.GetType(), confirm.Item1, stock.Date);
-							var str = string.Format("{0} of the {1} data have been deleted.", collection.TryGetValue(confirm.Item1, out Codes codes) ? codes.Name : confirm.Item1, model);
+							var str = string.Format("{0} of the {1} data have been deleted.", (connect as OpenAPI.ConnectAPI).TryGetValue(confirm.Item1, out Analysis analysis) ? analysis.Name : confirm.Item1, model);
 							notifyIcon.Text = str.Length < 0x40 ? str : string.Concat(confirm.Item1, '_', model);
 						}
 					CheckTheInformationReceivedOnTheDay();
@@ -313,7 +368,6 @@ namespace ShareInvest
 		void RequestBalanceInquiry()
 		{
 			if (connect.Account is not null)
-			{
 				if (connect is OpenAPI.ConnectAPI o)
 				{
 					if (connect.Account[^1] is not null && connect.Account[^1][^2..].Equals("31"))
@@ -322,8 +376,10 @@ namespace ShareInvest
 					}
 					o.InputValueRqData(string.Concat(instance, "Opw00005"), string.Concat(connect.Account[0], password)).Send += OnReceiveSecuritiesAPI;
 				}
-				SendReservation(MessageBox.Show("Time to go back 5 minutes from the early start bell.", "Temporary Code for Debugging", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
-			}
+				else
+				{
+
+				}
 		}
 		[Conditional("DEBUG")]
 		void SendReservation(DialogResult result)
@@ -511,20 +567,6 @@ namespace ShareInvest
 						Base.SendMessage(GetType(), key[0], remove);
 				}
 				await Task.Delay(delay * (Base.IsDebug ? 1 : 5));
-
-				foreach (var str in collection)
-					if (str.Key.Length == 6 && await api.PostContextAsync(new Stocks
-					{
-						Code = str.Key,
-						Price = str.Value.Price,
-						Date = now.ToString(Base.DateFormat),
-						Volume = int.MaxValue,
-						Retention = null
-
-					}) is string remove && string.IsNullOrEmpty(remove) is false)
-						Base.SendMessage(GetType(), str.Value.Name, remove);
-
-				await Task.Delay(delay);
 				CheckTheInformationReceivedOnTheDay();
 			}
 			else
@@ -558,6 +600,10 @@ namespace ShareInvest
 		{
 			get;
 		}
+		Reservation Reservation
+		{
+			get; set;
+		}
 		int[] GetTheCorrectAnswer
 		{
 			get;
@@ -566,7 +612,6 @@ namespace ShareInvest
 		readonly Random random;
 		readonly API api;
 		readonly GoblinBat server;
-		readonly Dictionary<string, Codes> collection;
 		readonly Icon[] icons;
 		readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
 		[Conditional("DEBUG")]

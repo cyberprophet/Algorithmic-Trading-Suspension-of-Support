@@ -224,6 +224,13 @@ namespace ShareInvest.OpenAPI
 
 			return ctor;
 		}
+		public bool TryGetValue(string key, out Analysis analysis)
+		{
+			var exist = API.StocksHeld.TryGetValue(key, out Analysis value);
+			analysis = value;
+
+			return exist;
+		}
 		public void StartProgress() => BeginInvoke(new Action(async () =>
 		{
 			Start = true;
@@ -239,13 +246,14 @@ namespace ShareInvest.OpenAPI
 			};
 			API = Connect.GetInstance(axAPI, Writer);
 		}));
+		public Analysis Append(string key, Analysis value) => API.StocksHeld[key] = value;
+		public void SendOrder(ISendOrder order) => API?.SendOrder(order);
 		public int CorrectTheDelayMilliseconds(int milliseconds)
 		{
 			Delay.Milliseconds = milliseconds;
 
 			return axAPI.GetConnectState();
 		}
-		public void SendOrder(ISendOrder order) => API?.SendOrder(order);
 		public StreamWriter Writer
 		{
 			get; private set;

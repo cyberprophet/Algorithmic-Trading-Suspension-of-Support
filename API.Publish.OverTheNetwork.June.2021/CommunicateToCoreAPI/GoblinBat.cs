@@ -114,7 +114,9 @@ namespace ShareInvest.Client
 		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.POST).AddJsonBody(param, Security.content_type), source.Token);
+				var request = new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.POST);
+				var body = param is Balance ? request.AddHeader(Security.content_type, Security.json).AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody) : request.AddJsonBody(param, Security.content_type);
+				var response = await client.ExecuteAsync(body, source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 					switch (param)
@@ -127,6 +129,7 @@ namespace ShareInvest.Client
 
 						case Message:
 						case Account:
+						case Balance:
 							if (Base.IsDebug)
 								Base.SendMessage(GetType(), response.Content);
 
