@@ -1,0 +1,5 @@
+﻿@page "/authentication/{action}"
+@inherits AuthenticationBase
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+<RemoteAuthenticatorView Action="@Action" />

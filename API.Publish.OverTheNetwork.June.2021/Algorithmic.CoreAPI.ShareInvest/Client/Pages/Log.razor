@@ -17,15 +17,15 @@
 			@foreach (var log in Logs.OrderByDescending(o => o.Time))
 			{
 				<tr>
-					@if (Temp.Date.CompareTo(log.Time.Date) < 0)
+					@if (Temp.DayOfWeek.Equals(log.Time.DayOfWeek) || Temp.CompareTo(DateTime.UnixEpoch) < 0)
+					{
+						<td>@string.Empty</td>
+					}
+					else
 					{
 						Temp = log.Time;
 
 						<th>@log.Time.ToLongDateString()</th>
-					}
-					else
-					{
-						<td>@string.Empty</td>
 					}
 					<td>@log.Time.ToLongTimeString()</td>
 					<td>@log.Message</td>

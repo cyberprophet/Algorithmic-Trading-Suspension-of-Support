@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-using ShareInvest.CoreAPI;
-
 namespace ShareInvest.Controllers
 {
 	[ApiController, Route(Security.route), Produces(Security.produces)]

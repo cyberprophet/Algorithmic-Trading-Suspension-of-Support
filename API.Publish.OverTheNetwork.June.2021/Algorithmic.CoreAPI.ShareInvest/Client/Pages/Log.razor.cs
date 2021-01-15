@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace ShareInvest.Pages
 {
@@ -22,6 +23,20 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
-		protected override async Task OnInitializedAsync() => Logs = await Http.GetFromJsonAsync<Catalog.Models.Log[]>(Crypto.Security.GetRoute("Message", Security.Identify));
+		protected override async Task OnInitializedAsync()
+		{
+			try
+			{
+				Logs = await Http.GetFromJsonAsync<Catalog.Models.Log[]>(Crypto.Security.GetRoute("Message", Security.Identify));
+			}
+			catch (AccessTokenNotAvailableException exception)
+			{
+				exception.Redirect();
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(ex.StackTrace, GetType());
+			}
+		}
 	}
 }

@@ -327,9 +327,14 @@ namespace ShareInvest
 					if (string.IsNullOrEmpty(hermes) is false && await server.PostContextAsync(new Catalog.Models.Message { Convey = string.Format("[{0}] {1}({2})", Math.Abs(error).ToString("D6"), hermes, send.Count.ToString("D4")), Key = Security.Key }) is int)
 						notifyIcon.Text = hermes;
 
-					if (error == -0x6A)
-						Dispose(connect as Control);
-
+					switch (error)
+					{
+						case -0x6A:
+						case -0xC8:
+						case -0x64:
+							Dispose(connect as Control);
+							return;
+					}
 					return;
 
 				case Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>> models:
