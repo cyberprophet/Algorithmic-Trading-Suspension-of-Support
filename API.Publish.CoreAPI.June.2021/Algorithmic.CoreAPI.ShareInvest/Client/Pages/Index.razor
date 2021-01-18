@@ -1,0 +1,101 @@
+﻿@page "/"
+@inherits IndexBase
+
+@if (IsConfirm)
+{
+	<div class="form-group">
+		<p>			
+			<div class="sub">
+				<strong><i>Confirm</i></strong>
+			</div>
+			<div>
+				@if (string.IsNullOrEmpty(InputIdentity) || InputIdentity.Length < 9)
+				{
+					<label>
+						<span style="margin-left: 3px">User ID</span>
+						<input class="user_input" maxlength="8" placeholder="키움증권 ID를 입력하세요." required @bind="InputIdentity" />
+					</label>
+				}
+				else
+				{
+					<div>
+						<span style="margin-left: 3px">User ID</span>
+						<br />
+						<span class="user_span">@InputIdentity</span>
+					</div>
+				}
+				@if (string.IsNullOrEmpty(InputName) || InputName.Length < 9)
+				{
+					<label>
+						<span style="margin-left: 3px">User Name</span>
+						<input class="user_input" maxlength="8" placeholder="ID와 연결된 이름을 입력하세요." required @bind="InputName" />
+					</label>
+				}
+				else
+				{
+					<div>
+						<span style="margin-left: 3px">User Name</span>
+						<br />
+						<span class="user_span">@InputName</span>
+					</div>
+					<br />
+				}
+			</div>
+		</p>
+		@if (Accounts.Count > 0)
+		{
+			<form>
+				<p>
+					<div class="sub">
+						<strong><i>Account</i></strong>
+					</div>
+					<fieldset class="flex-container">
+						<legend class="legend"><strong>Choose the Stock Account</strong></legend>
+						<ul>
+							@foreach (var str in Accounts)
+							{
+								@if (str.Length == 0xA && str[^2..].CompareTo("31") < 0)
+								{
+									<li>
+										<label for="stocks">
+											<input type="radio" id="stocks" name="stocks" value="@str" @onchange="OnReceiveTheSelectedButton" checked="@str.Equals(Stock)">
+											@ConvertFormat(str)
+										</label>
+									</li>
+								}
+							}
+						</ul>
+					</fieldset>
+					<br />
+					<fieldset class="flex-container">
+						<legend class="legend"><strong>Choose the Futures Account</strong></legend>
+						<ul>
+							@foreach (var str in Accounts)
+							{
+								@if (str.Length == 0xA && str[^2..].CompareTo("31") == 0)
+								{
+									<li>
+										<label for="futures">
+											<input type="radio" id="futures" name="futures" value="@str" @onchange="OnReceiveTheSelectedButton" checked="@str.Equals(Futures)">
+											@ConvertFormat(str)
+										</label>
+									</li>
+								}
+							}
+						</ul>
+					</fieldset>
+				</p>
+				<br />
+			</form>
+		}
+		<div>
+			<button class="style" @onclick="Send" disabled="@IsClicked">Submit</button>
+		</div>
+	</div>
+}
+else
+{
+	<p><em>The Account don’t Exist...</em></p>
+	<p><em>Connect the OpenAPI</em></p>
+	<p><em>Load the Account Information.</em></p>
+}

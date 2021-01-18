@@ -1,0 +1,96 @@
+﻿input
+{
+	vertical-align: middle;
+	margin: .3rem
+}
+
+ul
+{
+	padding: 0;
+	list-style-type: none
+}
+
+.sub
+{
+	width: 100%;
+	color: lightslategrey
+}
+
+.user_input
+{
+	margin-right: 1.5em;
+	background-color: transparent;
+	color: dimgray;
+	border: 0.75px ridge;
+	border-style: solid;
+	border-color: azure;
+	font-size: small;
+	text-align: center
+}
+
+	.user_input::placeholder
+	{
+		color: lightgrey;
+		font-style: italic;
+		font-size: smaller
+	}
+
+.user_span
+{
+	font-style: italic;
+	font-size: small;
+	padding-left: 0.75em;
+	color: lightsteelblue
+}
+
+.legend
+{
+	display: block;
+	padding-left: 1em;
+	padding-right: 1em;
+	text-align: center;
+	width: auto
+}
+
+.flex-container
+{
+	display: flex;
+	flex-flow: row;
+	justify-content: center;
+	padding: 1em;
+	border: 3px ridge;
+	border-color: #d7d7d7;
+	border-style: solid
+}
+
+.style
+{
+	border: 1;
+	line-height: 2.5;
+	padding: 0 20px;
+	font-size: 1rem;
+	font-stretch: wider;
+	text-align: center;
+	color: #fff;
+	text-shadow: 1px 1px 1px #000;
+	border-radius: 10px;
+	background-color: rgb(5, 39, 103);
+	background-image: linear-gradient(to top left, rgba(0, 0, 0, .2), rgba(0, 0, 0, .2) 30%, rgba(0, 0, 0, 0));
+	box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6), inset -2px -2px 3px rgba(0, 0, 0, .6);
+	width: 100%
+}
+
+	.style:hover
+	{
+		background-color: rgba(255, 0, 0, 1)
+	}
+
+	.style:active
+	{
+		box-shadow: inset -2px -2px 3px rgba(255, 255, 255, .6), inset 2px 2px 3px rgba(0, 0, 0, .6)
+	}
+
+	.style:disabled
+	{
+		background: #ccc
+	}

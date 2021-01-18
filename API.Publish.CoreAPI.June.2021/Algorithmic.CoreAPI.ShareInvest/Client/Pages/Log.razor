@@ -1,0 +1,42 @@
+﻿@page "/index"
+@inherits LogBase
+
+@if (Logs is Catalog.Models.Log[] && Logs.Length > 0)
+{
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th>Time</th>
+				<th>Message</th>
+				<th>Code</th>
+				<th>Screen</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var log in Logs.OrderByDescending(o => o.Time))
+			{
+				<tr>
+					@if (Temp.DayOfWeek.Equals(log.Time.DayOfWeek) || Temp.CompareTo(DateTime.UnixEpoch) < 0)
+					{
+						<td>@string.Empty</td>
+					}
+					else
+					{
+						Temp = log.Time;
+
+						<th>@log.Time.ToLongDateString()</th>
+					}
+					<td>@log.Time.ToLongTimeString()</td>
+					<td>@log.Message</td>
+					<td>@log.Code</td>
+					<td>@log.Screen</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+else
+{
+	<p><em>Loading...</em></p>
+}
