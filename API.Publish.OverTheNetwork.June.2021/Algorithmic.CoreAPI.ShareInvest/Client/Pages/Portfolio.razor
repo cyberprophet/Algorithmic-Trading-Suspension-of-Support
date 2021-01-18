@@ -1,7 +1,7 @@
 ﻿@page "/portfolio"
 @inherits PortfolioBase
 
-@if (Enumerable.Count > 0)
+@if (Quarter is not null && Enumerable.Count > 0)
 {
 	<Virtualize Items="Enumerable" Context="kv" OverscanCount="9">
 		<div class="" id="@kv.Key">

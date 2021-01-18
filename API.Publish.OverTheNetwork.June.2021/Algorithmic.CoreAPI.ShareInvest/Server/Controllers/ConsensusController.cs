@@ -1,24 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Catalog.Models;
 
 namespace ShareInvest.Controllers
 {
-	[ApiController, Route(Security.route), Produces(Security.produces)]
+	[Authorize, ApiController, Route(Security.route), Produces(Security.produces)]
 	public class ConsensusController : ControllerBase
 	{
 		[HttpGet]
 		public async Task<IEnumerable<Consensus>> GetContextAsync()
 		{
-			var list = await Security.API.GetContextAsync(new Codes(), 6) as List<Codes>;
+			var list = await context.Codes.Where(o => o.Code.Length == 6).Select(o => new { o.Code, o.Name, o.MarginRate, o.MaturityMarketCap, o.Price }).AsNoTracking().ToListAsync();
 			var queue = new Queue<Consensus>();
 
 			foreach (var st in Enum.GetNames(typeof(Catalog.AnalysisType)))
-				foreach (var con in await Security.API.GetContextAsync(new Consensus { Strategics = string.Concat("TC.", st) }) as List<Consensus>)
+			{
+				var find = string.Concat("TC.", st);
+				var where = context.Estimate.Where(o => o.Strategics.Equals(find)).AsNoTracking();
+				var max = await where.MaxAsync(o => o.Date);
+
+				foreach (var con in await where.Where(o => o.Date.Equals(max)).Select(o => new { o.Code, o.FirstQuarter, o.SecondQuarter, o.ThirdQuarter, o.Quarter, o.TheNextYear, o.TheYearAfterNext }).ToListAsync())
 				{
 					var key = list.Find(o => o.Code.Equals(con.Code));
 
@@ -39,7 +47,10 @@ namespace ShareInvest.Controllers
 							TheYearAfterNext = con.TheYearAfterNext
 						});
 				}
+			}
 			return queue.ToArray();
 		}
+		public ConsensusController(CoreApiDbContext context) => this.context = context;
+		readonly CoreApiDbContext context;
 	}
 }

@@ -94,6 +94,7 @@ namespace ShareInvest
 			Cash = cash;
 			Orders = new Stack<Analysis>();
 		}
+		public void Clear() => Orders.Clear();
 		public void Push(Analysis stocks_held) => Orders.Push(stocks_held);
 		long Cash
 		{

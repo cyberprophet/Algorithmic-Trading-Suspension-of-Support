@@ -130,6 +130,9 @@ namespace ShareInvest
 									return;
 
 								case construction:
+									if (Reservation is not null)
+										Reservation.Clear();
+
 									RequestBalanceInquiry();
 									return;
 							}
@@ -143,6 +146,9 @@ namespace ShareInvest
 							switch (operation.Item2[2..])
 							{
 								case before_market_closing:
+									if (Reservation is not null)
+										Reservation.Clear();
+
 									RequestBalanceInquiry();
 									return;
 

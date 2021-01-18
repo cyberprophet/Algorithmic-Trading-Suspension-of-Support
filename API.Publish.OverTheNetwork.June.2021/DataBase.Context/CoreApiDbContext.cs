@@ -1,18 +1,23 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using IdentityServer4.EntityFramework.Extensions;
+using IdentityServer4.EntityFramework.Options;
+
+using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using ShareInvest.Models;
 
 namespace ShareInvest
 {
-	public class CoreApiDbContext : IdentityDbContext<CoreUser, CoreRole, int>
+	public class CoreApiDbContext : ApiAuthorizationDbContext<CoreUser>
 	{
 		protected override void OnModelCreating(ModelBuilder builder)
 		{
 			base.OnModelCreating(builder);
+			builder.ConfigurePersistedGrantContext(store.Value);
 			builder.Entity<Days>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<Futures>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<Options>().HasKey(o => new { o.Code, o.Date });
+			builder.Entity<Models.Options>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<Stocks>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<RevisedStockPrice>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<StocksStrategics>().HasKey(o => new { o.Code, o.Strategics });
@@ -23,10 +28,7 @@ namespace ShareInvest
 			builder.Entity<Tick>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<Security>().HasKey(o => new { o.Identify, o.Code });
 		}
-		public CoreApiDbContext(DbContextOptions<CoreApiDbContext> options) : base(options)
-		{
-
-		}
+		public CoreApiDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> store) : base(options, store) => this.store = store;
 		public DbSet<Privacy> Privacies
 		{
 			get; set;
@@ -51,7 +53,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		public DbSet<Options> Options
+		public DbSet<Models.Options> Options
 		{
 			get; set;
 		}
@@ -99,5 +101,6 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		readonly IOptions<OperationalStoreOptions> store;
 	}
 }

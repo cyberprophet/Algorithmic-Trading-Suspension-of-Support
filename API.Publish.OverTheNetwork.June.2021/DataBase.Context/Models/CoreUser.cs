@@ -2,7 +2,7 @@
 
 namespace ShareInvest.Models
 {
-	public class CoreUser : IdentityUser<int>
+	public class CoreUser : IdentityUser
 	{
 
 	}

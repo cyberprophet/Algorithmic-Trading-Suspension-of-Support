@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace ShareInvest.Pages
 {
+	[Authorize]
 	public partial class BalanceBase : ComponentBase, IAsyncDisposable
 	{
 		public async ValueTask DisposeAsync() => await Hub.DisposeAsync();

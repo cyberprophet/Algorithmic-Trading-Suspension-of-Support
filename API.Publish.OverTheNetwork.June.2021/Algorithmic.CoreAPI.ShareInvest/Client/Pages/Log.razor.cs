@@ -3,15 +3,17 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace ShareInvest.Pages
 {
+	[Authorize]
 	public partial class LogBase : ComponentBase
 	{
 		[Inject]
-		protected internal HttpClient Http
+		HttpClient Http
 		{
 			get; set;
 		}

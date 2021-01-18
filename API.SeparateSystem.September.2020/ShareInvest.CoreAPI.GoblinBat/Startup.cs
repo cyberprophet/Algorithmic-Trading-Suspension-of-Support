@@ -32,7 +32,7 @@ namespace ShareInvest
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter()))
 				.AddMvcOptions(o => o.EnableEndpointRouting = false)
 				.SetCompatibilityVersion(CompatibilityVersion.Latest);
-			EntityFrameworkManager.ContextFactory = context => new CoreApiDbContext(new DbContextOptionsBuilder<CoreApiDbContext>().UseSqlServer(Configuration[Crypto.Security.Connection], o => o.MigrationsAssembly("Context")).Options);
+			EntityFrameworkManager.ContextFactory = context => new DbContext(new DbContextOptionsBuilder<CoreApiDbContext>().UseSqlServer(Configuration[Crypto.Security.Connection], o => o.MigrationsAssembly("Context")).Options);
 		}
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 		{

@@ -2,7 +2,7 @@
 
 namespace ShareInvest.Models
 {
-	public class CoreRole : IdentityRole<int>
+	public class CoreRole : IdentityRole
 	{
 
 	}

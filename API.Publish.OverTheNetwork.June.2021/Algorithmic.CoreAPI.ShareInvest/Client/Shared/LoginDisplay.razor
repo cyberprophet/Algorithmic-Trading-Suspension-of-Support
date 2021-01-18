@@ -1,0 +1,15 @@
+﻿@inherits LoginDisplayBase
+
+<AuthorizeView>
+	<Authorized>
+		<a href="authentication/profile">
+			<strong>
+				@context.User.Identity.Name
+			</strong>
+		</a>
+		<button class="nav-link btn btn-link" @onclick="BeginSignOut">LogOut</button>
+	</Authorized>
+	<NotAuthorized>
+		<a href="authentication/login">LogIn</a>
+	</NotAuthorized>
+</AuthorizeView>

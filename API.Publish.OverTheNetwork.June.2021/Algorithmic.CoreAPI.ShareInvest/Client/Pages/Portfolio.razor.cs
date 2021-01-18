@@ -5,13 +5,16 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 
 namespace ShareInvest.Pages
 {
+	[Authorize]
 	public partial class PortfolioBase : ComponentBase, IAsyncDisposable
 	{
 		public async ValueTask DisposeAsync()
@@ -24,34 +27,46 @@ namespace ShareInvest.Pages
 			var index = 0;
 			Key = new Dictionary<string, int>();
 			Dictionary = new Dictionary<string, Queue<Catalog.Models.Consensus>>();
-			Enumerable = new Dictionary<int, Catalog.Models.Portfolio>();
 
-			foreach (var con in await Http.GetFromJsonAsync<Catalog.Models.Consensus[]>(Crypto.Security.GetRoute("Consensus")))
+			try
 			{
-				if (Dictionary.TryGetValue(con.Code, out Queue<Catalog.Models.Consensus> queue))
+				foreach (var con in await Http.GetFromJsonAsync<Catalog.Models.Consensus[]>("Consensus"))
 				{
-					queue.Enqueue(con);
-					Dictionary[con.Code] = queue;
+					if (Dictionary.TryGetValue(con.Code, out Queue<Catalog.Models.Consensus> queue))
+					{
+						queue.Enqueue(con);
+						Dictionary[con.Code] = queue;
+					}
+					else
+						Dictionary[con.Code] = new Queue<Catalog.Models.Consensus>(new Catalog.Models.Consensus[] { con });
 				}
-				else
-					Dictionary[con.Code] = new Queue<Catalog.Models.Consensus>(new Catalog.Models.Consensus[] { con });
-			}
-			foreach (var consensus in Dictionary.OrderBy(o => o.Key))
-			{
-				Key[consensus.Key] = index;
-				Key[consensus.Value.Peek().Date] = index;
-				Enumerable[index++] = new Catalog.Models.Portfolio
-				{
-					Consensus = consensus.Value,
-					RenderingBalance = true,
-					SelectStrategics = 'D'
-				};
-			}
-			index = 0;
-			Quarter = new string[6];
+				Enumerable = new Dictionary<int, Catalog.Models.Portfolio>();
 
-			foreach (var near in Base.FindTheNearestQuarter(DateTime.Now))
-				Quarter[index++] = ConvertFormat(near);
+				foreach (var consensus in Dictionary.OrderBy(o => o.Key))
+				{
+					Key[consensus.Key] = index;
+					Key[consensus.Value.Peek().Date] = index;
+					Enumerable[index++] = new Catalog.Models.Portfolio
+					{
+						Consensus = consensus.Value,
+						RenderingBalance = true,
+						SelectStrategics = 'D'
+					};
+				}
+				index = 0;
+				Quarter = new string[6];
+
+				foreach (var near in Base.FindTheNearestQuarter(DateTime.Now))
+					Quarter[index++] = ConvertFormat(near);
+			}
+			catch (AccessTokenNotAvailableException exception)
+			{
+				exception.Redirect();
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(ex.StackTrace, GetType());
+			}
 		}
 		protected override async Task OnAfterRenderAsync(bool render)
 		{
@@ -137,11 +152,6 @@ namespace ShareInvest.Pages
 			get; set;
 		}
 		[Inject]
-		protected internal HttpClient Http
-		{
-			get; set;
-		}
-		[Inject]
 		protected internal IJSRuntime Runtime
 		{
 			get; set;
@@ -176,6 +186,11 @@ namespace ShareInvest.Pages
 		protected internal static string ConvertFormat(string param) => string.Format("’{0}. {1}.", param.Substring(0, 2), param.Substring(2, 2));
 		protected internal static (string, ConsoleColor) ConvertFormat(double param)
 				=> (param < 0 ? param.ToString("P2")[1..] : param.ToString("P2"), param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
+		[Inject]
+		HttpClient Http
+		{
+			get; set;
+		}
 		async Task WaitForTheScrollToMovement(int index, int pixel)
 		{
 			await Runtime.InvokeVoidAsync(string.Concat(interop, "move"), (index - Index) * pixel);

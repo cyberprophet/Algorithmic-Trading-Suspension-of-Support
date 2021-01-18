@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 using ShareInvest.Catalog.Models;
 
 namespace ShareInvest.Controllers
 {
-	[ApiController, Route(Security.route), Produces(Security.produces)]
+	[Authorize, ApiController, Route(Security.route), Produces(Security.produces)]
 	public class ConfirmController : ControllerBase
 	{
 		[HttpPost]

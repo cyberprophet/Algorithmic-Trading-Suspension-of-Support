@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.Filter;
 
 namespace ShareInvest.Controllers
 {
-	[ApiController, Route(Security.route), Produces(Security.produces)]
+	[Authorize, ApiController, Route(Security.route), Produces(Security.produces)]
 	public class AccountController : ControllerBase
 	{
 		[HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
@@ -48,19 +50,16 @@ namespace ShareInvest.Controllers
 			return Ok();
 		}
 		[HttpPut, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
-		public async Task<HttpStatusCode> PutContextAsync([FromBody] Privacies param)
+		public async Task<HttpStatusCode> PutContextAsync([FromBody] Models.Privacy param)
 		{
 			try
 			{
-				if (string.IsNullOrEmpty(param.Account) is false)
+				if (await context.Privacies.AnyAsync(o => o.Security.Equals(param.Security)))
 				{
-					var privacy = new Privacies
-					{
+					context.Entry(param).State = EntityState.Modified;
+					await context.BulkSaveChangesAsync();
 
-					};
-					var response = string.IsNullOrEmpty(param.Account) ? await Security.API.PostContextAsync(privacy) : await Security.API.PutContextAsync(privacy);
-
-					return (HttpStatusCode)response;
+					return HttpStatusCode.OK;
 				}
 			}
 			catch (Exception ex)
@@ -74,5 +73,7 @@ namespace ShareInvest.Controllers
 		{
 			return null;
 		}
+		public AccountController(CoreApiDbContext context) => this.context = context;
+		readonly CoreApiDbContext context;
 	}
 }

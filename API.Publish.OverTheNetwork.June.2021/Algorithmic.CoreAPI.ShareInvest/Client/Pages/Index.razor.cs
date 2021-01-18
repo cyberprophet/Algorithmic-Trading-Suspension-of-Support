@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 using Newtonsoft.Json;
 
@@ -12,12 +15,20 @@ using ShareInvest.Catalog.Models;
 
 namespace ShareInvest.Pages
 {
+	[Authorize]
 	public partial class IndexBase : ComponentBase
 	{
 		protected override void OnInitialized()
 		{
-			IsConfirm = true;
-			Accounts = new List<string>();
+			try
+			{
+				IsConfirm = true;
+				Accounts = new List<string>();
+			}
+			catch (AccessTokenNotAvailableException exception)
+			{
+				exception.Redirect();
+			}
 			/*
 			var accounts = await Http.GetFromJsonAsync<string[]>(Crypto.Security.GetRoute("Account"));
 
@@ -44,33 +55,44 @@ namespace ShareInvest.Pages
 		}
 		protected internal async Task Send()
 		{
-			if (Accounts.Count > 0 && string.IsNullOrEmpty(Stock) is false)
-				IsClicked = HttpStatusCode.OK.Equals((await Http.PutAsJsonAsync(Crypto.Security.GetRoute("Account"), new Privacies
-				{
-					Account = string.IsNullOrEmpty(Futures) ? Stock : string.Concat(Stock, ';', Futures)
-
-				})).StatusCode);
-			else if (string.IsNullOrEmpty(InputIdentity) is false && InputIdentity.Length < 9 && string.IsNullOrEmpty(InputName) is false && InputName.Length < 9)
+			try
 			{
-				InputIdentity = Crypto.Security.Encrypt(InputIdentity);
-				InputName = Crypto.Security.Encrypt(InputName);
-				var confirm = new Confirm { Identity = InputIdentity, Name = InputName };
-				var response = await Http.PostAsJsonAsync(Crypto.Security.GetRoute(confirm.GetType().Name), confirm);
-
-				if (HttpStatusCode.OK.Equals(response.StatusCode))
-				{
-					var content = JsonConvert.DeserializeObject<Account>(await response.Content.ReadAsStringAsync());
-
-					if (content.Length > 0)
+				if (Accounts.Count > 0 && string.IsNullOrEmpty(Stock) is false)
+					IsClicked = HttpStatusCode.OK.Equals((await Http.PutAsJsonAsync("Account", new Privacies
 					{
-						Storage = content;
+						Account = string.IsNullOrEmpty(Futures) ? Stock : string.Concat(Stock, ';', Futures)
 
-						foreach (var str in content.Number)
-							if (string.IsNullOrEmpty(str) is false && str.StartsWith("Test") is false)
-								Accounts.Add(str);
+					})).StatusCode);
+				else if (string.IsNullOrEmpty(InputIdentity) is false && InputIdentity.Length < 9 && string.IsNullOrEmpty(InputName) is false && InputName.Length < 9)
+				{
+					InputIdentity = Crypto.Security.Encrypt(InputIdentity);
+					InputName = Crypto.Security.Encrypt(InputName);
+					var confirm = new Confirm { Identity = InputIdentity, Name = InputName };
+					var response = await Http.PostAsJsonAsync(confirm.GetType().Name, confirm);
+
+					if (HttpStatusCode.OK.Equals(response.StatusCode))
+					{
+						var content = JsonConvert.DeserializeObject<Account>(await response.Content.ReadAsStringAsync());
+
+						if (content.Length > 0)
+						{
+							Storage = content;
+
+							foreach (var str in content.Number)
+								if (string.IsNullOrEmpty(str) is false && str.StartsWith("Test") is false)
+									Accounts.Add(str);
+						}
 					}
+					Security.Identify = InputIdentity;
 				}
-				Security.Identify = InputIdentity;
+			}
+			catch (AccessTokenNotAvailableException exception)
+			{
+				exception.Redirect();
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(ex.StackTrace, GetType());
 			}
 		}
 		protected internal void OnReceiveTheSelectedButton(ChangeEventArgs e)
@@ -116,7 +138,7 @@ namespace ShareInvest.Pages
 			get; private set;
 		}
 		[Inject]
-		protected internal HttpClient Http
+		HttpClient Http
 		{
 			get; set;
 		}

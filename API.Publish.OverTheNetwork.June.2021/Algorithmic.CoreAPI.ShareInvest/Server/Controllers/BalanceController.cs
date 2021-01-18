@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -10,7 +11,7 @@ using ShareInvest.Hubs;
 
 namespace ShareInvest.Controllers
 {
-	[ApiController, Route(Security.route), Produces(Security.produces)]
+	[Authorize, ApiController, Route(Security.route), Produces(Security.produces)]
 	public class BalanceController : ControllerBase
 	{
 		[HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
