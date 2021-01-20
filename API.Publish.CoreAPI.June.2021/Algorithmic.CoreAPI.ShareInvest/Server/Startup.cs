@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
@@ -33,13 +34,11 @@ namespace ShareInvest
 				o.KeepAliveInterval = TimeSpan.FromMilliseconds(wait / 3);
 				o.EnableDetailedErrors = true;
 			});
-			services.AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" })).Configure<KestrelServerOptions>(o =>
+			services.AddDbContext<CoreApiDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))).AddDatabaseDeveloperPageExceptionFilter().AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" })).AddSingleton<HermesHub>().AddScoped<BalanceHub>().AddScoped<MessageHub>().Configure<KestrelServerOptions>(o =>
 			{
-				o.ListenAnyIP(0x1BDF);
+				o.ListenAnyIP(0x1BDF, o => o.UseHttps(StoreName.My, "coreapi.shareinvest.net", true).UseConnectionLogging());
 				o.Limits.MaxRequestBodySize = int.MaxValue;
-			})
-				.AddSingleton<HermesHub>().AddScoped<BalanceHub>().AddScoped<MessageHub>();
-			services.AddDbContext<CoreApiDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))).AddDatabaseDeveloperPageExceptionFilter();
+			});
 			services.AddDefaultIdentity<Models.CoreUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<CoreApiDbContext>();
 			services.AddIdentityServer().AddApiAuthorization<Models.CoreUser, CoreApiDbContext>();
 			services.AddAuthentication().AddIdentityServerJwt();
@@ -55,15 +54,10 @@ namespace ShareInvest
 				app.UseExceptionHandler("/Error").UseHsts();
 
 			app.UseHttpsRedirection();
-			app.UseBlazorFrameworkFiles();
-			app.UseStaticFiles();
-
+			app.UseBlazorFrameworkFiles().UseStaticFiles();
 			app.UseRouting();
-
 			app.UseIdentityServer();
-			app.UseAuthentication();
-			app.UseAuthorization();
-
+			app.UseAuthentication().UseAuthorization();
 			app.UseEndpoints(endpoints =>
 			{
 				endpoints.MapRazorPages();

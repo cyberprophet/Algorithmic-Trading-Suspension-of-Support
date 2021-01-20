@@ -39,7 +39,7 @@ namespace ShareInvest
 					Time = collect.Key.ToString("D9"),
 					Datum = collect.Value
 				});
-			var max = storage.Max(o => o.Key);
+			var max = storage.Count > 0 ? storage.Max(o => o.Key) : uint.MinValue;
 
 			return (queue, storage.Min(o => o.Key), max, max > 0x91DF818 && code.Length == 6 || max > 0x934DB78 && code.Length == 8 ? (storage[max] is null ? string.Empty : storage[max].Split(';')[0][1..]) : string.Empty);
 		}

@@ -15,7 +15,7 @@ namespace ShareInvest.Controllers
 	[Authorize, ApiController, Route(Security.route), Produces(Security.produces)]
 	public class AccountController : ControllerBase
 	{
-		[HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
+		[AllowAnonymous, HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<IActionResult> PostContextAsync([FromBody] Account param)
 		{
 			try

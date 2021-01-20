@@ -1,12 +1,12 @@
 using System;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net.Mime;
+using System.Text;
 
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -17,9 +17,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 using ShareInvest.Filter;
 using ShareInvest.Hubs;
+using ShareInvest.Interface.Server;
+using ShareInvest.Models;
+using ShareInvest.Service;
 
 namespace ShareInvest
 {
@@ -32,7 +36,6 @@ namespace ShareInvest
 		}
 		public void ConfigureServices(IServiceCollection services)
 		{
-			JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 			services.AddDbContext<CoreApiDbContext>(o => o.UseSqlServer(Configuration[Crypto.Security.Connection], o => o.MigrationsAssembly("Context"))).AddDatabaseDeveloperPageExceptionFilter();
 			services.AddSignalR().AddHubOptions<HermesHub>(o =>
 			{
@@ -42,17 +45,31 @@ namespace ShareInvest
 				o.KeepAliveInterval = TimeSpan.FromMilliseconds(wait / 3);
 				o.EnableDetailedErrors = true;
 			});
-			services.AddDefaultIdentity<Models.CoreUser>(options => options.SignIn.RequireConfirmedAccount = true).AddEntityFrameworkStores<CoreApiDbContext>().AddDefaultTokenProviders();
-			services.AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" })).Configure<KestrelServerOptions>(o =>
+			services.AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { MediaTypeNames.Application.Octet })).Configure<KestrelServerOptions>(o =>
 			{
 				o.ListenAnyIP(0x1BDF);
 				o.Limits.MaxRequestBodySize = int.MaxValue;
 			})
+				.AddTransient<IJwtTokenService, JwtTokenService>()
 				.AddSingleton<HermesHub>().AddScoped<BalanceHub>().AddScoped<MessageHub>()
 				.AddScoped(container => new ClientIpCheckActionFilter(Configuration["AdminSafeList"], container.GetRequiredService<ILoggerFactory>().CreateLogger<ClientIpCheckActionFilter>()))
 				.AddControllersWithViews(o => o.InputFormatters.Insert(0, GetJsonPatchInputformatter())).AddMvcOptions(o => o.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
-			services.AddIdentityServer().AddApiAuthorization<Models.CoreUser, CoreApiDbContext>();
-			services.AddAuthentication().AddIdentityServerJwt();
+			services.AddDefaultIdentity<CoreUser>().AddEntityFrameworkStores<CoreApiDbContext>();
+			services.AddAuthentication(o =>
+			{
+				o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+				o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+			})
+				.AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
+				{
+					ValidateIssuer = true,
+					ValidateAudience = true,
+					ValidateLifetime = true,
+					ValidateIssuerSigningKey = true,
+					ValidIssuer = Configuration["Jwt:Issuer"],
+					ValidAudience = Configuration["Jwt:Audience"],
+					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
+				});
 			services.AddRazorPages();
 		}
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -68,8 +85,7 @@ namespace ShareInvest
 
 			app.UseResponseCompression().UseBlazorFrameworkFiles().UseStaticFiles();
 			app.UseRouting();
-			app.UseIdentityServer();
-			app.UseAuthentication().UseAuthorization();
+			app.UseAuthentication();
 			app.UseEndpoints(ep =>
 			{
 				ep.MapRazorPages();

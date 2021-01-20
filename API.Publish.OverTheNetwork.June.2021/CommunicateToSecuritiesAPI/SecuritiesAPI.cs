@@ -491,7 +491,7 @@ namespace ShareInvest
 					e.ClickedItem.Text = Base.IsDebug ? "조회" : "설정";
 
 					if (connect.Start)
-						Process.Start(new ProcessStartInfo(server.Url) { UseShellExecute = connect.Start });
+						Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
 
 					else
 						StartProgress(connect as Control);
@@ -512,7 +512,7 @@ namespace ShareInvest
 							break;
 					}
 				else
-					Process.Start(new ProcessStartInfo(server.Url) { UseShellExecute = connect.Start });
+					Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
 
 			else
 				Close();

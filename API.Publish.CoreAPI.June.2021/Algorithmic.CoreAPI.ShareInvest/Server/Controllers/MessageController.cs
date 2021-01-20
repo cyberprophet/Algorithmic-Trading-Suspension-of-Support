@@ -16,7 +16,7 @@ namespace ShareInvest.Controllers
 	[Authorize, ApiController, Route(Security.route), Produces(Security.produces)]
 	public class MessageController : ControllerBase
 	{
-		[HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
+		[AllowAnonymous, HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<IActionResult> PostContextAsync([FromBody] Message param)
 		{
 			try

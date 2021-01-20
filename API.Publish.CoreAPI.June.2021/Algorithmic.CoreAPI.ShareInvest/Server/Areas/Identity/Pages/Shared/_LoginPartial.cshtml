@@ -3,10 +3,9 @@
 @inject SignInManager<CoreUser> SignInManager
 @inject UserManager<CoreUser> UserManager
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
-
 @{
 	var returnUrl = "/";
-
+	
 	if (Context.Request.Query.TryGetValue("returnUrl", out var existingUrl))
 	{
 		returnUrl = existingUrl;
@@ -20,7 +19,7 @@
 		</li>
 		<li class="nav-item">
 			<form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
-				<button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+				<button type="submit" class="nav-link btn btn-link text-dark">LogOut</button>
 			</form>
 		</li>
 	}
@@ -30,7 +29,7 @@
 			<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register" asp-route-returnUrl="@returnUrl">Register</a>
 		</li>
 		<li class="nav-item">
-			<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@returnUrl">Login</a>
+			<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@returnUrl">LogIn</a>
 		</li>
 	}
 </ul>

@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR;
 
 using ShareInvest.Catalog.Models;
+using ShareInvest.EventHandler;
 
 namespace ShareInvest.Hubs
 {
 	public class HermesHub : Hub
 	{
 		public async Task SendMessage(Message message) => await Clients.All.SendAsync("ReceiveCurrentMessage", message);
-		/*
 		public async void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e)
 		{
 			switch (e.Convey)
@@ -43,7 +44,6 @@ namespace ShareInvest.Hubs
 					return;
 			}
 		}
-		*/
 		public override async Task OnConnectedAsync() => await base.OnConnectedAsync();
 		public override async Task OnDisconnectedAsync(Exception exception) => await base.OnDisconnectedAsync(exception);
 	}
