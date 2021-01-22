@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -30,7 +31,8 @@ namespace ShareInvest.Controllers
 						Time = DateTime.Now,
 						Message = message[^1].Trim(),
 						Code = message[0].Replace("[", string.Empty),
-						Screen = log[^1].Remove(log[^1].Length - 1)
+						Screen = log[^1].Remove(log[^1].Length - 1),
+						Name = user.Account.Name
 					});
 					if (hub is not null)
 						await hub.Clients.All.SendAsync(method, log[0].Trim());
@@ -48,13 +50,29 @@ namespace ShareInvest.Controllers
 		public IEnumerable<Log> GetContext(string key)
 		{
 			if (string.IsNullOrEmpty(key) is false)
-				foreach (var str in new[] { key, HttpUtility.UrlDecode(key) })
-					if (Security.User.TryGetValue(str, out User user) && user.Logs.Count > 0)
-						return user.Logs.ToArray();
+			{
+				List<Log> list = null;
 
+				foreach (var str in from o in context.User where o.Email.Equals(key) || o.Email.Equals(HttpUtility.UrlDecode(key)) select o)
+					if (Security.User.TryGetValue(str.Kiwoom, out User user))
+					{
+						if (list is null)
+							list = new List<Log>(user.Logs);
+
+						else
+							list.AddRange(user.Logs);
+					}
+				if (list is not null)
+					return list.ToArray();
+			}
 			return Array.Empty<Log>();
 		}
-		public MessageController(IHubContext<MessageHub> hub) => this.hub = hub;
+		public MessageController(IHubContext<MessageHub> hub, CoreApiDbContext context)
+		{
+			this.hub = hub;
+			this.context = context;
+		}
+		readonly CoreApiDbContext context;
 		readonly IHubContext<MessageHub> hub;
 		const string method = "ReceiveMessage";
 	}

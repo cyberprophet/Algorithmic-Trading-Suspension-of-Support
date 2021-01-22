@@ -2,25 +2,25 @@
 
 namespace ShareInvest.Catalog.Models
 {
-	public struct Log
+	public struct UserInformation
 	{
-		public DateTime Time
+		public string Key
 		{
 			get; set;
 		}
-		public string Message
-		{
-			get; set;
-		}
-		public string Code
-		{
-			get; set;
-		}
-		public string Screen
+		public string Check
 		{
 			get; set;
 		}
 		public string Name
+		{
+			get; set;
+		}
+		public string[] Account
+		{
+			get; set;
+		}
+		public DateTime Remaining
 		{
 			get; set;
 		}

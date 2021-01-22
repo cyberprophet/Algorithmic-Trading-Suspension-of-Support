@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using ShareInvest.Catalog.Models;
@@ -9,19 +14,56 @@ namespace ShareInvest.Controllers
 	public class ConfirmController : ControllerBase
 	{
 		[HttpPost]
-		public Account PostContext([FromBody] Confirm confirm)
+		public IEnumerable<UserInformation> PostContext([FromBody] Confirm confirm)
 		{
-			if (Security.User.TryGetValue(confirm.Identity, out User user))
-				return user.Account;
-
-			return new Account
+			if (Security.User.TryGetValue(confirm.Key, out User user) && confirm.First == user.Account.Name[0] && user.Account.Name[^1] == confirm.Last && context.User.Any(o => o.Kiwoom.Equals(confirm.Key) && o.Email.Equals(confirm.Email)) is false)
 			{
-				Number = new[] { "TestTest17", "TestTest14", "TestTest23", "TestTest22", "TestTest31" },
-				Identity = "Test",
-				Security = "Test",
-				Name = "Test",
-				Length = 5
-			};
+				var sb = new StringBuilder();
+
+				foreach (var str in user.Account.Number)
+					sb.Append(str).Append(';');
+
+				context.User.Add(new Models.Connection
+				{
+					Email = confirm.Email,
+					Kiwoom = confirm.Key,
+					Account = Crypto.Security.Encrypt(confirm.Email, sb.Remove(sb.Length - 1, 1))
+				});
+				if (context.SaveChanges() > 0)
+				{
+					var queue = new Queue<UserInformation>();
+
+					foreach (var renewal in from o in context.User where o.Email.Equals(confirm.Email) select o)
+					{
+						var check = string.Empty;
+
+						if (context.Privacies.Any(o => o.CodeStrategics.Equals(renewal.Kiwoom)))
+						{
+							var tick = double.NaN;
+
+							foreach (var privacy in from o in context.Privacies where o.CodeStrategics.Equals(renewal.Kiwoom) select o)
+								if (double.IsNaN(tick) || privacy.Commission > tick)
+								{
+									tick = privacy.Commission;
+									check = Crypto.Security.Decipher(privacy.Security, privacy.SecuritiesAPI, privacy.SecurityAPI);
+								}
+						}
+						queue.Enqueue(new UserInformation
+						{
+							Account = Crypto.Security.Decipher(renewal.Email, renewal.Account).Split(';'),
+							Key = renewal.Kiwoom,
+							Remaining = renewal.Payment > 0 ? new DateTime(renewal.Payment).AddDays(renewal.Coupon) : DateTime.Now,
+							Check = check,
+							Name = Security.User.TryGetValue(renewal.Kiwoom, out User su) ? su.Account.Name : string.Empty
+						});
+					}
+					if (queue.Count > 0)
+						return queue.ToArray();
+				}
+			}
+			return Array.Empty<UserInformation>();
 		}
+		public ConfirmController(CoreApiDbContext context) => this.context = context;
+		readonly CoreApiDbContext context;
 	}
 }

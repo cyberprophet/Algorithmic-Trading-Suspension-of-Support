@@ -94,7 +94,7 @@ namespace ShareInvest.Controllers
 		{
 			if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
 			{
-				if (string.IsNullOrEmpty(code) == false && string.IsNullOrEmpty(param.MaturityMarketCap) == false)
+				if (string.IsNullOrEmpty(code) is false && string.IsNullOrEmpty(param.MaturityMarketCap) is false)
 				{
 					if (await context.Codes.AnyAsync(o => o.Code.Equals(code)))
 						context.Entry(param).State = EntityState.Modified;

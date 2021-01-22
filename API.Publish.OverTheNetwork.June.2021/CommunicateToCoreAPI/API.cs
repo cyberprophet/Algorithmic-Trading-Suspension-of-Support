@@ -24,6 +24,22 @@ namespace ShareInvest.Client
 
 			return Client;
 		}
+		public async Task<object> GetSecurityAsync(string security)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(this.security.RequestTheIntegratedAddress(new Privacies { Security = security }), Method.GET), source.Token);
+
+				if (response.StatusCode.Equals(HttpStatusCode.OK))
+					return JsonConvert.DeserializeObject<Privacies>(response.Content);
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+				Base.SendMessage(ex.StackTrace, GetType());
+			}
+			return null;
+		}
 		public async Task<Retention> GetContextAsync(string param)
 		{
 			try
@@ -221,11 +237,9 @@ namespace ShareInvest.Client
 			try
 			{
 				if (param is Privacies)
-					return (await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, Method.PUT), Method.PUT, DataFormat.Json)
-					   .AddJsonBody(param, Security.content_type), source.Token)).StatusCode;
+					return (await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param, Method.PUT), Method.PUT, DataFormat.Json).AddJsonBody(param, Security.content_type), source.Token)).StatusCode;
 
-				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.PUT)
-					.AddJsonBody(param, Security.content_type), source.Token);
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.PUT).AddJsonBody(param, Security.content_type), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 					return param switch
@@ -262,3 +276,6 @@ namespace ShareInvest.Client
 		readonly IRestClient client;
 	}
 }
+///	<summary>
+/// Base.IsDebug ? @"http://localhost:5528/" :
+///	</summary>

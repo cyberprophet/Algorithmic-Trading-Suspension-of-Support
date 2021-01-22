@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -7,6 +6,8 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 using Newtonsoft.Json;
@@ -18,73 +19,14 @@ namespace ShareInvest.Pages
 	[Authorize]
 	public partial class IndexBase : ComponentBase
 	{
-		protected override void OnInitialized()
+		protected async override Task OnInitializedAsync()
 		{
 			try
 			{
-				IsConfirm = true;
-				Accounts = new List<string>();
-			}
-			catch (AccessTokenNotAvailableException exception)
-			{
-				exception.Redirect();
-			}
-			/*
-			var accounts = await Http.GetFromJsonAsync<string[]>(Crypto.Security.GetRoute("Account"));
+				Information = await Http.GetFromJsonAsync<UserInformation[]>(Crypto.Security.GetRoute("Account", await OnReceiveLogUserInformation()));
 
-			foreach (var str in accounts)
-			{
-				if (str.Equals("Separation"))
-				{
-					IsClicked = true;
-
-					break;
-				}
-				Accounts.Add(str);
-			}
-			if (IsClicked)
-			{
-				var index = Array.FindIndex(accounts, o => o.Equals("Separation"));
-
-				Stock = accounts[index + 1];
-
-				if (accounts.Length - index == 3)
-					Futures = accounts[index + 2];
-			}
-			*/
-		}
-		protected internal async Task Send()
-		{
-			try
-			{
-				if (Accounts.Count > 0 && string.IsNullOrEmpty(Stock) is false)
-					IsClicked = HttpStatusCode.OK.Equals((await Http.PutAsJsonAsync("Account", new Privacies
-					{
-						Account = string.IsNullOrEmpty(Futures) ? Stock : string.Concat(Stock, ';', Futures)
-
-					})).StatusCode);
-				else if (string.IsNullOrEmpty(InputIdentity) is false && InputIdentity.Length < 9 && string.IsNullOrEmpty(InputName) is false && InputName.Length < 9)
-				{
-					InputIdentity = Crypto.Security.Encrypt(InputIdentity);
-					InputName = Crypto.Security.Encrypt(InputName);
-					var confirm = new Confirm { Identity = InputIdentity, Name = InputName };
-					var response = await Http.PostAsJsonAsync(confirm.GetType().Name, confirm);
-
-					if (HttpStatusCode.OK.Equals(response.StatusCode))
-					{
-						var content = JsonConvert.DeserializeObject<Account>(await response.Content.ReadAsStringAsync());
-
-						if (content.Length > 0)
-						{
-							Storage = content;
-
-							foreach (var str in content.Number)
-								if (string.IsNullOrEmpty(str) is false && str.StartsWith("Test") is false)
-									Accounts.Add(str);
-						}
-					}
-					Security.Identify = InputIdentity;
-				}
+				if (Information is null || Information.Length == 0)
+					Caution = "정상적인 이메일로 가입하지 않았거나 입력하신 정보와 연결된 계좌가 없습니다.";
 			}
 			catch (AccessTokenNotAvailableException exception)
 			{
@@ -93,6 +35,42 @@ namespace ShareInvest.Pages
 			catch (Exception ex)
 			{
 				Base.SendMessage(ex.StackTrace, GetType());
+			}
+		}
+		protected internal async Task Send(object sender, object param, MouseEventArgs _)
+		{
+			try
+			{
+				switch (sender)
+				{
+					case string kiwoom when kiwoom.Equals(Kiwoom) && string.IsNullOrWhiteSpace(kiwoom) is false && kiwoom.Length < 9 && param is string confirm && string.IsNullOrEmpty(confirm) is false && confirm.Length > 2 && confirm.Length < 9:
+						var append = new Confirm
+						{
+							Email = await OnReceiveLogUserInformation(),
+							Key = Crypto.Security.Encrypt(kiwoom),
+							First = confirm[0],
+							Last = confirm[^1]
+						};
+						var response = await Http.PostAsJsonAsync(Crypto.Security.GetRoute(append.GetType()), append);
+
+						if (HttpStatusCode.OK.Equals(response.StatusCode))
+							Information = JsonConvert.DeserializeObject<UserInformation[]>(await response.Content.ReadAsStringAsync());
+
+						break;
+
+					case string stock when stock.Equals(Stock):
+
+						break;
+				}
+				if (Information is null || Information.Length == 0)
+					Caution = "You have not signed up with a legitimate email or do not have an account linked to the information entered.";
+
+				else
+					Caution = string.Empty;
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
 			}
 		}
 		protected internal void OnReceiveTheSelectedButton(ChangeEventArgs e)
@@ -113,15 +91,11 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
-		protected internal bool IsConfirm
-		{
-			get; private set;
-		}
-		protected internal string InputName
+		protected internal string Kiwoom
 		{
 			get; set;
 		}
-		protected internal string InputIdentity
+		protected internal string Name
 		{
 			get; set;
 		}
@@ -133,18 +107,29 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
-		protected internal List<string> Accounts
+		protected internal string Caution
 		{
 			get; private set;
+		}
+		protected internal UserInformation[] Information
+		{
+			get; set;
 		}
 		[Inject]
 		HttpClient Http
 		{
 			get; set;
 		}
-		Account Storage
+		[CascadingParameter]
+		Task<AuthenticationState> State
 		{
 			get; set;
+		}
+		async Task<string> OnReceiveLogUserInformation()
+		{
+			var user = (await State).User;
+
+			return user.Identity.IsAuthenticated ? user.Identity.Name : null;
 		}
 	}
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace ShareInvest.Pages
@@ -12,11 +13,6 @@ namespace ShareInvest.Pages
 	[Authorize]
 	public partial class LogBase : ComponentBase
 	{
-		[Inject]
-		HttpClient Http
-		{
-			get; set;
-		}
 		protected internal DateTime Temp
 		{
 			get; set;
@@ -29,7 +25,7 @@ namespace ShareInvest.Pages
 		{
 			try
 			{
-				Logs = await Http.GetFromJsonAsync<Catalog.Models.Log[]>(Crypto.Security.GetRoute("Message", Security.Identify));
+				Logs = await Http.GetFromJsonAsync<Catalog.Models.Log[]>(Crypto.Security.GetRoute("Message", await OnReceiveLogUserInformation()));
 			}
 			catch (AccessTokenNotAvailableException exception)
 			{
@@ -39,6 +35,22 @@ namespace ShareInvest.Pages
 			{
 				Base.SendMessage(ex.StackTrace, GetType());
 			}
+		}
+		async Task<string> OnReceiveLogUserInformation()
+		{
+			var user = (await State).User;
+
+			return user.Identity.IsAuthenticated ? user.Identity.Name : string.Empty;
+		}
+		[CascadingParameter]
+		Task<AuthenticationState> State
+		{
+			get; set;
+		}
+		[Inject]
+		HttpClient Http
+		{
+			get; set;
 		}
 	}
 }

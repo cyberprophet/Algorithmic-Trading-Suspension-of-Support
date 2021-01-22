@@ -1,7 +1,7 @@
 ﻿@page "/index"
 @inherits LogBase
 
-@if (Logs is Catalog.Models.Log[] && Logs.Length > 0)
+@if (Logs is Catalog.Models.Log[])
 {
 	<table class="table">
 		<thead>
@@ -11,27 +11,32 @@
 				<th>Message</th>
 				<th>Code</th>
 				<th>Screen</th>
+				<th>Name</th>
 			</tr>
 		</thead>
 		<tbody>
-			@foreach (var log in Logs.OrderByDescending(o => o.Time))
+			@if (Logs.Length > 0)
 			{
-				<tr>
-					@if (Temp.DayOfWeek.Equals(log.Time.DayOfWeek) || Temp.CompareTo(DateTime.UnixEpoch) < 0)
-					{
-						<td>@string.Empty</td>
-					}
-					else
-					{
-						Temp = log.Time;
+				foreach (var log in Logs.OrderByDescending(o => o.Time))
+				{
+					<tr>
+						@if (Temp.DayOfWeek.Equals(log.Time.DayOfWeek) is false || Temp.CompareTo(DateTime.UnixEpoch) == 0)
+						{
+							Temp = log.Time;
 
-						<th>@log.Time.ToLongDateString()</th>
-					}
-					<td>@log.Time.ToLongTimeString()</td>
-					<td>@log.Message</td>
-					<td>@log.Code</td>
-					<td>@log.Screen</td>
-				</tr>
+							<th>@log.Time.ToLongDateString()</th>
+						}
+						else
+						{
+							<td>@string.Empty</td>
+						}
+						<td>@log.Time.ToLongTimeString()</td>
+						<td>@log.Message</td>
+						<td>@log.Code</td>
+						<td>@log.Screen</td>
+						<td>@log.Name</td>
+					</tr>
+				}
 			}
 		</tbody>
 	</table>

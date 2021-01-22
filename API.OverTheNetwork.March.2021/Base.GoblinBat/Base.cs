@@ -9,6 +9,8 @@ namespace ShareInvest
 	{
 		public static readonly Dictionary<string, string> rename = new Dictionary<string, string>();
 		[Conditional("DEBUG")]
+		public static void SendMessage(Type type, string code, string date, string remove) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', date, '_', remove));
+		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string message) => Debug.WriteLine(string.Concat(type.Name, '_', message));
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string code, string message) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', message));

@@ -27,22 +27,6 @@ namespace ShareInvest.Client
 		{
 			get; set;
 		}
-		public async Task<object> GetContextAsync(string security)
-		{
-			try
-			{
-				var response = await client.ExecuteAsync(new RestRequest(this.security.RequestTheIntegratedAddress(new Privacies { Security = security }), Method.GET), source.Token);
-
-				if (response.StatusCode.Equals(HttpStatusCode.OK))
-					return JsonConvert.DeserializeObject<Privacies>(response.Content);
-			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
-			}
-			return null;
-		}
 		[SupportedOSPlatform("windows")]
 		public async Task<object> GetChartsAsync<T>(T param) where T : struct
 		{
@@ -173,3 +157,6 @@ namespace ShareInvest.Client
 		readonly IRestClient client;
 	}
 }
+///	<summary>
+/// Base.IsDebug ? @"https://localhost:44393/" :
+///	</summary>

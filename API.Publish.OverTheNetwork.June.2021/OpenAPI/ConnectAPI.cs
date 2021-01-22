@@ -254,6 +254,13 @@ namespace ShareInvest.OpenAPI
 
 			return axAPI.GetConnectState();
 		}
+		public int CorrectTheDelayMilliseconds()
+		{
+			if (Delay.Milliseconds > 0x257 && DateTime.Now.Second % 5 == 0)
+				Delay.Milliseconds--;
+
+			return axAPI.GetConnectState();
+		}
 		public StreamWriter Writer
 		{
 			get; private set;

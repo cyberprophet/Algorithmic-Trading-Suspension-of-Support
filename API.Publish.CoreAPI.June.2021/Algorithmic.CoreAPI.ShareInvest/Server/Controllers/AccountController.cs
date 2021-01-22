@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Web;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -25,7 +27,7 @@ namespace ShareInvest.Controllers
 					var temp = new string[param.Length];
 
 					for (int i = 0; i < param.Length; i++)
-						temp[i] = Base.IsDebug ? param.Number[i] : Crypto.Security.Decipher(param.Number[i]);
+						temp[i] = Crypto.Security.Decipher(param.Number[i]);
 
 					Security.User[param.Identity] = new User
 					{
@@ -66,6 +68,57 @@ namespace ShareInvest.Controllers
 				Base.SendMessage(ex.StackTrace, GetType());
 			}
 			return HttpStatusCode.BadRequest;
+		}
+		[HttpGet]
+		public IEnumerable<UserInformation> GetContext(string key)
+		{
+			if (string.IsNullOrEmpty(key) is false)
+			{
+				var queue = new Queue<UserInformation>();
+				string str = key, repeat = string.Empty;
+
+				do
+				{
+					foreach (var user in from o in context.User where o.Email.Equals(str) select o)
+					{
+						var check = string.Empty;
+
+						if (context.Privacies.Any(o => o.CodeStrategics.Equals(user.Kiwoom)))
+						{
+							var tick = double.NaN;
+
+							foreach (var privacy in from o in context.Privacies where o.CodeStrategics.Equals(user.Kiwoom) select o)
+								if (double.IsNaN(tick) || privacy.Commission > tick)
+								{
+									tick = privacy.Commission;
+									check = Crypto.Security.Decipher(privacy.Security, privacy.SecuritiesAPI, privacy.SecurityAPI);
+								}
+						}
+						queue.Enqueue(new UserInformation
+						{
+							Account = Crypto.Security.Decipher(user.Email, user.Account).Split(';'),
+							Key = user.Kiwoom,
+							Remaining = user.Payment > 0 ? new DateTime(user.Payment).AddDays(user.Coupon) : DateTime.Now,
+							Check = check,
+							Name = Security.User.TryGetValue(user.Kiwoom, out User su) ? su.Account.Name : string.Empty
+						});
+					}
+					if (queue.Count > 0)
+						return queue.ToArray();
+
+					else if (str.Equals(key))
+					{
+						str = HttpUtility.UrlDecode(key);
+
+						if (str.Equals(key) || str.Equals(repeat))
+							return Array.Empty<UserInformation>();
+
+						repeat = str;
+					}
+				}
+				while (queue.Count == 0);
+			}
+			return Array.Empty<UserInformation>();
 		}
 		public AccountController(CoreApiDbContext context) => this.context = context;
 		readonly CoreApiDbContext context;

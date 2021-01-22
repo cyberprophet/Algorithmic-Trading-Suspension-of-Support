@@ -37,6 +37,7 @@ ul
 
 .user_span
 {
+	padding-top: 3px;
 	font-style: italic;
 	font-size: small;
 	padding-left: 0.75em;
@@ -63,34 +64,55 @@ ul
 	border-style: solid
 }
 
-.style
+.button_style_save
 {
-	border: 1;
+	box-shadow: inset 0px 2px 3px rgba(255, 255, 255, .6), inset -2px -2px 3px rgba(0, 0, 0, .6);
+	margin-left: -3px;
+	border-bottom-right-radius: 10px;
+	border-top-right-radius: 10px
+}
+
+.button_style_append
+{
+	box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6), inset 0px -2px 3px rgba(0, 0, 0, .6);
+	margin-right: -3px;
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px
+}
+
+.button_style button
+{
 	line-height: 2.5;
 	padding: 0 20px;
-	font-size: 1rem;
+	font-size: 0.7rem;
 	font-stretch: wider;
 	text-align: center;
 	color: #fff;
 	text-shadow: 1px 1px 1px #000;
-	border-radius: 10px;
+	border: 0.5;
 	background-color: rgb(5, 39, 103);
 	background-image: linear-gradient(to top left, rgba(0, 0, 0, .2), rgba(0, 0, 0, .2) 30%, rgba(0, 0, 0, 0));
-	box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6), inset -2px -2px 3px rgba(0, 0, 0, .6);
-	width: 100%
+	width: 25%
 }
 
-	.style:hover
+	.button_style button:hover
 	{
 		background-color: rgba(255, 0, 0, 1)
 	}
 
-	.style:active
+	.button_style button:active
 	{
 		box-shadow: inset -2px -2px 3px rgba(255, 255, 255, .6), inset 2px 2px 3px rgba(0, 0, 0, .6)
 	}
 
-	.style:disabled
+	.button_style button:disabled
 	{
 		background: #ccc
 	}
+
+.caution
+{
+	text-style: Kenten Generic OpenType Font;
+	font-size: 1rem;
+	color: red
+}

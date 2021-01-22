@@ -27,8 +27,13 @@ namespace ShareInvest
 			builder.Entity<QuarterlyFinancialStatements>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<Tick>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<Security>().HasKey(o => new { o.Identify, o.Code });
+			builder.Entity<Connection>().HasKey(o => new { o.Email, o.Kiwoom });
 		}
 		public CoreApiDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> store) : base(options, store) => this.store = store;
+		public DbSet<Connection> User
+		{
+			get; set;
+		}
 		public DbSet<Privacy> Privacies
 		{
 			get; set;

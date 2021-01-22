@@ -109,93 +109,30 @@ namespace ShareInvest.Controllers
 					switch (stocks.Code.Length)
 					{
 						case 6:
-							if (await context.Stocks.AnyAsync(o => o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date) && (o.Price.CompareTo(stocks.Price) > 0 || o.Price.CompareTo(stocks.Retention) < 0)))
-								lock (context.Stocks)
-								{
-									var error = new Stack<Stocks>();
+							var error = new Stack<Stocks>();
 
-									foreach (var str in context.Stocks.Where(o => o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date)))
-										if (int.TryParse(str.Price, out int price) && int.TryParse(stocks.Retention, out int low) && int.TryParse(stocks.Price, out int high) && (price > high || price < low))
-											error.Push(str);
+							foreach (var query in from o in context.Stocks where o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date) && (o.Price.CompareTo(stocks.Price) > 0 || o.Price.CompareTo(stocks.Retention) < 0) select o)
+								if (int.TryParse(query.Price, out int price) && int.TryParse(stocks.Price, out int high) && int.TryParse(stocks.Retention, out int low) && (price > high || price < low))
+									error.Push(query);
 
-									if (error.Count > 0)
-									{
-										context.Stocks.RemoveRange(error);
+							if (error.Count > 0)
+							{
+								context.Stocks.RemoveRange(error);
 
-										return Ok(context.SaveChanges().ToString("N0"));
-									}
-								}
+								return Ok(context.SaveChanges().ToString("N0"));
+							}
 							break;
 
 						case 8 when stocks.Code[0] is '1':
 							if (await context.Futures.AnyAsync(o => o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date) && (o.Price.CompareTo(stocks.Price) > 0 || o.Price.CompareTo(stocks.Retention) < 0)))
-								lock (context.Futures)
-								{
-									var error = new Stack<Futures>();
+								return Ok(stocks.Code);
 
-									foreach (var str in context.Futures.Where(o => o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date)))
-										if (double.TryParse(str.Price, out double price) && double.TryParse(stocks.Retention, out double low) && double.TryParse(stocks.Price, out double high) && (price > high || price < low))
-											error.Push(str);
-
-									if (error.Count > 0)
-									{
-										context.Futures.RemoveRange(error);
-
-										return Ok(context.SaveChanges().ToString("N0"));
-									}
-								}
 							break;
 
 						case 8 when stocks.Code[0] is '2' or '3':
 							if (await context.Options.AnyAsync(o => o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date) && (o.Price.CompareTo(stocks.Price) > 0 || o.Price.CompareTo(stocks.Retention) < 0)))
-								lock (context.Options)
-								{
-									var error = new Stack<Options>();
+								return Ok(stocks.Code);
 
-									foreach (var str in context.Options.Where(o => o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date)))
-										if (double.TryParse(str.Price, out double price) && double.TryParse(stocks.Retention, out double low) && double.TryParse(stocks.Price, out double high) && (price > high || price < low))
-											error.Push(str);
-
-									if (error.Count > 0)
-									{
-										context.Options.RemoveRange(error);
-
-										return Ok(context.SaveChanges().ToString("N0"));
-									}
-								}
-							break;
-					}
-				else if (DateTime.Now.ToString(Base.DateFormat).Equals(stocks.Date) && stocks.Volume == int.MaxValue)
-					switch (stocks.Code.Length)
-					{
-						case 8 when stocks.Code[0] is '1':
-							if ((await context.Futures.MaxAsync(o => o.Date)).Substring(0, 6).CompareTo(stocks.Date) > 0)
-								lock (context.Futures)
-								{
-									context.Futures.RemoveRange(context.Futures.Where(o => o.Date.Substring(0, 6).CompareTo(stocks.Date) > 0));
-
-									return Ok(context.SaveChanges().ToString("N0"));
-								}
-							break;
-
-						case 8 when stocks.Code[0] is '2' or '3':
-							if ((await context.Options.MaxAsync(o => o.Date)).Substring(0, 6).CompareTo(stocks.Date) > 0)
-								lock (context.Options)
-								{
-									context.Options.RemoveRange(context.Options.Where(o => o.Date.Substring(0, 6).CompareTo(stocks.Date) > 0));
-
-									return Ok(context.SaveChanges().ToString("N0"));
-								}
-							break;
-
-						case 6:
-							if ((await context.Stocks.Where(o => o.Code.Equals(stocks.Code)).MaxAsync(o => o.Date)).Substring(0, 6).CompareTo(stocks.Date) > 0)
-								lock (context.Stocks)
-								{
-									context.Stocks.RemoveRange(context.Stocks.Where(o => o.Code.Equals(stocks.Code) && o.Date.Substring(0, 6).CompareTo(stocks.Date) > 0));
-
-									return Ok(context.SaveChanges().ToString("N0"));
-								}
 							break;
 					}
 			}

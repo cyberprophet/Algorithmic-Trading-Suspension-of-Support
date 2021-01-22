@@ -14,7 +14,7 @@ namespace ShareInvest.Controllers
 	[Authorize, ApiController, Route(Security.route), Produces(Security.produces)]
 	public class BalanceController : ControllerBase
 	{
-		[HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
+		[AllowAnonymous, HttpPost, ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<IActionResult> PostContextAsync([FromBody] Catalog.Models.Balance balance)
 		{
 			if (hub is not null)

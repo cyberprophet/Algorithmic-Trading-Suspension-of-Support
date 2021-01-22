@@ -30,7 +30,7 @@ namespace ShareInvest.Pages
 
 			try
 			{
-				foreach (var con in await Http.GetFromJsonAsync<Catalog.Models.Consensus[]>("Consensus"))
+				foreach (var con in await Http.GetFromJsonAsync<Catalog.Models.Consensus[]>(Crypto.Security.GetRoute("Consensus")))
 				{
 					if (Dictionary.TryGetValue(con.Code, out Queue<Catalog.Models.Consensus> queue))
 					{

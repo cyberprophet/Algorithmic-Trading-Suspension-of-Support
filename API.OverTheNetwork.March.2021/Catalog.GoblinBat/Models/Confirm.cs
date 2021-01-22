@@ -1,12 +1,20 @@
 ﻿namespace ShareInvest.Catalog.Models
 {
-	public class Confirm
+	public struct Confirm
 	{
-		public string Identity
+		public string Email
 		{
 			get; set;
 		}
-		public string Name
+		public string Key
+		{
+			get; set;
+		}
+		public char First
+		{
+			get; set;
+		}
+		public char Last
 		{
 			get; set;
 		}

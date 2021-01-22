@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
@@ -36,7 +35,7 @@ namespace ShareInvest
 			{
 				var now = DateTime.Now;
 
-				if (string.IsNullOrEmpty(str) is false && await api.GetContextAsync(str) is Retention retention && string.IsNullOrEmpty(retention.Code) is false)
+				if (string.IsNullOrEmpty(str) is false && (str.Length == 6 || str.Length == 8) && await api.GetContextAsync(str) is Retention retention && string.IsNullOrEmpty(retention.Code) is false)
 				{
 					if (string.IsNullOrEmpty(retention.LastDate) is false && now.ToString(Base.DateFormat).Equals(retention.LastDate.Substring(0, 6)) || string.IsNullOrEmpty(retention.Code) is false && retention.LastDate is null)
 						OnReceiveInformationTheDay();
@@ -284,14 +283,18 @@ namespace ShareInvest
 					return;
 
 				case Tuple<string, Stack<string>> charts:
-					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, charts.Item1).Send -= OnReceiveSecuritiesAPI;
+					var receive = connect as OpenAPI.ConnectAPI;
+					receive.RemoveValueRqData(sender.GetType().Name, charts.Item1).Send -= OnReceiveSecuritiesAPI;
 
-					if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1' ? await api.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2)) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2))) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
+					if (receive.CorrectTheDelayMilliseconds() > 0)
 					{
-						var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.", charts.Item1.Length == 6 && (connect as OpenAPI.ConnectAPI).TryGetValue(charts.Item1, out Analysis analysis) ? analysis.Name : charts.Item1, Codes.Count.ToString("N0"));
-						notifyIcon.Text = message.Length < 0x40 ? message : string.Format("Still {0} Stocks to be Collect.", Codes.Count.ToString("N0"));
+						if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1' ? await api.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2)) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2))) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
+						{
+							var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.", charts.Item1.Length == 6 && receive.TryGetValue(charts.Item1, out Analysis analysis) ? analysis.Name : charts.Item1, Codes.Count.ToString("N0"));
+							notifyIcon.Text = message.Length < 0x40 ? message : string.Format("Still {0} Stocks to be Collect.", Codes.Count.ToString("N0"));
+						}
+						OnReceiveInformationTheDay();
 					}
-					OnReceiveInformationTheDay();
 					return;
 
 				case string[] accounts:
@@ -302,6 +305,7 @@ namespace ShareInvest
 						Security = key,
 						Identity = connect.Securities("USER_ID"),
 						Name = connect.Securities("USER_NAME")
+
 					}, accounts.Length > 0)) is 0xC8)
 					{
 						this.connect.Account = new string[2];
@@ -309,15 +313,50 @@ namespace ShareInvest
 						connect.Real.Send += OnReceiveSecuritiesAPI;
 						((ISendSecuritiesAPI<SendSecuritiesAPI>)connect.API).Send += OnReceiveSecuritiesAPI;
 
-						foreach (var str in accounts)
-							if (str.Length == 0xA && str[^2..].CompareTo("32") < 0)
+						if (await api.GetSecurityAsync(key) is Privacies pri && char.TryParse(pri.SecuritiesAPI, out char initial))
+						{
+							if (char.IsLetter(initial) && await api.PutContextAsync(new Privacies
 							{
-								if (str[^2..].CompareTo("31") == 0)
-									this.connect.Account[^1] = str;
+								Security = pri.Security,
+								SecuritiesAPI = (accounts.Length % 0xA).ToString("N0"),
+								SecurityAPI = pri.SecurityAPI,
+								CodeStrategics = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")),
+								Coin = pri.Coin,
+								Commission = now.Ticks
 
-								else
-									this.connect.Account[0] = str;
+							}) is 0xC8)
+								Base.SendMessage(sender.GetType(), key, accounts.Length);
+
+							else
+							{
+
 							}
+							var acc = Crypto.Security.Decipher(pri.Security, pri.SecuritiesAPI, pri.SecurityAPI).Split(';');
+							this.connect.Account[^1] = acc[^1];
+							this.connect.Account[0] = acc[0];
+						}
+						else
+						{
+							foreach (var str in accounts)
+								if (str.Length == 0xA && str[^2..].CompareTo("32") < 0)
+								{
+									if (str[^2..].CompareTo("31") == 0)
+										this.connect.Account[^1] = str;
+
+									else
+										this.connect.Account[0] = str;
+								}
+							if (await api.PostContextAsync(new Privacies
+							{
+								Security = key,
+								SecuritiesAPI = (accounts.Length % 0xA).ToString("N0"),
+								SecurityAPI = Crypto.Security.Encrypt(new Privacies { Security = key, SecuritiesAPI = key[^1].ToString() }, string.Concat(this.connect.Account[0], ';', this.connect.Account[^1]), this.connect.Account.Length > 0),
+								CodeStrategics = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")),
+								Commission = now.Ticks
+
+							}) is 0xC8)
+								Base.SendMessage(sender.GetType(), key, accounts.Length);
+						}
 						foreach (var ctor in connect?.Chejan)
 							ctor.Send += OnReceiveSecuritiesAPI;
 
@@ -344,7 +383,8 @@ namespace ShareInvest
 					return;
 
 				case Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>> models:
-					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
+					var remove = connect as OpenAPI.ConnectAPI;
+					remove.RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
 
 					while (models.Item2.TryPop(out Catalog.Models.RevisedStockPrice revise))
 						if (await api.PostContextAsync(revise) is int rsp && rsp != 0xC8)
@@ -352,13 +392,13 @@ namespace ShareInvest
 
 					while (models.Item3.TryDequeue(out Stocks stock) && stock.Volume == 0)
 						if (await api.PostContextAsync(stock) is string confirm && string.IsNullOrEmpty(confirm) is false)
-						{
-							Repository.KeepOrganizedInStorage(stock, models.Item3.Count);
-							Base.SendMessage(sender.GetType(), models.Item1, stock.Date);
-							var str = string.Format("{0} of the {1} data have been deleted.", (connect as OpenAPI.ConnectAPI).TryGetValue(models.Item1, out Analysis analysis) ? analysis.Name : models.Item1, confirm);
-							notifyIcon.Text = str.Length < 0x40 ? str : string.Concat(models.Item1, '_', confirm);
-						}
-					CheckTheInformationReceivedOnTheDay();
+							Base.SendMessage(sender.GetType(), models.Item1, stock.Date, confirm);
+
+					if (remove.CorrectTheDelayMilliseconds() > 0)
+					{
+						notifyIcon.Text = Codes.Count.ToString("N0");
+						CheckTheInformationReceivedOnTheDay();
+					}
 					return;
 
 				case Tuple<string, Queue<Stocks>> confirm:
@@ -443,12 +483,8 @@ namespace ShareInvest
 					return;
 				}
 				else if (notifyIcon.Text.Length == 0 || notifyIcon.Text.Length > 0xF && notifyIcon.Text[^5..].Equals(". . ."))
-				{
-					if (Base.IsDebug is false && api.IsAdministrator && now.Hour > 0x11)
-						CheckTheInformationReceivedOnTheDay(now, 0xEA61);
-
 					notifyIcon.Text = connect.Securities("USER_NAME");
-				}
+
 				notifyIcon.Icon = icons[now.Second % 4];
 			}
 			else if (Visible is false && ShowIcon is false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
@@ -488,7 +524,7 @@ namespace ShareInvest
 			if (e.ClickedItem.Name.Equals(reference.Name))
 				if (e.ClickedItem.Text.Equals("연결"))
 				{
-					e.ClickedItem.Text = Base.IsDebug ? "조회" : "설정";
+					e.ClickedItem.Text = api.IsAdministrator ? "조회" : "설정";
 
 					if (connect.Start)
 						Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
@@ -509,11 +545,24 @@ namespace ShareInvest
 
 						case DialogResult.Ignore:
 							RequestTheMissingInformation();
+							e.ClickedItem.Text = "설정";
 							break;
 					}
 				else
-					Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
+					switch (MessageBox.Show("", connect.Securities("USER_NAME"), MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1))
+					{
+						case DialogResult.Abort:
 
+							break;
+
+						case DialogResult.Retry:
+							Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
+							break;
+
+						case DialogResult.Ignore:
+
+							break;
+					}
 			else
 				Close();
 		}
@@ -558,34 +607,6 @@ namespace ShareInvest
 			}
 			Dispose();
 		}
-		void CheckTheInformationReceivedOnTheDay(DateTime now, int delay) => BeginInvoke(new Action(async () =>
-		{
-			if (Base.IsDebug)
-			{
-				foreach (var key in new[] { "10100000", "20100000" })
-				{
-					await Task.Delay(delay);
-
-					if (await api.PostContextAsync(new Stocks
-					{
-						Code = key,
-						Price = key,
-						Date = now.ToString(Base.DateFormat),
-						Volume = int.MaxValue,
-						Retention = null
-
-					}) is string remove && string.IsNullOrEmpty(remove) is false)
-						Base.SendMessage(GetType(), key[0], remove);
-				}
-				await Task.Delay(delay * (Base.IsDebug ? 1 : 5));
-				CheckTheInformationReceivedOnTheDay();
-			}
-			else
-			{
-				await Task.Delay(delay * (Base.IsDebug ? 1 : 5));
-				OnReceiveInformationTheDay();
-			}
-		}));
 		void RequestTheMissingInformation()
 		{
 			var now = DateTime.Now;
@@ -600,8 +621,8 @@ namespace ShareInvest
 					connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), Base.CheckIfMarketDelay(now) ? "|3;100000;000000" : "|3;090000;000000"));
 					return;
 
-				case DialogResult.Abort:
-					CheckTheInformationReceivedOnTheDay(now, 0x3000);
+				case DialogResult.Abort when now.Hour < 5 || DayOfWeek.Sunday.Equals(now.DayOfWeek) || DayOfWeek.Saturday.Equals(now.DayOfWeek):
+					CheckTheInformationReceivedOnTheDay();
 					break;
 			}
 			if (Base.IsDebug is false && api.IsAdministrator)
