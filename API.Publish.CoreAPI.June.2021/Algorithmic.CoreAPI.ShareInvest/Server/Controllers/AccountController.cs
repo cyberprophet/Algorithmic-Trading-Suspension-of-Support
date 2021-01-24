@@ -51,13 +51,24 @@ namespace ShareInvest.Controllers
 			return Ok();
 		}
 		[HttpPut, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
-		public async Task<HttpStatusCode> PutContextAsync([FromBody] Models.Privacy param)
+		public async Task<HttpStatusCode> PutContextAsync([FromBody] UserInformation param)
 		{
 			try
 			{
-				if (await context.Privacies.AnyAsync(o => o.Security.Equals(param.Security)))
+				if (await context.Privacies.AnyAsync(o => o.CodeStrategics.Equals(param.Key)))
 				{
-					context.Entry(param).State = EntityState.Modified;
+					foreach (var pri in from o in context.Privacies where o.CodeStrategics.Equals(param.Key) select o)
+						context.Entry(new Models.Privacy
+						{
+							Security = pri.Security,
+							SecuritiesAPI = pri.SecuritiesAPI,
+							SecurityAPI = Crypto.Security.Encrypt(new Privacies { Security = pri.Security, SecuritiesAPI = pri.SecuritiesAPI }, param.Check, param.Name is string),
+							Account = pri.Account,
+							CodeStrategics = pri.CodeStrategics,
+							Coin = pri.Coin,
+							Commission = pri.Commission
+
+						}).State = EntityState.Modified;
 					await context.BulkSaveChangesAsync();
 
 					return HttpStatusCode.OK;

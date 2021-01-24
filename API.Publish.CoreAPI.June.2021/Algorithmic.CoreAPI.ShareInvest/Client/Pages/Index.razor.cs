@@ -57,10 +57,6 @@ namespace ShareInvest.Pages
 							Information = JsonConvert.DeserializeObject<UserInformation[]>(await response.Content.ReadAsStringAsync());
 
 						break;
-
-					case string stock when stock.Equals(Stock):
-
-						break;
 				}
 				if (Information is null || Information.Length == 0)
 					Caution = "You have not signed up with a legitimate email or do not have an account linked to the information entered.";
@@ -73,17 +69,44 @@ namespace ShareInvest.Pages
 				Base.SendMessage(GetType(), ex.StackTrace);
 			}
 		}
-		protected internal void OnReceiveTheSelectedButton(ChangeEventArgs e)
+		protected internal async Task Send(MouseEventArgs _)
 		{
-			if (e.Value is string account)
+			if (Information is not null && Information.Length > 0)
+				foreach (var info in Information)
+				{
+					var response = await Http.PutAsJsonAsync(Crypto.Security.GetRoute("Account"), info);
+
+					if (HttpStatusCode.OK.Equals(response.StatusCode))
+						IsClicked = false;
+
+					else
+						Caution = "Account linking Error.";
+				}
+			Information = null;
+		}
+		protected internal void OnReceiveTheSelectedButton(int index, object sender, ChangeEventArgs e)
+		{
+			if (e.Value is string account && sender is string key && key.Equals(Information[index].Key))
 			{
 				if (account[^2..].CompareTo("31") == 0)
-					Futures = account;
-
+					Information[index] = new UserInformation
+					{
+						Key = key,
+						Account = Information[index].Account,
+						Name = Information[index].Name,
+						Remaining = Information[index].Remaining,
+						Check = string.Concat(Information[index].Check.Split(';')[0], ';', account)
+					};
 				else
-					Stock = account;
-
-				IsClicked = false;
+					Information[index] = new UserInformation
+					{
+						Key = key,
+						Account = Information[index].Account,
+						Name = Information[index].Name,
+						Remaining = Information[index].Remaining,
+						Check = string.Concat(account, ';', Information[index].Check.Split(';')[^1])
+					};
+				IsClicked = true;
 			}
 		}
 		protected internal static string ConvertFormat(string account) => string.Format("{0}­ ─ ­{1}", account.Substring(0, 4), account.Substring(4, 4));
@@ -98,14 +121,6 @@ namespace ShareInvest.Pages
 		protected internal string Name
 		{
 			get; set;
-		}
-		protected internal string Stock
-		{
-			get; private set;
-		}
-		protected internal string Futures
-		{
-			get; private set;
 		}
 		protected internal string Caution
 		{

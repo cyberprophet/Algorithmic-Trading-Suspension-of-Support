@@ -21,65 +21,65 @@
 	</div>
 	<div class="button_style">
 		<button class="button_style_append" @onclick="e => Send(Kiwoom, Name, e)" disabled="@IsClicked">Append</button>
-		<button class="button_style_save" @onclick="e=> Send(Stock, Futures, e)" disabled="@(IsClicked is false)">Save</button>
+		<button class="button_style_save" @onclick="Send" disabled="@(IsClicked is false)">Save</button>
 	</div>
 	<div class="form-group">
 		@if (Information.Length > 0)
 		{
 			<br />
 
-			foreach (var info in Information)
+			for (int i = 0; i < Information.Length; i++)
 			{
-				<form>
-					<p>
+				<p>
+					<fieldset class="flex-container">
+						<legend class="legend">
+							<strong>@(string.IsNullOrEmpty(Information[i].Name) ? "It is not possible to check the current Connection." : Information[i].Name)</strong>
+						</legend>
 						<div class="sub">
-							<strong><i>@(string.IsNullOrEmpty(info.Name) ? "It is not possible to check the current Connection." : info.Name)</i></strong>
-						</div>
+							Choose the Stock Account
 
-						@if (info.Account.Any(acc => acc.Length == 0xA && acc[^2..].CompareTo("31") < 0))
-						{
-							<fieldset class="flex-container">
-								<legend class="legend"><strong>Choose the Stock Account</strong></legend>
+							@if (Information[i].Account.Any(acc => acc.Length == 0xA && acc[^2..].CompareTo("31") < 0))
+							{
 								<ul>
-									@foreach (var str in info.Account)
+									@foreach (var str in Information[i].Account)
 									{
 										if (str.Length == 0xA && str[^2..].CompareTo("31") < 0)
 										{
 											<li>
 												<label for="stocks">
-													<input type="radio" id="stocks" name="stocks" value="@str" @onchange="OnReceiveTheSelectedButton" checked="@str.Equals(Stock)">
+													<input type="radio" id="stocks" name="stocks" value="@str" @onchange="e => OnReceiveTheSelectedButton(i, Information[i].Key, e)" checked="@str.Equals(Information[i].Check.Split(';')[0])">
 													@ConvertFormat(str)
 												</label>
 											</li>
 										}
 									}
 								</ul>
-							</fieldset>
-						}
-						@if (info.Account.Any(acc => acc.Length == 0xA && acc[^2..].CompareTo("31") == 0))
-						{
-							<br />
-							<fieldset class="flex-container">
-								<legend class="legend"><strong>Choose the Futures Account</strong></legend>
+							}
+						</div>
+						<div class="sub">
+							Choose the Futures Account
+
+							@if (Information[i].Account.Any(acc => acc.Length == 0xA && acc[^2..].CompareTo("31") == 0))
+							{
 								<ul>
-									@foreach (var str in info.Account)
+									@foreach (var str in Information[i].Account)
 									{
 										if (str.Length == 0xA && str[^2..].CompareTo("31") == 0)
 										{
 											<li>
 												<label for="futures">
-													<input type="radio" id="futures" name="futures" value="@str" @onchange="OnReceiveTheSelectedButton" checked="@str.Equals(Futures)">
+													<input type="radio" id="futures" name="futures" value="@str" @onchange="e => OnReceiveTheSelectedButton(i, Information[i].Key, e)" checked="@str.Equals(Information[i].Check.Split(';')[^1])">
 													@ConvertFormat(str)
 												</label>
 											</li>
 										}
 									}
 								</ul>
-							</fieldset>
-						}
-					</p>
-					<br />
-				</form>
+							}
+						</div>
+					</fieldset>
+				</p>
+				<br />
 			}
 		}
 	</div>

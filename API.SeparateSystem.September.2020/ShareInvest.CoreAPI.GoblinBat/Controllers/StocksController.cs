@@ -124,15 +124,33 @@ namespace ShareInvest.Controllers
 							break;
 
 						case 8 when stocks.Code[0] is '1':
-							if (await context.Futures.AnyAsync(o => o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date) && (o.Price.CompareTo(stocks.Price) > 0 || o.Price.CompareTo(stocks.Retention) < 0)))
-								return Ok(stocks.Code);
+							var err = new Stack<Futures>();
 
+							foreach (var query in from o in context.Futures where o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date) && (o.Price.CompareTo(stocks.Price) > 0 || o.Price.CompareTo(stocks.Retention) < 0) select o)
+								if (double.TryParse(query.Price, out double price) && double.TryParse(stocks.Price, out double high) && double.TryParse(stocks.Retention, out double low) && (price > high || price < low))
+									err.Push(query);
+
+							if (err.Count > 0)
+							{
+								context.Futures.RemoveRange(err);
+
+								return Ok(context.SaveChanges().ToString("N0"));
+							}
 							break;
 
 						case 8 when stocks.Code[0] is '2' or '3':
-							if (await context.Options.AnyAsync(o => o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date) && (o.Price.CompareTo(stocks.Price) > 0 || o.Price.CompareTo(stocks.Retention) < 0)))
-								return Ok(stocks.Code);
+							var modify = new Stack<Options>();
 
+							foreach (var query in from o in context.Options where o.Code.Equals(stocks.Code) && o.Date.StartsWith(stocks.Date) && (o.Price.CompareTo(stocks.Price) > 0 || o.Price.CompareTo(stocks.Retention) < 0) select o)
+								if (double.TryParse(query.Price, out double price) && double.TryParse(stocks.Price, out double high) && double.TryParse(stocks.Retention, out double low) && (price > high || price < low))
+									modify.Push(query);
+
+							if (modify.Count > 0)
+							{
+								context.Options.RemoveRange(modify);
+
+								return Ok(context.SaveChanges().ToString("N0"));
+							}
 							break;
 					}
 			}

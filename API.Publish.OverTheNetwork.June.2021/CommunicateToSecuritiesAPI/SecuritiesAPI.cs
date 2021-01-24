@@ -318,7 +318,7 @@ namespace ShareInvest
 							if (char.IsLetter(initial) && await api.PutContextAsync(new Privacies
 							{
 								Security = pri.Security,
-								SecuritiesAPI = (accounts.Length % 0xA).ToString("N0"),
+								SecuritiesAPI = (accounts.Length % 0xA).ToString("D1"),
 								SecurityAPI = pri.SecurityAPI,
 								CodeStrategics = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")),
 								Coin = pri.Coin,
@@ -349,7 +349,7 @@ namespace ShareInvest
 							if (await api.PostContextAsync(new Privacies
 							{
 								Security = key,
-								SecuritiesAPI = (accounts.Length % 0xA).ToString("N0"),
+								SecuritiesAPI = (accounts.Length % 0xA).ToString("D1"),
 								SecurityAPI = Crypto.Security.Encrypt(new Privacies { Security = key, SecuritiesAPI = key[^1].ToString() }, string.Concat(this.connect.Account[0], ';', this.connect.Account[^1]), this.connect.Account.Length > 0),
 								CodeStrategics = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")),
 								Commission = now.Ticks
@@ -402,17 +402,18 @@ namespace ShareInvest
 					return;
 
 				case Tuple<string, Queue<Stocks>> confirm:
-					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, confirm.Item1).Send -= OnReceiveSecuritiesAPI;
+					var delete = connect as OpenAPI.ConnectAPI;
+					delete.RemoveValueRqData(sender.GetType().Name, confirm.Item1).Send -= OnReceiveSecuritiesAPI;
 
 					while (confirm.Item2.TryDequeue(out Stocks stock))
 						if (await api.PostContextAsync(stock) is string model && string.IsNullOrEmpty(model) is false)
-						{
-							Repository.KeepOrganizedInStorage(stock, confirm.Item2.Count);
-							Base.SendMessage(sender.GetType(), confirm.Item1, stock.Date);
-							var str = string.Format("{0} of the {1} data have been deleted.", (connect as OpenAPI.ConnectAPI).TryGetValue(confirm.Item1, out Analysis analysis) ? analysis.Name : confirm.Item1, model);
-							notifyIcon.Text = str.Length < 0x40 ? str : string.Concat(confirm.Item1, '_', model);
-						}
-					CheckTheInformationReceivedOnTheDay();
+							Base.SendMessage(sender.GetType(), confirm.Item1, stock.Date, model);
+
+					if (delete.CorrectTheDelayMilliseconds() > 0)
+					{
+						notifyIcon.Text = Codes.Count.ToString("N0");
+						CheckTheInformationReceivedOnTheDay();
+					}
 					return;
 			}
 		}));
