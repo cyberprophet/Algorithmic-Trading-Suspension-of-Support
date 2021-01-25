@@ -2,28 +2,28 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.Catalog.Strategics;
+using ShareInvest.Client;
 using ShareInvest.EventHandler;
 
-namespace ShareInvest
+namespace ShareInvest.Indicators
 {
-	[SupportedOSPlatform("windows")]
 	class BringInInformation
 	{
 		public event EventHandler<SendConsecutive> Send;
-		internal BringInInformation(Codes cm)
+		internal BringInInformation(Codes cm, Queue<ConfirmRevisedStockPrice> revise, API api)
 		{
+			this.api = api;
 			this.cm = cm;
+			this.revise = revise;
 			Days = new Queue<Catalog.Strategics.Charts>();
 		}
 		internal async Task<string> StartProgress()
 		{
-			var revise = Progress.Client.GetContextAsync(new Catalog.Strategics.RevisedStockPrice { Code = cm.Code }).Result as Queue<ConfirmRevisedStockPrice>;
-			var modify = revise != null && revise.Count > 0 ? new ConfirmRevisedStockPrice[revise.Count] : null;
+			var modify = revise is not null && revise.Count > 0 ? new ConfirmRevisedStockPrice[revise.Count] : null;
 			var index = 0;
 			var tick = FindTheOldestDueDate().GetAsyncEnumerator();
 			var response = string.Empty;
@@ -107,7 +107,7 @@ namespace ShareInvest
 			if (cm.Code.Length == 8 && cm.Code[0] == '1' && cm.Code[1] == '0')
 			{
 				var stack = new Stack<Codes>();
-				var list = await Progress.Client.GetContextAsync(new Codes(), 8) as List<Codes>;
+				var list = await api.GetContextAsync(new Codes(), 8) as List<Codes>;
 
 				foreach (var arg in list.Where(o => o.Code.StartsWith(cm.Code.Substring(0, 3)) && o.Code.EndsWith(cm.Code[5..]))
 					.OrderByDescending(o => o.MaturityMarketCap.Length == 8 ? o.MaturityMarketCap[2..] : o.MaturityMarketCap))
@@ -118,7 +118,7 @@ namespace ShareInvest
 					}
 					stack.Push(arg);
 				}
-				foreach (var arg in (await Progress.Client.GetChartsAsync(new Catalog.Models.Charts
+				foreach (var arg in (await api.GetChartsAsync(new Catalog.Models.Charts
 				{
 					Code = stack.Peek().Code,
 					Start = string.Empty,
@@ -137,7 +137,7 @@ namespace ShareInvest
 					{
 						start = Base.CallUpTheChart(list.First(o => o.Code.Equals("101QC000")), last);
 
-						foreach (var arg in (await Progress.Client.GetChartsAsync(new Catalog.Models.Charts
+						foreach (var arg in (await api.GetChartsAsync(new Catalog.Models.Charts
 						{
 							Code = codes.Code,
 							Start = start.Length == 8 ? start[2..] : start,
@@ -154,7 +154,7 @@ namespace ShareInvest
 					}
 					start = Base.CallUpTheChart(codes, last);
 
-					yield return await Progress.Client.GetChartsAsync(new Catalog.Models.Charts
+					yield return await api.GetChartsAsync(new Catalog.Models.Charts
 					{
 						Code = codes.Code,
 						Start = start.Length == 8 ? start[2..] : start,
@@ -165,9 +165,9 @@ namespace ShareInvest
 			}
 			else if (cm.Code.Length == 6)
 			{
-				string sDate = await Progress.Client.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = empty, End = empty }) as string, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(Base.DateFormat) : sDate.Substring(0, 6);
+				string sDate = await api.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = empty, End = empty }) as string, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(Base.DateFormat) : sDate.Substring(0, 6);
 
-				foreach (var day in from day in (await Progress.Client.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = string.Empty, End = string.Empty }) as IEnumerable<Catalog.Strategics.Charts>).OrderBy(o => o.Date) where string.Compare(day.Date[2..], date) < 0 select day)
+				foreach (var day in from day in (await api.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = string.Empty, End = string.Empty }) as IEnumerable<Catalog.Strategics.Charts>).OrderBy(o => o.Date) where string.Compare(day.Date[2..], date) < 0 select day)
 					Days.Enqueue(day);
 
 				if (DateTime.TryParseExact(date, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime start))
@@ -176,7 +176,7 @@ namespace ShareInvest
 					var count = 0;
 
 					while (string.IsNullOrEmpty(end) || string.Compare(end, DateTime.Now.ToString(Base.DateFormat)) <= 0)
-						yield return await Progress.Client.GetChartsAsync(new Catalog.Models.Charts
+						yield return await api.GetChartsAsync(new Catalog.Models.Charts
 						{
 							Code = cm.Code,
 							Start = start.AddDays(-1).AddDays(0x5A * count++).ToString(Base.DateFormat),
@@ -189,7 +189,9 @@ namespace ShareInvest
 		{
 			get;
 		}
+		readonly Queue<ConfirmRevisedStockPrice> revise;
 		readonly Codes cm;
+		readonly API api;
 		const string empty = "empty";
 	}
 }

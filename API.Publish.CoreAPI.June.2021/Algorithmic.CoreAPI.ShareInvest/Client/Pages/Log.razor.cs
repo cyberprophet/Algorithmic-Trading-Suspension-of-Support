@@ -25,6 +25,7 @@ namespace ShareInvest.Pages
 		{
 			try
 			{
+				Temp = DateTime.UnixEpoch;
 				Logs = await Http.GetFromJsonAsync<Catalog.Models.Log[]>(Crypto.Security.GetRoute("Message", await OnReceiveLogUserInformation()));
 			}
 			catch (AccessTokenNotAvailableException exception)

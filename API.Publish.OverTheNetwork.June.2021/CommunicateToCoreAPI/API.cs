@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,10 +20,48 @@ namespace ShareInvest.Client
 	{
 		public static API GetInstance(dynamic key)
 		{
-			if (Client == null)
+			if (Client is null)
 				Client = new API(key);
 
 			return Client;
+		}
+		[SupportedOSPlatform("windows")]
+		public async Task<object> GetChartsAsync<T>(T param) where T : struct
+		{
+			if (param is Charts chart)
+				try
+				{
+					var request = security.RequestCharts(param);
+
+					if (request.Item2)
+					{
+						if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
+							return JsonConvert.DeserializeObject<string>(request.Item1);
+
+						else
+							return JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(request.Item1);
+					}
+					else if (string.IsNullOrEmpty(request.Item1) == false)
+					{
+						var response = await client.ExecuteAsync(new RestRequest(request.Item1, Method.GET), source.Token);
+
+						if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString("yyMMdd")) < 0 || chart.End.Length < 6)
+						{
+							var save = Security.Save(chart);
+							Repository.Save(save.Item1, save.Item2, response.Content);
+						}
+						if (Array.Exists(chart.Start.ToCharArray(), o => char.IsLetter(o)) && Array.Exists(chart.End.ToCharArray(), o => char.IsLetter(o)))
+							return JsonConvert.DeserializeObject<string>(response.Content);
+
+						else
+							return JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(response.Content);
+					}
+				}
+				catch (Exception ex)
+				{
+					Base.SendMessage(param.GetType(), chart.Code, ex.StackTrace);
+				}
+			return null;
 		}
 		public async Task<object> GetSecurityAsync(string security)
 		{
@@ -36,7 +75,6 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
 			}
 			return null;
 		}
@@ -61,7 +99,6 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
 			}
 			return new Retention
 			{
@@ -146,7 +183,6 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
 			}
 			return null;
 		}
@@ -162,7 +198,31 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
+			}
+			return null;
+		}
+		public async Task<object> PostConfirmAsync<T>(T param) where T : struct
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.POST).AddHeader(Security.content_type, Security.json).AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+
+				if (response.StatusCode.Equals(HttpStatusCode.OK))
+					switch (param)
+					{
+						case ConfirmStrategics:
+							return JsonConvert.DeserializeObject<bool>(response.Content);
+
+						case Files:
+							if (response.RawBytes != null && response.RawBytes.Length > 0)
+								return JsonConvert.DeserializeObject<Files>(response.Content);
+
+							break;
+					}
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
 			}
 			return null;
 		}
@@ -197,7 +257,6 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
 			}
 			return int.MinValue;
 		}
@@ -228,7 +287,6 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
 			}
 			return null;
 		}
@@ -252,7 +310,6 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
 			}
 			return null;
 		}
