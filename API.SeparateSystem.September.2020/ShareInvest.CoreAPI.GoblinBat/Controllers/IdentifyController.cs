@@ -9,15 +9,21 @@ using Microsoft.EntityFrameworkCore;
 namespace ShareInvest.Controllers
 {
 	[ApiController, Route(Security.route), Produces(Security.produces)]
-	public class SecurityController : ControllerBase
+	public class IdentifyController : ControllerBase
 	{
 		[HttpGet(Security.routeKey), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
 		public async Task<IActionResult> GetContextAsync(string key)
 		{
 			try
 			{
-				if (await context.Securities.AnyAsync(o => o.Identify.Equals(key)))
-					return Ok(context.Securities.Where(o => o.Identify.Equals(key)).ToList());
+				if (await context.Securities.AnyAsync(o => o.Security.Equals(key)))
+					return Ok(context.Securities.Where(o => o.Security.Equals(key)).Select(o => new
+					{
+						o.Code,
+						o.Strategics,
+						o.Methods,
+						o.Contents
+					}));
 			}
 			catch (Exception ex)
 			{
@@ -30,8 +36,8 @@ namespace ShareInvest.Controllers
 		{
 			try
 			{
-				if (await context.Securities.AnyAsync(o => o.Identify.Equals(key) && o.Code.Equals(code)))
-					return Ok(context.Securities.First(o => o.Code.Equals(code) && o.Identify.Equals(key)));
+				if (await context.Securities.AnyAsync(o => o.Security.Equals(key) && o.Code.Equals(code)))
+					return Ok(context.Securities.First(o => o.Code.Equals(code) && o.Security.Equals(key)));
 			}
 			catch (Exception ex)
 			{
@@ -40,11 +46,11 @@ namespace ShareInvest.Controllers
 			return BadRequest();
 		}
 		[HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
-		public async Task<IActionResult> PostContextAsync([FromBody] Models.Security security)
+		public async Task<IActionResult> PostContextAsync([FromBody] Models.Identify security)
 		{
 			try
 			{
-				if (await context.Securities.AnyAsync(o => o.Code.Equals(security.Code) && o.Identify.Equals(security.Identify)))
+				if (context.Securities.Any(o => o.Code.Equals(security.Code) && o.Security.Equals(security.Security)))
 					context.Entry(security).State = EntityState.Modified;
 
 				else
@@ -60,7 +66,7 @@ namespace ShareInvest.Controllers
 			}
 			return BadRequest();
 		}
-		public SecurityController(CoreApiDbContext context) => this.context = context;
+		public IdentifyController(CoreApiDbContext context) => this.context = context;
 		readonly CoreApiDbContext context;
 	}
 }

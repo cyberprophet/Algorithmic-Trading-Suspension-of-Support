@@ -179,8 +179,8 @@ namespace ShareInvest.Indicators
 						yield return await api.GetChartsAsync(new Catalog.Models.Charts
 						{
 							Code = cm.Code,
-							Start = start.AddDays(-1).AddDays(0x5A * count++).ToString(Base.DateFormat),
-							End = end = start.AddDays(-1).AddDays(0x5A * count).ToString(Base.DateFormat)
+							Start = start.AddDays(-1).AddDays(0x4B * count++).ToString(Base.DateFormat),
+							End = end = start.AddDays(-1).AddDays(0x4B * count).ToString(Base.DateFormat)
 						}) as IEnumerable<Catalog.Strategics.Charts>;
 				}
 			}

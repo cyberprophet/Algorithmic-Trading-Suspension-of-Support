@@ -92,7 +92,7 @@ namespace ShareInvest.Models
 			get; set;
 		}
 		[ForeignKey("Code")]
-		public virtual ICollection<Security> Securities
+		public virtual ICollection<Identify> Securities
 		{
 			get; set;
 		}
@@ -110,7 +110,7 @@ namespace ShareInvest.Models
 			Quarter = new HashSet<QuarterlyFinancialStatements>();
 			Incorporate = new HashSet<IncorporatedStocks>();
 			Ticks = new HashSet<Tick>();
-			Securities = new HashSet<Security>();
+			Securities = new HashSet<Identify>();
 		}
 	}
 }

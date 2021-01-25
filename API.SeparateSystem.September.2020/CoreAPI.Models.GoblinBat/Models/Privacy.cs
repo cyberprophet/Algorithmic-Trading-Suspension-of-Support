@@ -47,14 +47,14 @@ namespace ShareInvest.Models
 			get; set;
 		}
 		[ForeignKey("Security")]
-		public virtual ICollection<Security> Securities
+		public virtual ICollection<Identify> Securities
 		{
 			get; set;
 		}
 		public Privacy()
 		{
 			Conditions = new HashSet<SatisfyConditions>();
-			Securities = new HashSet<Security>();
+			Securities = new HashSet<Identify>();
 		}
 	}
 }

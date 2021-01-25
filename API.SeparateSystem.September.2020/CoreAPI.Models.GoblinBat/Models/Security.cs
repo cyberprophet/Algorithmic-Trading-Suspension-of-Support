@@ -3,10 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-	public class Security
+	public class Identify
 	{
 		[ForeignKey("Privacy"), Column(Order = 1)]
-		public string Identify
+		public string Security
 		{
 			get; set;
 		}
@@ -21,6 +21,11 @@ namespace ShareInvest.Models
 			get; set;
 		}
 		[Column(Order = 4)]
+		public string Methods
+		{
+			get; set;
+		}
+		[Column(Order = 5)]
 		public string Contents
 		{
 			get; set;

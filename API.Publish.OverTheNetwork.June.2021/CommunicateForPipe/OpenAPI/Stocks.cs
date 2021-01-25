@@ -14,6 +14,10 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
+		public override string Memo
+		{
+			get; set;
+		}
 		public override int Quantity
 		{
 			get; set;
@@ -47,6 +51,10 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 			get; set;
 		}
 		public override Dictionary<string, dynamic> OrderNumber
+		{
+			get; set;
+		}
+		public override Stack<double> Trend
 		{
 			get; set;
 		}

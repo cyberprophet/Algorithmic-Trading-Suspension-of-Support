@@ -138,6 +138,8 @@ namespace ShareInvest
 							break;
 
 						case Catalog.OpenAPI.Operation.장시작:
+							foreach (var ctor in (connect as OpenAPI.ConnectAPI).Enumerator)
+								ctor.Wait = true;
 
 							break;
 
@@ -279,6 +281,9 @@ namespace ShareInvest
 					return;
 
 				case Tuple<long, long> balance when now.Hour == 8 || now.Hour == 0xF:
+					if (Reservation is null && (api.IsAdministrator is false || Base.IsDebug) && await api.GetStrategics(key) is IEnumerable<BringIn> enumerable)
+						BringInStrategics(enumerable);
+
 					Reservation = new Reservation(balance.Item2, connect.Account);
 					return;
 
@@ -433,15 +438,32 @@ namespace ShareInvest
 
 				}
 		}
-		[Conditional("DEBUG")]
-		void SendReservation(DialogResult result)
-		{
-			if (DialogResult.OK.Equals(result))
-				worker.RunWorkerAsync();
-		}
+		void BringInStrategics(IEnumerable<BringIn> strategics) => worker.RunWorkerAsync(strategics);
 		void WorkerDoWork(object sender, DoWorkEventArgs e)
 		{
+			if (e.Argument is IEnumerable<BringIn> enumerable && connect is OpenAPI.ConnectAPI api)
+				foreach (var bring in enumerable)
+					if (api.TryGetValue(bring.Code, out Analysis analysis))
+					{
+						if (analysis.Trend is null && string.IsNullOrEmpty(analysis.Memo))
+							analysis.Trend = new Stack<double>(0x80);
 
+						else if (analysis.Memo.Equals(bring.Methods))
+							continue;
+
+						else
+						{
+							analysis.Wait = false;
+							analysis.Trend.Clear();
+						}
+						analysis.Memo = bring.Methods;
+
+						var append = api.Append(bring.Code, analysis);
+						var now = DateTime.Now;
+
+						if (now.Hour > 8 && now.Hour < 16)
+							append.Wait = true;
+					}
 		}
 		void TimerTick(object sender, EventArgs e)
 		{

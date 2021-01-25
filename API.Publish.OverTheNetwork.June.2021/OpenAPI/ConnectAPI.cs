@@ -265,6 +265,14 @@ namespace ShareInvest.OpenAPI
 		{
 			get; private set;
 		}
+		public IEnumerable<Analysis> Enumerator
+		{
+			get
+			{
+				foreach (var ctor in API.StocksHeld)
+					yield return ctor.Value;
+			}
+		}
 		public IEnumerable<ISendSecuritiesAPI<SendSecuritiesAPI>> Chejan
 		{
 			get

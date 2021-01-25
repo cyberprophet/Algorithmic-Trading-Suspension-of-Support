@@ -14,6 +14,10 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		public abstract string Memo
+		{
+			get; set;
+		}
 		public abstract int Quantity
 		{
 			get; set;
@@ -47,6 +51,10 @@ namespace ShareInvest
 			get; set;
 		}
 		public abstract Dictionary<string, dynamic> OrderNumber
+		{
+			get; set;
+		}
+		public abstract Stack<double> Trend
 		{
 			get; set;
 		}

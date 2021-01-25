@@ -63,6 +63,21 @@ namespace ShareInvest.Client
 				}
 			return null;
 		}
+		public async Task<object> GetStrategics(string security)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(this.security.RequestTheIntegratedAddress(security), Method.GET), source.Token);
+
+				if (response.StatusCode.Equals(HttpStatusCode.OK))
+					return JsonConvert.DeserializeObject<IEnumerable<BringIn>>(response.Content);
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			return null;
+		}
 		public async Task<object> GetSecurityAsync(string security)
 		{
 			try

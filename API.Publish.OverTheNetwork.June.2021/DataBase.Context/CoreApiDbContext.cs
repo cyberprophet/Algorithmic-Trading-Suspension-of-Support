@@ -26,7 +26,7 @@ namespace ShareInvest
 			builder.Entity<FinancialStatement>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<QuarterlyFinancialStatements>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<Tick>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<Security>().HasKey(o => new { o.Identify, o.Code });
+			builder.Entity<Identify>().HasKey(o => new { o.Security, o.Code });
 			builder.Entity<Connection>().HasKey(o => new { o.Email, o.Kiwoom });
 		}
 		public CoreApiDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> store) : base(options, store) => this.store = store;
@@ -98,7 +98,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		public DbSet<Security> Securities
+		public DbSet<Identify> Securities
 		{
 			get; set;
 		}

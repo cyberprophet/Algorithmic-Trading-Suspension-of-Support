@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.Versioning;
@@ -62,7 +63,23 @@ namespace ShareInvest
 		{
 			var directory = new DirectoryInfo(path);
 
-			if (directory.Exists == false)
+			if (directory.Exists)
+				foreach (var before in directory.GetFiles("*.Res", SearchOption.AllDirectories))
+				{
+					var find = before.Name.Split('.')[0].Split('-');
+
+					if (find.Length == 2)
+					{
+						if (DateTime.TryParseExact(find[0], Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime start) && DateTime.TryParseExact(find[1], Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime end))
+						{
+							if (start.AddDays(0x4B).CompareTo(end) < 0)
+								before.Delete();
+						}
+						else
+							before.Delete();
+					}
+				}
+			else
 				directory.Create();
 
 			using var sw = new StreamWriter(file, false);
