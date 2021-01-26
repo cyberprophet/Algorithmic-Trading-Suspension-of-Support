@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog;
@@ -35,7 +36,7 @@ namespace ShareInvest
 			{
 				var now = DateTime.Now;
 
-				if (string.IsNullOrEmpty(str) is false && (str.Length == 6 || str.Length == 8) && await api.GetContextAsync(str) is Retention retention && string.IsNullOrEmpty(retention.Code) is false)
+				if (string.IsNullOrEmpty(str) is false && str.Length is 6 or 8 && await api.GetContextAsync(str) is Retention retention && string.IsNullOrEmpty(retention.Code) is false)
 				{
 					if (string.IsNullOrEmpty(retention.LastDate) is false && now.ToString(Base.DateFormat).Equals(retention.LastDate.Substring(0, 6)) || string.IsNullOrEmpty(retention.Code) is false && retention.LastDate is null)
 						OnReceiveInformationTheDay();
@@ -108,6 +109,43 @@ namespace ShareInvest
 
 			switch (e.Convey)
 			{
+				case Catalog.OpenAPI.Order order when (connect as OpenAPI.ConnectAPI).TryGetValue(order.Code, out Analysis oc):
+					if (Cash < order.Price)
+					{
+						foreach (var kv in oc.OrderNumber.OrderBy(o => o.Value))
+							if (Cash < order.Price && oc.OrderNumber.Count > 1)
+							{
+								connect.SendOrder(new Catalog.OpenAPI.Order
+								{
+									AccNo = order.AccNo,
+									Code = order.Code,
+									HogaGb = order.HogaGb,
+									OrgOrderNo = kv.Key,
+									OrderType = (int)OrderType.매수취소,
+									Price = order.Price,
+									Qty = order.Qty
+								});
+								Cash += kv.Value;
+							}
+					}
+					else if (oc.Quantity > 0 && oc.Quantity - oc.OrderNumber.Count(o => o.Value > order.Price) < 1)
+						connect.SendOrder(new Catalog.OpenAPI.Order
+						{
+							AccNo = order.AccNo,
+							OrderType = (int)OrderType.매도취소,
+							Code = order.Code,
+							Qty = order.Qty,
+							Price = order.Price,
+							HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+							OrgOrderNo = oc.OrderNumber.OrderByDescending(o => o.Value).First().Key
+						});
+					connect.SendOrder(order);
+					return;
+
+				case int cash:
+					Cash += cash;
+					return;
+
 				case Dictionary<string, string> chejan:
 					if (await server.PutContextAsync(sender.GetType(), chejan) is int status)
 						Base.SendMessage(sender.GetType(), chejan["종목명"], status);
@@ -130,15 +168,17 @@ namespace ShareInvest
 
 								case construction:
 									if (Reservation is not null)
+									{
+										Cash = Reservation.Cash;
 										Reservation.Clear();
-
+									}
 									RequestBalanceInquiry();
 									return;
 							}
 							break;
 
-						case Catalog.OpenAPI.Operation.장시작:
-							foreach (var ctor in (connect as OpenAPI.ConnectAPI).Enumerator)
+						case Catalog.OpenAPI.Operation.장시작 when (Base.IsDebug || api.IsAdministrator is false) && connect is OpenAPI.ConnectAPI wait:
+							foreach (var ctor in wait.Enumerator)
 								ctor.Wait = true;
 
 							break;
@@ -179,6 +219,7 @@ namespace ShareInvest
 					return;
 
 				case Tuple<string, string, string, string, int> tr when string.IsNullOrEmpty(tr.Item1) is false:
+					var app = connect as OpenAPI.ConnectAPI;
 					var param = new Codes
 					{
 						Code = tr.Item1,
@@ -191,15 +232,56 @@ namespace ShareInvest
 					{
 						connect.Writer.WriteLine(string.Concat(param.GetType().Name, '|', param.Code, '|', param.Price));
 						var classfication = param.Code.Length == 6 || param.Code.Length == 8 && param.Code[1].CompareTo('0') > 0;
-						(connect as OpenAPI.ConnectAPI).Append(tr.Item1, new SecondaryIndicators.OpenAPI.Stocks
+
+						if (Base.IsDebug || api.IsAdministrator is false)
 						{
-							Code = tr.Item1,
-							Name = tr.Item2,
-							Current = classfication ? (int)price : price,
-							MarketMarginRate = tr.Item5,
-							Offer = classfication ? 0 : 0D,
-							Bid = classfication ? 0 : 0D
-						});
+							if (classfication)
+							{
+								if (param.Code.Length == 6)
+									app.Append(tr.Item1, new SecondaryIndicators.OpenAPI.Stocks
+									{
+										Code = tr.Item1,
+										Name = tr.Item2,
+										Current = (int)price,
+										MarketMarginRate = tr.Item5,
+										Offer = 0,
+										Bid = 0
+									}).Send += OnReceiveSecuritiesAPI;
+								else if (param.Code.Length == 8 && param.Code[1].CompareTo('0') > 0)
+									app.Append(tr.Item1, new SecondaryIndicators.OpenAPI.StockFutures
+									{
+										Code = tr.Item1,
+										Name = tr.Item2,
+										Current = (int)price,
+										MarketMarginRate = tr.Item5,
+										Offer = 0,
+										Bid = 0
+									}).Send += OnReceiveSecuritiesAPI;
+							}
+							else
+							{
+								if (param.Code.Length == 8 && param.Code[0] is '1')
+									app.Append(tr.Item1, new SecondaryIndicators.OpenAPI.Futures
+									{
+										Code = tr.Item1,
+										Name = tr.Item2,
+										Current = price,
+										MarketMarginRate = tr.Item5,
+										Offer = 0D,
+										Bid = 0D
+									}).Send += OnReceiveSecuritiesAPI;
+								else if (param.Code.Length == 8 && param.Code[0] is '2' or '3')
+									app.Append(tr.Item1, new SecondaryIndicators.OpenAPI.Options
+									{
+										Code = tr.Item1,
+										Name = tr.Item2,
+										Current = price,
+										MarketMarginRate = tr.Item5,
+										Offer = 0D,
+										Bid = 0D
+									}).Send += OnReceiveSecuritiesAPI;
+							}
+						}
 						if (param.Code.Length == 6 || param.Code.Length == 8 && param.Code[1] is '0')
 							Codes.Enqueue(param.Code);
 					}
@@ -208,9 +290,9 @@ namespace ShareInvest
 						if (Codes.TryPeek(out string code) && code.Length > 8 && Codes.TryDequeue(out string dequeue))
 						{
 							var temp = dequeue.Split('_');
-							(connect as OpenAPI.ConnectAPI).RemoveValueRqData(temp[0], temp[^1]).Send -= OnReceiveSecuritiesAPI;
+							app.RemoveValueRqData(temp[0], temp[^1]).Send -= OnReceiveSecuritiesAPI;
 						}
-						(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, param.Code).Send -= OnReceiveSecuritiesAPI;
+						app.RemoveValueRqData(sender.GetType().Name, param.Code).Send -= OnReceiveSecuritiesAPI;
 					}
 					if ((param.Code.Length == 6 || param.Code.Length == 8 && param.Code[0] > '1') && api.IsAdministrator && await api.PutContextAsync(param) is string response && param.Code.Equals(response))
 						notifyIcon.Text = param.Name;
@@ -238,13 +320,15 @@ namespace ShareInvest
 
 				case Queue<string[]> hold:
 					var name = sender.GetType().Name;
-					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(name, string.Concat(connect.Account[name.EndsWith("Opw00005") ? 0 : ^1], password)).Send -= OnReceiveSecuritiesAPI;
+					var bal = connect as OpenAPI.ConnectAPI;
+					bal.RemoveValueRqData(name, string.Concat(connect.Account[name.EndsWith("Opw00005") ? 0 : ^1], password)).Send -= OnReceiveSecuritiesAPI;
 
 					while (hold.TryDequeue(out string[] ing))
 						if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate) && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase) && await server.PostContextAsync(new Balance
 						{
+							Account = connect.Account[^1].Substring(0, 8).Insert(4, "－"),
 							Code = ing[0],
-							Name = ing[1].Equals(ing[0]) && (connect as OpenAPI.ConnectAPI).TryGetValue(ing[1], out Analysis analysis) ? analysis.Name : ing[1],
+							Name = ing[1].Equals(ing[0]) && bal.TryGetValue(ing[1], out Analysis analysis) ? analysis.Name : ing[1],
 							Quantity = (ing[2].Equals("1") ? -quantity : quantity).ToString("N0"),
 							Purchase = fPurchase.ToString(ing[0][1] is '0' ? "N2" : "N0"),
 							Current = fCurrent.ToString(ing[0][1] is '0' ? "N2" : "N0"),
@@ -253,11 +337,11 @@ namespace ShareInvest
 							Separation = string.Empty,
 							Trend = string.Empty
 						}) is 0xC8)
-						{
 							Base.SendMessage(sender.GetType(), ing[0], quantity);
-						}
+
 						else if (ing[3].Length > 0 && ing[3][0] is 'A' && double.TryParse(ing[0xC]?.Insert(6, "."), out double ratio) && long.TryParse(ing[0xB], out long valuation) && int.TryParse(ing[6], out int amount) && uint.TryParse(ing[8], out uint purchase) && uint.TryParse(ing[7], out uint current) && await server.PostContextAsync(new Balance
 						{
+							Account = connect.Account[0].Substring(0, 8).Insert(4, "－"),
 							Code = ing[3][1..].Trim(),
 							Name = ing[4].Trim(),
 							Quantity = amount.ToString("N0"),
@@ -269,18 +353,18 @@ namespace ShareInvest
 							Separation = string.Empty
 						}) is 0xC8)
 						{
-							if (Reservation is not null && (connect as OpenAPI.ConnectAPI).TryGetValue(ing[3][1..].Trim(), out Analysis held))
+							if (Reservation is not null && (Base.IsDebug || api.IsAdministrator is false) && bal.TryGetValue(ing[3][1..].Trim(), out Analysis held))
 							{
 								held.Quantity = amount;
 								held.Purchase = purchase;
 								held.Current = current;
-								Reservation.Push((connect as OpenAPI.ConnectAPI).Append(held.Code, held));
+								Reservation.Push(bal.Append(held.Code, held));
 							}
 							Base.SendMessage(sender.GetType(), ing[4].Trim(), amount);
 						}
 					return;
 
-				case Tuple<long, long> balance when now.Hour == 8 || now.Hour == 0xF:
+				case Tuple<long, long> balance when now.Hour is 8 or 0xF:
 					if (Reservation is null && (api.IsAdministrator is false || Base.IsDebug) && await api.GetStrategics(key) is IEnumerable<BringIn> enumerable)
 						BringInStrategics(enumerable);
 
@@ -445,24 +529,27 @@ namespace ShareInvest
 				foreach (var bring in enumerable)
 					if (api.TryGetValue(bring.Code, out Analysis analysis))
 					{
-						if (analysis.Trend is null && string.IsNullOrEmpty(analysis.Memo))
-							analysis.Trend = new Stack<double>(0x80);
-
-						else if (analysis.Memo.Equals(bring.Methods))
+						if (string.IsNullOrEmpty(analysis.Memo) is false && analysis.Memo.Equals(bring.Methods))
 							continue;
+
+						else if (analysis.Trend is null)
+							analysis.Trend = new Stack<double>(0x80);
 
 						else
 						{
 							analysis.Wait = false;
 							analysis.Trend.Clear();
 						}
+						analysis.Consecutive -= analysis.OnReceiveDrawChart;
+						analysis.Send -= OnReceiveSecuritiesAPI;
 						analysis.Memo = bring.Methods;
-
 						var append = api.Append(bring.Code, analysis);
-						var now = DateTime.Now;
 
-						if (now.Hour > 8 && now.Hour < 16)
+						if (DateTime.Now.Hour is > 8 and < 0x10)
 							append.Wait = true;
+
+						append.Send += OnReceiveSecuritiesAPI;
+						append.Consecutive += append.OnReceiveDrawChart;
 					}
 		}
 		void TimerTick(object sender, EventArgs e)
@@ -644,7 +731,7 @@ namespace ShareInvest
 					connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), Base.CheckIfMarketDelay(now) ? "|3;100000;000000" : "|3;090000;000000"));
 					return;
 
-				case DialogResult.Abort when now.Hour < 5 || DayOfWeek.Sunday.Equals(now.DayOfWeek) || DayOfWeek.Saturday.Equals(now.DayOfWeek):
+				case DialogResult.Abort when now.Hour < 5 || now.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday:
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}
@@ -662,6 +749,10 @@ namespace ShareInvest
 		int[] GetTheCorrectAnswer
 		{
 			get;
+		}
+		long Cash
+		{
+			get; set;
 		}
 		readonly string key;
 		readonly Random random;

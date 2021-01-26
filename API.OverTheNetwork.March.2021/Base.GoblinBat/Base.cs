@@ -283,6 +283,6 @@ namespace ShareInvest
 		const string start = "0859";
 		const string transmit = "1529";
 		const string transaction_suspension = "거래정지";
-		const double tax = 2.5e-3;
+		const double tax = 25e-4 + 15e-5 + 15e-5;
 	}
 }

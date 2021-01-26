@@ -1,16 +1,27 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
-using ShareInvest.Interface;
+using ShareInvest.EventHandler;
 
 namespace ShareInvest
 {
 	public abstract class Analysis
 	{
+		public abstract event EventHandler<SendConsecutive> Consecutive;
+		public abstract event EventHandler<SendSecuritiesAPI> Send;
+		public abstract int OnReceiveConclusion(Dictionary<string, string> conclusion);
+		public abstract void OnReceiveEvent(string time, string price, string volume);
+		public abstract void OnReceiveDrawChart(object sender, SendConsecutive e);
+		public abstract bool GetCheckOnDate(string date);
 		public abstract string Code
 		{
 			get; set;
 		}
 		public abstract string Name
+		{
+			get; set;
+		}
+		public abstract string Account
 		{
 			get; set;
 		}
@@ -38,7 +49,15 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		public abstract double Rate
+		{
+			get; set;
+		}
 		public abstract double MarketMarginRate
+		{
+			get; set;
+		}
+		public abstract long Revenue
 		{
 			get; set;
 		}
@@ -46,7 +65,11 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		public abstract IStrategics Strategics
+		public abstract Interface.Strategics Strategics
+		{
+			get; set;
+		}
+		public abstract Interface.IStrategics Classification
 		{
 			get; set;
 		}
@@ -58,6 +81,14 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		public abstract Stack<double> Long
+		{
+			get; set;
+		}
+		public abstract Stack<double> Short
+		{
+			get; set;
+		}
 		internal abstract dynamic SellPrice
 		{
 			get; set;
@@ -66,5 +97,26 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		protected internal abstract string DateLine
+		{
+			get; set;
+		}
+		protected internal abstract double Gap
+		{
+			get; set;
+		}
+		protected internal abstract double Peek
+		{
+			get; set;
+		}
+		protected internal abstract DateTime NextOrderTime
+		{
+			get; set;
+		}
+		protected internal const string conclusion = "체결";
+		protected internal const string acceptance = "접수";
+		protected internal const string confirmation = "확인";
+		protected internal const string cancellantion = "취소";
+		protected internal const string correction = "정정";
 	}
 }

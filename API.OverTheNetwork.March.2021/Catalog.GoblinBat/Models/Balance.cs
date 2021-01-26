@@ -10,6 +10,10 @@
 		{
 			get; set;
 		}
+		public string Account
+		{
+			get; set;
+		}
 		public string Quantity
 		{
 			get; set;

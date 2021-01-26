@@ -14,8 +14,7 @@ namespace ShareInvest
 		{
 			var now = DateTime.Now;
 			var compress = Compress(json);
-			string storage = Path.Combine(path, code, now.Year.ToString("D4"), now.Month.ToString("D2")),
-				file = string.Concat(storage, @"\", now.Day.ToString("D2"), '_', start.ToString("D9"), '_', end.ToString("D9"), '_', string.IsNullOrEmpty(price) ? "Empty" : price, extension);
+			string storage = Path.Combine(path, code, now.Year.ToString("D4"), now.Month.ToString("D2")), file = string.Concat(storage, @"\", now.Day.ToString("D2"), '_', start.ToString("D9"), '_', end.ToString("D9"), '_', string.IsNullOrEmpty(price) ? "Empty" : price, extension);
 			CreateTheDirectory(new DirectoryInfo(storage));
 			using (var sw = new StreamWriter(file, false))
 				sw.Write(compress.Item1);
@@ -30,8 +29,7 @@ namespace ShareInvest
 		}
 		public static (string, bool) RetrieveSavedMaterial(Catalog.Models.Loading loading)
 		{
-			string storage = Path.Combine(path, loading.Code, loading.Year.ToString("D4"), loading.Month.ToString("D2")), material,
-				file = string.Concat(storage, @"\", loading.Day.ToString("D2"), '_', loading.Start.ToString("D9"), '_', loading.End.ToString("D9"), '_', loading.Price, extension);
+			string storage = Path.Combine(path, loading.Code, loading.Year.ToString("D4"), loading.Month.ToString("D2")), material, file = string.Concat(storage, @"\", loading.Day.ToString("D2"), '_', loading.Start.ToString("D9"), '_', loading.End.ToString("D9"), '_', loading.Price, extension);
 			var info = new DirectoryInfo(storage);
 
 			if (ReadTheFile(file))

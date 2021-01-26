@@ -36,5 +36,21 @@ namespace ShareInvest.EventHandler
 			Price = price;
 			Volume = volume;
 		}
+		public SendConsecutive(string date, string price, int volume)
+		{
+			if (int.TryParse(price[0] is '-' ? price[1..] : price, out int current))
+				Price = current;
+
+			Date = date;
+			Volume = volume;
+		}
+		public SendConsecutive(int volume, string price, string date)
+		{
+			if (double.TryParse(price[0] is '-' ? price[1..] : price, out double current))
+				Price = current;
+
+			Date = date;
+			Volume = volume;
+		}
 	}
 }

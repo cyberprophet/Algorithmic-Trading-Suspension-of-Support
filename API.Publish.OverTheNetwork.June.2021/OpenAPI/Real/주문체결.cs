@@ -21,7 +21,15 @@ namespace ShareInvest.OpenAPI.Catalog
 			foreach (var fid in Enum.GetValues(typeof(Conclusion)))
 				conclusion[fid.ToString()] = API.GetChejanData((int)fid);
 
-			Send?.Invoke(this, new SendSecuritiesAPI(conclusion));
+			var code = conclusion[Conclusion.종목코드_업종코드.ToString()];
+
+			if (Connect.GetInstance().StocksHeld.TryGetValue(code[0] is 'A' ? code[1..] : code, out Analysis analysis))
+			{
+				if (analysis.OrderNumber is null)
+					analysis.OrderNumber = new Dictionary<string, dynamic>();
+
+				Send?.Invoke(this, new SendSecuritiesAPI(analysis.OnReceiveConclusion(conclusion)));
+			}
 		}
 	}
 }

@@ -6,6 +6,7 @@
 	<table class="table">
 		<thead>
 			<tr>
+				<th>계좌번호</th>
 				<th>종목코드</th>
 				<th>종목명</th>
 				<th>수량</th>
@@ -21,6 +22,7 @@
 				@foreach (var bal in Balance)
 				{
 					<tr>
+						<th>@bal.Value.Account</th>
 						<td>@bal.Key</td>
 						<td>@bal.Value.Name</td>
 						<td>@bal.Value.Quantity</td>

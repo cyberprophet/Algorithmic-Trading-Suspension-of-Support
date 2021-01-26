@@ -21,7 +21,7 @@ namespace ShareInvest
 
 					switch (r.Strategics)
 					{
-						case Catalog.SatisfyConditionsAccordingToTrends sc:
+						case Strategics.SC when r.Classification is Catalog.SatisfyConditionsAccordingToTrends sc:
 							if (sc.ReservationSellQuantity > 0)
 							{
 								sell = Base.GetStartingPrice((int)(r.Purchase * (1 + sc.ReservationSellRate)), stock);
@@ -96,9 +96,9 @@ namespace ShareInvest
 		}
 		public void Clear() => Orders.Clear();
 		public void Push(Analysis stocks_held) => Orders.Push(stocks_held);
-		long Cash
+		public long Cash
 		{
-			get; set;
+			get; private set;
 		}
 		Stack<Analysis> Orders
 		{
