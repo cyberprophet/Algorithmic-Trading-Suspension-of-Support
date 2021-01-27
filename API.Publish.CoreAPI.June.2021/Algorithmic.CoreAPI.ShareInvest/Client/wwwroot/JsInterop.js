@@ -16,5 +16,13 @@
 			block: "center",
 			inline: "start"
 		});
+	},
+	download: function (param)
+	{
+		var link = document.createElement('a');
+		link.href = param;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
 	}
 };

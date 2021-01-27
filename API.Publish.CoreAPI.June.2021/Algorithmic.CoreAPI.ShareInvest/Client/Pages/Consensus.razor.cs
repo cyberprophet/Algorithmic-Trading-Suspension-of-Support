@@ -15,7 +15,7 @@ using Microsoft.JSInterop;
 namespace ShareInvest.Pages
 {
 	[Authorize]
-	public partial class PortfolioBase : ComponentBase, IAsyncDisposable
+	public partial class ConsensusBase : ComponentBase, IAsyncDisposable
 	{
 		public async ValueTask DisposeAsync()
 		{
@@ -151,11 +151,6 @@ namespace ShareInvest.Pages
 		{
 			get; set;
 		}
-		[Inject]
-		protected internal IJSRuntime Runtime
-		{
-			get; set;
-		}
 		protected internal static string ConvertFormat(char initial, string param)
 		{
 			var unit = string.Empty;
@@ -188,6 +183,11 @@ namespace ShareInvest.Pages
 				=> (param < 0 ? param.ToString("P2")[1..] : param.ToString("P2"), param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
 		[Inject]
 		HttpClient Http
+		{
+			get; set;
+		}
+		[Inject]
+		IJSRuntime Runtime
 		{
 			get; set;
 		}

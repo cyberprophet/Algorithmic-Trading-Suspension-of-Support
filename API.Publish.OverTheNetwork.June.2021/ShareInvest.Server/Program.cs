@@ -10,12 +10,13 @@ namespace ShareInvest
 		{
 			var security = new Security();
 
-			for (int i = 0; i < security.Length; i++)
+			for (int i = 0; i < security.Length + 1; i++)
 			{
-				foreach (var securtiy in new[] { security.Commands(i), security.Compress(i) })
-					ChooseTheInstallationPath(securtiy);
+				if (i < security.Length)
+					foreach (var securtiy in new[] { security.Commands(i), security.Compress(i) })
+						ChooseTheInstallationPath(securtiy);
 
-				if (security.SendUpdateToFile(i).Result is string file && i == 0)
+				if (security.SendUpdateToFile(i).Result is string file && (i == 0 || i == security.Length))
 					File.Delete(file);
 			}
 		}

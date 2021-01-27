@@ -1,0 +1,12 @@
+﻿@page "/download"
+@inherits DownloadBase
+
+<div class="page">
+	<ul class="nav flex-column">
+		<li class="nav-item px-3">
+			<a href="javascript:void(0)" @onclick="@(async () => await TryToDownloadAsync())" target="_blank">
+				<span class="oi oi-cloud-download" aria-hidden="true" /> ‘Algorithmic Trading’s Client
+			</a>
+		</li>
+	</ul>
+</div>

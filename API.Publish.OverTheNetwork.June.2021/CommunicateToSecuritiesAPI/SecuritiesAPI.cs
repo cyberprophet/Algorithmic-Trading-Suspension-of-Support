@@ -109,36 +109,37 @@ namespace ShareInvest
 
 			switch (e.Convey)
 			{
-				case Catalog.OpenAPI.Order order when (connect as OpenAPI.ConnectAPI).TryGetValue(order.Code, out Analysis oc):
-					if (Cash < order.Price)
+				case Catalog.OpenAPI.Order order:
+					if ((connect as OpenAPI.ConnectAPI).TryGetValue(order.Code, out Analysis oc) && oc.OrderNumber is not null)
 					{
-						foreach (var kv in oc.OrderNumber.OrderBy(o => o.Value))
-							if (Cash < order.Price && oc.OrderNumber.Count > 1)
+						if (oc.Quantity > 0 && oc.Quantity - oc.OrderNumber.Count(o => o.Value > order.Price) < 1)
+							connect.SendOrder(new Catalog.OpenAPI.Order
 							{
-								connect.SendOrder(new Catalog.OpenAPI.Order
+								AccNo = order.AccNo,
+								OrderType = (int)OrderType.매도취소,
+								Code = order.Code,
+								Qty = order.Qty,
+								Price = order.Price,
+								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+								OrgOrderNo = oc.OrderNumber.OrderByDescending(o => o.Value).First().Key
+							});
+						else if (Cash < order.Price)
+							foreach (var kv in oc.OrderNumber.OrderBy(o => o.Value))
+								if (Cash < order.Price && oc.OrderNumber.Count > 1)
 								{
-									AccNo = order.AccNo,
-									Code = order.Code,
-									HogaGb = order.HogaGb,
-									OrgOrderNo = kv.Key,
-									OrderType = (int)OrderType.매수취소,
-									Price = order.Price,
-									Qty = order.Qty
-								});
-								Cash += kv.Value;
-							}
+									connect.SendOrder(new Catalog.OpenAPI.Order
+									{
+										AccNo = order.AccNo,
+										Code = order.Code,
+										HogaGb = order.HogaGb,
+										OrgOrderNo = kv.Key,
+										OrderType = (int)OrderType.매수취소,
+										Price = order.Price,
+										Qty = order.Qty
+									});
+									Cash += kv.Value;
+								}
 					}
-					else if (oc.Quantity > 0 && oc.Quantity - oc.OrderNumber.Count(o => o.Value > order.Price) < 1)
-						connect.SendOrder(new Catalog.OpenAPI.Order
-						{
-							AccNo = order.AccNo,
-							OrderType = (int)OrderType.매도취소,
-							Code = order.Code,
-							Qty = order.Qty,
-							Price = order.Price,
-							HogaGb = ((int)HogaGb.지정가).ToString("D2"),
-							OrgOrderNo = oc.OrderNumber.OrderByDescending(o => o.Value).First().Key
-						});
 					connect.SendOrder(order);
 					return;
 
@@ -146,9 +147,9 @@ namespace ShareInvest
 					Cash += cash;
 					return;
 
-				case Dictionary<string, string> chejan:
-					if (await server.PutContextAsync(sender.GetType(), chejan) is int status)
-						Base.SendMessage(sender.GetType(), chejan["종목명"], status);
+				case Balance balance:
+					if (await server.PostContextAsync(balance) is int status)
+						Base.SendMessage(sender.GetType(), balance.Name, status);
 
 					return;
 

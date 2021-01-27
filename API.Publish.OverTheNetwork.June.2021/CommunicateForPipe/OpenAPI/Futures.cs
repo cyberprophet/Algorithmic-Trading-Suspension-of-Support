@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using ShareInvest.Catalog.Models;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest.SecondaryIndicators.OpenAPI
@@ -9,7 +10,11 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 	{
 		public override event EventHandler<SendSecuritiesAPI> Send;
 		public override event EventHandler<SendConsecutive> Consecutive;
-		public override int OnReceiveConclusion(Dictionary<string, string> conclusion)
+		public override Balance OnReceiveBalance(Dictionary<int, string> balance)
+		{
+			return new Balance { };
+		}
+		public override int OnReceiveConclusion(Dictionary<int, string> conclusion)
 		{
 			var cash = 0;
 

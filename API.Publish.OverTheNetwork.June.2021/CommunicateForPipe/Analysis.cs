@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using ShareInvest.Catalog.Models;
 using ShareInvest.EventHandler;
 
 namespace ShareInvest
@@ -9,7 +10,8 @@ namespace ShareInvest
 	{
 		public abstract event EventHandler<SendConsecutive> Consecutive;
 		public abstract event EventHandler<SendSecuritiesAPI> Send;
-		public abstract int OnReceiveConclusion(Dictionary<string, string> conclusion);
+		public abstract Balance OnReceiveBalance(Dictionary<int, string> balance);
+		public abstract int OnReceiveConclusion(Dictionary<int, string> conclusion);
 		public abstract void OnReceiveEvent(string time, string price, string volume);
 		public abstract void OnReceiveDrawChart(object sender, SendConsecutive e);
 		public abstract bool GetCheckOnDate(string date);

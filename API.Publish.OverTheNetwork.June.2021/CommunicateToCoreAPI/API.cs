@@ -41,7 +41,7 @@ namespace ShareInvest.Client
 						else
 							return JsonConvert.DeserializeObject<IEnumerable<Catalog.Strategics.Charts>>(request.Item1);
 					}
-					else if (string.IsNullOrEmpty(request.Item1) == false)
+					else if (string.IsNullOrEmpty(request.Item1) is false)
 					{
 						var response = await client.ExecuteAsync(new RestRequest(request.Item1, Method.GET), source.Token);
 
@@ -59,7 +59,7 @@ namespace ShareInvest.Client
 				}
 				catch (Exception ex)
 				{
-					Base.SendMessage(param.GetType(), chart.Code, ex.StackTrace);
+					Base.SendMessage(param.GetType(), chart.Code, chart.Start, ex.StackTrace);
 				}
 			return null;
 		}

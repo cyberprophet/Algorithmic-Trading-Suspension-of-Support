@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -76,21 +75,6 @@ namespace ShareInvest.Client
 
 							return (int)response.StatusCode;
 					}
-			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(GetType(), ex.StackTrace);
-			}
-			return null;
-		}
-		public async Task<object> PutContextAsync(Type type, Dictionary<string, string> param)
-		{
-			try
-			{
-				var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(type), Method.PUT).AddHeader(Security.content_type, Security.json).AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
-
-				if (response.StatusCode.Equals(HttpStatusCode.OK) is false)
-					return (int)response.StatusCode;
 			}
 			catch (Exception ex)
 			{

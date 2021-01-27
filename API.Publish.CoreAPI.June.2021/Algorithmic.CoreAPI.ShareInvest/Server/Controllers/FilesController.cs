@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -53,5 +54,17 @@ namespace ShareInvest.Controllers
 			}
 			return Ok();
 		}
+		[HttpGet, ProducesResponseType(StatusCodes.Status204NoContent)]
+		public IActionResult GetContext(string key)
+		{
+			if (string.IsNullOrEmpty(key) is false && context.User.Any(o => o.Email.Equals(key)))
+				return File(System.IO.File.OpenRead(file), stream, Path.GetFileName(file));
+
+			return NoContent();
+		}
+		public FilesController(CoreApiDbContext context) => this.context = context;
+		readonly CoreApiDbContext context;
+		const string stream = @"application/octet-stream";
+		const string file = @"C:\Algorithmic Trading\Res\Update\Client.egg";
 	}
 }

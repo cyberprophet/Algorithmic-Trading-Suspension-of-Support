@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using ShareInvest.Catalog.Models;
 using ShareInvest.EventHandler;
 using ShareInvest.Interface.OpenAPI;
 
@@ -10,9 +11,41 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 	{
 		public override event EventHandler<SendSecuritiesAPI> Send;
 		public override event EventHandler<SendConsecutive> Consecutive;
-		public override int OnReceiveConclusion(Dictionary<string, string> on)
+		public override Balance OnReceiveBalance(Dictionary<int, string> balance)
 		{
-			string price = on["현재가"], state = on["주문상태"], number = on["주문번호"], classification = on["주문구분"], original = on["원주문번호"];
+			string str_purchase = balance[0x3A3], str_quantity = balance[0x3A2], str_current = balance[0xA], str_offer = balance[0x1B], str_bid = balance[0x1C];
+
+			if (int.TryParse(str_purchase, out int purchase) && int.TryParse(str_quantity, out int quantity) && int.TryParse(str_current[0] is '-' ? str_current[1..] : str_current, out int current) && int.TryParse(str_offer[0] is '-' ? str_offer[1..] : str_offer, out int offer) && int.TryParse(str_bid[0] is '-' ? str_bid[1..] : str_bid, out int bid))
+			{
+				Current = current;
+				Quantity = quantity;
+				Purchase = purchase;
+				Revenue = (current - purchase) * quantity;
+				Rate = current / (double)purchase - 1;
+				Bid = bid;
+				Offer = offer;
+				Wait = true;
+
+				if (string.IsNullOrEmpty(Name))
+					Name = balance[0x12E].Trim();
+			}
+			return new Balance
+			{
+				Code = Code,
+				Name = Name,
+				Quantity = Quantity.ToString("N0"),
+				Purchase = Purchase.ToString("N0"),
+				Current = Current.ToString("N0"),
+				Revenue = Revenue.ToString("C0"),
+				Rate = Rate.ToString("P2"),
+				Account = balance[0x23F1].Substring(0, 8).Insert(4, "－"),
+				Trend = Peek.ToString("N0"),
+				Separation = Gap.ToString("N2")
+			};
+		}
+		public override int OnReceiveConclusion(Dictionary<int, string> on)
+		{
+			string price = on[0xA], state = on[0x391], number = on[0x23F3], classification = on[0x389], original = on[0x388];
 			var cash = 0;
 
 			if (int.TryParse(price[0] is '-' ? price[1..] : price, out int current))
@@ -28,20 +61,20 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 
 						break;
 
-					case acceptance when on["미체결수량"][0] is not '0':
-						if (int.TryParse(on["주문가격"], out int op) && op > 0)
+					case acceptance when on[0x386][0] is not '0':
+						if (int.TryParse(on[0x385], out int op) && op > 0)
 						{
 							OrderNumber[number] = op;
 							cash -= op;
 						}
 						if (string.IsNullOrEmpty(Name))
-							Name = on["종목명"].Trim();
+							Name = on[0x12E].Trim();
 
 						break;
 
 					case confirmation when classification.EndsWith(cancellantion) || classification.EndsWith(correction):
 						if (classification.EndsWith(cancellantion) && OrderNumber.TryGetValue(original, out dynamic order_price))
-							cash = (order_price < Current ? order_price : 0) * (int.TryParse(on["주문수량"], out int volume) ? volume : 0);
+							cash = (order_price < Current ? order_price : 0) * (int.TryParse(on[0x384], out int volume) ? volume : 0);
 
 						remove = OrderNumber.Remove(original);
 						break;
