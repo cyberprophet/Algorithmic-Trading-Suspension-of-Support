@@ -16,7 +16,7 @@ namespace ShareInvest
 					foreach (var securtiy in new[] { security.Commands(i), security.Compress(i) })
 						ChooseTheInstallationPath(securtiy);
 
-				if (security.SendUpdateToFile(i).Result is string file && (i == 0 || i == security.Length))
+				if ((i < security.Length || i == security.Length && Security.Exist) && security.SendUpdateToFile(i).Result is string file && (i == 0 || i == security.Length))
 					File.Delete(file);
 			}
 		}

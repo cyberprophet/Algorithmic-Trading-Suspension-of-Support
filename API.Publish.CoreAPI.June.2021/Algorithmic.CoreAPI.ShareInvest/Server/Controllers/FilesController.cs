@@ -58,13 +58,11 @@ namespace ShareInvest.Controllers
 		public IActionResult GetContext(string key)
 		{
 			if (string.IsNullOrEmpty(key) is false && context.User.Any(o => o.Email.Equals(key)))
-				return File(System.IO.File.OpenRead(file), stream, Path.GetFileName(file));
+				return File(System.IO.File.OpenRead(Security.File), Security.Stream, Path.GetFileName(Security.File));
 
 			return NoContent();
 		}
 		public FilesController(CoreApiDbContext context) => this.context = context;
 		readonly CoreApiDbContext context;
-		const string stream = @"application/octet-stream";
-		const string file = @"C:\Algorithmic Trading\Res\Update\Client.egg";
 	}
 }

@@ -77,7 +77,7 @@ namespace ShareInvest
 						}
 						catch (Exception ex)
 						{
-							Base.SendMessage(ex.StackTrace, GetType());
+							Base.SendMessage(GetType(), ex.StackTrace);
 						}
 						finally
 						{
