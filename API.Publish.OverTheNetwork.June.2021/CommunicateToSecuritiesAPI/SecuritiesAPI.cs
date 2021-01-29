@@ -160,11 +160,12 @@ namespace ShareInvest
 							switch (operation.Item2[2..])
 							{
 								case reservation:
-									foreach (var order in Reservation.Stocks)
-									{
-										connect.SendOrder(order.Value);
-										Base.SendMessage(sender.GetType(), order.Key.ToString("N0"), order.Value.Code);
-									}
+									if (Reservation is not null)
+										foreach (var order in Reservation.Stocks)
+										{
+											connect.SendOrder(order.Value);
+											Base.SendMessage(sender.GetType(), order.Key.ToString("N0"), order.Value.Code);
+										}
 									return;
 
 								case construction:
@@ -195,11 +196,12 @@ namespace ShareInvest
 									return;
 
 								case market_closing_reservation:
-									foreach (var order in Reservation.Stocks)
-									{
-										connect.SendOrder(order.Value);
-										Base.SendMessage(sender.GetType(), order.Key.ToString("N0"), order.Value.Code);
-									}
+									if (Reservation is not null)
+										foreach (var order in Reservation.Stocks)
+										{
+											connect.SendOrder(order.Value);
+											Base.SendMessage(sender.GetType(), order.Key.ToString("N0"), order.Value.Code);
+										}
 									return;
 							}
 							break;

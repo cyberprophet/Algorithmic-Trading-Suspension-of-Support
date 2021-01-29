@@ -6,14 +6,16 @@
 	<table class="table">
 		<thead>
 			<tr>
-				<th>계좌번호</th>
-				<th>종목코드</th>
-				<th>종목명</th>
-				<th>수량</th>
-				<th>매입가</th>
-				<th>현재가</th>
-				<th>평가손익</th>
-				<th>손익률</th>
+				<th><div>계좌번호</div></th>
+				<th><div>종목코드</div></th>
+				<th><div>종목명</div></th>
+				<th><div>수량</div></th>
+				<th><div>매입가</div></th>
+				<th><div>현재가</div></th>
+				<th><div>평가손익</div></th>
+				<th><div>손익률</div></th>
+				<th><div>추세선</div></th>
+				<th><div>이격도</div></th>
 			</tr>
 		</thead>
 		@if (Balance.Count > 0)
@@ -29,12 +31,13 @@
 						<td>@bal.Value.Purchase</td>
 						<td>@bal.Value.Current</td>
 						@{
-							var loss = bal.Value.Revenue[0] is '-' && bal.Value.Rate[0] is '-';
-							var color = loss ? ConsoleColor.Blue : ConsoleColor.Red;
-							string revenue = loss ? bal.Value.Revenue[1..] : bal.Value.Revenue,
-								rate = loss ? bal.Value.Rate[1..] : bal.Value.Rate;
+							bool loss = bal.Value.Revenue[0] is '-' && bal.Value.Rate[0] is '-', trend = string.IsNullOrEmpty(bal.Value.Trend) is false && bal.Value.Trend.CompareTo(bal.Value.Current) < 0, separation = string.IsNullOrEmpty(bal.Value.Separation) is false && bal.Value.Separation[0] is '-';
+							string revenue = loss ? bal.Value.Revenue[1..] : bal.Value.Revenue, rate = loss ? bal.Value.Rate[1..] : bal.Value.Rate;
+							ConsoleColor color = loss ? ConsoleColor.Blue : ConsoleColor.Red, tc = trend ? ConsoleColor.Blue : ConsoleColor.Red, sc = separation ? ConsoleColor.Blue : ConsoleColor.Red;
 							<td style="color: @color">@revenue</td>
 							<td style="color: @color">@rate</td>
+							<td style="color: @tc">@(trend && bal.Value.Trend[0] is '-' ? bal.Value.Trend[1..] : bal.Value.Trend)</td>
+							<td style="color: @sc">@(separation ? bal.Value.Separation[1..] : bal.Value.Separation)</td>
 						}
 					</tr>
 				}

@@ -14,14 +14,6 @@ namespace ShareInvest.Catalog.Models
 		{
 			get; set;
 		}
-		public Balance Balance
-		{
-			get; set;
-		}
-		public bool RenderingBalance
-		{
-			get; set;
-		}
 		public IStrategics Strategics
 		{
 			get; set;

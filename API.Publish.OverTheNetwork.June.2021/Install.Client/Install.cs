@@ -70,7 +70,7 @@ namespace ShareInvest
 					{
 						worker.ReportProgress(1);
 					}
-				var now = DateTime.Now;
+				var now = DateTime.Now.AddDays(-1);
 				worker.ReportProgress(1);
 				FileInfo x64 = new FileInfo(Path.Combine(update, z64)), x86 = new FileInfo(Path.Combine(update, z86));
 				int n64 = now.CompareTo(x64.LastWriteTime), n86 = now.CompareTo(x86.LastWriteTime);
@@ -103,6 +103,7 @@ namespace ShareInvest
 					File.WriteAllBytes(Path.Combine(this.path[0], "chromedriver.exe"), Properties.Resources.chromedriver);
 					timer.Stop();
 					worker.ReportProgress(1);
+					FirstUpdate = true;
 					StartProgress(exe[exe.Length - 1]);
 				}
 				catch
@@ -156,8 +157,15 @@ namespace ShareInvest
 							registry.Close();
 							Registry.CurrentUser.OpenSubKey(run, true).SetValue(name[0], Path.Combine(path[0], string.Concat(name[0], ".exe")));
 						}
-					if (StartProgress(new Tuple<string, string, string>(execute[0], key, path[1])) && StartProgress(new Tuple<string, string, string>(execute[1], key, path[2])))
-						Dispose();
+					if (StartProgress(new Tuple<string, string, string>(execute[0], key, path[1])))
+					{
+						if (FirstUpdate)
+							foreach (var file in new DirectoryInfo(update).GetFiles("*.zip", SearchOption.TopDirectoryOnly))
+								file.Delete();
+
+						if (StartProgress(new Tuple<string, string, string>(execute[1], key, path[2])))
+							Dispose();
+					}
 				}
 				else
 					Dispose();
@@ -188,6 +196,10 @@ namespace ShareInvest
 			if (string.IsNullOrEmpty(path) is false)
 				foreach (var file in Directory.GetFiles(path, "*.pdb", SearchOption.AllDirectories))
 					File.Delete(file);
+		}
+		bool FirstUpdate
+		{
+			get; set;
 		}
 		readonly Color[] color;
 	}

@@ -1,0 +1,270 @@
+﻿@page "/portfolio"
+@inherits PortfolioBase
+
+@if (Enumerable.Count > 0)
+{
+	foreach (var kv in Enumerable)
+	{
+		if (kv.Value.RenderingStrategics)
+		{
+			<fieldset class="flex-container">
+				<legend class="legend">
+					<span class="sub" @onclick="(e => OnClick(kv.Key, 'S', e))">
+						<small><b><i>Strategics</i></b></small>
+					</span>
+				</legend>
+				<ul>
+					@{
+						<li>
+							<div class="strategics">
+								<input type="radio" class="strategics_radio" @onclick="(e => OnClick(kv.Key, 'A', e))" checked="@(kv.Value.SelectStrategics is 'A')" />
+								<b><i>According to Trends</i></b>
+							</div>
+
+							@if (kv.Value.SelectStrategics is 'A')
+							{
+								<table class="table">
+									<thead>
+										<tr>
+											<th scope="col" class="strategics_title" title="Exponential Moving Average">
+												<div><small>EMA</small></div>
+											</th>
+											<th scope="col" class="strategics_table">
+												<div style="padding-right: 5px; color: maroon">Leading­Line</div>
+											</th>
+											<th scope="col" class="strategics_table">
+												<div style="padding-right: 5px; color: navy">Lagging­Line</div>
+											</th>
+											<th scope="col" class="strategics_table">
+												<div style="padding-right: 5px; color: maroon">Leading­Trend</div>
+											</th>
+											<th scope="col" class="strategics_table">
+												<div style="padding-right: 5px; color: navy">Lagging­Trend</div>
+											</th>
+										</tr>
+									</thead>
+
+									<tbody>
+										<tr>
+											<th scope="row" class="strategics_table"><div>Day</div></th>
+
+											@if (kv.Value.IsClickedAmend)
+											{
+												<td>
+													<input class="strategics_input" type="number" min=2 max=1450 placeholder=5 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min=3 max=1451 placeholder=60 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min=2 max=1450 placeholder=20 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min=3 max=1451 placeholder=45 required />
+												</td>
+											}
+											else
+											{
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
+												</td>
+											}
+										</tr>
+									</tbody>
+
+									<thead>
+										<tr>
+											<th scope="col" class="strategics_title" title="장중ㆍ동시호가（일 3회）">
+												<div><small>Term</small></div>
+											</th>
+											<th class="strategics_table" colspan="2" scope="col">
+												<div style="display: inline-block; color: maroon">In Gains</div>
+												<div style="display: inline-block">／</div>
+												<div style="display: inline-block; color: navy">Scale Trading</div>
+												<div style="display: inline-block">（％）</div>
+											</th>
+											<th class="strategics_table" scope="col"><div>Quantity（주）</div></th>
+											<th class="strategics_table" scope="col"><div>Unit（Tick）</div></th>
+										</tr>
+									</thead>
+
+									<tbody>
+										<tr>
+											<th rowspan="2" scope="row" class="strategics_table">
+												<div>Appoint</div>
+											</th>
+											<td class="strategics_table">
+												<div style="color: navy"><b>Sell</b></div>
+											</td>
+
+											@if (kv.Value.IsClickedAmend)
+											{
+												<td>
+													<input class="strategics_input" type="number" step="0.05" min="0.05" max="1000" placeholder=1.35 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min="1" max="30" placeholder=1 required />
+												</td>
+											}
+											else
+											{
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('T', null)</small></span>
+												</td>
+											}
+										</tr>
+										<tr>
+											<td class="strategics_table">
+												<div style="color: maroon"><b>Buy</b></div>
+											</td>
+
+											@if (kv.Value.IsClickedAmend)
+											{
+												<td>
+													<input class="strategics_input" type="number" step="0.05" min="0.05" max="1000" placeholder=1.75 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min="1" max="30" placeholder=1 required />
+												</td>
+											}
+											else
+											{
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('T', null)</small></span>
+												</td>
+											}
+										</tr>
+									</tbody>
+
+									<thead>
+										<tr>
+											<th scope="col" class="strategics_title" title="매매방식（도움말 참조）">
+												<div><small>Expression</small></div>
+											</th>
+											<th class="strategics_table" colspan="2" scope="col"><div>（￦）</div></th>
+											<th class="strategics_table" scope="col"><div>Quantity（주）</div></th>
+											<th class="strategics_table" scope="col"><div>Interval（㎳）</div></th>
+										</tr>
+									</thead>
+
+									<tbody>
+										<tr>
+											<th rowspan="2" scope="row" class="strategics_table">
+												<div>Trading</div>
+											</th>
+											<td class="strategics_table">
+												<div style="color: navy"><b>Sell</b></div>
+											</td>
+
+											@if (kv.Value.IsClickedAmend)
+											{
+												<td>
+													<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min="200" max="30000000" placeholder=1735 required />
+												</td>
+											}
+											else
+											{
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('M', null)</small></span>
+												</td>
+											}
+										</tr>
+										<tr>
+											<td class="strategics_table">
+												<div style="color: maroon"><b>Buy</b></div>
+											</td>
+
+											@if (kv.Value.IsClickedAmend)
+											{
+												<td>
+													<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
+												</td>
+												<td>
+													<input class="strategics_input" type="number" min="200" max="30000000" placeholder=1235 required />
+												</td>
+											}
+											else
+											{
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
+												</td>
+												<td class="strategics_table">
+													<span class="strategics_cell"><small>@ConvertFormat('M', null)</small></span>
+												</td>
+											}
+										</tr>
+									</tbody>
+								</table>
+							}
+							else
+							{
+								<br />
+							}
+						</li>
+
+						<li>
+							<div class="strategics">
+								<input type="radio" class="strategics_radio" @onclick="(e => OnClick(kv.Key, 'D', e))" checked="@(kv.Value.SelectStrategics is 'D')" />
+								<b><i>Deletion</i></b>
+							</div>
+						</li>
+					}
+				</ul>
+				<div class="button_style">
+					<button class="button_style_amend" @onclick="(e => OnClick(kv.Key, e))" disabled="@kv.Value.IsClickedAmend">Amend</button>
+					<button class="button_style_verify">Verify</button>
+					<button class="button_style_submit" disabled="@(kv.Value.IsClickedAmend is false)">Save</button>
+				</div>
+			</fieldset>
+		}
+	}
+}
+else
+{
+
+}
