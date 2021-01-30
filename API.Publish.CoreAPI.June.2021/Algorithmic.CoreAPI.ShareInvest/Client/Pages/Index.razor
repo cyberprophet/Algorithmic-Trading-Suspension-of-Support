@@ -47,7 +47,7 @@
 										{
 											<li>
 												<label for="stocks">
-													<input type="radio" id="stocks" name="stocks" value="@str" @onchange="e => OnReceiveTheSelectedButton(i, Information[i].Key, e)" checked="@str.Equals(Information[i].Check.Split(';')[0])">
+													<input type="radio" id="stocks" name="@i" value="@string.Concat(str, ';', i)" @onchange="e => OnReceiveTheSelectedButton(e)" checked="@str.Equals(Information[i].Check.Split(';')[0])">
 													@ConvertFormat(str)
 												</label>
 											</li>
@@ -68,7 +68,7 @@
 										{
 											<li>
 												<label for="futures">
-													<input type="radio" id="futures" name="futures" value="@str" @onchange="e => OnReceiveTheSelectedButton(i, Information[i].Key, e)" checked="@str.Equals(Information[i].Check.Split(';')[^1])">
+													<input type="radio" id="futures" name="@string.Concat("31", i)" value="@string.Concat(str, ';', i)" @onchange="e => OnReceiveTheSelectedButton(e)" checked="@str.Equals(Information[i].Check.Split(';')[^1])">
 													@ConvertFormat(str)
 												</label>
 											</li>

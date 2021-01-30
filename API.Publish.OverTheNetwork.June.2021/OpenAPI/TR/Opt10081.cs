@@ -66,7 +66,7 @@ namespace ShareInvest.OpenAPI.Catalog
 								Date = param[4][2..],
 								Price = param[1]
 							});
-						if (param[4].CompareTo(date.AddMonths(-3).ToString(Base.LongDateFormat)) > 0)
+						if (param[4].CompareTo(date.AddMonths(-1).ToString(Base.LongDateFormat)) > 0)
 							confirm.Enqueue(new Stocks
 							{
 								Code = temp.Item1[0],

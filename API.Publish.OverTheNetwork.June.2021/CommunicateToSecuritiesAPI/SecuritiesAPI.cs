@@ -414,7 +414,8 @@ namespace ShareInvest
 								SecurityAPI = pri.SecurityAPI,
 								CodeStrategics = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")),
 								Coin = pri.Coin,
-								Commission = now.Ticks
+								Commission = now.Ticks,
+								Account = this.connect.Securities("GetServerGubun")[^1..]
 
 							}) is 0xC8)
 								Base.SendMessage(sender.GetType(), key, accounts.Length);
@@ -444,7 +445,8 @@ namespace ShareInvest
 								SecuritiesAPI = (accounts.Length % 0xA).ToString("D1"),
 								SecurityAPI = Crypto.Security.Encrypt(new Privacies { Security = key, SecuritiesAPI = key[^1].ToString() }, string.Concat(this.connect.Account[0], ';', this.connect.Account[^1]), this.connect.Account.Length > 0),
 								CodeStrategics = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")),
-								Commission = now.Ticks
+								Commission = now.Ticks,
+								Account = this.connect.Securities("GetServerGubun")[^1..]
 
 							}) is 0xC8)
 								Base.SendMessage(sender.GetType(), key, accounts.Length);
@@ -738,8 +740,8 @@ namespace ShareInvest
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}
-			if (Base.IsDebug is false && api.IsAdministrator)
-				(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(0xE11);
+			if (Base.IsDebug is false)
+				(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(0x1600);
 		}
 		Queue<string> Codes
 		{

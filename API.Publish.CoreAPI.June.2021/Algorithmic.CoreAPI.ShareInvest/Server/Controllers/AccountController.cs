@@ -57,8 +57,9 @@ namespace ShareInvest.Controllers
 			{
 				if (await context.Privacies.AnyAsync(o => o.CodeStrategics.Equals(param.Key)))
 				{
-					foreach (var pri in from o in context.Privacies where o.CodeStrategics.Equals(param.Key) select o)
-						context.Entry(new Models.Privacy
+					foreach (var pri in (from o in context.Privacies where o.CodeStrategics.Equals(param.Key) select o).AsNoTracking())
+					{
+						var privacy = new Models.Privacy
 						{
 							Security = pri.Security,
 							SecuritiesAPI = pri.SecuritiesAPI,
@@ -67,8 +68,12 @@ namespace ShareInvest.Controllers
 							CodeStrategics = pri.CodeStrategics,
 							Coin = pri.Coin,
 							Commission = pri.Commission
+						};
+						if (context.Privacies.All(o => o.Security.Equals(privacy.Security) && o.SecurityAPI.Equals(privacy.SecurityAPI)))
+							return HttpStatusCode.OK;
 
-						}).State = EntityState.Modified;
+						context.Entry(privacy).State = EntityState.Modified;
+					}
 					await context.BulkSaveChangesAsync();
 
 					return HttpStatusCode.OK;
@@ -76,7 +81,7 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				Base.SendMessage(ex.StackTrace, GetType());
+				Base.SendMessage(GetType(), ex.StackTrace);
 			}
 			return HttpStatusCode.BadRequest;
 		}

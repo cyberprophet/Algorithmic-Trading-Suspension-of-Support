@@ -34,7 +34,7 @@ namespace ShareInvest
 				o.KeepAliveInterval = TimeSpan.FromMilliseconds(wait / 3);
 				o.EnableDetailedErrors = true;
 			});
-			services.AddDbContext<CoreApiDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))).AddDatabaseDeveloperPageExceptionFilter().AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" })).AddSingleton<HermesHub>().AddScoped<BalanceHub>().AddScoped<MessageHub>().Configure<KestrelServerOptions>(o =>
+			services.AddDbContext<CoreApiDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped).AddDatabaseDeveloperPageExceptionFilter().AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" })).AddSingleton<HermesHub>().AddScoped<BalanceHub>().AddScoped<MessageHub>().Configure<KestrelServerOptions>(o =>
 			{
 				o.ListenAnyIP(0x1BDF, o => o.UseHttps(StoreName.My, "coreapi.shareinvest.net", true).UseConnectionLogging());
 				o.Limits.MaxRequestBodySize = int.MaxValue;

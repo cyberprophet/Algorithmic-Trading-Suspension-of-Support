@@ -43,13 +43,14 @@ namespace ShareInvest.Pages
 			{
 				switch (sender)
 				{
-					case string kiwoom when kiwoom.Equals(Kiwoom) && string.IsNullOrWhiteSpace(kiwoom) is false && kiwoom.Length < 9 && param is string confirm && string.IsNullOrEmpty(confirm) is false && confirm.Length > 2 && confirm.Length < 9:
+					case string kiwoom when kiwoom.Equals(Kiwoom) && string.IsNullOrWhiteSpace(kiwoom) is false && kiwoom.Length < 9 && param is string confirm && string.IsNullOrEmpty(confirm) is false && confirm.Length > 0 && confirm.Length < 9:
+						var name = Crypto.Security.ConvertName(confirm).Trim();
 						var append = new Confirm
 						{
 							Email = await OnReceiveLogUserInformation(),
 							Key = Crypto.Security.Encrypt(kiwoom),
-							First = confirm[0],
-							Last = confirm[^1]
+							First = name[0],
+							Last = name[^1]
 						};
 						var response = await Http.PostAsJsonAsync(Crypto.Security.GetRoute(append.GetType()), append);
 
@@ -72,6 +73,7 @@ namespace ShareInvest.Pages
 		protected internal async Task Send(MouseEventArgs _)
 		{
 			if (Information is not null && Information.Length > 0)
+			{
 				foreach (var info in Information)
 				{
 					var response = await Http.PutAsJsonAsync(Crypto.Security.GetRoute("Account"), info);
@@ -82,30 +84,38 @@ namespace ShareInvest.Pages
 					else
 						Caution = "Account linking Error.";
 				}
-			Information = null;
+				Information = null;
+				await OnInitializedAsync();
+			}
 		}
-		protected internal void OnReceiveTheSelectedButton(int index, object sender, ChangeEventArgs e)
+		protected internal void OnReceiveTheSelectedButton(ChangeEventArgs e)
 		{
-			if (e.Value is string account && sender is string key && key.Equals(Information[index].Key))
+			if (e.Value is string str)
 			{
-				if (account[^2..].CompareTo("31") == 0)
-					Information[index] = new UserInformation
-					{
-						Key = key,
-						Account = Information[index].Account,
-						Name = Information[index].Name,
-						Remaining = Information[index].Remaining,
-						Check = string.Concat(Information[index].Check.Split(';')[0], ';', account)
-					};
-				else
-					Information[index] = new UserInformation
-					{
-						Key = key,
-						Account = Information[index].Account,
-						Name = Information[index].Name,
-						Remaining = Information[index].Remaining,
-						Check = string.Concat(account, ';', Information[index].Check.Split(';')[^1])
-					};
+				var split = str.Split(';');
+				var account = split[0];
+
+				if (int.TryParse(split[^1], out int index))
+				{
+					if (account[^2..].CompareTo("31") == 0)
+						Information[index] = new UserInformation
+						{
+							Key = Information[index].Key,
+							Account = Information[index].Account,
+							Name = Information[index].Name,
+							Remaining = Information[index].Remaining,
+							Check = string.Concat(Information[index].Check.Split(';')[0], ';', account)
+						};
+					else
+						Information[index] = new UserInformation
+						{
+							Key = Information[index].Key,
+							Account = Information[index].Account,
+							Name = Information[index].Name,
+							Remaining = Information[index].Remaining,
+							Check = string.Concat(account, ';', Information[index].Check.Split(';')[^1])
+						};
+				}
 				IsClicked = true;
 			}
 		}
