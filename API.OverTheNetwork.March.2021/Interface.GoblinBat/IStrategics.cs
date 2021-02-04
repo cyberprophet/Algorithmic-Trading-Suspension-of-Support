@@ -18,6 +18,10 @@
 		{
 			get; set;
 		}
+		long Date
+		{
+			get; set;
+		}
 	}
 	public enum LongShort
 	{

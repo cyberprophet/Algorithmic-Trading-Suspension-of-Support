@@ -227,6 +227,7 @@ namespace ShareInvest
 			return date;
 		}
 		public static string TellTheClientConnectionStatus(string name, bool is_connected) => string.Format("{0} is connected on {1}", name, is_connected);
+		public static string ConvertFormat(string account) => string.Format("{0}­ ─ ­{1}", account.Substring(0, 4), account.Substring(4, 4));
 		public static bool CheckIfMarketDelay(DateTime now) => Array.Exists(SAT, o => o.Equals(now.ToString(DateFormat)));
 		public static bool CheckIfMarketDelay(DateTime now, int check) => Array.FindIndex(SAT, o => o.Equals(now.ToString(DateFormat))) % 2 == check;
 		public static DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);
@@ -258,6 +259,7 @@ namespace ShareInvest
 		public static string DateFormat => "yyMMdd";
 		public static string LongDateFormat => "yyyyMMdd";
 		public static string TransactionSuspension => transaction_suspension;
+		public static string Margin => margin;
 		public static string Transmit => transmit;
 		public static string Start => start;
 		public static string[] Holidays => new[] { "211231", "210922", "210921", "210920", "210519", "210505", "210301", "210212", "210211", "210101", "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
@@ -283,6 +285,7 @@ namespace ShareInvest
 		const string start = "0859";
 		const string transmit = "1529";
 		const string transaction_suspension = "거래정지";
+		const string margin = "증거금";
 		const double tax = 25e-4 + 15e-5 + 15e-5;
 	}
 }

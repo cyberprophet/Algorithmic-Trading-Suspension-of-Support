@@ -63,6 +63,23 @@ namespace ShareInvest.Controllers
 			}
 			return Array.Empty<UserInformation>();
 		}
+		[HttpGet]
+		public IEnumerable<Codes> GetContext(string key)
+		{
+			var stack = new Stack<Codes>();
+
+			foreach (var co in from o in context.Codes where o.Code.Length == key.Length select o)
+				if (string.IsNullOrEmpty(co.Price) is false && co.MaturityMarketCap.StartsWith(Base.Margin) && co.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && (co.MarginRate == 1 || co.MarginRate == 2) && int.TryParse(co.Price, out int price) && price > 0)
+					stack.Push(new Codes
+					{
+						Code = co.Code,
+						Name = co.Name,
+						Price = co.Price,
+						MaturityMarketCap = co.MaturityMarketCap,
+						MarginRate = co.MarginRate
+					});
+			return stack.Count > 0 ? stack.ToArray() : Array.Empty<Codes>();
+		}
 		public ConfirmController(CoreApiDbContext context) => this.context = context;
 		readonly CoreApiDbContext context;
 	}

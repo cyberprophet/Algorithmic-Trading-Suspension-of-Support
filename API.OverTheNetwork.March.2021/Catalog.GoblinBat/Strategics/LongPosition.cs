@@ -2,9 +2,21 @@
 
 namespace ShareInvest.Catalog
 {
-	public struct AccordingToTrends : IStrategics
+	public struct LongPosition : IStrategics
 	{
 		public string Code
+		{
+			get; set;
+		}
+		public string Account
+		{
+			get; set;
+		}
+		public ulong Overweight
+		{
+			get; set;
+		}
+		public ulong Underweight
 		{
 			get; set;
 		}

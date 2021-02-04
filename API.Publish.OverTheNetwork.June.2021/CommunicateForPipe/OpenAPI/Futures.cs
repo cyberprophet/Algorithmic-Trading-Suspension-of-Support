@@ -10,9 +10,12 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 	{
 		public override event EventHandler<SendSecuritiesAPI> Send;
 		public override event EventHandler<SendConsecutive> Consecutive;
-		public override Balance OnReceiveBalance(Dictionary<int, string> balance)
+		public override Balance OnReceiveBalance(string kiwoom, Dictionary<int, string> balance)
 		{
-			return new Balance { };
+			return new Balance
+			{
+				Kiwoom = kiwoom
+			};
 		}
 		public override int OnReceiveConclusion(Dictionary<int, string> conclusion)
 		{

@@ -14,14 +14,21 @@ namespace ShareInvest.OpenAPI.Catalog
 		{
 			get; set;
 		}
+		protected internal override string Identity
+		{
+			get; set;
+		}
 		internal override void OnReceiveChejanData(_DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
 		{
-			var conclusion = new Dictionary<string, string>();
+			var conclusion = new Dictionary<int, string>();
 
-			foreach (var fid in Enum.GetValues(typeof(Derivatives)))
-				conclusion[fid.ToString()] = API.GetChejanData((int)fid);
+			foreach (int fid in Enum.GetValues(typeof(Derivatives)))
+				conclusion[fid] = API.GetChejanData(fid);
 
-			Send?.Invoke(this, new SendSecuritiesAPI(conclusion));
+			var code = conclusion[(int)Conclusion.종목코드_업종코드];
+
+			if (Connect.GetInstance().StocksHeld.TryGetValue(code[0] is 'A' ? code[1..] : code, out Analysis analysis))
+				Send?.Invoke(this, new SendSecuritiesAPI(analysis.OnReceiveBalance(Identity, conclusion)));
 		}
 	}
 }

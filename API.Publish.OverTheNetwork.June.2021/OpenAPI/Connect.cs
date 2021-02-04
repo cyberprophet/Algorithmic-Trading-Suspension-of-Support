@@ -135,7 +135,34 @@ namespace ShareInvest.OpenAPI
 				}
 			};
 			StocksHeld = new Dictionary<string, Analysis>();
-			Chejan = new Dictionary<string, Chejan>() { { ((int)ChejanType.주문체결).ToString("D1"), new 주문체결 { API = axAPI } }, { ((int)ChejanType.잔고).ToString("D1"), new 잔고 { API = axAPI } }, { ((int)ChejanType.파생잔고).ToString("D1"), new 파생잔고 { API = axAPI } } };
+			var identity = Crypto.Security.Encrypt(axAPI.GetLoginInfo("USER_ID"));
+			Chejan = new Dictionary<string, Chejan>()
+			{
+				{
+					((int)ChejanType.주문체결).ToString("D1"),
+					new 주문체결
+					{
+						API = axAPI,
+						Identity = identity
+					}
+				},
+				{
+					((int)ChejanType.잔고).ToString("D1"),
+					new 잔고
+					{
+						API = axAPI,
+						Identity = identity
+					}
+				},
+				{
+					((int)ChejanType.파생잔고).ToString("D1"),
+					new 파생잔고
+					{
+						API = axAPI,
+						Identity = identity
+					}
+				}
+			};
 		}
 		readonly Delay request;
 		readonly AxKHOpenAPI axAPI;

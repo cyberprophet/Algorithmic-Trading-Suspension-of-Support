@@ -11,7 +11,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 	{
 		public override event EventHandler<SendSecuritiesAPI> Send;
 		public override event EventHandler<SendConsecutive> Consecutive;
-		public override Balance OnReceiveBalance(Dictionary<int, string> balance)
+		public override Balance OnReceiveBalance(string kiwoom, Dictionary<int, string> balance)
 		{
 			string str_purchase = balance[0x3A3], str_quantity = balance[0x3A2], str_current = balance[0xA], str_offer = balance[0x1B], str_bid = balance[0x1C];
 
@@ -31,6 +31,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 			}
 			return new Balance
 			{
+				Kiwoom = kiwoom,
 				Code = Code,
 				Name = Name,
 				Quantity = Quantity.ToString("N0"),
@@ -38,9 +39,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 				Current = Current.ToString("N0"),
 				Revenue = Revenue.ToString("C0"),
 				Rate = Rate.ToString("P2"),
-				Account = balance[0x23F1].Substring(0, 8).Insert(4, "－"),
-				Trend = Peek.ToString("N0"),
-				Separation = Gap.ToString("N2")
+				Account = balance[0x23F1].Substring(0, 8).Insert(4, "－")
 			};
 		}
 		public override int OnReceiveConclusion(Dictionary<int, string> on)
@@ -100,21 +99,53 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		}
 		public override void OnReceiveDrawChart(object sender, SendConsecutive e)
 		{
-			if (GetCheckOnDate(e.Date))
-			{
-				Trend.Pop();
-				Short.Pop();
-				Long.Pop();
-			}
-			Trend.Push(Trend.TryPeek(out double tp) ? EMA.Make(Classification.Trend, Trend.Count, e.Price, tp) : EMA.Make(e.Price));
-			Short.Push(Short.TryPeek(out double sp) ? EMA.Make(Classification.Short, Short.Count, e.Price, sp) : EMA.Make(e.Price));
-			Long.Push(Long.TryPeek(out double lp) ? EMA.Make(Classification.Long, Long.Count, e.Price, lp) : EMA.Make(e.Price));
-			SendSecuritiesAPI securities = null;
-
 			switch (Classification)
 			{
-				case Catalog.SatisfyConditionsAccordingToTrends sc when Short.TryPop(out double popShort) && Long.TryPop(out double popLong):
-					if (Short.TryPeek(out double short_peek) && Long.TryPeek(out double long_peek) && Trend.TryPeek(out double peek))
+				case Catalog.LongPosition lop when Wait:
+					switch (Quantity * e.Price)
+					{
+						case ulong buy when Bid > 0 && buy < lop.Overweight * (1 - Base.Tax) && OrderNumber.ContainsValue(Bid) is false:
+							Wait = false;
+							Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+							{
+								AccNo = lop.Account,
+								Code = lop.Code,
+								OrderType = (int)OrderType.신규매수,
+								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+								OrgOrderNo = string.Empty,
+								Price = Bid,
+								Qty = 1
+							}));
+							return;
+
+						case ulong sell when Offer > 0 && sell > lop.Underweight * (1 + Base.Tax) && OrderNumber.ContainsValue(Offer) is false:
+							Wait = false;
+							Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+							{
+								AccNo = lop.Account,
+								Code = lop.Code,
+								OrderType = (int)OrderType.신규매도,
+								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+								OrgOrderNo = string.Empty,
+								Price = Offer,
+								Qty = 1
+							}));
+							return;
+					}
+					break;
+
+				case Catalog.SatisfyConditionsAccordingToTrends sc:
+					if (GetCheckOnDate(e.Date))
+					{
+						Trend.Pop();
+						Short.Pop();
+						Long.Pop();
+					}
+					Trend.Push(Trend.TryPeek(out double tp) ? EMA.Make(Classification.Trend, Trend.Count, e.Price, tp) : EMA.Make(e.Price));
+					Short.Push(Short.TryPeek(out double sp) ? EMA.Make(Classification.Short, Short.Count, e.Price, sp) : EMA.Make(e.Price));
+					Long.Push(Long.TryPeek(out double lp) ? EMA.Make(Classification.Long, Long.Count, e.Price, lp) : EMA.Make(e.Price));
+
+					if (Short.TryPop(out double popShort) && Long.TryPop(out double popLong) && Short.TryPeek(out double short_peek) && Long.TryPeek(out double long_peek) && Trend.TryPeek(out double peek))
 					{
 						var gap = popShort - popLong - (short_peek - long_peek);
 						var interval = new DateTime(NextOrderTime.Year, NextOrderTime.Month, NextOrderTime.Day, int.TryParse(e.Date.Substring(0, 2), out int cHour) ? cHour : DateTime.Now.Hour, int.TryParse(e.Date.Substring(2, 2), out int cMinute) ? cMinute : DateTime.Now.Minute, int.TryParse(e.Date[4..], out int cSecond) ? cSecond : DateTime.Now.Second);
@@ -122,7 +153,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 						if (Bid > 0 && sc.TradingBuyQuantity > 0 && Bid < peek * (1 - sc.TradingBuyRate) && gap > 0 && OrderNumber.ContainsValue(Bid) is false && Wait && (sc.TradingBuyInterval == 0 || sc.TradingBuyInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
 						{
 							Wait = false;
-							securities = new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+							Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
 							{
 								Code = Code,
 								OrderType = (int)OrderType.신규매수,
@@ -131,7 +162,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 								Price = Bid,
 								Qty = sc.TradingBuyQuantity,
 								AccNo = Account
-							});
+							}));
 							if (sc.TradingBuyInterval > 0)
 								NextOrderTime = Base.MeasureTheDelayTime(sc.TradingBuyInterval * (Purchase > 0 && Bid > 0 ? Purchase / (double)Bid : 1), interval);
 						}
@@ -140,7 +171,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 							if (sc.TradingSellQuantity > 0 && Offer > peek * (1 + sc.TradingSellRate) && Offer > Purchase + Base.Tax * Offer && gap < 0 && OrderNumber.ContainsValue(Offer) is false && Wait && (sc.TradingSellInterval == 0 || sc.TradingSellInterval > 0 && interval.CompareTo(NextOrderTime) > 0))
 							{
 								Wait = false;
-								securities = new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+								Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
 								{
 									Code = Code,
 									OrderType = (int)OrderType.신규매도,
@@ -149,7 +180,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 									Price = Offer,
 									Qty = sc.TradingSellQuantity,
 									AccNo = Account
-								});
+								}));
 								if (sc.TradingSellInterval > 0)
 									NextOrderTime = Base.MeasureTheDelayTime(sc.TradingSellInterval * (Purchase > 0 && Offer > 0 ? Offer / (double)Purchase : 1), interval);
 							}
@@ -158,7 +189,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 								for (int i = 0; i < sc.ReservationSellUnit; i++)
 									SellPrice += Base.GetQuoteUnit(SellPrice, MarketMarginRate == 1);
 
-								securities = new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+								Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
 								{
 									Code = Code,
 									OrderType = (int)OrderType.신규매도,
@@ -167,7 +198,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 									Price = Offer,
 									Qty = sc.ReservationSellQuantity,
 									AccNo = Account
-								});
+								}));
 								Wait = false;
 							}
 							else if (Bid > 0 && BuyPrice > 0 && sc.ReservationBuyQuantity > 0 && Bid < BuyPrice && OrderNumber.ContainsValue(Bid) is false && Wait)
@@ -175,7 +206,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 								for (int i = 0; i < sc.ReservationBuyUnit; i++)
 									BuyPrice -= Base.GetQuoteUnit(BuyPrice, MarketMarginRate == 1);
 
-								securities = new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+								Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
 								{
 									Code = Code,
 									OrderType = (int)OrderType.신규매수,
@@ -184,7 +215,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 									Price = Bid,
 									Qty = sc.ReservationBuyQuantity,
 									AccNo = Account
-								});
+								}));
 								Wait = false;
 							}
 							else if (SellPrice == 0 && Purchase > 0)
@@ -200,8 +231,6 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 					}
 					break;
 			}
-			if (securities?.Convey is Catalog.OpenAPI.Order)
-				Send?.Invoke(this, securities);
 		}
 		public override bool GetCheckOnDate(string date)
 		{

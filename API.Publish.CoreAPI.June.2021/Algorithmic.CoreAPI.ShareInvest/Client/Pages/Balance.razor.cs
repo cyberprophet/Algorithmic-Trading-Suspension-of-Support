@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace ShareInvest.Pages
@@ -21,17 +25,27 @@ namespace ShareInvest.Pages
 		{
 			get; set;
 		}
-		protected internal Dictionary<string, Catalog.Models.Balance> Balance
+		protected internal Dictionary<Tuple<string, string>, Catalog.Models.Balance> Balance
 		{
 			get; private set;
 		}
 		protected override async Task OnInitializedAsync()
 		{
-			Balance = new Dictionary<string, Catalog.Models.Balance>();
-			Hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance")).Build();
+			Balance = new Dictionary<Tuple<string, string>, Catalog.Models.Balance>();
+
+			foreach (var response in await Http.GetFromJsonAsync<Catalog.Models.Balance[]>(Crypto.Security.GetRoute("Balance", await OnReceiveLogUserInformation())))
+				Balance[new Tuple<string, string>(response.Kiwoom, response.Code)] = response;
+
 			Hermes = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/hermes")).Build();
-			Hub.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) => StateHasChanged(balance));
+			Hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance"), o => o.AccessTokenProvider = async () =>
+			{
+				(await TokenProvider.RequestAccessToken()).TryGetToken(out var accessToken);
+
+				return accessToken.Value;
+
+			}).Build();
 			Hermes.On<Catalog.Models.Message>("ReceiveCurrentMessage", (current) => StateHasChanged(current));
+			Hub.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) => StateHasChanged(balance));
 			await Hermes.StartAsync();
 			await Hub.StartAsync();
 		}
@@ -42,33 +56,39 @@ namespace ShareInvest.Pages
 				case Catalog.Models.Balance balance:
 					if (balance.Quantity.Length < 2 && balance.Quantity[0] is '0')
 					{
-						if (Balance.Remove(balance.Code))
+						if (Balance.Remove(new Tuple<string, string>(balance.Kiwoom, balance.Code)))
 							StateHasChanged();
 					}
 					else
 					{
-						Balance[balance.Code] = balance;
+						Balance[new Tuple<string, string>(balance.Kiwoom, balance.Code)] = balance;
 						StateHasChanged();
 					}
 					break;
 
-				case Catalog.Models.Message message when Balance.TryGetValue(message.Key, out Catalog.Models.Balance bal) && int.TryParse(bal.Quantity, out int quantity) && quantity > 0 && int.TryParse(bal.Purchase, out int purchase) && int.TryParse(message.Convey, out int price) && int.TryParse(bal.Current, out int current) && price != current:
-					Balance[bal.Code] = new Catalog.Models.Balance
-					{
-						Account = bal.Account,
-						Code = message.Key,
-						Name = bal.Name,
-						Quantity = bal.Quantity,
-						Purchase = bal.Purchase,
-						Current = price.ToString("N0"),
-						Revenue = ((Math.Abs(price) - purchase) * quantity).ToString("C0"),
-						Rate = (price / (double)purchase - 1).ToString("P2"),
-						Separation = bal.Separation,
-						Trend = bal.Trend
-					};
+				case Catalog.Models.Message message:
+					foreach (var kv in Balance)
+						if (kv.Key.Item2.Equals(message.Key) && int.TryParse(kv.Value.Quantity, out int quantity) && quantity > 0 && int.TryParse(message.Convey[0] is '-' ? message.Convey[1..] : message.Convey, out int price) && int.TryParse(kv.Value.Current.Replace(",", string.Empty), out int current) && current != price && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
+							Balance[new Tuple<string, string>(kv.Value.Kiwoom, kv.Value.Code)] = new Catalog.Models.Balance
+							{
+								Kiwoom = kv.Value.Kiwoom,
+								Account = kv.Value.Account,
+								Code = message.Key,
+								Name = kv.Value.Name,
+								Quantity = kv.Value.Quantity,
+								Purchase = kv.Value.Purchase,
+								Current = price.ToString("N0"),
+								Revenue = ((Math.Abs(price) - purchase) * quantity).ToString("C0"),
+								Rate = (price / (double)purchase - 1).ToString("P2")
+							};
 					StateHasChanged();
 					break;
 			}
+		}
+		[Inject]
+		IAccessTokenProvider TokenProvider
+		{
+			get; set;
 		}
 		HubConnection Hub
 		{
@@ -77,6 +97,22 @@ namespace ShareInvest.Pages
 		HubConnection Hermes
 		{
 			get; set;
+		}
+		[Inject]
+		HttpClient Http
+		{
+			get; set;
+		}
+		[CascadingParameter]
+		Task<AuthenticationState> State
+		{
+			get; set;
+		}
+		async Task<string> OnReceiveLogUserInformation()
+		{
+			var user = (await State).User;
+
+			return user.Identity.IsAuthenticated ? user.Identity.Name : string.Empty;
 		}
 	}
 }

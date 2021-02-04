@@ -14,6 +14,10 @@ namespace ShareInvest.OpenAPI.Catalog
 		{
 			get; set;
 		}
+		protected internal override string Identity
+		{
+			get; set;
+		}
 		internal override void OnReceiveChejanData(_DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
 		{
 			var conclusion = new Dictionary<int, string>();
@@ -24,7 +28,7 @@ namespace ShareInvest.OpenAPI.Catalog
 			var code = conclusion[(int)Conclusion.종목코드_업종코드];
 
 			if (Connect.GetInstance().StocksHeld.TryGetValue(code[0] is 'A' ? code[1..] : code, out Analysis analysis))
-				Send?.Invoke(this, new SendSecuritiesAPI(analysis.OnReceiveBalance(conclusion)));
+				Send?.Invoke(this, new SendSecuritiesAPI(analysis.OnReceiveBalance(Identity, conclusion)));
 		}
 	}
 }

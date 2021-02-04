@@ -39,7 +39,8 @@ namespace ShareInvest.Controllers
 							Security = param.Security,
 							Number = temp
 						},
-						Logs = new Queue<Log>()
+						Logs = new Queue<Log>(),
+						Balance = new Dictionary<string, Balance>()
 					};
 					return Ok(temp[^1]);
 				}

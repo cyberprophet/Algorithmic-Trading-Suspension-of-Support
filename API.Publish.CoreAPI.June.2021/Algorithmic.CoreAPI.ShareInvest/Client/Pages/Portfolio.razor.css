@@ -1,4 +1,31 @@
-﻿.button_style_submit
+﻿.codes,
+.strategics
+{
+	text-align: center;
+	background-color: transparent;
+	color: dimgray;
+	border: 0.75px ridge;
+	border-style: solid;
+	border-color: azure;
+	font-size: medium;
+	height: 25px;
+	margin-left: 0.5em
+}
+
+	.codes::placeholder,
+	.strategics::placeholder
+	{
+		color: lightsteelblue;
+		font-size: small;
+		font-style: italic
+	}
+
+.title
+{
+	padding-left: 1rem
+}
+
+.button_style_save
 {
 	box-shadow: inset 0px 2px 3px rgba(255, 255, 255, .6), inset -2px -2px 3px rgba(0, 0, 0, .6);
 	margin-left: -3px;
@@ -7,13 +34,6 @@
 }
 
 .button_style_verify
-{
-	box-shadow: inset 0px 2px 3px rgba(255, 255, 255, .6), inset 0px -2px 3px rgba(0, 0, 0, .6);
-	margin-right: -1.3px;
-	margin-left: -1.3px
-}
-
-.button_style_amend
 {
 	box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6), inset 0px -2px 3px rgba(0, 0, 0, .6);
 	margin-right: -3px;
@@ -25,7 +45,7 @@
 {
 	line-height: 2.5;
 	padding: 0 20px;
-	font-size: 1rem;
+	font-size: 0.7rem;
 	font-stretch: wider;
 	text-align: center;
 	color: #fff;
@@ -33,7 +53,7 @@
 	border: 0.5;
 	background-color: rgb(5, 39, 103);
 	background-image: linear-gradient(to top left, rgba(0, 0, 0, .2), rgba(0, 0, 0, .2) 30%, rgba(0, 0, 0, 0));
-	width: 33.1%
+	width: 49.50%
 }
 
 	.button_style button:hover
@@ -50,6 +70,7 @@
 	{
 		background: #ccc
 	}
+
 
 .flex-container
 {
@@ -71,16 +92,25 @@
 
 .sub
 {
-	width: 100%;
 	color: lightslategrey;
-	cursor: pointer
+	font-size: smaller;
+	font-weight: bold;
+	font-style: italic
 }
 
-.strategics
+.context
 {
-	color: midnightblue;
-	width: 100%;
-	font-size: 16px
+	color: gainsboro;
+	font-size: small;
+	font-style: italic
+}
+
+.sub_context
+{
+	color: slategrey;
+	font-size: smaller;
+	text-align: right;
+	padding-top: 3px
 }
 
 .strategics_radio
@@ -98,7 +128,7 @@
 	border-style: solid;
 	border-color: tan;
 	font-size: small;
-	width: 100%;
+	width: auto;
 	height: 25px;
 	text-align: end
 }

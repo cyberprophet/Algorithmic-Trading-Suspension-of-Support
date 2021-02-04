@@ -19,10 +19,9 @@ namespace ShareInvest.Controllers
 				if (await context.Securities.AnyAsync(o => o.Security.Equals(key)))
 					return Ok(context.Securities.Where(o => o.Security.Equals(key)).Select(o => new
 					{
-						o.Code,
 						o.Strategics,
-						o.Methods,
-						o.Contents
+						o.Contents,
+						o.Date
 					}));
 			}
 			catch (Exception ex)

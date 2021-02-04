@@ -18,5 +18,9 @@
 		{
 			get; set;
 		}
+		public long Date
+		{
+			get; set;
+		}
 	}
 }

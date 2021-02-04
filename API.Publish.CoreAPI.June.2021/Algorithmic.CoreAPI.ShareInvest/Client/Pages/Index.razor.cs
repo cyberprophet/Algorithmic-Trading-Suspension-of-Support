@@ -118,8 +118,7 @@ namespace ShareInvest.Pages
 				}
 				IsClicked = true;
 			}
-		}
-		protected internal static string ConvertFormat(string account) => string.Format("{0}­ ─ ­{1}", account.Substring(0, 4), account.Substring(4, 4));
+		}		
 		protected internal bool IsClicked
 		{
 			get; private set;

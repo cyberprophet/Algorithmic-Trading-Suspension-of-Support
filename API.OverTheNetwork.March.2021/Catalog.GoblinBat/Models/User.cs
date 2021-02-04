@@ -12,5 +12,9 @@ namespace ShareInvest.Catalog.Models
 		{
 			get; set;
 		}
+		public Dictionary<string, Balance> Balance
+		{
+			get; set;
+		}
 	}
 }

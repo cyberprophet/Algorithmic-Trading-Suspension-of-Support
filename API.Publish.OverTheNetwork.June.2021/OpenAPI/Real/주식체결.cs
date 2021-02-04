@@ -20,9 +20,12 @@ namespace ShareInvest.OpenAPI.Catalog
 
 			if (string.IsNullOrEmpty(volume) is false && string.IsNullOrEmpty(current) is false && string.IsNullOrEmpty(time) is false)
 			{
-				if (Connect.GetInstance().StocksHeld.TryGetValue(e.sRealKey, out Analysis analysis) && analysis.Trend is not null && analysis.Trend.Count > 0)
+				if (Connect.GetInstance().StocksHeld.TryGetValue(e.sRealKey, out Analysis analysis))
+				{
+					analysis.Bid = int.TryParse(API.GetCommRealData(e.sRealKey, Fid[5]), out int bid) ? bid : int.MinValue;
+					analysis.Offer = int.TryParse(API.GetCommRealData(e.sRealKey, Fid[4]), out int offer) ? offer : int.MinValue;
 					analysis.OnReceiveEvent(time, current, volume);
-
+				}
 				Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', time, ';', current, ';', volume));
 			}
 		}

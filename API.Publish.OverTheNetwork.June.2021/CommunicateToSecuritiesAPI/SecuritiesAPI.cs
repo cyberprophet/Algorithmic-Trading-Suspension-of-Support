@@ -329,6 +329,7 @@ namespace ShareInvest
 					while (hold.TryDequeue(out string[] ing))
 						if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate) && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase) && await server.PostContextAsync(new Balance
 						{
+							Kiwoom = Security.Key,
 							Account = connect.Account[^1].Substring(0, 8).Insert(4, "－"),
 							Code = ing[0],
 							Name = ing[1].Equals(ing[0]) && bal.TryGetValue(ing[1], out Analysis analysis) ? analysis.Name : ing[1],
@@ -336,14 +337,14 @@ namespace ShareInvest
 							Purchase = fPurchase.ToString(ing[0][1] is '0' ? "N2" : "N0"),
 							Current = fCurrent.ToString(ing[0][1] is '0' ? "N2" : "N0"),
 							Revenue = fValuation.ToString("C0"),
-							Rate = (fRate * 1e-2).ToString("P2"),
-							Separation = string.Empty,
-							Trend = string.Empty
+							Rate = (fRate * 1e-2).ToString("P2")
+
 						}) is 0xC8)
 							Base.SendMessage(sender.GetType(), ing[0], quantity);
 
 						else if (ing[3].Length > 0 && ing[3][0] is 'A' && double.TryParse(ing[0xC]?.Insert(6, "."), out double ratio) && long.TryParse(ing[0xB], out long valuation) && int.TryParse(ing[6], out int amount) && uint.TryParse(ing[8], out uint purchase) && uint.TryParse(ing[7], out uint current) && await server.PostContextAsync(new Balance
 						{
+							Kiwoom = Security.Key,
 							Account = connect.Account[0].Substring(0, 8).Insert(4, "－"),
 							Code = ing[3][1..].Trim(),
 							Name = ing[4].Trim(),
@@ -351,9 +352,8 @@ namespace ShareInvest
 							Purchase = purchase.ToString("N0"),
 							Current = current.ToString("N0"),
 							Revenue = valuation.ToString("C0"),
-							Rate = ratio.ToString("P2"),
-							Trend = string.Empty,
-							Separation = string.Empty
+							Rate = ratio.ToString("P2")
+
 						}) is 0xC8)
 						{
 							if (Reservation is not null && (Base.IsDebug || api.IsAdministrator is false) && bal.TryGetValue(ing[3][1..].Trim(), out Analysis held))
@@ -741,7 +741,7 @@ namespace ShareInvest
 					break;
 			}
 			if (Base.IsDebug is false)
-				(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(0x1600);
+				(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(0x1253);
 		}
 		Queue<string> Codes
 		{

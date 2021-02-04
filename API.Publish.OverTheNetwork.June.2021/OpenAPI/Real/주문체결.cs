@@ -14,6 +14,10 @@ namespace ShareInvest.OpenAPI.Catalog
 		{
 			get; set;
 		}
+		protected internal override string Identity
+		{
+			get; set;
+		}
 		internal override void OnReceiveChejanData(_DKHOpenAPIEvents_OnReceiveChejanDataEvent e)
 		{
 			var conclusion = new Dictionary<int, string>();

@@ -34,11 +34,7 @@
 		{
 			get; set;
 		}
-		public string Trend
-		{
-			get; set;
-		}
-		public string Separation
+		public string Kiwoom
 		{
 			get; set;
 		}

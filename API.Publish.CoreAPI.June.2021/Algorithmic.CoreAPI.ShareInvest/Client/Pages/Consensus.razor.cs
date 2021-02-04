@@ -117,33 +117,6 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
-		protected internal static string ConvertFormat(char initial, string param)
-		{
-			var unit = string.Empty;
-
-			switch (initial)
-			{
-				case 'D':
-					unit = "일";
-					break;
-
-				case 'M':
-					unit = "㎳";
-					break;
-
-				case 'S':
-					unit = "주";
-					break;
-
-				case 'T':
-					unit = "호가";
-					break;
-
-				case '%':
-					break;
-			}
-			return string.Concat(param, string.IsNullOrEmpty(unit) ? initial : unit);
-		}
 		protected internal static string ConvertFormat(string param) => string.Format("’{0}. {1}.", param.Substring(0, 2), param.Substring(2, 2));
 		protected internal static (string, ConsoleColor) ConvertFormat(double param) => (param < 0 ? param.ToString("P2")[1..] : param.ToString("P2"), param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
 		[Inject]

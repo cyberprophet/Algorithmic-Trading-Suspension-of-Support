@@ -1,270 +1,79 @@
 ﻿@page "/portfolio"
 @inherits PortfolioBase
 
-@if (Enumerable.Count > 0)
+@if (Codes is Catalog.Models.Codes[] && string.IsNullOrEmpty(Complete) is false)
 {
-	foreach (var kv in Enumerable)
+	foreach (var user in Information)
 	{
-		if (kv.Value.RenderingStrategics)
+		if (string.IsNullOrEmpty(user.Check) is false)
 		{
+			var account = user.Check.Split(';')[0];
+
 			<fieldset class="flex-container">
 				<legend class="legend">
-					<span class="sub" @onclick="(e => OnClick(kv.Key, 'S', e))">
-						<small><b><i>Strategics</i></b></small>
-					</span>
+					<span class="sub">@Base.ConvertFormat(account)</span>
+					<input type="text" class="codes" name="codes" list="codes-list" placeholder="Please enter the code." @onchange="e => OnReceiveTheChoiceItem(e, account)" required />
+					<input type="text" class="strategics" name="strategics" list="strategics-list" placeholder="Please enter the strategics." @onchange="e => OnReceiveTheChoiceItem(account, e)" required />
 				</legend>
-				<ul>
-					@{
-						<li>
-							<div class="strategics">
-								<input type="radio" class="strategics_radio" @onclick="(e => OnClick(kv.Key, 'A', e))" checked="@(kv.Value.SelectStrategics is 'A')" />
-								<b><i>According to Trends</i></b>
-							</div>
 
-							@if (kv.Value.SelectStrategics is 'A')
-							{
-								<table class="table">
-									<thead>
-										<tr>
-											<th scope="col" class="strategics_title" title="Exponential Moving Average">
-												<div><small>EMA</small></div>
-											</th>
-											<th scope="col" class="strategics_table">
-												<div style="padding-right: 5px; color: maroon">Leading­Line</div>
-											</th>
-											<th scope="col" class="strategics_table">
-												<div style="padding-right: 5px; color: navy">Lagging­Line</div>
-											</th>
-											<th scope="col" class="strategics_table">
-												<div style="padding-right: 5px; color: maroon">Leading­Trend</div>
-											</th>
-											<th scope="col" class="strategics_table">
-												<div style="padding-right: 5px; color: navy">Lagging­Trend</div>
-											</th>
-										</tr>
-									</thead>
+				@if (ChosenStrategics.TryGetValue(account, out string value) && Enum.TryParse(value, out Strategics name) && ChosenCodes.TryGetValue(account, out string code) && Codes.Any(o => o.Code.Equals(code)))
+				{
+					switch (name)
+					{
+						case Strategics.Long_Position:
+							var record = RetrieveRecordedInformation(name, account, code);
 
-									<tbody>
-										<tr>
-											<th scope="row" class="strategics_table"><div>Day</div></th>
-
-											@if (kv.Value.IsClickedAmend)
-											{
-												<td>
-													<input class="strategics_input" type="number" min=2 max=1450 placeholder=5 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min=3 max=1451 placeholder=60 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min=2 max=1450 placeholder=20 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min=3 max=1451 placeholder=45 required />
-												</td>
-											}
-											else
-											{
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('D', null)</small></span>
-												</td>
-											}
-										</tr>
-									</tbody>
-
-									<thead>
-										<tr>
-											<th scope="col" class="strategics_title" title="장중ㆍ동시호가（일 3회）">
-												<div><small>Term</small></div>
-											</th>
-											<th class="strategics_table" colspan="2" scope="col">
-												<div style="display: inline-block; color: maroon">In Gains</div>
-												<div style="display: inline-block">／</div>
-												<div style="display: inline-block; color: navy">Scale Trading</div>
-												<div style="display: inline-block">（％）</div>
-											</th>
-											<th class="strategics_table" scope="col"><div>Quantity（주）</div></th>
-											<th class="strategics_table" scope="col"><div>Unit（Tick）</div></th>
-										</tr>
-									</thead>
-
-									<tbody>
-										<tr>
-											<th rowspan="2" scope="row" class="strategics_table">
-												<div>Appoint</div>
-											</th>
-											<td class="strategics_table">
-												<div style="color: navy"><b>Sell</b></div>
-											</td>
-
-											@if (kv.Value.IsClickedAmend)
-											{
-												<td>
-													<input class="strategics_input" type="number" step="0.05" min="0.05" max="1000" placeholder=1.35 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min="1" max="30" placeholder=1 required />
-												</td>
-											}
-											else
-											{
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('T', null)</small></span>
-												</td>
-											}
-										</tr>
-										<tr>
-											<td class="strategics_table">
-												<div style="color: maroon"><b>Buy</b></div>
-											</td>
-
-											@if (kv.Value.IsClickedAmend)
-											{
-												<td>
-													<input class="strategics_input" type="number" step="0.05" min="0.05" max="1000" placeholder=1.75 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min="1" max="30" placeholder=1 required />
-												</td>
-											}
-											else
-											{
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('T', null)</small></span>
-												</td>
-											}
-										</tr>
-									</tbody>
-
-									<thead>
-										<tr>
-											<th scope="col" class="strategics_title" title="매매방식（도움말 참조）">
-												<div><small>Expression</small></div>
-											</th>
-											<th class="strategics_table" colspan="2" scope="col"><div>（￦）</div></th>
-											<th class="strategics_table" scope="col"><div>Quantity（주）</div></th>
-											<th class="strategics_table" scope="col"><div>Interval（㎳）</div></th>
-										</tr>
-									</thead>
-
-									<tbody>
-										<tr>
-											<th rowspan="2" scope="row" class="strategics_table">
-												<div>Trading</div>
-											</th>
-											<td class="strategics_table">
-												<div style="color: navy"><b>Sell</b></div>
-											</td>
-
-											@if (kv.Value.IsClickedAmend)
-											{
-												<td>
-													<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min="200" max="30000000" placeholder=1735 required />
-												</td>
-											}
-											else
-											{
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('M', null)</small></span>
-												</td>
-											}
-										</tr>
-										<tr>
-											<td class="strategics_table">
-												<div style="color: maroon"><b>Buy</b></div>
-											</td>
-
-											@if (kv.Value.IsClickedAmend)
-											{
-												<td>
-													<input class="strategics_input" type="number" min=2 max=1451 placeholder=1 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min="0" max="1000000" placeholder=1 required />
-												</td>
-												<td>
-													<input class="strategics_input" type="number" min="200" max="30000000" placeholder=1235 required />
-												</td>
-											}
-											else
-											{
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('%', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('S', null)</small></span>
-												</td>
-												<td class="strategics_table">
-													<span class="strategics_cell"><small>@ConvertFormat('M', null)</small></span>
-												</td>
-											}
-										</tr>
-									</tbody>
-								</table>
-							}
-							else
-							{
-								<br />
-							}
-						</li>
-
-						<li>
-							<div class="strategics">
-								<input type="radio" class="strategics_radio" @onclick="(e => OnClick(kv.Key, 'D', e))" checked="@(kv.Value.SelectStrategics is 'D')" />
-								<b><i>Deletion</i></b>
-							</div>
-						</li>
+							<table class="table">
+								<thead>
+									<tr name="@((int)name)">
+										<th scope="col" title="매도ㆍ매수 ( ￦ : Unit )">
+											<div class="context">@Enum.GetName(typeof(Strategics), name).Replace("_", " ")</div>
+										</th>
+										<th scope="col"><div class="title">Underweight</div></th>
+										<th scope="col"><div class="title">Overweight</div></th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<th scope="row" title="@(string.IsNullOrEmpty(record.Item3) ? "Data doesn′t Exist." : record.Item3)">
+											<div class="sub_context">@Codes.First(o => o.Code.Equals(code)).Name</div>
+										</th>
+										<td>
+											<span><input class="strategics_input" type="text" placeholder="@record.Item1" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat((int)name, account)" /><small> won</small></span>
+										</td>
+										<td>
+											<span><input class="strategics_input" type="text" placeholder="@record.Item2" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat(account, (int)name)" /><small> won</small></span>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+							break;
 					}
-				</ul>
-				<div class="button_style">
-					<button class="button_style_amend" @onclick="(e => OnClick(kv.Key, e))" disabled="@kv.Value.IsClickedAmend">Amend</button>
-					<button class="button_style_verify">Verify</button>
-					<button class="button_style_submit" disabled="@(kv.Value.IsClickedAmend is false)">Save</button>
-				</div>
+					<div class="button_style">
+						<button class="button_style_verify" @onclick="e => RequestVerification(account, e)" disabled="@(IsClicked.ContainsKey(account) is false)">Verify</button>
+						<button class="button_style_save" @onclick="e => RequestSave((int)name, account, e)" disabled="@IsClicked.ContainsKey(account)">@Complete</button>
+					</div>
+				}
 			</fieldset>
 		}
+		<br />
 	}
+	<datalist id="strategics-list">
+		@foreach (var st in Enum.GetValues(typeof(Strategics)))
+		{
+			<option value="@((int)st)">@st.ToString().Replace("_", " ")</option>
+		}
+	</datalist>
+	<datalist id="codes-list">
+		@foreach (var co in Codes.OrderBy(o => o.Name))
+		{
+			<option value="@co.Code">@co.Name</option>
+		}
+	</datalist>
 }
 else
 {
-
+	<p>
+		<em>Loading...</em>
+	</p>
 }

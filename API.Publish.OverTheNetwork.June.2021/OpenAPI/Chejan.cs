@@ -14,6 +14,10 @@ namespace ShareInvest.OpenAPI
 		{
 			get; set;
 		}
+		protected internal abstract string Identity
+		{
+			get; set;
+		}
 		internal abstract void OnReceiveChejanData(_DKHOpenAPIEvents_OnReceiveChejanDataEvent e);
 	}
 	enum ChejanType

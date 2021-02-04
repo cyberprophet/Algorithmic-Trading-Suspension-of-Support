@@ -9,6 +9,6 @@ namespace ShareInvest.Hubs
 	{
 		public override async Task OnConnectedAsync() => await base.OnConnectedAsync();
 		public override async Task OnDisconnectedAsync(Exception exception) => await base.OnDisconnectedAsync(exception);
-		public async Task SendBalanceMessage(Catalog.Models.Balance balance) => await Clients.All.SendAsync("ReceiveBalanceMessage", balance);
+		public async Task SendBalanceMessage(string user, Catalog.Models.Balance balance) => await Clients.User(user).SendAsync("ReceiveBalanceMessage", balance);
 	}
 }
