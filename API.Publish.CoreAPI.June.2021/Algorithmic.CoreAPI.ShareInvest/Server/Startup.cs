@@ -53,17 +53,13 @@ namespace ShareInvest
 			else
 				app.UseExceptionHandler("/Error").UseHsts();
 
-			app.UseHttpsRedirection();
-			app.UseBlazorFrameworkFiles().UseStaticFiles();
-			app.UseRouting();
-			app.UseIdentityServer();
-			app.UseAuthentication().UseAuthorization();
-			app.UseEndpoints(ep =>
+			app.UseResponseCompression().UseHttpsRedirection().UseBlazorFrameworkFiles().UseStaticFiles().UseRouting().UseIdentityServer().UseAuthentication().UseAuthorization().UseEndpoints(ep =>
 			{
 				ep.MapRazorPages();
 				ep.MapHub<MessageHub>("/hub/message");
 				ep.MapHub<BalanceHub>("/hub/balance");
 				ep.MapHub<HermesHub>("/hub/hermes", o => o.Transports = HttpTransportType.WebSockets | HttpTransportType.LongPolling);
+				ep.MapHub<ChatHub>("/hub/chat");
 				ep.MapControllers();
 				ep.MapFallbackToFile("index.html");
 			});

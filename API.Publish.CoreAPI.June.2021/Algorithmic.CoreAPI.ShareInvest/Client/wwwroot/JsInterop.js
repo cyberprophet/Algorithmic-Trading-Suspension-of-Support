@@ -8,6 +8,14 @@
 			top: param
 		});
 	},
+	scroll: function ()
+	{
+		window.scrollBy({
+			left: 0,
+			top: document.body.scrollHeight,
+			behavior: "auto"
+		});
+	},
 	selector: function (param)
 	{
 		var element = document.getElementById(param);

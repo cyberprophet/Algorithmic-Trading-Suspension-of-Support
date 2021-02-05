@@ -1,2 +1,62 @@
 ﻿@page "/chat"
 @inherits ChatBase
+
+@if (Messages is List<Tuple<uint, string, string>>)
+{
+	<div class="chatbox">
+		@foreach (var msg in Messages)
+		{
+			if (User.Equals(msg.Item2))
+			{
+				<div class="chatbox_user_messages">
+					@if (msg.Item1 < Messages.Count - 1)
+					{
+						<div class="chatbox_messages_user_message_ind_message">
+							<p class="name">@User</p>
+							<br />
+							<p class="message">@msg.Item3</p>
+						</div>
+					}
+					else
+					{
+						<div class="first_chatbox_messages_user_message_ind_message">
+							<p class="name">@User</p>
+							<br />
+							<p class="message">@msg.Item3</p>
+						</div>
+					}
+				</div>
+			}
+			else
+			{
+				<div class="chatbox_messages">
+					@if (msg.Item1 < Messages.Count - 1)
+					{
+						<div class="chatbox_messages_user_message_ind_message">
+							<p class="name">@msg.Item2</p>
+							<br />
+							<p class="message">@msg.Item3</p>
+						</div>
+					}
+					else
+					{
+						<div class="first_chatbox_messages_user_message_ind_message">
+							<p class="name">@msg.Item2</p>
+							<br />
+							<p class="message">@msg.Item3</p>
+						</div>
+					}
+				</div>
+			}
+		}
+	</div>
+	<div class="send_message">
+		<input class="send_message_input" type="text" disabled="@(IsConnected is false)" @bind="Message" @onkeyup="SendMessage" placeholder="Enter your message to send." autocomplete="on" size="59">
+	</div>
+}
+else
+{
+	<p>
+		<em>Loading...</em>
+	</p>
+}
