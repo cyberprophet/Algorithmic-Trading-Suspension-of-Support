@@ -28,7 +28,7 @@ namespace ShareInvest.Controllers
 
 					if (hub is not null)
 						foreach (var email in from o in context.User where o.Kiwoom.Equals(balance.Kiwoom) select o.Email)
-							await hub.Clients.User(email).SendAsync(message, balance);
+							await hub.Clients.User(context.Users.First(o => o.Email.Equals(email)).Id).SendAsync(message, balance);
 				}
 			}
 			catch (Exception ex)

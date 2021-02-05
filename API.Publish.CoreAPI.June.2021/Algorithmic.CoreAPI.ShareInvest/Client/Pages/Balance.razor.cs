@@ -36,7 +36,6 @@ namespace ShareInvest.Pages
 			foreach (var response in await Http.GetFromJsonAsync<Catalog.Models.Balance[]>(Crypto.Security.GetRoute("Balance", await OnReceiveLogUserInformation())))
 				Balance[new Tuple<string, string>(response.Kiwoom, response.Code)] = response;
 
-			Hermes = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/hermes")).Build();
 			Hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/balance"), o => o.AccessTokenProvider = async () =>
 			{
 				(await TokenProvider.RequestAccessToken()).TryGetToken(out var accessToken);
@@ -44,6 +43,7 @@ namespace ShareInvest.Pages
 				return accessToken.Value;
 
 			}).Build();
+			Hermes = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/hermes")).Build();
 			Hermes.On<Catalog.Models.Message>("ReceiveCurrentMessage", (current) => StateHasChanged(current));
 			Hub.On<Catalog.Models.Balance>("ReceiveBalanceMessage", (balance) => StateHasChanged(balance));
 			await Hermes.StartAsync();

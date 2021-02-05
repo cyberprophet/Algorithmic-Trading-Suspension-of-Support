@@ -35,7 +35,8 @@ namespace ShareInvest.Controllers
 						Name = user.Account.Name
 					});
 					if (hub is not null)
-						await hub.Clients.All.SendAsync(method, log[0].Trim());
+						foreach (var email in from o in context.User where o.Kiwoom.Equals(param.Key) select o.Email)
+							await hub.Clients.User(context.Users.First(o => o.Email.Equals(email)).Id).SendAsync(method, log[0].Trim());
 
 					return Ok(param.Convey);
 				}

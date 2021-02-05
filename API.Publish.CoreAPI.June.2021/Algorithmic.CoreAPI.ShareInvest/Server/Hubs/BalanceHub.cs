@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace ShareInvest.Hubs
 {
+	[Authorize]
 	public class BalanceHub : Hub
 	{
 		public override async Task OnConnectedAsync() => await base.OnConnectedAsync();

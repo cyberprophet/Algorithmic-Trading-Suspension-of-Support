@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +34,7 @@ namespace ShareInvest
 				o.KeepAliveInterval = TimeSpan.FromMilliseconds(wait / 3);
 				o.EnableDetailedErrors = true;
 			});
-			services.AddDbContext<CoreApiDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped).AddDatabaseDeveloperPageExceptionFilter().AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" })).AddSingleton<HermesHub>().AddScoped<BalanceHub>().AddScoped<MessageHub>().AddSingleton<IUserIdProvider, UserIdProvider>().Configure<KestrelServerOptions>(o =>
+			services.AddDbContext<CoreApiDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped).AddDatabaseDeveloperPageExceptionFilter().AddResponseCompression(o => o.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" })).AddSingleton<HermesHub>().AddScoped<BalanceHub>().AddScoped<MessageHub>().Configure<KestrelServerOptions>(o =>
 			{
 				o.ListenAnyIP(0x1BDF, o => o.UseHttps(StoreName.My, "coreapi.shareinvest.net", true).UseConnectionLogging());
 				o.Limits.MaxRequestBodySize = int.MaxValue;
@@ -59,14 +58,14 @@ namespace ShareInvest
 			app.UseRouting();
 			app.UseIdentityServer();
 			app.UseAuthentication().UseAuthorization();
-			app.UseEndpoints(endpoints =>
+			app.UseEndpoints(ep =>
 			{
-				endpoints.MapRazorPages();
-				endpoints.MapHub<MessageHub>("/hub/message");
-				endpoints.MapHub<BalanceHub>("/hub/balance");
-				endpoints.MapHub<HermesHub>("/hub/hermes", o => o.Transports = HttpTransportType.WebSockets | HttpTransportType.LongPolling);
-				endpoints.MapControllers();
-				endpoints.MapFallbackToFile("index.html");
+				ep.MapRazorPages();
+				ep.MapHub<MessageHub>("/hub/message");
+				ep.MapHub<BalanceHub>("/hub/balance");
+				ep.MapHub<HermesHub>("/hub/hermes", o => o.Transports = HttpTransportType.WebSockets | HttpTransportType.LongPolling);
+				ep.MapControllers();
+				ep.MapFallbackToFile("index.html");
 			});
 		}
 	}
