@@ -61,10 +61,6 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
-		public override string Memo
-		{
-			get; set;
-		}
 		public override int Quantity
 		{
 			get; set;

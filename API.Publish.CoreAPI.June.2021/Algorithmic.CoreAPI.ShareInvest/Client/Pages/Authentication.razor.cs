@@ -9,5 +9,12 @@ namespace ShareInvest.Pages
 		{
 			get; set;
 		}
+		[Inject]
+		protected internal NavigationManager Manager
+		{
+			get; set;
+		}
+		protected internal bool MakeSureLoggedOut => logged_out.Equals(Action);
+		const string logged_out = "logged-out";
 	}
 }

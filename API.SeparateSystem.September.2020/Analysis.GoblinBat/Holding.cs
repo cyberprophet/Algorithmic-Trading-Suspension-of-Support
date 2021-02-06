@@ -78,8 +78,8 @@ namespace ShareInvest.Analysis
 						yield return Temporary.CallUpTheChartAsync(new Catalog.Request.Charts
 						{
 							Code = code,
-							Start = start.AddDays(-1).AddDays(0x4B * count++).ToString(format),
-							End = end = start.AddDays(-1).AddDays(0x4B * count).ToString(format)
+							Start = start.AddDays(-1).AddDays(0x3C * count++).ToString(format),
+							End = end = start.AddDays(-1).AddDays(0x3C * count).ToString(format)
 						}).Result;
 				}
 			}

@@ -1,5 +1,11 @@
 ﻿@page "/authentication/{action}"
 @inherits AuthenticationBase
-@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
-<RemoteAuthenticatorView Action="@Action" />
+<div class="form-group">
+	<RemoteAuthenticatorView Action="@Action" />
+
+	@if (MakeSureLoggedOut)
+	{
+		Manager.NavigateTo("/");
+	}
+</div>

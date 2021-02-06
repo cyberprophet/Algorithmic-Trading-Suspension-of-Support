@@ -21,7 +21,8 @@ namespace ShareInvest.Controllers
 					{
 						o.Strategics,
 						o.Contents,
-						o.Date
+						o.Date,
+						o.Code
 					}));
 			}
 			catch (Exception ex)

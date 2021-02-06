@@ -9,6 +9,8 @@ namespace ShareInvest
 	{
 		public static readonly Dictionary<string, string> rename = new Dictionary<string, string>();
 		[Conditional("DEBUG")]
+		public static void SendMessage(Type type, string code, int quantity, int count, object purchase, object current) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', quantity, '_', count, '_', purchase, '_', current));
+		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string code, string date, string remove) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', date, '_', remove));
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string message) => Debug.WriteLine(string.Concat(type.Name, '_', message));
@@ -19,80 +21,9 @@ namespace ShareInvest
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, object code, object message) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', message));
 		[Conditional("DEBUG")]
-		public static void SendMessage(string sender, object convey, string message, object param, Type type)
-			=> Console.WriteLine(string.Concat(type.Name, '_', sender, '_', convey, '_', message, '_', param));
+		public static void SendMessage(string sender, object convey, string message, object param, Type type) => Console.WriteLine(string.Concat(type.Name, '_', sender, '_', convey, '_', message, '_', param));
 		[Conditional("DEBUG")]
 		public static void SendMessage(string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', message));
-		[Conditional("DEBUG")]
-		public static void SendMessage(Type type, string message, Catalog.OpenAPI.Conclusion conclusion)
-		{
-			Console.WriteLine(type.FullName);
-			Console.WriteLine(message);
-			Console.WriteLine(conclusion.Account);
-			Console.WriteLine(conclusion.OrderNumber);
-			Console.WriteLine(conclusion.AdminNumber);
-			Console.WriteLine(conclusion.Code);
-			Console.WriteLine(conclusion.OrderBusinessClassification);
-			Console.WriteLine(conclusion.OrderState);
-			Console.WriteLine(conclusion.Name);
-			Console.WriteLine(conclusion.OrderQuantity);
-			Console.WriteLine(conclusion.OrderPrice);
-			Console.WriteLine(conclusion.UnsettledQuantity);
-			Console.WriteLine(conclusion.TotalExecutionAmount);
-			Console.WriteLine(conclusion.OriginalOrderNumber);
-			Console.WriteLine(conclusion.OrderClassification);
-			Console.WriteLine(conclusion.SalesClassification);
-			Console.WriteLine(conclusion.TradingClassification);
-			Console.WriteLine(conclusion.Time);
-			Console.WriteLine(conclusion.ConclusionNumber);
-			Console.WriteLine(conclusion.ConclusionPrice);
-			Console.WriteLine(conclusion.ConclusionQuantity);
-			Console.WriteLine(conclusion.CurrentPrice);
-			Console.WriteLine(conclusion.OfferPrice);
-			Console.WriteLine(conclusion.BidPrice);
-			Console.WriteLine(conclusion.UnitConclusionPrice);
-			Console.WriteLine(conclusion.UnitConclusionQuantity);
-			Console.WriteLine(conclusion.Commission);
-			Console.WriteLine(conclusion.Tax);
-			Console.WriteLine(conclusion.ReasonForRejection);
-			Console.WriteLine(conclusion.ScreenNumber);
-			Console.WriteLine(conclusion.TerminalNumber);
-			Console.WriteLine(conclusion.CreditClassification);
-			Console.WriteLine(conclusion.LoanDate);
-		}
-		[Conditional("DEBUG")]
-		public static void SendMessage(Type type, string message, Catalog.OpenAPI.Balance balance)
-		{
-			Console.WriteLine(type.FullName);
-			Console.WriteLine(message);
-			Console.WriteLine(string.Concat("계좌번호_", balance.Account));
-			Console.WriteLine(string.Concat("종목코드_업종코드_", balance.Code));
-			Console.WriteLine(string.Concat("신용구분_", balance.CreditClassification));
-			Console.WriteLine(string.Concat("대출일_", balance.LoanDate));
-			Console.WriteLine(string.Concat("종목명_", balance.Name));
-			Console.WriteLine(string.Concat("현재가_", balance.Current));
-			Console.WriteLine(string.Concat("보유수량_", balance.Quantity));
-			Console.WriteLine(string.Concat("매입단가_", balance.Purchase));
-			Console.WriteLine(string.Concat("총매입가_", balance.TotalPurchasePrice));
-			Console.WriteLine(string.Concat("주문가능수량_", balance.QuantityAvailable));
-			Console.WriteLine(string.Concat("당일순매수량_", balance.NetPurchaseOnTheDay));
-			Console.WriteLine(string.Concat("매도_매수구분_", balance.TradingClassification));
-			Console.WriteLine(string.Concat("당일총매도손익_", balance.TotalSalesOnTheDay));
-			Console.WriteLine(string.Concat("예수금_", balance.Deposit));
-			Console.WriteLine(string.Concat("매도호가_", balance.Offer));
-			Console.WriteLine(string.Concat("매수호가_", balance.Bid));
-			Console.WriteLine(string.Concat("기준가_", balance.ReferencePrice));
-			Console.WriteLine(string.Concat("손익율_", balance.Rate));
-			Console.WriteLine(string.Concat("신용금액_", balance.CreditAmount));
-			Console.WriteLine(string.Concat("신용이자_", balance.CreditInterest));
-			Console.WriteLine(string.Concat("만기일_", balance.ExpirationDate));
-			Console.WriteLine(string.Concat("당일실현손익_유가_", balance.RealizedOnTheDay));
-			Console.WriteLine(string.Concat("당일실현손익률_유가_", balance.RealizedRateOnTheDay));
-			Console.WriteLine(string.Concat("당일실현손익_신용_", balance.RealizedOnTheDayCredit));
-			Console.WriteLine(string.Concat("당일실현손익률_신용_", balance.RealizedRateOnTheDayCredit));
-			Console.WriteLine(string.Concat("담보대출수량_", balance.LoanQuantity));
-			Console.WriteLine(string.Concat("ExtraItem_", balance.ExtraItem));
-		}
 		[Conditional("DEBUG")]
 		public static void SendMessage(string code, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', code, '_', message));
 		[Conditional("DEBUG")]
@@ -104,9 +35,7 @@ namespace ShareInvest
 			foreach (var process in Process.GetProcessesByName(name))
 				process.Kill();
 		}
-		public static string GetRemainingTime(TimeSpan span) => span.Days == 0 ?
-			string.Concat("장시작 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .") :
-			string.Concat("장시작 ", span.Days, "일 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .");
+		public static string GetRemainingTime(TimeSpan span) => span.Days == 0 ? string.Concat("장시작 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .") : string.Concat("장시작 ", span.Days, "일 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .");
 		public static DateTime IsTheSecondThursday(DateTime now)
 		{
 			var month = now.AddDays(1 - now.Day);
@@ -236,13 +165,10 @@ namespace ShareInvest
 		{
 			get
 			{
-				DayOfWeek dt = DateTime.Now.AddDays(1 - DateTime.Now.Day).DayOfWeek;
-				int check = dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 3 : 2,
-					usWeekNumber = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) -
-					CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1;
+				var dt = DateTime.Now.AddDays(1 - DateTime.Now.Day).DayOfWeek;
+				int check = dt.Equals(DayOfWeek.Friday) || dt.Equals(DayOfWeek.Saturday) ? 3 : 2, usWeekNumber = CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now, CalendarWeekRule.FirstDay, DayOfWeek.Sunday) - CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(DateTime.Now.AddDays(1 - DateTime.Now.Day), CalendarWeekRule.FirstDay, DayOfWeek.Sunday) + 1;
 
-				return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) ||
-					DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString(distinctDate) : DateTime.Now.ToString(distinctDate);
+				return usWeekNumber > check || usWeekNumber == check && (DateTime.Now.DayOfWeek.Equals(DayOfWeek.Friday) || DateTime.Now.DayOfWeek.Equals(DayOfWeek.Saturday)) ? DateTime.Now.AddMonths(1).ToString(distinctDate) : DateTime.Now.ToString(distinctDate);
 			}
 		}
 		public static bool IsDebug

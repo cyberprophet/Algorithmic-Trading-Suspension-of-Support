@@ -21,11 +21,11 @@ namespace ShareInvest.Pages
 	[Authorize]
 	public partial class PortfolioBase : ComponentBase
 	{
-		internal (string, string, string) RetrieveRecordedInformation(Strategics strategics, string account, string code)
+		internal (string, string, string) RetrieveRecordedInformation(Interface.Strategics strategics, string account, string code)
 		{
 			switch (strategics)
 			{
-				case Strategics.Long_Position when Array.Exists(Enumerable, o => o.Code.Equals(code)):
+				case Interface.Strategics.Long_Position when Array.Exists(Enumerable, o => o.Code.Equals(code)):
 					foreach (var find in Enumerable.Where(o => o.Trend == (int)strategics && o.Code.Equals(code)))
 						if (find is Catalog.LongPosition lp && lp.Account.Equals(account))
 						{
@@ -52,10 +52,10 @@ namespace ShareInvest.Pages
 			Enumerable = new Interface.IStrategics[enumerable.Length];
 
 			for (int i = 0; i < enumerable.Length; i++)
-				if (Enum.TryParse(enumerable[i].Strategics, out Strategics strategics))
+				if (Enum.TryParse(enumerable[i].Strategics, out Interface.Strategics strategics))
 					switch (strategics)
 					{
-						case Strategics.Long_Position:
+						case Interface.Strategics.Long_Position:
 							Enumerable[i] = JsonConvert.DeserializeObject<Catalog.LongPosition>(enumerable[i].Contents);
 							break;
 					}
@@ -67,9 +67,9 @@ namespace ShareInvest.Pages
 			IsClicked[sender] = true;
 			string json = null;
 
-			switch (Enum.ToObject(typeof(Strategics), name))
+			switch (Enum.ToObject(typeof(Interface.Strategics), name))
 			{
-				case Strategics.Long_Position when ulong.TryParse((await Runtime.InvokeAsync<string>(string.Concat(interop, recall), string.Concat(sender, name))).Replace(",", string.Empty), out ulong over) && ulong.TryParse((await Runtime.InvokeAsync<string>(string.Concat(interop, recall), string.Concat(name, sender))).Replace(",", string.Empty), out ulong under):
+				case Interface.Strategics.Long_Position when ulong.TryParse((await Runtime.InvokeAsync<string>(string.Concat(interop, recall), string.Concat(sender, name))).Replace(",", string.Empty), out ulong over) && ulong.TryParse((await Runtime.InvokeAsync<string>(string.Concat(interop, recall), string.Concat(name, sender))).Replace(",", string.Empty), out ulong under):
 					json = JsonConvert.SerializeObject(new Catalog.LongPosition
 					{
 						Account = sender,
@@ -159,9 +159,5 @@ namespace ShareInvest.Pages
 		const string portfolio = "Portfolio";
 		const string save = "Save";
 		const string error = "Error";
-	}
-	enum Strategics
-	{
-		Long_Position = 'L'
 	}
 }

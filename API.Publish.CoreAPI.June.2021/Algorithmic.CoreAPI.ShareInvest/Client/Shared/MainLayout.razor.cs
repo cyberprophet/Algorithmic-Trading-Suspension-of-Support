@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -12,19 +13,22 @@ namespace ShareInvest.Shared
 		public async ValueTask DisposeAsync() => await Hub.DisposeAsync();
 		protected override async Task OnInitializedAsync()
 		{
-			Hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/message"), o => o.AccessTokenProvider = async () =>
+			if (await OnReceiveLogUserInformation())
 			{
-				(await TokenProvider.RequestAccessToken()).TryGetToken(out var accessToken);
+				Hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/message"), o => o.AccessTokenProvider = async () =>
+				{
+					(await TokenProvider.RequestAccessToken()).TryGetToken(out var accessToken);
 
-				return accessToken.Value;
+					return accessToken.Value;
 
-			}).Build();
-			Hub.On<string>("ReceiveMessage", (message) =>
-			{
-				Message = message[^1] is '.' ? message : string.Concat(message, '.');
-				StateHasChanged();
-			});
-			await Hub.StartAsync();
+				}).Build();
+				Hub.On<string>("ReceiveMessage", (message) =>
+				{
+					Message = message[^1] is '.' ? message : string.Concat(message, '.');
+					StateHasChanged();
+				});
+				await Hub.StartAsync();
+			}
 		}
 		[Inject]
 		protected internal NavigationManager Manager
@@ -44,5 +48,11 @@ namespace ShareInvest.Shared
 		{
 			get; set;
 		}
+		[CascadingParameter]
+		Task<AuthenticationState> State
+		{
+			get; set;
+		}
+		async Task<bool> OnReceiveLogUserInformation() => (await State).User.Identity.IsAuthenticated;
 	}
 }

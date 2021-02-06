@@ -4,7 +4,10 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+
+using Newtonsoft.Json;
 
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.Models;
@@ -94,7 +97,7 @@ namespace ShareInvest
 		{
 			if (Codes.TryDequeue(out string code))
 			{
-				if (string.IsNullOrEmpty(code))
+				if (string.IsNullOrEmpty(code) || Base.IsDebug && code.Length == 6)
 					CheckTheInformationReceivedOnTheDay();
 
 				else
@@ -207,6 +210,9 @@ namespace ShareInvest
 							break;
 
 						case Catalog.OpenAPI.Operation.장마감:
+							if (worker.WorkerSupportsCancellation)
+								worker.CancelAsync();
+
 							OnReceiveInformationTheDay();
 							break;
 
@@ -249,6 +255,7 @@ namespace ShareInvest
 										MarketMarginRate = tr.Item5,
 										Offer = 0,
 										Bid = 0
+
 									}).Send += OnReceiveSecuritiesAPI;
 								else if (param.Code.Length == 8 && param.Code[1].CompareTo('0') > 0)
 									app.Append(tr.Item1, new SecondaryIndicators.OpenAPI.StockFutures
@@ -259,6 +266,7 @@ namespace ShareInvest
 										MarketMarginRate = tr.Item5,
 										Offer = 0,
 										Bid = 0
+
 									}).Send += OnReceiveSecuritiesAPI;
 							}
 							else
@@ -272,6 +280,7 @@ namespace ShareInvest
 										MarketMarginRate = tr.Item5,
 										Offer = 0D,
 										Bid = 0D
+
 									}).Send += OnReceiveSecuritiesAPI;
 								else if (param.Code.Length == 8 && param.Code[0] is '2' or '3')
 									app.Append(tr.Item1, new SecondaryIndicators.OpenAPI.Options
@@ -282,6 +291,7 @@ namespace ShareInvest
 										MarketMarginRate = tr.Item5,
 										Offer = 0D,
 										Bid = 0D
+
 									}).Send += OnReceiveSecuritiesAPI;
 							}
 						}
@@ -324,9 +334,11 @@ namespace ShareInvest
 				case Queue<string[]> hold:
 					var name = sender.GetType().Name;
 					var bal = connect as OpenAPI.ConnectAPI;
+					var strategics = new string[hold.Count];
 					bal.RemoveValueRqData(name, string.Concat(connect.Account[name.EndsWith("Opw00005") ? 0 : ^1], password)).Send -= OnReceiveSecuritiesAPI;
 
 					while (hold.TryDequeue(out string[] ing))
+					{
 						if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate) && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase) && await server.PostContextAsync(new Balance
 						{
 							Kiwoom = Security.Key,
@@ -356,21 +368,28 @@ namespace ShareInvest
 
 						}) is 0xC8)
 						{
-							if (Reservation is not null && (Base.IsDebug || api.IsAdministrator is false) && bal.TryGetValue(ing[3][1..].Trim(), out Analysis held))
+							if ((Base.IsDebug || api.IsAdministrator is false) && bal.TryGetValue(ing[3][1..].Trim(), out Analysis held))
 							{
 								held.Quantity = amount;
 								held.Purchase = purchase;
 								held.Current = current;
-								Reservation.Push(bal.Append(held.Code, held));
+								held.Rate = ratio;
+								held.Revenue = valuation;
+								held.Name = ing[4].Trim();
+
+								if (Reservation is not null)
+									Reservation.Push(held);
 							}
 							Base.SendMessage(sender.GetType(), ing[4].Trim(), amount);
 						}
+						strategics[hold.Count] = (ing[0].Length == 8 ? ing[0] : ing[3][1..]).Trim();
+					}
+					if (worker.IsBusy is false && worker.WorkerSupportsCancellation is false)
+						worker.RunWorkerAsync(strategics);
+
 					return;
 
 				case Tuple<long, long> balance when now.Hour is 8 or 0xF:
-					if (Reservation is null && (api.IsAdministrator is false || Base.IsDebug) && await api.GetStrategics(key) is IEnumerable<BringIn> enumerable)
-						BringInStrategics(enumerable);
-
 					Reservation = new Reservation(balance.Item2, connect.Account);
 					return;
 
@@ -527,35 +546,80 @@ namespace ShareInvest
 
 				}
 		}
-		void BringInStrategics(IEnumerable<BringIn> strategics) => worker.RunWorkerAsync(strategics);
-		void WorkerDoWork(object sender, DoWorkEventArgs e)
+		void BringInStrategics(Strategics strategics, BringIn bring, string[] codes)
 		{
-			if (e.Argument is IEnumerable<BringIn> enumerable && connect is OpenAPI.ConnectAPI api)
-				foreach (var bring in enumerable)
-					if (api.TryGetValue(bring.Code, out Analysis analysis))
+			var api = connect as OpenAPI.ConnectAPI;
+			Analysis append;
+
+			if (api.TryGetValue(bring.Code, out Analysis analysis))
+			{
+				analysis.Wait = false;
+				analysis.Consecutive -= analysis.OnReceiveDrawChart;
+				analysis.Send -= OnReceiveSecuritiesAPI;
+
+				switch (strategics)
+				{
+					case Strategics.Long_Position when JsonConvert.DeserializeObject<LongPosition>(bring.Contents) is LongPosition json && analysis.Code.Equals(json.Code):
+						analysis.Account = json.Account;
+						analysis.Classification = json;
+						analysis.Strategics = strategics;
+						analysis.Wait = DateTime.Now.Hour > 8;
+						append = api.Append(bring.Code, analysis);
+						break;
+
+					default:
+						return;
+				}
+				append.Send += OnReceiveSecuritiesAPI;
+				append.Consecutive += append.OnReceiveDrawChart;
+
+				if (Array.Exists(codes, o => o.Equals(bring.Code)))
+					Base.SendMessage(bring.GetType(), append.Name, append.Quantity, append.OrderNumber is null ? int.MinValue : append.OrderNumber.Count, append.Purchase, append.Current as object);
+			}
+		}
+		async void WorkerDoWork(object sender, DoWorkEventArgs e)
+		{
+			if (e.Argument is string[] codes)
+			{
+				var now = DateTime.Now;
+
+				while (e.Cancel is false)
+				{
+					try
 					{
-						if (string.IsNullOrEmpty(analysis.Memo) is false && analysis.Memo.Equals(bring.Methods))
-							continue;
+						foreach (var bring in await api.GetStrategics(key) as IEnumerable<BringIn>)
+							if (Enum.TryParse(bring.Strategics, out Strategics strategics))
+							{
+								if (worker.WorkerSupportsCancellation && now.CompareTo(new DateTime(bring.Date)) > 0)
+									continue;
 
-						else if (analysis.Trend is null)
-							analysis.Trend = new Stack<double>(0x80);
+								else if (worker.WorkerSupportsCancellation is false)
+									worker.WorkerSupportsCancellation = true;
 
+								BringInStrategics(strategics, bring, codes);
+							}
+					}
+					catch (Exception ex)
+					{
+						Base.SendMessage(sender.GetType(), ex.StackTrace);
+					}
+					finally
+					{
+						if (worker.CancellationPending && worker.IsBusy is false)
+						{
+							e.Cancel = true;
+
+							foreach (var code in codes)
+								Base.SendMessage(sender.GetType(), code, now.ToLongTimeString());
+						}
 						else
 						{
-							analysis.Wait = false;
-							analysis.Trend.Clear();
+							now = DateTime.Now;
+							await Task.Delay(0xEA60);
 						}
-						analysis.Consecutive -= analysis.OnReceiveDrawChart;
-						analysis.Send -= OnReceiveSecuritiesAPI;
-						analysis.Memo = bring.Methods;
-						var append = api.Append(bring.Code, analysis);
-
-						if (DateTime.Now.Hour is > 8 and < 0x10)
-							append.Wait = true;
-
-						append.Send += OnReceiveSecuritiesAPI;
-						append.Consecutive += append.OnReceiveDrawChart;
 					}
+				}
+			}
 		}
 		void TimerTick(object sender, EventArgs e)
 		{
@@ -650,8 +714,8 @@ namespace ShareInvest
 				else if (e.ClickedItem.Text.Equals("조회"))
 					switch (MessageBox.Show(look_up, connect.Securities("USER_NAME"), MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1))
 					{
-						case DialogResult.Abort:
-
+						case DialogResult.Abort when worker.WorkerSupportsCancellation:
+							worker.CancelAsync();
 							break;
 
 						case DialogResult.Retry:
@@ -664,20 +728,8 @@ namespace ShareInvest
 							break;
 					}
 				else
-					switch (MessageBox.Show("", connect.Securities("USER_NAME"), MessageBoxButtons.AbortRetryIgnore, MessageBoxIcon.Question, MessageBoxDefaultButton.Button1))
-					{
-						case DialogResult.Abort:
+					Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
 
-							break;
-
-						case DialogResult.Retry:
-							Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
-							break;
-
-						case DialogResult.Ignore:
-
-							break;
-					}
 			else
 				Close();
 		}

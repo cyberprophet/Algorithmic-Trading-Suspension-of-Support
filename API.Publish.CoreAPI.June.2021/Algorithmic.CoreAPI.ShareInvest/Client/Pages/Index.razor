@@ -1,9 +1,9 @@
-﻿@page "/"
+﻿@page "/account"
 @inherits IndexBase
 
 @if (Information is UserInformation[])
 {
-	<div>
+	<div class="form-group">
 		@if (string.IsNullOrEmpty(Caution) is false)
 		{
 			<div class="caution">@Caution</div>
@@ -26,7 +26,7 @@
 	<div class="form-group">
 		@if (Information.Length > 0)
 		{
-			<br />
+			<hr />
 
 			for (int i = 0; i < Information.Length; i++)
 			{
@@ -79,7 +79,10 @@
 						</div>
 					</fieldset>
 				</p>
-				<br />
+				@if (i < Information.Length - 1)
+				{
+					<hr />
+				}
 			}
 		}
 	</div>

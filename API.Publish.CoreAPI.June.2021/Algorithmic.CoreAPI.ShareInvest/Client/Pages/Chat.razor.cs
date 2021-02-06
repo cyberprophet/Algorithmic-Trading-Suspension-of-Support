@@ -24,7 +24,7 @@ namespace ShareInvest.Pages
 			{
 				Messages.Add(new Tuple<uint, string, string>(Count++, user, message));
 
-				if (User.Equals(user))
+				if (User.Equals(user) || DateTime.Now.Second % 0xA == 9)
 					StateHasChanged();
 			});
 			await Hub.StartAsync();

@@ -7,15 +7,11 @@
 
 	<div class="main">
 		<div class="top-row px-4">
-			@if (string.IsNullOrEmpty(Message))
-			{
-
-			}
-			else
+			@if (string.IsNullOrEmpty(Message) is false)
 			{
 				<span>@Message</span>
 			}
-			<a href="https://sharecompany.tistory.com/46" target="_blank" class="ml-md-auto">이용약관</a>
+			<a href="https://sharecompany.tistory.com/46" target="_blank" class="ml-md-auto">Terms</a>
 			<LoginDisplay />
 		</div>
 

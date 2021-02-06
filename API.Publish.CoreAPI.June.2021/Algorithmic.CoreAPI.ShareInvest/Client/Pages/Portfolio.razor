@@ -16,18 +16,18 @@
 					<input type="text" class="strategics" name="strategics" list="strategics-list" placeholder="Please enter the strategics." @onchange="e => OnReceiveTheChoiceItem(account, e)" required />
 				</legend>
 
-				@if (ChosenStrategics.TryGetValue(account, out string value) && Enum.TryParse(value, out Strategics name) && ChosenCodes.TryGetValue(account, out string code) && Codes.Any(o => o.Code.Equals(code)))
+				@if (ChosenStrategics.TryGetValue(account, out string value) && Enum.TryParse(value, out Interface.Strategics name) && ChosenCodes.TryGetValue(account, out string code) && Codes.Any(o => o.Code.Equals(code)))
 				{
 					switch (name)
 					{
-						case Strategics.Long_Position:
+						case Interface.Strategics.Long_Position:
 							var record = RetrieveRecordedInformation(name, account, code);
 
 							<table class="table">
 								<thead>
 									<tr name="@((int)name)">
 										<th scope="col" title="매도ㆍ매수 ( ￦ : Unit )">
-											<div class="context">@Enum.GetName(typeof(Strategics), name).Replace("_", " ")</div>
+											<div class="context">@Enum.GetName(typeof(Interface.Strategics), name).Replace("_", " ")</div>
 										</th>
 										<th scope="col"><div class="title">Underweight</div></th>
 										<th scope="col"><div class="title">Overweight</div></th>
@@ -59,10 +59,11 @@
 		<br />
 	}
 	<datalist id="strategics-list">
-		@foreach (var st in Enum.GetValues(typeof(Strategics)))
-		{
-			<option value="@((int)st)">@st.ToString().Replace("_", " ")</option>
-		}
+		@foreach (var st in Enum.GetValues(typeof(Interface.Strategics)))
+			if (st.ToString().Length > 2)
+			{
+				<option value="@((int)st)">@st.ToString().Replace("_", " ")</option>
+			}
 	</datalist>
 	<datalist id="codes-list">
 		@foreach (var co in Codes.OrderBy(o => o.Name))

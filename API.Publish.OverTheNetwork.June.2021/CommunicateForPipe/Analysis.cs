@@ -27,10 +27,6 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		public abstract string Memo
-		{
-			get; set;
-		}
 		public abstract int Quantity
 		{
 			get; set;
