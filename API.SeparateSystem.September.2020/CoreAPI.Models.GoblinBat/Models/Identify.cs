@@ -5,17 +5,22 @@ namespace ShareInvest.Models
 {
 	public class Identify
 	{
-		[ForeignKey("Privacy"), Column(Order = 1)]
+		[Column(Order = 1)]
+		public long Date
+		{
+			get; set;
+		}
+		[ForeignKey("Privacy"), Column(Order = 2)]
 		public string Security
 		{
 			get; set;
 		}
-		[ForeignKey("Codes"), Column(Order = 2), MinLength(6), MaxLength(8)]
+		[ForeignKey("Codes"), Column(Order = 3), MinLength(6), MaxLength(8)]
 		public string Code
 		{
 			get; set;
 		}
-		[Column(Order = 3), Required, StringLength(2)]
+		[Column(Order = 6), Required, StringLength(2)]
 		public string Strategics
 		{
 			get; set;
