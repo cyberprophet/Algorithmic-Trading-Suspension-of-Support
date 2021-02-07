@@ -1,0 +1,14 @@
+﻿@inherits TableTemplateBase<TItem>
+@typeparam TItem
+
+<table class="table">
+	<thead>
+		<tr>@TableHeader</tr>
+	</thead>
+	<tbody>
+		@foreach (var item in Items)
+		{
+			<tr>@RowTemplate(item)</tr>
+		}
+	</tbody>
+</table>

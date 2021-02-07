@@ -384,7 +384,7 @@ namespace ShareInvest
 						}
 						strategics[hold.Count] = (ing[0].Length == 8 ? ing[0] : ing[3][1..]).Trim();
 					}
-					if (worker.IsBusy is false && worker.WorkerSupportsCancellation is false)
+					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false && (api.IsAdministrator is false || Base.IsDebug))
 						worker.RunWorkerAsync(strategics);
 
 					return;
@@ -548,10 +548,7 @@ namespace ShareInvest
 		}
 		void BringInStrategics(Strategics strategics, BringIn bring, string[] codes)
 		{
-			var api = connect as OpenAPI.ConnectAPI;
-			Analysis append;
-
-			if (api.TryGetValue(bring.Code, out Analysis analysis))
+			if ((connect as OpenAPI.ConnectAPI).TryGetValue(bring.Code, out Analysis analysis))
 			{
 				analysis.Wait = false;
 				analysis.Consecutive -= analysis.OnReceiveDrawChart;
@@ -563,18 +560,17 @@ namespace ShareInvest
 						analysis.Account = json.Account;
 						analysis.Classification = json;
 						analysis.Strategics = strategics;
-						analysis.Wait = DateTime.Now.Hour > 8;
-						append = api.Append(bring.Code, analysis);
 						break;
 
 					default:
 						return;
 				}
-				append.Send += OnReceiveSecuritiesAPI;
-				append.Consecutive += append.OnReceiveDrawChart;
+				analysis.Wait = DateTime.Now.Hour > 8;
+				analysis.Send += OnReceiveSecuritiesAPI;
+				analysis.Consecutive += analysis.OnReceiveDrawChart;
 
 				if (Array.Exists(codes, o => o.Equals(bring.Code)))
-					Base.SendMessage(bring.GetType(), append.Name, append.Quantity, append.OrderNumber is null ? int.MinValue : append.OrderNumber.Count, append.Purchase, append.Current as object);
+					Base.SendMessage(bring.GetType(), analysis.Name, analysis.Quantity, analysis.OrderNumber is null ? int.MinValue : analysis.OrderNumber.Count, analysis.Purchase, analysis.Current as object, analysis.Classification);
 			}
 		}
 		async void WorkerDoWork(object sender, DoWorkEventArgs e)
@@ -615,7 +611,7 @@ namespace ShareInvest
 						else
 						{
 							now = DateTime.Now;
-							await Task.Delay(0xEA60);
+							await Task.Delay(0xEA61);
 						}
 					}
 				}

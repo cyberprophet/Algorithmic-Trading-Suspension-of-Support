@@ -9,7 +9,18 @@ namespace ShareInvest
 	{
 		public static readonly Dictionary<string, string> rename = new Dictionary<string, string>();
 		[Conditional("DEBUG")]
-		public static void SendMessage(Type type, string code, int quantity, int count, object purchase, object current) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', quantity, '_', count, '_', purchase, '_', current));
+		public static void SendMessage(Type type, string code, int quantity, int count, object purchase, object current, Interface.IStrategics strategics)
+		{
+			var str = string.Empty;
+
+			switch (strategics)
+			{
+				case Catalog.LongPosition lp:
+					str = string.Concat('_', new DateTime(lp.Date), '_', lp.Underweight.ToString("P3"), '_', lp.Overweight.ToString("C0"));
+					break;
+			}
+			Debug.WriteLine(string.Concat(type.Name, '_', code, '_', quantity, '_', count, '_', purchase, '_', current, str));
+		}
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string code, string date, string remove) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', date, '_', remove));
 		[Conditional("DEBUG")]

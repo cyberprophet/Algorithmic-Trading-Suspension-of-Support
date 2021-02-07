@@ -16,7 +16,7 @@ namespace ShareInvest.Catalog
 		{
 			get; set;
 		}
-		public ulong Underweight
+		public double Underweight
 		{
 			get; set;
 		}

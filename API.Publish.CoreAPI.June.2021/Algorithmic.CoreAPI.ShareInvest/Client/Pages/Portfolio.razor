@@ -3,61 +3,81 @@
 
 @if (Codes is Catalog.Models.Codes[] && string.IsNullOrEmpty(Complete) is false)
 {
-	foreach (var user in Information)
-	{
-		if (string.IsNullOrEmpty(user.Check) is false)
+	if (Information is UserInformation[])
+		foreach (var user in Information)
 		{
-			var account = user.Check.Split(';')[0];
+			if (string.IsNullOrEmpty(user.Check) is false)
+			{
+				var account = user.Check.Split(';')[0];
 
-			<fieldset class="flex-container">
-				<legend class="legend">
-					<span class="sub">@Base.ConvertFormat(account)</span>
-					<input type="text" class="codes" name="codes" list="codes-list" placeholder="Please enter the code." @onchange="e => OnReceiveTheChoiceItem(e, account)" required />
-					<input type="text" class="strategics" name="strategics" list="strategics-list" placeholder="Please enter the strategics." @onchange="e => OnReceiveTheChoiceItem(account, e)" required />
-				</legend>
+				<fieldset class="flex-container">
+					<legend class="legend">
+						<span class="sub">@Base.ConvertFormat(account)</span>
+						<input type="text" class="codes" name="codes" list="codes-list" placeholder="Please enter the code." @onchange="e => OnReceiveTheChoiceItem(e, account)" required />
+						<input type="text" class="strategics" name="strategics" list="strategics-list" placeholder="Please enter the strategics." @onchange="e => OnReceiveTheChoiceItem(account, e)" required />
+					</legend>
 
-				@if (ChosenStrategics.TryGetValue(account, out string value) && Enum.TryParse(value, out Interface.Strategics name) && ChosenCodes.TryGetValue(account, out string code) && Codes.Any(o => o.Code.Equals(code)))
-				{
-					switch (name)
+					@if (Bring is BringIn[] && Bring.Length > 0 && Array.Exists(Bring, o => o.Methods.Equals(user.Key)))
 					{
-						case Interface.Strategics.Long_Position:
-							var record = RetrieveRecordedInformation(name, account, code);
-
-							<table class="table">
-								<thead>
-									<tr name="@((int)name)">
-										<th scope="col" title="매도ㆍ매수 ( ￦ : Unit )">
-											<div class="context">@Enum.GetName(typeof(Interface.Strategics), name).Replace("_", " ")</div>
-										</th>
-										<th scope="col"><div class="title">Underweight</div></th>
-										<th scope="col"><div class="title">Overweight</div></th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<th scope="row" title="@(string.IsNullOrEmpty(record.Item3) ? "Data doesn′t Exist." : record.Item3)">
-											<div class="sub_context">@Codes.First(o => o.Code.Equals(code)).Name</div>
-										</th>
-										<td>
-											<span><input class="strategics_input" type="text" placeholder="@record.Item1" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat((int)name, account)" /><small> won</small></span>
-										</td>
-										<td>
-											<span><input class="strategics_input" type="text" placeholder="@record.Item2" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat(account, (int)name)" /><small> won</small></span>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-							break;
+						<TableTemplate Items="Bring.Where(o => o.Methods.Equals(user.Key)).OrderBy(o => o.Date).ToArray()">
+							<TableHeader>
+								<th scope="col">Code</th>
+								<th scope="col">Name</th>
+								<th scope="col">Strategics</th>
+								<th scope="col">Modified Date</th>
+								<th scope="col">Exposure</th>
+							</TableHeader>
+							<RowTemplate Context="e">
+								<th scope="row">@e.Code</th>
+								<td>@Codes.FirstOrDefault(o => o.Code.Equals(e.Code)).Name</td>
+								<td>@(int.TryParse(e.Strategics, out int number) ? Enum.GetName(typeof(Interface.Strategics), number).Replace("_", " ") : string.Empty)</td>
+								<td>@(new DateTime(e.Date))</td>
+								<td>@(e.Contents.Length > 9 ? string.Empty : e.Contents)</td>
+							</RowTemplate>
+						</TableTemplate>
 					}
-					<div class="button_style">
-						<button class="button_style_verify" @onclick="e => RequestVerification(account, e)" disabled="@(IsClicked.ContainsKey(account) is false)">Verify</button>
-						<button class="button_style_save" @onclick="e => RequestSave((int)name, account, e)" disabled="@IsClicked.ContainsKey(account)">@Complete</button>
-					</div>
-				}
-			</fieldset>
+					@if (ChosenStrategics.TryGetValue(account, out string value) && Enum.TryParse(value, out Interface.Strategics name) && ChosenCodes.TryGetValue(account, out string code) && Codes.Any(o => o.Code.Equals(code)))
+					{
+						switch (name)
+						{
+							case Interface.Strategics.Long_Position:
+								var record = RetrieveRecordedInformation(name, account, code);
+
+								<table class="table">
+									<thead>
+										<tr name="@((int)name)">
+											<th scope="col" title="매도ㆍ매수 ( ￦ : Unit )">
+												<div class="context">@Enum.GetName(typeof(Interface.Strategics), name).Replace("_", " ")</div>
+											</th>
+											<th scope="col"><div class="title" title="If the yield is higher than the target, place a Sell order.">Underweight</div></th>
+											<th scope="col"><div class="title" title="If the holding amount is less than the set amount, place an order to Buy.">Overweight</div></th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<th scope="row" title="@(string.IsNullOrEmpty(record.Item3) ? "Data doesn′t Exist." : record.Item3)">
+												<div class="sub_context">@Codes.First(o => o.Code.Equals(code)).Name</div>
+											</th>
+											<td>
+												<span><input class="strategics_input" type="number" placeholder="@record.Item1" max="999" min="-100" step="0.5" required id="@string.Concat((int)name, account)" /><small> ％</small></span>
+											</td>
+											<td>
+												<span><input class="strategics_input" type="text" placeholder="@record.Item2" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat(account, (int)name)" /><small> won</small></span>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+								break;
+						}
+						<div class="button_style">
+							<button class="button_style_verify" @onclick="e => RequestVerification(account, e)" disabled="@(IsClicked.ContainsKey(account) is false)">Verify</button>
+							<button class="button_style_save" @onclick="e => RequestSave((int)name, account, e)" disabled="@IsClicked.ContainsKey(account)">@Complete</button>
+						</div>
+					}
+				</fieldset>
+			}
+			<br />
 		}
-		<br />
-	}
 	<datalist id="strategics-list">
 		@foreach (var st in Enum.GetValues(typeof(Interface.Strategics)))
 			if (st.ToString().Length > 2)

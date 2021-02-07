@@ -101,36 +101,36 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			switch (Classification)
 			{
-				case Catalog.LongPosition lop when Wait:
-					switch (Quantity * e.Price)
+				case Catalog.LongPosition lop when Wait && (Quantity > 0 && double.IsNaN(Purchase) is false && Purchase > 0 ? e.Price / Purchase - 1 : 0D) is double rate:
+					if (Offer > 0 && lop.Underweight + Base.Tax < rate && (OrderNumber is null || OrderNumber.ContainsValue(Offer) is false))
 					{
-						case ulong buy when Bid > 0 && buy < lop.Overweight * (1 - Base.Tax) && OrderNumber.ContainsValue(Bid) is false:
-							Wait = false;
-							Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
-							{
-								AccNo = lop.Account,
-								Code = lop.Code,
-								OrderType = (int)OrderType.신규매수,
-								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
-								OrgOrderNo = string.Empty,
-								Price = Bid,
-								Qty = 1
-							}));
-							return;
-
-						case ulong sell when Offer > 0 && sell > lop.Underweight * (1 + Base.Tax) && OrderNumber.ContainsValue(Offer) is false:
-							Wait = false;
-							Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
-							{
-								AccNo = lop.Account,
-								Code = lop.Code,
-								OrderType = (int)OrderType.신규매도,
-								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
-								OrgOrderNo = string.Empty,
-								Price = Offer,
-								Qty = 1
-							}));
-							return;
+						Wait = false;
+						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+						{
+							AccNo = lop.Account,
+							Code = lop.Code,
+							OrderType = (int)OrderType.신규매도,
+							HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+							OrgOrderNo = string.Empty,
+							Price = Offer,
+							Qty = 1
+						}));
+						return;
+					}
+					if (Bid > 0 && (long)Quantity * e.Price < lop.Overweight * (1 - Base.Tax) && lop.Underweight - Base.Tax > rate && (OrderNumber is null || OrderNumber.ContainsValue(Bid) is false))
+					{
+						Wait = false;
+						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+						{
+							AccNo = lop.Account,
+							Code = lop.Code,
+							OrderType = (int)OrderType.신규매수,
+							HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+							OrgOrderNo = string.Empty,
+							Price = Bid,
+							Qty = 1
+						}));
+						return;
 					}
 					break;
 

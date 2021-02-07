@@ -31,7 +31,7 @@ namespace ShareInvest.Pages
 						{
 							var date = new DateTime(lp.Date);
 
-							return (lp.Underweight.ToString("N0"), lp.Overweight.ToString("N0"), lp.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty);
+							return (lp.Underweight.ToString("P5").Replace("%", string.Empty), lp.Overweight.ToString("N0"), lp.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty);
 						}
 					break;
 			}
@@ -48,17 +48,31 @@ namespace ShareInvest.Pages
 				ChosenStrategics = new Dictionary<string, string>();
 				Information = await Http.GetFromJsonAsync<UserInformation[]>(Crypto.Security.GetRoute("Account", await OnReceiveLogUserInformation()));
 			}
-			var enumerable = await Http.GetFromJsonAsync<BringIn[]>(Crypto.Security.GetRoute(portfolio, await OnReceiveLogUserInformation()));
-			Enumerable = new Interface.IStrategics[enumerable.Length];
+			else
+			{
+				var enumerable = await Http.GetFromJsonAsync<BringIn[]>(Crypto.Security.GetRoute(portfolio, await OnReceiveLogUserInformation()));
+				Enumerable = new Interface.IStrategics[enumerable.Length];
+				Bring = new BringIn[enumerable.Length];
 
-			for (int i = 0; i < enumerable.Length; i++)
-				if (Enum.TryParse(enumerable[i].Strategics, out Interface.Strategics strategics))
-					switch (strategics)
+				for (int i = 0; i < enumerable.Length; i++)
+				{
+					Bring[i] = new BringIn
 					{
-						case Interface.Strategics.Long_Position:
-							Enumerable[i] = JsonConvert.DeserializeObject<Catalog.LongPosition>(enumerable[i].Contents);
-							break;
-					}
+						Code = enumerable[i].Code,
+						Date = enumerable[i].Date,
+						Methods = enumerable[i].Methods,
+						Strategics = enumerable[i].Strategics,
+						Contents = await OnReceiveContextAsync(enumerable[i].Code)
+					};
+					if (Enum.TryParse(enumerable[i].Strategics, out Interface.Strategics strategics))
+						switch (strategics)
+						{
+							case Interface.Strategics.Long_Position:
+								Enumerable[i] = JsonConvert.DeserializeObject<Catalog.LongPosition>(enumerable[i].Contents);
+								break;
+						}
+				}
+			}
 		}
 		protected internal void OnReceiveTheChoiceItem(string sender, ChangeEventArgs e) => ChosenStrategics[sender] = e.Value as string;
 		protected internal void OnReceiveTheChoiceItem(ChangeEventArgs e, string sender) => ChosenCodes[sender] = e.Value as string;
@@ -69,12 +83,12 @@ namespace ShareInvest.Pages
 
 			switch (Enum.ToObject(typeof(Interface.Strategics), name))
 			{
-				case Interface.Strategics.Long_Position when ulong.TryParse((await Runtime.InvokeAsync<string>(string.Concat(interop, recall), string.Concat(sender, name))).Replace(",", string.Empty), out ulong over) && ulong.TryParse((await Runtime.InvokeAsync<string>(string.Concat(interop, recall), string.Concat(name, sender))).Replace(",", string.Empty), out ulong under):
+				case Interface.Strategics.Long_Position when ulong.TryParse((await Runtime.InvokeAsync<string>(string.Concat(interop, recall), string.Concat(sender, name))).Replace(",", string.Empty), out ulong over) && double.TryParse(await Runtime.InvokeAsync<string>(string.Concat(interop, recall), string.Concat(name, sender)), out double under) && over > 0 && double.IsNaN(under) is false:
 					json = JsonConvert.SerializeObject(new Catalog.LongPosition
 					{
 						Account = sender,
 						Code = ChosenCodes[sender],
-						Underweight = under,
+						Underweight = under * 1e-2,
 						Overweight = over,
 						Trend = name,
 						Date = DateTime.Now.Ticks
@@ -106,6 +120,10 @@ namespace ShareInvest.Pages
 			}
 		}
 		protected internal string Complete
+		{
+			get; private set;
+		}
+		protected internal BringIn[] Bring
 		{
 			get; private set;
 		}
@@ -148,6 +166,7 @@ namespace ShareInvest.Pages
 		{
 			get; set;
 		}
+		async Task<string> OnReceiveContextAsync(string code) => await Http.GetFromJsonAsync<string>(Crypto.Security.GetRoute("Exposure", code));
 		async Task<string> OnReceiveLogUserInformation()
 		{
 			var user = (await State).User;
