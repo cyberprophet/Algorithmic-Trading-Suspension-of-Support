@@ -787,7 +787,7 @@ namespace ShareInvest
 					connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), Base.CheckIfMarketDelay(now) ? "|3;100000;000000" : "|3;090000;000000"));
 					return;
 
-				case DialogResult.Abort when now.Hour < 5 || now.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday:
+				case DialogResult.Abort when (now.Hour < 5 || now.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday) && api.IsAdministrator:
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}

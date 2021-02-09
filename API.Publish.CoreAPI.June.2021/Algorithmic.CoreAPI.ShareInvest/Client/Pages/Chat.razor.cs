@@ -24,10 +24,15 @@ namespace ShareInvest.Pages
 			{
 				Messages.Add(new Tuple<uint, string, string>(Count++, user, message));
 
-				if (User.Equals(user) || DateTime.Now.Second % 0xA == 9)
+				if (User.Equals(user) || Messages.Count % 0xA == 3)
 					StateHasChanged();
 			});
 			await Hub.StartAsync();
+		}
+		protected override async Task OnAfterRenderAsync(bool render)
+		{
+			if (render is false && Messages.Count > 0)
+				await Runtime.InvokeVoidAsync(string.Concat(interop, "scroll"));
 		}
 		protected internal async void SendMessage(KeyboardEventArgs e)
 		{
@@ -36,8 +41,6 @@ namespace ShareInvest.Pages
 				await Hub.SendAsync("SendMessage", User, Message);
 				Message = string.Empty;
 			}
-			if (Messages.Count > 0 && Message.Length < 2 && (e.Key.Length == 1 || ConsoleKey.Enter.Equals(key)))
-				(Runtime as IJSInProcessRuntime).InvokeVoid(string.Concat(interop, "scroll"));
 		}
 		protected internal bool IsConnected => Hub.State == HubConnectionState.Connected;
 		[Inject]

@@ -23,6 +23,41 @@
 	padding-left: 1rem
 }
 
+.button_remove_style
+{
+	box-shadow: inset 2px 2px 3px rgba(255, 255, 255, .6), inset 0px -2px 3px rgba(0, 0, 0, .7);
+	border-radius: 10px
+}
+
+.button_remove button
+{
+	line-height: 2.05;
+	padding: 0 17px;
+	font-size: 0.71rem;
+	text-align: center;
+	color: #fff;
+	text-shadow: 1px 1px 1px #000;
+	background-color: rgb(5, 37, 101);
+	background-image: linear-gradient(to top left, rgba(0, 0, 0, .2), rgba(0, 0, 0, .2) 30%, rgba(0, 0, 0, 0));
+	width: 100%
+}
+
+	.button_remove button:hover
+	{
+		background-color: rgba(255, 0, 0, 1)
+	}
+
+	.button_remove button:active
+	{
+		box-shadow: inset -2px -2px 3px rgba(255, 255, 255, .6), inset 2px 2px 3px rgba(0, 0, 0, .6)
+	}
+
+	.button_remove button:disabled
+	{
+		background: #ccc
+	}
+
+
 .button_style_save
 {
 	box-shadow: inset 0px 2px 3px rgba(255, 255, 255, .6), inset -2px -2px 3px rgba(0, 0, 0, .6);
@@ -51,7 +86,7 @@
 	border: 0.5;
 	background-color: rgb(5, 39, 103);
 	background-image: linear-gradient(to top left, rgba(0, 0, 0, .2), rgba(0, 0, 0, .2) 30%, rgba(0, 0, 0, 0));
-	width: 49.50%
+	width: 49.35%
 }
 
 	.button_style button:hover

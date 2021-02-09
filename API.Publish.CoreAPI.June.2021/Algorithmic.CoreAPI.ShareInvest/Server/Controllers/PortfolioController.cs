@@ -60,6 +60,18 @@ namespace ShareInvest.Controllers
 			}
 			return HttpStatusCode.BadRequest;
 		}
+		[HttpDelete]
+		public HttpStatusCode DeleteContext(string key)
+		{
+			if (string.IsNullOrEmpty(key) is false && key.Split(';') is string[] arr)
+			{
+				context.Securities.RemoveRange(from o in context.Securities where o.Methods.Equals(arr[0]) && o.Code.Equals(arr[1]) select o);
+
+				if (context.SaveChanges() > 0)
+					return HttpStatusCode.OK;
+			}
+			return HttpStatusCode.BadRequest;
+		}
 		public PortfolioController(CoreApiDbContext context) => this.context = context;
 		readonly CoreApiDbContext context;
 	}

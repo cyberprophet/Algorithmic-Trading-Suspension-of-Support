@@ -112,6 +112,14 @@ namespace ShareInvest.Pages
 
 			StateHasChanged();
 		}
+		protected internal async void RequestTheDeletionOfHoldings(string sender, MouseEventArgs _)
+		{
+			if (HttpStatusCode.OK.Equals((await Http.DeleteAsync(Crypto.Security.GetRoute(portfolio, sender))).StatusCode))
+			{
+				await OnAfterRenderAsync(false);
+				StateHasChanged();
+			}
+		}
 		protected internal void RequestVerification(string sender, MouseEventArgs _)
 		{
 			if (IsClicked.Remove(sender))

@@ -67,8 +67,11 @@ namespace ShareInvest.Pages
 					break;
 
 				case Catalog.Models.Message message:
+					var render = false;
+
 					foreach (var kv in Balance)
 						if (kv.Key.Item2.Equals(message.Key) && int.TryParse(kv.Value.Quantity, out int quantity) && quantity > 0 && int.TryParse(message.Convey[0] is '-' ? message.Convey[1..] : message.Convey, out int price) && int.TryParse(kv.Value.Current.Replace(",", string.Empty), out int current) && current != price && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
+						{
 							Balance[new Tuple<string, string>(kv.Value.Kiwoom, kv.Value.Code)] = new Catalog.Models.Balance
 							{
 								Kiwoom = kv.Value.Kiwoom,
@@ -81,7 +84,11 @@ namespace ShareInvest.Pages
 								Revenue = ((Math.Abs(price) - purchase) * quantity).ToString("C0"),
 								Rate = (price / (double)purchase - 1).ToString("P2")
 							};
-					StateHasChanged();
+							render = true;
+						}
+					if (render)
+						StateHasChanged();
+
 					break;
 			}
 		}
