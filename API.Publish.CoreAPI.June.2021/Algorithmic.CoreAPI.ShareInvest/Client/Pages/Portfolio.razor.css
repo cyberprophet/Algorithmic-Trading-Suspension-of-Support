@@ -1,5 +1,4 @@
-﻿.codes,
-.strategics
+﻿.codes, .strategics
 {
 	text-align: center;
 	background-color: transparent;
@@ -12,8 +11,7 @@
 	margin-left: 0.5em
 }
 
-	.codes::placeholder,
-	.strategics::placeholder
+	.codes::placeholder, .strategics::placeholder
 	{
 		color: lightsteelblue;
 		font-size: small;

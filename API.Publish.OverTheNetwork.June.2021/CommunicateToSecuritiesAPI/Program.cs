@@ -14,7 +14,7 @@ namespace ShareInvest
 				Application.EnableVisualStyles();
 				Application.SetCompatibleTextRenderingDefault(false);
 
-				if (Security.GetAdministrator(args) is string str)
+				if (Security.GetAdministrator(args) is (bool, string) str)
 					StartProgress(str, new OpenAPI.ConnectAPI());
 			}
 			GC.Collect();
@@ -23,7 +23,7 @@ namespace ShareInvest
 		static void StartProgress(dynamic param, Interface.ISecuritiesAPI<EventHandler.SendSecuritiesAPI> api)
 		{
 			if (api is OpenAPI.ConnectAPI)
-				Application.Run(new SecuritiesAPI(param, api));
+				Application.Run(new SecuritiesAPI(param.Item1, param.Item2, api));
 		}
 	}
 }

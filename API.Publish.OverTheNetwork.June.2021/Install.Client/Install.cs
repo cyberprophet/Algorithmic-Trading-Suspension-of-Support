@@ -8,6 +8,8 @@ using System.Windows.Forms;
 
 using Microsoft.Win32;
 
+using ShareInvest.Message;
+
 namespace ShareInvest
 {
 	sealed partial class Install : Form
@@ -25,12 +27,12 @@ namespace ShareInvest
 
 			return (di.Exists, di);
 		}
-		bool StartProgress(Tuple<string, string, string> process) => Process.GetProcessesByName(process.Item1.Split('.')[0]).Length == 0 && new Process
+		bool StartProgress(double ram, Tuple<string, string, string> process) => Process.GetProcessesByName(process.Item1.Split('.')[0]).Length == 0 && new Process
 		{
 			StartInfo = new ProcessStartInfo
 			{
 				FileName = process.Item1,
-				Arguments = process.Item2,
+				Arguments = ram > 0x59C7 ? process.Item2 : string.Concat(process.Item2, "_lite"),
 				UseShellExecute = true,
 				WorkingDirectory = process.Item3
 			}
@@ -72,18 +74,22 @@ namespace ShareInvest
 					}
 				var now = DateTime.Now.AddDays(-1);
 				worker.ReportProgress(1);
-				FileInfo x64 = new FileInfo(Path.Combine(update, z64)), x86 = new FileInfo(Path.Combine(update, z86));
-				int n64 = now.CompareTo(x64.LastWriteTime), n86 = now.CompareTo(x86.LastWriteTime);
 
-				if (n64 < 0 || new DirectoryInfo(path[1]).GetFiles("*.exe", SearchOption.TopDirectoryOnly).Length == 0)
+				if (new FileInfo(Path.Combine(@"C:\Program Files (x86)\ESTsoft\ALZip", "ALZipCon.exe")).Exists || DialogResult.OK.Equals(MessageBox.Show("알집 설치가 필요합니다.\n\n절대경로에 설치하세요.\n\n설치가 완료되면 ‘OK’를 누르세요.\n\n다음 프로세스를 진행합니다.", "Requirement", MessageBoxButtons.OK, MessageBoxIcon.Information)))
 				{
-					worker.ReportProgress(1);
-					UpdateToVersion(path[3], Format(x64.FullName, path[1]), path[1]);
-				}
-				if (n86 < 0 || new DirectoryInfo(path[2]).GetFiles("*.exe", SearchOption.TopDirectoryOnly).Length == 0)
-				{
-					worker.ReportProgress(1);
-					UpdateToVersion(path[3], Format(x86.FullName, path[2]), path[2]);
+					FileInfo x64 = new FileInfo(Path.Combine(update, z64)), x86 = new FileInfo(Path.Combine(update, z86));
+					int n64 = now.CompareTo(x64.LastWriteTime), n86 = now.CompareTo(x86.LastWriteTime);
+
+					if (n64 < 0 || new DirectoryInfo(path[1]).GetFiles("*.exe", SearchOption.TopDirectoryOnly).Length == 0)
+					{
+						worker.ReportProgress(1);
+						UpdateToVersion(path[3], Format(x64.FullName, path[1]), path[1]);
+					}
+					if (n86 < 0 || new DirectoryInfo(path[2]).GetFiles("*.exe", SearchOption.TopDirectoryOnly).Length == 0)
+					{
+						worker.ReportProgress(1);
+						UpdateToVersion(path[3], Format(x86.FullName, path[2]), path[2]);
+					}
 				}
 			}
 			else
@@ -128,7 +134,7 @@ namespace ShareInvest
 				timer.Start();
 			}
 		}));
-		void TimerTick(object sender, EventArgs e)
+		async void TimerTick(object sender, EventArgs e)
 		{
 			if (progress.Value < 0x63)
 			{
@@ -157,14 +163,27 @@ namespace ShareInvest
 							registry.Close();
 							Registry.CurrentUser.OpenSubKey(run, true).SetValue(name[0], exe);
 						}
-					if (StartProgress(new Tuple<string, string, string>(execute[0], key, path[1])))
+					GC.Collect();
+					var ram = new PerformanceCounter("Memory", "Available MBytes").NextValue();
+					label_hardware.Text = string.Format("{0}GB", (ram / (double)0x400).ToString("N2"));
+					Application.DoEvents();
+
+					if (StartProgress(ram, new Tuple<string, string, string>(execute[0], key, path[1])))
 					{
-						if (DateTime.Now.CompareTo(new FileInfo(exe).LastWriteTime.AddMinutes(5)) < 0)
+						if (DialogResult.Yes.Equals(TimerBox.Show(first, "Caution", MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2, 0x1573)))
+						{
 							foreach (var file in new DirectoryInfo(update).GetFiles("*.zip", SearchOption.TopDirectoryOnly))
 								file.Delete();
 
-						if (StartProgress(new Tuple<string, string, string>(execute[1], key, path[2])))
+							await Task.Delay(0x5C7);
+						}
+						if (StartProgress(ram, new Tuple<string, string, string>(execute[1], key, path[2])))
+						{
+							label_hardware.ForeColor = ram > 0x59C7 ? Color.Gold : Color.Silver;
+							await Task.Delay(0x5C7);
+							StartProgress();
 							Dispose();
+						}
 					}
 				}
 				else

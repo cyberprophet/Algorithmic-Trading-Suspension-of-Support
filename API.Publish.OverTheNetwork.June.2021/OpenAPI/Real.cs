@@ -27,6 +27,10 @@ namespace ShareInvest.OpenAPI
 		{
 			get; set;
 		}
+		internal abstract bool Lite
+		{
+			get; set;
+		}
 		internal abstract void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e);
 	}
 }

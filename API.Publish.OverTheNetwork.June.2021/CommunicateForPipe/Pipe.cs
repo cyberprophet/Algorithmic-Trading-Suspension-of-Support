@@ -23,12 +23,13 @@ namespace ShareInvest
 		{
 			get; private set;
 		}
-		public Pipe(string name, string type)
+		public Pipe(string name, string type, bool lite)
 		{
 			if (type.Equals(typeof(Security).Name))
 				price = new Dictionary<string, string>();
 
 			this.name = name;
+			this.lite = lite;
 			Collection = new Dictionary<string, Queue<Collect>>(0x800);
 			Initialize();
 		}
@@ -86,7 +87,7 @@ namespace ShareInvest
 									break;
 
 								case 5:
-									if (temp[0].Equals("Codes") && (temp[1].Length == 6 || temp[1].Length == 8))
+									if (temp[0].Equals("Codes") && (temp[1].Length == 6 || temp[1].Length == 8) && lite)
 									{
 										Collection[temp[1]] = new Queue<Collect>(0x800);
 
@@ -105,7 +106,7 @@ namespace ShareInvest
 
 										switch (op)
 										{
-											case Catalog.OpenAPI.Operation.장시작:
+											case Catalog.OpenAPI.Operation.장시작 when lite:
 												collection = operation[1].Equals(sat ? "100000" : "090000") && operation[^1].Equals("000000");
 												stocks = true;
 												futures = true;
@@ -178,7 +179,9 @@ namespace ShareInvest
 												if (price is not null)
 													price.Clear();
 
-												Collection.Clear();
+												if (lite)
+													Collection.Clear();
+
 												GC.Collect();
 												break;
 										}
@@ -213,6 +216,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		readonly bool lite;
 		readonly string name;
 		readonly Dictionary<string, string> price;
 	}

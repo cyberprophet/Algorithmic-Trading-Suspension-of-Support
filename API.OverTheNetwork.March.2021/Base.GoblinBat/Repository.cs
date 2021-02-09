@@ -70,7 +70,7 @@ namespace ShareInvest
 					{
 						if (DateTime.TryParseExact(find[0], Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime start) && DateTime.TryParseExact(find[1], Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime end))
 						{
-							if (start.AddDays(0x4B).CompareTo(end) < 0)
+							if (start.AddDays(0x3C).CompareTo(end) < 0)
 								before.Delete();
 						}
 						else

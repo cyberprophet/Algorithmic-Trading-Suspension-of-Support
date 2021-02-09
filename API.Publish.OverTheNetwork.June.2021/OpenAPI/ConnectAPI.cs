@@ -231,7 +231,7 @@ namespace ShareInvest.OpenAPI
 
 			return exist;
 		}
-		public void StartProgress() => BeginInvoke(new Action(async () =>
+		public void StartProgress(bool lite) => BeginInvoke(new Action(async () =>
 		{
 			Start = true;
 			axAPI.OnEventConnect += OnEventConnect;
@@ -244,7 +244,7 @@ namespace ShareInvest.OpenAPI
 			{
 				AutoFlush = true
 			};
-			API = Connect.GetInstance(axAPI, Writer);
+			API = Connect.GetInstance(axAPI, Writer, lite);
 		}));
 		public Analysis Append(string key, Analysis value) => API.StocksHeld[key] = value;
 		public void SendOrder(ISendOrder order) => API?.SendOrder(order);

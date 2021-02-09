@@ -35,11 +35,10 @@
 						<legend class="legend">
 							<strong>@(string.IsNullOrEmpty(Information[i].Name) ? "It is not possible to check the current Connection." : Information[i].Name)</strong>
 						</legend>
-						<div class="sub">
-							Choose the Stock Account
-
-							@if (Information[i].Account.Any(acc => acc.Length == 0xA && acc[^2..].CompareTo("31") < 0))
-							{
+						@if (Information[i].Account.Any(acc => acc.Length == 0xA && acc[^2..].CompareTo("31") < 0))
+						{
+							<div class="sub">
+								Choose the Stock Account
 								<ul>
 									@foreach (var str in Information[i].Account)
 									{
@@ -54,13 +53,12 @@
 										}
 									}
 								</ul>
-							}
-						</div>
-						<div class="sub">
-							Choose the Futures Account
-
-							@if (Information[i].Account.Any(acc => acc.Length == 0xA && acc[^2..].CompareTo("31") == 0))
-							{
+							</div>
+						}
+						@if (Information[i].Account.Any(acc => acc.Length == 0xA && acc[^2..].CompareTo("31") == 0))
+						{
+							<div class="sub">
+								Choose the Futures Account
 								<ul>
 									@foreach (var str in Information[i].Account)
 									{
@@ -75,8 +73,8 @@
 										}
 									}
 								</ul>
-							}
-						</div>
+							</div>
+						}
 					</fieldset>
 				</p>
 				@if (i < Information.Length - 1)

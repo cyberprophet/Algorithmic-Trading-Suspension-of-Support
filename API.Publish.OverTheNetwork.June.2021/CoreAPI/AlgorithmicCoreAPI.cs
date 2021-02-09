@@ -20,9 +20,10 @@ namespace ShareInvest
 		{
 			InitializeComponent();
 			icon = new[] { Properties.Resources.upload_server_icon_icons_com_76732, Properties.Resources.download_server_icon_icons_com_76720, Properties.Resources.data_server_icon_icons_com_76718 };
-			key = Initialize(param);
+			var initial = Initialize(param);
+			key = initial.Item1;
 			api = API.GetInstance(key);
-			pipe = new Pipe(api.GetType().Name, typeof(CoreAPI).Name);
+			pipe = new Pipe(api.GetType().Name, typeof(CoreAPI).Name, initial.Item2);
 			timer.Start();
 		}
 		string Message

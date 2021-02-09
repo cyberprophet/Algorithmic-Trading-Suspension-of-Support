@@ -10,11 +10,11 @@ namespace ShareInvest.OpenAPI
 	abstract class Chejan : ISendSecuritiesAPI<SendSecuritiesAPI>
 	{
 		public abstract event EventHandler<SendSecuritiesAPI> Send;
-		protected internal abstract AxKHOpenAPI API
+		public abstract string Identity
 		{
-			get; set;
+			protected internal get; set;
 		}
-		protected internal abstract string Identity
+		protected internal abstract AxKHOpenAPI API
 		{
 			get; set;
 		}

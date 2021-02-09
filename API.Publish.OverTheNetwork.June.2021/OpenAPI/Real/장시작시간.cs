@@ -12,6 +12,10 @@ namespace ShareInvest.OpenAPI.Catalog
 {
 	class 장시작시간 : Real, ISendSecuritiesAPI<SendSecuritiesAPI>
 	{
+		string ISendSecuritiesAPI<SendSecuritiesAPI>.Identity
+		{
+			set => throw new NotImplementedException();
+		}
 		internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
 		{
 			var param = base.OnReceiveRealData(e, Fid);
@@ -50,6 +54,10 @@ namespace ShareInvest.OpenAPI.Catalog
 			get; set;
 		}
 		internal override StreamWriter Server
+		{
+			get; set;
+		}
+		internal override bool Lite
 		{
 			get; set;
 		}

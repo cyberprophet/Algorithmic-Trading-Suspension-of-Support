@@ -34,10 +34,10 @@ namespace ShareInvest.OpenAPI
 			get; set;
 		}
 		internal static Connect GetInstance() => API;
-		internal static Connect GetInstance(AxKHOpenAPI axAPI, StreamWriter writer)
+		internal static Connect GetInstance(AxKHOpenAPI axAPI, StreamWriter writer, bool lite)
 		{
 			if (API is null && axAPI.CommConnect() == 0)
-				API = new Connect(axAPI, writer);
+				API = new Connect(axAPI, writer, lite);
 
 			return API;
 		}
@@ -75,7 +75,7 @@ namespace ShareInvest.OpenAPI
 		{
 			get; private set;
 		}
-		Connect(AxKHOpenAPI axAPI, StreamWriter server)
+		Connect(AxKHOpenAPI axAPI, StreamWriter server, bool lite)
 		{
 			TR = new HashSet<TR>();
 			this.axAPI = axAPI;
@@ -86,83 +86,93 @@ namespace ShareInvest.OpenAPI
 				new 주식체결
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				},
 				new 주식호가잔량
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				},
 				new 주식시세
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				},
 				new 주식우선호가
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				},
 				new 장시작시간
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				},
 				new 선물시세
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				},
 				new 선물옵션우선호가
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				},
 				new 선물호가잔량
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				},
 				new 옵션시세
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				},
 				new 옵션호가잔량
 				{
 					API = axAPI,
-					Server = server
+					Server = server,
+					Lite = lite
 				}
 			};
 			StocksHeld = new Dictionary<string, Analysis>();
-			var identity = Crypto.Security.Encrypt(axAPI.GetLoginInfo("USER_ID"));
 			Chejan = new Dictionary<string, Chejan>()
 			{
 				{
 					((int)ChejanType.주문체결).ToString("D1"),
 					new 주문체결
 					{
-						API = axAPI,
-						Identity = identity
+						API = axAPI
 					}
 				},
 				{
 					((int)ChejanType.잔고).ToString("D1"),
 					new 잔고
 					{
-						API = axAPI,
-						Identity = identity
+						API = axAPI
 					}
 				},
 				{
 					((int)ChejanType.파생잔고).ToString("D1"),
 					new 파생잔고
 					{
-						API = axAPI,
-						Identity = identity
+						API = axAPI
 					}
 				}
 			};
+		}
+		string ISendSecuritiesAPI<SendSecuritiesAPI>.Identity
+		{
+			set => throw new NotImplementedException();
 		}
 		readonly Delay request;
 		readonly AxKHOpenAPI axAPI;

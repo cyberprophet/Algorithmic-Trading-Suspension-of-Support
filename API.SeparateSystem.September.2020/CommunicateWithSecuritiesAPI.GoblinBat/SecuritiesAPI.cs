@@ -520,156 +520,149 @@ namespace ShareInvest
 			var catalog = new Dictionary<string, IStrategics>();
 
 			if (privacy.CodeStrategics is string cStrategics && string.IsNullOrEmpty(cStrategics) == false)
-			{
-				if (cStrategics.Contains(';'))
-					foreach (var strategics in cStrategics?.Split(';'))
-					{
-						var stParam = strategics?.Split(strategics[2].Equals('|') ? '|' : '.');
-						var code = string.Empty;
+				foreach (var strategics in cStrategics?.Split(';'))
+				{
+					var stParam = strategics?.Split(strategics[2].Equals('|') ? '|' : '.');
+					var code = string.Empty;
 
-						if (Enum.TryParse(strategics.Substring(0, 2), out Strategics initial))
-							switch (initial)
-							{
-								case Strategics.TV:
-								case Strategics.SC:
-									if (stParam.Length == 0x11 && int.TryParse(stParam[2], out int vShort) && int.TryParse(stParam[3], out int vLong)
-										&& int.TryParse(stParam[4], out int vTrend) && int.TryParse(stParam[5], out int su) && int.TryParse(stParam[6], out int sq)
-										&& double.TryParse(stParam[7], out double vSubtraction) && int.TryParse(stParam[8], out int au) && int.TryParse(stParam[9], out int aq)
-										&& double.TryParse(stParam[0xA], out double vAddition) && int.TryParse(stParam[0xB], out int si)
-										&& int.TryParse(stParam[0xC], out int tsq) && double.TryParse(stParam[0xD], out double sp) && int.TryParse(stParam[0xE], out int ai)
-										&& int.TryParse(stParam[0xF], out int taq) && double.TryParse(stParam[0x10], out double ap))
-									{
-										if (initial.Equals(Strategics.TV))
-											catalog[stParam[1]] = new TrendsInValuation
-											{
-												Code = stParam[1],
-												Short = vShort,
-												Long = vLong,
-												Trend = vTrend,
-												SubtractionalUnit = su,
-												ReservationSubtractionalQuantity = sq,
-												Subtraction = vSubtraction * 1e-2,
-												AdditionalUnit = au,
-												ReservationAddtionalQuantity = aq,
-												Addition = vAddition * 1e-2,
-												SubtractionalInterval = si,
-												TradingSubtractionalQuantity = tsq,
-												SubtractionalPosition = sp * 1e-2,
-												AddtionalInterval = ai,
-												TradingAddtionalQuantity = taq,
-												AdditionalPosition = ap * 1e-2
-											};
-										else if (initial.Equals(Strategics.SC))
-											catalog[stParam[1]] = new SatisfyConditionsAccordingToTrends
-											{
-												Code = stParam[1],
-												Short = vShort,
-												Long = vLong,
-												Trend = vTrend,
-												ReservationSellUnit = su,
-												ReservationSellQuantity = sq,
-												ReservationSellRate = vSubtraction * 1e-2,
-												ReservationBuyUnit = au,
-												ReservationBuyQuantity = aq,
-												ReservationBuyRate = vAddition * 1e-2,
-												TradingSellInterval = si * 1e+3,
-												TradingSellQuantity = tsq,
-												TradingSellRate = sp * 1e-2,
-												TradingBuyInterval = ai * 1e+3,
-												TradingBuyQuantity = taq,
-												TradingBuyRate = ap * 1e-2
-											};
-										Balance.ToolTipDictionary[stParam[1]]
-											= string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n☞매도예약\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n☞매수예약\r\n호가단위_", stParam[8], "틱\r\n예약수량_", stParam[9], "주\r\n추가매수_", stParam[0xA], "%\r\n☞매도\r\n매매간격_", stParam[0xB], "초\r\n매매수량_", stParam[0xC], "주\r\n수익실현_", stParam[0xD], "%\r\n☞매수\r\n매매간격_", stParam[0xE], "초\r\n매매수량_", stParam[0xF], "주\r\n추가매수_", stParam[0x10], "%");
-									}
-									break;
-
-								case Strategics.TC:
-									if (stParam.Length == 0xD && double.TryParse(stParam[0xC], out double cpAddition) && double.TryParse(stParam[0xB], out double cpRevenue)
-										&& int.TryParse(stParam[0xA], out int ctQuantity) && int.TryParse(stParam[9], out int cInterval)
-										&& double.TryParse(stParam[8], out double cAddition) && double.TryParse(stParam[7], out double crRevenue)
-										&& int.TryParse(stParam[6], out int crQuantity) && int.TryParse(stParam[5], out int cUnit) && int.TryParse(stParam[4], out int cTrend)
-										&& int.TryParse(stParam[3], out int cLong) && int.TryParse(stParam[2], out int cShort))
-									{
-										code = stParam[1];
-										catalog[code] = new TrendToCashflow
+					if (Enum.TryParse(strategics.Substring(0, 2), out Strategics initial))
+						switch (initial)
+						{
+							case Strategics.TV:
+							case Strategics.SC:
+								if (stParam.Length == 0x11 && int.TryParse(stParam[2], out int vShort) && int.TryParse(stParam[3], out int vLong)
+									&& int.TryParse(stParam[4], out int vTrend) && int.TryParse(stParam[5], out int su) && int.TryParse(stParam[6], out int sq)
+									&& double.TryParse(stParam[7], out double vSubtraction) && int.TryParse(stParam[8], out int au) && int.TryParse(stParam[9], out int aq)
+									&& double.TryParse(stParam[0xA], out double vAddition) && int.TryParse(stParam[0xB], out int si)
+									&& int.TryParse(stParam[0xC], out int tsq) && double.TryParse(stParam[0xD], out double sp) && int.TryParse(stParam[0xE], out int ai)
+									&& int.TryParse(stParam[0xF], out int taq) && double.TryParse(stParam[0x10], out double ap))
+								{
+									if (initial.Equals(Strategics.TV))
+										catalog[stParam[1]] = new TrendsInValuation
 										{
 											Code = stParam[1],
-											Short = cShort,
-											Long = cLong,
-											Trend = cTrend,
-											Unit = cUnit,
-											ReservationQuantity = crQuantity,
-											ReservationRevenue = crRevenue * 1e-2,
-											Addition = cAddition * 1e-2,
-											Interval = cInterval,
-											TradingQuantity = ctQuantity,
-											PositionRevenue = cpRevenue * 1e-2,
-											PositionAddition = cpAddition * 1e-2
+											Short = vShort,
+											Long = vLong,
+											Trend = vTrend,
+											SubtractionalUnit = su,
+											ReservationSubtractionalQuantity = sq,
+											Subtraction = vSubtraction * 1e-2,
+											AdditionalUnit = au,
+											ReservationAddtionalQuantity = aq,
+											Addition = vAddition * 1e-2,
+											SubtractionalInterval = si,
+											TradingSubtractionalQuantity = tsq,
+											SubtractionalPosition = sp * 1e-2,
+											AddtionalInterval = ai,
+											TradingAddtionalQuantity = taq,
+											AdditionalPosition = ap * 1e-2
 										};
-										Balance.ToolTipDictionary[code]
-											= string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n추가매수_", stParam[8], "%\r\n매매간격_", stParam[9], "초\r\n매매수량_", stParam[10], "주\r\n수익실현_", stParam[11], "%\r\n추가매수_", stParam[12], "%");
-									}
-									break;
-
-								case Strategics.TF:
-									if (int.TryParse(stParam[0].Substring(0xB), out int ds) && int.TryParse(stParam[1], out int dl) && int.TryParse(stParam[2], out int m)
-										&& int.TryParse(stParam[3], out int ms) && int.TryParse(stParam[4], out int ml) && int.TryParse(stParam[5], out int rs)
-										&& int.TryParse(stParam[6], out int rl) && int.TryParse(stParam[7], out int qs) && int.TryParse(stParam[8], out int ql))
-									{
-										code = strategics.Substring(2, 8);
-										catalog[strategics.Substring(2, 8)] = new TrendFollowingBasicFutures
+									else if (initial.Equals(Strategics.SC))
+										catalog[stParam[1]] = new SatisfyConditionsAccordingToTrends
 										{
-											Code = code,
-											RollOver = stParam[0].Substring(0xA, 1).Equals("1"),
-											DayShort = ds,
-											DayLong = dl,
-											Minute = m,
-											MinuteShort = ms,
-											MinuteLong = ml,
-											ReactionShort = rs,
-											ReactionLong = rl,
-											QuantityShort = qs,
-											QuantityLong = ql
+											Code = stParam[1],
+											Short = vShort,
+											Long = vLong,
+											Trend = vTrend,
+											ReservationSellUnit = su,
+											ReservationSellQuantity = sq,
+											ReservationSellRate = vSubtraction * 1e-2,
+											ReservationBuyUnit = au,
+											ReservationBuyQuantity = aq,
+											ReservationBuyRate = vAddition * 1e-2,
+											TradingSellInterval = si * 1e+3,
+											TradingSellQuantity = tsq,
+											TradingSellRate = sp * 1e-2,
+											TradingBuyInterval = ai * 1e+3,
+											TradingBuyQuantity = taq,
+											TradingBuyRate = ap * 1e-2
 										};
-										Balance.ToolTipDictionary[code]
-											= string.Concat("RollOver_", stParam[0].Substring(0xA, 1).Equals("1"), "\r\nDayShort_", ds, "\r\nDayLong_", dl, "\r\nMinute_", m, "\r\nMinuteShort_", ms, "\r\nMinuteLong_", ml, "\r\nShortReaction_", rs, "\r\nLongReaction_", rl, "\r\nShortQuantity_", qs, "\r\nLongQuantity_", ql);
-									}
-									break;
+									Balance.ToolTipDictionary[stParam[1]]
+										= string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n☞매도예약\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n☞매수예약\r\n호가단위_", stParam[8], "틱\r\n예약수량_", stParam[9], "주\r\n추가매수_", stParam[0xA], "%\r\n☞매도\r\n매매간격_", stParam[0xB], "초\r\n매매수량_", stParam[0xC], "주\r\n수익실현_", stParam[0xD], "%\r\n☞매수\r\n매매간격_", stParam[0xE], "초\r\n매매수량_", stParam[0xF], "주\r\n추가매수_", stParam[0x10], "%");
+								}
+								break;
 
-								case Strategics.TS:
-									if (char.TryParse(stParam[stParam.Length - 1], out char setting) && char.TryParse(stParam[8], out char tTrend)
-										&& char.TryParse(stParam[7], out char longShort) && int.TryParse(stParam[6], out int quoteUnit) && int.TryParse(stParam[5], out int quantity)
-										&& double.TryParse(stParam[4].Insert(stParam[4].Length - 2, "."), out double additionalPurchase)
-										&& double.TryParse(stParam[3].Insert(stParam[3].Length - 2, "."), out double realizeProfit)
-										&& int.TryParse(stParam[2], out int trend) && int.TryParse(stParam[1], out int l) && int.TryParse(stParam[0].Substring(8), out int s))
+							case Strategics.TC:
+								if (stParam.Length == 0xD && double.TryParse(stParam[0xC], out double cpAddition) && double.TryParse(stParam[0xB], out double cpRevenue)
+									&& int.TryParse(stParam[0xA], out int ctQuantity) && int.TryParse(stParam[9], out int cInterval)
+									&& double.TryParse(stParam[8], out double cAddition) && double.TryParse(stParam[7], out double crRevenue)
+									&& int.TryParse(stParam[6], out int crQuantity) && int.TryParse(stParam[5], out int cUnit) && int.TryParse(stParam[4], out int cTrend)
+									&& int.TryParse(stParam[3], out int cLong) && int.TryParse(stParam[2], out int cShort))
+								{
+									code = stParam[1];
+									catalog[code] = new TrendToCashflow
 									{
-										code = strategics.Substring(2, 6);
-										catalog[strategics.Substring(2, 6)] = new TrendsInStockPrices
-										{
-											Code = code,
-											Short = s,
-											Long = l,
-											Trend = trend,
-											RealizeProfit = realizeProfit * 0.01,
-											AdditionalPurchase = additionalPurchase * 0.01,
-											Quantity = quantity,
-											QuoteUnit = quoteUnit,
-											LongShort = (LongShort)longShort,
-											TrendType = (Trend)tTrend,
-											Setting = (Setting)setting
-										};
-										Balance.ToolTipDictionary[code]
-											= string.Concat("Short_", s, "\r\nLong_", l, "\r\nTrend_", trend, "\r\nRealize_", (realizeProfit * 0.01).ToString("P2"), "\r\nAddition_", (additionalPurchase * 0.01).ToString("P2"), "\r\nQuantity_", quantity, "\r\nQuoteUnit_", quoteUnit, "\r\nLongShort_", Enum.GetName(typeof(LongShort), longShort), "\r\nTrendType_", Enum.GetName(typeof(Trend), tTrend), "\r\nSetting_", Enum.GetName(typeof(Setting), setting));
-									}
-									break;
-							}
-					}
-				else
-				{
-					Console.WriteLine("Ok?");
+										Code = stParam[1],
+										Short = cShort,
+										Long = cLong,
+										Trend = cTrend,
+										Unit = cUnit,
+										ReservationQuantity = crQuantity,
+										ReservationRevenue = crRevenue * 1e-2,
+										Addition = cAddition * 1e-2,
+										Interval = cInterval,
+										TradingQuantity = ctQuantity,
+										PositionRevenue = cpRevenue * 1e-2,
+										PositionAddition = cpAddition * 1e-2
+									};
+									Balance.ToolTipDictionary[code]
+										= string.Concat("Short_", stParam[2], "\r\nLong_", stParam[3], "\r\nTrend_", stParam[4], "\r\n호가단위_", stParam[5], "틱\r\n예약수량_", stParam[6], "주\r\n수익실현_", stParam[7], "%\r\n추가매수_", stParam[8], "%\r\n매매간격_", stParam[9], "초\r\n매매수량_", stParam[10], "주\r\n수익실현_", stParam[11], "%\r\n추가매수_", stParam[12], "%");
+								}
+								break;
+
+							case Strategics.TF:
+								if (int.TryParse(stParam[0].Substring(0xB), out int ds) && int.TryParse(stParam[1], out int dl) && int.TryParse(stParam[2], out int m)
+									&& int.TryParse(stParam[3], out int ms) && int.TryParse(stParam[4], out int ml) && int.TryParse(stParam[5], out int rs)
+									&& int.TryParse(stParam[6], out int rl) && int.TryParse(stParam[7], out int qs) && int.TryParse(stParam[8], out int ql))
+								{
+									code = strategics.Substring(2, 8);
+									catalog[strategics.Substring(2, 8)] = new TrendFollowingBasicFutures
+									{
+										Code = code,
+										RollOver = stParam[0].Substring(0xA, 1).Equals("1"),
+										DayShort = ds,
+										DayLong = dl,
+										Minute = m,
+										MinuteShort = ms,
+										MinuteLong = ml,
+										ReactionShort = rs,
+										ReactionLong = rl,
+										QuantityShort = qs,
+										QuantityLong = ql
+									};
+									Balance.ToolTipDictionary[code]
+										= string.Concat("RollOver_", stParam[0].Substring(0xA, 1).Equals("1"), "\r\nDayShort_", ds, "\r\nDayLong_", dl, "\r\nMinute_", m, "\r\nMinuteShort_", ms, "\r\nMinuteLong_", ml, "\r\nShortReaction_", rs, "\r\nLongReaction_", rl, "\r\nShortQuantity_", qs, "\r\nLongQuantity_", ql);
+								}
+								break;
+
+							case Strategics.TS:
+								if (char.TryParse(stParam[stParam.Length - 1], out char setting) && char.TryParse(stParam[8], out char tTrend)
+									&& char.TryParse(stParam[7], out char longShort) && int.TryParse(stParam[6], out int quoteUnit) && int.TryParse(stParam[5], out int quantity)
+									&& double.TryParse(stParam[4].Insert(stParam[4].Length - 2, "."), out double additionalPurchase)
+									&& double.TryParse(stParam[3].Insert(stParam[3].Length - 2, "."), out double realizeProfit)
+									&& int.TryParse(stParam[2], out int trend) && int.TryParse(stParam[1], out int l) && int.TryParse(stParam[0].Substring(8), out int s))
+								{
+									code = strategics.Substring(2, 6);
+									catalog[strategics.Substring(2, 6)] = new TrendsInStockPrices
+									{
+										Code = code,
+										Short = s,
+										Long = l,
+										Trend = trend,
+										RealizeProfit = realizeProfit * 0.01,
+										AdditionalPurchase = additionalPurchase * 0.01,
+										Quantity = quantity,
+										QuoteUnit = quoteUnit,
+										LongShort = (LongShort)longShort,
+										TrendType = (Trend)tTrend,
+										Setting = (Setting)setting
+									};
+									Balance.ToolTipDictionary[code]
+										= string.Concat("Short_", s, "\r\nLong_", l, "\r\nTrend_", trend, "\r\nRealize_", (realizeProfit * 0.01).ToString("P2"), "\r\nAddition_", (additionalPurchase * 0.01).ToString("P2"), "\r\nQuantity_", quantity, "\r\nQuoteUnit_", quoteUnit, "\r\nLongShort_", Enum.GetName(typeof(LongShort), longShort), "\r\nTrendType_", Enum.GetName(typeof(Trend), tTrend), "\r\nSetting_", Enum.GetName(typeof(Setting), setting));
+								}
+								break;
+						}
 				}
-			}
 			switch (com)
 			{
 				case OpenAPI.ConnectAPI o:

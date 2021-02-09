@@ -29,6 +29,6 @@ namespace ShareInvest.Interface
 		}
 		string Securities(string param);
 		void SendOrder(ISendOrder order);
-		void StartProgress();
+		void StartProgress(bool version);
 	}
 }

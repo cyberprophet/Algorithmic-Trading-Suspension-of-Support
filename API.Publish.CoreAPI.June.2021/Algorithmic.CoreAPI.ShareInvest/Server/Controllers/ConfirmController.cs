@@ -27,7 +27,7 @@ namespace ShareInvest.Controllers
 				{
 					Email = confirm.Email,
 					Kiwoom = confirm.Key,
-					Account = Crypto.Security.Encrypt(confirm.Email, sb.Remove(sb.Length - 1, 1))
+					Account = Crypto.Security.Encrypt(confirm.Email, sb.Length == 0xB ? sb : sb.Remove(sb.Length - 1, 1))
 				});
 				if (context.SaveChanges() > 0)
 				{

@@ -10,11 +10,11 @@ namespace ShareInvest.OpenAPI.Catalog
 	class 잔고 : Chejan
 	{
 		public override event EventHandler<SendSecuritiesAPI> Send;
-		protected internal override AxKHOpenAPI API
+		public override string Identity
 		{
-			get; set;
+			protected internal get; set;
 		}
-		protected internal override string Identity
+		protected internal override AxKHOpenAPI API
 		{
 			get; set;
 		}

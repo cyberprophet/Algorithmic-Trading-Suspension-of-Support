@@ -20,16 +20,17 @@ namespace ShareInvest
 {
 	sealed partial class SecuritiesAPI : Form
 	{
-		internal SecuritiesAPI(dynamic key, ISecuritiesAPI<SendSecuritiesAPI> connect)
+		internal SecuritiesAPI(bool version, dynamic key, ISecuritiesAPI<SendSecuritiesAPI> connect)
 		{
 			icons = new[] { Properties.Resources.sleep_adium_bird_20649, Properties.Resources.idle_adium_bird_20651, Properties.Resources.awake_adium_bird_20653, Properties.Resources.alert_adium_bird_20655, Properties.Resources.away_adium_bird_20654, Properties.Resources.invisible_adium_bird_20650 };
 			InitializeComponent();
 			this.connect = connect;
+			this.version = version;
 			this.key = key;
 			api = API.GetInstance(key);
 			random = new Random(Guid.NewGuid().GetHashCode());
 			Codes = new Queue<string>();
-			GetTheCorrectAnswer = new int[(key as string).Length];
+			GetTheCorrectAnswer = new int[this.key.Length];
 			server = GoblinBat.GetInstance(key);
 			timer.Start();
 		}
@@ -126,7 +127,7 @@ namespace ShareInvest
 								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
 								OrgOrderNo = oc.OrderNumber.OrderByDescending(o => o.Value).First().Key
 							});
-						else if (Cash < order.Price)
+						else if (Cash < order.Price && oc.OrderNumber.Any(o => o.Value < order.Price))
 							foreach (var kv in oc.OrderNumber.OrderBy(o => o.Value))
 								if (Cash < order.Price && oc.OrderNumber.Count > 1)
 								{
@@ -389,23 +390,23 @@ namespace ShareInvest
 
 					return;
 
-				case Tuple<long, long> balance when now.Hour is 8 or 0xF:
-					Reservation = new Reservation(balance.Item2, connect.Account);
+				case Tuple<long, long> balance:
+					if (now.Hour is 8 or 0xF)
+						Reservation = new Reservation(balance.Item2, connect.Account);
+
+					Cash = balance.Item2;
 					return;
 
 				case Tuple<string, Stack<string>> charts:
 					var receive = connect as OpenAPI.ConnectAPI;
 					receive.RemoveValueRqData(sender.GetType().Name, charts.Item1).Send -= OnReceiveSecuritiesAPI;
 
-					if (receive.CorrectTheDelayMilliseconds() > 0)
+					if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1' ? await api.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2)) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2))) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
 					{
-						if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1' ? await api.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2)) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2))) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
-						{
-							var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.", charts.Item1.Length == 6 && receive.TryGetValue(charts.Item1, out Analysis analysis) ? analysis.Name : charts.Item1, Codes.Count.ToString("N0"));
-							notifyIcon.Text = message.Length < 0x40 ? message : string.Format("Still {0} Stocks to be Collect.", Codes.Count.ToString("N0"));
-						}
-						OnReceiveInformationTheDay();
+						var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.", charts.Item1.Length == 6 && receive.TryGetValue(charts.Item1, out Analysis analysis) ? analysis.Name : charts.Item1, Codes.Count.ToString("N0"));
+						notifyIcon.Text = message.Length < 0x40 ? message : string.Format("Still {0} Stocks to be Collect.", Codes.Count.ToString("N0"));
 					}
+					OnReceiveInformationTheDay();
 					return;
 
 				case string[] accounts:
@@ -417,35 +418,35 @@ namespace ShareInvest
 						Identity = connect.Securities("USER_ID"),
 						Name = connect.Securities("USER_NAME")
 
-					}, accounts.Length > 0)) is 0xC8)
+					}, accounts.Length > 0)) is 0xC8 && ulong.TryParse(now.ToString(Base.FullDateFormat), out ulong date))
 					{
 						this.connect.Account = new string[2];
 						var connect = this.connect as OpenAPI.ConnectAPI;
 						connect.Real.Send += OnReceiveSecuritiesAPI;
 						((ISendSecuritiesAPI<SendSecuritiesAPI>)connect.API).Send += OnReceiveSecuritiesAPI;
+						string encrypt = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")), server = this.connect.Securities("GetServerGubun"), length = (accounts.Length % 0xA).ToString("D1");
 
-						if (await api.GetSecurityAsync(key) is Privacies pri && char.TryParse(pri.SecuritiesAPI, out char initial))
+						if (await api.GetSecurityAsync(key) is Privacies pri && char.TryParse(pri.SecuritiesAPI, out char initial) && string.IsNullOrEmpty(pri.CodeStrategics) is false)
 						{
 							if (char.IsLetter(initial) && await api.PutContextAsync(new Privacies
 							{
-								Security = pri.Security,
-								SecuritiesAPI = (accounts.Length % 0xA).ToString("D1"),
+								Security = key,
+								SecuritiesAPI = length,
 								SecurityAPI = pri.SecurityAPI,
-								CodeStrategics = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")),
+								CodeStrategics = encrypt,
 								Coin = pri.Coin,
-								Commission = now.Ticks,
-								Account = this.connect.Securities("GetServerGubun")[^1..]
+								Commission = date,
+								Account = string.IsNullOrWhiteSpace(server) ? (server.Length % 0xA).ToString("D1") : server[^1..]
 
 							}) is 0xC8)
 								Base.SendMessage(sender.GetType(), key, accounts.Length);
 
-							else
+							if (string.IsNullOrEmpty(pri.SecurityAPI) is false)
 							{
-
+								var acc = Crypto.Security.Decipher(pri.Security, pri.SecuritiesAPI, pri.SecurityAPI).Split(';');
+								this.connect.Account[^1] = acc.Length > 1 && string.IsNullOrEmpty(acc[^1]) is false ? acc[^1] : string.Empty;
+								this.connect.Account[0] = acc[0];
 							}
-							var acc = Crypto.Security.Decipher(pri.Security, pri.SecuritiesAPI, pri.SecurityAPI).Split(';');
-							this.connect.Account[^1] = acc[^1];
-							this.connect.Account[0] = acc[0];
 						}
 						else
 						{
@@ -461,19 +462,21 @@ namespace ShareInvest
 							if (await api.PostContextAsync(new Privacies
 							{
 								Security = key,
-								SecuritiesAPI = (accounts.Length % 0xA).ToString("D1"),
-								SecurityAPI = Crypto.Security.Encrypt(new Privacies { Security = key, SecuritiesAPI = key[^1].ToString() }, string.Concat(this.connect.Account[0], ';', this.connect.Account[^1]), this.connect.Account.Length > 0),
-								CodeStrategics = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")),
-								Commission = now.Ticks,
-								Account = this.connect.Securities("GetServerGubun")[^1..]
+								SecuritiesAPI = length,
+								SecurityAPI = Crypto.Security.Encrypt(new Privacies { Security = key, SecuritiesAPI = key[^1].ToString() }, string.Concat(this.connect.Account[0], ';', Array.Exists(this.connect.Account, o => string.IsNullOrEmpty(o)) ? string.Empty : this.connect.Account[^1]), this.connect.Account.Length > 0),
+								CodeStrategics = encrypt,
+								Commission = date,
+								Account = string.IsNullOrWhiteSpace(server) ? (server.Length % 0xA).ToString("D1") : server[^1..]
 
 							}) is 0xC8)
 								Base.SendMessage(sender.GetType(), key, accounts.Length);
 						}
 						foreach (var ctor in connect?.Chejan)
+						{
+							ctor.Identity = encrypt;
 							ctor.Send += OnReceiveSecuritiesAPI;
-
-						Security.SetKey(this.connect.Securities("USER_ID"));
+						}
+						Security.SetKey(encrypt);
 						RequestBalanceInquiry();
 					}
 					return;
@@ -535,7 +538,7 @@ namespace ShareInvest
 			if (connect.Account is not null)
 				if (connect is OpenAPI.ConnectAPI o)
 				{
-					if (connect.Account[^1] is not null && connect.Account[^1][^2..].Equals("31"))
+					if (Array.Exists(connect.Account, o => string.IsNullOrEmpty(o)) is false && string.IsNullOrEmpty(connect.Account[^1]) is false && connect.Account[^1].Length == 0xA && connect.Account[^1][^2..].Equals("31"))
 					{
 
 					}
@@ -589,9 +592,6 @@ namespace ShareInvest
 								if (worker.WorkerSupportsCancellation && now.CompareTo(new DateTime(bring.Date)) > 0)
 									continue;
 
-								else if (worker.WorkerSupportsCancellation is false)
-									worker.WorkerSupportsCancellation = true;
-
 								BringInStrategics(strategics, bring, codes);
 							}
 					}
@@ -610,6 +610,9 @@ namespace ShareInvest
 						}
 						else
 						{
+							if (worker.WorkerSupportsCancellation is false)
+								worker.WorkerSupportsCancellation = true;
+
 							now = DateTime.Now;
 							await Task.Delay(0xEA61);
 						}
@@ -699,7 +702,7 @@ namespace ShareInvest
 			if (e.ClickedItem.Name.Equals(reference.Name))
 				if (e.ClickedItem.Text.Equals("연결"))
 				{
-					e.ClickedItem.Text = api.IsAdministrator ? "조회" : "설정";
+					e.ClickedItem.Text = api.IsInsider || api.IsAdministrator ? "조회" : "설정";
 
 					if (connect.Start)
 						Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
@@ -754,7 +757,7 @@ namespace ShareInvest
 				FormBorderStyle = FormBorderStyle.None;
 				CenterToScreen();
 				this.connect.Send += OnReceiveSecuritiesAPI;
-				this.connect.StartProgress();
+				this.connect.StartProgress(version);
 			}
 			else
 				Close();
@@ -788,8 +791,7 @@ namespace ShareInvest
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}
-			if (Base.IsDebug is false)
-				(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(0x1253);
+			(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0x1253);
 		}
 		Queue<string> Codes
 		{
@@ -807,6 +809,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		readonly bool version;
 		readonly string key;
 		readonly Random random;
 		readonly API api;

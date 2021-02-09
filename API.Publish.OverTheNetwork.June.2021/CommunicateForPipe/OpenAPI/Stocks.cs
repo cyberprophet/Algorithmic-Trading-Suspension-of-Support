@@ -87,7 +87,6 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 			if (int.TryParse(volume, out int vol))
 			{
 				var consecutive = new SendConsecutive(time, price, vol);
-				Consecutive?.Invoke(this, consecutive);
 
 				if (Current != consecutive.Price)
 				{
@@ -95,6 +94,8 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 					Rate = consecutive.Price / (double)Purchase - 1;
 					Current = consecutive.Price;
 				}
+				if (Classification is Interface.IStrategics)
+					Consecutive?.Invoke(this, consecutive);
 			}
 		}
 		public override void OnReceiveDrawChart(object sender, SendConsecutive e)

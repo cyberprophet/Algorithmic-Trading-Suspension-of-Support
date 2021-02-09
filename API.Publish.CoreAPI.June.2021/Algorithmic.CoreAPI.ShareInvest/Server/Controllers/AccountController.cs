@@ -108,7 +108,9 @@ namespace ShareInvest.Controllers
 								if (double.IsNaN(tick) || privacy.Commission > tick)
 								{
 									tick = privacy.Commission;
-									check = Crypto.Security.Decipher(privacy.Security, privacy.SecuritiesAPI, privacy.SecurityAPI);
+
+									if (string.IsNullOrEmpty(privacy.SecurityAPI) is false)
+										check = Crypto.Security.Decipher(privacy.Security, privacy.SecuritiesAPI, privacy.SecurityAPI);
 								}
 						}
 						queue.Enqueue(new UserInformation

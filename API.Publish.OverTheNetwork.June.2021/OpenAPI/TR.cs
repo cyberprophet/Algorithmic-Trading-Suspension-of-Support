@@ -84,6 +84,10 @@ namespace ShareInvest.OpenAPI
 		{
 			get; set;
 		}
+		string ISendSecuritiesAPI<SendSecuritiesAPI>.Identity
+		{
+			set => throw new NotImplementedException();
+		}
 		static uint count;
 	}
 	enum CatalogTR

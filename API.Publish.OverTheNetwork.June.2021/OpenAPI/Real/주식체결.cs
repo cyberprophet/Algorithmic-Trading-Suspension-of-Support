@@ -22,12 +22,22 @@ namespace ShareInvest.OpenAPI.Catalog
 			{
 				if (Connect.GetInstance().StocksHeld.TryGetValue(e.sRealKey, out Analysis analysis))
 				{
-					analysis.Bid = int.TryParse(API.GetCommRealData(e.sRealKey, Fid[5]), out int bid) ? bid : int.MinValue;
-					analysis.Offer = int.TryParse(API.GetCommRealData(e.sRealKey, Fid[4]), out int offer) ? offer : int.MinValue;
-					analysis.OnReceiveEvent(time, current, volume);
+					string str_bid = API.GetCommRealData(e.sRealKey, Fid[5]), str_offer = API.GetCommRealData(e.sRealKey, Fid[4]);
+
+					if (int.TryParse(str_offer[0] is '-' ? str_offer[1..] : str_offer, out int offer) && int.TryParse(str_bid[0] is '-' ? str_bid[1..] : str_bid, out int bid))
+					{
+						analysis.Bid = bid;
+						analysis.Offer = offer;
+						analysis.OnReceiveEvent(time, current, volume);
+					}
 				}
-				Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', time, ';', current, ';', volume));
+				if (Lite)
+					Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', time, ';', current, ';', volume));
 			}
+		}
+		internal override bool Lite
+		{
+			get; set;
 		}
 		protected internal override int[] Fid => new int[] { 20, 10, 11, 12, 27, 28, 15, 13, 14, 16, 17, 18, 25, 26, 29, 30, 31, 32, 228, 311, 290, 691, 567, 568 };
 	}
