@@ -133,6 +133,10 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
+		protected internal override string NextOrderStringTime
+		{
+			get; set;
+		}
 		protected internal override double Gap
 		{
 			get; set;

@@ -576,6 +576,37 @@ namespace ShareInvest
 					Base.SendMessage(bring.GetType(), analysis.Name, analysis.Quantity, analysis.OrderNumber is null ? int.MinValue : analysis.OrderNumber.Count, analysis.Purchase, analysis.Current as object, analysis.Classification);
 			}
 		}
+		void ExceptInStrategics(IEnumerable<string> enumerable)
+		{
+			if (connect is OpenAPI.ConnectAPI api && api.Enumerator?.Where(o => o.Classification is IStrategics) is IEnumerable<Analysis> strategics && strategics.Select(o => o.Code).Except(enumerable) is IEnumerable<string> list)
+				foreach (var except in list)
+					if (string.IsNullOrEmpty(except) is false && api.TryGetValue(except, out Analysis analysis))
+					{
+						analysis.Classification = null;
+
+						if (analysis.Classification is null)
+						{
+							if (analysis.OrderNumber is Dictionary<string, dynamic> numbers && numbers.Count > 0)
+								foreach (var kv in numbers.OrderByDescending(o => o.Value))
+									if (analysis.Code.Length == 6)
+									{
+										connect.SendOrder(new Catalog.OpenAPI.Order
+										{
+											AccNo = connect.Account[0],
+											Code = analysis.Code,
+											HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+											OrgOrderNo = kv.Key,
+											OrderType = (int)(analysis.Current < kv.Value ? OrderType.매도취소 : OrderType.매수취소),
+											Price = analysis.Current,
+											Qty = 1
+										});
+										if (analysis.Current > kv.Value)
+											Cash += kv.Value;
+									}
+							Base.SendMessage(analysis.GetType(), analysis.Name, analysis.Strategics);
+						}
+					}
+		}
 		async void WorkerDoWork(object sender, DoWorkEventArgs e)
 		{
 			if (e.Argument is string[] codes)
@@ -586,14 +617,46 @@ namespace ShareInvest
 				{
 					try
 					{
-						foreach (var bring in await api.GetStrategics(key) as IEnumerable<BringIn>)
-							if (Enum.TryParse(bring.Strategics, out Strategics strategics))
-							{
-								if (worker.WorkerSupportsCancellation && now.CompareTo(new DateTime(bring.Date)) > 0)
-									continue;
+						if (await api.GetStrategics(key) is IEnumerable<BringIn> enumerable)
+						{
+							foreach (var bring in enumerable)
+								if (Enum.TryParse(bring.Strategics, out Strategics strategics))
+								{
+									if (worker.WorkerSupportsCancellation && now.CompareTo(new DateTime(bring.Date)) > 0)
+										continue;
 
-								BringInStrategics(strategics, bring, codes);
-							}
+									BringInStrategics(strategics, bring, codes);
+								}
+							ExceptInStrategics(enumerable.Select(o => o.Code));
+						}
+						else if (connect is OpenAPI.ConnectAPI api && api.Enumerator?.Where(o => o.Classification is IStrategics) is IEnumerable<Analysis> strategics)
+							foreach (var sis in strategics)
+								if (string.IsNullOrEmpty(sis.Code) is false && api.TryGetValue(sis.Code, out Analysis analysis))
+								{
+									analysis.Classification = null;
+
+									if (analysis.Classification is null)
+									{
+										if (analysis.OrderNumber is Dictionary<string, dynamic> numbers && numbers.Count > 0)
+											foreach (var kv in numbers.OrderByDescending(o => o.Value))
+												if (analysis.Code.Length == 6)
+												{
+													connect.SendOrder(new Catalog.OpenAPI.Order
+													{
+														AccNo = connect.Account[0],
+														Code = analysis.Code,
+														HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+														OrgOrderNo = kv.Key,
+														OrderType = (int)(analysis.Current < kv.Value ? OrderType.매도취소 : OrderType.매수취소),
+														Price = analysis.Current,
+														Qty = 1
+													});
+													if (analysis.Current > kv.Value)
+														Cash += kv.Value;
+												}
+										Base.SendMessage(analysis.GetType(), analysis.Name, analysis.Strategics);
+									}
+								}
 					}
 					catch (Exception ex)
 					{

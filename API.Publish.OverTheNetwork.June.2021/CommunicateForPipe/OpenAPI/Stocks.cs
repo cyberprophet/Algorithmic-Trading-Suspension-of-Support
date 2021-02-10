@@ -103,7 +103,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 			switch (Classification)
 			{
 				case Catalog.LongPosition lop when Wait && (Quantity > 0 && double.IsNaN(Purchase) is false && Purchase > 0 ? e.Price / Purchase - 1 : 0D) is double rate:
-					if (Offer > 0 && lop.Underweight + Base.Tax < rate && (OrderNumber is null || OrderNumber.ContainsValue(Offer) is false))
+					if (Offer > 0 && lop.Underweight + Base.Tax < rate && (OrderNumber is null || OrderNumber.ContainsValue(Offer) is false) && e.Date.CompareTo(NextOrderStringTime) > 0)
 					{
 						Wait = false;
 						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
@@ -116,9 +116,10 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 							Price = Offer,
 							Qty = 1
 						}));
+						NextOrderStringTime = e.Date;
 						return;
 					}
-					if (Bid > 0 && (long)Quantity * e.Price < lop.Overweight * (1 - Base.Tax) && lop.Underweight - Base.Tax > rate && (OrderNumber is null || OrderNumber.ContainsValue(Bid) is false))
+					if (Bid > 0 && (long)Quantity * e.Price < lop.Overweight * (1 - Base.Tax) && lop.Underweight - Base.Tax > rate && (OrderNumber is null || OrderNumber.ContainsValue(Bid) is false) && e.Date.CompareTo(NextOrderStringTime) > 0)
 					{
 						Wait = false;
 						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
@@ -131,6 +132,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 							Price = Bid,
 							Qty = 1
 						}));
+						NextOrderStringTime = e.Date;
 						return;
 					}
 					break;
@@ -336,6 +338,10 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 			get; set;
 		}
 		protected internal override string DateLine
+		{
+			get; set;
+		}
+		protected internal override string NextOrderStringTime
 		{
 			get; set;
 		}

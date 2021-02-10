@@ -99,6 +99,10 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		protected internal abstract string NextOrderStringTime
+		{
+			get; set;
+		}
 		protected internal abstract double Gap
 		{
 			get; set;
