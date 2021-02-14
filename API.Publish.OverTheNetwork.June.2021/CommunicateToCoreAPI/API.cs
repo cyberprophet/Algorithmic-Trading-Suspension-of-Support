@@ -241,6 +241,36 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		public async Task<object> PostContextAsync(Catalog.Models.Theme theme)
+		{
+			try
+			{
+				var now = DateTime.Now;
+				var param = new Catalog.Dart.Theme
+				{
+					Index = theme.Index,
+					Name = theme.Name,
+					Code = string.Concat(theme.Code[0] ?? string.Empty, ';', theme.Code[^1] ?? string.Empty),
+					Rate = theme.Rate * 1e-2,
+					Average = theme.Average * 1e-2,
+					Date = now.AddDays(now.Hour < 0x12 ? -1 : 0).ToString(Base.DateFormat)
+				};
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(theme.GetType().Name), Method.POST).AddJsonBody(param, Security.content_type), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+				{
+					if (JsonConvert.DeserializeObject<int>(response.Content) is int content && content > 0)
+						Base.SendMessage(GetType(), theme.Name, content);
+
+					return param;
+				}
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			return null;
+		}
 		public async Task<int> PostContextAsync<T>(IEnumerable<T> param) where T : struct
 		{
 			try

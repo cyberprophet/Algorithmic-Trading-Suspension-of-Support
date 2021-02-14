@@ -34,6 +34,10 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		public DbSet<Theme> Theme
+		{
+			get; set;
+		}
 		public DbSet<Privacy> Privacies
 		{
 			get; set;

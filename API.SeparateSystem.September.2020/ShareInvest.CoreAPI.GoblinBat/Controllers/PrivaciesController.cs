@@ -20,7 +20,7 @@ namespace ShareInvest.Controllers
 			{
 				var context = await this.context.Privacies.FindAsync(security);
 
-				if (context == null)
+				if (context is null)
 					return NotFound();
 
 				return Ok(context);
@@ -86,7 +86,7 @@ namespace ShareInvest.Controllers
 			{
 				var context = await this.context.Privacies.FindAsync(security);
 
-				if (context != null)
+				if (context is not null)
 				{
 					this.context.Privacies.Remove(context);
 					await this.context.BulkSaveChangesAsync();

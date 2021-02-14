@@ -190,6 +190,7 @@ namespace ShareInvest
 					Dispose();
 			}
 		}
+		void LinkCoreAPIShareUnvestNetClick(object sender, LinkLabelLinkClickedEventArgs e) => BeginInvoke(new Action(() => Process.Start(link_coreapi_shareinvest_net.Text)));
 		void UpdateToVersion(string directory, string command, string path)
 		{
 			using (var process = new Process
