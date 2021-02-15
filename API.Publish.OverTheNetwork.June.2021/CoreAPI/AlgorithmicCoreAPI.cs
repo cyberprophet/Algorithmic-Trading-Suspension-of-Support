@@ -86,16 +86,22 @@ namespace ShareInvest
 					case uint arg:
 						while (arg >= 0)
 							if (new Client.Theme(key).OnReceiveMarketPriceByTheme((int)++arg) is IEnumerable<Catalog.Models.Theme> enumerable)
-							{
 								foreach (var theme in enumerable)
-									if (await api.PostContextAsync(theme) is Catalog.Dart.Theme struct_theme)
+									try
 									{
+										if (await api.PostContextAsync(theme) is Catalog.Dart.Theme st)
+										{
+											if (new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
+												while (queue.TryDequeue(out GroupDetail detail))
+												{
 
+												}
+										}
 									}
-							}
-							else
-								return;
-
+									catch (Exception ex)
+									{
+										Base.SendMessage(sender.GetType(), theme.Name, ex.StackTrace);
+									}
 						break;
 
 					case IEnumerable<Interface.IStrategics> enumerable:

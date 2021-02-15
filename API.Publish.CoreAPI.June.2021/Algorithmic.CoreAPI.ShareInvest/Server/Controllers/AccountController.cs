@@ -22,7 +22,7 @@ namespace ShareInvest.Controllers
 		{
 			try
 			{
-				if (param.Length > 0 && Security.User.ContainsKey(param.Identity) is false)
+				if (param.Length > 0)
 				{
 					var temp = new string[param.Length];
 

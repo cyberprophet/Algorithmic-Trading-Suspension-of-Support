@@ -93,6 +93,76 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		public Queue<Catalog.Models.GroupDetail> GetDetailsFromGroup(string page, int index)
+		{
+			try
+			{
+				driver.Navigate().GoToUrl(Security.RequestTheIntegratedAddress(this, page));
+				driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(0xC);
+				var group = new Queue<Catalog.Models.GroupDetail>();
+
+				foreach (var context in driver.FindElementsByXPath(Security.RequestDetailsFromGroup(index)))
+					foreach (var tbody in context.FindElements(By.TagName("tbody")))
+					{
+						var count = 0;
+						var temp = new string[0xA];
+
+						foreach (var td in tbody.FindElements(By.TagName("td")))
+						{
+							var attribute = td.GetAttribute("class");
+
+							if (Enum.TryParse(attribute, out GroupDetailType type))
+								switch (type)
+								{
+									case GroupDetailType.name:
+										continue;
+
+									case GroupDetailType.number:
+										temp[count++] = td.Text.Replace(",", string.Empty);
+										break;
+
+									case GroupDetailType.center:
+										if (td.FindElement(By.TagName("a")).GetAttribute("href").Split('=')[^1] is string code && code.Length == 6)
+										{
+											if (int.TryParse(temp[8], out int before) && int.TryParse(temp[6], out int volume) && double.TryParse(temp[3].Replace("%", string.Empty), out double rate) && int.TryParse(temp[1], out int current))
+												group.Enqueue(new Catalog.Models.GroupDetail
+												{
+													Code = code,
+													Index = page,
+													Title = temp[0],
+													Current = current,
+													Rate = rate * 1e-2,
+													Degree = double.NegativeInfinity,
+													Compare = volume / (double)before
+												});
+											temp[count] = code;
+										}
+										break;
+								}
+							else if (string.IsNullOrEmpty(attribute))
+								foreach (var p in td.FindElements(By.TagName("p")))
+								{
+									count = 0;
+									temp[count++] = p.GetAttribute("textContent");
+								}
+						}
+					}
+				if (group.Count > 0)
+					return group;
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), page, ex.StackTrace);
+			}
+			finally
+			{
+				driver.Close();
+				driver.Dispose();
+				service.Dispose();
+				GC.Collect();
+			}
+			return null;
+		}
 		public Theme(dynamic key)
 		{
 			var security = new Security(key);

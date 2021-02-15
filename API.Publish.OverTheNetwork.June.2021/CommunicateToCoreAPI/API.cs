@@ -259,10 +259,8 @@ namespace ShareInvest.Client
 
 				if (HttpStatusCode.OK.Equals(response.StatusCode))
 				{
-					if (JsonConvert.DeserializeObject<int>(response.Content) is int content && content > 0)
-						Base.SendMessage(GetType(), theme.Name, content);
-
-					return param;
+					if (string.IsNullOrEmpty(response.Content) is false && JsonConvert.DeserializeObject<int>(response.Content) is int content && content > 0 || Base.IsDebug)
+						return param;
 				}
 			}
 			catch (Exception ex)

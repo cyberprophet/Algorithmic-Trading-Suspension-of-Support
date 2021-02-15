@@ -31,7 +31,7 @@ namespace ShareInvest
 			random = new Random(Guid.NewGuid().GetHashCode());
 			Codes = new Queue<string>();
 			GetTheCorrectAnswer = new int[this.key.Length];
-			server = GoblinBat.GetInstance(key);
+			server = GoblinBat.GetInstance(key);			
 			timer.Start();
 		}
 		void OnReceiveInformationTheDay() => BeginInvoke(new Action(async () =>
