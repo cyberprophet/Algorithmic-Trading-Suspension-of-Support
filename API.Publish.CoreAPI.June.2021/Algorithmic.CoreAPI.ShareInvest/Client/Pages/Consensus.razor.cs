@@ -117,7 +117,7 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
-		protected internal static string ConvertFormat(string param) => string.Format("’{0}. {1}.", param.Substring(0, 2), param.Substring(2, 2));
+		protected internal static string ConvertFormat(string param) => $"’{param.Substring(0, 2)}. {param.Substring(2, 2)}.";
 		protected internal static (string, ConsoleColor) ConvertFormat(double param) => (param < 0 ? param.ToString("P2")[1..] : param.ToString("P2"), param > 0 ? ConsoleColor.Red : ConsoleColor.Blue);
 		[Inject]
 		HttpClient Http

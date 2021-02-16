@@ -9,7 +9,7 @@ namespace ShareInvest.Client
 {
 	public sealed class Theme
 	{
-		public IEnumerable<Catalog.Models.Theme> OnReceiveMarketPriceByTheme(int page)
+		public (uint, IEnumerable<Catalog.Models.Theme>) OnReceiveMarketPriceByTheme(int page)
 		{
 			try
 			{
@@ -77,7 +77,7 @@ namespace ShareInvest.Client
 							if (string.IsNullOrEmpty(theme.Name) is false)
 								queue.Enqueue(theme);
 						}
-					return queue.OrderBy(o => Guid.NewGuid());
+					return ((uint)(1 + last_page), queue.OrderBy(o => Guid.NewGuid()));
 				}
 			}
 			catch (Exception ex)
@@ -91,7 +91,7 @@ namespace ShareInvest.Client
 				service.Dispose();
 				GC.Collect();
 			}
-			return null;
+			return (uint.MinValue, null);
 		}
 		public Queue<Catalog.Models.GroupDetail> GetDetailsFromGroup(string page, int index)
 		{
@@ -172,7 +172,7 @@ namespace ShareInvest.Client
 				service = ChromeDriverService.CreateDefaultService(security.Path[0]);
 				service.HideCommandPromptWindow = true;
 				var options = new ChromeOptions();
-				options.AddArgument("--window-size=1015,1063");
+				options.AddArgument($"--window-size=1015,{(Base.IsDebug ? 0x427 : 0x401)}");
 				options.AddArgument(string.Concat("user-agent=", security.Path[^1]));
 				driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0xC));
 			}

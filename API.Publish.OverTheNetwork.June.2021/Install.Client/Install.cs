@@ -139,8 +139,11 @@ namespace ShareInvest
 			if (progress.Value < 0x63)
 			{
 				if (progress.Value++ == 0)
+				{
+					label_hardware.ForeColor = Color.Snow;
+					label_hardware.Text = $"Core{Environment.ProcessorCount}";
 					worker.RunWorkerAsync();
-
+				}
 				label_name.ForeColor = color[DateTime.Now.Second % 3];
 			}
 			else if (progress.Value == 0x64)
@@ -165,7 +168,8 @@ namespace ShareInvest
 						}
 					GC.Collect();
 					var ram = new PerformanceCounter("Memory", "Available MBytes").NextValue();
-					label_hardware.Text = string.Format("{0}GB", (ram / (double)0x400).ToString("N2"));
+					label_hardware.ForeColor = Color.Maroon;
+					label_hardware.Text = $"{ram / (double)0x400:N2}GB";
 					Application.DoEvents();
 
 					if (StartProgress(ram, new Tuple<string, string, string>(execute[0], key, path[1])))

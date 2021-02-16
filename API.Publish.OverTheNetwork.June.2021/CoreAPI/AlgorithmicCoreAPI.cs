@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog.Models;
@@ -24,7 +25,10 @@ namespace ShareInvest
 			key = initial.Item1;
 			api = API.GetInstance(key);
 			pipe = new Pipe(api.GetType().Name, typeof(CoreAPI).Name, initial.Item2);
-			theme = new BackgroundWorker();
+
+			if (Environment.ProcessorCount > 4)
+				theme = new BackgroundWorker();
+
 			timer.Start();
 		}
 		string Message
@@ -53,7 +57,9 @@ namespace ShareInvest
 				Visible = false;
 				ShowIcon = false;
 				notifyIcon.Visible = true;
-				theme.DoWork += new DoWorkEventHandler(WorkerDoWork);
+
+				if (theme is BackgroundWorker)
+					theme.DoWork += new DoWorkEventHandler(WorkerDoWork);
 			}
 			else if (string.IsNullOrEmpty(pipe.Message))
 			{
@@ -62,7 +68,8 @@ namespace ShareInvest
 					if (await api.GetContextAsync(new Catalog.TrendsToCashflow()) is IEnumerable<Interface.IStrategics> enumerable)
 						worker.RunWorkerAsync(enumerable);
 
-					theme.RunWorkerAsync(uint.MinValue);
+					if (theme is BackgroundWorker)
+						theme.RunWorkerAsync(uint.MinValue);
 				}));
 				pipe.StartProgress();
 			}
@@ -84,9 +91,12 @@ namespace ShareInvest
 				switch (e.Argument)
 				{
 					case uint arg:
-						while (arg >= 0)
-							if (new Client.Theme(key).OnReceiveMarketPriceByTheme((int)++arg) is IEnumerable<Catalog.Models.Theme> enumerable)
-								foreach (var theme in enumerable)
+						var page = uint.MaxValue;
+						await Task.Delay(0x32000);
+
+						while (++arg > 0 && arg < page)
+							if (new Client.Theme(key).OnReceiveMarketPriceByTheme((int)arg) is (uint, IEnumerable<Catalog.Models.Theme>) enumerable)
+								foreach (var theme in enumerable.Item2)
 									try
 									{
 										if (await api.PostContextAsync(theme) is Catalog.Dart.Theme st)
@@ -97,10 +107,15 @@ namespace ShareInvest
 
 												}
 										}
+										page = enumerable.Item1;
 									}
 									catch (Exception ex)
 									{
 										Base.SendMessage(sender.GetType(), theme.Name, ex.StackTrace);
+									}
+									finally
+									{
+										await Task.Delay(0xC00);
 									}
 						break;
 
@@ -194,8 +209,10 @@ namespace ShareInvest
 						count = int.MaxValue;
 					}
 				}
+				if (theme is BackgroundWorker)
+					theme.Dispose();
+
 				worker.Dispose();
-				theme.Dispose();
 				Dispose();
 			}
 		}

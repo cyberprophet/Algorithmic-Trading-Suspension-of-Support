@@ -257,11 +257,8 @@ namespace ShareInvest.Client
 				};
 				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(theme.GetType().Name), Method.POST).AddJsonBody(param, Security.content_type), source.Token);
 
-				if (HttpStatusCode.OK.Equals(response.StatusCode))
-				{
-					if (string.IsNullOrEmpty(response.Content) is false && JsonConvert.DeserializeObject<int>(response.Content) is int content && content > 0 || Base.IsDebug)
-						return param;
-				}
+				if (HttpStatusCode.OK.Equals(response.StatusCode) && string.IsNullOrEmpty(response.Content) is false && JsonConvert.DeserializeObject<int>(response.Content) > 0)
+					return param;
 			}
 			catch (Exception ex)
 			{

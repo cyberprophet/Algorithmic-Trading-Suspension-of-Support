@@ -25,9 +25,19 @@ namespace ShareInvest
 			builder.Entity<EstimatedPrice>().HasKey(o => new { o.Code, o.Strategics });
 			builder.Entity<FinancialStatement>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<QuarterlyFinancialStatements>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<Tick>().HasKey(o => new { o.Code, o.Date });
 			builder.Entity<Identify>().HasKey(o => new { o.Security, o.Code });
 			builder.Entity<Connection>().HasKey(o => new { o.Email, o.Kiwoom });
+			builder.Entity<Tick>(o =>
+			{
+				o.ToTable("Tick");
+				o.HasOne(o => o.Contents).WithOne().HasForeignKey<Contents>(o => new { o.Code, o.Date });
+				o.HasKey(o => new { o.Code, o.Date });
+			});
+			builder.Entity<Contents>(o =>
+			{
+				o.ToTable("Tick");
+				o.HasKey(o => new { o.Code, o.Date });
+			});
 		}
 		public CoreApiDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> store) : base(options, store) => this.store = store;
 		public DbSet<Connection> User
@@ -107,6 +117,10 @@ namespace ShareInvest
 			get; set;
 		}
 		public DbSet<Tick> Ticks
+		{
+			get; set;
+		}
+		public DbSet<Contents> Contents
 		{
 			get; set;
 		}

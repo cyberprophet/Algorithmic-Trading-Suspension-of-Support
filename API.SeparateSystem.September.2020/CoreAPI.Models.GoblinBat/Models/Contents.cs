@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
 {
-	public class Tick
+	public class Contents
 	{
 		[ForeignKey("Codes"), Column(Order = 1), MinLength(6), MaxLength(8)]
 		public string Code
@@ -15,22 +15,8 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
-		[Column(Order = 3), StringLength(9), Required]
-		public string Open
-		{
-			get; set;
-		}
-		[Column(Order = 4), StringLength(9), Required]
-		public string Close
-		{
-			get; set;
-		}
-		[Column(Order = 5), Required]
-		public string Price
-		{
-			get; set;
-		}
-		public Contents Contents
+		[Required]
+		public string CompressedContents
 		{
 			get; set;
 		}

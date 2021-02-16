@@ -31,7 +31,7 @@ namespace ShareInvest
 			random = new Random(Guid.NewGuid().GetHashCode());
 			Codes = new Queue<string>();
 			GetTheCorrectAnswer = new int[this.key.Length];
-			server = GoblinBat.GetInstance(key);			
+			server = GoblinBat.GetInstance(key);
 			timer.Start();
 		}
 		void OnReceiveInformationTheDay() => BeginInvoke(new Action(async () =>
@@ -39,6 +39,7 @@ namespace ShareInvest
 			if (Codes.TryDequeue(out string str))
 			{
 				var now = DateTime.Now;
+				var choice = Codes.Count % 0xC;
 
 				if (string.IsNullOrEmpty(str) is false && str.Length is 6 or 8 && await api.GetContextAsync(str) is Retention retention && string.IsNullOrEmpty(retention.Code) is false)
 				{
@@ -75,8 +76,27 @@ namespace ShareInvest
 										Base.SendMessage(retention.Code, status, GetType());
 									}
 								}
-								else if (await api.GetContextAsync(new Catalog.IncorporatedStocks { Market = 'P' }) is int next && await api.PostContextAsync(new Client.IncorporatedStocks(key).OnReceiveSequentially(next)) != 0xC8)
-									Base.SendMessage(retention.Code, next, GetType());
+								else
+								{
+									Stack<Catalog.IncorporatedStocks> stack = null;
+									var page = random.Next(0, now.Day + now.Month + now.Year + DateTime.DaysInMonth(now.Year, now.Month) + now.Second - 0x7D0);
+
+									switch (choice)
+									{
+										case 0:
+											stack = await new ConstituentStocks(key).GetConstituentStocks(page % 2 + 1, now);
+											break;
+
+										case > 3 and < 7 when await api.GetContextAsync(new Catalog.IncorporatedStocks { Market = 'P' }) is int next:
+											stack = new Client.IncorporatedStocks(key).OnReceiveSequentially(next);
+											break;
+									}
+									if (stack is Stack<Catalog.IncorporatedStocks> && await api.PostContextAsync(stack) == 0xC8)
+									{
+										await Task.Delay(0x500);
+										await new Advertise(key).StartAdvertisingInTheDataCollectionSection(page);
+									}
+								}
 							}
 						}
 						catch (Exception ex)

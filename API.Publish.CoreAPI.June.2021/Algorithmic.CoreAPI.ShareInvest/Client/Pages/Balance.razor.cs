@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
@@ -66,11 +67,11 @@ namespace ShareInvest.Pages
 					}
 					break;
 
-				case Catalog.Models.Message message:
+				case Catalog.Models.Message message when Balance.Any(o => o.Key.Item2.Equals(message.Key) && o.Value.Current.Replace(",", string.Empty).Equals((message.Convey[0] is '-' or '+') ? message.Convey[1..] : message.Convey) is false):
 					var render = false;
 
-					foreach (var kv in Balance)
-						if (kv.Key.Item2.Equals(message.Key) && int.TryParse(kv.Value.Quantity, out int quantity) && quantity > 0 && int.TryParse(message.Convey[0] is '-' ? message.Convey[1..] : message.Convey, out int price) && int.TryParse(kv.Value.Current.Replace(",", string.Empty), out int current) && current != price && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
+					foreach (var kv in from o in Balance where o.Key.Item2.Equals(message.Key) select o)
+						if (int.TryParse(kv.Value.Quantity, out int quantity) && quantity > 0 && int.TryParse(message.Convey[0] is '-' ? message.Convey[1..] : message.Convey, out int price) && int.TryParse(kv.Value.Current.Replace(",", string.Empty), out int current) && current != price && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
 						{
 							Balance[new Tuple<string, string>(kv.Value.Kiwoom, kv.Value.Code)] = new Catalog.Models.Balance
 							{
