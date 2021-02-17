@@ -5,7 +5,7 @@ namespace ShareInvest.Models
 {
 	public class Tick
 	{
-		[ForeignKey("Codes"), Column(Order = 1), MinLength(6), MaxLength(8)]
+		[Column(Order = 1), MinLength(6), MaxLength(8)]
 		public string Code
 		{
 			get; set;

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Text;
 
@@ -26,6 +28,38 @@ namespace ShareInvest
 		{
 			using var sw = new StreamWriter(string.Concat(path, @"\", stocks.Code, '_', stocks.Date, extension));
 			sw.WriteLine(string.Concat(stocks.Price, '_', stocks.Retention, '_', count));
+		}
+		public static IEnumerable<Catalog.Models.Tick> RetrieveSavedMaterial(string code)
+		{
+			var stack = new Stack<Catalog.Models.Tick>();
+
+			foreach (var file in new DirectoryInfo(Path.Combine(path, code)).GetFiles($"*{extension}", SearchOption.AllDirectories))
+			{
+				var directory = file.DirectoryName.Split('\\')[^1];
+
+				if (directory.Length == 2 && Array.TrueForAll(directory.ToCharArray(), o => char.IsDigit(o)))
+				{
+					var name = file.FullName.Split('\\');
+					var info = name[^1].Replace(extension, string.Empty).Split('_');
+
+					if (name[^3].Length == 4 && Array.TrueForAll(name[^3].ToCharArray(), o => char.IsDigit(o)) && info.Length == 4 && name[^4].Length is 6 or 8 && name[^2].Length == 2 && Array.TrueForAll(name[^2].ToCharArray(), o => char.IsDigit(o)) && info[^3].Length == 9 && Array.TrueForAll(info[^3].ToCharArray(), o => char.IsDigit(o)) && info[^2].Length == 9 && Array.TrueForAll(info[^2].ToCharArray(), o => char.IsDigit(o)) && Array.TrueForAll(info[^1].ToCharArray(), o => char.IsDigit(o)) && info[0].Length == 2 && Array.TrueForAll(info[0].ToCharArray(), o => char.IsDigit(o)))
+					{
+						var date = string.Concat(name[^3], name[^2], info[0]);
+
+						if (string.IsNullOrEmpty(date) is false && date.Length == 8 && base_date.CompareTo(date) < 0)
+							stack.Push(new Catalog.Models.Tick
+							{
+								Price = info[^1],
+								Close = info[^2],
+								Open = info[^3],
+								Date = date,
+								Code = name[^4],
+								Contents = string.Empty
+							});
+					}
+				}
+			}
+			return stack.Count > 0 ? stack.OrderBy(o => o.Date) : Array.Empty<Catalog.Models.Tick>();
 		}
 		public static (string, bool) RetrieveSavedMaterial(Catalog.Models.Loading loading)
 		{
@@ -70,7 +104,7 @@ namespace ShareInvest
 					{
 						if (DateTime.TryParseExact(find[0], Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime start) && DateTime.TryParseExact(find[1], Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime end))
 						{
-							if (start.AddDays(0x3C).CompareTo(end) < 0)
+							if (start.AddDays(0x2D).CompareTo(end) < 0)
 								before.Delete();
 						}
 						else
@@ -124,6 +158,7 @@ namespace ShareInvest
 				info.Create();
 		}
 		const string path = @"C:\Algorithmic Trading\Res";
+		const string base_date = "20210104";
 		const string extension = ".res";
 	}
 }

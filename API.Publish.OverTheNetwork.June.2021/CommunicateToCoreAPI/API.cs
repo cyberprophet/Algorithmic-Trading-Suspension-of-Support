@@ -255,9 +255,7 @@ namespace ShareInvest.Client
 					Average = theme.Average * 1e-2,
 					Date = now.AddDays(now.Hour < 0x12 ? -1 : 0).ToString(Base.DateFormat)
 				};
-				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(theme.GetType().Name), Method.POST).AddJsonBody(param, Security.content_type), source.Token);
-
-				if (HttpStatusCode.OK.Equals(response.StatusCode) && string.IsNullOrEmpty(response.Content) is false && JsonConvert.DeserializeObject<int>(response.Content) > 0)
+				if (HttpStatusCode.OK.Equals((await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(theme.GetType().Name), Method.POST).AddJsonBody(param, Security.content_type), source.Token)).StatusCode))
 					return param;
 			}
 			catch (Exception ex)

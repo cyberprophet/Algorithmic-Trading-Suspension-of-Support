@@ -13,7 +13,7 @@ namespace ShareInvest.Client
 			{
 				string url;
 
-				if (page is 0xF or 0x10 or 0x11 or 0x12 or < 7 or > 0x30)
+				if (page is 0xF or 0x10 or 0x11 or 0x12 or < 7 or > 0x33)
 					url = tistory.Remove(tistory.Length - 1, 1);
 
 				else
@@ -25,7 +25,7 @@ namespace ShareInvest.Client
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(ex.StackTrace);
+				Base.SendMessage(GetType(), ex.StackTrace);
 			}
 			finally
 			{

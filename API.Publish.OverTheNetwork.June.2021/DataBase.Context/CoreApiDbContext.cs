@@ -29,13 +29,13 @@ namespace ShareInvest
 			builder.Entity<Connection>().HasKey(o => new { o.Email, o.Kiwoom });
 			builder.Entity<Tick>(o =>
 			{
-				o.ToTable("Tick");
+				o.ToTable(tick);
 				o.HasOne(o => o.Contents).WithOne().HasForeignKey<Contents>(o => new { o.Code, o.Date });
 				o.HasKey(o => new { o.Code, o.Date });
 			});
 			builder.Entity<Contents>(o =>
 			{
-				o.ToTable("Tick");
+				o.ToTable(tick);
 				o.HasKey(o => new { o.Code, o.Date });
 			});
 		}
@@ -125,5 +125,6 @@ namespace ShareInvest
 			get; set;
 		}
 		readonly IOptions<OperationalStoreOptions> store;
+		const string tick = "Tick";
 	}
 }

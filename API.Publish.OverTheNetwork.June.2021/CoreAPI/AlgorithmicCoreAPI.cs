@@ -88,12 +88,13 @@ namespace ShareInvest
 		async void WorkerDoWork(object sender, DoWorkEventArgs e)
 		{
 			if (await api.GetContextAsync(new Codes(), 6) is List<Codes> list)
+			{
+				var page = uint.MaxValue;
+				await Task.Delay(Base.IsDebug ? 0x400 : new Random(Guid.NewGuid().GetHashCode()).Next(0x32000, 0x64000));
+
 				switch (e.Argument)
 				{
 					case uint arg:
-						var page = uint.MaxValue;
-						await Task.Delay(0x32000);
-
 						while (++arg > 0 && arg < page)
 							if (new Client.Theme(key).OnReceiveMarketPriceByTheme((int)arg) is (uint, IEnumerable<Catalog.Models.Theme>) enumerable)
 								foreach (var theme in enumerable.Item2)
@@ -104,7 +105,10 @@ namespace ShareInvest
 											if (new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
 												while (queue.TryDequeue(out GroupDetail detail))
 												{
+													var bring = new Indicators.BringInTheme(api, detail, list.FirstOrDefault(o => o.Code.Equals(detail.Code)));
 
+													if (await bring.StartProgress() is not null)
+														Base.SendMessage(bring.GetType(), list.Find(o => o.Code.Equals(detail.Code)).Name, detail.Title);
 												}
 										}
 										page = enumerable.Item1;
@@ -149,7 +153,7 @@ namespace ShareInvest
 										var bring = new Indicators.BringInInformation(ch, await api.GetContextAsync(new Catalog.Strategics.RevisedStockPrice { Code = ch.Code }) as Queue<Catalog.Strategics.ConfirmRevisedStockPrice>, api);
 										bring.Send += cf.OnReceiveDrawChart;
 										cf.StartProgress(Base.Tax);
-										var name = await bring.StartProgress();
+										await bring.StartProgress();
 										var statistics = cf.SendMessage;
 
 										if (estimate is not null && estimate.Count > 3 && string.IsNullOrEmpty(statistics.Key) is false)
@@ -190,6 +194,7 @@ namespace ShareInvest
 								}
 						break;
 				}
+			}
 		}
 		void Dispose(short param)
 		{

@@ -11,9 +11,9 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.Indicators
 {
-	class BringInInformation
+	class BringInInformation : BringIn
 	{
-		public event EventHandler<SendConsecutive> Send;
+		public override event EventHandler<SendConsecutive> Send;
 		internal BringInInformation(Codes cm, Queue<ConfirmRevisedStockPrice> revise, API api)
 		{
 			this.api = api;
@@ -21,11 +21,11 @@ namespace ShareInvest.Indicators
 			this.revise = revise;
 			Days = new Queue<Catalog.Strategics.Charts>();
 		}
-		internal async Task<string> StartProgress()
+		public override async Task<object> StartProgress()
 		{
 			var modify = revise is not null && revise.Count > 0 ? new ConfirmRevisedStockPrice[revise.Count] : null;
 			var index = 0;
-			var tick = FindTheOldestDueDate().GetAsyncEnumerator();
+			var tick = FindTheOldestDueDate<Catalog.Strategics.Charts>().GetAsyncEnumerator();
 			var response = string.Empty;
 
 			while (await tick.MoveNextAsync())
@@ -102,7 +102,7 @@ namespace ShareInvest.Indicators
 					}
 			return string.Concat(cm.Name, '_', response);
 		}
-		async IAsyncEnumerable<IEnumerable<Catalog.Strategics.Charts>> FindTheOldestDueDate()
+		protected override async IAsyncEnumerable<IEnumerable<T>> FindTheOldestDueDate<T>() where T : struct
 		{
 			if (cm.Code.Length == 8 && cm.Code[0] == '1' && cm.Code[1] == '0')
 			{
@@ -154,18 +154,19 @@ namespace ShareInvest.Indicators
 					}
 					start = Base.CallUpTheChart(codes, last);
 
-					yield return await api.GetChartsAsync(new Catalog.Models.Charts
+					if (await api.GetChartsAsync(new Catalog.Models.Charts
 					{
 						Code = codes.Code,
 						Start = start.Length == 8 ? start[2..] : start,
 						End = codes.MaturityMarketCap.Length == 8 ? codes.MaturityMarketCap[2..] : codes.MaturityMarketCap
 					})
-						as IEnumerable<Catalog.Strategics.Charts>;
+						is IEnumerable<Catalog.Strategics.Charts> response)
+						yield return (IEnumerable<T>)response;
 				}
 			}
 			else if (cm.Code.Length == 6)
 			{
-				string sDate = await api.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = empty, End = empty }) as string, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(Base.DateFormat) : sDate.Substring(0, 6);
+				string sDate = await api.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = Base.Empty, End = Base.Empty }) as string, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(Base.DateFormat) : sDate.Substring(0, 6);
 
 				foreach (var day in from day in (await api.GetChartsAsync(new Catalog.Models.Charts { Code = cm.Code, Start = string.Empty, End = string.Empty }) as IEnumerable<Catalog.Strategics.Charts>).OrderBy(o => o.Date) where string.Compare(day.Date[2..], date) < 0 select day)
 					Days.Enqueue(day);
@@ -176,22 +177,23 @@ namespace ShareInvest.Indicators
 					var count = 0;
 
 					while (string.IsNullOrEmpty(end) || string.Compare(end, DateTime.Now.ToString(Base.DateFormat)) <= 0)
-						yield return await api.GetChartsAsync(new Catalog.Models.Charts
+						if (await api.GetChartsAsync(new Catalog.Models.Charts
 						{
 							Code = cm.Code,
-							Start = start.AddDays(-1).AddDays(0x3C * count++).ToString(Base.DateFormat),
-							End = end = start.AddDays(-1).AddDays(0x3C * count).ToString(Base.DateFormat)
-						}) as IEnumerable<Catalog.Strategics.Charts>;
+							Start = start.AddDays(-1).AddDays(0x2D * count++).ToString(Base.DateFormat),
+							End = end = start.AddDays(-1).AddDays(0x2D * count).ToString(Base.DateFormat)
+						})
+							is IEnumerable<Catalog.Strategics.Charts> response)
+							yield return (IEnumerable<T>)response;
 				}
 			}
 		}
-		Queue<Catalog.Strategics.Charts> Days
+		protected override Queue<Catalog.Strategics.Charts> Days
 		{
 			get;
 		}
 		readonly Queue<ConfirmRevisedStockPrice> revise;
 		readonly Codes cm;
 		readonly API api;
-		const string empty = "empty";
 	}
 }

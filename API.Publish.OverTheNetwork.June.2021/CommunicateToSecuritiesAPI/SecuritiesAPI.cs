@@ -39,7 +39,6 @@ namespace ShareInvest
 			if (Codes.TryDequeue(out string str))
 			{
 				var now = DateTime.Now;
-				var choice = Codes.Count % 0xC;
 
 				if (string.IsNullOrEmpty(str) is false && str.Length is 6 or 8 && await api.GetContextAsync(str) is Retention retention && string.IsNullOrEmpty(retention.Code) is false)
 				{
@@ -81,21 +80,22 @@ namespace ShareInvest
 									Stack<Catalog.IncorporatedStocks> stack = null;
 									var page = random.Next(0, now.Day + now.Month + now.Year + DateTime.DaysInMonth(now.Year, now.Month) + now.Second - 0x7D0);
 
-									switch (choice)
+									switch (Codes.Count % 0xC)
 									{
 										case 0:
 											stack = await new ConstituentStocks(key).GetConstituentStocks(page % 2 + 1, now);
 											break;
 
-										case > 3 and < 7 when await api.GetContextAsync(new Catalog.IncorporatedStocks { Market = 'P' }) is int next:
+										case > 0 and < 7 when await api.GetContextAsync(new Catalog.IncorporatedStocks { Market = 'P' }) is int next:
 											stack = new Client.IncorporatedStocks(key).OnReceiveSequentially(next);
+											break;
+
+										default:
+											await new Advertise(key).StartAdvertisingInTheDataCollectionSection(page);
 											break;
 									}
 									if (stack is Stack<Catalog.IncorporatedStocks> && await api.PostContextAsync(stack) == 0xC8)
-									{
 										await Task.Delay(0x500);
-										await new Advertise(key).StartAdvertisingInTheDataCollectionSection(page);
-									}
 								}
 							}
 						}
@@ -532,6 +532,9 @@ namespace ShareInvest
 
 					if (remove.CorrectTheDelayMilliseconds() > 0)
 					{
+						if (Base.IsDebug is false && Milliseconds > 0)
+							await Task.Delay(Milliseconds--);
+
 						notifyIcon.Text = Codes.Count.ToString("N0");
 						CheckTheInformationReceivedOnTheDay();
 					}
@@ -547,6 +550,9 @@ namespace ShareInvest
 
 					if (delete.CorrectTheDelayMilliseconds() > 0)
 					{
+						if (Base.IsDebug is false && Milliseconds > 0)
+							await Task.Delay(Milliseconds--);
+
 						notifyIcon.Text = Codes.Count.ToString("N0");
 						CheckTheInformationReceivedOnTheDay();
 					}
@@ -871,6 +877,7 @@ namespace ShareInvest
 					return;
 
 				case DialogResult.Abort when (now.Hour < 5 || now.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday) && api.IsAdministrator:
+					Milliseconds = 0x1400;
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}
@@ -887,6 +894,10 @@ namespace ShareInvest
 		int[] GetTheCorrectAnswer
 		{
 			get;
+		}
+		int Milliseconds
+		{
+			get; set;
 		}
 		long Cash
 		{

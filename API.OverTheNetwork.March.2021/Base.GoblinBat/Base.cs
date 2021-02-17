@@ -199,6 +199,7 @@ namespace ShareInvest
 		public static string Margin => margin;
 		public static string Transmit => transmit;
 		public static string Start => start;
+		public static string Empty => empty;
 		public static string[] Holidays => new[] { "211231", "210922", "210921", "210920", "210519", "210505", "210301", "210212", "210211", "210101", "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
 		static string ConvertDateTime(int length) => length switch
 		{
@@ -223,6 +224,7 @@ namespace ShareInvest
 		const string transmit = "1529";
 		const string transaction_suspension = "거래정지";
 		const string margin = "증거금";
+		const string empty = "empty";
 		const double tax = 25e-4 + 15e-5 + 15e-5;
 	}
 }

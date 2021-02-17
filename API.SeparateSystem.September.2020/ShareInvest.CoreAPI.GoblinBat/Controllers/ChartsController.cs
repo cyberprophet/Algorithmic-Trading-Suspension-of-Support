@@ -84,6 +84,43 @@ namespace ShareInvest.Controllers
 			}
 			return BadRequest();
 		}
+		[HttpGet(Security.route_day_chart), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+		public async Task<IActionResult> GetContextAsync(string code, string start, string end)
+		{
+			try
+			{
+				if (await context.Stocks.AnyAsync(o => o.Code.Equals(code)))
+				{
+					var response = new Stack<Charts>();
+					var stocks = from o in context.Stocks.AsNoTracking() where o.Code.Equals(code) select new { o.Date, o.Price, o.Volume };
+
+					foreach (var co in from o in stocks.AsNoTracking() where o.Date.EndsWith(end_date) && start_date.Equals(o.Date.Substring(start.Length, end.Length / 2)) && o.Date.CompareTo(string.Concat(start, remain)) > 0 && o.Date.CompareTo(string.Concat(end, remain)) < 0 select o)
+						if (co.Date[9] < '5' && co.Date.StartsWith(sat) is false)
+							response.Push(new Charts
+							{
+								Date = co.Date.Substring(0, end.Length + start.Length),
+								Price = co.Price,
+								Volume = co.Volume
+							});
+					if (sat.CompareTo(start) >= 0)
+						foreach (var co in from o in stocks.AsNoTracking() where o.Date.StartsWith(sat_date) && o.Date.EndsWith(end_date) select o)
+							if (co.Date[9] < '5')
+								response.Push(new Charts
+								{
+									Date = co.Date.Substring(0, end.Length + start.Length),
+									Price = co.Price,
+									Volume = co.Volume
+								});
+					if (response.Count > 0)
+						return Ok(response);
+				}
+			}
+			catch (Exception ex)
+			{
+				await Record.SendToErrorMessage(GetType().Name, ex.StackTrace);
+			}
+			return BadRequest();
+		}
 		[HttpGet(Security.routeGetChart), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<IActionResult> GetContext(string key, string code, string start, string end)
 		{
@@ -254,6 +291,10 @@ namespace ShareInvest.Controllers
 		const string futures = "1";
 		const string call = "2";
 		const string put = "3";
+		const string start_date = "153";
+		const string sat_date = "201203163";
+		const string end_date = "000";
+		const string sat = "201203";
 		const string remain = "000000000";
 	}
 }
