@@ -26,6 +26,10 @@
 		{
 			get; set;
 		}
+		public double Percent
+		{
+			get; set;
+		}
 		public string Index
 		{
 			get; set;

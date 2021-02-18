@@ -45,7 +45,7 @@ namespace ShareInvest.Client
 					{
 						var response = await client.ExecuteAsync(new RestRequest(request.Item1, Method.GET), source.Token);
 
-						if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString("yyMMdd")) < 0 || chart.End.Length < 6)
+						if (chart.End.Length == 6 && chart.End.CompareTo(DateTime.Now.AddDays(-1).ToString(Base.DateFormat)) < 0 || chart.End.Length < 6)
 						{
 							var save = Security.Save(chart);
 							Repository.Save(save.Item1, save.Item2, response.Content);
@@ -93,6 +93,28 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		public async Task<object> GetContextAsync<T>(T type, string param) where T : struct
+		{
+			try
+			{
+				if (string.IsNullOrEmpty(param) is false)
+				{
+					var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param, type), Method.GET), source.Token);
+
+					if (HttpStatusCode.OK.Equals(response.StatusCode))
+						switch (type)
+						{
+							case Tick:
+								return JsonConvert.DeserializeObject<Stack<Tick>>(response.Content).OrderBy(o => o.Date);
+						}
+				}
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			return null;
+		}
 		public async Task<Retention> GetContextAsync(string param)
 		{
 			try
@@ -129,11 +151,17 @@ namespace ShareInvest.Client
 
 				switch (param)
 				{
+					case Charts when response.StatusCode.Equals(HttpStatusCode.OK):
+						return JsonConvert.DeserializeObject<Stack<Catalog.Strategics.Charts>>(response.Content).OrderBy(o => o.Date);
+
 					case Catalog.Models.Consensus when response.StatusCode.Equals(HttpStatusCode.OK):
 						return JsonConvert.DeserializeObject<List<Catalog.Models.Consensus>>(response.Content);
 
 					case Catalog.Strategics.RevisedStockPrice when response.StatusCode.Equals(HttpStatusCode.OK):
 						return JsonConvert.DeserializeObject<Queue<Catalog.Strategics.ConfirmRevisedStockPrice>>(response.Content);
+
+					case Tick when response.StatusCode.Equals(HttpStatusCode.OK) && string.IsNullOrEmpty(response.Content) is false:
+						return JsonConvert.DeserializeObject<Tick>(response.Content);
 
 					case FinancialStatement:
 						var list = JsonConvert.DeserializeObject<List<FinancialStatement>>(response.Content);
@@ -310,6 +338,9 @@ namespace ShareInvest.Client
 						case Privacies:
 							return response.StatusCode;
 
+						case Tick when HttpStatusCode.OK.Equals(response.StatusCode) && string.IsNullOrEmpty(response.Content) is false:
+							return JsonConvert.DeserializeObject<int>(response.Content);
+
 						case Retention when string.IsNullOrEmpty(response.Content) is false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
 
@@ -361,7 +392,7 @@ namespace ShareInvest.Client
 		API(dynamic key)
 		{
 			security = new Security(key);
-			client = new RestClient(security.Url)
+			client = new RestClient(Base.IsDebug ? @"http://localhost:5528/" : security.Url)
 			{
 				Timeout = -1
 			};

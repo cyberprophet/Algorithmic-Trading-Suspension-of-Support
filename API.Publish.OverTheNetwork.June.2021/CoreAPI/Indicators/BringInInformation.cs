@@ -11,7 +11,7 @@ using ShareInvest.EventHandler;
 
 namespace ShareInvest.Indicators
 {
-	class BringInInformation : BringIn
+	class BringInInformation : BringIn<SendConsecutive>
 	{
 		public override event EventHandler<SendConsecutive> Send;
 		internal BringInInformation(Codes cm, Queue<ConfirmRevisedStockPrice> revise, API api)
@@ -29,7 +29,7 @@ namespace ShareInvest.Indicators
 			var response = string.Empty;
 
 			while (await tick.MoveNextAsync())
-				if (tick.Current is not null)
+				if (tick.Current is IEnumerable<Catalog.Strategics.Charts>)
 					try
 					{
 						var enumerable = tick.Current.OrderBy(o => o.Date);

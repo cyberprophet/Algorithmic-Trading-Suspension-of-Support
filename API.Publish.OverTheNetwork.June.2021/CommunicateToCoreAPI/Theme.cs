@@ -132,7 +132,8 @@ namespace ShareInvest.Client
 													Title = temp[0],
 													Current = current,
 													Rate = rate * 1e-2,
-													Degree = double.NegativeInfinity,
+													Degree = double.NaN,
+													Percent = double.NaN,
 													Compare = volume / (double)before
 												});
 											temp[count] = code;

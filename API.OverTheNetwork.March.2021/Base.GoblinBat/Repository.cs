@@ -24,10 +24,29 @@ namespace ShareInvest
 			if (compress.Item2 == 0)
 				Base.SendMessage(code, typeof(Repository));
 		}
+		public static void KeepOrganizedInStorage(Catalog.Models.Tick tick)
+		{
+			string storage = Path.Combine(path, tick.Code, tick.Date.Substring(0, 4), tick.Date.Substring(4, 2)), file = Path.Combine(storage, $"{tick.Date[6..]}_{tick.Open}_{tick.Close}_{tick.Price}{extension}");
+			CreateTheDirectory(new DirectoryInfo(storage));
+			using var sw = new StreamWriter(file, false);
+			sw.Write(tick.Contents);
+		}
 		public static void KeepOrganizedInStorage(Catalog.Models.Stocks stocks, int count)
 		{
 			using var sw = new StreamWriter(string.Concat(path, @"\", stocks.Code, '_', stocks.Date, extension));
 			sw.WriteLine(string.Concat(stocks.Price, '_', stocks.Retention, '_', count));
+		}
+		public static string RetrieveSavedMaterial(Catalog.Models.Tick tick)
+		{
+			var file = Path.Combine(path, tick.Code, tick.Date.Substring(0, 4), tick.Date.Substring(4, 2), $"{tick.Date[6..]}_{tick.Open}_{tick.Close}_{tick.Price}{extension}");
+
+			if (ReadTheFile(file))
+			{
+				using var sr = new StreamReader(file);
+
+				return Decompress(sr.ReadToEnd());
+			}
+			return null;
 		}
 		public static IEnumerable<Catalog.Models.Tick> RetrieveSavedMaterial(string code)
 		{
@@ -59,7 +78,7 @@ namespace ShareInvest
 					}
 				}
 			}
-			return stack.Count > 0 ? stack.OrderBy(o => o.Date) : Array.Empty<Catalog.Models.Tick>();
+			return stack.Count > 0 ? stack.OrderBy(o => o.Date) : Enumerable.Empty<Catalog.Models.Tick>();
 		}
 		public static (string, bool) RetrieveSavedMaterial(Catalog.Models.Loading loading)
 		{
@@ -154,7 +173,7 @@ namespace ShareInvest
 		static bool ReadTheFile(string name) => new FileInfo(name).Exists;
 		static void CreateTheDirectory(DirectoryInfo info)
 		{
-			if (info.Exists == false)
+			if (info.Exists is false)
 				info.Create();
 		}
 		const string path = @"C:\Algorithmic Trading\Res";

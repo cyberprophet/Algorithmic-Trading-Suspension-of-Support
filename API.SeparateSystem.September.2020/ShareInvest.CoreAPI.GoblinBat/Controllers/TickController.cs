@@ -57,7 +57,7 @@ namespace ShareInvest.Controllers
 						Open = response.Open,
 						Close = response.Close,
 						Price = response.Price,
-						Contents = response.Contents.CompressedContents
+						Contents = context.Contents.Find(response.Code, response.Date).CompressedContents
 					});
 				return NoContent();
 			}

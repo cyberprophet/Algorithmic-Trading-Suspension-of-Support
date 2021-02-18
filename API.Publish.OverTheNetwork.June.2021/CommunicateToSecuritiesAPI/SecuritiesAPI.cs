@@ -423,8 +423,8 @@ namespace ShareInvest
 
 					if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1' ? await api.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2)) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2))) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
 					{
-						var message = string.Format("Collecting Datum on {0}.\nStill {1} Stocks to be Collect.", charts.Item1.Length == 6 && receive.TryGetValue(charts.Item1, out Analysis analysis) ? analysis.Name : charts.Item1, Codes.Count.ToString("N0"));
-						notifyIcon.Text = message.Length < 0x40 ? message : string.Format("Still {0} Stocks to be Collect.", Codes.Count.ToString("N0"));
+						var message = $"Collecting Datum on {(charts.Item1.Length == 6 && receive.TryGetValue(charts.Item1, out Analysis analysis) ? analysis.Name : charts.Item1)}.\nStill {Codes.Count:N0} Stocks to be Collect.";
+						notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Stocks to be Collect.";
 					}
 					OnReceiveInformationTheDay();
 					return;
@@ -505,7 +505,7 @@ namespace ShareInvest
 					var send = connect as OpenAPI.ConnectAPI;
 					var hermes = send.SendErrorMessage(error);
 
-					if (string.IsNullOrEmpty(hermes) is false && await server.PostContextAsync(new Catalog.Models.Message { Convey = string.Format("[{0}] {1}({2})", Math.Abs(error).ToString("D6"), hermes, send.Count.ToString("D4")), Key = Security.Key }) is int)
+					if (string.IsNullOrEmpty(hermes) is false && await server.PostContextAsync(new Catalog.Models.Message { Convey = $"[{Math.Abs(error):D6}] {hermes}({send.Count:D4})", Key = Security.Key }) is int)
 						notifyIcon.Text = hermes;
 
 					switch (error)
@@ -856,7 +856,7 @@ namespace ShareInvest
 			if (connect is Control)
 			{
 				if (this.connect.ConnectToReceiveRealTime.IsConnected)
-					this.connect.Writer.WriteLine(string.Format("장시작시간|{0}|{1};{2};{3}", GetType(), (int)Catalog.OpenAPI.Operation.장종료_시간외종료, api.IsAdministrator, Catalog.OpenAPI.Operation.장종료_시간외종료));
+					this.connect.Writer.WriteLine($"장시작시간|{GetType()}|{(int)Catalog.OpenAPI.Operation.장종료_시간외종료};{api.IsAdministrator};{Catalog.OpenAPI.Operation.장종료_시간외종료}");
 
 				connect.Dispose();
 			}

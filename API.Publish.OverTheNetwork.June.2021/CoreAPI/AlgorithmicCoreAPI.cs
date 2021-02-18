@@ -107,8 +107,8 @@ namespace ShareInvest
 												{
 													var bring = new Indicators.BringInTheme(api, detail, list.FirstOrDefault(o => o.Code.Equals(detail.Code)));
 
-													if (await bring.StartProgress() is not null)
-														Base.SendMessage(bring.GetType(), list.Find(o => o.Code.Equals(detail.Code)).Name, detail.Title);
+													if (await bring.StartProgress() is double percent)
+														Base.SendMessage(bring.GetType(), list.Find(o => o.Code.Equals(detail.Code)).Name, percent);
 												}
 										}
 										page = enumerable.Item1;

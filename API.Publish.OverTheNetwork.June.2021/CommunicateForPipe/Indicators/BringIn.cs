@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using ShareInvest.EventHandler;
-
 namespace ShareInvest.Indicators
 {
-	public abstract partial class BringIn
+	public abstract partial class BringIn<Event>
 	{
-		public abstract event EventHandler<SendConsecutive> Send;
+		public abstract event EventHandler<Event> Send;
 		public abstract Task<object> StartProgress();
 		protected abstract Queue<Catalog.Strategics.Charts> Days
 		{
