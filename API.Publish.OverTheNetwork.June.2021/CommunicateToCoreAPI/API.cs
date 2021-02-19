@@ -93,6 +93,35 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		public async Task<object> GetConfirmAsync<T>(T param) where T : struct
+		{
+			try
+			{
+				string address;
+
+				switch (param)
+				{
+					case Tick tick:
+						address = System.IO.Path.Combine(tick.Code, tick.Date, tick.Open, tick.Close);
+						break;
+
+					default:
+						return null;
+				}
+				var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(address, param), Method.GET), source.Token);
+
+				switch (param)
+				{
+					case Tick when HttpStatusCode.NoContent.Equals(response.StatusCode):
+						return param;
+				}
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			return null;
+		}
 		public async Task<object> GetContextAsync<T>(T type, string param) where T : struct
 		{
 			try
@@ -338,15 +367,10 @@ namespace ShareInvest.Client
 						case Privacies:
 							return response.StatusCode;
 
-						case Tick when HttpStatusCode.OK.Equals(response.StatusCode) && string.IsNullOrEmpty(response.Content) is false:
-							return JsonConvert.DeserializeObject<int>(response.Content);
-
 						case Retention when string.IsNullOrEmpty(response.Content) is false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
 
-						case Message:
-						case Account:
-						case Catalog.Models.RevisedStockPrice:
+						case Tick or Message or Account or Catalog.Models.RevisedStockPrice:
 							return (int)response.StatusCode;
 
 						case Stocks:

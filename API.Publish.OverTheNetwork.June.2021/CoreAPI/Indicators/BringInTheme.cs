@@ -30,7 +30,7 @@ namespace ShareInvest.Indicators
 			})
 				as string, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(Base.DateFormat) : sDate.Substring(0, 6);
 			DateTime restore = DateTime.TryParseExact(end, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime store) ? store : DateTime.UnixEpoch, now = DateTime.Now;
-			IEnumerable<Catalog.Models.Tick> repository = Repository.RetrieveSavedMaterial(theme.Code), storage = await api.GetContextAsync(new Catalog.Models.Tick(), theme.Code) as IEnumerable<Catalog.Models.Tick>;
+			IEnumerable<Catalog.Models.Tick> storage = await api.GetContextAsync(new Catalog.Models.Tick(), theme.Code) as IEnumerable<Catalog.Models.Tick>, repository = Repository.RetrieveSavedMaterial(theme.Code);
 			var stack = new Stack<Catalog.Models.Tick>();
 
 			foreach (var day in from day in (await api.GetChartsAsync(new Catalog.Models.Charts { Code = theme.Code, Start = string.Empty, End = string.Empty }) as IEnumerable<Charts>).OrderBy(o => o.Date) where string.Compare(day.Date[2..], date) < 0 select day)
@@ -61,18 +61,18 @@ namespace ShareInvest.Indicators
 						{
 							var server = storage.First(o => o.Date.Equals(str));
 
-							if (string.IsNullOrEmpty(my.Close) is false && my.Close.Length == 9 && my.Close.EndsWith(ends) && my.Close[1] is '5' or '6' && string.IsNullOrEmpty(my.Open) is false && my.Open.Length == 9 && my.Open.EndsWith(ends) && my.Open[1] is '9' or '0' && my.Open.CompareTo(server.Open) <= 0 && my.Close.CompareTo(server.Close) >= 0)
+							if (string.IsNullOrEmpty(my.Close) is false && my.Close.Length == 9 && my.Close.EndsWith(ends) && my.Close[2] is '3' && my.Close[1] is '5' or '6' && string.IsNullOrEmpty(my.Open) is false && my.Open.Length == 9 && my.Open.EndsWith(ends) && my.Open[1] is '9' or '0' && my.Open.CompareTo(server.Open) <= 0 && my.Close.CompareTo(server.Close) >= 0)
 							{
-								if ((server.Open.Equals(my.Open) && server.Close.Equals(my.Close)) is false && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Catalog.Models.Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file }) is int num)
+								if ((server.Open.Equals(my.Open) && server.Close.Equals(my.Close)) is false && Repository.RetrieveSavedMaterial(my) is string file && await api.GetConfirmAsync(my) is Catalog.Models.Tick)
 								{
-									if (num < 1)
-										Base.SendMessage(GetType(), info.Name, "if_post_context");
+									if (await api.PostContextAsync(new Catalog.Models.Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file }) is 0xC8)
+										Base.SendMessage(GetType(), $"{info.Name} if_post_context has been modified.");
 
-									await Task.Delay(0x400);
+									await Task.Delay(0xC00);
 								}
 								stack.Push(my);
 							}
-							else if (string.IsNullOrEmpty(server.Close) is false && server.Close.Length == 9 && server.Close.EndsWith(ends) && server.Close[1] is '5' or '6' && string.IsNullOrEmpty(server.Open) is false && server.Open.Length == 9 && server.Open.EndsWith(ends) && server.Open[1] is '9' or '0' && server.Open.CompareTo(my.Open) <= 0 && server.Close.CompareTo(my.Close) >= 0)
+							else if (string.IsNullOrEmpty(server.Close) is false && server.Close.Length == 9 && server.Close.EndsWith(ends) && server.Close[2] is '3' && server.Close[1] is '5' or '6' && string.IsNullOrEmpty(server.Open) is false && server.Open.Length == 9 && server.Open.EndsWith(ends) && server.Open[1] is '9' or '0' && server.Open.CompareTo(my.Open) <= 0 && server.Close.CompareTo(my.Close) >= 0)
 							{
 								if ((my.Open.Equals(server.Open) && my.Close.Equals(server.Close)) is false && await api.GetContextAsync(new Catalog.Models.Tick { Code = theme.Code, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Contents = server.Contents }) is Catalog.Models.Tick tick)
 								{
@@ -86,10 +86,10 @@ namespace ShareInvest.Indicators
 										Contents = string.Empty
 									});
 									if (Repository.Delete(my))
-										Base.SendMessage(GetType(), info.Name, "else if_get_context");
+										Base.SendMessage(GetType(), info.Name, $"Failed to delete the {tick.Date} else if_get_context.");
 
 									Repository.KeepOrganizedInStorage(tick);
-									await Task.Delay(0x400);
+									await Task.Delay(0xC00);
 								}
 								else
 									stack.Push(my);
@@ -99,12 +99,12 @@ namespace ShareInvest.Indicators
 						}
 						else
 						{
-							if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Catalog.Models.Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file }) is int num)
+							if (Repository.RetrieveSavedMaterial(my) is string file && await api.GetConfirmAsync(my) is Catalog.Models.Tick)
 							{
-								if (num < 1)
-									Base.SendMessage(GetType(), info.Name, "else_post_context");
+								if (await api.PostContextAsync(new Catalog.Models.Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file }) is 0xC8)
+									Base.SendMessage(GetType(), $"{info.Name} else_post_context has been modified.");
 
-								await Task.Delay(0x400);
+								await Task.Delay(0xC00);
 							}
 							stack.Push(my);
 						}
@@ -113,7 +113,7 @@ namespace ShareInvest.Indicators
 					{
 						var server = storage.First(o => o.Date.Equals(str));
 
-						if (string.IsNullOrEmpty(server.Close) is false && server.Close.Length == 9 && server.Close.EndsWith(ends) && server.Close[1] is '5' or '6' && string.IsNullOrEmpty(server.Open) is false && server.Open.Length == 9 && server.Open.EndsWith(ends) && server.Open[1] is '9' or '0' && await api.GetContextAsync(new Catalog.Models.Tick { Code = theme.Code, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Contents = server.Contents }) is Catalog.Models.Tick tick)
+						if (string.IsNullOrEmpty(server.Close) is false && server.Close.Length == 9 && server.Close.EndsWith(ends) && server.Close[2] is '3' && server.Close[1] is '5' or '6' && string.IsNullOrEmpty(server.Open) is false && server.Open.Length == 9 && server.Open.EndsWith(ends) && server.Open[1] is '9' or '0' && await api.GetContextAsync(new Catalog.Models.Tick { Code = theme.Code, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Contents = server.Contents }) is Catalog.Models.Tick tick)
 						{
 							stack.Push(new Catalog.Models.Tick
 							{
@@ -125,7 +125,7 @@ namespace ShareInvest.Indicators
 								Contents = string.Empty
 							});
 							Repository.KeepOrganizedInStorage(tick);
-							await Task.Delay(0x400);
+							await Task.Delay(0xC00);
 						}
 					}
 				}
@@ -154,38 +154,38 @@ namespace ShareInvest.Indicators
 			}
 			while (await tick.MoveNextAsync())
 				if (tick.Current is IEnumerable<Catalog.Models.Tick> enumerable)
-					foreach (var model in enumerable)
-						try
-						{
-							while (modify is ConfirmRevisedStockPrice[] && revise.TryDequeue(out ConfirmRevisedStockPrice param))
-								if (param.Date.CompareTo(Days.Count > 0 ? (Days.Any(o => o.Date.Length == 8) ? Days.Where(o => o.Date.Length == 8).Max(o => o.Date)[2..] : Days.Max(o => o.Date).Substring(0, 6)) : model.Date[2..]) > 0 && (revise.Count == 0 || revise.TryPeek(out ConfirmRevisedStockPrice peek) && param.Rate != peek.Rate))
-									modify[index++] = param;
+					try
+					{
+						while (modify is ConfirmRevisedStockPrice[] && revise.TryDequeue(out ConfirmRevisedStockPrice param))
+							if (param.Date.CompareTo(Days.Count > 0 ? (Days.Any(o => o.Date.Length == 8) ? Days.Where(o => o.Date.Length == 8).Max(o => o.Date)[2..] : Days.Max(o => o.Date).Substring(0, 6)) : enumerable.First().Date[2..]) > 0 && (revise.Count == 0 || revise.TryPeek(out ConfirmRevisedStockPrice peek) && param.Rate != peek.Rate))
+								modify[index++] = param;
 
-							index = uint.MinValue;
+						index = uint.MinValue;
 
-							if (Days.Count > 0)
-								while (Days.TryDequeue(out Charts dequeue))
+						if (Days.Count > 0)
+							while (Days.TryDequeue(out Charts dequeue))
+							{
+								if (int.TryParse(dequeue.Price[0] is '-' ? dequeue.Price[1..] : dequeue.Price, out int price))
 								{
-									if (int.TryParse(dequeue.Price[0] is '-' ? dequeue.Price[1..] : dequeue.Price, out int price))
+									var rate = 1D;
+
+									switch (modify)
 									{
-										var rate = 1D;
-
-										switch (modify)
-										{
-											case ConfirmRevisedStockPrice[]:
-												foreach (var param in Array.FindAll(modify, o => string.IsNullOrEmpty(o.Date) is false && o.Date.CompareTo(dequeue.Date.Length == 8 ? dequeue.Date[2..] : dequeue.Date.Substring(0, 6)) > 0))
-													if (double.IsNormal(param.Rate) && param.Rate != 0)
-														rate *= param.Rate * 1e-2 + 1;
-												break;
-										}
-										var now = rate == 1D ? price : Base.GetStartingPrice((int)(rate * price), info.MarginRate == 1);
-										collection[index++ % 0x14] = now;
-
-										if (index > 0x13)
-											Bollinger.CalculateBands(now, collection, 2);
+										case ConfirmRevisedStockPrice[]:
+											foreach (var param in Array.FindAll(modify, o => string.IsNullOrEmpty(o.Date) is false && o.Date.CompareTo(dequeue.Date.Length == 8 ? dequeue.Date[2..] : dequeue.Date.Substring(0, 6)) > 0))
+												if (double.IsNormal(param.Rate) && param.Rate != 0)
+													rate *= param.Rate * 1e-2 + 1;
+											break;
 									}
-									Send?.Invoke(this, null);
+									var now = rate == 1D ? price : Base.GetStartingPrice((int)(rate * price), info.MarginRate == 1);
+									collection[index++ % 0x14] = now;
+
+									if (index > 0x13)
+										Bollinger.CalculateBands(now, collection, 2);
 								}
+								Send?.Invoke(this, null);
+							}
+						foreach (var model in enumerable)
 							if (int.TryParse(model.Price, out int current))
 							{
 								var rate = 1D;
@@ -206,12 +206,14 @@ namespace ShareInvest.Indicators
 									var band = Bollinger.CalculateBands(now, collection, 2);
 									percent = band.Item4;
 								}
+								else
+									Base.SendMessage(GetType(), info.Name, "Catch the error.");
 							}
-						}
-						catch (Exception ex)
-						{
-							Base.SendMessage(GetType(), info.Name, ex.StackTrace);
-						}
+					}
+					catch (Exception ex)
+					{
+						Base.SendMessage(GetType(), info.Name, ex.StackTrace);
+					}
 			return percent;
 		}
 		readonly API api;

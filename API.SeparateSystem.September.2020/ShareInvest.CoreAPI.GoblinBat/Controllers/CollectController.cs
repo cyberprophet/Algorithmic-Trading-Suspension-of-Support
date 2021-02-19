@@ -30,7 +30,7 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				await Record.SendToErrorMessage(string.Concat(GetType().Name, '_', code), ex.StackTrace);
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.PostContexts)}");
 			}
 			return BadRequest();
 		}
@@ -51,7 +51,7 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				await Record.SendToErrorMessage(GetType().Name, ex.StackTrace);
+				await new Task(() => Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.PostContexts)}"));
 			}
 			return BadRequest();
 		}
@@ -73,7 +73,7 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				await Record.SendToErrorMessage(GetType().Name, ex.StackTrace);
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContexts)}");
 			}
 			return BadRequest();
 		}

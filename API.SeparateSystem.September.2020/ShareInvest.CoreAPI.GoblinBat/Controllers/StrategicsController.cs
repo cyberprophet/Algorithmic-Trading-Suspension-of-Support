@@ -91,7 +91,7 @@ namespace ShareInvest.Controllers
 				}
 				catch (Exception ex)
 				{
-					await Record.SendToErrorMessage(GetType().Name, ex.StackTrace);
+					Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.PutContext)}");
 				}
 			return BadRequest();
 		}
@@ -157,7 +157,7 @@ namespace ShareInvest.Controllers
 				}
 				catch (Exception ex)
 				{
-					await Record.SendToErrorMessage(GetType().Name, ex.StackTrace);
+					Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContext)}");
 				}
 			return BadRequest();
 		}

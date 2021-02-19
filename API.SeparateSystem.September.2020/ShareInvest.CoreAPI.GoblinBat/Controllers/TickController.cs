@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+
+using Newtonsoft.Json;
 
 using ShareInvest.Models;
 
@@ -40,7 +43,24 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				await Record.SendToErrorMessage(GetType().Name, ex.StackTrace);
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
+			}
+			return BadRequest();
+		}
+		[HttpGet(Security.confirm), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status204NoContent)]
+		public async Task<IActionResult> GetContextAsync(string code, string date, string start, string close)
+		{
+			try
+			{
+				if (await context.Ticks.AnyAsync(o => o.Code.Equals(code) && o.Date.Equals(date) && o.Open.Equals(start) && o.Close.Equals(close)))
+					return Ok();
+
+				else
+					return NoContent();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
 			}
 			return BadRequest();
 		}
@@ -63,18 +83,17 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				await Record.SendToErrorMessage(GetType().Name, ex.StackTrace);
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
 			}
 			return BadRequest();
 		}
-		[HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
 		public async Task<IActionResult> PostContextAsync([FromBody] Catalog.Models.Tick tick)
 		{
 			try
 			{
-				if (string.IsNullOrEmpty(tick.Close) is false && tick.Close.Length == 9 && tick.Close.EndsWith(ends) && tick.Close[1] is '5' or '6' && string.IsNullOrEmpty(tick.Open) is false && tick.Open.Length == 9 && tick.Open.EndsWith(ends) && tick.Open[1] is '9' or '0')
+				if (string.IsNullOrEmpty(tick.Close) is false && tick.Close.Length == 9 && tick.Close.EndsWith(ends) && tick.Close[1] is '5' or '6' && tick.Close[2] is '3' && string.IsNullOrEmpty(tick.Open) is false && tick.Open.Length == 9 && tick.Open.EndsWith(ends) && tick.Open[1] is '9' or '0')
 				{
-					var stack = new Stack<Tick>();
 					var entry = new Tick
 					{
 						Code = tick.Code,
@@ -90,27 +109,27 @@ namespace ShareInvest.Controllers
 						}
 					};
 					if (await context.Ticks.AnyAsync(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date)))
-					{
 						foreach (var res in from o in context.Ticks where o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date) select o)
-							if ((tick.Open.Equals(res.Open) && tick.Close.Equals(res.Close)) is false && uint.TryParse(tick.Open, out uint to) && uint.TryParse(res.Open, out uint ro) && uint.TryParse(tick.Close, out uint tc) && uint.TryParse(res.Close, out uint rc) && (to <= ro || tc >= rc))
-								stack.Push(res);
-
-						if (stack.Count > 0)
-							context.Ticks.RemoveRange(stack);
-					}
-					else
+							if ((tick.Open.Equals(res.Open) && tick.Close.Equals(res.Close)) is false && uint.TryParse(tick.Open, out uint to) && uint.TryParse(res.Open, out uint ro) && to < ro && res.Close[2] is not '3' && res.Close[1] is not '5' or '6' && res.Open[1] is not '9' or '0')
+								context.SingleDelete(res, o =>
+								{
+									o.BatchSize = 0x5000;
+									o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+									o.AutoMapOutputDirection = false;
+								});
+					await context.SingleInsertAsync(entry, o =>
 					{
-						stack.Push(entry);
-						context.Ticks.AddRange(stack);
-					}
-					if (stack.Count > 0)
-						return Ok(context.SaveChanges());
+						o.InsertIfNotExists = true;
+						o.BatchSize = 0x5000;
+						o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
+						o.AutoMapOutputDirection = false;
+					});
+					return Ok();
 				}
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine(GetType());
-				Console.WriteLine(ex.Message);
+				Console.WriteLine($"{GetType()}\n{JsonConvert.SerializeObject(new Catalog.Models.Tick { Code = tick.Code, Date = tick.Date, Open = tick.Open, Close = tick.Close, Price = tick.Price, Contents = tick.Contents.Length.ToString("N0") })}\n{ex.InnerException.Message}\n{nameof(this.PostContextAsync)}");
 			}
 			return BadRequest();
 		}
