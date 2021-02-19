@@ -63,32 +63,18 @@ namespace ShareInvest.Indicators
 
 							if (string.IsNullOrEmpty(my.Close) is false && my.Close.Length == 9 && my.Close.EndsWith(ends) && my.Close[1] is '5' or '6' && string.IsNullOrEmpty(my.Open) is false && my.Open.Length == 9 && my.Open.EndsWith(ends) && my.Open[1] is '9' or '0' && my.Open.CompareTo(server.Open) <= 0 && my.Close.CompareTo(server.Close) >= 0)
 							{
-								if ((server.Open.CompareTo(my.Open) == 0 && server.Close.CompareTo(my.Close) == 0) is false && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Catalog.Models.Tick
+								if ((server.Open.Equals(my.Open) && server.Close.Equals(my.Close)) is false && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Catalog.Models.Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file }) is int num)
 								{
-									Code = my.Code,
-									Date = my.Date,
-									Open = my.Open,
-									Close = my.Close,
-									Price = my.Price,
-									Contents = file
-								})
-									is int num)
-									Base.SendMessage(GetType(), info.Name, num);
+									if (num < 1)
+										Base.SendMessage(GetType(), info.Name, "if_post_context");
 
+									await Task.Delay(0x400);
+								}
 								stack.Push(my);
 							}
 							else if (string.IsNullOrEmpty(server.Close) is false && server.Close.Length == 9 && server.Close.EndsWith(ends) && server.Close[1] is '5' or '6' && string.IsNullOrEmpty(server.Open) is false && server.Open.Length == 9 && server.Open.EndsWith(ends) && server.Open[1] is '9' or '0' && server.Open.CompareTo(my.Open) <= 0 && server.Close.CompareTo(my.Close) >= 0)
 							{
-								if ((my.Open.CompareTo(server.Open) == 0 && my.Close.CompareTo(server.Close) == 0) is false && await api.GetContextAsync(new Catalog.Models.Tick
-								{
-									Code = theme.Code,
-									Date = server.Date,
-									Open = server.Open,
-									Close = server.Close,
-									Price = server.Price,
-									Contents = server.Contents
-								})
-									is Catalog.Models.Tick tick)
+								if ((my.Open.Equals(server.Open) && my.Close.Equals(server.Close)) is false && await api.GetContextAsync(new Catalog.Models.Tick { Code = theme.Code, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Contents = server.Contents }) is Catalog.Models.Tick tick)
 								{
 									stack.Push(new Catalog.Models.Tick
 									{
@@ -99,8 +85,11 @@ namespace ShareInvest.Indicators
 										Price = tick.Price,
 										Contents = string.Empty
 									});
+									if (Repository.Delete(my))
+										Base.SendMessage(GetType(), info.Name, "else if_get_context");
+
 									Repository.KeepOrganizedInStorage(tick);
-									Base.SendMessage(GetType(), info.Name);
+									await Task.Delay(0x400);
 								}
 								else
 									stack.Push(my);
@@ -110,15 +99,34 @@ namespace ShareInvest.Indicators
 						}
 						else
 						{
-							if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Catalog.Models.Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file }) is int num && num < 1)
-								Base.SendMessage(GetType(), info.Name, "else_post_context");
+							if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Catalog.Models.Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file }) is int num)
+							{
+								if (num < 1)
+									Base.SendMessage(GetType(), info.Name, "else_post_context");
 
+								await Task.Delay(0x400);
+							}
 							stack.Push(my);
 						}
 					}
-					else
+					else if (storage is IEnumerable<Catalog.Models.Tick> && storage.Any(o => o.Date.Equals(str)))
 					{
+						var server = storage.First(o => o.Date.Equals(str));
 
+						if (string.IsNullOrEmpty(server.Close) is false && server.Close.Length == 9 && server.Close.EndsWith(ends) && server.Close[1] is '5' or '6' && string.IsNullOrEmpty(server.Open) is false && server.Open.Length == 9 && server.Open.EndsWith(ends) && server.Open[1] is '9' or '0' && await api.GetContextAsync(new Catalog.Models.Tick { Code = theme.Code, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Contents = server.Contents }) is Catalog.Models.Tick tick)
+						{
+							stack.Push(new Catalog.Models.Tick
+							{
+								Code = tick.Code,
+								Date = tick.Date,
+								Open = tick.Open,
+								Close = tick.Close,
+								Price = tick.Price,
+								Contents = string.Empty
+							});
+							Repository.KeepOrganizedInStorage(tick);
+							await Task.Delay(0x400);
+						}
 					}
 				}
 				restore = restore.AddDays(1);

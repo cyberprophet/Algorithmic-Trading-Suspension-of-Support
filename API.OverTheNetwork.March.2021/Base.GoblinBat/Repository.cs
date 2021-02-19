@@ -22,14 +22,18 @@ namespace ShareInvest
 				sw.Write(compress.Item1);
 
 			if (compress.Item2 == 0)
-				Base.SendMessage(code, typeof(Repository));
+				Base.SendMessage(typeof(Repository), file);
 		}
 		public static void KeepOrganizedInStorage(Catalog.Models.Tick tick)
 		{
 			string storage = Path.Combine(path, tick.Code, tick.Date.Substring(0, 4), tick.Date.Substring(4, 2)), file = Path.Combine(storage, $"{tick.Date[6..]}_{tick.Open}_{tick.Close}_{tick.Price}{extension}");
 			CreateTheDirectory(new DirectoryInfo(storage));
-			using var sw = new StreamWriter(file, false);
-			sw.Write(tick.Contents);
+			var compress = Compress(tick.Contents);
+			using (var sw = new StreamWriter(file, false))
+				sw.Write(compress.Item1);
+
+			if (compress.Item2 == 0)
+				Base.SendMessage(typeof(Repository), file);
 		}
 		public static void KeepOrganizedInStorage(Catalog.Models.Stocks stocks, int count)
 		{
@@ -142,6 +146,15 @@ namespace ShareInvest
 
 			if (file.Exists)
 				file.Delete();
+		}
+		public static bool Delete(Catalog.Models.Tick tick)
+		{
+			var file = new FileInfo(Path.Combine(path, tick.Code, tick.Date.Substring(0, 4), tick.Date.Substring(4, 2), $"{tick.Date[6..]}_{tick.Open}_{tick.Close}_{tick.Price}{extension}"));
+
+			if (file.Exists)
+				file.Delete();
+
+			return file.Exists;
 		}
 		public static string Decompress(string param)
 		{
