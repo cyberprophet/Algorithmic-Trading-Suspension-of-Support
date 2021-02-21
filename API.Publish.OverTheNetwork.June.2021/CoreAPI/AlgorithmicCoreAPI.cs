@@ -105,7 +105,7 @@ namespace ShareInvest
 											if (new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
 												while (queue.TryDequeue(out GroupDetail detail))
 												{
-													var bring = new Indicators.BringInTheme(api, detail, list.FirstOrDefault(o => o.Code.Equals(detail.Code)));
+													var bring = new Indicators.BringInTheme(key, api, detail, list.FirstOrDefault(o => o.Code.Equals(detail.Code)));
 
 													if (await bring.StartProgress() is double percent)
 														Base.SendMessage(bring.GetType(), list.Find(o => o.Code.Equals(detail.Code)).Name, percent);

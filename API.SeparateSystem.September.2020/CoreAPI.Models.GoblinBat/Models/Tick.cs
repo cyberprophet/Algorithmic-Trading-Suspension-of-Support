@@ -30,6 +30,7 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
+		[Required]
 		public Contents Contents
 		{
 			get; set;

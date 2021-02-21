@@ -125,6 +125,6 @@ namespace ShareInvest
 			get; set;
 		}
 		readonly IOptions<OperationalStoreOptions> store;
-		const string tick = "Tick";
+		const string tick = "Ticks";
 	}
 }

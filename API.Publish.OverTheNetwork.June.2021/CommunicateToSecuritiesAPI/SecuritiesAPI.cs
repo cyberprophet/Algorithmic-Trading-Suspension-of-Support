@@ -520,43 +520,43 @@ namespace ShareInvest
 					return;
 
 				case Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>> models:
-					var remove = connect as OpenAPI.ConnectAPI;
-					remove.RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
+					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
 
 					while (models.Item2.TryPop(out Catalog.Models.RevisedStockPrice revise))
 						if (await api.PostContextAsync(revise) is int rsp && rsp != 0xC8)
 							Base.SendMessage(sender.GetType(), models.Item1, models.Item2.Count);
 
 					while (models.Item3.TryDequeue(out Stocks stock) && stock.Volume == 0)
-						if (await api.PostContextAsync(stock) is string confirm && string.IsNullOrEmpty(confirm) is false)
-							Base.SendMessage(sender.GetType(), models.Item1, stock.Date, confirm);
+						if (await api.PostContextAsync(stock) is string confirm)
+						{
+							if (string.IsNullOrEmpty(confirm))
+								notifyIcon.Text = $"Still {Codes.Count:N0} Stocks to be Collect.";
 
-					if (remove.CorrectTheDelayMilliseconds() > 0)
-					{
-						if (Base.IsDebug is false && Milliseconds > 0)
-							await Task.Delay(Milliseconds--);
-
-						notifyIcon.Text = Codes.Count.ToString("N0");
-						CheckTheInformationReceivedOnTheDay();
-					}
+							else
+							{
+								var message = $"Deleted {confirm} {models.Item1} Data {stock.Date} where the Error was found.";
+								notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Stocks to be Collect.";
+							}
+						}
+					CheckTheInformationReceivedOnTheDay();
 					return;
 
 				case Tuple<string, Queue<Stocks>> confirm:
-					var delete = connect as OpenAPI.ConnectAPI;
-					delete.RemoveValueRqData(sender.GetType().Name, confirm.Item1).Send -= OnReceiveSecuritiesAPI;
+					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, confirm.Item1).Send -= OnReceiveSecuritiesAPI;
 
 					while (confirm.Item2.TryDequeue(out Stocks stock))
-						if (await api.PostContextAsync(stock) is string model && string.IsNullOrEmpty(model) is false)
-							Base.SendMessage(sender.GetType(), confirm.Item1, stock.Date, model);
+						if (await api.PostContextAsync(stock) is string model)
+						{
+							if (string.IsNullOrEmpty(model))
+								notifyIcon.Text = $"Still {Codes.Count:N0} Futures to be Collect.";
 
-					if (delete.CorrectTheDelayMilliseconds() > 0)
-					{
-						if (Base.IsDebug is false && Milliseconds > 0)
-							await Task.Delay(Milliseconds--);
-
-						notifyIcon.Text = Codes.Count.ToString("N0");
-						CheckTheInformationReceivedOnTheDay();
-					}
+							else
+							{
+								var message = $"Deleted {model} {confirm.Item1} Data {stock.Date} where the Error was found.";
+								notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Futures to be Collect.";
+							}
+						}
+					CheckTheInformationReceivedOnTheDay();
 					return;
 			}
 		}));
@@ -878,11 +878,14 @@ namespace ShareInvest
 					return;
 
 				case DialogResult.Abort when (now.Hour < 5 || now.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday) && api.IsAdministrator:
-					Milliseconds = 0x1400;
-					CheckTheInformationReceivedOnTheDay();
+					BeginInvoke(new Action(async () =>
+					{
+						await Task.Delay(0x339000);
+						CheckTheInformationReceivedOnTheDay();
+					}));
 					break;
 			}
-			(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0x1253);
+			(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0x1000);
 		}
 		Queue<string> Codes
 		{
@@ -899,10 +902,6 @@ namespace ShareInvest
 		int[] GetTheCorrectAnswer
 		{
 			get;
-		}
-		int Milliseconds
-		{
-			get; set;
 		}
 		long Cash
 		{

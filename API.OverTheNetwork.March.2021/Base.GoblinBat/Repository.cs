@@ -26,7 +26,7 @@ namespace ShareInvest
 		}
 		public static void KeepOrganizedInStorage(Catalog.Models.Tick tick)
 		{
-			string storage = Path.Combine(path, tick.Code, tick.Date.Substring(0, 4), tick.Date.Substring(4, 2)), file = Path.Combine(storage, $"{tick.Date[6..]}_{tick.Open}_{tick.Close}_{tick.Price}{extension}");
+			string storage = string.IsNullOrEmpty(tick.Path) ? Path.Combine(path, tick.Code, tick.Date.Substring(0, 4), tick.Date.Substring(4, 2)) : GetPath(tick.Path), file = string.IsNullOrEmpty(tick.Path) ? Path.Combine(storage, $"{tick.Date[6..]}_{tick.Open}_{tick.Close}_{tick.Price}{extension}") : tick.Path;
 			CreateTheDirectory(new DirectoryInfo(storage));
 			var compress = Compress(tick.Contents);
 			using (var sw = new StreamWriter(file, false))
@@ -52,37 +52,47 @@ namespace ShareInvest
 			}
 			return null;
 		}
-		public static IEnumerable<Catalog.Models.Tick> RetrieveSavedMaterial(string code)
+		public static object RetrieveSavedMaterial(string code)
 		{
-			var stack = new Stack<Catalog.Models.Tick>();
-
-			foreach (var file in new DirectoryInfo(Path.Combine(path, code)).GetFiles($"*{extension}", SearchOption.AllDirectories))
+			if (code.Length is 6 or 8)
 			{
-				var directory = file.DirectoryName.Split('\\')[^1];
+				var stack = new Stack<Catalog.Models.Tick>();
 
-				if (directory.Length == 2 && Array.TrueForAll(directory.ToCharArray(), o => char.IsDigit(o)))
+				foreach (var file in new DirectoryInfo(Path.Combine(path, code)).GetFiles($"*{extension}", SearchOption.AllDirectories))
 				{
-					var name = file.FullName.Split('\\');
-					var info = name[^1].Replace(extension, string.Empty).Split('_');
+					var directory = file.DirectoryName.Split('\\')[^1];
 
-					if (name[^3].Length == 4 && Array.TrueForAll(name[^3].ToCharArray(), o => char.IsDigit(o)) && info.Length == 4 && name[^4].Length is 6 or 8 && name[^2].Length == 2 && Array.TrueForAll(name[^2].ToCharArray(), o => char.IsDigit(o)) && info[^3].Length == 9 && Array.TrueForAll(info[^3].ToCharArray(), o => char.IsDigit(o)) && info[^2].Length == 9 && Array.TrueForAll(info[^2].ToCharArray(), o => char.IsDigit(o)) && Array.TrueForAll(info[^1].ToCharArray(), o => char.IsDigit(o)) && info[0].Length == 2 && Array.TrueForAll(info[0].ToCharArray(), o => char.IsDigit(o)))
+					if (directory.Length == 2 && Array.TrueForAll(directory.ToCharArray(), o => char.IsDigit(o)))
 					{
-						var date = string.Concat(name[^3], name[^2], info[0]);
+						var name = file.FullName.Split('\\');
+						var info = name[^1].Replace(extension, string.Empty).Split('_');
 
-						if (string.IsNullOrEmpty(date) is false && date.Length == 8 && base_date.CompareTo(date) < 0)
-							stack.Push(new Catalog.Models.Tick
-							{
-								Price = info[^1],
-								Close = info[^2],
-								Open = info[^3],
-								Date = date,
-								Code = name[^4],
-								Contents = string.Empty
-							});
+						if (name[^3].Length == 4 && Array.TrueForAll(name[^3].ToCharArray(), o => char.IsDigit(o)) && info.Length == 4 && name[^4].Length is 6 or 8 && name[^2].Length == 2 && Array.TrueForAll(name[^2].ToCharArray(), o => char.IsDigit(o)) && info[^3].Length == 9 && Array.TrueForAll(info[^3].ToCharArray(), o => char.IsDigit(o)) && info[^2].Length == 9 && Array.TrueForAll(info[^2].ToCharArray(), o => char.IsDigit(o)) && Array.TrueForAll(info[^1].ToCharArray(), o => char.IsDigit(o)) && info[0].Length == 2 && Array.TrueForAll(info[0].ToCharArray(), o => char.IsDigit(o)))
+						{
+							var date = string.Concat(name[^3], name[^2], info[0]);
+
+							if (string.IsNullOrEmpty(date) is false && date.Length == 8 && base_date.CompareTo(date) < 0)
+								stack.Push(new Catalog.Models.Tick
+								{
+									Price = info[^1],
+									Close = info[^2],
+									Open = info[^3],
+									Date = date,
+									Code = name[^4],
+									Contents = string.Empty
+								});
+						}
 					}
 				}
+				return stack.Count > 0 ? stack.OrderBy(o => o.Date) : Enumerable.Empty<Catalog.Models.Tick>();
 			}
-			return stack.Count > 0 ? stack.OrderBy(o => o.Date) : Enumerable.Empty<Catalog.Models.Tick>();
+			else if (ReadTheFile(code))
+			{
+				using var sr = new StreamReader(code);
+
+				return Decompress(sr.ReadToEnd());
+			}
+			return null;
 		}
 		public static (string, bool) RetrieveSavedMaterial(Catalog.Models.Loading loading)
 		{
@@ -182,6 +192,12 @@ namespace ShareInvest
 			Buffer.BlockCopy(BitConverter.GetBytes(sourceArray.Length), 0, targetArray, 0, 4);
 
 			return (Convert.ToBase64String(targetArray), length);
+		}
+		static string GetPath(string param)
+		{
+			var path = param.Split('.')[0];
+
+			return path.Remove(path.Length - 3);
 		}
 		static bool ReadTheFile(string name) => new FileInfo(name).Exists;
 		static void CreateTheDirectory(DirectoryInfo info)

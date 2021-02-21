@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 using Newtonsoft.Json;
 
+using ShareInvest.Filter;
 using ShareInvest.Models;
 
 namespace ShareInvest.Controllers
@@ -22,7 +23,7 @@ namespace ShareInvest.Controllers
 		{
 			try
 			{
-				if (await context.Ticks.AnyAsync(o => o.Code.Equals(code)))
+				if (await context.Ticks.AsNoTracking().AnyAsync(o => o.Code.Equals(code)))
 				{
 					var ticks = new Stack<Catalog.Models.Tick>();
 
@@ -34,7 +35,8 @@ namespace ShareInvest.Controllers
 							Open = tick.Open,
 							Close = tick.Close,
 							Price = tick.Price,
-							Contents = string.Empty
+							Contents = string.Empty,
+							Path = string.Empty
 						});
 					if (ticks.Count > 0)
 						return Ok(ticks);
@@ -47,94 +49,100 @@ namespace ShareInvest.Controllers
 			}
 			return BadRequest();
 		}
-		[HttpGet(Security.confirm), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status204NoContent)]
-		public async Task<IActionResult> GetContextAsync(string code, string date, string start, string close)
-		{
-			try
-			{
-				if (await context.Ticks.AnyAsync(o => o.Code.Equals(code) && o.Date.Equals(date) && o.Open.Equals(start) && o.Close.Equals(close)))
-					return Ok();
-
-				else
-					return NoContent();
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
-			}
-			return BadRequest();
-		}
-		[HttpGet(Security.stocks), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[HttpGet(Security.stocks), ServiceFilter(typeof(ClientIpCheckActionFilter)), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status400BadRequest), SupportedOSPlatform("windows")]
 		public async Task<IActionResult> GetContextAsync(string code, string date)
 		{
 			try
 			{
 				if (await context.Ticks.FindAsync(code, date) is Tick response)
-					return Ok(new Catalog.Models.Tick
-					{
-						Code = response.Code,
-						Date = response.Date,
-						Open = response.Open,
-						Close = response.Close,
-						Price = response.Price,
-						Contents = context.Contents.Find(response.Code, response.Date).CompressedContents
-					});
+					foreach (var content in from o in context.Contents.AsNoTracking() where o.Code.Equals(response.Code) && o.Date.Equals(response.Date) select o.CompressedContents)
+						return Ok(new Catalog.Models.Tick
+						{
+							Code = response.Code,
+							Date = response.Date,
+							Open = response.Open,
+							Close = response.Close,
+							Price = response.Price,
+							Path = string.Empty,
+							Contents = Repository.RetrieveSavedMaterial(content) as string
+						});
 				return NoContent();
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
+				Console.WriteLine($"{GetType()}\nCode:{code} Date:{date}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
 			}
 			return BadRequest();
 		}
-		[HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[HttpPost, ServiceFilter(typeof(ClientIpCheckActionFilter)), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status204NoContent), SupportedOSPlatform("windows")]
 		public async Task<IActionResult> PostContextAsync([FromBody] Catalog.Models.Tick tick)
 		{
 			try
 			{
-				if (string.IsNullOrEmpty(tick.Close) is false && tick.Close.Length == 9 && tick.Close.EndsWith(ends) && tick.Close[1] is '5' or '6' && tick.Close[2] is '3' && string.IsNullOrEmpty(tick.Open) is false && tick.Open.Length == 9 && tick.Open.EndsWith(ends) && tick.Open[1] is '9' or '0')
+				var price = string.Empty;
+				Repository.KeepOrganizedInStorage(tick);
+
+				if (empty.Equals(tick.Price))
+					switch (tick.Code.Length)
+					{
+						case 6:
+							price = context.Stocks.AsNoTracking().First(r => r.Code.Equals(tick.Code) && r.Date.Equals((from o in context.Stocks.AsNoTracking() where o.Code.Equals(tick.Code) && o.Date.Substring(0, 8).Equals(string.Concat(tick.Date.Substring(2, 6), tick.Close.Substring(0, 2))) select o.Date).Max())).Price;
+							break;
+
+						case 8 when tick.Code[0] is '1' && tick.Code[1] is '0':
+
+							break;
+
+						case 8 when tick.Code[0] is '2' or '3':
+
+							break;
+
+						default:
+
+							break;
+					}
+				var entry = new Tick
 				{
-					var entry = new Tick
+					Code = tick.Code,
+					Date = tick.Date,
+					Open = tick.Open,
+					Close = tick.Close,
+					Price = string.IsNullOrEmpty(price) ? tick.Price : price,
+					Contents = new Contents
 					{
 						Code = tick.Code,
 						Date = tick.Date,
-						Open = tick.Open,
-						Close = tick.Close,
-						Price = tick.Price,
-						Contents = new Contents
-						{
-							Code = tick.Code,
-							Date = tick.Date,
-							CompressedContents = tick.Contents
-						}
-					};
-					if (await context.Ticks.AnyAsync(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date)))
-						foreach (var res in from o in context.Ticks where o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date) select o)
-							if ((tick.Open.Equals(res.Open) && tick.Close.Equals(res.Close)) is false && uint.TryParse(tick.Open, out uint to) && uint.TryParse(res.Open, out uint ro) && to < ro && res.Close[2] is not '3' && res.Close[1] is not '5' or '6' && res.Open[1] is not '9' or '0')
-								context.SingleDelete(res, o =>
-								{
-									o.BatchSize = 0x5000;
-									o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-									o.AutoMapOutputDirection = false;
-								});
-					await context.SingleInsertAsync(entry, o =>
+						CompressedContents = tick.Path
+					}
+				};
+				if (await context.Ticks.AsNoTracking().AnyAsync(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date)))
+					foreach (var i in from o in context.Ticks.AsNoTracking() where o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date) select new { o.Close, o.Open })
 					{
-						o.InsertIfNotExists = true;
-						o.BatchSize = 0x5000;
-						o.SqlBulkCopyOptions = (int)SqlBulkCopyOptions.Default | (int)SqlBulkCopyOptions.TableLock;
-						o.AutoMapOutputDirection = false;
-					});
-					return Ok();
-				}
+						if ((i.Open.Equals(tick.Open) && i.Close.Equals(tick.Close)) is false && (int.TryParse(i.Close, out int ic) && int.TryParse(tick.Close, out int tc) && ic < tc || int.TryParse(i.Open, out int io) && int.TryParse(tick.Open, out int to) && io > to))
+						{
+							var modify = context.Ticks.First(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date));
+							modify.Open = tick.Open;
+							modify.Close = tick.Close;
+							modify.Price = tick.Price;
+							var attemper = context.Contents.First(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date));
+							attemper.CompressedContents = tick.Path;
+						}
+						else
+							return NoContent();
+					}
+				else
+					context.Ticks.Add(entry);
+
+				return Ok(context.SaveChanges());
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"{GetType()}\n{JsonConvert.SerializeObject(new Catalog.Models.Tick { Code = tick.Code, Date = tick.Date, Open = tick.Open, Close = tick.Close, Price = tick.Price, Contents = tick.Contents.Length.ToString("N0") })}\n{ex.InnerException.Message}\n{nameof(this.PostContextAsync)}");
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{JsonConvert.SerializeObject(new Catalog.Models.Tick { Code = tick.Code, Date = tick.Date, Open = tick.Open, Close = tick.Close, Price = tick.Price, Contents = tick.Contents.Length.ToString("N0"), Path = tick.Path })}\n{ex.InnerException.Message}\n{nameof(this.PostContextAsync)}");
 			}
 			return BadRequest();
 		}
 		public TickController(CoreApiDbContext context) => this.context = context;
 		readonly CoreApiDbContext context;
-		const string ends = "000";
+		const string empty = "Empty";
 	}
 }
