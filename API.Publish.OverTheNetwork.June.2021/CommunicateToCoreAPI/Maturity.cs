@@ -15,8 +15,7 @@ namespace ShareInvest.Client
 		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(model), Method.PUT)
-					.AddJsonBody(model, Security.content_type), source.Token);
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(model), Method.PUT).AddJsonBody(model, Security.content_type), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 					return (int)response.StatusCode;

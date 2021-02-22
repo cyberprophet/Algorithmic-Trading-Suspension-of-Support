@@ -7,13 +7,14 @@ namespace ShareInvest.Client
 {
 	public class Advertise
 	{
-		public async Task StartAdvertisingInTheDataCollectionSection(int page)
+		public async Task StartAdvertisingInTheDataCollectionSection(int count)
 		{
 			try
 			{
 				string url;
+				var page = count % 0x33;
 
-				if (page is 0xF or 0x10 or 0x11 or 0x12 or < 7 or > 0x33)
+				if (page is 0xF or 0x10 or 0x11 or 0x12 or < 7)
 					url = tistory.Remove(tistory.Length - 1, 1);
 
 				else

@@ -18,7 +18,7 @@ namespace ShareInvest.Client
 			try
 			{
 				var stack = new Stack<Catalog.IncorporatedStocks>();
-				var response = await client.ExecuteAsync(new RestRequest(Security.Contents[3], Method.POST).AddHeader(Security.content_type, Security.Contents[4]).AddParameter(Security.Contents[5], market).AddParameter(Security.Contents[6], security.GetMarket(market)).AddParameter(Security.Contents[7], Security.Contents[8]).AddParameter(Security.Contents[9], now.ToString(format)).AddParameter(Security.Contents[0xA], (await client.ExecuteAsync(new RestRequest(Security.Contents[0xB], Method.GET))).Content), source.Token);
+				var response = await client.ExecuteAsync(new RestRequest(Security.Contents[3], Method.POST).AddHeader(Security.content_type, Security.Contents[4]).AddParameter(Security.Contents[5], market).AddParameter(Security.Contents[6], security.GetMarket(market)).AddParameter(Security.Contents[7], Security.Contents[8]).AddParameter(Security.Contents[9], now.ToString(Base.LongDateFormat)).AddParameter(Security.Contents[0xA], (await client.ExecuteAsync(new RestRequest(Security.Contents[0xB], Method.GET))).Content), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 				{
@@ -28,7 +28,7 @@ namespace ShareInvest.Client
 							{
 								Code = str.Code,
 								Name = str.Name,
-								Date = now.ToString(format[2..]),
+								Date = now.ToString(Base.DateFormat),
 								Market = market == 1 ? 'P' : 'Q',
 								Capitalization = (int)(capitalization / 0x5F5E100)
 							});
@@ -38,7 +38,6 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
-				Base.SendMessage(ex.StackTrace, GetType());
 			}
 			return null;
 		}
@@ -58,7 +57,6 @@ namespace ShareInvest.Client
 				source = new CancellationTokenSource();
 			}
 		}
-		const string format = "yyyyMMdd";
 		readonly string cookie;
 		readonly CancellationTokenSource source;
 		readonly Security security;

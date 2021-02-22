@@ -78,12 +78,11 @@ namespace ShareInvest
 								else
 								{
 									Stack<Catalog.IncorporatedStocks> stack = null;
-									var page = random.Next(0, now.Day + now.Month + now.Year + DateTime.DaysInMonth(now.Year, now.Month) + now.Second - 0x7D0);
 
 									switch (Operation)
 									{
 										case Catalog.OpenAPI.Operation.장마감 or Catalog.OpenAPI.Operation.시간외_종가매매_시작 or Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_시작 or Catalog.OpenAPI.Operation.장종료_예상지수종료 or Catalog.OpenAPI.Operation.장종료_시간외종료:
-											stack = await new ConstituentStocks(key).GetConstituentStocks(page % 2 + 1, now);
+											stack = await new KRX.Incorporate(Interface.KRX.Catalog.지수구성종목, key).GetConstituentStocks(now, Codes.Count) as Stack<Catalog.IncorporatedStocks>;
 											break;
 
 										case Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_종료 or Catalog.OpenAPI.Operation.시간외_종가매매_종료 when await api.GetContextAsync(new Catalog.IncorporatedStocks { Market = 'P' }) is int next:
@@ -91,7 +90,7 @@ namespace ShareInvest
 											break;
 
 										default:
-											await new Advertise(key).StartAdvertisingInTheDataCollectionSection(page);
+											await new Advertise(key).StartAdvertisingInTheDataCollectionSection(Codes.Count);
 											break;
 									}
 									if (stack is Stack<Catalog.IncorporatedStocks> && await api.PostContextAsync(stack) == 0xC8)

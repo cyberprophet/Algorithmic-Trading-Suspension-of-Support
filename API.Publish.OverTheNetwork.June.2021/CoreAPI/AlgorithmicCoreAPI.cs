@@ -67,9 +67,10 @@ namespace ShareInvest
 				{
 					if (await api.GetContextAsync(new Catalog.TrendsToCashflow()) is IEnumerable<Interface.IStrategics> enumerable)
 						worker.RunWorkerAsync(enumerable);
-
+					/*
 					if (theme is BackgroundWorker)
 						theme.RunWorkerAsync(uint.MinValue);
+					*/
 				}));
 				pipe.StartProgress();
 			}
