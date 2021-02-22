@@ -407,6 +407,7 @@ namespace ShareInvest.Client
 			return null;
 		}
 		public bool GrantAccess => security.GrantAccess;
+		public bool IsServer => security.IsServer;
 		public bool IsInsider => security.IsInsiders;
 		public bool IsAdministrator => security.IsAdministrator;
 		static API Client

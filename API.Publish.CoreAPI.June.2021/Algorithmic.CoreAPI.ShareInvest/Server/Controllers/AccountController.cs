@@ -47,7 +47,7 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				await new Task(() => Base.SendMessage(ex.StackTrace, GetType()));
+				await new Task(() => Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.PostContextAsync)}"));
 			}
 			return Ok();
 		}
@@ -82,7 +82,7 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				Base.SendMessage(GetType(), ex.StackTrace);
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.PutContextAsync)}");
 			}
 			return HttpStatusCode.BadRequest;
 		}

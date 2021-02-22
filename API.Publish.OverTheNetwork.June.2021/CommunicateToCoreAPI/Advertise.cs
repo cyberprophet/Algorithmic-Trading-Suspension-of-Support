@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Interactions;
 
 namespace ShareInvest.Client
 {
@@ -22,7 +24,17 @@ namespace ShareInvest.Client
 
 				driver.Navigate().GoToUrl(url);
 				driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(0xA);
-				await Task.Delay(0x2800);
+				driver.Manage().Window.FullScreen();
+				var action = new Actions(driver).SendKeys(Keys.ArrowDown).Build();
+				page = page > 0x15 ? page / 3 : page;
+
+				while (page-- > 0)
+				{
+					action.Perform();
+					await Task.Delay(0x400);
+					action.Perform();
+				}
+				new Actions(driver).SendKeys(Keys.Escape).Perform();
 			}
 			catch (Exception ex)
 			{

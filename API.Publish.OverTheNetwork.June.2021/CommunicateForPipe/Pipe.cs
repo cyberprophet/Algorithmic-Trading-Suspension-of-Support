@@ -125,8 +125,11 @@ namespace ShareInvest
 															}
 															catch (Exception ex)
 															{
-																Base.SendMessage(collect.Value.GetType(), ex.StackTrace, collect.Key);
-																Send?.Invoke(this, new SendSecuritiesAPI(ex.TargetSite.Name));
+																Send?.Invoke(this, new SendSecuritiesAPI($"{collect.Key}_{ex.TargetSite.Name}"));
+															}
+															finally
+															{
+																GC.Collect();
 															}
 												}).Start();
 												break;
@@ -143,7 +146,6 @@ namespace ShareInvest
 
 											case Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_종료 when futures && collection:
 												if (futures && collection)
-												{
 													new Task(() =>
 													{
 														foreach (var collect in Collection)
@@ -155,11 +157,13 @@ namespace ShareInvest
 																}
 																catch (Exception ex)
 																{
-																	Base.SendMessage(collect.Value.GetType(), ex.StackTrace, collect.Key);
-																	Send?.Invoke(this, new SendSecuritiesAPI(ex.TargetSite.Name));
+																	Send?.Invoke(this, new SendSecuritiesAPI($"{collect.Key}_{ex.TargetSite.Name}"));
+																}
+																finally
+																{
+																	GC.Collect();
 																}
 													}).Start();
-												}
 												else
 												{
 													futures = false;

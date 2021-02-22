@@ -82,7 +82,7 @@ namespace ShareInvest.Controllers
 				var price = string.Empty;
 				Repository.KeepOrganizedInStorage(tick);
 
-				if (empty.Equals(tick.Price))
+				if (Base.PriceEmpty.Equals(tick.Price))
 					switch (tick.Code.Length)
 					{
 						case 6:
@@ -90,31 +90,13 @@ namespace ShareInvest.Controllers
 							break;
 
 						case 8 when tick.Code[0] is '1' && tick.Code[1] is '0':
-
+							price = context.Futures.AsNoTracking().First(r => r.Code.Equals(tick.Code) && r.Date.Equals((from o in context.Futures.AsNoTracking() where o.Code.Equals(tick.Code) && o.Date.Substring(0, 8).Equals(string.Concat(tick.Date.Substring(2, 6), tick.Close.Substring(0, 2))) select o.Date).Max())).Price;
 							break;
 
 						case 8 when tick.Code[0] is '2' or '3':
-
-							break;
-
-						default:
-
+							price = context.Options.AsNoTracking().First(r => r.Code.Equals(tick.Code) && r.Date.Equals((from o in context.Options.AsNoTracking() where o.Code.Equals(tick.Code) && o.Date.Substring(0, 8).Equals(string.Concat(tick.Date.Substring(2, 6), tick.Close.Substring(0, 2))) select o.Date).Max())).Price;
 							break;
 					}
-				var entry = new Tick
-				{
-					Code = tick.Code,
-					Date = tick.Date,
-					Open = tick.Open,
-					Close = tick.Close,
-					Price = string.IsNullOrEmpty(price) ? tick.Price : price,
-					Contents = new Contents
-					{
-						Code = tick.Code,
-						Date = tick.Date,
-						CompressedContents = tick.Path
-					}
-				};
 				if (await context.Ticks.AsNoTracking().AnyAsync(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date)))
 					foreach (var i in from o in context.Ticks.AsNoTracking() where o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date) select new { o.Close, o.Open })
 					{
@@ -123,7 +105,7 @@ namespace ShareInvest.Controllers
 							var modify = context.Ticks.First(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date));
 							modify.Open = tick.Open;
 							modify.Close = tick.Close;
-							modify.Price = tick.Price;
+							modify.Price = string.IsNullOrEmpty(price) ? tick.Price : price;
 							var attemper = context.Contents.First(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date));
 							attemper.CompressedContents = tick.Path;
 						}
@@ -131,8 +113,20 @@ namespace ShareInvest.Controllers
 							return NoContent();
 					}
 				else
-					context.Ticks.Add(entry);
-
+					context.Ticks.Add(new Tick
+					{
+						Code = tick.Code,
+						Date = tick.Date,
+						Open = tick.Open,
+						Close = tick.Close,
+						Price = string.IsNullOrEmpty(price) ? tick.Price : price,
+						Contents = new Contents
+						{
+							Code = tick.Code,
+							Date = tick.Date,
+							CompressedContents = tick.Path
+						}
+					});
 				return Ok(context.SaveChanges());
 			}
 			catch (Exception ex)
@@ -143,6 +137,5 @@ namespace ShareInvest.Controllers
 		}
 		public TickController(CoreApiDbContext context) => this.context = context;
 		readonly CoreApiDbContext context;
-		const string empty = "Empty";
 	}
 }

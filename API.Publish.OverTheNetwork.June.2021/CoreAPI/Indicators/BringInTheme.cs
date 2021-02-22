@@ -31,14 +31,14 @@ namespace ShareInvest.Indicators
 				End = Base.Empty
 			})
 				as string, date = string.IsNullOrEmpty(sDate) ? DateTime.Now.AddDays(-5).ToString(Base.DateFormat) : sDate.Substring(0, 6);
-			DateTime restore = DateTime.TryParseExact(end, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime store) ? store : DateTime.UnixEpoch, now = DateTime.Now;
+			DateTime restore = DateTime.TryParseExact(Base.End, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime store) ? store : DateTime.UnixEpoch, now = DateTime.Now;
 			IEnumerable<Catalog.Models.Tick> storage = await api.GetContextAsync(new Catalog.Models.Tick(), theme.Code) as IEnumerable<Catalog.Models.Tick>, repository = Repository.RetrieveSavedMaterial(theme.Code) as IEnumerable<Catalog.Models.Tick>;
 			var stack = new Stack<Catalog.Models.Tick>();
 
 			foreach (var day in from day in (await api.GetChartsAsync(new Catalog.Models.Charts { Code = theme.Code, Start = string.Empty, End = string.Empty }) as IEnumerable<Charts>).OrderBy(o => o.Date) where string.Compare(day.Date[2..], date) < 0 select day)
 				Days.Enqueue(day);
 
-			if (await api.GetContextAsync(new Catalog.Models.Charts { Code = theme.Code, Start = Days.Count > 0 ? Days.Max(o => o.Date)[2..] : date, End = end }) is IEnumerable<Charts> enumerable)
+			if (await api.GetContextAsync(new Catalog.Models.Charts { Code = theme.Code, Start = Days.Count > 0 ? Days.Max(o => o.Date)[2..] : date, End = Base.End }) is IEnumerable<Charts> enumerable)
 			{
 				string max = string.Empty;
 
@@ -71,7 +71,7 @@ namespace ShareInvest.Indicators
 									await Task.Delay(0x300);
 									Base.SendMessage(GetType(), $"{info.Name} if_post_context has been modified.");
 								}
-								else if ((mo > so || mc < sc || my.Price.Equals(empty)) && await api.GetContextAsync(new Catalog.Models.Tick { Code = theme.Code, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Catalog.Models.Tick tick)
+								else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Catalog.Models.Tick { Code = theme.Code, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Catalog.Models.Tick tick)
 								{
 									stack.Push(new Catalog.Models.Tick
 									{
@@ -217,7 +217,5 @@ namespace ShareInvest.Indicators
 		readonly API api;
 		readonly Catalog.Models.Codes info;
 		readonly Catalog.Models.GroupDetail theme;
-		const string end = "210105";
-		const string empty = "Empty";
 	}
 }

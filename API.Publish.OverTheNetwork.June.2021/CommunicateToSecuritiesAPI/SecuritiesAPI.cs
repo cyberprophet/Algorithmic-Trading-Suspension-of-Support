@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -520,6 +522,7 @@ namespace ShareInvest
 
 				case Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>> models:
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
+					var restore = DateTime.TryParseExact(Base.End, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime store) ? store : DateTime.UnixEpoch;
 
 					while (models.Item2.TryPop(out Catalog.Models.RevisedStockPrice revise))
 						if (await api.PostContextAsync(revise) is int rsp && rsp != 0xC8)
@@ -537,11 +540,40 @@ namespace ShareInvest
 								notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Stocks to be Collect.";
 							}
 						}
+					if (await api.GetContextAsync(new Tick(), models.Item1) is IEnumerable<Tick> storage && Repository.RetrieveSavedMaterial(models.Item1) is IEnumerable<Tick> repository)
+						while (restore.CompareTo(now) < 0)
+						{
+							if (restore.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(restore.ToString(Base.DateFormat))) is false)
+							{
+								var str = restore.ToString(Base.LongDateFormat);
+
+								if (repository.Any(o => o.Date.Equals(str)) && repository.First(o => o.Date.Equals(str)) is Tick my)
+								{
+									if (storage is IEnumerable<Tick> && storage.Any(o => o.Date.Equals(str)) && storage.First(o => o.Date.Equals(str)) is Tick server && (my.Open.Equals(server.Open) && my.Close.Equals(server.Close) && my.Price.Equals(server.Price)) is false && int.TryParse(my.Open, out int mo) && int.TryParse(server.Open, out int so) && int.TryParse(my.Close, out int mc) && int.TryParse(server.Close, out int sc))
+									{
+										if ((mo < so || mc > sc) && Repository.RetrieveSavedMaterial(my) is string contents && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res"), Contents = contents }) is 0xC8)
+											notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
+
+										else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
+											Repository.KeepOrganizedInStorage(tick);
+									}
+									else if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+										notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
+								}
+								else if (storage is IEnumerable<Tick> && storage.Any(o => o.Date.Equals(str)) && storage.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
+									Repository.KeepOrganizedInStorage(tick);
+							}
+							restore = restore.AddDays(1);
+						}
+					else
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(Codes.Count);
+
 					CheckTheInformationReceivedOnTheDay();
 					return;
 
 				case Tuple<string, Queue<Stocks>> confirm:
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, confirm.Item1).Send -= OnReceiveSecuritiesAPI;
+					var fo = DateTime.TryParseExact(Base.End, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt) ? dt : DateTime.UnixEpoch;
 
 					while (confirm.Item2.TryDequeue(out Stocks stock))
 						if (await api.PostContextAsync(stock) is string model)
@@ -555,6 +587,34 @@ namespace ShareInvest
 								notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Futures to be Collect.";
 							}
 						}
+					if (await api.GetContextAsync(new Tick(), confirm.Item1) is IEnumerable<Tick> ss && Repository.RetrieveSavedMaterial(confirm.Item1) is IEnumerable<Tick> rs)
+						while (fo.CompareTo(now) < 0)
+						{
+							if (fo.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(fo.ToString(Base.DateFormat))) is false)
+							{
+								var str = fo.ToString(Base.LongDateFormat);
+
+								if (rs.Any(o => o.Date.Equals(str)) && rs.First(o => o.Date.Equals(str)) is Tick my)
+								{
+									if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && (my.Open.Equals(server.Open) && my.Close.Equals(server.Close) && my.Price.Equals(server.Price)) is false && int.TryParse(my.Open, out int mo) && int.TryParse(server.Open, out int so) && int.TryParse(my.Close, out int mc) && int.TryParse(server.Close, out int sc))
+									{
+										if ((mo < so || mc > sc) && Repository.RetrieveSavedMaterial(my) is string contents && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res"), Contents = contents }) is 0xC8)
+											notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
+
+										else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
+											Repository.KeepOrganizedInStorage(tick);
+									}
+									else if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+										notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
+								}
+								else if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
+									Repository.KeepOrganizedInStorage(tick);
+							}
+							restore = fo.AddDays(1);
+						}
+					else
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(Codes.Count);
+
 					CheckTheInformationReceivedOnTheDay();
 					return;
 			}
@@ -635,78 +695,104 @@ namespace ShareInvest
 		}
 		async void WorkerDoWork(object sender, DoWorkEventArgs e)
 		{
-			if (e.Argument is string[] codes)
+			var now = DateTime.Now;
+
+			switch (e.Argument)
 			{
-				var now = DateTime.Now;
-
-				while (e.Cancel is false)
-				{
-					try
+				case string[] codes:
+					while (e.Cancel is false)
 					{
-						if (await api.GetStrategics(key) is IEnumerable<BringIn> enumerable)
+						try
 						{
-							foreach (var bring in enumerable)
-								if (Enum.TryParse(bring.Strategics, out Strategics strategics))
-								{
-									if (worker.WorkerSupportsCancellation && now.CompareTo(new DateTime(bring.Date)) > 0)
-										continue;
-
-									BringInStrategics(strategics, bring, codes);
-								}
-							ExceptInStrategics(enumerable.Select(o => o.Code));
-						}
-						else if (connect is OpenAPI.ConnectAPI api && api.Enumerator?.Where(o => o.Classification is IStrategics) is IEnumerable<Analysis> strategics)
-							foreach (var sis in strategics)
-								if (string.IsNullOrEmpty(sis.Code) is false && api.TryGetValue(sis.Code, out Analysis analysis))
-								{
-									analysis.Classification = null;
-
-									if (analysis.Classification is null)
+							if (await api.GetStrategics(key) is IEnumerable<BringIn> enumerable)
+							{
+								foreach (var bring in enumerable)
+									if (Enum.TryParse(bring.Strategics, out Strategics strategics))
 									{
-										if (analysis.OrderNumber is Dictionary<string, dynamic> numbers && numbers.Count > 0)
-											foreach (var kv in numbers.OrderByDescending(o => o.Value))
-												if (analysis.Code.Length == 6)
-												{
-													connect.SendOrder(new Catalog.OpenAPI.Order
-													{
-														AccNo = connect.Account[0],
-														Code = analysis.Code,
-														HogaGb = ((int)HogaGb.지정가).ToString("D2"),
-														OrgOrderNo = kv.Key,
-														OrderType = (int)(analysis.Current < kv.Value ? OrderType.매도취소 : OrderType.매수취소),
-														Price = analysis.Current,
-														Qty = 1
-													});
-													if (analysis.Current > kv.Value)
-														Cash += kv.Value;
-												}
-										Base.SendMessage(analysis.GetType(), analysis.Name, analysis.Strategics);
+										if (worker.WorkerSupportsCancellation && now.CompareTo(new DateTime(bring.Date)) > 0)
+											continue;
+
+										BringInStrategics(strategics, bring, codes);
 									}
-								}
-					}
-					catch (Exception ex)
-					{
-						Base.SendMessage(sender.GetType(), ex.StackTrace);
-					}
-					finally
-					{
-						if (worker.CancellationPending && worker.IsBusy is false)
-						{
-							e.Cancel = true;
+								ExceptInStrategics(enumerable.Select(o => o.Code));
+							}
+							else if (connect is OpenAPI.ConnectAPI api && api.Enumerator?.Where(o => o.Classification is IStrategics) is IEnumerable<Analysis> strategics)
+								foreach (var sis in strategics)
+									if (string.IsNullOrEmpty(sis.Code) is false && api.TryGetValue(sis.Code, out Analysis analysis))
+									{
+										analysis.Classification = null;
 
-							foreach (var code in codes)
-								Base.SendMessage(sender.GetType(), code, now.ToLongTimeString());
+										if (analysis.Classification is null)
+										{
+											if (analysis.OrderNumber is Dictionary<string, dynamic> numbers && numbers.Count > 0)
+												foreach (var kv in numbers.OrderByDescending(o => o.Value))
+													if (analysis.Code.Length == 6)
+													{
+														connect.SendOrder(new Catalog.OpenAPI.Order
+														{
+															AccNo = connect.Account[0],
+															Code = analysis.Code,
+															HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+															OrgOrderNo = kv.Key,
+															OrderType = (int)(analysis.Current < kv.Value ? OrderType.매도취소 : OrderType.매수취소),
+															Price = analysis.Current,
+															Qty = 1
+														});
+														if (analysis.Current > kv.Value)
+															Cash += kv.Value;
+													}
+											Base.SendMessage(analysis.GetType(), analysis.Name, analysis.Strategics);
+										}
+									}
 						}
-						else
+						catch (Exception ex)
 						{
-							if (worker.WorkerSupportsCancellation is false)
-								worker.WorkerSupportsCancellation = true;
+							Base.SendMessage(sender.GetType(), ex.StackTrace);
+						}
+						finally
+						{
+							if (worker.CancellationPending && worker.IsBusy is false)
+							{
+								e.Cancel = true;
 
-							now = DateTime.Now;
-							await Task.Delay(0xEA61);
+								foreach (var code in codes)
+									Base.SendMessage(sender.GetType(), code, now.ToLongTimeString());
+							}
+							else
+							{
+								if (worker.WorkerSupportsCancellation is false)
+									worker.WorkerSupportsCancellation = true;
+
+								now = DateTime.Now;
+								await Task.Delay(0xEA61);
+							}
 						}
 					}
-				}
+					break;
+
+				case uint page:
+					while (page++ < 0x33)
+						try
+						{
+							if (page is 3 or 0x32 && await api.PostContextAsync(await new KRX.Incorporate(Interface.KRX.Catalog.지수구성종목, key).GetConstituentStocks(now, (int)page) as Stack<Catalog.IncorporatedStocks>) == 0xC8)
+								await Task.Delay(0x400);
+
+							if (page is 1)
+								await Task.Delay(0x1400);
+
+							await new Advertise(key).StartAdvertisingInTheDataCollectionSection((int)(page + 0x11));
+						}
+						catch (Exception ex)
+						{
+							Base.SendMessage(sender.GetType(), ex.StackTrace);
+						}
+						finally
+						{
+							GC.Collect();
+						}
+					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0xE11);
+					CheckTheInformationReceivedOnTheDay();
+					break;
 			}
 		}
 		void TimerTick(object sender, EventArgs e)
@@ -772,6 +858,14 @@ namespace ShareInvest
 				{
 					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
+				}
+				else if (api.IsAdministrator && api.IsServer && connect.Start is false && now.Hour == 1 && DayOfWeek.Sunday.Equals(now.DayOfWeek) is false)
+				{
+					var worker = new BackgroundWorker();
+					notifyIcon.Icon = icons[^2];
+					worker.DoWork += WorkerDoWork;
+					StartProgress(connect as Control);
+					worker.RunWorkerAsync(0U);
 				}
 			}
 		}
@@ -884,7 +978,7 @@ namespace ShareInvest
 					}));
 					break;
 			}
-			(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0x1000);
+			(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0xE11);
 		}
 		Queue<string> Codes
 		{

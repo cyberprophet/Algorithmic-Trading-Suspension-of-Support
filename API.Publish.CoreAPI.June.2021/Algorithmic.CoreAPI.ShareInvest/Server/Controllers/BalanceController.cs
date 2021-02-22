@@ -33,7 +33,7 @@ namespace ShareInvest.Controllers
 			}
 			catch (Exception ex)
 			{
-				Base.SendMessage(GetType(), ex.StackTrace);
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.PostContextAsync)}");
 			}
 			return Ok(balance.Name);
 		}

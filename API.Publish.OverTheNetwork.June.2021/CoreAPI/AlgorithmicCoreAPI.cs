@@ -67,10 +67,10 @@ namespace ShareInvest
 				{
 					if (await api.GetContextAsync(new Catalog.TrendsToCashflow()) is IEnumerable<Interface.IStrategics> enumerable)
 						worker.RunWorkerAsync(enumerable);
-					/*
+
 					if (theme is BackgroundWorker)
 						theme.RunWorkerAsync(uint.MinValue);
-					*/
+
 				}));
 				pipe.StartProgress();
 			}
@@ -105,12 +105,13 @@ namespace ShareInvest
 										{
 											if (new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
 												while (queue.TryDequeue(out GroupDetail detail))
-												{
-													var bring = new Indicators.BringInTheme(key, api, detail, list.FirstOrDefault(o => o.Code.Equals(detail.Code)));
+													if (list.First(o => o.Code.Equals(detail.Code)).MaturityMarketCap.Contains(Base.TransactionSuspension) is false)
+													{
+														var bring = new Indicators.BringInTheme(key, api, detail, list.FirstOrDefault(o => o.Code.Equals(detail.Code)));
 
-													if (await bring.StartProgress() is double percent)
-														Base.SendMessage(bring.GetType(), list.Find(o => o.Code.Equals(detail.Code)).Name, percent);
-												}
+														if (await bring.StartProgress() is double percent)
+															Base.SendMessage(bring.GetType(), list.Find(o => o.Code.Equals(detail.Code)).Name, percent);
+													}
 										}
 										page = enumerable.Item1;
 									}
