@@ -19,10 +19,6 @@ namespace ShareInvest
 	public class Pipe
 	{
 		public event EventHandler<SendSecuritiesAPI> Send;
-		public Dictionary<string, Queue<Collect>> Collection
-		{
-			get; private set;
-		}
 		public Pipe(string name, string type, bool lite)
 		{
 			if (type.Equals(typeof(Security).Name))
@@ -97,7 +93,7 @@ namespace ShareInvest
 											Send?.Invoke(this, new SendSecuritiesAPI(new Message { Key = temp[1], Convey = temp[^1] }));
 										}
 										if (Collection.Count % 0x400 == 0 || Collection.Count > 0x400 * 3)
-											Send?.Invoke(this, new SendSecuritiesAPI(string.Format("Total of {0} Stocks to be Collect.", Collection.Count.ToString("N0"))));
+											Send?.Invoke(this, new SendSecuritiesAPI($"Total of {Collection.Count:N0} Stocks to be Collect."));
 									}
 									else if (temp[0].Equals("장시작시간"))
 									{
@@ -114,24 +110,7 @@ namespace ShareInvest
 
 											case Catalog.OpenAPI.Operation.장마감 when stocks:
 												stocks = false;
-												new Task(() =>
-												{
-													foreach (var collect in Collection)
-														if (string.IsNullOrEmpty(collect.Key) is false && collect.Key.Length == 6 && collect.Value.Count > 0)
-															try
-															{
-																var convert = new Sort(collect.Key).TheRecordedInformation(collect.Value);
-																Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3, convert.Item4);
-															}
-															catch (Exception ex)
-															{
-																Send?.Invoke(this, new SendSecuritiesAPI($"{collect.Key}_{ex.TargetSite.Name}"));
-															}
-															finally
-															{
-																GC.Collect();
-															}
-												}).Start();
+												new Task(async () => await RecordedInformation(6, DateTime.Now)).Start();
 												break;
 
 											case Catalog.OpenAPI.Operation.장시작전:
@@ -145,30 +124,8 @@ namespace ShareInvest
 												break;
 
 											case Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_종료 when futures && collection:
-												if (futures && collection)
-													new Task(() =>
-													{
-														foreach (var collect in Collection)
-															if (string.IsNullOrEmpty(collect.Key) is false && collect.Key.Length == 8 && collect.Value.Count > 0)
-																try
-																{
-																	var convert = new Sort(collect.Key).TheRecordedInformation(collect.Value);
-																	Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3, convert.Item4);
-																}
-																catch (Exception ex)
-																{
-																	Send?.Invoke(this, new SendSecuritiesAPI($"{collect.Key}_{ex.TargetSite.Name}"));
-																}
-																finally
-																{
-																	GC.Collect();
-																}
-													}).Start();
-												else
-												{
-													futures = false;
-													collection = false;
-												}
+												futures = false;
+												collection = false;
 												break;
 
 											case Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_시작:
@@ -214,11 +171,61 @@ namespace ShareInvest
 				Thread.Sleep(0xC97);
 				StartProgress();
 			}
+			now = DateTime.Now;
+
+			if (now.Hour is 0x10 or 0x11 && now.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Base.CheckIfMarketDelay(now) is false)
+				foreach (var collect in Collection)
+					if (string.IsNullOrEmpty(collect.Key) is false && collect.Value.Count > 0)
+						try
+						{
+							var convert = new Sort(collect.Key).TheRecordedInformation(collect.Value);
+							Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3, convert.Item4);
+						}
+						catch (Exception ex)
+						{
+							Send?.Invoke(this, new SendSecuritiesAPI($"{collect.Key}_{ex.Message}"));
+						}
+						finally
+						{
+							collect.Value.Clear();
+						}
 			Send?.Invoke(this, new SendSecuritiesAPI((short)-0x6A));
+		}
+		async Task RecordedInformation(int classfication, DateTime now)
+		{
+			do
+			{
+				foreach (var collect in Collection)
+					if (string.IsNullOrEmpty(collect.Key) is false && collect.Key.Length == classfication && collect.Value.Count > 0)
+						try
+						{
+							var convert = new Sort(collect.Key).TheRecordedInformation(collect.Value);
+							Repository.KeepOrganizedInStorage(JsonConvert.SerializeObject(convert.Item1), collect.Key, convert.Item2, convert.Item3, convert.Item4);
+						}
+						catch (Exception ex)
+						{
+							Send?.Invoke(this, new SendSecuritiesAPI($"{collect.Key}_{ex.Message}"));
+						}
+						finally
+						{
+							collect.Value.Clear();
+						}
+				while (now.Hour == (Base.CheckIfMarketDelay(now) ? 0x10 : 0xF) && now.Minute < 0x2E)
+				{
+					await Task.Delay(0xEA71);
+					now = DateTime.Now;
+				}
+				classfication += 2;
+			}
+			while (classfication == 8);
 		}
 		NamedPipeClientStream Client
 		{
 			get; set;
+		}
+		Dictionary<string, Queue<Collect>> Collection
+		{
+			get;
 		}
 		readonly bool lite;
 		readonly string name;

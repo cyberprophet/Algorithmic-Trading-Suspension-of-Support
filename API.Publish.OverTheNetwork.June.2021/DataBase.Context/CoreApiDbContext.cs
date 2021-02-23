@@ -1,4 +1,5 @@
-﻿using IdentityServer4.EntityFramework.Extensions;
+﻿
+using IdentityServer4.EntityFramework.Extensions;
 using IdentityServer4.EntityFramework.Options;
 
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
@@ -38,9 +39,29 @@ namespace ShareInvest
 				o.ToTable(tick);
 				o.HasKey(o => new { o.Code, o.Date });
 			});
+			builder.Entity<Tendency>(o => o.HasKey(o => new { o.Code, o.Date, o.Tick }));
+			builder.Entity<GroupDetail>(o =>
+			{
+				o.HasMany(o => o.Tendencies).WithOne().HasForeignKey(o => new { o.Code, o.Date });
+				o.HasKey(o => new { o.Code, o.Date });
+			});
+			builder.Entity<Group>(o => o.HasMany(o => o.Details).WithOne().HasForeignKey(o => o.Code));
+			builder.Entity<Theme>(o => o.HasMany(o => o.Groups).WithOne().HasForeignKey(o => o.Index));
 		}
 		public CoreApiDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> store) : base(options, store) => this.store = store;
 		public DbSet<Connection> User
+		{
+			get; set;
+		}
+		public DbSet<Tendency> Tendencies
+		{
+			get; set;
+		}
+		public DbSet<GroupDetail> Details
+		{
+			get; set;
+		}
+		public DbSet<Group> Group
 		{
 			get; set;
 		}

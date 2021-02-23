@@ -6,6 +6,10 @@
 		{
 			get; set;
 		}
+		public string Date
+		{
+			get; set;
+		}
 		public string Title
 		{
 			get; set;
@@ -22,7 +26,11 @@
 		{
 			get; set;
 		}
-		public double Degree
+		public int[] Tick
+		{
+			get; set;
+		}
+		public double[] Inclination
 		{
 			get; set;
 		}

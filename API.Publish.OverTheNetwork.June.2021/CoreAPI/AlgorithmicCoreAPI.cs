@@ -82,7 +82,7 @@ namespace ShareInvest
 				else
 				{
 					notifyIcon.Icon = Message.EndsWith(false.ToString()) ? icon[^1] : icon[DateTime.Now.Second % 2];
-					notifyIcon.Text = Message;
+					notifyIcon.Text = Message.Length < 0x40 ? Message : Message.Substring(0, 0x3F);
 				}
 			}
 		}
@@ -105,9 +105,9 @@ namespace ShareInvest
 										{
 											if (new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
 												while (queue.TryDequeue(out GroupDetail detail))
-													if (list.First(o => o.Code.Equals(detail.Code)).MaturityMarketCap.Contains(Base.TransactionSuspension) is false)
+													if (list.Any(o => o.Code.Equals(detail.Code)))
 													{
-														var bring = new Indicators.BringInTheme(key, api, detail, list.FirstOrDefault(o => o.Code.Equals(detail.Code)));
+														var bring = new Indicators.BringInTheme(key, api, detail, list.First(o => o.Code.Equals(detail.Code)));
 
 														if (await bring.StartProgress() is double percent)
 															Base.SendMessage(bring.GetType(), list.Find(o => o.Code.Equals(detail.Code)).Name, percent);

@@ -52,12 +52,11 @@ namespace ShareInvest
 						{
 							if (retention.Code.Length == 6)
 							{
-								var consensus = new Client.Consensus(key);
-
-								if (consensus.GrantAccess)
+								if (api.IsInsider)
 								{
 									Queue<ConvertConsensus> queue;
 									Queue<FinancialStatement> context = null;
+									var consensus = new Client.Consensus(key);
 
 									for (int i = 0; i < retention.Code.Length / 3; i++)
 									{
@@ -523,6 +522,7 @@ namespace ShareInvest
 				case Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>> models:
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
 					var restore = DateTime.TryParseExact(Base.End, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime store) ? store : DateTime.UnixEpoch;
+					IEnumerable<Tick> storage = await api.GetContextAsync(new Tick(), models.Item1) as IEnumerable<Tick>, repository = Repository.RetrieveSavedMaterial(models.Item1) as IEnumerable<Tick>;
 
 					while (models.Item2.TryPop(out Catalog.Models.RevisedStockPrice revise))
 						if (await api.PostContextAsync(revise) is int rsp && rsp != 0xC8)
@@ -540,32 +540,31 @@ namespace ShareInvest
 								notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Stocks to be Collect.";
 							}
 						}
-					if (await api.GetContextAsync(new Tick(), models.Item1) is IEnumerable<Tick> storage && Repository.RetrieveSavedMaterial(models.Item1) is IEnumerable<Tick> repository)
-						while (restore.CompareTo(now) < 0)
+					while (restore.CompareTo(now) < 0)
+					{
+						if (restore.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(restore.ToString(Base.DateFormat))) is false)
 						{
-							if (restore.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(restore.ToString(Base.DateFormat))) is false)
+							var str = restore.ToString(Base.LongDateFormat);
+
+							if (repository.Any(o => o.Date.Equals(str)) && repository.First(o => o.Date.Equals(str)) is Tick my)
 							{
-								var str = restore.ToString(Base.LongDateFormat);
-
-								if (repository.Any(o => o.Date.Equals(str)) && repository.First(o => o.Date.Equals(str)) is Tick my)
+								if (storage is IEnumerable<Tick> && storage.Any(o => o.Date.Equals(str)) && storage.First(o => o.Date.Equals(str)) is Tick server && (my.Open.Equals(server.Open) && my.Close.Equals(server.Close) && my.Price.Equals(server.Price)) is false && int.TryParse(my.Open, out int mo) && int.TryParse(server.Open, out int so) && int.TryParse(my.Close, out int mc) && int.TryParse(server.Close, out int sc))
 								{
-									if (storage is IEnumerable<Tick> && storage.Any(o => o.Date.Equals(str)) && storage.First(o => o.Date.Equals(str)) is Tick server && (my.Open.Equals(server.Open) && my.Close.Equals(server.Close) && my.Price.Equals(server.Price)) is false && int.TryParse(my.Open, out int mo) && int.TryParse(server.Open, out int so) && int.TryParse(my.Close, out int mc) && int.TryParse(server.Close, out int sc))
-									{
-										if ((mo < so || mc > sc) && Repository.RetrieveSavedMaterial(my) is string contents && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res"), Contents = contents }) is 0xC8)
-											notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
-
-										else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
-											Repository.KeepOrganizedInStorage(tick);
-									}
-									else if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+									if ((mo < so || mc > sc) && Repository.RetrieveSavedMaterial(my) is string contents && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res"), Contents = contents }) is 0xC8)
 										notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
+
+									else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
+										Repository.KeepOrganizedInStorage(tick);
 								}
-								else if (storage is IEnumerable<Tick> && storage.Any(o => o.Date.Equals(str)) && storage.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
-									Repository.KeepOrganizedInStorage(tick);
+								else if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+									notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
 							}
-							restore = restore.AddDays(1);
+							else if (storage is IEnumerable<Tick> && storage.Any(o => o.Date.Equals(str)) && storage.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
+								Repository.KeepOrganizedInStorage(tick);
 						}
-					else
+						restore = restore.AddDays(1);
+					}
+					if (now.Hour < 2)
 						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(Codes.Count);
 
 					CheckTheInformationReceivedOnTheDay();
@@ -574,6 +573,7 @@ namespace ShareInvest
 				case Tuple<string, Queue<Stocks>> confirm:
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, confirm.Item1).Send -= OnReceiveSecuritiesAPI;
 					var fo = DateTime.TryParseExact(Base.End, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt) ? dt : DateTime.UnixEpoch;
+					IEnumerable<Tick> ss = await api.GetContextAsync(new Tick(), confirm.Item1) as IEnumerable<Tick>, rs = Repository.RetrieveSavedMaterial(confirm.Item1) as IEnumerable<Tick>;
 
 					while (confirm.Item2.TryDequeue(out Stocks stock))
 						if (await api.PostContextAsync(stock) is string model)
@@ -587,32 +587,31 @@ namespace ShareInvest
 								notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Futures to be Collect.";
 							}
 						}
-					if (await api.GetContextAsync(new Tick(), confirm.Item1) is IEnumerable<Tick> ss && Repository.RetrieveSavedMaterial(confirm.Item1) is IEnumerable<Tick> rs)
-						while (fo.CompareTo(now) < 0)
+					while (fo.CompareTo(now) < 0)
+					{
+						if (fo.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(fo.ToString(Base.DateFormat))) is false)
 						{
-							if (fo.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(fo.ToString(Base.DateFormat))) is false)
+							var str = fo.ToString(Base.LongDateFormat);
+
+							if (rs.Any(o => o.Date.Equals(str)) && rs.First(o => o.Date.Equals(str)) is Tick my)
 							{
-								var str = fo.ToString(Base.LongDateFormat);
-
-								if (rs.Any(o => o.Date.Equals(str)) && rs.First(o => o.Date.Equals(str)) is Tick my)
+								if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && (my.Open.Equals(server.Open) && my.Close.Equals(server.Close) && my.Price.Equals(server.Price)) is false && int.TryParse(my.Open, out int mo) && int.TryParse(server.Open, out int so) && int.TryParse(my.Close, out int mc) && int.TryParse(server.Close, out int sc))
 								{
-									if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && (my.Open.Equals(server.Open) && my.Close.Equals(server.Close) && my.Price.Equals(server.Price)) is false && int.TryParse(my.Open, out int mo) && int.TryParse(server.Open, out int so) && int.TryParse(my.Close, out int mc) && int.TryParse(server.Close, out int sc))
-									{
-										if ((mo < so || mc > sc) && Repository.RetrieveSavedMaterial(my) is string contents && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res"), Contents = contents }) is 0xC8)
-											notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
-
-										else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
-											Repository.KeepOrganizedInStorage(tick);
-									}
-									else if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+									if ((mo < so || mc > sc) && Repository.RetrieveSavedMaterial(my) is string contents && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res"), Contents = contents }) is 0xC8)
 										notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
+
+									else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
+										Repository.KeepOrganizedInStorage(tick);
 								}
-								else if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
-									Repository.KeepOrganizedInStorage(tick);
+								else if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+									notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
 							}
-							restore = fo.AddDays(1);
+							else if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
+								Repository.KeepOrganizedInStorage(tick);
 						}
-					else
+						restore = fo.AddDays(1);
+					}
+					if (now.Hour < 2)
 						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(Codes.Count);
 
 					CheckTheInformationReceivedOnTheDay();

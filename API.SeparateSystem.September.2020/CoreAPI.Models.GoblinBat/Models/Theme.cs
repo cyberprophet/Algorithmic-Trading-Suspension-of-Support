@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
@@ -33,5 +34,11 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
+		[ForeignKey("Index")]
+		public virtual ICollection<Group> Groups
+		{
+			get; set;
+		}
+		public Theme() => Groups = new HashSet<Group>();
 	}
 }
