@@ -1,5 +1,4 @@
-﻿
-using IdentityServer4.EntityFramework.Extensions;
+﻿using IdentityServer4.EntityFramework.Extensions;
 using IdentityServer4.EntityFramework.Options;
 
 using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;

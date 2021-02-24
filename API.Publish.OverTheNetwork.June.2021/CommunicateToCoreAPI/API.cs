@@ -172,15 +172,24 @@ namespace ShareInvest.Client
 				LastDate = null
 			};
 		}
+		[SupportedOSPlatform("windows")]
 		public async Task<object> GetContextAsync<T>(T param) where T : struct
 		{
 			try
 			{
+				if (param is Charts && Repository.RetrieveSavedMaterial(param) is string file)
+					return JsonConvert.DeserializeObject<Stack<Catalog.Strategics.Charts>>(file).OrderBy(o => o.Date);
+
 				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.GET), source.Token);
 
 				switch (param)
 				{
-					case Charts when response.StatusCode.Equals(HttpStatusCode.OK):
+					case Catalog.Strategics.Charts when HttpStatusCode.OK.Equals(response.StatusCode) && string.IsNullOrEmpty(response.Content) is false:
+						return JsonConvert.DeserializeObject<Tick>(response.Content);
+
+					case Charts charts when HttpStatusCode.OK.Equals(response.StatusCode):
+						Repository.KeepOrganizedInStorage(response.Content, charts);
+
 						return JsonConvert.DeserializeObject<Stack<Catalog.Strategics.Charts>>(response.Content).OrderBy(o => o.Date);
 
 					case Catalog.Models.Consensus when response.StatusCode.Equals(HttpStatusCode.OK):

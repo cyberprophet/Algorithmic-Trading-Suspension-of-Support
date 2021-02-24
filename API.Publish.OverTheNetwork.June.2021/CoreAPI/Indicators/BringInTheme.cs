@@ -125,6 +125,8 @@ namespace ShareInvest.Indicators
 						else
 							stack.Push(server);
 					}
+					else if (await api.GetContextAsync(new Charts { Date = str, Price = theme.Code }) is Catalog.Models.Tick tick)
+						stack.Push(tick);
 				}
 				restore = restore.AddDays(1);
 			}
@@ -176,11 +178,11 @@ namespace ShareInvest.Indicators
 									}
 									var now = rate == 1D ? price : Base.GetStartingPrice((int)(rate * price), info.MarginRate == 1);
 									collection[index++ % 0x14] = now;
+									Send?.Invoke(this, new SendConsecutive(dequeue.Date, now));
 
 									if (index > 0x13)
 										Bollinger.CalculateBands(now, collection, 2);
 								}
-								Send?.Invoke(this, null);
 							}
 						foreach (var model in enumerable)
 							if (int.TryParse(model.Price, out int current))
@@ -197,6 +199,7 @@ namespace ShareInvest.Indicators
 								}
 								var now = rate == 1D ? current : Base.GetStartingPrice((int)(rate * current), info.MarginRate == 1);
 								collection[index++ % 0x14] = now;
+								Send?.Invoke(this, new SendConsecutive(model.Date, now));
 
 								if (index > 0x13)
 								{

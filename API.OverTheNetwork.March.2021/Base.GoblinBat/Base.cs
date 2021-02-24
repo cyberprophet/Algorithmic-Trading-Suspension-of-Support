@@ -166,6 +166,7 @@ namespace ShareInvest
 			}
 			return date;
 		}
+		public static string IsServer(bool server) => server ? "210225" : "210224";
 		public static string TellTheClientConnectionStatus(string name, bool is_connected) => $"{name} is connected on {is_connected}";
 		public static string ConvertFormat(string account) => $"{account.Substring(0, 4)}­ ─ ­{account.Substring(4, 4)}";
 		public static bool CheckIfMarketDelay(DateTime now) => Array.Exists(SAT, o => o.Equals(now.ToString(DateFormat)));

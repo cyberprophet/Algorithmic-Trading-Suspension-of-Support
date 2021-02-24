@@ -519,8 +519,8 @@ namespace ShareInvest
 					}
 					return;
 
-				case Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>> models:
-					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
+				case Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>> models when connect is OpenAPI.ConnectAPI ca:
+					ca.RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
 					var restore = DateTime.TryParseExact(Base.End, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime store) ? store : DateTime.UnixEpoch;
 					IEnumerable<Tick> storage = await api.GetContextAsync(new Tick(), models.Item1) as IEnumerable<Tick>, repository = Repository.RetrieveSavedMaterial(models.Item1) as IEnumerable<Tick>;
 
@@ -564,15 +564,13 @@ namespace ShareInvest
 						}
 						restore = restore.AddDays(1);
 					}
-					if (now.Hour < 2)
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(Codes.Count);
-
+					ca.CorrectTheDelayMilliseconds();
 					CheckTheInformationReceivedOnTheDay();
 					return;
 
 				case Tuple<string, Queue<Stocks>> confirm:
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, confirm.Item1).Send -= OnReceiveSecuritiesAPI;
-					var fo = DateTime.TryParseExact(Base.End, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt) ? dt : DateTime.UnixEpoch;
+					var fo = DateTime.TryParseExact(Base.IsServer(api.IsServer), Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime dt) ? dt : DateTime.UnixEpoch;
 					IEnumerable<Tick> ss = await api.GetContextAsync(new Tick(), confirm.Item1) as IEnumerable<Tick>, rs = Repository.RetrieveSavedMaterial(confirm.Item1) as IEnumerable<Tick>;
 
 					while (confirm.Item2.TryDequeue(out Stocks stock))
@@ -611,9 +609,6 @@ namespace ShareInvest
 						}
 						restore = fo.AddDays(1);
 					}
-					if (now.Hour < 2)
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(Codes.Count);
-
 					CheckTheInformationReceivedOnTheDay();
 					return;
 			}
@@ -789,7 +784,7 @@ namespace ShareInvest
 						{
 							GC.Collect();
 						}
-					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0xE11);
+					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0x1C00);
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}

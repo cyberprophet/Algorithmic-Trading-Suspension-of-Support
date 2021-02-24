@@ -24,6 +24,17 @@ namespace ShareInvest
 			if (compress.Item2 == 0)
 				Base.SendMessage(typeof(Repository), file);
 		}
+		public static void KeepOrganizedInStorage(string json, Catalog.Models.Charts ch)
+		{
+			string storage = Path.Combine(path, ch.Code, ch.GetType().Name), file = Path.Combine(storage, $"{ch.Start}_{ch.End}{extension}");
+			var compress = Compress(json);
+			CreateTheDirectory(new DirectoryInfo(storage));
+			using (var sw = new StreamWriter(file, false))
+				sw.Write(compress.Item1);
+
+			if (compress.Item2 == 0)
+				Base.SendMessage(typeof(Repository), file);
+		}
 		public static void KeepOrganizedInStorage(Catalog.Models.Tick tick)
 		{
 			string storage = string.IsNullOrEmpty(tick.Path) ? Path.Combine(path, tick.Code, tick.Date.Substring(0, 4), tick.Date.Substring(4, 2)) : GetPath(tick.Path), file = string.IsNullOrEmpty(tick.Path) ? Path.Combine(storage, $"{tick.Date[6..]}_{tick.Open}_{tick.Close}_{tick.Price}{extension}") : tick.Path;
@@ -39,18 +50,6 @@ namespace ShareInvest
 		{
 			using var sw = new StreamWriter(string.Concat(path, @"\", stocks.Code, '_', stocks.Date, extension));
 			sw.WriteLine(string.Concat(stocks.Price, '_', stocks.Retention, '_', count));
-		}
-		public static string RetrieveSavedMaterial(Catalog.Models.Tick tick)
-		{
-			var file = Path.Combine(path, tick.Code, tick.Date.Substring(0, 4), tick.Date.Substring(4, 2), $"{tick.Date[6..]}_{tick.Open}_{tick.Close}_{tick.Price}{extension}");
-
-			if (ReadTheFile(file))
-			{
-				using var sr = new StreamReader(file);
-
-				return Decompress(sr.ReadToEnd());
-			}
-			return null;
 		}
 		public static object RetrieveSavedMaterial(string code)
 		{
@@ -94,35 +93,55 @@ namespace ShareInvest
 			}
 			return null;
 		}
-		public static (string, bool) RetrieveSavedMaterial(Catalog.Models.Loading loading)
+		public static object RetrieveSavedMaterial<T>(T param) where T : struct
 		{
-			string storage = Path.Combine(path, loading.Code, loading.Year.ToString("D4"), loading.Month.ToString("D2")), material, file = string.Concat(storage, @"\", loading.Day.ToString("D2"), '_', loading.Start.ToString("D9"), '_', loading.End.ToString("D9"), '_', loading.Price, extension);
-			var info = new DirectoryInfo(storage);
+			var file = string.Empty;
 
+			switch (param)
+			{
+				case Catalog.Models.Charts ch:
+					file = Path.Combine(path, ch.Code, ch.GetType().Name, $"{ch.Start}_{ch.End}{extension}");
+					break;
+
+				case Catalog.Models.Tick tick:
+					file = Path.Combine(path, tick.Code, tick.Date.Substring(0, 4), tick.Date.Substring(4, 2), $"{tick.Date[6..]}_{tick.Open}_{tick.Close}_{tick.Price}{extension}");
+					break;
+
+				case Catalog.Models.Loading loading:
+					string storage = Path.Combine(path, loading.Code, loading.Year.ToString("D4"), loading.Month.ToString("D2")), material;
+					var info = new DirectoryInfo(storage);
+					file = string.Concat(storage, @"\", loading.Day.ToString("D2"), '_', loading.Start.ToString("D9"), '_', loading.End.ToString("D9"), '_', loading.Price, extension);
+
+					if (ReadTheFile(file))
+					{
+						using (var sr = new StreamReader(file))
+							material = Decompress(sr.ReadToEnd());
+
+						return (material, true);
+					}
+					else if (info.Exists)
+						foreach (var pf in info.GetFiles())
+							if (loading.Day.ToString("D2").Equals(pf.Name.Substring(0, 2)))
+							{
+								var split = pf.Name.Split('.')[0].Split('_');
+
+								if (pf.Length > loading.Length && uint.TryParse(split[1], out uint start) && start < loading.Start && start > 0x55D4A80 - 1 && uint.TryParse(split[^2], out uint end) && end > loading.End && (loading.Code.Length == 6 ? end > 0x91E9840 - 1 : end > 0x9357BA0 - 0x1) && ReadTheFile(pf.FullName))
+								{
+									using (var sr = new StreamReader(pf.FullName))
+										material = Decompress(sr.ReadToEnd());
+
+									return (material, false);
+								}
+							}
+					return (string.Empty, false);
+			}
 			if (ReadTheFile(file))
 			{
-				using (var sr = new StreamReader(file))
-					material = Decompress(sr.ReadToEnd());
+				using var sr = new StreamReader(file);
 
-				return (material, true);
+				return Decompress(sr.ReadToEnd());
 			}
-			else if (info.Exists)
-				foreach (var pf in info.GetFiles())
-					if (loading.Day.ToString("D2").Equals(pf.Name.Substring(0, 2)))
-					{
-						var split = pf.Name.Split('.')[0].Split('_');
-
-						if (pf.Length > loading.Length && uint.TryParse(split[1], out uint start) && start < loading.Start && start > 0x55D4A80 - 1
-							&& uint.TryParse(split[^2], out uint end) && end > loading.End && (loading.Code.Length == 6 ? end > 0x91E9840 - 1 : end > 0x9357BA0 - 0x1)
-							&& ReadTheFile(pf.FullName))
-						{
-							using (var sr = new StreamReader(pf.FullName))
-								material = Decompress(sr.ReadToEnd());
-
-							return (material, false);
-						}
-					}
-			return (string.Empty, false);
+			return null;
 		}
 		public static void Save(string path, string file, string param)
 		{

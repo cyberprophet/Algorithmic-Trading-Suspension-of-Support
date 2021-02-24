@@ -26,7 +26,7 @@ namespace ShareInvest
 			api = API.GetInstance(key);
 			pipe = new Pipe(api.GetType().Name, typeof(CoreAPI).Name, initial.Item2);
 
-			if (Environment.ProcessorCount > 4)
+			if (Environment.ProcessorCount > 4 && api.IsInsider)
 				theme = new BackgroundWorker();
 
 			timer.Start();
@@ -105,12 +105,31 @@ namespace ShareInvest
 										{
 											if (new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
 												while (queue.TryDequeue(out GroupDetail detail))
-													if (list.Any(o => o.Code.Equals(detail.Code)))
+													if (list.Any(o => o.Code.Equals(detail.Code) && o.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && o.MarginRate > 0))
 													{
-														var bring = new Indicators.BringInTheme(key, api, detail, list.First(o => o.Code.Equals(detail.Code)));
+														var find = list.First(o => o.Code.Equals(detail.Code));
+														var bring = new Indicators.BringInTheme(key, api, detail, find);
+														var slope = new Indicators.Slope(find.Name);
+														bring.Send += slope.OnReceiveCurrentLocation;
 
 														if (await bring.StartProgress() is double percent)
-															Base.SendMessage(bring.GetType(), list.Find(o => o.Code.Equals(detail.Code)).Name, percent);
+														{
+															bring.Send -= slope.OnReceiveCurrentLocation;
+															var temp = new GroupDetail
+															{
+																Code = detail.Code,
+																Compare = detail.Compare,
+																Current = detail.Current,
+																Date = slope.Date,
+																Index = detail.Index,
+																Rate = detail.Rate,
+																Title = detail.Title,
+																Percent = percent,
+																Tick = (int[])Enum.GetValues(typeof(Interface.KRX.Line)),
+																Inclination = slope.CalculateTheSlope
+															};
+															Base.SendMessage(bring.GetType(), find.Name, percent);
+														}
 													}
 										}
 										page = enumerable.Item1;

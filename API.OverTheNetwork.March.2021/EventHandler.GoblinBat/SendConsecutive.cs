@@ -52,5 +52,10 @@ namespace ShareInvest.EventHandler
 			Date = date;
 			Volume = volume;
 		}
+		public SendConsecutive(string date, int price)
+		{
+			Date = date;
+			Price = price;
+		}
 	}
 }

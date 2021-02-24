@@ -60,9 +60,29 @@ namespace ShareInvest.Controllers
 			return BadRequest();
 		}
 		[HttpGet(Security.routeGetDayChart), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status404NotFound)]
-		public async Task<IActionResult> GetContext(string key, string code)
+		public async Task<IActionResult> GetContextAsync(string key, string code)
 		{
-			if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
+			if (key.Length == 8 && Array.TrueForAll(key.ToCharArray(), o => char.IsDigit(o)))
+				switch (code.Length)
+				{
+					case 6:
+						foreach (var rc in (from o in context.Stocks.AsNoTracking() where o.Code.Equals(code) && o.Date.Substring(0, 6).Equals(key.Substring(2, 6)) select new { o.Date, o.Price }).OrderByDescending(o => o.Date).Take(1))
+							return Ok(new Catalog.Models.Tick
+							{
+								Code = code,
+								Date = key,
+								Price = rc.Price,
+								Open = string.Empty,
+								Close = string.Empty,
+								Path = string.Empty,
+								Contents = string.Empty
+							});
+						break;
+
+					case 8:
+						break;
+				}
+			else if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
 			{
 				try
 				{
@@ -78,7 +98,7 @@ namespace ShareInvest.Controllers
 				}
 				catch (Exception ex)
 				{
-					Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContext)}");
+					Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
 				}
 				return NotFound(code);
 			}
