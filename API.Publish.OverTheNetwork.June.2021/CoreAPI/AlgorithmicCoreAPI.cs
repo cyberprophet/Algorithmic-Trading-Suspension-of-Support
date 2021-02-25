@@ -26,7 +26,7 @@ namespace ShareInvest
 			api = API.GetInstance(key);
 			pipe = new Pipe(api.GetType().Name, typeof(CoreAPI).Name, initial.Item2);
 
-			if (Environment.ProcessorCount > 4 && api.IsInsider)
+			if (Environment.ProcessorCount > 4 && (api.IsInsider || Base.IsDebug))
 				theme = new BackgroundWorker();
 
 			timer.Start();
@@ -105,7 +105,7 @@ namespace ShareInvest
 										{
 											if (new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
 												while (queue.TryDequeue(out GroupDetail detail))
-													if (list.Any(o => o.Code.Equals(detail.Code) && o.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && o.MarginRate > 0))
+													if (list.Any(o => o.Code.Equals(detail.Code) && o.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && o.MarginRate > 0) && await api.GetConfirmAsync(detail) is string index && detail.Index.Equals(index) is false)
 													{
 														var find = list.First(o => o.Code.Equals(detail.Code));
 														var bring = new Indicators.BringInTheme(key, api, detail, find);
@@ -115,7 +115,8 @@ namespace ShareInvest
 														if (await bring.StartProgress() is double percent)
 														{
 															bring.Send -= slope.OnReceiveCurrentLocation;
-															var temp = new GroupDetail
+
+															if (await api.PostContextAsync(new GroupDetail
 															{
 																Code = detail.Code,
 																Compare = detail.Compare,
@@ -127,10 +128,12 @@ namespace ShareInvest
 																Percent = percent,
 																Tick = (int[])Enum.GetValues(typeof(Interface.KRX.Line)),
 																Inclination = slope.CalculateTheSlope
-															};
-															Base.SendMessage(bring.GetType(), find.Name, percent);
+															}) is int change && change > 0)
+																Base.SendMessage(bring.GetType(), find.Name, change);
 														}
 													}
+													else
+														Base.SendMessage(detail.GetType(), $"There is Data on the same day of {list.Find(o => o.Code.Equals(detail.Code)).Name}.");
 										}
 										page = enumerable.Item1;
 									}

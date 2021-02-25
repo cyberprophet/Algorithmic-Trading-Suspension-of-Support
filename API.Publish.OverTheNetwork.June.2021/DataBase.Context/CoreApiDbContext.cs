@@ -38,13 +38,18 @@ namespace ShareInvest
 				o.ToTable(tick);
 				o.HasKey(o => new { o.Code, o.Date });
 			});
-			builder.Entity<Tendency>(o => o.HasKey(o => new { o.Code, o.Date, o.Tick }));
+			builder.Entity<Tendency>(o => o.HasKey(o => new { o.Code, o.Tick }));
 			builder.Entity<GroupDetail>(o =>
 			{
-				o.HasMany(o => o.Tendencies).WithOne().HasForeignKey(o => new { o.Code, o.Date });
-				o.HasKey(o => new { o.Code, o.Date });
+				o.ToTable(typeof(Group).Name);
+				o.HasMany(o => o.Tendencies).WithOne().HasForeignKey(o => o.Code);
+				o.HasKey(o => o.Code);
 			});
-			builder.Entity<Group>(o => o.HasMany(o => o.Details).WithOne().HasForeignKey(o => o.Code));
+			builder.Entity<Group>(o =>
+			{
+				o.ToTable(typeof(Group).Name);
+				o.HasOne(o => o.Details).WithOne().HasForeignKey<GroupDetail>(o => o.Code);
+			});
 			builder.Entity<Theme>(o => o.HasMany(o => o.Groups).WithOne().HasForeignKey(o => o.Index));
 		}
 		public CoreApiDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> store) : base(options, store) => this.store = store;

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ShareInvest.Models
@@ -21,11 +20,10 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
-		[ForeignKey("Code")]
-		public virtual ICollection<GroupDetail> Details
+		[ForeignKey("Code"), Required]
+		public virtual GroupDetail Details
 		{
 			get; set;
 		}
-		public Group() => Details = new HashSet<GroupDetail>();
 	}
 }

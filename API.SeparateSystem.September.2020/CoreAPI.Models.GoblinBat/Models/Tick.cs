@@ -31,7 +31,7 @@ namespace ShareInvest.Models
 			get; set;
 		}
 		[Required]
-		public Contents Contents
+		public virtual Contents Contents
 		{
 			get; set;
 		}

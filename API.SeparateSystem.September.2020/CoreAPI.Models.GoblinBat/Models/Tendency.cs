@@ -10,17 +10,12 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
-		[StringLength(6), Column(Order = 2)]
-		public string Date
-		{
-			get; set;
-		}
-		[DatabaseGenerated(DatabaseGeneratedOption.None), Column(Order = 3)]
+		[DatabaseGenerated(DatabaseGeneratedOption.None), Column(Order = 2)]
 		public int Tick
 		{
 			get; set;
 		}
-		[Required]
+		[Required, Column(Order = 3)]
 		public double Inclination
 		{
 			get; set;

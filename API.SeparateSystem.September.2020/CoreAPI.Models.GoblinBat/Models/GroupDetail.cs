@@ -6,7 +6,7 @@ namespace ShareInvest.Models
 {
 	public class GroupDetail
 	{
-		[StringLength(6), Column(Order = 1), ForeignKey("Group")]
+		[StringLength(6), Column(Order = 1), ForeignKey("Group"), Key]
 		public string Code
 		{
 			get; set;
@@ -15,27 +15,7 @@ namespace ShareInvest.Models
 		public string Date
 		{
 			get; set;
-		}
-		[NotMapped]
-		public int[] Tick
-		{
-			get; set;
-		}
-		[NotMapped]
-		public double[] Inclination
-		{
-			get; set;
-		}
-		[NotMapped]
-		public string Title
-		{
-			get; set;
-		}
-		[NotMapped]
-		public string Index
-		{
-			get; set;
-		}
+		}		
 		[Required]
 		public int Current
 		{
@@ -56,6 +36,7 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
+		[ForeignKey("Code")]
 		public virtual ICollection<Tendency> Tendencies
 		{
 			get; set;

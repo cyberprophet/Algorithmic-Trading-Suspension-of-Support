@@ -106,8 +106,7 @@ namespace ShareInvest.Controllers
 							modify.Open = tick.Open;
 							modify.Close = tick.Close;
 							modify.Price = string.IsNullOrEmpty(price) ? tick.Price : price;
-							var attemper = context.Contents.First(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date));
-							attemper.CompressedContents = tick.Path;
+							context.Contents.First(o => o.Code.Equals(tick.Code) && o.Date.Equals(tick.Date)).CompressedContents = tick.Path;
 						}
 						else
 							return NoContent();

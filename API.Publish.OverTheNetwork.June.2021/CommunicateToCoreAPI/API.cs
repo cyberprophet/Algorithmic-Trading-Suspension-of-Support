@@ -105,6 +105,10 @@ namespace ShareInvest.Client
 						address = System.IO.Path.Combine(tick.Code, tick.Date, tick.Open, tick.Close);
 						break;
 
+					case GroupDetail detail:
+						address = detail.Code;
+						break;
+
 					default:
 						return null;
 				}
@@ -112,6 +116,9 @@ namespace ShareInvest.Client
 
 				switch (param)
 				{
+					case GroupDetail:
+						return HttpStatusCode.OK.Equals(response.StatusCode) ? JsonConvert.DeserializeObject<string>(response.Content) : string.Empty;
+
 					case Tick when HttpStatusCode.NoContent.Equals(response.StatusCode):
 						return param;
 				}
@@ -375,6 +382,9 @@ namespace ShareInvest.Client
 					{
 						case Privacies:
 							return response.StatusCode;
+
+						case GroupDetail when string.IsNullOrEmpty(response.Content) is false:
+							return JsonConvert.DeserializeObject<int>(response.Content);
 
 						case Retention when string.IsNullOrEmpty(response.Content) is false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
