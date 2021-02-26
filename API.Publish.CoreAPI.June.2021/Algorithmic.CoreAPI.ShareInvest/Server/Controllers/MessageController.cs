@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.Hubs;
@@ -35,7 +36,7 @@ namespace ShareInvest.Controllers
 						Name = user.Account.Name
 					});
 					if (hub is not null)
-						foreach (var email in from o in context.User where o.Kiwoom.Equals(param.Key) select o.Email)
+						foreach (var email in from o in context.User.AsNoTracking() where o.Kiwoom.Equals(param.Key) select o.Email)
 							await hub.Clients.User(context.Users.First(o => o.Email.Equals(email)).Id).SendAsync(method, log[0].Trim());
 
 					return Ok(param.Convey);
@@ -54,7 +55,7 @@ namespace ShareInvest.Controllers
 			{
 				List<Log> list = null;
 
-				foreach (var str in from o in context.User where o.Email.Equals(key) || o.Email.Equals(HttpUtility.UrlDecode(key)) select o)
+				foreach (var str in from o in context.User.AsNoTracking() where o.Email.Equals(key) || o.Email.Equals(HttpUtility.UrlDecode(key)) select o)
 					if (Security.User.TryGetValue(str.Kiwoom, out User user))
 					{
 						if (list is null)

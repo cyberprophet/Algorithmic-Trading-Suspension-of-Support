@@ -5,6 +5,7 @@ using System.Text;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Catalog.Models;
 
@@ -16,7 +17,7 @@ namespace ShareInvest.Controllers
 		[HttpPost]
 		public IEnumerable<UserInformation> PostContext([FromBody] Confirm confirm)
 		{
-			if (Security.User.TryGetValue(confirm.Key, out User user) && confirm.First == user.Account.Name[0] && user.Account.Name[^1] == confirm.Last && context.User.Any(o => o.Kiwoom.Equals(confirm.Key) && o.Email.Equals(confirm.Email)) is false)
+			if (Security.User.TryGetValue(confirm.Key, out User user) && confirm.First == user.Account.Name[0] && user.Account.Name[^1] == confirm.Last && context.User.AsNoTracking().Any(o => o.Kiwoom.Equals(confirm.Key) && o.Email.Equals(confirm.Email)) is false)
 			{
 				var sb = new StringBuilder();
 
@@ -33,15 +34,15 @@ namespace ShareInvest.Controllers
 				{
 					var queue = new Queue<UserInformation>();
 
-					foreach (var renewal in from o in context.User where o.Email.Equals(confirm.Email) select o)
+					foreach (var renewal in from o in context.User.AsNoTracking() where o.Email.Equals(confirm.Email) select o)
 					{
 						var check = string.Empty;
 
-						if (context.Privacies.Any(o => o.CodeStrategics.Equals(renewal.Kiwoom)))
+						if (context.Privacies.AsNoTracking().Any(o => o.CodeStrategics.Equals(renewal.Kiwoom)))
 						{
 							var tick = double.NaN;
 
-							foreach (var privacy in from o in context.Privacies where o.CodeStrategics.Equals(renewal.Kiwoom) select o)
+							foreach (var privacy in from o in context.Privacies.AsNoTracking() where o.CodeStrategics.Equals(renewal.Kiwoom) select o)
 								if (double.IsNaN(tick) || privacy.Commission > tick)
 								{
 									tick = privacy.Commission;

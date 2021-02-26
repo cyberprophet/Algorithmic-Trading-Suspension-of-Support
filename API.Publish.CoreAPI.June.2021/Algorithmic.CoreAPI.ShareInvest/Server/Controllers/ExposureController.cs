@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace ShareInvest.Controllers
 {
@@ -9,7 +10,7 @@ namespace ShareInvest.Controllers
 	public class ExposureController : ControllerBase
 	{
 		[HttpGet]
-		public string GetContext(string key) => key.Length == 6 || key.Length == 8 ? (context.Securities.Count(o => o.Code.Equals(key)) / (double)context.Securities.Count()).ToString("P5") : 0.ToString("P");
+		public string GetContext(string key) => key.Length is 6 or 8 ? (context.Securities.AsNoTracking().Count(o => o.Code.Equals(key)) / (double)context.Securities.AsNoTracking().Count()).ToString("P5") : 0.ToString("P");
 		public ExposureController(CoreApiDbContext context) => this.context = context;
 		readonly CoreApiDbContext context;
 	}

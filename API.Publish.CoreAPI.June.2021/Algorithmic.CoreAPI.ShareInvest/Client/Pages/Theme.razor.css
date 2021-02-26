@@ -1,0 +1,80 @@
+﻿.paragraph
+{
+	border: 1px;
+	border-color: gainsboro;
+	border-style: solid;
+	width: 100%;
+	margin: 0
+}
+
+.inner_inclination
+{
+	width: 100%;
+	font-size: x-small;
+	text-align: end;
+	padding-right: 1em;
+	color: dimgray
+}
+
+.inner_table
+{
+	width: 100%;
+	color: #212529
+}
+
+.search
+{
+	margin-bottom: 1rem
+}
+
+.search_input
+{
+	background-color: transparent;
+	margin-right: 1em;
+	color: dimgray;
+	border: 0.75px ridge;
+	border-style: solid;
+	border-color: azure;
+	font-size: small;
+	width: 25%;
+	height: 25px;
+	text-align: center
+}
+
+	.search_input::placeholder
+	{
+		color: lightgrey;
+		font-style: italic
+	}
+
+#sort
+{
+	cursor: pointer;
+	font-size: 12px;
+	padding-left: 1px;
+	color: slategray
+}
+
+a
+{
+	text-decoration: none
+}
+
+	a:link
+	{
+	}
+
+	a:visited
+	{
+		color: #8c59b9
+	}
+
+	a:hover
+	{
+		text-decoration: underline
+	}
+
+	a:active
+	{
+		color: dimgray
+	}

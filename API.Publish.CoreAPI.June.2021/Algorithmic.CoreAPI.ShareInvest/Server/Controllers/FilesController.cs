@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Catalog.Models;
 
@@ -57,7 +58,7 @@ namespace ShareInvest.Controllers
 		[HttpGet, ProducesResponseType(StatusCodes.Status204NoContent)]
 		public IActionResult GetContext(string key)
 		{
-			if (string.IsNullOrEmpty(key) is false && context.User.Any(o => o.Email.Equals(key)))
+			if (string.IsNullOrEmpty(key) is false && context.User.AsNoTracking().Any(o => o.Email.Equals(key)))
 				return File(System.IO.File.OpenRead(Security.File), Security.Stream, Path.GetFileName(Security.File));
 
 			return NoContent();

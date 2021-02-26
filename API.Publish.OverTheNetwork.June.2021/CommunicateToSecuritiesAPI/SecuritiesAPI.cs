@@ -95,7 +95,7 @@ namespace ShareInvest
 											break;
 									}
 									if (stack is Stack<Catalog.IncorporatedStocks> && await api.PostContextAsync(stack) == 0xC8)
-										await Task.Delay(0x500);
+										await Task.Delay(0x100);
 								}
 							}
 						}
@@ -531,15 +531,12 @@ namespace ShareInvest
 					while (models.Item3.TryDequeue(out Stocks stock) && stock.Volume == 0)
 						if (await api.PostContextAsync(stock) is string confirm)
 						{
-							if (string.IsNullOrEmpty(confirm))
-								notifyIcon.Text = $"Still {Codes.Count:N0} Stocks to be Collect.";
-
-							else
-							{
-								var message = $"Deleted {confirm} {models.Item1} Data {stock.Date} where the Error was found.";
-								notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Stocks to be Collect.";
-							}
+							var message = $"Deleted {confirm} {models.Item1} Data {stock.Date} where the Error was found.";
+							notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Stocks to be Collect.";
 						}
+						else
+							notifyIcon.Text = $"Still {Codes.Count:N0} Stocks to be Collect.";
+
 					while (restore.CompareTo(now) < 0)
 					{
 						if (restore.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(restore.ToString(Base.DateFormat))) is false)
@@ -576,15 +573,12 @@ namespace ShareInvest
 					while (confirm.Item2.TryDequeue(out Stocks stock))
 						if (await api.PostContextAsync(stock) is string model)
 						{
-							if (string.IsNullOrEmpty(model))
-								notifyIcon.Text = $"Still {Codes.Count:N0} Futures to be Collect.";
-
-							else
-							{
-								var message = $"Deleted {model} {confirm.Item1} Data {stock.Date} where the Error was found.";
-								notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Futures to be Collect.";
-							}
+							var message = $"Deleted {model} {confirm.Item1} Data {stock.Date} where the Error was found.";
+							notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Futures to be Collect.";
 						}
+						else
+							notifyIcon.Text = $"Still {Codes.Count:N0} Futures to be Collect.";
+
 					while (fo.CompareTo(now) < 0)
 					{
 						if (fo.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(fo.ToString(Base.DateFormat))) is false)
@@ -784,7 +778,7 @@ namespace ShareInvest
 						{
 							GC.Collect();
 						}
-					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0x1C00);
+					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0x1400);
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}

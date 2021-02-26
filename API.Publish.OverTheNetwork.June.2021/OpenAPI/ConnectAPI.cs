@@ -258,6 +258,9 @@ namespace ShareInvest.OpenAPI
 		{
 			Delay.Milliseconds--;
 
+			if (DateTime.Now.Hour > 2)
+				Delay.Milliseconds--;
+
 			return axAPI.GetConnectState();
 		}
 		public StreamWriter Writer

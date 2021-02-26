@@ -27,8 +27,8 @@ namespace ShareInvest.Controllers
 					user.Balance[balance.Code] = balance;
 
 					if (hub is not null)
-						foreach (var email in from o in context.User where o.Kiwoom.Equals(balance.Kiwoom) select o.Email)
-							await hub.Clients.User(context.Users.First(o => o.Email.Equals(email)).Id).SendAsync(message, balance);
+						foreach (var email in from o in context.User.AsNoTracking() where o.Kiwoom.Equals(balance.Kiwoom) select o.Email)
+							await hub.Clients.User(context.Users.AsNoTracking().First(o => o.Email.Equals(email)).Id).SendAsync(message, balance);
 				}
 			}
 			catch (Exception ex)
@@ -40,11 +40,11 @@ namespace ShareInvest.Controllers
 		[HttpGet]
 		public IEnumerable<Catalog.Models.Balance> GetContextAsync(string key)
 		{
-			if (context.User.Any(o => o.Email.Equals(key)))
+			if (context.User.AsNoTracking().Any(o => o.Email.Equals(key)))
 			{
 				var stack = new Stack<Catalog.Models.Balance>();
 
-				foreach (var user in (from o in context.User where o.Email.Equals(key) select o).AsNoTracking())
+				foreach (var user in from o in context.User.AsNoTracking() where o.Email.Equals(key) select o)
 					if (Security.User.TryGetValue(user.Kiwoom, out Catalog.Models.User model))
 						foreach (var kv in model.Balance)
 							stack.Push(kv.Value);

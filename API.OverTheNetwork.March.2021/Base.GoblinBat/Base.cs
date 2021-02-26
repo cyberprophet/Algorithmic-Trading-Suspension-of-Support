@@ -173,6 +173,15 @@ namespace ShareInvest
 		public static bool CheckIfMarketDelay(DateTime now, int check) => Array.FindIndex(SAT, o => o.Equals(now.ToString(DateFormat))) % 2 == check;
 		public static DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);
 		public static DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
+		public static string GetUrl(string code) => string.Concat(url, code);
+		public static string ChangeFormat(double param) => Math.Abs(param).ToString("P2");
+		public static string ChangeFormat(string date, string format)
+		{
+			if (DateTime.TryParseExact(date, format, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
+				return TimeFormat.Equals(format) ? time.ToShortTimeString() : time.ToShortDateString();
+
+			return string.Empty;
+		}
 		public static string DistinctDate
 		{
 			get
@@ -192,10 +201,16 @@ namespace ShareInvest
 				return ToDebug;
 			}
 		}
+		public static ConsoleColor ChangeColor(double param) => param > 0 ? ConsoleColor.Red : ConsoleColor.Blue;
+		public static string[] Contents => new[] { "Name", "Rate", "Average", "Major Stocks", "Base Date" };
+		public static string[] Title => new[] { "테마명", "전일대비", "최근3일\n등락률", "주도주", "기준일" };
+		public static string[] Stocks => new[] { "Code", "Name", "Price", "Rate", "Volume", "Location" };
+		public static string[] Explicate => new[] { "종목코드ㆍ체결시각ㆍ경사도", "기업개요", "체결가격", "전일대비\n등락률", "전일대비\n거래증감률", "볼린저밴드（σ :２）" };
 		public static double Tax => tax;
 		public static string FullDateFormat => "yyMMddHHmmss";
 		public static string DateFormat => "yyMMdd";
 		public static string LongDateFormat => "yyyyMMdd";
+		public static string TimeFormat => "HHmmss";
 		public static string TransactionSuspension => transaction_suspension;
 		public static string Margin => margin;
 		public static string Transmit => transmit;
@@ -230,6 +245,7 @@ namespace ShareInvest
 		const string transaction_suspension = "거래정지";
 		const string margin = "증거금";
 		const string empty = "empty";
+		const string url = @"https://finance.naver.com/item/fchart.nhn?code=";
 		const double tax = 25e-4 + 15e-5 + 15e-5;
 	}
 }

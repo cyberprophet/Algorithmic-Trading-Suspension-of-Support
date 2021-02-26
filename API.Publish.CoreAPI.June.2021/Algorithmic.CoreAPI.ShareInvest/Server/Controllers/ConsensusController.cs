@@ -17,13 +17,13 @@ namespace ShareInvest.Controllers
 		[HttpGet]
 		public async Task<IEnumerable<Consensus>> GetContextAsync()
 		{
-			var list = await context.Codes.Where(o => o.Code.Length == 6).Select(o => new { o.Code, o.Name, o.MarginRate, o.MaturityMarketCap, o.Price }).AsNoTracking().ToListAsync();
+			var list = await context.Codes.AsNoTracking().Where(o => o.Code.Length == 6).Select(o => new { o.Code, o.Name, o.MarginRate, o.MaturityMarketCap, o.Price }).ToListAsync();
 			var queue = new Queue<Consensus>();
 
 			foreach (var st in Enum.GetNames(typeof(Catalog.AnalysisType)))
 			{
 				var find = string.Concat("TC.", st);
-				var where = context.Estimate.Where(o => o.Strategics.Equals(find)).AsNoTracking();
+				var where = context.Estimate.AsNoTracking().Where(o => o.Strategics.Equals(find));
 				var max = await where.MaxAsync(o => o.Date);
 
 				foreach (var con in await where.Where(o => o.Date.Equals(max)).Select(o => new { o.Code, o.FirstQuarter, o.SecondQuarter, o.ThirdQuarter, o.Quarter, o.TheNextYear, o.TheYearAfterNext }).ToListAsync())

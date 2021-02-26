@@ -20,8 +20,8 @@ namespace ShareInvest.Controllers
 			{
 				var stack = new Stack<Catalog.Models.BringIn>();
 
-				foreach (var find in (from o in context.User where o.Email.Equals(key) select o).AsNoTracking())
-					foreach (var sk in (from o in context.Securities where o.Methods.Equals(find.Kiwoom) select o).AsNoTracking())
+				foreach (var find in from o in context.User.AsNoTracking() where o.Email.Equals(key) select o)
+					foreach (var sk in from o in context.Securities.AsNoTracking() where o.Methods.Equals(find.Kiwoom) select o)
 						stack.Push(new Catalog.Models.BringIn
 						{
 							Code = sk.Code,
@@ -38,7 +38,7 @@ namespace ShareInvest.Controllers
 		[HttpPost]
 		public async Task<HttpStatusCode> PostContextAsync([FromBody] Catalog.Models.BringIn bring)
 		{
-			if (await context.Privacies.AnyAsync(o => o.CodeStrategics.Equals(bring.Methods)))
+			if (await context.Privacies.AsNoTracking().AnyAsync(o => o.CodeStrategics.Equals(bring.Methods)))
 			{
 				var identity = new Models.Identify
 				{

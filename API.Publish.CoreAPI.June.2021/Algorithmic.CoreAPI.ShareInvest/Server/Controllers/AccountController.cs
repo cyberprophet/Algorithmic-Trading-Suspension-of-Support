@@ -56,9 +56,9 @@ namespace ShareInvest.Controllers
 		{
 			try
 			{
-				if (await context.Privacies.AnyAsync(o => o.CodeStrategics.Equals(param.Key)))
+				if (await context.Privacies.AsNoTracking().AnyAsync(o => o.CodeStrategics.Equals(param.Key)))
 				{
-					foreach (var pri in (from o in context.Privacies where o.CodeStrategics.Equals(param.Key) select o).AsNoTracking())
+					foreach (var pri in from o in context.Privacies where o.CodeStrategics.Equals(param.Key) select o)
 					{
 						var privacy = new Models.Privacy
 						{
@@ -96,15 +96,15 @@ namespace ShareInvest.Controllers
 
 				do
 				{
-					foreach (var user in from o in context.User where o.Email.Equals(str) select o)
+					foreach (var user in from o in context.User.AsNoTracking() where o.Email.Equals(str) select o)
 					{
 						var check = string.Empty;
 
-						if (context.Privacies.Any(o => o.CodeStrategics.Equals(user.Kiwoom)))
+						if (context.Privacies.AsNoTracking().Any(o => o.CodeStrategics.Equals(user.Kiwoom)))
 						{
 							var tick = double.NaN;
 
-							foreach (var privacy in from o in context.Privacies where o.CodeStrategics.Equals(user.Kiwoom) select o)
+							foreach (var privacy in from o in context.Privacies.AsNoTracking() where o.CodeStrategics.Equals(user.Kiwoom) select o)
 								if (double.IsNaN(tick) || privacy.Commission > tick)
 								{
 									tick = privacy.Commission;

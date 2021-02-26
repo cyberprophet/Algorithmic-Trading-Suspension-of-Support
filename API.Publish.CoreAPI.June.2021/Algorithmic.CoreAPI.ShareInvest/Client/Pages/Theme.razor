@@ -1,0 +1,166 @@
+﻿@page "/theme"
+@inherits ThemeBase
+
+@if (Theme is Catalog.Dart.Theme[])
+{
+	if (Inclination is string[])
+	{
+		<div class="search">
+			<input class="search_input" id="search" type="text" @onchange="OnReceiveKeyPress" placeholder="Search for the Stocks." autocomplete="on" list="search-list">
+			@if (string.IsNullOrEmpty(Search))
+			{
+				<span class="oi oi-x" aria-hidden="true" id="sort" title="It doesn't exist in the Theme." />
+			}
+			else
+			{
+				<strong>
+					@string.Concat(Search, " ")
+				</strong>
+				<span class="oi oi-magnifying-glass" @onclick="OnClick" aria-hidden="true" id="sort" />
+			}
+		</div>
+		<datalist id="search-list">
+			@foreach (var search in Codes.OrderBy(o => o.Name))
+			{
+				<option value="@search.Code">@search.Name</option>
+			}
+		</datalist>
+	}
+	<table class="table">
+		<thead>
+			<tr>
+				@foreach (var th in Base.Contents)
+				{
+					var index = Array.FindIndex(Base.Contents, o => o.Equals(th));
+
+					<th title="@Base.Title[index]">
+						@th
+						@if (Check[index])
+						{
+							<span class="oi oi-sort-ascending" id="sort" aria-hidden="true" @onclick="e => OnClick(index + Base.Contents.Length, e)" />
+						}
+						else
+						{
+							<span class="oi oi-sort-descending" id="sort" aria-hidden="true" @onclick="e => OnClick(index, e)" />
+						}
+					</th>
+				}
+			</tr>
+		</thead>
+		<tbody>
+			<Virtualize @ref="Virtualize" ItemsProvider="LoadGroup" Context="theme">
+				<tr id="@Array.FindIndex(Theme, o => o.Index.Equals(theme.Index))" @key="@theme.Index">
+					<th>
+						@theme.Name
+						<span class="oi oi-magnifying-glass" @onclick="e => OnClick(theme.Index, e)" aria-hidden="true" id="sort" />
+					</th>
+					<td style="color: @Base.ChangeColor(theme.Rate)">
+						@Base.ChangeFormat(theme.Rate)
+					</td>
+					<td style="color: @Base.ChangeColor(theme.Average)">
+						@Base.ChangeFormat(theme.Average)
+					</td>
+					@{
+						var sp = theme.Code.Split(';');
+						var name = ChangeFormat(sp);
+
+						<td>
+							<span>
+								<a href="@Base.GetUrl(sp[0])" target="_blank">@name.Item1</a>
+							</span>
+							<br />
+							<span>
+								<a href="@Base.GetUrl(sp[^1])" target="_blank">@name.Item2</a>
+							</span>
+						</td>
+					}
+					<td>
+						@Base.ChangeFormat(theme.Date, Base.DateFormat)
+					</td>
+				</tr>
+				@if (IsClick[theme.Index] && Detail is IEnumerable<GroupDetail>)
+				{
+					<tr>
+						<td colspan="5" class="paragraph">
+							<table class="inner_table">
+								<thead>
+									<tr>
+										@foreach (var th in Base.Stocks)
+										{
+											var index = Array.FindIndex(Base.Stocks, o => o.Equals(th));
+
+											<th title="@Base.Explicate[index]">
+												@th
+												@if (IsCheck[index])
+												{
+													<span class="oi oi-sort-ascending" id="sort" aria-hidden="true" @onclick="e => OnClick(e, index + Base.Stocks.Length)" />
+												}
+												else
+												{
+													<span class="oi oi-sort-descending" id="sort" aria-hidden="true" @onclick="e => OnClick(e, index)" />
+												}
+												<div class="inner_inclination">
+													@(index > 0 ? Inclination[index - 1] : "Inclination")
+												</div>
+											</th>
+										}
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (var tail in Detail)
+									{
+										<tr id="@tail.Code" @key="tail.Code">
+											<td>
+												@tail.Code
+												<div class="inner_inclination">
+													@Base.ChangeFormat(tail.Date, Base.TimeFormat)
+												</div>
+											</td>
+											<th title="@tail.Title.Replace(". ",".\n")">
+												<a href="@Base.GetUrl(tail.Code)" target="_blank">@FindByName(tail.Code)</a>
+												<div class="inner_inclination" style="color: @Base.ChangeColor(tail.Inclination[0])">
+													@Math.Abs(tail.Inclination[0]).ToString("N3")˚
+												</div>
+											</th>
+											<td>
+												@tail.Current.ToString("C0")
+												<div class="inner_inclination" style="color: @Base.ChangeColor(tail.Inclination[1])">
+													@Math.Abs(tail.Inclination[1]).ToString("N3")˚
+												</div>
+											</td>
+											<td style="color: @Base.ChangeColor(tail.Rate)">
+												@Base.ChangeFormat(tail.Rate)
+												<div class="inner_inclination" style="color: @Base.ChangeColor(tail.Inclination[2])">
+													@Math.Abs(tail.Inclination[2]).ToString("N3")˚
+												</div>
+											</td>
+											<td style="color: @Base.ChangeColor(tail.Compare)">
+												@Base.ChangeFormat(tail.Compare)
+												<div class="inner_inclination" style="color: @Base.ChangeColor(tail.Inclination[3])">
+													@Math.Abs(tail.Inclination[3]).ToString("N3")˚
+												</div>
+											</td>
+											<td style="color: @(tail.Percent > 1 || tail.Percent < 0 ? Base.ChangeColor(tail.Percent) : null)">
+												@Base.ChangeFormat(tail.Percent)
+												<div class="inner_inclination" style="color: @Base.ChangeColor(tail.Inclination[^1])">
+													@Math.Abs(tail.Inclination[^1]).ToString("N3")˚
+												</div>
+											</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						</td>
+					</tr>
+				}
+			</Virtualize>
+		</tbody>
+	</table>
+
+}
+else
+{
+	<p>
+		<em>Loading...</em>
+	</p>
+}
