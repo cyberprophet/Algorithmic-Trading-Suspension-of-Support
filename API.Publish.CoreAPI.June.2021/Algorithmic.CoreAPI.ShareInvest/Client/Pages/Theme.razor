@@ -9,14 +9,14 @@
 			<input class="search_input" id="search" type="text" @onchange="OnReceiveKeyPress" placeholder="Search for the Stocks." autocomplete="on" list="search-list">
 			@if (string.IsNullOrEmpty(Search))
 			{
-				<span class="oi oi-x" aria-hidden="true" id="sort" title="It doesn't exist in the Theme." />
+				<span class="sort oi oi-x" aria-hidden="true" title="It doesn't exist in the Theme." />
 			}
 			else
 			{
 				<strong>
 					@string.Concat(Search, " ")
 				</strong>
-				<span class="oi oi-magnifying-glass" @onclick="OnClick" aria-hidden="true" id="sort" />
+				<span class="sort oi oi-magnifying-glass" @onclick="OnClick" aria-hidden="true" />
 			}
 		</div>
 		<datalist id="search-list">
@@ -35,24 +35,40 @@
 
 					<th title="@Base.Title[index]">
 						@th
+
 						@if (Check[index])
 						{
-							<span class="oi oi-sort-ascending" id="sort" aria-hidden="true" @onclick="e => OnClick(index + Base.Contents.Length, e)" />
+							<span class="sort oi oi-sort-ascending" aria-hidden="true" @onclick="e => OnClick(index + Base.Contents.Length, e)" />
 						}
 						else
 						{
-							<span class="oi oi-sort-descending" id="sort" aria-hidden="true" @onclick="e => OnClick(index, e)" />
+							<span class="sort oi oi-sort-descending" aria-hidden="true" @onclick="e => OnClick(index, e)" />
 						}
 					</th>
 				}
 			</tr>
 		</thead>
 		<tbody>
-			<Virtualize @ref="Virtualize" ItemsProvider="LoadGroup" Context="theme">
+			<Virtualize @ref="Virtualize" ItemsProvider="LoadGroupAsync" Context="theme">
 				<tr id="@Array.FindIndex(Theme, o => o.Index.Equals(theme.Index))" @key="@theme.Index">
 					<th>
 						@theme.Name
-						<span class="oi oi-magnifying-glass" @onclick="e => OnClick(theme.Index, e)" aria-hidden="true" id="sort" />
+
+						@if (IsClick[theme.Index])
+						{
+							if (Detail is IEnumerable<GroupDetail> && Detail.Any())
+							{
+								<span class="sort oi oi-fullscreen-exit" @onclick="e => OnClick(theme.Index, e)" aria-hidden="true" />
+							}
+							else
+							{
+								<span class="sort oi oi-x" aria-hidden="true" title="It doesn't exist in the Theme." />
+							}
+						}
+						else
+						{
+							<span class="sort oi oi-magnifying-glass" @onclick="e => OnClick(theme.Index, e)" aria-hidden="true" />
+						}
 					</th>
 					<td style="color: @Base.ChangeColor(theme.Rate)">
 						@Base.ChangeFormat(theme.Rate)
@@ -78,7 +94,7 @@
 						@Base.ChangeFormat(theme.Date, Base.DateFormat)
 					</td>
 				</tr>
-				@if (IsClick[theme.Index] && Detail is IEnumerable<GroupDetail>)
+				@if (IsClick[theme.Index] && Detail is IEnumerable<GroupDetail> && Detail.Any())
 				{
 					<tr>
 						<td colspan="5" class="paragraph">
@@ -91,13 +107,14 @@
 
 											<th title="@Base.Explicate[index]">
 												@th
+
 												@if (IsCheck[index])
 												{
-													<span class="oi oi-sort-ascending" id="sort" aria-hidden="true" @onclick="e => OnClick(e, index + Base.Stocks.Length)" />
+													<span class="sort oi oi-sort-ascending" aria-hidden="true" @onclick="e => OnClick(e, index + Base.Stocks.Length)" />
 												}
 												else
 												{
-													<span class="oi oi-sort-descending" id="sort" aria-hidden="true" @onclick="e => OnClick(e, index)" />
+													<span class="sort oi oi-sort-descending" aria-hidden="true" @onclick="e => OnClick(e, index)" />
 												}
 												<div class="inner_inclination">
 													@(index > 0 ? Inclination[index - 1] : "Inclination")
@@ -118,6 +135,15 @@
 											</td>
 											<th title="@tail.Title.Replace(". ",".\n")">
 												<a href="@Base.GetUrl(tail.Code)" target="_blank">@FindByName(tail.Code)</a>
+
+												@if (IsClick[tail.Code])
+												{
+													<span class="oi_search oi oi-fullscreen-exit" @onclick="e => OnClick(e, tail.Code)" aria-hidden="true" />
+												}
+												else
+												{
+													<span class="oi_search oi oi-magnifying-glass" @onclick="e => OnClick(e, tail.Code)" aria-hidden="true" />
+												}
 												<div class="inner_inclination" style="color: @Base.ChangeColor(tail.Inclination[0])">
 													@Math.Abs(tail.Inclination[0]).ToString("N3")˚
 												</div>
@@ -156,7 +182,6 @@
 			</Virtualize>
 		</tbody>
 	</table>
-
 }
 else
 {

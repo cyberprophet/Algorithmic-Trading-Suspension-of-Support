@@ -47,12 +47,21 @@
 		font-style: italic
 	}
 
-#sort
+.sort
 {
 	cursor: pointer;
 	font-size: 12px;
-	padding-left: 1px;
+	padding-left: 1.5px;
 	color: slategray
+}
+
+.oi_search
+{
+	cursor: pointer;
+	color: dimgray;
+	font-size: x-small;
+	margin-left: 1.5px;
+	margin-bottom: 1px
 }
 
 a

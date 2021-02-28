@@ -63,7 +63,8 @@ namespace ShareInvest.Pages
 						Detail = from o in Group where o.Index.Equals(str) select o;
 
 						foreach (var kv in IsClick)
-							IsClick[kv.Key] = kv.Key.Equals(str) && Detail.Any();
+							if (kv.Key.Length < 6)
+								IsClick[kv.Key] = kv.Key.Equals(str);
 					}
 					break;
 
@@ -86,7 +87,9 @@ namespace ShareInvest.Pages
 					break;
 			}
 			StateHasChanged();
-			await Virtualize.RefreshDataAsync();
+
+			if (sender is int)
+				await Virtualize.RefreshDataAsync();
 		}
 		protected internal async void OnClick(MouseEventArgs _)
 		{
@@ -97,6 +100,17 @@ namespace ShareInvest.Pages
 		{
 			switch (sender)
 			{
+				case string str:
+					IsClick[str] = IsClick[str] is false;
+
+					if (IsClick[str])
+					{
+						foreach (var kv in IsClick)
+							if (kv.Key.Length == 6)
+								IsClick[kv.Key] = kv.Key.Equals(str);
+					}
+					break;
+
 				case int num:
 					Detail = sender switch
 					{
@@ -176,7 +190,7 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
-		protected internal ValueTask<ItemsProviderResult<Catalog.Dart.Theme>> LoadGroup(ItemsProviderRequest request) => ValueTask.FromResult(new ItemsProviderResult<Catalog.Dart.Theme>(GetTheme(request.StartIndex, Math.Min(request.Count, Collection.Length - request.StartIndex)), Collection.Length));
+		protected internal async ValueTask<ItemsProviderResult<Catalog.Dart.Theme>> LoadGroupAsync(ItemsProviderRequest request) => await Task.FromResult(new ItemsProviderResult<Catalog.Dart.Theme>(Theme.Skip(request.StartIndex).Take(request.Count), Theme.Length));
 		protected override async Task OnInitializedAsync()
 		{
 			Collection = await Http.GetFromJsonAsync<Catalog.Dart.Theme[]>(Crypto.Security.GetRoute(nameof(Catalog.Dart.Theme), nameof(Catalog.Dart.Theme)));
@@ -196,6 +210,10 @@ namespace ShareInvest.Pages
 				Inclination = Enum.GetNames(typeof(Interface.KRX.Line));
 				IsCheck = new bool[] { true, true, true, true, true, true };
 			}
+			if (Group is GroupDetail[])
+				foreach (var detail in Group)
+					if (IsClick is Dictionary<string, bool> && IsClick.ContainsKey(detail.Code) is false)
+						IsClick[detail.Code] = false;
 		}
 		async Task WaitForTheScrollToMovement(int index)
 		{
@@ -209,15 +227,6 @@ namespace ShareInvest.Pages
 			{
 				await WaitForTheScrollToMovement(index);
 			}
-		}
-		List<Catalog.Dart.Theme> GetTheme(int initial, int quantity)
-		{
-			var result = new List<Catalog.Dart.Theme>();
-
-			for (int i = initial; i < initial + quantity; i++)
-				result.Add(Theme[i]);
-
-			return result;
 		}
 		[Inject]
 		HttpClient Http

@@ -847,7 +847,7 @@ namespace ShareInvest
 					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
 				}
-				else if (api.IsAdministrator && api.IsServer && connect.Start is false && now.Hour == 1 && DayOfWeek.Sunday.Equals(now.DayOfWeek) is false)
+				else if (api.IsAdministrator && api.IsServer && connect.Start is false && now.Hour == 0 && now.Minute > 0x10 && DateTime.Now.DayOfWeek is not DayOfWeek.Sunday or DayOfWeek.Monday)
 				{
 					var worker = new BackgroundWorker();
 					notifyIcon.Icon = icons[^2];
