@@ -7,7 +7,7 @@ namespace ShareInvest
 {
 	public static class Base
 	{
-		public static readonly Dictionary<string, string> rename = new Dictionary<string, string>();
+		public static readonly Dictionary<string, string> rename = new();
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string code, int quantity, int count, object purchase, object current, Interface.IStrategics strategics)
 		{

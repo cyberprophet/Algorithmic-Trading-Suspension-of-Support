@@ -176,7 +176,7 @@ namespace ShareInvest.OpenAPI
 		}
 		readonly Delay request;
 		readonly AxKHOpenAPI axAPI;
-		readonly Dictionary<int, string> error = new Dictionary<int, string>
+		readonly Dictionary<int, string> error = new()
 		{
 			{ 0, "정상처리" },
 			{ -1, "미접속상태" },

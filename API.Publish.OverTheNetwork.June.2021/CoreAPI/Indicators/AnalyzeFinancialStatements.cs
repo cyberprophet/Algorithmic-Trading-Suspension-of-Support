@@ -17,7 +17,7 @@ namespace ShareInvest.Indicators
 		{
 			get
 			{
-				List<long> sale = new List<long>(), oper = new List<long>(), netincome = new List<long>(), flow = new List<long>();
+				List<long> sale = new(), oper = new(), netincome = new(), flow = new();
 				var financial_statement = new Dictionary<DateTime, Tuple<long, long, long, long>>();
 				var dictionary = new Dictionary<DateTime, double>();
 				var list = new List<long>[] { sale, oper, netincome, flow };
@@ -121,7 +121,7 @@ namespace ShareInvest.Indicators
 		static Dictionary<DateTime, double> EstimateThePrice(Dictionary<DateTime, double> estimate, int year)
 		{
 			var dictionary = new Dictionary<DateTime, double>(estimate);
-			List<double> xs = new List<double>(), ys = new List<double>();
+			List<double> xs = new(), ys = new();
 
 			foreach (var kv in estimate.OrderBy(o => o.Key))
 				if (kv.Value > 0 && kv.Value < 1)

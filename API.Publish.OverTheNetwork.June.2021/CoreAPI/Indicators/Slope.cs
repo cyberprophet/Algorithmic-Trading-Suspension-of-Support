@@ -50,7 +50,7 @@ namespace ShareInvest.Indicators
 							for (int i = 0; i < (int)kv.Key; i++)
 								temp[i] = i + 1;
 
-							Normalization x = new Normalization(temp), y = new Normalization(kv.Value);
+							Normalization x = new(temp), y = new(kv.Value);
 							double[] xs = new double[(int)kv.Key], ys = new double[kv.Value.Length];
 
 							for (int i = 0; i < (int)kv.Key; i++)
