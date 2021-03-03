@@ -11,6 +11,19 @@ namespace ShareInvest.Controllers
 	[ApiController, Route(Security.route), Produces(Security.produces)]
 	public class ThemeController : ControllerBase
 	{
+		[HttpGet, ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+		public async Task<IActionResult> GetContextAsync()
+		{
+			try
+			{
+				return Ok(await (from o in context.Theme.AsNoTracking() select new { o.Name, o.Index, o.Rate, o.Average }).ToArrayAsync());
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
+			}
+			return BadRequest();
+		}
 		[HttpPost, ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<IActionResult> PostContextAsync([FromBody] Models.Theme theme)
 		{

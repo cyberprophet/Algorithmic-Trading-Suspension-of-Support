@@ -103,23 +103,27 @@ namespace ShareInvest
 
 			switch (now.Month)
 			{
-				case 1:
-				case 4:
-				case 7:
-				case 0xA:
+				case 1 or 4 or 0xA:
 					near = IsTheSecondThursday(new DateTime(now.Year, now.AddMonths(2).Month, DateTime.DaysInMonth(now.Year, now.Month)));
 					break;
 
-				case 2:
-				case 5:
-				case 8:
-				case 0xB:
+				case 7:
+					near = IsTheSecondThursday(new DateTime(now.Year, now.AddMonths(2).Month, DateTime.DaysInMonth(now.Year, now.Month) - 1));
+					break;
+
+				case 2 or 0xB:
 					near = IsTheSecondThursday(new DateTime(now.Year, now.AddMonths(1).Month, DateTime.DaysInMonth(now.Year, now.Month)));
 					break;
 
+				case 5 or 8:
+					near = IsTheSecondThursday(new DateTime(now.Year, now.AddMonths(1).Month, DateTime.DaysInMonth(now.Year, now.Month) - 1));
+					break;
+
 				case 3:
-				case 6:
-				case 9:
+					near = IsTheSecondThursday(new DateTime(now.Year, now.AddMonths(3).Month, DateTime.DaysInMonth(now.Year, now.Month) - 1));
+					break;
+
+				case 6 or 9:
 					near = IsTheSecondThursday(new DateTime(now.Year, now.AddMonths(3).Month, DateTime.DaysInMonth(now.Year, now.Month)));
 					break;
 

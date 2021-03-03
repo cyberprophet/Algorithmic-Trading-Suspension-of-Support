@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows.Forms;
 
 using ShareInvest.Catalog.Models;
@@ -26,9 +27,15 @@ namespace ShareInvest
 			api = API.GetInstance(key);
 			pipe = new Pipe(api.GetType().Name, typeof(CoreAPI).Name, initial.Item2);
 
-			if (Environment.ProcessorCount > 4 && (api.IsInsider || Base.IsDebug))
-				theme = new BackgroundWorker();
-
+			if (Environment.ProcessorCount > 4)
+			{
+				if (Environment.ProcessorCount > 6)
+				{
+					if (api.IsInsider || Base.IsDebug)
+						theme = new BackgroundWorker();
+				}
+				search = new BackgroundWorker();
+			}
 			timer.Start();
 		}
 		string Message
@@ -60,6 +67,9 @@ namespace ShareInvest
 
 				if (theme is BackgroundWorker)
 					theme.DoWork += new DoWorkEventHandler(WorkerDoWork);
+
+				if (search is BackgroundWorker)
+					search.DoWork += new DoWorkEventHandler(WorkerDoWork);
 			}
 			else if (string.IsNullOrEmpty(pipe.Message))
 			{
@@ -71,6 +81,8 @@ namespace ShareInvest
 					if (theme is BackgroundWorker)
 						theme.RunWorkerAsync(uint.MinValue);
 
+					if (search is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
+						search.RunWorkerAsync(list);
 				}));
 				pipe.StartProgress();
 			}
@@ -95,46 +107,63 @@ namespace ShareInvest
 
 				switch (e.Argument)
 				{
+					case List<Catalog.Models.Theme> theme:
+						foreach (var cn in list.OrderBy(o => Guid.NewGuid()))
+							if (cn.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && cn.MarginRate > 0)
+								try
+								{
+									if (int.TryParse(cn.Code, out int length))
+										await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(string.Concat(cn.Name, " -판다몰")), length);
+								}
+								catch (Exception ex)
+								{
+									Base.SendMessage(sender.GetType(), cn.Name, ex.StackTrace);
+								}
+								finally
+								{
+									await Task.Delay(0x200);
+								}
+						break;
+
 					case uint arg:
 						while (++arg > 0 && arg < page)
 							if (new Client.Theme(key).OnReceiveMarketPriceByTheme((int)arg) is (uint, IEnumerable<Catalog.Models.Theme>) enumerable)
 								foreach (var theme in enumerable.Item2)
 									try
 									{
-										if (await api.PostContextAsync(theme) is Catalog.Dart.Theme st)
-										{
-											if (new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
-												while (queue.TryDequeue(out GroupDetail detail))
-													if (list.Any(o => o.Code.Equals(detail.Code) && o.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && o.MarginRate > 0) && await api.GetConfirmAsync(detail) is string index && detail.Index.Equals(index) is false)
+										if (await api.PostContextAsync(theme) is Catalog.Dart.Theme st && new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
+											while (queue.TryDequeue(out GroupDetail detail))
+												if (list.Any(o => o.Code.Equals(detail.Code) && o.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && o.MarginRate > 0) && await api.GetConfirmAsync(detail) is string index && detail.Index.Equals(index) is false)
+												{
+													var find = list.First(o => o.Code.Equals(detail.Code));
+													var bring = new Indicators.BringInTheme(key, api, detail, find);
+													var slope = new Indicators.Slope(find.Name);
+													bring.Send += slope.OnReceiveCurrentLocation;
+
+													if (await bring.StartProgress() is double percent)
 													{
-														var find = list.First(o => o.Code.Equals(detail.Code));
-														var bring = new Indicators.BringInTheme(key, api, detail, find);
-														var slope = new Indicators.Slope(find.Name);
-														bring.Send += slope.OnReceiveCurrentLocation;
+														bring.Send -= slope.OnReceiveCurrentLocation;
 
-														if (await bring.StartProgress() is double percent)
+														if (await api.PostContextAsync(new GroupDetail
 														{
-															bring.Send -= slope.OnReceiveCurrentLocation;
+															Code = detail.Code,
+															Compare = detail.Compare,
+															Current = detail.Current,
+															Date = slope.Date,
+															Index = detail.Index,
+															Rate = detail.Rate,
+															Title = detail.Title,
+															Percent = percent,
+															Tick = (int[])Enum.GetValues(typeof(Interface.KRX.Line)),
+															Inclination = slope.CalculateTheSlope
 
-															if (await api.PostContextAsync(new GroupDetail
-															{
-																Code = detail.Code,
-																Compare = detail.Compare,
-																Current = detail.Current,
-																Date = slope.Date,
-																Index = detail.Index,
-																Rate = detail.Rate,
-																Title = detail.Title,
-																Percent = percent,
-																Tick = (int[])Enum.GetValues(typeof(Interface.KRX.Line)),
-																Inclination = slope.CalculateTheSlope
-															}) is int change && change > 0)
-																Base.SendMessage(bring.GetType(), find.Name, change);
-														}
+														}) is int change && change > 0)
+															Base.SendMessage(bring.GetType(), find.Name, change);
 													}
-													else
-														Base.SendMessage(detail.GetType(), $"There is Data on the same day of {list.Find(o => o.Code.Equals(detail.Code)).Name}.");
-										}
+												}
+												else
+													Base.SendMessage(detail.GetType(), $"There is Data on the same day of {list.Find(o => o.Code.Equals(detail.Code)).Name}.");
+
 										page = enumerable.Item1;
 									}
 									catch (Exception ex)
@@ -214,7 +243,7 @@ namespace ShareInvest
 								}
 								catch (Exception ex)
 								{
-									Base.SendMessage(sender.GetType(), ex.StackTrace);
+									Base.SendMessage(sender.GetType(), ch.Name, ex.StackTrace);
 								}
 						break;
 				}
@@ -241,6 +270,9 @@ namespace ShareInvest
 				if (theme is BackgroundWorker)
 					theme.Dispose();
 
+				if (search is BackgroundWorker)
+					search.Dispose();
+
 				worker.Dispose();
 				Dispose();
 			}
@@ -249,6 +281,7 @@ namespace ShareInvest
 		readonly API api;
 		readonly Pipe pipe;
 		readonly BackgroundWorker theme;
+		readonly BackgroundWorker search;
 		readonly Icon[] icon;
 	}
 }

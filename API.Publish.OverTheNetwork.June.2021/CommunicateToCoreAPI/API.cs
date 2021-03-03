@@ -109,6 +109,10 @@ namespace ShareInvest.Client
 						address = detail.Code;
 						break;
 
+					case Catalog.Dart.Theme:
+						address = string.Empty;
+						break;
+
 					default:
 						return null;
 				}
@@ -121,6 +125,9 @@ namespace ShareInvest.Client
 
 					case Tick when HttpStatusCode.NoContent.Equals(response.StatusCode):
 						return param;
+
+					case Catalog.Dart.Theme when HttpStatusCode.OK.Equals(response.StatusCode):
+						return JsonConvert.DeserializeObject<List<Catalog.Models.Theme>>(response.Content);
 				}
 			}
 			catch (Exception ex)
