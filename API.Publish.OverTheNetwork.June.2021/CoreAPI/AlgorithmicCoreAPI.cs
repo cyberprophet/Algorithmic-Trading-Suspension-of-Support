@@ -34,7 +34,10 @@ namespace ShareInvest
 					if (api.IsInsider || Base.IsDebug)
 						theme = new BackgroundWorker();
 				}
-				search = new BackgroundWorker();
+				if (Base.IsDebug is false)
+					search = new BackgroundWorker();
+
+				big = new BackgroundWorker();
 			}
 			timer.Start();
 		}
@@ -70,6 +73,9 @@ namespace ShareInvest
 
 				if (search is BackgroundWorker)
 					search.DoWork += new DoWorkEventHandler(WorkerDoWork);
+
+				if (big is BackgroundWorker)
+					big.DoWork += new DoWorkEventHandler(WorkerDoWork);
 			}
 			else if (string.IsNullOrEmpty(pipe.Message))
 			{
@@ -80,6 +86,9 @@ namespace ShareInvest
 
 					if (theme is BackgroundWorker)
 						theme.RunWorkerAsync(uint.MinValue);
+
+					if (big is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> shuffle)
+						big.RunWorkerAsync(shuffle.OrderBy(o => Guid.NewGuid()));
 
 					if (search is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
 						search.RunWorkerAsync(list);
@@ -112,8 +121,40 @@ namespace ShareInvest
 							if (cn.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && cn.MarginRate > 0)
 								try
 								{
-									if (int.TryParse(cn.Code, out int length))
-										await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(string.Concat(cn.Name, " -판다몰")), length);
+									var contents = new Stack<string>();
+
+									if (int.TryParse(cn.Code, out int length) && await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(cn.Name), length) is Queue<string> queue)
+										while (queue.TryDequeue(out string url))
+											if (await new Naver.Search(key).BrowseTheSite(url) is (string, Stack<string>) co)
+											{
+												while (co.Item2.TryPop(out string text))
+													contents.Push(text);
+
+												contents.Push(co.Item1);
+											}
+									if (contents.Count > 0)
+									{
+										contents.Push(cn.Code);
+										contents.Push(cn.Name);
+									}
+								}
+								catch (Exception ex)
+								{
+									Base.SendMessage(sender.GetType(), cn.Name, ex.StackTrace);
+								}
+								finally
+								{
+									await Task.Delay(0x200);
+								}
+						break;
+
+					case IEnumerable<Catalog.Models.Theme> enumerable:
+						foreach (var cn in list.OrderBy(o => Guid.NewGuid()))
+							if (cn.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && cn.MarginRate > 0)
+								try
+								{
+									if (int.TryParse(cn.Code, out int _) && await new Naver.Search(key).VisualizeTheResultsOfAnAnalysis(cn.Name) is (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
+										Base.SendMessage(GetType(), cn.Name, cloud.Item1.Count, cloud.Item2.Count);
 								}
 								catch (Exception ex)
 								{
@@ -273,6 +314,9 @@ namespace ShareInvest
 				if (search is BackgroundWorker)
 					search.Dispose();
 
+				if (big is BackgroundWorker)
+					big.Dispose();
+
 				worker.Dispose();
 				Dispose();
 			}
@@ -280,6 +324,7 @@ namespace ShareInvest
 		readonly string key;
 		readonly API api;
 		readonly Pipe pipe;
+		readonly BackgroundWorker big;
 		readonly BackgroundWorker theme;
 		readonly BackgroundWorker search;
 		readonly Icon[] icon;

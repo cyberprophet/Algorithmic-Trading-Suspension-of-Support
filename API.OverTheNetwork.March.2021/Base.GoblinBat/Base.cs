@@ -22,6 +22,8 @@ namespace ShareInvest
 			Debug.WriteLine(string.Concat(type.Name, '_', code, '_', quantity, '_', count, '_', purchase, '_', current, str));
 		}
 		[Conditional("DEBUG")]
+		public static void SendMessage(Type sender, object convey, object message, object param) => Debug.WriteLine(string.Concat(sender.Name, '_', convey, '_', message, '_', param));
+		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string code, string date, string remove) => Debug.WriteLine(string.Concat(type.Name, '_', code, '_', date, '_', remove));
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type type, string message) => Debug.WriteLine(string.Concat(type.Name, '_', message));
