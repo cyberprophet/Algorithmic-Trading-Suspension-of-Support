@@ -1,9 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
+
+using RestSharp;
 
 namespace ShareInvest.Client
 {
@@ -45,12 +53,137 @@ namespace ShareInvest.Client
 				driver.Close();
 				driver.Dispose();
 				service.Dispose();
-				GC.Collect();
+			}
+		}
+		public async Task TransmitCollectedInformation(Catalog.Models.Codes cn, (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
+		{
+			try
+			{
+				driver.Navigate().GoToUrl(System.IO.Path.Combine(tistory, 0x32.ToString()));
+				var timeout = driver.Manage().Timeouts();
+				timeout.ImplicitWait = TimeSpan.FromSeconds(0xC);
+				timeout.PageLoad = TimeSpan.FromSeconds(0xC);
+				await Task.Delay(0x200);
+				driver.Manage().Window.FullScreen();
+
+				foreach (var header in driver.FindElementsByXPath(security.Transmit[^1]))
+					foreach (var button in header.FindElements(By.TagName("button")))
+					{
+						var title = button.GetAttribute("title");
+
+						if (string.IsNullOrEmpty(title) is false && menu.Equals(title))
+						{
+							button.Click();
+							await Task.Delay(0x400);
+						}
+					}
+				foreach (var aside in driver.FindElementsByXPath(security.Transmit[^2]))
+					foreach (var div in aside.FindElements(By.TagName(nameof(aside))))
+						foreach (var btn in div.FindElements(By.TagName(nameof(div))))
+						{
+							var attribute = btn.GetAttribute("class");
+
+							if (string.IsNullOrEmpty(attribute) is false && attribute.StartsWith("btn-for-") && attribute.EndsWith("guest"))
+							{
+								btn.FindElement(By.TagName("a")).Click();
+								await Task.Delay(0x400);
+
+								foreach (var main in driver.FindElementsByXPath(security.Transmit[^3]))
+									foreach (var a in main.FindElements(By.TagName("a")))
+									{
+										var login = a.GetAttribute("class");
+
+										if (string.IsNullOrEmpty(login) is false && login.EndsWith(security.Transmit[^4]))
+										{
+											a.Click();
+											await Task.Delay(0x400);
+											driver.FindElementByXPath(security.Transmit[^5]).SendKeys(security.Transmit[^6]);
+											await Task.Delay(0x400);
+											driver.FindElementByXPath(security.Transmit[^7]).SendKeys(security.Transmit[^8]);
+											await Task.Delay(0x400);
+
+											foreach (var fieldset in driver.FindElementsByXPath(security.Transmit[^9]))
+												foreach (var wrap_btn in fieldset.FindElements(By.TagName("div")))
+												{
+													var wrap = wrap_btn.GetAttribute("class");
+
+													if (string.IsNullOrEmpty(wrap) is false && nameof(wrap_btn).Equals(wrap))
+														foreach (var button in wrap_btn.FindElements(By.TagName("button")))
+														{
+															var submit = button.GetAttribute("tabindex");
+
+															if (string.IsNullOrEmpty(submit) is false && submit[0] is '3')
+															{
+																button.Click();
+																await Task.Delay(0x400);
+																driver.Navigate().GoToUrl(System.IO.Path.Combine(story, security.Transmit[^0xA]));
+																timeout.ImplicitWait = TimeSpan.FromSeconds(0xC);
+																timeout.PageLoad = TimeSpan.FromSeconds(0xC);
+																driver.Manage().Window.FullScreen();
+																await Task.Delay(0x200);
+																((IJavaScriptExecutor)driver).ExecuteScript("window.open();");
+
+																foreach (var confirm in driver.FindElementsByXPath(security.Transmit[^0xB]))
+																	foreach (var span in confirm.FindElements(By.TagName("button")))
+																	{
+																		var click = span.GetAttribute("class");
+
+																		if (string.IsNullOrEmpty(click) is false && nameof(confirm).Equals(click))
+																		{
+																			span.Click();
+																			await Task.Delay(0x400);
+																			Url = driver.Url.Split('?')[^1].Split('&')[0].Trim();
+																			driver.SwitchTo().Window(driver.WindowHandles[^1]).Manage().Window.FullScreen();
+
+																			break;
+																		}
+																	}
+																break;
+															}
+														}
+												}
+											break;
+										}
+									}
+								break;
+							}
+						}
+				var client = new RestClient(story)
+				{
+					Timeout = -1
+				};
+				var source = new CancellationTokenSource();
+				var response = await client.ExecuteAsync(new RestRequest(security.GetToken(Url), Method.GET), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+				{
+					foreach (var kv in JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content))
+						if (string.IsNullOrEmpty(kv.Value) is false)
+							Url = string.Concat(kv.Key, '=', kv.Value);
+
+					response = await client.ExecuteAsync(new RestRequest(security.GetInfomation(Url), Method.GET), source.Token);
+
+					if (HttpStatusCode.OK.Equals(response.StatusCode))
+						Base.SendMessage(GetType(), JObject.Parse(response.Content)[nameof(tistory)].ToString());
+				}
+				driver.Navigate().GoToUrl(System.IO.Path.Combine(tistory, 0x32.ToString()));
+				source.Dispose();
+				client.ClearHandlers();
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			finally
+			{
+				driver.Close();
+				driver.Dispose();
+				service.Dispose();
 			}
 		}
 		public Advertise(dynamic key)
 		{
-			var security = new Security(key);
+			security = new Security(key);
 			service = ChromeDriverService.CreateDefaultService(security.Path[0]);
 			service.HideCommandPromptWindow = true;
 			var options = new ChromeOptions();
@@ -58,8 +191,15 @@ namespace ShareInvest.Client
 			options.AddArgument(string.Concat("user-agent=", security.Path[^1]));
 			driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
 		}
+		string Url
+		{
+			get; set;
+		}
+		readonly Security security;
 		readonly ChromeDriver driver;
 		readonly ChromeDriverService service;
+		const string menu = "메뉴";
+		const string story = @"https://www.tistory.com";
 		const string tistory = @"https://sharecompany.tistory.com/";
 	}
 }

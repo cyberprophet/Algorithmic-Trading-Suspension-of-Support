@@ -111,6 +111,7 @@ namespace ShareInvest
 		{
 			if (await api.GetContextAsync(new Codes(), 6) is List<Codes> list)
 			{
+				var now = DateTime.Now;
 				var page = uint.MaxValue;
 				await Task.Delay(Base.IsDebug ? 0x400 : new Random(Guid.NewGuid().GetHashCode()).Next(0x32000, 0x64000));
 
@@ -118,6 +119,7 @@ namespace ShareInvest
 				{
 					case List<Catalog.Models.Theme> theme:
 						foreach (var cn in list.OrderBy(o => Guid.NewGuid()))
+						{
 							if (cn.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && cn.MarginRate > 0)
 								try
 								{
@@ -145,16 +147,26 @@ namespace ShareInvest
 								finally
 								{
 									await Task.Delay(0x200);
+									now = DateTime.Now;
 								}
+							if (now.Hour == 8)
+							{
+								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
+									continue;
+
+								break;
+							}
+						}
 						break;
 
 					case IEnumerable<Catalog.Models.Theme> enumerable:
 						foreach (var cn in list.OrderBy(o => Guid.NewGuid()))
+						{
 							if (cn.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && cn.MarginRate > 0)
 								try
 								{
 									if (int.TryParse(cn.Code, out int _) && await new Naver.Search(key).VisualizeTheResultsOfAnAnalysis(cn.Name) is (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
-										Base.SendMessage(GetType(), cn.Name, cloud.Item1.Count, cloud.Item2.Count);
+										await new Advertise(key).TransmitCollectedInformation(cn, cloud);
 								}
 								catch (Exception ex)
 								{
@@ -163,11 +175,21 @@ namespace ShareInvest
 								finally
 								{
 									await Task.Delay(0x200);
+									now = DateTime.Now;
 								}
+							if (now.Hour == 8)
+							{
+								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
+									continue;
+
+								break;
+							}
+						}
 						break;
 
 					case uint arg:
 						while (++arg > 0 && arg < page)
+						{
 							if (new Client.Theme(key).OnReceiveMarketPriceByTheme((int)arg) is (uint, IEnumerable<Catalog.Models.Theme>) enumerable)
 								foreach (var theme in enumerable.Item2)
 									try
@@ -214,16 +236,24 @@ namespace ShareInvest
 									finally
 									{
 										await Task.Delay(0xC00);
+										now = DateTime.Now;
 									}
+							if (now.Hour == 8)
+							{
+								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
+									continue;
+
+								break;
+							}
+						}
 						break;
 
 					case IEnumerable<Interface.IStrategics> enumerable:
 						foreach (Catalog.TrendsToCashflow analysis in enumerable)
+						{
 							foreach (var ch in list.OrderBy(o => Guid.NewGuid()))
 								try
 								{
-									var now = DateTime.Now;
-
 									if (string.IsNullOrEmpty(ch.Price) is false && (ch.MarginRate == 1 || ch.MarginRate == 2) && ch.MaturityMarketCap.StartsWith(Base.Margin) && int.TryParse(ch.Price, out int price) && price > 0 && ch.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && await api.PostConfirmAsync(new Catalog.ConfirmStrategics
 									{
 										Code = ch.Code,
@@ -286,9 +316,23 @@ namespace ShareInvest
 								{
 									Base.SendMessage(sender.GetType(), ch.Name, ex.StackTrace);
 								}
+								finally
+								{
+									await Task.Delay(0x400);
+									now = DateTime.Now;
+								}
+							if (now.Hour == 8)
+							{
+								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
+									continue;
+
+								break;
+							}
+						}
 						break;
 				}
 			}
+			(sender as BackgroundWorker).Dispose();
 		}
 		void Dispose(short param)
 		{
@@ -317,7 +361,9 @@ namespace ShareInvest
 				if (big is BackgroundWorker)
 					big.Dispose();
 
-				worker.Dispose();
+				if (worker is BackgroundWorker)
+					worker.Dispose();
+
 				Dispose();
 			}
 		}
