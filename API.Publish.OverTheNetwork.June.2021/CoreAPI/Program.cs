@@ -8,7 +8,7 @@ namespace ShareInvest
 	{
 		[STAThread]
 		static void Main(string[] args)
-		{
+		{	
 			if (Application.SetHighDpiMode(HighDpiMode.SystemAware))
 			{
 				Application.EnableVisualStyles();

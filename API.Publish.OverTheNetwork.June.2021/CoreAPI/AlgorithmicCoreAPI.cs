@@ -166,7 +166,16 @@ namespace ShareInvest
 								try
 								{
 									if (int.TryParse(cn.Code, out int _) && await new Naver.Search(key).VisualizeTheResultsOfAnAnalysis(cn.Name) is (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
-										await new Advertise(key).TransmitCollectedInformation(cn, cloud);
+										switch (await new Advertise(key).TransmitCollectedInformation(cn, cloud.Item1, cloud.Item2))
+										{
+											case Response response:
+												Base.SendMessage(sender.GetType(), cn.Name, response.Post, response.Url);
+												break;
+
+											case int status when status == 0x196:
+												Base.SendMessage(sender.GetType(), cn.Name, status);
+												break;
+										}
 								}
 								catch (Exception ex)
 								{
@@ -318,7 +327,7 @@ namespace ShareInvest
 								}
 								finally
 								{
-									await Task.Delay(0x400);
+									await Task.Delay(0x100);
 									now = DateTime.Now;
 								}
 							if (now.Hour == 8)

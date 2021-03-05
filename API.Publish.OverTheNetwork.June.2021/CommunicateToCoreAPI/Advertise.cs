@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -55,7 +57,7 @@ namespace ShareInvest.Client
 				service.Dispose();
 			}
 		}
-		public async Task TransmitCollectedInformation(Catalog.Models.Codes cn, (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
+		public async Task<object> TransmitCollectedInformation(Catalog.Models.Codes cn, List<Catalog.KRX.Cloud> cloud, Dictionary<string, string> news)
 		{
 			try
 			{
@@ -157,18 +159,78 @@ namespace ShareInvest.Client
 
 				if (HttpStatusCode.OK.Equals(response.StatusCode))
 				{
+					(string, string) token = (null, null);
+
 					foreach (var kv in JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content))
 						if (string.IsNullOrEmpty(kv.Value) is false)
+						{
 							Url = string.Concat(kv.Key, '=', kv.Value);
-
+							token = (kv.Key, kv.Value);
+						}
 					response = await client.ExecuteAsync(new RestRequest(security.GetInfomation(Url), Method.GET), source.Token);
 
 					if (HttpStatusCode.OK.Equals(response.StatusCode))
-						Base.SendMessage(GetType(), JObject.Parse(response.Content)[nameof(tistory)].ToString());
+					{
+						response = await client.ExecuteAsync(new RestRequest("apis/post/attach", Method.POST).AddParameter(token.Item1, token.Item2).AddParameter("blogName", "sharecompany").AddFileBytes("uploadedfile", Properties.Resources.coreapi, "main.png"), source.Token);
+
+						if (HttpStatusCode.OK.Equals(response.StatusCode))
+						{
+							StringBuilder tag = new(), content = new(security.Cloud[0]);
+							var now = DateTime.Now;
+							var index = 0;
+							now = now.Hour < 9 ? now.AddDays(-1) : now;
+							var image = string.Empty;
+							var xml = new System.Xml.XmlDocument();
+							xml.LoadXml(response.Content);
+
+							foreach (var replace in xml.GetElementsByTagName("replacer"))
+								if (replace is System.Xml.XmlNode node && string.IsNullOrEmpty(node.InnerText) is false)
+									image = node.InnerText;
+
+							foreach (var word in cloud.OrderByDescending(o => o.Frequency))
+							{
+								if (index++ < 0xA)
+									tag.Append(word.Text).Append(',');
+
+								content.Append(security.Cloud[1]).Append($"'{word.Anchor}'").Append(security.Cloud[2]).Append($"'{word.Transform}'").Append(security.Cloud[3]).Append($"'{word.Style}'").Append(security.Cloud[^3]).Append(word.Text).Append(security.Cloud[^2]);
+							}
+							content.Append(security.Cloud[^1]).Append(@"<br />").Append(image).Append(@"<div>");
+
+							foreach (var ns in news)
+								content.Append($"<figure contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-source-url='{ns.Key}' data-og-url='{ns.Key}'>").Append($"<a href='{ns.Key}' target='_blank' rel='noopener' data-source-url='{ns.Key}'>").Append($"<p style='text-align: center'><b><span style='font-family: Noto Serif KR'>{ns.Value}</span></b></p>").Append(@"</a>").Append(@"</figure>");
+
+							response = await client.ExecuteAsync(new RestRequest("apis/post/write", Method.POST).AddJsonBody(JsonConvert.SerializeObject(new Catalog.Models.Tistory
+							{
+								Token = token.Item2,
+								Type = Security.json.Split('/')[^1],
+								Name = "sharecompany",
+								Title = string.Concat(cn.Name, " WordCloud Tag.", cn.Code, now.ToString(Base.DateFormat)),
+								Visibility = "3",
+								Category = "710553",
+								Publish = string.Empty,
+								Slogan = string.Concat(cn.Code, cn.Name, now.ToString(Base.DateFormat)),
+								Tag = tag.Remove(tag.Length - 1, 1).ToString(),
+								Comment = "1",
+								Password = string.Empty,
+								Content = content.Append(@"</div>").ToString()
+
+							}), Security.content_type), source.Token);
+						}
+					}
 				}
 				driver.Navigate().GoToUrl(System.IO.Path.Combine(tistory, 0x32.ToString()));
+				Url = JObject.Parse(response.Content)[nameof(tistory)].ToString();
 				source.Dispose();
 				client.ClearHandlers();
+
+				switch (response.StatusCode)
+				{
+					case HttpStatusCode.OK:
+						return JsonConvert.DeserializeObject<Catalog.Models.Response>(Url);
+
+					case HttpStatusCode.NotAcceptable:
+						return (int)HttpStatusCode.NotAcceptable;
+				}
 			}
 			catch (Exception ex)
 			{
@@ -180,6 +242,7 @@ namespace ShareInvest.Client
 				driver.Dispose();
 				service.Dispose();
 			}
+			return null;
 		}
 		public Advertise(dynamic key)
 		{

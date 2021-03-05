@@ -136,7 +136,7 @@ namespace ShareInvest
 			switch (e.Convey)
 			{
 				case Catalog.OpenAPI.Order order:
-					if ((connect as OpenAPI.ConnectAPI).TryGetValue(order.Code, out Analysis oc) && oc.OrderNumber is not null)
+					if ((connect as OpenAPI.ConnectAPI).TryGetValue(order.Code, out Analysis oc) && oc.OrderNumber is not null && oc.Classification is not null)
 					{
 						if (oc.Quantity > 0 && oc.Quantity - oc.OrderNumber.Count(o => o.Value > order.Price) < 1)
 							connect.SendOrder(new Catalog.OpenAPI.Order
@@ -694,46 +694,51 @@ namespace ShareInvest
 					{
 						try
 						{
-							if (await api.GetStrategics(key) is IEnumerable<BringIn> enumerable)
+							switch (await api.GetStrategics(key))
 							{
-								foreach (var bring in enumerable)
-									if (Enum.TryParse(bring.Strategics, out Strategics strategics))
-									{
-										if (worker.WorkerSupportsCancellation && now.CompareTo(new DateTime(bring.Date)) > 0)
-											continue;
-
-										BringInStrategics(strategics, bring, codes);
-									}
-								ExceptInStrategics(enumerable.Select(o => o.Code));
-							}
-							else if (connect is OpenAPI.ConnectAPI api && api.Enumerator?.Where(o => o.Classification is IStrategics) is IEnumerable<Analysis> strategics)
-								foreach (var sis in strategics)
-									if (string.IsNullOrEmpty(sis.Code) is false && api.TryGetValue(sis.Code, out Analysis analysis))
-									{
-										analysis.Classification = null;
-
-										if (analysis.Classification is null)
+								case IEnumerable<BringIn> enumerable:
+									foreach (var bring in enumerable)
+										if (Enum.TryParse(bring.Strategics, out Strategics strategics))
 										{
-											if (analysis.OrderNumber is Dictionary<string, dynamic> numbers && numbers.Count > 0)
-												foreach (var kv in numbers.OrderByDescending(o => o.Value))
-													if (analysis.Code.Length == 6)
-													{
-														connect.SendOrder(new Catalog.OpenAPI.Order
-														{
-															AccNo = connect.Account[0],
-															Code = analysis.Code,
-															HogaGb = ((int)HogaGb.지정가).ToString("D2"),
-															OrgOrderNo = kv.Key,
-															OrderType = (int)(analysis.Current < kv.Value ? OrderType.매도취소 : OrderType.매수취소),
-															Price = analysis.Current,
-															Qty = 1
-														});
-														if (analysis.Current > kv.Value)
-															Cash += kv.Value;
-													}
-											Base.SendMessage(analysis.GetType(), analysis.Name, analysis.Strategics);
+											if (worker.WorkerSupportsCancellation && now.CompareTo(new DateTime(bring.Date)) > 0)
+												continue;
+
+											BringInStrategics(strategics, bring, codes);
 										}
-									}
+									ExceptInStrategics(enumerable.Select(o => o.Code));
+									break;
+
+								case int:
+									if (connect is OpenAPI.ConnectAPI api && api.Enumerator?.Where(o => o.Classification is IStrategics) is IEnumerable<Analysis> enumerator)
+										foreach (var sis in enumerator)
+											if (string.IsNullOrEmpty(sis.Code) is false && api.TryGetValue(sis.Code, out Analysis analysis))
+											{
+												analysis.Classification = null;
+
+												if (analysis.Classification is null)
+												{
+													if (analysis.OrderNumber is Dictionary<string, dynamic> numbers && numbers.Count > 0)
+														foreach (var kv in numbers.OrderByDescending(o => o.Value))
+															if (analysis.Code.Length == 6)
+															{
+																connect.SendOrder(new Catalog.OpenAPI.Order
+																{
+																	AccNo = connect.Account[0],
+																	Code = analysis.Code,
+																	HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+																	OrgOrderNo = kv.Key,
+																	OrderType = (int)(analysis.Current < kv.Value ? OrderType.매도취소 : OrderType.매수취소),
+																	Price = analysis.Current,
+																	Qty = 1
+																});
+																if (analysis.Current > kv.Value)
+																	Cash += kv.Value;
+															}
+													Base.SendMessage(analysis.GetType(), analysis.Name, analysis.Strategics);
+												}
+											}
+									break;
+							}
 						}
 						catch (Exception ex)
 						{
@@ -846,6 +851,9 @@ namespace ShareInvest
 
 				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12 && Base.IsDebug) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
 				{
+					foreach (var process in Process.GetProcessesByName("chromedriver"))
+						process.Kill();
+
 					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
 				}

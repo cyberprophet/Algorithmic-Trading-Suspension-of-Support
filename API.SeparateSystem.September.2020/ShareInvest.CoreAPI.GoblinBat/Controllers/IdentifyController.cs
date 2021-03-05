@@ -24,6 +24,8 @@ namespace ShareInvest.Controllers
 						o.Date,
 						o.Code
 					}));
+				else
+					return NoContent();
 			}
 			catch (Exception ex)
 			{

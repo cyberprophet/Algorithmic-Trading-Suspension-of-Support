@@ -166,14 +166,14 @@ namespace ShareInvest.Naver
 								}
 						}
 					foreach (var kv in temp)
-						if (list.Find(o => o.Text.Equals(kv.Key)) is Catalog.KRX.Cloud cloud && list.Remove(cloud))
+						if (list.Find(o => o.Text.Equals(kv.Key)) is Catalog.KRX.Cloud cloud && list.Remove(cloud) && int.TryParse(kv.Value, out int frequency))
 							list.Add(new Catalog.KRX.Cloud
 							{
 								Text = cloud.Text,
 								Anchor = cloud.Anchor,
-								Style = cloud.Style,
+								Style = cloud.Style.Remove(cloud.Style.Length - 1, 1).Replace("\"", string.Empty),
 								Transform = cloud.Transform,
-								Frequency = kv.Value
+								Frequency = frequency
 							});
 				}
 				while ((driver as IJavaScriptExecutor).ExecuteScript(command) is not 0x64L and < 1e+2)

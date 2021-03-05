@@ -18,7 +18,7 @@
 		{
 			get; set;
 		}
-		public string Frequency
+		public int Frequency
 		{
 			get; set;
 		}
