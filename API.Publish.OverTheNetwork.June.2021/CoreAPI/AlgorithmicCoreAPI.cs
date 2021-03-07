@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
 
+using Newtonsoft.Json;
+
 using ShareInvest.Catalog.Models;
 using ShareInvest.Client;
 using ShareInvest.EventHandler;
@@ -165,17 +167,59 @@ namespace ShareInvest
 							if (cn.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && cn.MarginRate > 0)
 								try
 								{
-									if (int.TryParse(cn.Code, out int _) && await new Naver.Search(key).VisualizeTheResultsOfAnAnalysis(cn.Name) is (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
-										switch (await new Advertise(key).TransmitCollectedInformation(cn, cloud.Item1, cloud.Item2))
-										{
-											case Response response:
-												Base.SendMessage(sender.GetType(), cn.Name, response.Post, response.Url);
-												break;
+									if (int.TryParse(cn.Code, out int _) && await api.GetResponseAsync(HttpUtility.UrlEncode(Repository.GetPath(cn, now))) is false && await new Naver.Search(key).VisualizeTheResultsOfAnAnalysis(cn.Name) is (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
+									{
+										if (Refuse is false)
+											switch (await new Advertise(key).TransmitCollectedInformation(cn, cloud.Item1, cloud.Item2))
+											{
+												case Response response:
+													if (await api.PutContextAsync(new Response { Status = cn.Code, Post = response.Post, Url = response.Url }) is > 0)
+														Base.SendMessage(sender.GetType(), cn.Name, response.Post, response.Url);
 
-											case int status when status == 0x196:
-												Base.SendMessage(sender.GetType(), cn.Name, status);
-												break;
-										}
+													break;
+
+												case int status:
+													Refuse = status == 0x196;
+													break;
+											}
+										var index = 0;
+										var tags = new Cloud[cloud.Item1.Count];
+										var news = new News[cloud.Item2.Count];
+
+										foreach (var kv in cloud.Item2)
+											if (string.IsNullOrEmpty(kv.Key) is false && string.IsNullOrEmpty(kv.Value) is false)
+												news[index++] = new News
+												{
+													Title = kv.Value,
+													Link = kv.Key
+												};
+										index = 0;
+
+										foreach (var tidy in cloud.Item1)
+											if (tidy.Style.Split(';') is string[] str)
+												tags[index++] = new Cloud
+												{
+													Anchor = tidy.Anchor,
+													Frequency = tidy.Frequency,
+													Text = tidy.Text,
+													Transform = tidy.Transform,
+													Size = str[0].Split(':')[^1].Trim(),
+													Style = str[2].Split(':')[^1].Trim()
+												};
+										if (await api.PostContextAsync(new Response
+										{
+											Status = cn.Code,
+											Url = Repository.GetPath(cn, now),
+											Post = JsonConvert.SerializeObject(new { tags, news })
+
+										}) is 0xC8)
+											Base.SendMessage(sender.GetType(), cn.Name, JsonConvert.SerializeObject(new
+											{
+												tags,
+												news
+											},
+											Formatting.Indented));
+									}
 								}
 								catch (Exception ex)
 								{
@@ -327,7 +371,6 @@ namespace ShareInvest
 								}
 								finally
 								{
-									await Task.Delay(0x100);
 									now = DateTime.Now;
 								}
 							if (now.Hour == 8)
@@ -375,6 +418,10 @@ namespace ShareInvest
 
 				Dispose();
 			}
+		}
+		bool Refuse
+		{
+			get; set;
 		}
 		readonly string key;
 		readonly API api;

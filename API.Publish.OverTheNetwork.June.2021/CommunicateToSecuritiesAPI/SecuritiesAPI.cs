@@ -91,8 +91,8 @@ namespace ShareInvest
 											break;
 
 										default:
-											if (Codes.Count % 5 == 0)
-												await new Advertise(key).StartAdvertisingInTheDataCollectionSection(Codes.Count);
+											if (await api.GetPageAsync(retention.Code) is int page)
+												await new Advertise(key).StartAdvertisingInTheDataCollectionSection(page);
 
 											break;
 									}
@@ -120,7 +120,7 @@ namespace ShareInvest
 		{
 			if (Codes.TryDequeue(out string code))
 			{
-				if (string.IsNullOrEmpty(code) || Base.IsDebug && code.Length == 6)
+				if (string.IsNullOrEmpty(code))
 					CheckTheInformationReceivedOnTheDay();
 
 				else
@@ -555,7 +555,7 @@ namespace ShareInvest
 									else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
 										Repository.KeepOrganizedInStorage(tick);
 								}
-								else if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+								else if (storage.Any(o => o.Date.Equals(str)) is false && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
 									notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
 							}
 							else if (storage is IEnumerable<Tick> && storage.Any(o => o.Date.Equals(str)) && storage.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
@@ -563,8 +563,9 @@ namespace ShareInvest
 						}
 						restore = restore.AddDays(1);
 					}
-					ca.CorrectTheDelayMilliseconds();
-					CheckTheInformationReceivedOnTheDay();
+					if (ca.CorrectTheDelayMilliseconds() > 0)
+						CheckTheInformationReceivedOnTheDay();
+
 					return;
 
 				case Tuple<string, Queue<Stocks>> confirm:
@@ -597,7 +598,7 @@ namespace ShareInvest
 									else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
 										Repository.KeepOrganizedInStorage(tick);
 								}
-								else if (Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+								else if (ss.Any(o => o.Date.Equals(str)) is false && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
 									notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
 							}
 							else if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
@@ -775,7 +776,7 @@ namespace ShareInvest
 							if (page is 1)
 								await Task.Delay(0x1400);
 
-							await new Advertise(key).StartAdvertisingInTheDataCollectionSection((int)(page + 0x11));
+							await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x73));
 						}
 						catch (Exception ex)
 						{
@@ -785,7 +786,7 @@ namespace ShareInvest
 						{
 							GC.Collect();
 						}
-					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0x1400);
+					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x400 : 0x1800);
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}
@@ -969,11 +970,9 @@ namespace ShareInvest
 					return;
 
 				case DialogResult.Abort when (now.Hour < 5 || now.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday) && api.IsAdministrator:
-					BeginInvoke(new Action(async () =>
-					{
-						await Task.Delay(0x339000);
-						CheckTheInformationReceivedOnTheDay();
-					}));
+					var worker = new BackgroundWorker();
+					worker.DoWork += WorkerDoWork;
+					worker.RunWorkerAsync(0U);
 					break;
 			}
 			(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0xE11);

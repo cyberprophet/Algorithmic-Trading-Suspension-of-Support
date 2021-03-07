@@ -256,12 +256,7 @@ namespace ShareInvest.OpenAPI
 		}
 		public int CorrectTheDelayMilliseconds()
 		{
-			Delay.Milliseconds--;
-
 			if (DateTime.Now.Hour > 1)
-				Delay.Milliseconds--;
-
-			if (DateTime.Now.Hour > 2)
 				Delay.Milliseconds--;
 
 			return axAPI.GetConnectState();

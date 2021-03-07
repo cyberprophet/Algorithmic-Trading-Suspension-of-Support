@@ -19,31 +19,24 @@ namespace ShareInvest.Client
 {
 	public class Advertise
 	{
-		public async Task StartAdvertisingInTheDataCollectionSection(int count)
+		public async Task StartAdvertisingInTheDataCollectionSection(int page)
 		{
 			try
 			{
-				string url;
-				var page = count % 0x33;
-
-				if (page is 0xF or 0x10 or 0x11 or 0x12 or < 7)
-					url = tistory.Remove(tistory.Length - 1, 1);
-
-				else
-					url = string.Concat(tistory, page);
-
-				driver.Navigate().GoToUrl(url);
-				driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(0xA);
-				driver.Manage().Window.FullScreen();
+				driver.Navigate().GoToUrl(string.Concat(tistory, page));
+				var timeout = driver.Manage().Timeouts();
+				timeout.ImplicitWait = TimeSpan.FromSeconds(0xC);
+				timeout.PageLoad = TimeSpan.FromSeconds(0xC);
+				await Task.Delay(0x200);
 				var action = new Actions(driver).SendKeys(Keys.ArrowDown).Build();
-				page = page > 0x15 ? page / 3 : page;
+				driver.Manage().Window.FullScreen();
 
-				while (page-- > 0)
-				{
-					action.Perform();
-					await Task.Delay(0x400);
-					action.Perform();
-				}
+				for (int i = page; i > 0; i--)
+					if (page < 0x100)
+					{
+						action.Perform();
+						await Task.Delay(i % 0x100 > 0x20 ? i % 0x100 : 0x40);
+					}
 				new Actions(driver).SendKeys(Keys.Escape).Perform();
 			}
 			catch (Exception ex)
@@ -194,7 +187,7 @@ namespace ShareInvest.Client
 
 								content.Append(security.Cloud[1]).Append($"'{word.Anchor}'").Append(security.Cloud[2]).Append($"'{word.Transform}'").Append(security.Cloud[3]).Append($"'{word.Style}'").Append(security.Cloud[^3]).Append(word.Text).Append(security.Cloud[^2]);
 							}
-							content.Append(security.Cloud[^1]).Append(@"<br />").Append(image).Append(@"<div>");
+							content.Append(security.Cloud[^1]).Append(@"<br />").Append(image).Append(@"<div>").Append("<figure contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-source-url='https://coreapi.shareinvest.net' data-og-url='https://coreapi.shareinvest.net'><a href='https://coreapi.shareinvest.net' target='_blank' rel='noopener' data-source-url='https://coreapi.shareinvest.net'><p style='text-align: center'><b><span style='font-family: Noto Serif KR'>Algorithmic Trading</span></b></p></a></figure>");
 
 							foreach (var ns in news)
 								content.Append($"<figure contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-source-url='{ns.Key}' data-og-url='{ns.Key}'>").Append($"<a href='{ns.Key}' target='_blank' rel='noopener' data-source-url='{ns.Key}'>").Append($"<p style='text-align: center'><b><span style='font-family: Noto Serif KR'>{ns.Value}</span></b></p>").Append(@"</a>").Append(@"</figure>");
@@ -223,6 +216,53 @@ namespace ShareInvest.Client
 				source.Dispose();
 				client.ClearHandlers();
 
+				foreach (var header in driver.FindElementsByXPath(security.Transmit[^1]))
+					foreach (var button in header.FindElements(By.TagName("button")))
+					{
+						var title = button.GetAttribute("title");
+
+						if (string.IsNullOrEmpty(title) is false && menu.Equals(title))
+						{
+							button.Click();
+							await Task.Delay(0x400);
+						}
+					}
+				foreach (var aside in driver.FindElementsByXPath(security.Transmit[^2]))
+					foreach (var div in aside.FindElements(By.TagName(nameof(aside))))
+						foreach (var btn in div.FindElements(By.TagName(nameof(div))))
+						{
+							var attribute = btn.GetAttribute("class");
+
+							if (string.IsNullOrEmpty(attribute) is false && attribute.StartsWith("btn-for-") && attribute.EndsWith("user"))
+							{
+								foreach (var a in btn.FindElements(By.TagName("a")))
+								{
+									var href = a.GetAttribute("href");
+
+									if (string.IsNullOrEmpty(href) is false && driver.Url.Equals(href.Replace("#", string.Empty)))
+									{
+										a.Click();
+										await Task.Delay(0x400);
+
+										foreach (var button in driver.FindElementsByXPath(security.Transmit[^0xC]))
+											foreach (var log in button.FindElements(By.TagName(nameof(button))))
+											{
+												var value = log.GetAttribute("value");
+
+												if (string.IsNullOrEmpty(value) is false && true.ToString().ToLower().Equals(value))
+												{
+													log.Click();
+													await Task.Delay(0x400);
+
+													break;
+												}
+											}
+										break;
+									}
+								}
+								break;
+							}
+						}
 				switch (response.StatusCode)
 				{
 					case HttpStatusCode.OK:

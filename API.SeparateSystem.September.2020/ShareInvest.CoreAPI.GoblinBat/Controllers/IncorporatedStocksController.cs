@@ -54,7 +54,7 @@ namespace ShareInvest.Controllers
 		{
 			try
 			{
-				var date = DateTime.Now.ToString(Security.format);
+				var date = DateTime.Now.ToString(Base.DateFormat);
 				int count;
 
 				switch (key)

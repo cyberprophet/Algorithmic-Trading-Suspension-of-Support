@@ -24,6 +24,21 @@ namespace ShareInvest.Controllers
 			}
 			return BadRequest();
 		}
+		[HttpGet(Security.collect), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+		public async Task<IActionResult> GetContextAsync(string code)
+		{
+			try
+			{
+				if (await context.Group.AsNoTracking().AnyAsync(o => o.Code.Equals(code)))
+					foreach (var page in from o in context.Page.AsNoTracking() where o.Code.Equals(code) && o.Tistory > 0 select o.Tistory)
+						return Ok(page);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"{GetType()}\n{code}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
+			}
+			return BadRequest();
+		}
 		[HttpPost, ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<IActionResult> PostContextAsync([FromBody] Models.Theme theme)
 		{

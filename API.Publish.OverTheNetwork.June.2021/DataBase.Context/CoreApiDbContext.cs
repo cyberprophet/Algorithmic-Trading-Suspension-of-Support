@@ -39,6 +39,11 @@ namespace ShareInvest
 				o.HasKey(o => new { o.Code, o.Date });
 			});
 			builder.Entity<Tendency>(o => o.HasKey(o => new { o.Code, o.Tick }));
+			builder.Entity<Response>(o =>
+			{
+				o.ToTable(typeof(Group).Name);
+				o.HasKey(o => o.Code);
+			});
 			builder.Entity<GroupDetail>(o =>
 			{
 				o.ToTable(typeof(Group).Name);
@@ -49,6 +54,7 @@ namespace ShareInvest
 			{
 				o.ToTable(typeof(Group).Name);
 				o.HasOne(o => o.Details).WithOne().HasForeignKey<GroupDetail>(o => o.Code);
+				o.HasOne(o => o.Page).WithOne().HasForeignKey<Response>(o => o.Code);
 			});
 			builder.Entity<Theme>(o => o.HasMany(o => o.Groups).WithOne().HasForeignKey(o => o.Index));
 		}
@@ -62,6 +68,10 @@ namespace ShareInvest
 			get; set;
 		}
 		public DbSet<GroupDetail> Details
+		{
+			get; set;
+		}
+		public DbSet<Response> Page
 		{
 			get; set;
 		}

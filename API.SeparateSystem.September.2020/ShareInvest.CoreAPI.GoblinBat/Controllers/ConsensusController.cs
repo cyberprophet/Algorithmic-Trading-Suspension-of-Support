@@ -114,7 +114,7 @@ namespace ShareInvest.Controllers
 			{
 				var now = DateTime.Now;
 
-				return Ok(await context.Estimate.Where(o => o.Date.Equals(now.Hour < 0x11 ? now.AddDays(-1).ToString(Security.format) : now.ToString(Security.format))).AsNoTracking().Select(o => new
+				return Ok(await context.Estimate.Where(o => o.Date.Equals(now.Hour < 0x11 ? now.AddDays(-1).ToString(Base.DateFormat) : now.ToString(Base.DateFormat))).AsNoTracking().Select(o => new
 				{
 					o.Code,
 					o.FirstQuarter,

@@ -40,7 +40,8 @@ namespace ShareInvest.Controllers
 								Rate = gd.Rate,
 								Percent = gd.Percent,
 								Tick = tick,
-								Inclination = inclination
+								Inclination = inclination,
+								Page = context.Page.Find(search).Tistory
 							});
 						}
 					return detail.ToArray();

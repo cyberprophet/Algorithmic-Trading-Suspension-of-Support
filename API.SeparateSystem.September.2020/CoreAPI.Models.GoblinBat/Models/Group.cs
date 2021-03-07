@@ -25,5 +25,10 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
+		[ForeignKey("Code")]
+		public virtual Response Page
+		{
+			get; set;
+		}
 	}
 }

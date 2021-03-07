@@ -93,6 +93,7 @@ namespace ShareInvest
 			}
 			return null;
 		}
+		public static string GetPath(Catalog.Models.Codes cn, DateTime now) => Path.Combine("F:\\Res", cn.Code, now.Year.ToString("D4"), now.Month.ToString("D2"), string.Concat((now.Hour < 9 ? now.AddDays(-1).Day : now.Day).ToString("D2"), '_', cn.Name, ".res"));
 		public static object RetrieveSavedMaterial<T>(T param) where T : struct
 		{
 			var file = string.Empty;
@@ -185,6 +186,12 @@ namespace ShareInvest
 
 			return file.Exists;
 		}
+		public static bool ReadTheFile(string name) => new FileInfo(name).Exists;
+		public static void CreateTheDirectory(DirectoryInfo info)
+		{
+			if (info.Exists is false)
+				info.Create();
+		}
 		public static string Decompress(string param)
 		{
 			byte[] sourceArray = Convert.FromBase64String(param), targetArray = new byte[BitConverter.ToInt32(sourceArray, 0)];
@@ -217,12 +224,6 @@ namespace ShareInvest
 			var path = param.Split('.')[0];
 
 			return path.Remove(path.Length - 3);
-		}
-		static bool ReadTheFile(string name) => new FileInfo(name).Exists;
-		static void CreateTheDirectory(DirectoryInfo info)
-		{
-			if (info.Exists is false)
-				info.Create();
 		}
 		const string path = @"C:\Algorithmic Trading\Res";
 		const string base_date = "20210104";

@@ -176,7 +176,7 @@ namespace ShareInvest.Naver
 								Frequency = frequency
 							});
 				}
-				while ((driver as IJavaScriptExecutor).ExecuteScript(command) is not 0x64L and < 1e+2)
+				while ((driver as IJavaScriptExecutor).ExecuteScript(Base.Command) is not 0x64L and < 1e+2)
 				{
 					await Task.Delay(0x40);
 					action.Perform();
@@ -214,7 +214,7 @@ namespace ShareInvest.Naver
 					await Task.Delay(0x100);
 					action.Perform();
 
-					if ((driver as IJavaScriptExecutor).ExecuteScript(command) is 0x64L or > 1e+2)
+					if ((driver as IJavaScriptExecutor).ExecuteScript(Base.Command) is 0x64L or > 1e+2)
 						break;
 				}
 				foreach (var x in driver.FindElementsByXPath("//*[@id='main_pack']/section/div/div[2]/panel-list/div/more-contents/div/ul"))
@@ -269,7 +269,6 @@ namespace ShareInvest.Naver
 		{
 			get; set;
 		}
-		const string command = "return (window.scrollY + window.innerHeight) / document.body.clientHeight * 100";
 		const string news = "news-detail";
 		const string dsc = "total_dsc";
 		const string blog = "blog";

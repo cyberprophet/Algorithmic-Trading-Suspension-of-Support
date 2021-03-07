@@ -18,6 +18,10 @@
 		{
 			get; set;
 		}
+		public int Page
+		{
+			get; set;
+		}
 		public double Rate
 		{
 			get; set;

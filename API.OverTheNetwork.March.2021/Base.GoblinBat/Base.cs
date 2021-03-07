@@ -188,6 +188,7 @@ namespace ShareInvest
 
 			return string.Empty;
 		}
+		public static string Command => "return (window.scrollY + window.innerHeight) / document.body.clientHeight * 100";
 		public static string DistinctDate
 		{
 			get

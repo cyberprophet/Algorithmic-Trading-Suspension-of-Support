@@ -63,6 +63,36 @@ namespace ShareInvest.Client
 				}
 			return null;
 		}
+		public async Task<object> GetResponseAsync(string path)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(typeof(Response), path), Method.GET), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					return JsonConvert.DeserializeObject<bool>(response.Content);
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), path, ex.StackTrace);
+			}
+			return null;
+		}
+		public async Task<object> GetPageAsync(string code)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(typeof(Catalog.Dart.Theme), code), Method.GET), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					return JsonConvert.DeserializeObject<int>(response.Content);
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), code, ex.StackTrace);
+			}
+			return null;
+		}
 		public async Task<object> GetStrategics(string security)
 		{
 			try
@@ -402,7 +432,7 @@ namespace ShareInvest.Client
 						case Retention when string.IsNullOrEmpty(response.Content) is false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
 
-						case Tick or Message or Account or Catalog.Models.RevisedStockPrice:
+						case Tick or Message or Account or Catalog.Models.RevisedStockPrice or Response:
 							return (int)response.StatusCode;
 
 						case Stocks:
@@ -427,6 +457,7 @@ namespace ShareInvest.Client
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 					return param switch
 					{
+						Response when string.IsNullOrEmpty(response.Content) is false => JsonConvert.DeserializeObject<int>(response.Content),
 						StocksStrategics => JsonConvert.DeserializeObject<double>(response.Content),
 						Catalog.Models.Consensus => (int)response.StatusCode,
 						_ => JsonConvert.DeserializeObject<string>(response.Content),
