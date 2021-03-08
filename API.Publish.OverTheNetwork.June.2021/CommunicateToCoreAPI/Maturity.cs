@@ -26,10 +26,11 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		public HttpStatusCode GetContext() => client.Execute(new RestRequest(Method.GET)).StatusCode;
 		public Maturity(dynamic param)
 		{
 			security = new Security(param);
-			client = new RestClient(security.Url)
+			client = new RestClient(security.Kinds)
 			{
 				Timeout = -1
 			};

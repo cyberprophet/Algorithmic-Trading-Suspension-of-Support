@@ -68,7 +68,7 @@ namespace ShareInvest.Naver
 		{
 			try
 			{
-				driver.Navigate().GoToUrl(Security.Kinds);
+				driver.Navigate().GoToUrl(security.Kinds);
 				var timeout = driver.Manage().Timeouts();
 				timeout.ImplicitWait = TimeSpan.FromSeconds(0xC);
 				timeout.PageLoad = TimeSpan.FromSeconds(0xC);
@@ -78,13 +78,13 @@ namespace ShareInvest.Naver
 				var dictionary = new Dictionary<string, string>();
 				driver.Manage().Window.FullScreen();
 
-				foreach (var key in driver.FindElementsByXPath(Security.Click[^1]))
+				foreach (var key in driver.FindElementsByXPath(security.Click[^1]))
 				{
 					key.SendKeys(keyword);
 					enter.Perform();
 					await Task.Delay(0x200);
 				}
-				foreach (var select in driver.FindElementsByXPath(Security.Click[^2]))
+				foreach (var select in driver.FindElementsByXPath(security.Click[^2]))
 				{
 					select.Click();
 
@@ -98,10 +98,10 @@ namespace ShareInvest.Naver
 						else
 							action.Perform();
 				}
-				for (int i = Security.Click.Length - 2; i > 3; i--)
+				for (int i = security.Click.Length - 2; i > 3; i--)
 				{
 					await Task.Delay(0xC00);
-					Web = driver.FindElementByXPath(Security.Click[i - 1]);
+					Web = driver.FindElementByXPath(security.Click[i - 1]);
 					Web.Click();
 					up.Perform();
 				}
@@ -110,7 +110,7 @@ namespace ShareInvest.Naver
 					await Task.Delay(0x200);
 					var id = input.GetAttribute("id");
 
-					if (Array.Exists(Security.Click, o => o.Substring(9, 5).Equals(id)))
+					if (Array.Exists(security.Click, o => o.Substring(9, 5).Equals(id)))
 					{
 						foreach (var label in Web.FindElements(By.TagName("label")))
 							if (id.Equals(label.GetAttribute("for")))
@@ -118,7 +118,7 @@ namespace ShareInvest.Naver
 								label.Click();
 								await Task.Delay(0x200);
 							}
-						if (Security.Click[0].Substring(9, 5).Equals(id))
+						if (security.Click[0].Substring(9, 5).Equals(id))
 							break;
 					}
 				}
@@ -135,7 +135,7 @@ namespace ShareInvest.Naver
 				{
 					var href = a.GetAttribute("href");
 
-					if (href.StartsWith(Security.News) is false && dictionary.TryGetValue(news, out string detail) && dictionary.Remove(news))
+					if (href.StartsWith(security.News) is false && dictionary.TryGetValue(news, out string detail) && dictionary.Remove(news))
 						dictionary[href] = detail;
 
 					else if (a.GetAttribute("class").Equals(news))
@@ -202,40 +202,46 @@ namespace ShareInvest.Naver
 		{
 			try
 			{
-				driver.Navigate().GoToUrl(Security.GoToKeyword(param));
-				driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(0xC);
-				driver.Manage().Window.FullScreen();
-				var action = new Actions(driver).SendKeys(Keys.ArrowDown).Build();
-				var stack = new Stack<IWebElement>();
+				var keywords = security.GoToKeyword(param);
 				var queue = new Queue<string>();
 
-				while (length-- > 0)
+				for (int i = 0; i < keywords.Length; i++)
 				{
-					await Task.Delay(0x100);
-					action.Perform();
+					driver.Navigate().GoToUrl(keywords[i]);
+					var timeout = driver.Manage().Timeouts();
+					timeout.ImplicitWait = TimeSpan.FromSeconds(0xC);
+					timeout.PageLoad = TimeSpan.FromSeconds(0xC);
+					driver.Manage().Window.FullScreen();
+					var action = new Actions(driver).SendKeys(Keys.ArrowDown).Build();
+					var stack = new Stack<IWebElement>();
 
-					if ((driver as IJavaScriptExecutor).ExecuteScript(Base.Command) is 0x64L or > 1e+2)
-						break;
-				}
-				foreach (var x in driver.FindElementsByXPath("//*[@id='main_pack']/section/div/div[2]/panel-list/div/more-contents/div/ul"))
-					foreach (var ul in x.FindElements(By.TagName("li")))
-						foreach (var div in ul.FindElements(By.TagName("div")))
-						{
-							var attribute = div.GetAttribute("data-cr-rank");
-
-							if (string.IsNullOrEmpty(attribute) is false)
-								stack.Push(div);
-						}
-				while (stack.TryPop(out IWebElement web))
-					foreach (var a in web.FindElements(By.TagName("a")))
+					while (length-- > 0)
 					{
-						var confirm = a.GetAttribute("class");
+						await Task.Delay(0x100);
+						action.Perform();
 
-						if (dsc.Equals(confirm))
-							queue.Enqueue(a.GetAttribute("href"));
+						if ((driver as IJavaScriptExecutor).ExecuteScript(Base.Command) is 0x64L or > 1e+2)
+							break;
 					}
-				new Actions(driver).SendKeys(Keys.Escape).Perform();
+					foreach (var x in driver.FindElementsByXPath(security.PathKeyword[i]))
+						foreach (var ul in x.FindElements(By.TagName("li")))
+							foreach (var div in ul.FindElements(By.TagName("div")))
+							{
+								var attribute = div.GetAttribute("data-cr-rank");
 
+								if (string.IsNullOrEmpty(attribute) is false)
+									stack.Push(div);
+							}
+					while (stack.TryPop(out IWebElement web))
+						foreach (var a in web.FindElements(By.TagName("a")))
+						{
+							var confirm = a.GetAttribute("class");
+
+							if (dsc.Equals(confirm))
+								queue.Enqueue(a.GetAttribute("href"));
+						}
+					new Actions(driver).SendKeys(Keys.Escape).Perform();
+				}
 				if (queue.Count > 0)
 					return queue;
 			}
@@ -253,7 +259,7 @@ namespace ShareInvest.Naver
 		}
 		public Search(dynamic key)
 		{
-			var security = new Security(key);
+			security = new Security(key);
 
 			if (security.GrantAccess)
 			{
@@ -276,6 +282,7 @@ namespace ShareInvest.Naver
 		const string post = "post";
 		const string score = "score";
 		const string frame = "iframe";
+		readonly Security security;
 		readonly ChromeDriver driver;
 		readonly ChromeDriverService service;
 	}

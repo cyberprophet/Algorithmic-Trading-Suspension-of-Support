@@ -41,7 +41,7 @@ namespace ShareInvest.Controllers
 								Percent = gd.Percent,
 								Tick = tick,
 								Inclination = inclination,
-								Page = context.Page.Find(search).Tistory
+								Page = context.Page.Find(search) is Models.Response response ? response.Tistory : 0
 							});
 						}
 					return detail.ToArray();

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -33,13 +34,16 @@ namespace ShareInvest
 			{
 				if (Environment.ProcessorCount > 6)
 				{
-					if (api.IsInsider || Base.IsDebug)
+					if (api.IsInsider)
 						theme = new BackgroundWorker();
-				}
-				if (Base.IsDebug is false)
-					search = new BackgroundWorker();
 
-				big = new BackgroundWorker();
+					else
+						search = new BackgroundWorker();
+				}
+				if (Status is HttpStatusCode.OK)
+					big = new BackgroundWorker();
+
+				keywords = new BackgroundWorker();
 			}
 			timer.Start();
 		}
@@ -78,6 +82,9 @@ namespace ShareInvest
 
 				if (big is BackgroundWorker)
 					big.DoWork += new DoWorkEventHandler(WorkerDoWork);
+
+				if (keywords is BackgroundWorker)
+					keywords.DoWork += new DoWorkEventHandler(WorkerDoWork);
 			}
 			else if (string.IsNullOrEmpty(pipe.Message))
 			{
@@ -89,8 +96,11 @@ namespace ShareInvest
 					if (theme is BackgroundWorker)
 						theme.RunWorkerAsync(uint.MinValue);
 
-					if (big is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> shuffle)
-						big.RunWorkerAsync(shuffle.OrderBy(o => Guid.NewGuid()));
+					if (big is BackgroundWorker)
+						big.RunWorkerAsync(Status);
+
+					if (keywords is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> shuffle)
+						keywords.RunWorkerAsync(shuffle.OrderBy(o => Guid.NewGuid()));
 
 					if (search is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
 						search.RunWorkerAsync(list);
@@ -162,20 +172,50 @@ namespace ShareInvest
 						break;
 
 					case IEnumerable<Catalog.Models.Theme> enumerable:
+						foreach (var theme in enumerable)
+						{
+							try
+							{
+
+							}
+							catch (Exception ex)
+							{
+								Base.SendMessage(sender.GetType(), theme.Name, ex.StackTrace);
+							}
+							finally
+							{
+								now = DateTime.Now;
+							}
+							if (now.Hour == 8)
+							{
+								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
+									continue;
+
+								break;
+							}
+						}
+						break;
+
+					case HttpStatusCode:
 						foreach (var cn in list.OrderBy(o => Guid.NewGuid()))
 						{
-							if (cn.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && cn.MarginRate > 0)
+							if (Status is HttpStatusCode.OK && cn.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && cn.MarginRate > 0)
 								try
 								{
 									if (int.TryParse(cn.Code, out int _) && await api.GetResponseAsync(HttpUtility.UrlEncode(Repository.GetPath(cn, now))) is false && await new Naver.Search(key).VisualizeTheResultsOfAnAnalysis(cn.Name) is (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
 									{
 										if (Refuse is false)
-											switch (await new Advertise(key).TransmitCollectedInformation(cn, cloud.Item1, cloud.Item2))
+											switch (await new Advertise(cn, key).TransmitCollectedInformation(cloud.Item1, cloud.Item2))
 											{
 												case Response response:
 													if (await api.PutContextAsync(new Response { Status = cn.Code, Post = response.Post, Url = response.Url }) is > 0)
-														Base.SendMessage(sender.GetType(), cn.Name, response.Post, response.Url);
+													{
+														if (api.IsInsider)
+															Base.SendMessage(sender.GetType(), cn.Name, response.Post, response.Url);
 
+														else
+															continue;
+													}
 													break;
 
 												case int status:
@@ -230,7 +270,7 @@ namespace ShareInvest
 									await Task.Delay(0x200);
 									now = DateTime.Now;
 								}
-							if (now.Hour == 8)
+							if (now.Hour == 8 || Status is HttpStatusCode.Forbidden)
 							{
 								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
 									continue;
@@ -303,8 +343,8 @@ namespace ShareInvest
 
 					case IEnumerable<Interface.IStrategics> enumerable:
 						foreach (Catalog.TrendsToCashflow analysis in enumerable)
-						{
 							foreach (var ch in list.OrderBy(o => Guid.NewGuid()))
+							{
 								try
 								{
 									if (string.IsNullOrEmpty(ch.Price) is false && (ch.MarginRate == 1 || ch.MarginRate == 2) && ch.MaturityMarketCap.StartsWith(Base.Margin) && int.TryParse(ch.Price, out int price) && price > 0 && ch.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && await api.PostConfirmAsync(new Catalog.ConfirmStrategics
@@ -373,14 +413,14 @@ namespace ShareInvest
 								{
 									now = DateTime.Now;
 								}
-							if (now.Hour == 8)
-							{
-								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
-									continue;
+								if (now.Hour == 8)
+								{
+									if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
+										continue;
 
-								break;
+									break;
+								}
 							}
-						}
 						break;
 				}
 			}
@@ -419,6 +459,7 @@ namespace ShareInvest
 				Dispose();
 			}
 		}
+		HttpStatusCode Status => new Maturity(key).GetContext();
 		bool Refuse
 		{
 			get; set;
@@ -429,6 +470,7 @@ namespace ShareInvest
 		readonly BackgroundWorker big;
 		readonly BackgroundWorker theme;
 		readonly BackgroundWorker search;
+		readonly BackgroundWorker keywords;
 		readonly Icon[] icon;
 	}
 }

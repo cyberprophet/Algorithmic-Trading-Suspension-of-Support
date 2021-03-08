@@ -50,7 +50,7 @@ namespace ShareInvest.Client
 				service.Dispose();
 			}
 		}
-		public async Task<object> TransmitCollectedInformation(Catalog.Models.Codes cn, List<Catalog.KRX.Cloud> cloud, Dictionary<string, string> news)
+		public async Task<object> TransmitCollectedInformation(List<Catalog.KRX.Cloud> cloud, Dictionary<string, string> news)
 		{
 			try
 			{
@@ -294,6 +294,21 @@ namespace ShareInvest.Client
 			options.AddArgument(string.Concat("user-agent=", security.Path[^1]));
 			driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
 		}
+		public Advertise(Catalog.Models.Codes cn, dynamic key)
+		{
+			security = new Security(key);
+			service = ChromeDriverService.CreateDefaultService(security.Path[0]);
+			service.HideCommandPromptWindow = true;
+			var options = new ChromeOptions();
+			options.AddArgument("--window-size=273,71");
+			options.AddArgument(string.Concat("user-agent=", security.Path[^1]));
+
+			if (security.IsInsiders is false)
+				options.AddArguments("headless");
+
+			this.cn = cn;
+			driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
+		}
 		string Url
 		{
 			get; set;
@@ -301,6 +316,7 @@ namespace ShareInvest.Client
 		readonly Security security;
 		readonly ChromeDriver driver;
 		readonly ChromeDriverService service;
+		readonly Catalog.Models.Codes cn;
 		const string menu = "메뉴";
 		const string story = @"https://www.tistory.com";
 		const string tistory = @"https://sharecompany.tistory.com/";

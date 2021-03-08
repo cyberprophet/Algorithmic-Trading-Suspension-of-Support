@@ -53,5 +53,7 @@ namespace ShareInvest.Controllers
 			}
 			return Ok();
 		}
+		public FilesController(CoreApiDbContext context) => this.context = context;
+		readonly CoreApiDbContext context;
 	}
 }

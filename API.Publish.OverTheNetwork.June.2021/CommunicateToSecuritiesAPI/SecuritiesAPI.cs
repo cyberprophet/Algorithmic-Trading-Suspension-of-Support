@@ -776,7 +776,7 @@ namespace ShareInvest
 							if (page is 1)
 								await Task.Delay(0x1400);
 
-							await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x73));
+							await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x90));
 						}
 						catch (Exception ex)
 						{
@@ -884,7 +884,7 @@ namespace ShareInvest
 			if (e.ClickedItem.Name.Equals(reference.Name))
 				if (e.ClickedItem.Text.Equals("연결"))
 				{
-					e.ClickedItem.Text = api.IsInsider || api.IsAdministrator ? "조회" : "설정";
+					e.ClickedItem.Text = api.IsAdministrator ? "조회" : "설정";
 
 					if (connect.Start)
 						Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
