@@ -16,7 +16,9 @@ namespace ShareInvest.Client
 			try
 			{
 				driver.Navigate().GoToUrl(security.RequestTheSummmaryAddress(code));
-				driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(7);
+				var timeout = driver.Manage().Timeouts();
+				timeout.ImplicitWait = TimeSpan.FromSeconds(7);
+				timeout.PageLoad = TimeSpan.FromSeconds(0xC);
 				driver.FindElementByXPath(security.Cns(day))?.Click();
 				string[] quarter = new string[8], name = new string[0x21], value = new string[8];
 				var list = new List<string[]>();
@@ -143,7 +145,11 @@ namespace ShareInvest.Client
 				service.HideCommandPromptWindow = true;
 				var options = new ChromeOptions();
 				options.AddArgument(string.Concat("user-agent=", security.Path[^1]));
-				driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
+
+				if (security.IsInsiders is false)
+					options.AddArguments("headless");
+
+				driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x40));
 			}
 		}
 		readonly Security security;

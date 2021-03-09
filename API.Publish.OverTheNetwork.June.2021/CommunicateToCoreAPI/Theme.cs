@@ -14,7 +14,9 @@ namespace ShareInvest.Client
 			try
 			{
 				driver.Navigate().GoToUrl(Security.RequestTheIntegratedAddress(this, page));
-				driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(3);
+				var timeout = driver.Manage().Timeouts();
+				timeout.ImplicitWait = TimeSpan.FromSeconds(3);
+				timeout.PageLoad = TimeSpan.FromSeconds(0xC);
 				var queue = new Queue<Catalog.Models.Theme>();
 				var last_page = 0;
 
@@ -98,7 +100,9 @@ namespace ShareInvest.Client
 			try
 			{
 				driver.Navigate().GoToUrl(Security.RequestTheIntegratedAddress(this, page));
-				driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(0x11);
+				var timeout = driver.Manage().Timeouts();
+				timeout.ImplicitWait = TimeSpan.FromSeconds(0x11);
+				timeout.PageLoad = TimeSpan.FromSeconds(0xC);
 				var group = new Queue<Catalog.Models.GroupDetail>();
 
 				foreach (var context in driver.FindElementsByXPath(Security.RequestDetailsFromGroup(index)))
@@ -174,7 +178,7 @@ namespace ShareInvest.Client
 				var options = new ChromeOptions();
 				options.AddArgument($"--window-size=1015,{(Base.IsDebug ? 0x427 : 0x401)}");
 				options.AddArgument(string.Concat("user-agent=", security.Path[^1]));
-				driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
+				driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x40));
 			}
 		}
 		readonly ChromeDriver driver;

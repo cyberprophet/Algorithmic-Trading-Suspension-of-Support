@@ -12,7 +12,7 @@ namespace ShareInvest.Naver
 {
 	public class Search
 	{
-		public async Task<(string, Stack<string>)> BrowseTheSite(string url)
+		public async Task<Stack<string>> BrowseTheSite(string url)
 		{
 			try
 			{
@@ -20,7 +20,6 @@ namespace ShareInvest.Naver
 				var timeout = driver.Manage().Timeouts();
 				timeout.ImplicitWait = TimeSpan.FromSeconds(0xC);
 				timeout.PageLoad = TimeSpan.FromSeconds(0xC);
-				var title = string.Empty;
 				var contents = new Stack<string>();
 				await Task.Delay(0x200);
 				driver.Manage().Window.FullScreen();
@@ -31,12 +30,8 @@ namespace ShareInvest.Naver
 						var ds = driver.SwitchTo().Frame(web);
 
 						foreach (var ct in ds.FindElements(By.Id($"post-view{url.Split('/')[^1]}")))
-						{
-							if (string.IsNullOrEmpty(title))
-								title = ds.Title.Split(':')[0].Replace("..", string.Empty).Trim();
+							contents.Push(string.Concat(ds.Title.Split(':')[0].Replace("..", string.Empty).Trim(), '\n', ct.Text));
 
-							contents.Push(ct.Text);
-						}
 						break;
 
 					case cafe when driver.WindowHandles.Count == 1:
@@ -49,8 +44,8 @@ namespace ShareInvest.Naver
 				}
 				new Actions(driver).SendKeys(Keys.Escape).Perform();
 
-				if (contents.Count > 0 && string.IsNullOrEmpty(title) is false)
-					return (title, contents);
+				if (contents.Count > 0)
+					return contents;
 			}
 			catch (Exception ex)
 			{
@@ -62,7 +57,7 @@ namespace ShareInvest.Naver
 				driver.Dispose();
 				service.Dispose();
 			}
-			return (null, null);
+			return null;
 		}
 		public async Task<(List<Catalog.KRX.Cloud>, Dictionary<string, string>)> VisualizeTheResultsOfAnAnalysis(string keyword)
 		{
@@ -198,12 +193,12 @@ namespace ShareInvest.Naver
 			}
 			return (null, null);
 		}
-		public async Task<Queue<string>> SearchForKeyword(string param, int length)
+		public async Task<Dictionary<string, string>> SearchForKeyword(string param, int length)
 		{
 			try
 			{
 				var keywords = security.GoToKeyword(param);
-				var queue = new Queue<string>();
+				var response = new Dictionary<string, string>();
 
 				for (int i = 0; i < keywords.Length; i++)
 				{
@@ -233,17 +228,24 @@ namespace ShareInvest.Naver
 									stack.Push(div);
 							}
 					while (stack.TryPop(out IWebElement web))
+					{
+						var title = string.Empty;
+
 						foreach (var a in web.FindElements(By.TagName("a")))
 						{
 							var confirm = a.GetAttribute("class");
 
-							if (dsc.Equals(confirm))
-								queue.Enqueue(a.GetAttribute("href"));
+							if (security.Title.Equals(confirm))
+								title = a.Text.Trim();
+
+							if (dsc.Equals(confirm) && string.IsNullOrEmpty(title) is false)
+								response[a.GetAttribute("href")] = title;
 						}
+					}
 					new Actions(driver).SendKeys(Keys.Escape).Perform();
 				}
-				if (queue.Count > 0)
-					return queue;
+				if (response.Count > 0)
+					return response;
 			}
 			catch (Exception ex)
 			{
@@ -268,7 +270,7 @@ namespace ShareInvest.Naver
 				var options = new ChromeOptions();
 				options.AddArgument($"--window-size=1015,{(Base.IsDebug ? 0x427 : 0x401)}");
 				options.AddArgument(string.Concat("user-agent=", security.Path[^1]));
-				driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
+				driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x40));
 			}
 		}
 		IWebElement Web

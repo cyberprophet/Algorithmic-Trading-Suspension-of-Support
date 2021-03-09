@@ -36,6 +36,30 @@ namespace ShareInvest
 			server = GoblinBat.GetInstance(key);
 			timer.Start();
 		}
+		async Task OnReceiveFinancialStatement(DateTime now, Retention retention)
+		{
+			Queue<ConvertConsensus> queue;
+			Queue<FinancialStatement> context = null;
+			var consensus = new Client.Consensus(key);
+
+			for (int i = 0; i < retention.Code.Length / 3; i++)
+			{
+				queue = await consensus.GetContextAsync(i, retention.Code);
+				int status = int.MinValue;
+
+				if (queue != null && queue.Count > 0)
+				{
+					status = await api.PostContextAsync(queue);
+
+					if (i == 0)
+						context = new Summary(key).GetContext(retention.Code, now.Day);
+
+					if (i == 1 && context != null)
+						status = await api.PostContextAsync(context);
+				}
+				Base.SendMessage(retention.Code, status, GetType());
+			}
+		}
 		void OnReceiveInformationTheDay() => BeginInvoke(new Action(async () =>
 		{
 			if (Codes.TryDequeue(out string str))
@@ -53,52 +77,25 @@ namespace ShareInvest
 							if (retention.Code.Length == 6)
 							{
 								if (api.IsInsider)
-								{
-									Queue<ConvertConsensus> queue;
-									Queue<FinancialStatement> context = null;
-									var consensus = new Client.Consensus(key);
+									await OnReceiveFinancialStatement(now, retention);
 
-									for (int i = 0; i < retention.Code.Length / 3; i++)
-									{
-										queue = await consensus.GetContextAsync(i, retention.Code);
-										int status = int.MinValue;
-
-										if (queue != null && queue.Count > 0)
-										{
-											status = await api.PostContextAsync(queue);
-
-											if (i == 0)
-												context = new Summary(key).GetContext(retention.Code, now.Day);
-
-											if (i == 1 && context != null)
-												status = await api.PostContextAsync(context);
-										}
-										Base.SendMessage(retention.Code, status, GetType());
-									}
-								}
 								else
-								{
-									Stack<Catalog.IncorporatedStocks> stack = null;
-
 									switch (Operation)
 									{
 										case Catalog.OpenAPI.Operation.장마감 or Catalog.OpenAPI.Operation.시간외_종가매매_시작 or Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_시작 or Catalog.OpenAPI.Operation.장종료_예상지수종료 or Catalog.OpenAPI.Operation.장종료_시간외종료:
-											stack = await new KRX.Incorporate(Interface.KRX.Catalog.지수구성종목, key).GetConstituentStocks(now, Codes.Count) as Stack<Catalog.IncorporatedStocks>;
+											if (await new KRX.Incorporate(Interface.KRX.Catalog.지수구성종목, key).GetConstituentStocks(now, Codes.Count) is Stack<Catalog.IncorporatedStocks> stack && await api.PostContextAsync(stack) == 0xC8)
+												await Task.Delay(0x100);
+
 											break;
 
-										case Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_종료 or Catalog.OpenAPI.Operation.시간외_종가매매_종료 when await api.GetContextAsync(new Catalog.IncorporatedStocks { Market = 'P' }) is int next:
-											stack = new Client.IncorporatedStocks(key).OnReceiveSequentially(next);
+										case Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_종료 or Catalog.OpenAPI.Operation.시간외_종가매매_종료 when await api.GetPageAsync(retention.Code) is int page:
+											await new Advertise(key).StartAdvertisingInTheDataCollectionSection(page);
 											break;
 
 										default:
-											if (await api.GetPageAsync(retention.Code) is int page)
-												await new Advertise(key).StartAdvertisingInTheDataCollectionSection(page);
-
+											await OnReceiveFinancialStatement(now, retention);
 											break;
 									}
-									if (stack is Stack<Catalog.IncorporatedStocks> && await api.PostContextAsync(stack) == 0xC8)
-										await Task.Delay(0x100);
-								}
 							}
 						}
 						catch (Exception ex)
@@ -767,7 +764,7 @@ namespace ShareInvest
 					break;
 
 				case uint page:
-					while (page++ < 0x33)
+					while (page++ < 0x80)
 						try
 						{
 							if (page is 3 or 0x32 && await api.PostContextAsync(await new KRX.Incorporate(Interface.KRX.Catalog.지수구성종목, key).GetConstituentStocks(now, (int)page) as Stack<Catalog.IncorporatedStocks>) == 0xC8)

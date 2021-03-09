@@ -39,6 +39,19 @@ namespace ShareInvest.Controllers
 			}
 			return BadRequest();
 		}
+		[HttpGet(Security.routeStocks), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+		public async Task<IActionResult> GetContextAsync(string key, string code)
+		{
+			try
+			{
+				return Ok(await context.Url.AsNoTracking().AnyAsync(o => o.Index.Equals(key) && o.Record.Equals(code)));
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"{GetType()}\n{key}\n{ex.Message}\n{code}\n{nameof(this.GetContextAsync)}");
+			}
+			return BadRequest();
+		}
 		[HttpPost, ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<IActionResult> PostContextAsync([FromBody] Models.Theme theme)
 		{
@@ -59,6 +72,30 @@ namespace ShareInvest.Controllers
 			catch (Exception ex)
 			{
 				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.PostContextAsync)}");
+			}
+			return BadRequest();
+		}
+		[HttpPut, ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status204NoContent)]
+		public async Task<IActionResult> PutContextAsync([FromBody] Models.Url url)
+		{
+			try
+			{
+				if (context.Url.Find(url.Index) is Models.Url model)
+				{
+					model.Record = url.Record;
+					model.Json = url.Json;
+				}
+				else if (context.Theme.Find(url.Index) is Models.Theme theme)
+					theme.Url = url;
+
+				else
+					return NoContent();
+
+				return Ok(await context.SaveChangesAsync());
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"{GetType()}\n{url.Index}\n{ex.Message}\n{url.Record}\n{nameof(this.PutContextAsync)}");
 			}
 			return BadRequest();
 		}

@@ -129,6 +129,21 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		public async Task<bool> GetConfirmAsync(Catalog.Models.Theme param)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.GET), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					return JsonConvert.DeserializeObject<bool>(response.Content);
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), param.Name, ex.StackTrace);
+			}
+			return false;
+		}
 		public async Task<object> GetConfirmAsync<T>(T param) where T : struct
 		{
 			try
@@ -466,6 +481,27 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			return null;
+		}
+		public async Task<object> PutContextAsync(DateTime now, Catalog.Models.Theme theme, Dictionary<string, string> param)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(theme.GetType().Name), Method.PUT).AddJsonBody(new Url
+				{
+					Index = theme.Index,
+					Record = (now.Hour < 9 ? now.AddDays(-1) : now).ToString(Base.DateFormat),
+					Json = JsonConvert.SerializeObject(param)
+
+				}), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					return JsonConvert.DeserializeObject<int>(response.Content);
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), theme.Name, ex.StackTrace);
 			}
 			return null;
 		}

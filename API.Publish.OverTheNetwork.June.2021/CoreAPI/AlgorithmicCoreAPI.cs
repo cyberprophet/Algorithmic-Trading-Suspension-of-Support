@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -137,15 +138,12 @@ namespace ShareInvest
 								{
 									var contents = new Stack<string>();
 
-									if (int.TryParse(cn.Code, out int length) && await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(cn.Name), length) is Queue<string> queue)
-										while (queue.TryDequeue(out string url))
-											if (await new Naver.Search(key).BrowseTheSite(url) is (string, Stack<string>) co)
-											{
-												while (co.Item2.TryPop(out string text))
+									if (int.TryParse(cn.Code, out int length) && await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(cn.Name), length) is Dictionary<string, string> response)
+										foreach (var kv in response)
+											if (await new Naver.Search(key).BrowseTheSite(kv.Value) is Stack<string> stack)
+												while (stack.TryPop(out string text))
 													contents.Push(text);
 
-												contents.Push(co.Item1);
-											}
 									if (contents.Count > 0)
 									{
 										contents.Push(cn.Code);
@@ -176,7 +174,46 @@ namespace ShareInvest
 						{
 							try
 							{
+								var keywords = new Dictionary<string, string>();
 
+								if (await api.GetConfirmAsync(theme) is false)
+									foreach (var str in theme.Name.Split(')'))
+										if (string.IsNullOrEmpty(str) is false)
+											foreach (var name in str.Split('('))
+												if (string.IsNullOrEmpty(name) is false)
+													foreach (var sep in name.Split('/'))
+														if (string.IsNullOrEmpty(sep) is false)
+															foreach (var comma in sep.Split(','))
+																if (string.IsNullOrEmpty(comma) is false)
+																	foreach (var em in comma.Split('&'))
+																		if (string.IsNullOrEmpty(em) is false)
+																		{
+																			var search = new Stack<string>();
+
+																			if (Array.Exists(exception, o => em.EndsWith(o)) is false)
+																				search.Push(em);
+
+																			if (em.Split(' ') is string[] ws && ws.Length > 1)
+																				foreach (var tn in ws)
+																					if (string.IsNullOrEmpty(tn) is false && Array.Exists(exception, o => tn.EndsWith(o)) is false)
+																						search.Push(tn);
+
+																			while (search.TryPop(out string pop))
+																				if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(pop), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response && await api.PutContextAsync(now, theme, response) is > 0)
+																					foreach (var kv in response)
+																						if (await new Naver.Search(key).BrowseTheSite(kv.Key) is Stack<string> stack)
+																						{
+																							var sb = new StringBuilder();
+
+																							while (stack.TryPop(out string text))
+																								sb.Append(text).Append('\n');
+
+																							keywords[kv.Key] = sb.Remove(sb.Length - 1, 1).ToString();
+																						}
+																		}
+								if (keywords.Count > 0)
+									foreach (var kv in keywords)
+										Base.SendMessage(GetType(), kv.Key, kv.Value);
 							}
 							catch (Exception ex)
 							{
@@ -184,6 +221,7 @@ namespace ShareInvest
 							}
 							finally
 							{
+								await Task.Delay(0x200);
 								now = DateTime.Now;
 							}
 							if (now.Hour == 8)
@@ -272,7 +310,7 @@ namespace ShareInvest
 								}
 							if (now.Hour == 8 || Status is HttpStatusCode.Forbidden)
 							{
-								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
+								if (Status is HttpStatusCode.OK && (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat)))))
 									continue;
 
 								break;
@@ -455,6 +493,9 @@ namespace ShareInvest
 
 				if (worker is BackgroundWorker)
 					worker.Dispose();
+
+				if (keywords is BackgroundWorker)
+					keywords.Dispose();
 
 				Dispose();
 			}

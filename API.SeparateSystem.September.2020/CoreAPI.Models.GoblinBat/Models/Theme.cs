@@ -39,6 +39,11 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
+		[ForeignKey("Index")]
+		public virtual Url Url
+		{
+			get; set;
+		}
 		public Theme() => Groups = new HashSet<Group>();
 	}
 }

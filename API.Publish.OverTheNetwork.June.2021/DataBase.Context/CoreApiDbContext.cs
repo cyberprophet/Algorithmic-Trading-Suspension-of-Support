@@ -53,10 +53,22 @@ namespace ShareInvest
 			builder.Entity<Group>(o =>
 			{
 				o.ToTable(typeof(Group).Name);
+				o.HasKey(o => o.Code);
 				o.HasOne(o => o.Details).WithOne().HasForeignKey<GroupDetail>(o => o.Code);
 				o.HasOne(o => o.Page).WithOne().HasForeignKey<Response>(o => o.Code);
 			});
-			builder.Entity<Theme>(o => o.HasMany(o => o.Groups).WithOne().HasForeignKey(o => o.Index));
+			builder.Entity<Url>(o =>
+			{
+				o.ToTable(nameof(Theme));
+				o.HasKey(o => o.Index);
+			});
+			builder.Entity<Theme>(o =>
+			{
+				o.ToTable(nameof(Theme));
+				o.HasKey(o => o.Index);
+				o.HasOne(o => o.Url).WithOne().HasForeignKey<Url>(o => o.Index);
+				o.HasMany(o => o.Groups).WithOne().HasForeignKey(o => o.Index);
+			});
 		}
 		public CoreApiDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> store) : base(options, store) => this.store = store;
 		public DbSet<Connection> User
@@ -76,6 +88,10 @@ namespace ShareInvest
 			get; set;
 		}
 		public DbSet<Group> Group
+		{
+			get; set;
+		}
+		public DbSet<Url> Url
 		{
 			get; set;
 		}
