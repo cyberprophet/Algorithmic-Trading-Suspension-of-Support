@@ -552,7 +552,7 @@ namespace ShareInvest
 									else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
 										Repository.KeepOrganizedInStorage(tick);
 								}
-								else if (storage.Any(o => o.Date.Equals(str)) is false && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+								else if ((storage is null || storage.Any(o => o.Date.Equals(str)) is false) && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
 									notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
 							}
 							else if (storage is IEnumerable<Tick> && storage.Any(o => o.Date.Equals(str)) && storage.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = models.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
@@ -595,7 +595,7 @@ namespace ShareInvest
 									else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
 										Repository.KeepOrganizedInStorage(tick);
 								}
-								else if (ss.Any(o => o.Date.Equals(str)) is false && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+								else if ((ss is null || ss.Any(o => o.Date.Equals(str)) is false) && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
 									notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
 							}
 							else if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
@@ -783,7 +783,7 @@ namespace ShareInvest
 						{
 							GC.Collect();
 						}
-					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x400 : 0x1800);
+					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x400 : 0x1400);
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}
@@ -849,9 +849,7 @@ namespace ShareInvest
 
 				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12 && Base.IsDebug) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
 				{
-					foreach (var process in Process.GetProcessesByName("chromedriver"))
-						process.Kill();
-
+					Base.SendMessage("chromedriver");
 					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
 				}
@@ -884,8 +882,10 @@ namespace ShareInvest
 					e.ClickedItem.Text = api.IsAdministrator ? "조회" : "설정";
 
 					if (connect.Start)
-						Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
-
+						Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net")
+						{
+							UseShellExecute = connect.Start
+						});
 					else
 						StartProgress(connect as Control);
 				}
@@ -906,8 +906,10 @@ namespace ShareInvest
 							break;
 					}
 				else
-					Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net") { UseShellExecute = connect.Start });
-
+					Process.Start(new ProcessStartInfo(@"https://coreapi.shareinvest.net")
+					{
+						UseShellExecute = connect.Start
+					});
 			else
 				Close();
 		}
