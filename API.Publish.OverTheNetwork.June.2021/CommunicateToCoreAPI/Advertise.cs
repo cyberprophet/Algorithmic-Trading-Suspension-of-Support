@@ -164,7 +164,7 @@ namespace ShareInvest.Client
 
 					if (HttpStatusCode.OK.Equals(response.StatusCode))
 					{
-						response = await client.ExecuteAsync(new RestRequest("apis/post/attach", Method.POST).AddParameter(token.Item1, token.Item2).AddParameter("blogName", "sharecompany").AddFileBytes("uploadedfile", Properties.Resources.coreapi, "main.png"), source.Token);
+						response = await client.ExecuteAsync(new RestRequest("apis/post/attach", Method.POST).AddParameter(token.Item1, token.Item2).AddParameter("blogName", "sharecompany").AddFileBytes("uploadedfile", resources[random.Next(0, resources.Count)], "main.png"), source.Token);
 
 						if (HttpStatusCode.OK.Equals(response.StatusCode))
 						{
@@ -300,22 +300,26 @@ namespace ShareInvest.Client
 			service = ChromeDriverService.CreateDefaultService(security.Path[0]);
 			service.HideCommandPromptWindow = true;
 			var options = new ChromeOptions();
-			options.AddArgument("--window-size=273,71");
+			options.AddArgument("--window-size=800,450");
 			options.AddArgument(string.Concat("user-agent=", security.Path[^1]));
 
-			if (security.IsInsiders is false)
+			if ((security.IsInsiders || security.IsHome) is false)
 				options.AddArguments("headless");
 
 			this.cn = cn;
+			resources = new List<byte[]> { Properties.Resources._20210311_Stocks, Properties.Resources._20210311_TagCloud, Properties.Resources._20210311_Portfolio, Properties.Resources._20210311_Theme };
+			random = new Random(Guid.NewGuid().GetHashCode());
 			driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
 		}
 		string Url
 		{
 			get; set;
 		}
+		readonly Random random;
 		readonly Security security;
 		readonly ChromeDriver driver;
 		readonly ChromeDriverService service;
+		readonly List<byte[]> resources;
 		readonly Catalog.Models.Codes cn;
 		const string menu = "메뉴";
 		const string story = @"https://www.tistory.com";

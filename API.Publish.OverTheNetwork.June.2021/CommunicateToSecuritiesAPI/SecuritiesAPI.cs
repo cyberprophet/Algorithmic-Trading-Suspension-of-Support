@@ -773,7 +773,7 @@ namespace ShareInvest
 							if (page is 1)
 								await Task.Delay(0x1400);
 
-							await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x90));
+							await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x100));
 						}
 						catch (Exception ex)
 						{

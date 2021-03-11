@@ -26,25 +26,28 @@ namespace ShareInvest
 		{
 			InitializeComponent();
 			icon = new[] { Properties.Resources.upload_server_icon_icons_com_76732, Properties.Resources.download_server_icon_icons_com_76720, Properties.Resources.data_server_icon_icons_com_76718 };
+			var processor = Environment.ProcessorCount;
 			var initial = Initialize(param);
 			key = initial.Item1;
 			api = API.GetInstance(key);
 			pipe = new Pipe(api.GetType().Name, typeof(CoreAPI).Name, initial.Item2);
 
-			if (Environment.ProcessorCount > 4)
+			if (processor > 2)
 			{
-				if (Environment.ProcessorCount > 6)
+				if (processor > 4)
 				{
-					if (api.IsInsider)
-						theme = new BackgroundWorker();
+					if (processor > 6)
+					{
+						if (api.IsInsider)
+							theme = new BackgroundWorker();
 
-					else
-						search = new BackgroundWorker();
+						else
+							search = new BackgroundWorker();
+					}
+					keywords = new BackgroundWorker();
 				}
 				if (Status is HttpStatusCode.OK)
 					big = new BackgroundWorker();
-
-				keywords = new BackgroundWorker();
 			}
 			timer.Start();
 		}
@@ -240,26 +243,21 @@ namespace ShareInvest
 							if (Status is HttpStatusCode.OK && cn.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && cn.MarginRate > 0)
 								try
 								{
-									if (int.TryParse(cn.Code, out int _) && await api.GetResponseAsync(HttpUtility.UrlEncode(Repository.GetPath(cn, now))) is false && await new Naver.Search(key).VisualizeTheResultsOfAnAnalysis(cn.Name) is (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
+									if (int.TryParse(cn.Code, out int _) && Refuse is false && (api.IsInsider is false || await api.GetResponseAsync(HttpUtility.UrlEncode(Repository.GetPath(cn, now))) is false) && await new Naver.Search(key).VisualizeTheResultsOfAnAnalysis(cn.Name) is (List<Catalog.KRX.Cloud>, Dictionary<string, string>) cloud)
 									{
-										if (Refuse is false)
-											switch (await new Advertise(cn, key).TransmitCollectedInformation(cloud.Item1, cloud.Item2))
-											{
-												case Response response:
-													if (await api.PutContextAsync(new Response { Status = cn.Code, Post = response.Post, Url = response.Url }) is > 0)
-													{
-														if (api.IsInsider)
-															Base.SendMessage(sender.GetType(), cn.Name, response.Post, response.Url);
+										switch (await new Advertise(cn, key).TransmitCollectedInformation(cloud.Item1, cloud.Item2))
+										{
+											case Response response when await api.PutContextAsync(new Response { Status = cn.Code, Post = response.Post, Url = response.Url }) is > 0 && api.IsInsider:
+												Base.SendMessage(sender.GetType(), cn.Name, response.Post, response.Url);
+												break;
 
-														else
-															continue;
-													}
-													break;
+											case int status:
+												Refuse = status == 0x196;
+												break;
 
-												case int status:
-													Refuse = status == 0x196;
-													break;
-											}
+											default:
+												continue;
+										}
 										var index = 0;
 										var tags = new Cloud[cloud.Item1.Count];
 										var news = new News[cloud.Item2.Count];

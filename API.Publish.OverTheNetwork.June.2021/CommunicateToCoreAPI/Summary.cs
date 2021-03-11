@@ -146,7 +146,7 @@ namespace ShareInvest.Client
 				var options = new ChromeOptions();
 				options.AddArgument(string.Concat("user-agent=", security.Path[^1]));
 
-				if (security.IsInsiders is false)
+				if ((security.IsHome || security.IsInsiders) is false)
 					options.AddArguments("headless");
 
 				driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x40));
