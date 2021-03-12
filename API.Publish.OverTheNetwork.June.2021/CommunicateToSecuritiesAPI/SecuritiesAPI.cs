@@ -783,7 +783,7 @@ namespace ShareInvest
 						{
 							GC.Collect();
 						}
-					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x400 : 0x1400);
+					(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x400 : 0x1000);
 					CheckTheInformationReceivedOnTheDay();
 					break;
 			}

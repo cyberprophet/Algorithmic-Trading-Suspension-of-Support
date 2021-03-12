@@ -3,7 +3,9 @@ using System.Collections.Generic;
 
 using Newtonsoft.Json;
 
+using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Interactions;
 
 using ShareInvest.Catalog;
 
@@ -24,6 +26,7 @@ namespace ShareInvest.Client
 				var list = new List<string[]>();
 				var queue = new Queue<FinancialStatement>();
 				int count = 0, index;
+				driver.Manage().Window.FullScreen();
 
 				foreach (var str in driver.PageSource.Split(security.Summary, StringSplitOptions.RemoveEmptyEntries)[1].Split(security.T1, StringSplitOptions.RemoveEmptyEntries))
 				{
@@ -36,9 +39,7 @@ namespace ShareInvest.Client
 						{
 							var array = num.ToCharArray();
 
-							if (index < 0xA
-								&& (string.IsNullOrEmpty(num) || num.StartsWith("-") && char.IsDigit(array[1]) || char.IsDigit(array[0]) || char.IsLetter(array[0]))
-								&& (string.IsNullOrEmpty(num) == false || empty))
+							if (index < 0xA && (string.IsNullOrEmpty(num) || num.StartsWith("-") && char.IsDigit(array[1]) || char.IsDigit(array[0]) || char.IsLetter(array[0])) && (string.IsNullOrEmpty(num) == false || empty))
 							{
 								param = num.Replace(security.Replace[2], string.Empty);
 
@@ -121,6 +122,8 @@ namespace ShareInvest.Client
 							IssuedStocks = dart.IssuedStocks
 						});
 					}
+				new Actions(driver).SendKeys(Keys.Escape).Perform();
+
 				return queue;
 			}
 			catch (Exception ex)
