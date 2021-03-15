@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -215,8 +216,15 @@ namespace ShareInvest
 																						}
 																		}
 								if (keywords.Count > 0)
+								{
+									string file = string.Concat(theme.Index, ".txt"), path = Path.Combine(Repository.R, file);
+
 									foreach (var kv in keywords)
-										Base.SendMessage(GetType(), kv.Key, kv.Value);
+										using (var sw = new StreamWriter(path, true))
+											sw.WriteLine(kv.Value);
+
+									File.Delete(file);
+								}
 							}
 							catch (Exception ex)
 							{

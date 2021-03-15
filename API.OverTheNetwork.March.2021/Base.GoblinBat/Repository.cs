@@ -204,6 +204,7 @@ namespace ShareInvest
 			}
 			return Encoding.UTF8.GetString(targetArray);
 		}
+		public static string R => Path.Combine(path, nameof(R));
 		static (string, int) Compress(string param)
 		{
 			byte[] sourceArray = Encoding.UTF8.GetBytes(param);

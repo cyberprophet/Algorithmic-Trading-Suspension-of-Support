@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Security.Principal;
+using System.Text;
 using System.Windows.Forms;
 
 namespace ShareInvest
@@ -28,11 +29,19 @@ namespace ShareInvest
 						GC.Collect();
 						Process.GetCurrentProcess().Kill();
 					}
+				var info = new DirectoryInfo(directory);
+
+				if (info.Exists is false)
+				{
+					info.Create();
+					File.WriteAllBytes(Path.Combine(directory, initialize), Properties.Resources.initialize);
+				}
 				using (var process = new Process
 				{
 					StartInfo = new ProcessStartInfo
 					{
 						FileName = cmd,
+						Verb = "runas",
 						UseShellExecute = false,
 						RedirectStandardError = true,
 						RedirectStandardInput = true,
@@ -42,17 +51,14 @@ namespace ShareInvest
 				})
 					if (process.Start())
 					{
-						process.StandardInput.WriteLine($"rscript {initialize}.r {nameof(Packages).Remove(nameof(Packages).Length - 1, 1)}");
+						var sb = new StringBuilder();
+
+						foreach (var package in Packages)
+							sb.Append(' ').Append(package);
+
+						process.StandardInput.WriteLine(string.Concat("rscript ", initialize, sb));
 						process.StandardInput.Close();
-
-						using (var r = process.StandardOutput)
-							while (r.EndOfStream is false)
-							{
-								var response = r.ReadLine();
-
-								if (string.IsNullOrEmpty(response) is false && response.StartsWith(initial))
-									Console.WriteLine(response.Replace(initial, string.Empty).Replace("\"", string.Empty));
-							}
+						Console.WriteLine(process.StandardOutput.ReadToEnd());
 						process.WaitForExit();
 					}
 				Application.Run(new Install(Verify.KeyDecoder.ProductKeyFromRegistry));
@@ -80,11 +86,10 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		static string[] Packages => new[] { "" };
+		static string[] Packages => new[] { "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "htmlwidgets", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "remotes" };
 		static (string, string, string)[] Files => new[] { (@"C:\OpenAPI", "opstarter.exe", @"https://www2.kiwoom.com/nkw.templateFrameSet.do?m=m1408000000"), (@"C:\Program Files (x86)\ESTsoft\ALZip", "ALZipCon.exe", @"https://www.altools.co.kr/download/alzip.aspx"), (@"C:\R", @"R-4.0.4\bin\x64\Rscript.exe", @"https://cran.r-project.org/bin/windows/base"), (@"C:\rtools40", @"usr\bin\make.exe", @"https://cran.r-project.org/bin/windows/Rtools") };
 		const string cmd = "cmd";
-		const string initial = "[1] ";
-		const string initialize = "initialize";
+		const string initialize = "initialize.R";
 		const string directory = @"C:\Algorithmic Trading\Res\R";
 	}
 }
