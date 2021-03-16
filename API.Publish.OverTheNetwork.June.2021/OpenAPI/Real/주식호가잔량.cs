@@ -9,11 +9,14 @@ namespace ShareInvest.OpenAPI.Catalog
 	{
 		internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
 		{
+			var data = e.sRealData.Split('\t');
+			var index = 0;
+
 			if (Connect.GetInstance().StocksHeld.TryGetValue(e.sRealKey, out Analysis sis))
 			{
-				string str_offer = API.GetCommRealData(e.sRealKey, Fid[0x29]), str_bid = API.GetCommRealData(e.sRealKey, Fid[0x33]);
+				string str_offer = data[1], str_bid = data[4];
 
-				if (int.TryParse(str_offer[0] is '-' ? str_offer[1..] : str_offer, out int offer) && int.TryParse(str_bid[0] is '-' ? str_bid[1..] : str_bid, out int bid))
+				if (int.TryParse(str_offer[index] is '-' ? str_offer[1..] : str_offer, out int offer) && int.TryParse(str_bid[index] is '-' ? str_bid[1..] : str_bid, out int bid))
 				{
 					sis.Offer = offer;
 					sis.Bid = bid;
@@ -21,11 +24,10 @@ namespace ShareInvest.OpenAPI.Catalog
 			}
 			if (Lite)
 			{
-				var index = 0;
-				var sb = new StringBuilder(API.GetCommRealData(e.sRealKey, Fid[index]));
+				var sb = new StringBuilder(data[index]);
 
 				for (index = 0; index < 0x40; index++)
-					sb.Append(';').Append(API.GetCommRealData(e.sRealKey, Fid[index + 1]));
+					sb.Append(';').Append(data[index + 1]);
 
 				if (sb.Length > 0x1F)
 					Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', sb));
