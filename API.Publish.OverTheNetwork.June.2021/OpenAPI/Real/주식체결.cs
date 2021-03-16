@@ -16,23 +16,18 @@ namespace ShareInvest.OpenAPI.Catalog
 		}
 		internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
 		{
-			string time = API.GetCommRealData(e.sRealKey, Fid[0]), current = API.GetCommRealData(e.sRealKey, Fid[1]), volume = API.GetCommRealData(e.sRealKey, Fid[6]);
+			var data = e.sRealData.Split('\t');
 
-			if (string.IsNullOrEmpty(volume) is false && string.IsNullOrEmpty(current) is false && string.IsNullOrEmpty(time) is false)
+			if (string.IsNullOrEmpty(data[6]) is false && string.IsNullOrEmpty(data[1]) is false && string.IsNullOrEmpty(data[0]) is false)
 			{
-				if (Connect.GetInstance().StocksHeld.TryGetValue(e.sRealKey, out Analysis analysis))
+				if (Connect.GetInstance().StocksHeld.TryGetValue(e.sRealKey, out Analysis analysis) && int.TryParse(data[4][0] is '-' ? data[4][1..] : data[4], out int offer) && int.TryParse(data[5][0] is '-' ? data[5][1..] : data[5], out int bid))
 				{
-					string str_bid = API.GetCommRealData(e.sRealKey, Fid[5]), str_offer = API.GetCommRealData(e.sRealKey, Fid[4]);
-
-					if (int.TryParse(str_offer[0] is '-' ? str_offer[1..] : str_offer, out int offer) && int.TryParse(str_bid[0] is '-' ? str_bid[1..] : str_bid, out int bid))
-					{
-						analysis.Bid = bid;
-						analysis.Offer = offer;
-						analysis.OnReceiveEvent(time, current, volume);
-					}
+					analysis.Bid = bid;
+					analysis.Offer = offer;
+					analysis.OnReceiveEvent(data[0], data[1], data[6]);
 				}
 				if (Lite)
-					Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', time, ';', current, ';', volume));
+					Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', data[0], ';', data[1], ';', data[6]));
 			}
 		}
 		internal override bool Lite

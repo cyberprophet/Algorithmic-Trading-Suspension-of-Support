@@ -18,9 +18,9 @@ namespace ShareInvest.OpenAPI.Catalog
 		{
 			if (Connect.GetInstance().StocksHeld.TryGetValue(e.sRealKey, out Analysis analysis))
 			{
-				string str_offer = API.GetCommRealData(e.sRealKey, Fid[3]), str_bid = API.GetCommRealData(e.sRealKey, Fid[4]), str_current = API.GetCommRealData(e.sRealKey, Fid[0]);
+				var data = e.sRealData.Split('\t');
 
-				if (int.TryParse(str_current[0] is '-' ? str_current[1..] : str_current, out int current) && int.TryParse(str_offer[0] is '-' ? str_offer[1..] : str_offer, out int offer) && int.TryParse(str_bid[0] is '-' ? str_bid[1..] : str_bid, out int bid))
+				if (int.TryParse(data[0][0] is '-' ? data[0][1..] : data[0], out int current) && int.TryParse(data[3][0] is '-' ? data[3][1..] : data[3], out int offer) && int.TryParse(data[4][0] is '-' ? data[4][1..] : data[4], out int bid))
 				{
 					analysis.Bid = bid;
 					analysis.Offer = offer;

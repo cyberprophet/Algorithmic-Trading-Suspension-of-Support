@@ -8,12 +8,12 @@ namespace ShareInvest.OpenAPI.Catalog
 	{
 		internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
 		{
-			var param = base.OnReceiveRealData(e, Fid);
+			var data = e.sRealData.Split('\t');
 
-			if (string.IsNullOrEmpty(param[0]) is false && string.IsNullOrEmpty(param[1]) is false && string.IsNullOrEmpty(param[2]) is false)
+			if (string.IsNullOrEmpty(data[0]) is false && string.IsNullOrEmpty(data[1]) is false && string.IsNullOrEmpty(data[2]) is false)
 			{
 				if (Lite)
-					Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', param[0], ';', param[1], ';', param[2]));
+					Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', data[0], ';', data[1], ';', data[2]));
 			}
 		}
 		internal override AxKHOpenAPI API

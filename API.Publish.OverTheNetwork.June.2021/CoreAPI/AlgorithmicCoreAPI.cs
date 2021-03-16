@@ -45,8 +45,7 @@ namespace ShareInvest
 						else
 							search = new BackgroundWorker();
 					}
-					if (Base.IsDebug is false)
-						keywords = new BackgroundWorker();
+					keywords = new BackgroundWorker();
 				}
 				if (Status is HttpStatusCode.OK)
 					big = new BackgroundWorker();

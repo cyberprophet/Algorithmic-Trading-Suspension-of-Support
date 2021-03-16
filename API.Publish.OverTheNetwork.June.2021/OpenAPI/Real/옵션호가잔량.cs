@@ -17,13 +17,15 @@ namespace ShareInvest.OpenAPI.Catalog
 		}
 		internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
 		{
+			var index = 0;
+			var data = e.sRealData.Split('\t');
+
 			if (Lite)
 			{
-				var index = 0;
-				var sb = new StringBuilder(API.GetCommRealData(e.sRealKey, Fid[index]));
+				var sb = new StringBuilder(data[index]);
 
 				for (index = 0; index < 0x30; index++)
-					sb.Append(';').Append(API.GetCommRealData(e.sRealKey, Fid[index + 3]));
+					sb.Append(';').Append(data[index + 3]);
 
 				if (sb.Length > 0x1F)
 					Server.WriteLine(string.Concat(e.sRealType, '|', e.sRealKey, '|', sb));
