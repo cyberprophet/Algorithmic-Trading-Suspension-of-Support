@@ -22,16 +22,16 @@
 				@foreach (var bal in Balance)
 				{
 					<tr>
-						<th>@bal.Value.Account</th>
+						<td>@bal.Value.Account</td>
 						<td>@bal.Key.Item2</td>
-						<td>@bal.Value.Name</td>
+						<th>@bal.Value.Name</th>
 						<td>@bal.Value.Quantity</td>
 						<td>@bal.Value.Purchase</td>
 						<td>@bal.Value.Current</td>
 						@{
 							var loss = bal.Value.Revenue[0] is '-' && bal.Value.Rate[0] is '-';
+							var color = loss ? ConsoleColor.Blue : ConsoleColor.Red;
 							string revenue = loss ? bal.Value.Revenue[1..] : bal.Value.Revenue, rate = loss ? bal.Value.Rate[1..] : bal.Value.Rate;
-							ConsoleColor color = loss ? ConsoleColor.Blue : ConsoleColor.Red;
 							<td style="color: @color">@revenue</td>
 							<td style="color: @color">@rate</td>
 						}

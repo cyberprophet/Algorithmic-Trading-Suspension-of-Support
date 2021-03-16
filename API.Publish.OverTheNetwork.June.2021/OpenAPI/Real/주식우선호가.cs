@@ -16,9 +16,9 @@ namespace ShareInvest.OpenAPI.Catalog
 		}
 		internal override void OnReceiveRealData(_DKHOpenAPIEvents_OnReceiveRealDataEvent e)
 		{
-			var param = base.OnReceiveRealData(e, Fid);
+			var data = e.sRealData.Split('\t');
 
-			if (Connect.GetInstance().StocksHeld.TryGetValue(e.sRealKey, out Analysis analysis) && int.TryParse(param[0][0] is '-' ? param[0][1..] : param[0], out int offer) && int.TryParse(param[1][0] is '-' ? param[1][1..] : param[1], out int bid))
+			if (Connect.GetInstance().StocksHeld.TryGetValue(e.sRealKey, out Analysis analysis) && int.TryParse(data[0][0] is '-' ? data[0][1..] : data[0], out int offer) && int.TryParse(data[1][0] is '-' ? data[1][1..] : data[1], out int bid))
 			{
 				analysis.Bid = bid;
 				analysis.Offer = offer;

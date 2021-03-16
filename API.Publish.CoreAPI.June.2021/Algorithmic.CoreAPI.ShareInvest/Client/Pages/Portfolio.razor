@@ -40,12 +40,12 @@
 					}
 					@if (ChosenStrategics.TryGetValue(account, out string value) && Enum.TryParse(value, out Interface.Strategics name) && ChosenCodes.TryGetValue(account, out string code) && Codes.Any(o => o.Code.Equals(code)))
 					{
-						switch (name)
-						{
-							case Interface.Strategics.Long_Position:
-								var record = RetrieveRecordedInformation(name, account, code);
+						var retrieve = RetrieveRecordedInformation(name, account, code);
 
-								<table class="table">
+						<table class="table">
+							@switch (name)
+							{
+								case Interface.Strategics.Long_Position:
 									<thead>
 										<tr name="@((int)name)">
 											<th scope="col" title="매도ㆍ매수 ( ￦ : Unit )">
@@ -57,20 +57,80 @@
 									</thead>
 									<tbody>
 										<tr>
-											<th scope="row" title="@(string.IsNullOrEmpty(record.Item3) ? "Data doesn′t Exist." : record.Item3)">
+											<th scope="row" title="@(string.IsNullOrEmpty((retrieve as Tuple<string, string, string>)?.Item3) ? "Data doesn′t Exist." : (retrieve as Tuple<string, string, string>).Item3)">
 												<div class="sub_context">@Codes.First(o => o.Code.Equals(code)).Name</div>
 											</th>
 											<td>
-												<span><input class="strategics_input" type="number" placeholder="@record.Item1" max="999" min="-100" step="0.5" required id="@string.Concat((int)name, account)" /><small> ％</small></span>
+												<span>
+													<input class="strategics_input" type="number" placeholder="@((retrieve as Tuple<string, string, string>)?.Item1)" max="999" min="-100" step="0.5" required id="@string.Concat((int)name, account)" />
+													<small> ％</small>
+												</span>
 											</td>
 											<td>
-												<span><input class="strategics_input" type="text" placeholder="@record.Item2" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat(account, (int)name)" /><small> won</small></span>
+												<span>
+													<input class="strategics_input" type="text" placeholder="@((retrieve as Tuple<string, string, string>)?.Item2)" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat(account, (int)name)" />
+													<small> won</small>
+												</span>
 											</td>
 										</tr>
 									</tbody>
-								</table>
-								break;
-						}
+									break;
+
+								case Interface.Strategics.Scenario:
+									<thead>
+										<tr name="@((int)name)">
+											<th scope="col" title="매도ㆍ매수 ( 日 : Unit )">
+												<div class="context">@Enum.GetName(typeof(Interface.Strategics), name)</div>
+											</th>
+											<th>
+												<div class="title" title="for a few days">Sell／Buy</div>
+											</th>
+											<th>
+												<div class="title" title="buy up to">Accumulate</div>
+											</th>
+											<th>
+												<div class="title" title="for less than">Price per Share</div>
+											</th>
+											<th>
+												<div class="title" title="sell in divisions when">Outperform</div>
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<th scope="row" title="@(string.IsNullOrEmpty((retrieve as Tuple<int, int, string, string, string, string>)?.Item6) ? "Data doesn′t Exist." : (retrieve as Tuple<int, int, string, string, string, string>).Item6)">
+												<div class="sub_context">@Codes.First(o => o.Code.Equals(code)).Name</div>
+											</th>
+											<td>
+												<span>
+													<input class="scenario_input scenario_input_division" type="number" placeholder="@((retrieve as Tuple<int, int, string, string, string, string>)?.Item1)" step="1" min="1" max="999" id="@account.Insert(1, ((int)name).ToString("D2"))" required />
+													<small>／</small>
+													<input class="scenario_input scenario_input_division" type="number" placeholder="@((retrieve as Tuple<int, int, string, string, string, string>)?.Item2)" step="1" min="1" max="999" id="@account.Insert(3, ((int)name).ToString("D2"))" required />
+												</span>
+											</td>
+											<td>
+												<span>
+													<input class="scenario_input scenario_input_single" type="text" placeholder="@((retrieve as Tuple<int, int, string, string, string, string>)?.Item3)" id="@string.Concat((int)name, account)" required onchange="number(this)" onkeyup="number(this)" />
+													<small> won</small>
+												</span>
+											</td>
+											<td>
+												<span>
+													<input class="scenario_input scenario_input_single" type="text" placeholder="@((retrieve as Tuple<int, int, string, string, string, string>)?.Item4)" id="@string.Concat(account, (int)name)" required onchange="number(this)" onkeyup="number(this)" />
+													<small> won</small>
+												</span>
+											</td>
+											<td>
+												<span>
+													<input class="scenario_input scenario_input_single" type="number" placeholder="@((retrieve as Tuple<int, int, string, string, string, string>)?.Item5)" step="0.5" min="0.25" max="999" id="@account.Insert(5, ((int)name).ToString("D2"))" required />
+													<small> ％</small>
+												</span>
+											</td>
+										</tr>
+									</tbody>
+									break;
+							}
+						</table>
 						<div class="button_style">
 							<button class="button_style_verify" @onclick="e => RequestVerification(account, e)" disabled="@(IsClicked.ContainsKey(account) is false)">Verify</button>
 							<button class="button_style_save" @onclick="e => RequestSave((int)name, account, e)" disabled="@IsClicked.ContainsKey(account)">@Complete</button>

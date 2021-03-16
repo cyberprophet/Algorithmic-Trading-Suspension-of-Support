@@ -21,23 +21,29 @@ namespace ShareInvest.Pages
 	[Authorize]
 	public partial class PortfolioBase : ComponentBase
 	{
-		internal (string, string, string) RetrieveRecordedInformation(Interface.Strategics strategics, string account, string code)
+		internal object RetrieveRecordedInformation(Interface.Strategics strategics, string account, string code)
 		{
-			switch (strategics)
-			{
-				case Interface.Strategics.Long_Position when Array.Exists(Enumerable, o => o.Code.Equals(code)):
-					foreach (var find in Enumerable.Where(o => o.Trend == (int)strategics && o.Code.Equals(code)))
-						if (find is Catalog.LongPosition lp && lp.Account.Equals(account))
-						{
-							var date = new DateTime(lp.Date);
+			if (Array.Exists(Enumerable, o => o.Code.Equals(code)))
+				foreach (var find in Enumerable.Where(o => o.Trend == (int)strategics && o.Code.Equals(code)))
+				{
+					var date = new DateTime(find.Date);
 
-							return (lp.Underweight.ToString("P5").Replace("%", string.Empty), lp.Overweight.ToString("N0"), lp.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty);
-						}
-					break;
-			}
-			return (string.Empty, string.Empty, string.Empty);
+					switch (find)
+					{
+						case Catalog.LongPosition lp when lp.Account.Equals(account):
+							return new Tuple<string, string, string>(lp.Underweight.ToString("P5").Replace("%", string.Empty), lp.Overweight.ToString("N0"), lp.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty);
+
+						case Catalog.Scenario scenario when scenario.Account.Equals(account):
+							return new Tuple<int, int, string, string, string, string>(scenario.Short, scenario.Long, scenario.Maximum.ToString("N0"), scenario.Hope.ToString("N0"), scenario.Target.ToString("P5").Replace("%", string.Empty), scenario.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty);
+					}
+				}
+			return null;
 		}
-		protected override async Task OnInitializedAsync() => Codes = await Http.GetFromJsonAsync<Codes[]>(Crypto.Security.GetRoute("Confirm", "Stocks"));
+		protected override async Task OnInitializedAsync()
+		{
+			Codes = await Http.GetFromJsonAsync<Codes[]>(Crypto.Security.GetRoute("Confirm", "Stocks"));
+			Information = await Http.GetFromJsonAsync<UserInformation[]>(Crypto.Security.GetRoute("Account", await OnReceiveLogUserInformation()));
+		}
 		protected override async Task OnAfterRenderAsync(bool render)
 		{
 			if (render)
@@ -46,7 +52,6 @@ namespace ShareInvest.Pages
 				IsClicked = new Dictionary<string, bool>();
 				ChosenCodes = new Dictionary<string, string>();
 				ChosenStrategics = new Dictionary<string, string>();
-				Information = await Http.GetFromJsonAsync<UserInformation[]>(Crypto.Security.GetRoute("Account", await OnReceiveLogUserInformation()));
 			}
 			else
 			{
@@ -69,6 +74,10 @@ namespace ShareInvest.Pages
 						{
 							case Interface.Strategics.Long_Position:
 								Enumerable[i] = JsonConvert.DeserializeObject<Catalog.LongPosition>(enumerable[i].Contents);
+								break;
+
+							case Interface.Strategics.Scenario:
+								Enumerable[i] = JsonConvert.DeserializeObject<Catalog.Scenario>(enumerable[i].Contents);
 								break;
 						}
 				}
@@ -93,6 +102,28 @@ namespace ShareInvest.Pages
 						Trend = name,
 						Date = DateTime.Now.Ticks
 					});
+					break;
+
+				case Interface.Strategics.Scenario:
+					var response = new string[5];
+					var location = new[] { 0, 1, 3, 5, sender.Length };
+
+					for (int index = 0; index < location.Length; index++)
+						response[index] = await Runtime.InvokeAsync<string>(string.Concat(interop, recall), sender.Insert(location[index], name.ToString("D2")));
+
+					if (double.TryParse(response[^2], out double rate) && int.TryParse(response[location.Length - 1].Replace(",", string.Empty), out int price) && long.TryParse(response[0].Replace(",", string.Empty), out long max) && int.TryParse(response[1], out int sell) && int.TryParse(response[2], out int buy) && buy > 0 && sell > 0 && price > 0 && max > 0 && double.IsNaN(rate) is false)
+						json = JsonConvert.SerializeObject(new Catalog.Scenario
+						{
+							Account = sender,
+							Code = ChosenCodes[sender],
+							Date = DateTime.Now.Ticks,
+							Trend = name,
+							Short = sell,
+							Long = buy,
+							Maximum = max,
+							Hope = price,
+							Target = rate * 1e-2
+						});
 					break;
 			}
 			if (string.IsNullOrEmpty(json) is false && HttpStatusCode.OK.Equals((await Http.PostAsJsonAsync(Crypto.Security.GetRoute(portfolio), new BringIn

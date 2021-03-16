@@ -193,6 +193,34 @@
 	font-style: italic
 }
 
+.scenario_input
+{
+	background-color: transparent;
+	color: dimgray;
+	border: 0.75px ridge;
+	border-style: solid;
+	border-color: tan;
+	font-size: small;
+	height: 25px;
+	text-align: end
+}
+
+	.scenario_input::placeholder
+	{
+		color: lightsteelblue;
+		font-style: italic
+	}
+
+.scenario_input_division
+{
+	width: 35%
+}
+
+.scenario_input_single
+{
+	width: 82.5%
+}
+
 .search
 {
 	position: fixed;

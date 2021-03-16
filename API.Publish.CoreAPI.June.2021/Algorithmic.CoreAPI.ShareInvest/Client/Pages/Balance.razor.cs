@@ -69,6 +69,7 @@ namespace ShareInvest.Pages
 
 				case Catalog.Models.Message message when Balance.Any(o => o.Key.Item2.Equals(message.Key) && o.Value.Current.Replace(",", string.Empty).Equals((message.Convey[0] is '-' or '+') ? message.Convey[1..] : message.Convey) is false):
 					var render = false;
+					var now = DateTime.Now;
 
 					foreach (var kv in from o in Balance where o.Key.Item2.Equals(message.Key) select o)
 						if (int.TryParse(kv.Value.Quantity, out int quantity) && quantity > 0 && int.TryParse(message.Convey[0] is '-' ? message.Convey[1..] : message.Convey, out int price) && int.TryParse(kv.Value.Current.Replace(",", string.Empty), out int current) && current != price && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
@@ -87,11 +88,17 @@ namespace ShareInvest.Pages
 							};
 							render = true;
 						}
-					if (render)
+					if (render && Second != now.Second)
+					{
+						Second = now.Second;
 						StateHasChanged();
-
+					}
 					break;
 			}
+		}
+		int Second
+		{
+			get; set;
 		}
 		[Inject]
 		IAccessTokenProvider TokenProvider

@@ -43,6 +43,7 @@
 	public enum Strategics
 	{
 		Long_Position = 'L',
+		Scenario = 'N',
 		TC = 'C',
 		TF = 'F',
 		TS = 'T',

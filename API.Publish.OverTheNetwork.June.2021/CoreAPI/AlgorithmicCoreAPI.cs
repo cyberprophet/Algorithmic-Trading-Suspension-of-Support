@@ -105,8 +105,13 @@ namespace ShareInvest
 						big.RunWorkerAsync(Status);
 
 					if (keywords is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> shuffle)
+					{
+						Repository.CreateTheDirectory(new DirectoryInfo(directory));
 						keywords.RunWorkerAsync(shuffle.OrderBy(o => Guid.NewGuid()));
 
+						if (Base.IsDebug is false && api.IsAdministrator is false)
+							File.WriteAllBytes(Path.Combine(directory, initialize), Properties.Resources.initialize);
+					}
 					if (search is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
 						search.RunWorkerAsync(list);
 				}));
@@ -223,7 +228,7 @@ namespace ShareInvest
 										using (var sw = new StreamWriter(path, true))
 											sw.WriteLine(kv.Value);
 
-									File.Delete(file);
+									File.Delete(path);
 								}
 							}
 							catch (Exception ex)
@@ -511,6 +516,8 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		const string initialize = "initialize.R";
+		const string directory = @"C:\Algorithmic Trading\Res\R";
 		readonly string key;
 		readonly API api;
 		readonly Pipe pipe;
