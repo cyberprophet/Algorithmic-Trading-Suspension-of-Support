@@ -67,14 +67,14 @@ namespace ShareInvest.Pages
 					}
 					break;
 
-				case Catalog.Models.Message message when Balance.Any(o => o.Key.Item2.Equals(message.Key) && o.Value.Current.Replace(",", string.Empty).Equals((message.Convey[0] is '-' or '+') ? message.Convey[1..] : message.Convey) is false):
-					var render = false;
+				case Catalog.Models.Message message when Balance.Any(o => o.Key.Item2.Equals(message.Key)) && (message.Convey[0] is '-' or '+' ? message.Convey[1..] : message.Convey) is string convey:
 					var now = DateTime.Now;
+					var render = false;
 
-					foreach (var kv in from o in Balance where o.Key.Item2.Equals(message.Key) select o)
-						if (int.TryParse(kv.Value.Quantity, out int quantity) && quantity > 0 && int.TryParse(message.Convey[0] is '-' ? message.Convey[1..] : message.Convey, out int price) && int.TryParse(kv.Value.Current.Replace(",", string.Empty), out int current) && current != price && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
+					foreach (var kv in Balance)
+						if (kv.Key.Item2.Equals(message.Key) && convey.Equals(kv.Value.Current.Replace(",", string.Empty)) is false && int.TryParse(kv.Value.Quantity, out int quantity) && quantity > 0 && int.TryParse(convey, out int price) && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
 						{
-							Balance[new Tuple<string, string>(kv.Value.Kiwoom, kv.Value.Code)] = new Catalog.Models.Balance
+							Balance[kv.Key] = new Catalog.Models.Balance
 							{
 								Kiwoom = kv.Value.Kiwoom,
 								Account = kv.Value.Account,

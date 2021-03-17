@@ -117,7 +117,7 @@ namespace ShareInvest
 		{
 			if (Codes.TryDequeue(out string code))
 			{
-				if (string.IsNullOrEmpty(code))
+				if (string.IsNullOrEmpty(code) || Base.IsDebug && code.Length == 6)
 					CheckTheInformationReceivedOnTheDay();
 
 				else
@@ -601,7 +601,7 @@ namespace ShareInvest
 							else if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
 								Repository.KeepOrganizedInStorage(tick);
 						}
-						restore = fo.AddDays(1);
+						fo = fo.AddDays(1);
 					}
 					CheckTheInformationReceivedOnTheDay();
 					return;
@@ -639,6 +639,61 @@ namespace ShareInvest
 						analysis.Strategics = strategics;
 						break;
 
+					case Strategics.Scenario when JsonConvert.DeserializeObject<Scenario>(bring.Contents) is Scenario json && analysis.Code.Equals(json.Code):
+						var amount = json.Maximum / json.Long / analysis.Current;
+						int order = 0, remain = (int)(json.Maximum / json.Hope / json.Short);
+						DateTime now = DateTime.Now, time = new(now.Year, now.Month, now.Day, Base.CheckIfMarketDelay(now) ? 0xA : 9, 0, 0);
+						analysis.Reservation = new Queue<string>(0x20);
+
+						if (amount > Base.Tradable)
+						{
+							var quantity = (int)(amount / Base.Tradable) + 1;
+							var add = Base.Tradable / (amount / quantity);
+							analysis.Classification = new Scenario
+							{
+								Account = json.Account,
+								Code = json.Code,
+								Date = remain,
+								Hope = json.Hope,
+								Maximum = json.Maximum,
+								Target = json.Target,
+								Trend = json.Trend,
+								Short = (int)(remain / (Base.Tradable * 5)) + 1,
+								Long = quantity
+							};
+							for (order = 0; order < Base.Tradable; order += add)
+								analysis.Reservation.Enqueue(time.AddSeconds(order * 5).ToString(Base.TimeFormat));
+						}
+						else
+						{
+							analysis.Classification = new Scenario
+							{
+								Account = json.Account,
+								Code = json.Code,
+								Date = remain,
+								Hope = json.Hope,
+								Maximum = json.Maximum,
+								Target = json.Target,
+								Trend = json.Trend,
+								Short = (int)(remain / (Base.Tradable * 5)) + 1,
+								Long = 1
+							};
+							if (amount == Base.Tradable)
+								for (order = 0; order < Base.Tradable; order++)
+									analysis.Reservation.Enqueue(time.AddSeconds(order * 5).ToString(Base.TimeFormat));
+
+							else
+							{
+								var add = Base.Tradable / amount;
+
+								for (order = 0; order < Base.Tradable; order += add)
+									analysis.Reservation.Enqueue(time.AddSeconds(order * 5).ToString(Base.TimeFormat));
+							}
+						}
+						analysis.Account = json.Account;
+						analysis.Strategics = strategics;
+						break;
+
 					default:
 						return;
 				}
@@ -646,8 +701,8 @@ namespace ShareInvest
 				analysis.Send += OnReceiveSecuritiesAPI;
 				analysis.Consecutive += analysis.OnReceiveDrawChart;
 
-				if (Array.Exists(codes, o => o.Equals(bring.Code)))
-					Base.SendMessage(bring.GetType(), analysis.Name, analysis.Quantity, analysis.OrderNumber is null ? int.MinValue : analysis.OrderNumber.Count, analysis.Purchase, analysis.Current as object, analysis.Classification);
+				if (Base.IsDebug)
+					Base.SendMessage(bring.GetType(), analysis.Name, analysis.Quantity, analysis.Reservation.Count, analysis.Purchase, analysis.Current as object, analysis.Classification);
 			}
 		}
 		void ExceptInStrategics(IEnumerable<string> enumerable)
@@ -773,7 +828,8 @@ namespace ShareInvest
 							if (page is 1)
 								await Task.Delay(0x1400);
 
-							await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x100));
+							if (Base.IsDebug is false)
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x145));
 						}
 						catch (Exception ex)
 						{
@@ -968,7 +1024,7 @@ namespace ShareInvest
 					connect.Writer.WriteLine(string.Concat("장시작시간|", GetType(), Base.CheckIfMarketDelay(now) ? "|3;100000;000000" : "|3;090000;000000"));
 					return;
 
-				case DialogResult.Abort when (now.Hour < 5 || now.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday) && api.IsAdministrator:
+				case DialogResult.Abort when (now.Hour < 5 || now.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday) && api.IsAdministrator || Base.IsDebug:
 					var worker = new BackgroundWorker();
 					worker.DoWork += WorkerDoWork;
 					worker.RunWorkerAsync(0U);

@@ -87,11 +87,19 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		public abstract Queue<string> Reservation
+		{
+			get; set;
+		}
 		internal abstract dynamic SellPrice
 		{
 			get; set;
 		}
 		internal abstract dynamic BuyPrice
+		{
+			get; set;
+		}
+		protected internal abstract int Count
 		{
 			get; set;
 		}

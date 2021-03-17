@@ -121,11 +121,19 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
+		public override Queue<string> Reservation
+		{
+			get; set;
+		}
 		internal override dynamic SellPrice
 		{
 			get; set;
 		}
 		internal override dynamic BuyPrice
+		{
+			get; set;
+		}
+		protected internal override int Count
 		{
 			get; set;
 		}

@@ -102,6 +102,41 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			switch (Classification)
 			{
+				case Catalog.Scenario scenario when Wait:
+					if (Offer > 0 && Quantity > 0 && scenario.Hope * (1 + scenario.Target + Base.Tax) > Bid && e.Date.CompareTo(NextOrderStringTime) > 0 && Count++ * scenario.Short < scenario.Date)
+					{
+						Wait = false;
+						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+						{
+							AccNo = scenario.Account,
+							Code = scenario.Code,
+							OrderType = (int)OrderType.신규매도,
+							HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+							OrgOrderNo = string.Empty,
+							Price = Offer,
+							Qty = scenario.Short
+						}));
+						NextOrderStringTime = e.Date;
+						return;
+					}
+					if (Bid > 0 && Offer > scenario.Hope && scenario.Maximum * (1 - Base.Tax) > (long)e.Price * Quantity && e.Date.CompareTo(NextOrderStringTime) > 0)
+					{
+						Wait = false;
+						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+						{
+							AccNo = scenario.Account,
+							Code = scenario.Code,
+							OrderType = (int)OrderType.신규매수,
+							HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+							OrgOrderNo = string.Empty,
+							Price = Bid,
+							Qty = scenario.Long
+						}));
+						NextOrderStringTime = Reservation.TryDequeue(out string next) ? next : scenario.Account;
+						return;
+					}
+					break;
+
 				case Catalog.LongPosition lop when Wait && (Quantity > 0 && double.IsNaN(Purchase) is false && Purchase > 0 ? e.Price / Purchase - 1 : 0D) is double rate:
 					if (Offer > 0 && lop.Underweight + Base.Tax < rate && (OrderNumber is null || OrderNumber.ContainsValue(Offer) is false) && e.Date.CompareTo(NextOrderStringTime) > 0)
 					{
@@ -321,11 +356,19 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
+		public override Queue<string> Reservation
+		{
+			get; set;
+		}
 		internal override dynamic SellPrice
 		{
 			get; set;
 		}
 		internal override dynamic BuyPrice
+		{
+			get; set;
+		}
+		protected internal override int Count
 		{
 			get; set;
 		}

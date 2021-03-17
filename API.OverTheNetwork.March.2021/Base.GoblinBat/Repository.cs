@@ -56,33 +56,35 @@ namespace ShareInvest
 			if (code.Length is 6 or 8)
 			{
 				var stack = new Stack<Catalog.Models.Tick>();
+				var dic = new DirectoryInfo(Path.Combine(path, code));
 
-				foreach (var file in new DirectoryInfo(Path.Combine(path, code)).GetFiles($"*{extension}", SearchOption.AllDirectories))
-				{
-					var directory = file.DirectoryName.Split('\\')[^1];
-
-					if (directory.Length == 2 && Array.TrueForAll(directory.ToCharArray(), o => char.IsDigit(o)))
+				if (dic.Exists)
+					foreach (var file in dic.GetFiles($"*{extension}", SearchOption.AllDirectories))
 					{
-						var name = file.FullName.Split('\\');
-						var info = name[^1].Replace(extension, string.Empty).Split('_');
+						var directory = file.DirectoryName.Split('\\')[^1];
 
-						if (name[^3].Length == 4 && Array.TrueForAll(name[^3].ToCharArray(), o => char.IsDigit(o)) && info.Length == 4 && name[^4].Length is 6 or 8 && name[^2].Length == 2 && Array.TrueForAll(name[^2].ToCharArray(), o => char.IsDigit(o)) && info[^3].Length == 9 && Array.TrueForAll(info[^3].ToCharArray(), o => char.IsDigit(o)) && info[^2].Length == 9 && Array.TrueForAll(info[^2].ToCharArray(), o => char.IsDigit(o)) && Array.TrueForAll(info[^1].ToCharArray(), o => char.IsDigit(o)) && info[0].Length == 2 && Array.TrueForAll(info[0].ToCharArray(), o => char.IsDigit(o)))
+						if (directory.Length == 2 && Array.TrueForAll(directory.ToCharArray(), o => char.IsDigit(o)))
 						{
-							var date = string.Concat(name[^3], name[^2], info[0]);
+							var name = file.FullName.Split('\\');
+							var info = name[^1].Replace(extension, string.Empty).Split('_');
 
-							if (string.IsNullOrEmpty(date) is false && date.Length == 8 && base_date.CompareTo(date) < 0)
-								stack.Push(new Catalog.Models.Tick
-								{
-									Price = info[^1],
-									Close = info[^2],
-									Open = info[^3],
-									Date = date,
-									Code = name[^4],
-									Contents = string.Empty
-								});
+							if (name[^3].Length == 4 && Array.TrueForAll(name[^3].ToCharArray(), o => char.IsDigit(o)) && info.Length == 4 && name[^4].Length is 6 or 8 && name[^2].Length == 2 && Array.TrueForAll(name[^2].ToCharArray(), o => char.IsDigit(o)) && info[^3].Length == 9 && Array.TrueForAll(info[^3].ToCharArray(), o => char.IsDigit(o)) && info[^2].Length == 9 && Array.TrueForAll(info[^2].ToCharArray(), o => char.IsDigit(o)) && Array.TrueForAll(info[^1].ToCharArray(), o => char.IsDigit(o)) && info[0].Length == 2 && Array.TrueForAll(info[0].ToCharArray(), o => char.IsDigit(o)))
+							{
+								var date = string.Concat(name[^3], name[^2], info[0]);
+
+								if (string.IsNullOrEmpty(date) is false && date.Length == 8 && base_date.CompareTo(date) < 0)
+									stack.Push(new Catalog.Models.Tick
+									{
+										Price = info[^1],
+										Close = info[^2],
+										Open = info[^3],
+										Date = date,
+										Code = name[^4],
+										Contents = string.Empty
+									});
+							}
 						}
 					}
-				}
 				return stack.Count > 0 ? stack.OrderBy(o => o.Date) : Enumerable.Empty<Catalog.Models.Tick>();
 			}
 			else if (ReadTheFile(code))

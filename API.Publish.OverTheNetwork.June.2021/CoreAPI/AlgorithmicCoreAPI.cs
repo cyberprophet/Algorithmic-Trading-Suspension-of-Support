@@ -32,6 +32,7 @@ namespace ShareInvest
 			key = initial.Item1;
 			api = API.GetInstance(key);
 			pipe = new Pipe(api.GetType().Name, typeof(CoreAPI).Name, initial.Item2);
+			random = new Random(Guid.NewGuid().GetHashCode());
 
 			if (processor > 2)
 			{
@@ -45,7 +46,8 @@ namespace ShareInvest
 						else
 							search = new BackgroundWorker();
 					}
-					keywords = new BackgroundWorker();
+					if (Base.IsDebug is false)
+						keywords = new BackgroundWorker();
 				}
 				if (Status is HttpStatusCode.OK)
 					big = new BackgroundWorker();
@@ -135,7 +137,18 @@ namespace ShareInvest
 			{
 				var now = DateTime.Now;
 				var page = uint.MaxValue;
-				await Task.Delay(Base.IsDebug ? 0x400 : new Random(Guid.NewGuid().GetHashCode()).Next(0x32000, 0x64000));
+
+				do
+					try
+					{
+						await Task.Delay(Base.IsDebug ? 0x400 : random.Next(0x32000, 0x64000));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x145));
+					}
+					catch (Exception ex)
+					{
+						Base.SendMessage(sender.GetType(), ex.StackTrace, list.Count);
+					}
+				while (now.Hour is 0x11 or 0x10 or 0xF && Base.IsDebug is false);
 
 				switch (e.Argument)
 				{
@@ -521,6 +534,7 @@ namespace ShareInvest
 		readonly string key;
 		readonly API api;
 		readonly Pipe pipe;
+		readonly Random random;
 		readonly BackgroundWorker big;
 		readonly BackgroundWorker theme;
 		readonly BackgroundWorker search;

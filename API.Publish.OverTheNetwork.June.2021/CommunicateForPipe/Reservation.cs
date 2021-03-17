@@ -22,8 +22,8 @@ namespace ShareInvest
 					switch (r.Strategics)
 					{
 						case Strategics.Long_Position:
-
-							break;
+						case Strategics.Scenario:
+							continue;
 
 						case Strategics.SC when r.Classification is Catalog.SatisfyConditionsAccordingToTrends sc:
 							if (sc.ReservationSellQuantity > 0)
