@@ -142,7 +142,7 @@ namespace ShareInvest
 					try
 					{
 						await Task.Delay(Base.IsDebug ? 0x400 : random.Next(0x32000, 0x64000));
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x145));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x163));
 					}
 					catch (Exception ex)
 					{

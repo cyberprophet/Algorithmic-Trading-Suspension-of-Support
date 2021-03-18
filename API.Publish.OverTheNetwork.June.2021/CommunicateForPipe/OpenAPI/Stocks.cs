@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.EventHandler;
@@ -103,7 +104,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 			switch (Classification)
 			{
 				case Catalog.Scenario scenario when Wait:
-					if (Offer > 0 && Quantity > 0 && scenario.Hope * (1 + scenario.Target + Base.Tax) > Bid && e.Date.CompareTo(NextOrderStringTime) > 0 && Count++ * scenario.Short < scenario.Date)
+					if (Offer > 0 && Quantity > 0 && scenario.Hope * (1 + scenario.Target + Base.Tax) < Offer && e.Date.CompareTo(NextOrderStringTime) > 0 && Count++ * scenario.Short < scenario.Date)
 					{
 						Wait = false;
 						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
@@ -119,7 +120,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 						NextOrderStringTime = e.Date;
 						return;
 					}
-					if (Bid > 0 && Offer > scenario.Hope && scenario.Maximum * (1 - Base.Tax) > (long)e.Price * Quantity && e.Date.CompareTo(NextOrderStringTime) > 0)
+					if (Bid > 0 && Bid < scenario.Hope * (1 - Base.Tax) && e.Date.CompareTo(NextOrderStringTime) > 0 && scenario.Maximum * (1 - Base.Tax) > (long)e.Price * (OrderNumber is null || OrderNumber.Any(o => o.Value <= e.Price) is false ? Quantity : Quantity + OrderNumber.Count(o => o.Value <= e.Price)))
 					{
 						Wait = false;
 						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
@@ -132,7 +133,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 							Price = Bid,
 							Qty = scenario.Long
 						}));
-						NextOrderStringTime = Reservation.TryDequeue(out string next) ? next : scenario.Account;
+						NextOrderStringTime = Reservation.TryDequeue(out string next) ? (e.Date.CompareTo(next) > 0 ? e.Date : next) : scenario.Account;
 						return;
 					}
 					break;

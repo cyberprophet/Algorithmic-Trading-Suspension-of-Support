@@ -623,7 +623,7 @@ namespace ShareInvest
 
 				}
 		}
-		void BringInStrategics(Strategics strategics, BringIn bring, string[] codes)
+		void BringInStrategics(Strategics strategics, BringIn bring)
 		{
 			if ((connect as OpenAPI.ConnectAPI).TryGetValue(bring.Code, out Analysis analysis))
 			{
@@ -702,7 +702,7 @@ namespace ShareInvest
 				analysis.Consecutive += analysis.OnReceiveDrawChart;
 
 				if (Base.IsDebug)
-					Base.SendMessage(bring.GetType(), analysis.Name, analysis.Quantity, analysis.Reservation.Count, analysis.Purchase, analysis.Current as object, analysis.Classification);
+					Base.SendMessage(bring.GetType(), analysis.Name, analysis.Quantity, analysis.Reservation is Queue<string> ? analysis.Reservation.Count : int.MinValue, analysis.Purchase, analysis.Current as object, analysis.Classification);
 			}
 		}
 		void ExceptInStrategics(IEnumerable<string> enumerable)
@@ -742,7 +742,7 @@ namespace ShareInvest
 
 			switch (e.Argument)
 			{
-				case string[] codes:
+				case string[]:
 					while (e.Cancel is false)
 					{
 						try
@@ -756,7 +756,7 @@ namespace ShareInvest
 											if (worker.WorkerSupportsCancellation && now.CompareTo(new DateTime(bring.Date)) > 0)
 												continue;
 
-											BringInStrategics(strategics, bring, codes);
+											BringInStrategics(strategics, bring);
 										}
 									ExceptInStrategics(enumerable.Select(o => o.Code));
 									break;
@@ -803,8 +803,9 @@ namespace ShareInvest
 							{
 								e.Cancel = true;
 
-								foreach (var code in codes)
-									Base.SendMessage(sender.GetType(), code, now.ToLongTimeString());
+								if (e.Argument is string[] enumerable)
+									foreach (var code in enumerable)
+										Base.SendMessage(sender.GetType(), code, now.ToLongTimeString());
 							}
 							else
 							{
@@ -829,7 +830,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x145));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x163));
 						}
 						catch (Exception ex)
 						{
