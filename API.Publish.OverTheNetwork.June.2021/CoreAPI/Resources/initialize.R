@@ -5,12 +5,7 @@ if (length(args) > 0)
 {
     for (index in 1:length(args))
     {
-        if (args[index] %in% package)
-        {
-            cat(args[index])
-            print(index)
-        }
-        else
+        if (!(args[index] %in% package))
         {
             install.packages(args[index], repos = 'https://cran.seoul.go.kr')
             
@@ -29,4 +24,5 @@ if (length(args) > 0)
             }
         }
     }
+    update.packages(repos = 'https://cran.seoul.go.kr', ask = FALSE)
 }

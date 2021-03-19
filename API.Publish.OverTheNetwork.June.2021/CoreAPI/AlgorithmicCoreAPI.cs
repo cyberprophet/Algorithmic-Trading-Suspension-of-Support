@@ -107,13 +107,8 @@ namespace ShareInvest
 						big.RunWorkerAsync(Status);
 
 					if (keywords is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> shuffle)
-					{
-						Repository.CreateTheDirectory(new DirectoryInfo(directory));
 						keywords.RunWorkerAsync(shuffle.OrderBy(o => Guid.NewGuid()));
 
-						if (Base.IsDebug is false && api.IsAdministrator is false)
-							File.WriteAllBytes(Path.Combine(directory, initialize), Properties.Resources.initialize);
-					}
 					if (search is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
 						search.RunWorkerAsync(list);
 				}));
@@ -142,11 +137,15 @@ namespace ShareInvest
 					try
 					{
 						await Task.Delay(Base.IsDebug ? 0x400 : random.Next(0x32000, 0x64000));
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7, 0x163));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x163));
 					}
 					catch (Exception ex)
 					{
 						Base.SendMessage(sender.GetType(), ex.StackTrace, list.Count);
+					}
+					finally
+					{
+						now = DateTime.Now;
 					}
 				while (now.Hour is 0x11 or 0x10 or 0xF && Base.IsDebug is false);
 
@@ -192,13 +191,63 @@ namespace ShareInvest
 						break;
 
 					case IEnumerable<Catalog.Models.Theme> enumerable:
+						if (Base.IsDebug is false && api.IsAdministrator is false)
+						{
+							Repository.CreateTheDirectory(new DirectoryInfo(directory));
+							File.WriteAllBytes(Path.Combine(directory, initialize), Properties.Resources.initialize);
+							File.WriteAllBytes(Path.Combine(directory, tag), Properties.Resources.TagCloud);
+
+							foreach (var file in new[] { (@"C:\R", @"R-4.0.4\bin\x64\Rscript.exe", @"https://cran.r-project.org/bin/windows/base"), (@"C:\rtools40", @"usr\bin\make.exe", @"https://cran.r-project.org/bin/windows/Rtools") })
+								if (new FileInfo(Path.Combine(file.Item1, file.Item2)).Exists is false)
+									using (var process = new Process { StartInfo = new ProcessStartInfo(file.Item3) })
+									{
+										if (process.Start() && DialogResult.OK.Equals(MessageBox.Show("An essential element for program operation is missing.\n\nDownload from the link you are connecting to,\ninstall it in the captioned location\nat the top of the message box,\nand click the 'OK' button.\n\nIf you move on to the next step\nbefore the installation is finished,\nthe program will be terminated.", file.Item1, MessageBoxButtons.OK, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1)))
+										{
+											if (new FileInfo(Path.Combine(file.Item1, file.Item2)).Exists)
+												continue;
+										}
+										(sender as BackgroundWorker).Dispose();
+
+										return;
+									}
+							using (var process = new Process
+							{
+								StartInfo = new ProcessStartInfo
+								{
+									FileName = "cmd",
+									Verb = "runas",
+									UseShellExecute = false,
+									RedirectStandardError = true,
+									RedirectStandardInput = true,
+									RedirectStandardOutput = true,
+									WorkingDirectory = directory
+								}
+							})
+								if (process.Start())
+								{
+									var sb = new StringBuilder();
+
+									foreach (var package in new[] { "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "htmlwidgets", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "remotes" })
+										sb.Append(' ').Append(package);
+
+									process.StandardInput.WriteLine(string.Concat("rscript ", initialize, sb));
+									process.StandardInput.Close();
+									Console.WriteLine(process.StandardOutput.ReadToEnd());
+									process.WaitForExit();
+								}
+						}
+						using (var sw = new StreamWriter(Path.Combine(directory, "Codes.txt"), false))
+							foreach (var param in list)
+								if (param.Name.Split(' ').Length == 1 && param.Name.EndsWith("우") is false && param.Name.EndsWith("B") is false && param.Name.EndsWith(")") is false && param.Name.EndsWith("스팩") is false)
+									sw.WriteLine(param.Name.Replace("(Reg.S)", string.Empty));
+
 						foreach (var theme in enumerable)
 						{
 							try
 							{
 								var keywords = new Dictionary<string, string>();
 
-								if (await api.GetConfirmAsync(theme) is false)
+								if (await api.GetConfirmAsync(theme) is false || Base.IsDebug)
 									foreach (var str in theme.Name.Split(')'))
 										if (string.IsNullOrEmpty(str) is false)
 											foreach (var name in str.Split('('))
@@ -221,6 +270,7 @@ namespace ShareInvest
 																						search.Push(tn);
 
 																			while (search.TryPop(out string pop))
+																			{
 																				if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(pop), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response && await api.PutContextAsync(now, theme, response) is > 0)
 																					foreach (var kv in response)
 																						if (await new Naver.Search(key).BrowseTheSite(kv.Key) is Stack<string> stack)
@@ -232,6 +282,10 @@ namespace ShareInvest
 
 																							keywords[kv.Key] = sb.Remove(sb.Length - 1, 1).ToString();
 																						}
+																				using var sw = new StreamWriter(Path.Combine(directory, "Codes.txt"), true);
+																				if (pop.Split(' ').Length == 1)
+																					sw.WriteLine(pop);
+																			}
 																		}
 								if (keywords.Count > 0)
 								{
@@ -241,6 +295,32 @@ namespace ShareInvest
 										using (var sw = new StreamWriter(path, true))
 											sw.WriteLine(kv.Value);
 
+									using (var process = new Process
+									{
+										StartInfo = new ProcessStartInfo
+										{
+											FileName = "cmd",
+											Verb = "runas",
+											UseShellExecute = false,
+											RedirectStandardError = true,
+											RedirectStandardInput = true,
+											RedirectStandardOutput = true,
+											WorkingDirectory = directory
+										}
+									})
+										if (process.Start())
+										{
+											var response = string.Empty;
+
+											process.StandardInput.WriteLine(string.Concat("rscript ", tag, ' ', file));
+											process.StandardInput.Close();
+											response = process.StandardOutput.ReadToEnd();
+											Console.WriteLine(response);
+											process.WaitForExit();
+
+											if (string.IsNullOrEmpty(response) is false && Base.IsDebug)
+												Base.SendMessage(process.GetType(), response);
+										}
 									File.Delete(path);
 								}
 							}
@@ -529,6 +609,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		const string tag = "TagCloud.R";
 		const string initialize = "initialize.R";
 		const string directory = @"C:\Algorithmic Trading\Res\R";
 		readonly string key;
