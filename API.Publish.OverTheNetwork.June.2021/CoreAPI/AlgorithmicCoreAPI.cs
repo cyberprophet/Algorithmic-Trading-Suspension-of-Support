@@ -46,8 +46,8 @@ namespace ShareInvest
 						else
 							search = new BackgroundWorker();
 					}
-					if (Base.IsDebug is false)
-						keywords = new BackgroundWorker();
+					script = @"C:\R\R-4.0.4\bin\rscript ";
+					keywords = new BackgroundWorker();
 				}
 				if (Status is HttpStatusCode.OK)
 					big = new BackgroundWorker();
@@ -227,10 +227,10 @@ namespace ShareInvest
 								{
 									var sb = new StringBuilder();
 
-									foreach (var package in new[] { "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "htmlwidgets", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "remotes" })
+									foreach (var package in new[] { "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "htmlwidgets", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes" })
 										sb.Append(' ').Append(package);
 
-									process.StandardInput.WriteLine(string.Concat("rscript ", initialize, sb));
+									process.StandardInput.WriteLine(string.Concat(script, initialize, sb));
 									process.StandardInput.Close();
 									Console.WriteLine(process.StandardOutput.ReadToEnd());
 									process.WaitForExit();
@@ -247,7 +247,7 @@ namespace ShareInvest
 							{
 								var keywords = new Dictionary<string, string>();
 
-								if (await api.GetConfirmAsync(theme) is false || Base.IsDebug)
+								if (await api.GetConfirmAsync(theme) is false)
 									foreach (var str in theme.Name.Split(')'))
 										if (string.IsNullOrEmpty(str) is false)
 											foreach (var name in str.Split('('))
@@ -288,41 +288,7 @@ namespace ShareInvest
 																			}
 																		}
 								if (keywords.Count > 0)
-								{
-									string file = string.Concat(theme.Index, ".txt"), path = Path.Combine(Repository.R, file);
-
-									foreach (var kv in keywords)
-										using (var sw = new StreamWriter(path, true))
-											sw.WriteLine(kv.Value);
-
-									using (var process = new Process
-									{
-										StartInfo = new ProcessStartInfo
-										{
-											FileName = "cmd",
-											Verb = "runas",
-											UseShellExecute = false,
-											RedirectStandardError = true,
-											RedirectStandardInput = true,
-											RedirectStandardOutput = true,
-											WorkingDirectory = directory
-										}
-									})
-										if (process.Start())
-										{
-											var response = string.Empty;
-
-											process.StandardInput.WriteLine(string.Concat("rscript ", tag, ' ', file));
-											process.StandardInput.Close();
-											response = process.StandardOutput.ReadToEnd();
-											Console.WriteLine(response);
-											process.WaitForExit();
-
-											if (string.IsNullOrEmpty(response) is false && Base.IsDebug)
-												Base.SendMessage(process.GetType(), response);
-										}
-									File.Delete(path);
-								}
+									WorkerProgress(theme.Index, keywords);
 							}
 							catch (Exception ex)
 							{
@@ -568,6 +534,40 @@ namespace ShareInvest
 			}
 			(sender as BackgroundWorker).Dispose();
 		}
+		void WorkerProgress(string theme, IEnumerable<KeyValuePair<string, string>> enumerable)
+		{
+			string file = string.Concat(theme, ".txt"), path = Path.Combine(Repository.R, file);
+
+			foreach (var kv in enumerable)
+				using (var sw = new StreamWriter(path, true))
+					sw.WriteLine(kv.Value);
+
+			new Task(async () =>
+			{
+				using (var process = new Process
+				{
+					StartInfo = new ProcessStartInfo
+					{
+						FileName = "cmd",
+						Verb = "runas",
+						UseShellExecute = false,
+						RedirectStandardError = true,
+						RedirectStandardInput = true,
+						RedirectStandardOutput = true,
+						WorkingDirectory = directory
+					}
+				})
+					if (process.Start())
+					{
+						process.StandardInput.WriteLine(string.Concat(script, tag, ' ', theme, ' ', nameof(Codes)));
+						process.StandardInput.Close();
+						Console.WriteLine(process.StandardOutput.ReadToEnd());
+						await process.WaitForExitAsync();
+					}
+				File.Delete(path);
+
+			}).Start();
+		}
 		void Dispose(short param)
 		{
 			if (param == -0x6A)
@@ -613,6 +613,7 @@ namespace ShareInvest
 		const string initialize = "initialize.R";
 		const string directory = @"C:\Algorithmic Trading\Res\R";
 		readonly string key;
+		readonly string script;
 		readonly API api;
 		readonly Pipe pipe;
 		readonly Random random;

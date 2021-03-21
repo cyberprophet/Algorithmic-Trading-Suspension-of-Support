@@ -21,6 +21,10 @@ if (length(args) > 0)
                     upgrade = "never",
                     INSTALL_opts = c("--no-multiarch")
                 )
+                library(devtools)
+                devtools::install_github("lchiffon/wordcloud2")
+                library(webshot)
+                webshot::install_phantomjs()
             }
         }
     }
