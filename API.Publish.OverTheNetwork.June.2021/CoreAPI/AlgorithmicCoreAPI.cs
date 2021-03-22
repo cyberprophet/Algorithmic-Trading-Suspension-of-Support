@@ -46,17 +46,14 @@ namespace ShareInvest
 						else
 							search = new BackgroundWorker();
 					}
-					script = @"C:\R\R-4.0.4\bin\x64\rscript ";
+					log = Path.Combine(Repository.R, "Log.txt");
+					script = @"C:\R\R-4.0.4\bin\x64\rscript --verbose ";
 					keywords = new BackgroundWorker();
 				}
 				if (Status is HttpStatusCode.OK)
 					big = new BackgroundWorker();
 			}
 			timer.Start();
-		}
-		string Message
-		{
-			get; set;
 		}
 		void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e) => BeginInvoke(new Action(() =>
 		{
@@ -107,8 +104,12 @@ namespace ShareInvest
 						big.RunWorkerAsync(Status);
 
 					if (keywords is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> shuffle)
-						keywords.RunWorkerAsync(shuffle.OrderBy(o => Guid.NewGuid()));
+					{
+						if (new FileInfo(log).Exists)
+							File.Delete(log);
 
+						keywords.RunWorkerAsync(shuffle.OrderBy(o => Guid.NewGuid()));
+					}
 					if (search is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
 						search.RunWorkerAsync(list);
 				}));
@@ -137,7 +138,7 @@ namespace ShareInvest
 					try
 					{
 						await Task.Delay(Base.IsDebug ? random.Next(0x400, 0x1000) : random.Next(0x32000, 0x64000));
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x19F));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x1BD));
 					}
 					catch (Exception ex)
 					{
@@ -211,13 +212,12 @@ namespace ShareInvest
 
 									return;
 								}
-						foreach (var package in new[] { "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "NIADic", "webshot", "remotes", "htmlwidgets", string.Empty })
+						foreach (var package in new[] { "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
 							using (var process = new Process
 							{
 								StartInfo = new ProcessStartInfo
 								{
 									FileName = "cmd",
-									Verb = "runas",
 									UseShellExecute = false,
 									RedirectStandardError = true,
 									RedirectStandardInput = true,
@@ -225,13 +225,18 @@ namespace ShareInvest
 									WorkingDirectory = directory
 								}
 							})
+							{
+								process.ErrorDataReceived += SortOutputHandler;
+
 								if (process.Start())
 								{
+									process.BeginErrorReadLine();
 									process.StandardInput.WriteLine(string.Concat(script, initialize, string.IsNullOrEmpty(package) ? string.Empty : string.Concat(' ', package)));
 									process.StandardInput.Close();
-									Console.WriteLine(process.StandardOutput.ReadToEnd());
 									process.WaitForExit();
 								}
+								process.ErrorDataReceived -= SortOutputHandler;
+							}
 						using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), false))
 							foreach (var param in list)
 								if (param.Name.Split(' ').Length == 1 && param.Name[^1] is not '우' && (param.Name[^1] is '호' && char.IsDigit(param.Name[^2])) is false && param.Name[^1] is not 'B' && param.Name[^1] is not ')' && param.Name.EndsWith("스팩") is false)
@@ -243,7 +248,7 @@ namespace ShareInvest
 							{
 								var keywords = new Dictionary<string, string>();
 
-								if (await api.GetConfirmAsync(theme) is false)
+								if (Base.IsDebug || await api.GetConfirmAsync(theme) is false)
 									foreach (var str in theme.Name.Split(')'))
 										if (string.IsNullOrEmpty(str) is false)
 											foreach (var name in str.Split('('))
@@ -538,7 +543,6 @@ namespace ShareInvest
 				using (var sw = new StreamWriter(Path.Combine(Repository.R, string.Concat(theme, ".txt")), true))
 					sw.WriteLine(kv.Value);
 
-			var str = string.Empty;
 			new Task(async () =>
 			{
 				try
@@ -548,7 +552,6 @@ namespace ShareInvest
 						StartInfo = new ProcessStartInfo
 						{
 							FileName = "cmd",
-							Verb = "runas",
 							UseShellExecute = false,
 							RedirectStandardError = true,
 							RedirectStandardInput = true,
@@ -556,13 +559,18 @@ namespace ShareInvest
 							WorkingDirectory = directory
 						}
 					})
+					{
+						process.ErrorDataReceived += SortOutputHandler;
+
 						if (process.Start())
 						{
+							process.BeginErrorReadLine();
 							process.StandardInput.WriteLine(string.Concat(script, tags, ' ', theme, ' ', nameof(Codes)));
 							process.StandardInput.Close();
-							str = process.StandardOutput.ReadToEnd();
 							process.WaitForExit();
 						}
+						process.ErrorDataReceived -= SortOutputHandler;
+					}
 					var dic = new Dictionary<string, int>();
 
 					using (var process = new Process
@@ -570,7 +578,6 @@ namespace ShareInvest
 						StartInfo = new ProcessStartInfo
 						{
 							FileName = "cmd",
-							Verb = "runas",
 							UseShellExecute = false,
 							RedirectStandardError = true,
 							RedirectStandardInput = true,
@@ -598,22 +605,40 @@ namespace ShareInvest
 									}
 								}
 							}
+						process.ErrorDataReceived += SortOutputHandler;
+
 						if (process.Start())
 						{
+							process.BeginErrorReadLine();
 							process.StandardInput.WriteLine(string.Concat(script, cloud, ' ', theme));
 							process.StandardInput.Close();
-							str = process.StandardOutput.ReadToEnd();
 							await process.WaitForExitAsync();
 						}
+						process.ErrorDataReceived -= SortOutputHandler;
 					}
 					foreach (var file in Directory.GetFiles(directory, string.Concat(theme, ".*"), SearchOption.TopDirectoryOnly))
 						File.Delete(file);
+
+					Directory.Delete(Path.Combine(directory, string.Concat(theme, '_', "files")), true);
 				}
 				catch (Exception ex)
 				{
-					Base.SendMessage(GetType(), theme, str, ex.StackTrace);
+					Base.SendMessage(GetType(), theme, ex.StackTrace);
 				}
 			}).Start();
+		}
+		void SortOutputHandler(object sender, DataReceivedEventArgs e)
+		{
+			if (string.IsNullOrEmpty(e.Data) is false && e.Data[0] is not '[')
+				try
+				{
+					using var sw = new StreamWriter(log, true);
+					sw.WriteLine(e.Data);
+				}
+				catch (Exception ex)
+				{
+					Base.SendMessage(sender.GetType(), e.Data, ex.StackTrace);
+				}
 		}
 		void Dispose(short param)
 		{
@@ -656,10 +681,15 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		string Message
+		{
+			get; set;
+		}
 		const string tags = "Tags.R";
 		const string cloud = "Cloud.R";
 		const string initialize = "initialize.R";
 		const string directory = @"C:\Algorithmic Trading\Res\R";
+		readonly string log;
 		readonly string key;
 		readonly string script;
 		readonly API api;

@@ -52,6 +52,11 @@ if (length(args) == 1)
         library(devtools)
         devtools::install_github("lchiffon/wordcloud2")
     }
+    if (!('NIADic' %in% package))
+    {
+        library(devtools)
+        devtools::install_github('haven-jeon/NIADic/NIADic')
+    }
     if (!('webshot' %in% package))
     {
         install.packages('webshot', repos = 'https://cran.seoul.go.kr')
