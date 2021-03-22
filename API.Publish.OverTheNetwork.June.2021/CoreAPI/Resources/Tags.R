@@ -1,17 +1,15 @@
-#Sys.setenv(JAVA_HOME = "C:\\Program Files\\Java\\jre1.8.0_221")
-
 args <- commandArgs(TRUE)
 filter <-
     c(
-        '\\d',
         ' ',
         '-',
         '"',
+        '\\]',
         '[~!@#$%&*()_+=?<>,.·‘’“♥"/\']',
         '\\[',
         '(ㅜ|ㅠ)',
-        '\\d+',
         '[ㄱ-ㅎ]',
+        '\\d{2,}',
         'URL',
         '관련주',
         'ipo',
@@ -141,8 +139,6 @@ filter <-
         '한동안',
         '한국의',
         "는",
-        "은",
-        "을",
         "를",
         "입니다",
         "합니다",
@@ -152,7 +148,12 @@ filter <-
         '이네여',
         '것',
         '이구여',
-        '있으며'
+        '있으며',
+        'KRX',
+        'TIGER',
+        'news',
+        '꼴찌',
+        '주린이'
     )
 lapply(
     c(
@@ -204,12 +205,13 @@ codes <-
         fileEncoding = 'UTF-8',
         stringsAsFactors = FALSE
     )
+except <- data.frame(c('삼성SDS', '2차전지', '5G', '4차산업'), 'ncn')
 mergeUserDic(codes)
-words <- unlist(sapply(readLines(
-    paste(args[1], '.txt', sep = '', collapse = ''), encoding = 'UTF-8'
-),
-extractNoun,
-USE.NAMES = F))
+mergeUserDic(except)
+words <-
+    unlist(sapply(readLines(
+        paste(args[1], '.txt', sep = '', collapse = ''), encoding = 'UTF-8'
+    ), extractNoun, USE.NAMES = F))
 words <- Filter(function(x) {
     nchar(x) > 1
 }, words)
@@ -223,37 +225,22 @@ for (code in codes$V1)
     words <-
         gsub(paste(code, '\\S*', sep = '', collapse = ''), code, words)
 }
+for (ex in except[, 1])
+{
+    words <-
+        gsub(paste(ex, '\\S*', sep = '', collapse = ''), ex, words)
+}
 options(mc.cores = 1)
 tm.words <- VCorpus(VectorSource(words))
 tm.words <- tm_map(tm.words, stripWhitespace)
 tm.words <- tm_map(tm.words, removePunctuation)
 matrix <-
     sort(rowSums(as.matrix(TermDocumentMatrix(tm.words))), decreasing = TRUE)
-d <- data.frame(word = names(matrix), freq = matrix)
-wordcloud(
-    words = d$word,
-    freq = d$freq,
-    min.freq = 5,
-    max.words = 200,
-    random.order = FALSE,
-    scale = c(4, 0.3),
-    colors = brewer.pal(8, "Accent")
-)
-saveWidget(
-    wordcloud2(
-        data = d[d$freq > 3, ],
-        color = "random-dark",
-        size = 0.9,
-        fontWeight = 'bold'
-    ),
-    paste(args[1], '.html', sep = '', collapse = ''),
-    selfcontained = F
-)
-webshot::webshot(
-    paste(args[1], '.html', sep = '', collapse = ''),
-    paste(args[1], '.png', sep = '', collapse = ''),
-    vwidth = 720,
-    vheight = 540,
-    delay = 10
+data <- data.frame(word = toupper(names(matrix)), freq = matrix)
+write.csv(
+    data[data$freq > 2, ],
+    paste(args[1], '.csv', sep = '' , collapse = ''),
+    row.names = FALSE,
+    fileEncoding = 'UTF-8'
 )
 warnings()

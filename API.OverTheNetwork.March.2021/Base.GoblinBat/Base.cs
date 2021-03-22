@@ -49,8 +49,15 @@ namespace ShareInvest
 		public static void SendMessage(DateTime now, string message, Type type) => Console.WriteLine(string.Concat(type.Name, '_', now, '_', message));
 		public static void SendMessage(string name)
 		{
-			foreach (var process in Process.GetProcessesByName(name))
-				process.Kill();
+			try
+			{
+				foreach (var process in Process.GetProcessesByName(name))
+					process.Kill();
+			}
+			catch (Exception ex)
+			{
+				SendMessage(typeof(Base), name, ex.StackTrace);
+			}
 		}
 		public static string GetRemainingTime(TimeSpan span) => span.Days == 0 ? string.Concat("장시작 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .") : string.Concat("장시작 ", span.Days, "일 ", span.Hours, "시간 ", span.Minutes, "분 ", span.Seconds, "초 전. . .");
 		public static DateTime IsTheSecondThursday(DateTime now)
