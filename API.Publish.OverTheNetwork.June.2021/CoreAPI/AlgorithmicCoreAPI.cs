@@ -306,7 +306,6 @@ namespace ShareInvest
 								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
 									continue;
 
-								Base.SendMessage("cmd");
 								break;
 							}
 						}
@@ -607,19 +606,20 @@ namespace ShareInvest
 							}
 						process.ErrorDataReceived += SortOutputHandler;
 
-						if (process.Start())
+						if (await api.PutContextAsync(dic) is null && process.Start())
 						{
 							process.BeginErrorReadLine();
 							process.StandardInput.WriteLine(string.Concat(script, cloud, ' ', theme));
 							process.StandardInput.Close();
-							await process.WaitForExitAsync();
+							process.WaitForExit();
 						}
 						process.ErrorDataReceived -= SortOutputHandler;
 					}
 					foreach (var file in Directory.GetFiles(directory, string.Concat(theme, ".*"), SearchOption.TopDirectoryOnly))
 						File.Delete(file);
 
-					Directory.Delete(Path.Combine(directory, string.Concat(theme, '_', "files")), true);
+					if (Path.Combine(directory, string.Concat(theme, '_', "files")) is string path && new DirectoryInfo(path).Exists)
+						Directory.Delete(path, true);
 				}
 				catch (Exception ex)
 				{

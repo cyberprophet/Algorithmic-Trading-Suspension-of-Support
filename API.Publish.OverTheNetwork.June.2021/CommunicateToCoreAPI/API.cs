@@ -484,6 +484,23 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		public async Task<object> PutContextAsync(Dictionary<string, int> param)
+		{
+			try
+			{
+				var json = JsonConvert.SerializeObject(param);
+
+				var response = await client.ExecuteAsync(new RestRequest("", Method.PUT), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					return null;
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			return null;
+		}
 		public async Task<object> PutContextAsync(DateTime now, Catalog.Models.Theme theme, Dictionary<string, string> param)
 		{
 			try

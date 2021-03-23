@@ -121,7 +121,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
-		public override Queue<string> Reservation
+		public override Tuple<Queue<string>, Queue<string>> Reservation
 		{
 			get; set;
 		}
@@ -133,15 +133,11 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
-		protected internal override int Count
-		{
-			get; set;
-		}
 		protected internal override string DateLine
 		{
 			get; set;
 		}
-		protected internal override string NextOrderStringTime
+		protected internal override (string, string) NextOrderStringTime
 		{
 			get; set;
 		}

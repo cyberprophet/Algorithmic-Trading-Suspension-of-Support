@@ -9,7 +9,7 @@ namespace ShareInvest
 	{
 		public static readonly Dictionary<string, string> rename = new();
 		[Conditional("DEBUG")]
-		public static void SendMessage(Type type, string code, int quantity, int count, double purchase, object current, Interface.IStrategics strategics)
+		public static void SendMessage(Type type, string code, int quantity, int sell, int buy, double purchase, object current, Interface.IStrategics strategics)
 		{
 			var str = string.Empty;
 
@@ -23,7 +23,7 @@ namespace ShareInvest
 					str = string.Concat('_', scenario.Date, '_', scenario.Short, '_', scenario.Long);
 					break;
 			}
-			Debug.WriteLine(string.Concat(type.Name, '_', code, '_', quantity, '_', count, '_', purchase, '_', current, str));
+			Debug.WriteLine(string.Concat(type.Name, '_', code, '_', quantity, '_', sell, '_', buy, '_', purchase, '_', current, str));
 		}
 		[Conditional("DEBUG")]
 		public static void SendMessage(Type sender, object convey, object message, object param) => Debug.WriteLine(string.Concat(sender.Name, '_', convey, '_', message, '_', param));
@@ -237,7 +237,7 @@ namespace ShareInvest
 		public static string End => end;
 		public static string PriceEmpty => price_empty;
 		public static string[] Holidays => new[] { "211231", "210922", "210921", "210920", "210519", "210505", "210301", "210212", "210211", "210101", "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
-		public static uint Tradable => 0x5910 / 5;
+		public static int Tradable => 0x5910 / 0x19;
 		static string ConvertDateTime(int length) => length switch
 		{
 			6 => DateFormat,

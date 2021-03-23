@@ -640,56 +640,27 @@ namespace ShareInvest
 						break;
 
 					case Strategics.Scenario when JsonConvert.DeserializeObject<Scenario>(bring.Contents) is Scenario json && analysis.Code.Equals(json.Code):
-						var amount = json.Maximum / json.Long / analysis.Current;
-						int order = 0, remain = (int)(json.Maximum / json.Hope / json.Short);
+						int amount = (int)(json.Maximum / json.Long / analysis.Current), remain = (int)(json.Maximum / json.Short / json.Hope), order = 0;
 						DateTime now = DateTime.Now, time = new(now.Year, now.Month, now.Day, Base.CheckIfMarketDelay(now) ? 0xA : 9, 0, 0);
-						analysis.Reservation = new Queue<string>(0x20);
-
-						if (amount > Base.Tradable)
+						analysis.Reservation = new Tuple<Queue<string>, Queue<string>>(new Queue<string>(0x20), new Queue<string>(0x20));
+						analysis.Classification = new Scenario
 						{
-							var quantity = (int)(amount / Base.Tradable) + 1;
-							var add = Base.Tradable / (amount / quantity);
-							analysis.Classification = new Scenario
-							{
-								Account = json.Account,
-								Code = json.Code,
-								Date = remain,
-								Hope = json.Hope,
-								Maximum = json.Maximum,
-								Target = json.Target,
-								Trend = json.Trend,
-								Short = (int)(remain / (Base.Tradable * 5)) + 1,
-								Long = quantity
-							};
-							for (order = 0; order < Base.Tradable; order += add)
-								analysis.Reservation.Enqueue(time.AddSeconds(order * 5).ToString(Base.TimeFormat));
-						}
-						else
-						{
-							analysis.Classification = new Scenario
-							{
-								Account = json.Account,
-								Code = json.Code,
-								Date = remain,
-								Hope = json.Hope,
-								Maximum = json.Maximum,
-								Target = json.Target,
-								Trend = json.Trend,
-								Short = (int)(remain / (Base.Tradable * 5)) + 1,
-								Long = 1
-							};
-							if (amount == Base.Tradable)
-								for (order = 0; order < Base.Tradable; order++)
-									analysis.Reservation.Enqueue(time.AddSeconds(order * 5).ToString(Base.TimeFormat));
+							Account = json.Account,
+							Code = json.Code,
+							Date = remain,
+							Hope = json.Hope,
+							Maximum = json.Maximum,
+							Target = json.Target,
+							Trend = json.Trend,
+							Short = remain > Base.Tradable ? remain / Base.Tradable + 1 : 1,
+							Long = amount > Base.Tradable ? amount / Base.Tradable + 1 : 1
+						};
+						for (order = 0; order < Base.Tradable * 0x19; order += Base.Tradable * 0x19 / (amount / analysis.Classification.Long))
+							analysis.Reservation.Item2.Enqueue(time.AddSeconds(order).ToString(Base.TimeFormat));
 
-							else
-							{
-								var add = Base.Tradable / amount;
+						for (order = 0; order < Base.Tradable * 0x19; order += Base.Tradable * 0x19 / (remain / analysis.Classification.Short))
+							analysis.Reservation.Item1.Enqueue(time.AddSeconds(order).ToString(Base.TimeFormat));
 
-								for (order = 0; order < Base.Tradable; order += add)
-									analysis.Reservation.Enqueue(time.AddSeconds(order * 5).ToString(Base.TimeFormat));
-							}
-						}
 						analysis.Account = json.Account;
 						analysis.Strategics = strategics;
 						break;
@@ -701,8 +672,8 @@ namespace ShareInvest
 				analysis.Send += OnReceiveSecuritiesAPI;
 				analysis.Consecutive += analysis.OnReceiveDrawChart;
 
-				if (Base.IsDebug)
-					Base.SendMessage(bring.GetType(), analysis.Name, analysis.Quantity, analysis.Reservation is Queue<string> ? analysis.Reservation.Count : int.MinValue, analysis.Purchase, analysis.Current as object, analysis.Classification);
+				if (Base.IsDebug && analysis.Reservation is Tuple<Queue<string>, Queue<string>>)
+					Base.SendMessage(bring.GetType(), analysis.Name, analysis.Quantity, analysis.Reservation.Item1.Count, analysis.Reservation.Item2.Count, analysis.Purchase, analysis.Current as object, analysis.Classification);
 			}
 		}
 		void ExceptInStrategics(IEnumerable<string> enumerable)
@@ -906,7 +877,10 @@ namespace ShareInvest
 
 				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12 && Base.IsDebug) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
 				{
-					Base.SendMessage("chromedriver");
+					foreach (var kill in new[] { "cmd", "chromedriver" })
+						Base.SendMessage(kill);
+
+					GC.Collect();
 					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
 				}

@@ -104,7 +104,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 			switch (Classification)
 			{
 				case Catalog.Scenario scenario when Wait:
-					if (Offer > 0 && Quantity > 0 && scenario.Hope * (1 + scenario.Target + Base.Tax) < Offer && e.Date.CompareTo(NextOrderStringTime) > 0 && Count++ * scenario.Short < scenario.Date)
+					if (Offer > 0 && Quantity > 0 && scenario.Hope * (1 + scenario.Target + Base.Tax) < Offer && e.Date.CompareTo(NextOrderStringTime.Item1) > 0 && (OrderNumber is null || OrderNumber.Any(o => o.Value >= e.Price) is false || Quantity > OrderNumber.Count(o => o.Value >= e.Price) * scenario.Short))
 					{
 						Wait = false;
 						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
@@ -115,12 +115,17 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 							HogaGb = ((int)HogaGb.지정가).ToString("D2"),
 							OrgOrderNo = string.Empty,
 							Price = Offer,
-							Qty = scenario.Short
+							Qty = scenario.Short < Quantity ? scenario.Short : Quantity
 						}));
-						NextOrderStringTime = e.Date;
+						if (Reservation.Item1.TryDequeue(out string next))
+							NextOrderStringTime = (e.Date.CompareTo(next) < 0 ? next : e.Date, NextOrderStringTime.Item2);
+
+						else
+							NextOrderStringTime = (scenario.Account, NextOrderStringTime.Item2);
+
 						return;
 					}
-					if (Bid > 0 && Bid < scenario.Hope * (1 - Base.Tax) && e.Date.CompareTo(NextOrderStringTime) > 0 && scenario.Maximum * (1 - Base.Tax) > (long)e.Price * (OrderNumber is null || OrderNumber.Any(o => o.Value <= e.Price) is false ? Quantity : Quantity + OrderNumber.Count(o => o.Value <= e.Price)))
+					if (Bid > 0 && Bid < scenario.Hope * (1 - Base.Tax) && e.Date.CompareTo(NextOrderStringTime.Item2) > 0 && scenario.Maximum * (1 - Base.Tax) > (long)e.Price * (OrderNumber is null || OrderNumber.Any(o => o.Value <= e.Price) is false ? Quantity : Quantity + scenario.Long * OrderNumber.Count(o => o.Value <= e.Price)))
 					{
 						Wait = false;
 						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
@@ -133,13 +138,18 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 							Price = Bid,
 							Qty = scenario.Long
 						}));
-						NextOrderStringTime = Reservation.TryDequeue(out string next) ? (e.Date.CompareTo(next) > 0 ? e.Date : next) : scenario.Account;
+						if (Reservation.Item2.TryDequeue(out string next))
+							NextOrderStringTime = (NextOrderStringTime.Item1, e.Date.CompareTo(next) < 0 ? next : e.Date);
+
+						else
+							NextOrderStringTime = (NextOrderStringTime.Item1, scenario.Account);
+
 						return;
 					}
 					break;
 
 				case Catalog.LongPosition lop when Wait && (Quantity > 0 && double.IsNaN(Purchase) is false && Purchase > 0 ? e.Price / Purchase - 1 : 0D) is double rate:
-					if (Offer > 0 && lop.Underweight + Base.Tax < rate && (OrderNumber is null || OrderNumber.ContainsValue(Offer) is false) && e.Date.CompareTo(NextOrderStringTime) > 0)
+					if (Offer > 0 && lop.Underweight + Base.Tax < rate && (OrderNumber is null || OrderNumber.ContainsValue(Offer) is false) && e.Date.CompareTo(NextOrderStringTime.Item1) > 0)
 					{
 						Wait = false;
 						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
@@ -152,10 +162,10 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 							Price = Offer,
 							Qty = 1
 						}));
-						NextOrderStringTime = e.Date;
+						NextOrderStringTime = (e.Date, NextOrderStringTime.Item2);
 						return;
 					}
-					if (Bid > 0 && (long)Quantity * e.Price < lop.Overweight * (1 - Base.Tax) && lop.Underweight - Base.Tax > rate && (OrderNumber is null || OrderNumber.ContainsValue(Bid) is false) && e.Date.CompareTo(NextOrderStringTime) > 0)
+					if (Bid > 0 && (long)Quantity * e.Price < lop.Overweight * (1 - Base.Tax) && lop.Underweight - Base.Tax > rate && (OrderNumber is null || OrderNumber.ContainsValue(Bid) is false) && e.Date.CompareTo(NextOrderStringTime.Item2) > 0)
 					{
 						Wait = false;
 						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
@@ -168,7 +178,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 							Price = Bid,
 							Qty = 1
 						}));
-						NextOrderStringTime = e.Date;
+						NextOrderStringTime = (NextOrderStringTime.Item1, e.Date);
 						return;
 					}
 					break;
@@ -357,7 +367,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
-		public override Queue<string> Reservation
+		public override Tuple<Queue<string>, Queue<string>> Reservation
 		{
 			get; set;
 		}
@@ -366,10 +376,6 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 			get; set;
 		}
 		internal override dynamic BuyPrice
-		{
-			get; set;
-		}
-		protected internal override int Count
 		{
 			get; set;
 		}
@@ -385,7 +391,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
-		protected internal override string NextOrderStringTime
+		protected internal override (string, string) NextOrderStringTime
 		{
 			get; set;
 		}

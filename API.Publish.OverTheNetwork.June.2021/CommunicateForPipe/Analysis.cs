@@ -87,7 +87,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		public abstract Queue<string> Reservation
+		public abstract Tuple<Queue<string>, Queue<string>> Reservation
 		{
 			get; set;
 		}
@@ -99,15 +99,11 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		protected internal abstract int Count
-		{
-			get; set;
-		}
 		protected internal abstract string DateLine
 		{
 			get; set;
 		}
-		protected internal abstract string NextOrderStringTime
+		protected internal abstract (string, string) NextOrderStringTime
 		{
 			get; set;
 		}
