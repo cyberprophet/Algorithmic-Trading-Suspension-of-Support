@@ -129,14 +129,14 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
-		public async Task<bool> GetConfirmAsync(Catalog.Models.Theme param)
+		public async Task<object> GetConfirmAsync(Catalog.Models.Theme param)
 		{
 			try
 			{
 				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.GET), source.Token);
 
 				if (HttpStatusCode.OK.Equals(response.StatusCode))
-					return JsonConvert.DeserializeObject<bool>(response.Content);
+					return JsonConvert.DeserializeObject<Url>(response.Content);
 			}
 			catch (Exception ex)
 			{
@@ -433,7 +433,15 @@ namespace ShareInvest.Client
 		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.POST).AddJsonBody(param, Security.content_type), source.Token);
+				string address;
+
+				if (param is Privacies)
+					address = security.RequestTheAddressForNewRegistration(param);
+
+				else
+					address = security.RequestTheIntegratedAddress(param);
+
+				var response = await client.ExecuteAsync(new RestRequest(address, Method.POST).AddJsonBody(param, Security.content_type), source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 					switch (param)
@@ -484,30 +492,26 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
-		public async Task<object> PutContextAsync(Dictionary<string, int> param)
+		public async Task<object> PutContextAsync<T>(DateTime now, T content, Dictionary<string, int> param) where T : class
 		{
-			try
+			string index, name, type;
+
+			switch (content)
 			{
-				var json = JsonConvert.SerializeObject(param);
+				case Catalog.Models.Theme theme:
+					index = theme.Index;
+					type = theme.GetType().Name;
+					name = theme.Name;
+					break;
 
-				var response = await client.ExecuteAsync(new RestRequest("", Method.PUT), source.Token);
-
-				if (HttpStatusCode.OK.Equals(response.StatusCode))
+				default:
 					return null;
 			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(GetType(), ex.StackTrace);
-			}
-			return null;
-		}
-		public async Task<object> PutContextAsync(DateTime now, Catalog.Models.Theme theme, Dictionary<string, string> param)
-		{
 			try
 			{
-				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(theme.GetType().Name), Method.PUT).AddJsonBody(new Url
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(type), Method.PUT).AddJsonBody(new Url
 				{
-					Index = theme.Index,
+					Index = index,
 					Record = (now.Hour < 9 ? now.AddDays(-1) : now).ToString(Base.DateFormat),
 					Json = JsonConvert.SerializeObject(param)
 
@@ -518,7 +522,26 @@ namespace ShareInvest.Client
 			}
 			catch (Exception ex)
 			{
-				Base.SendMessage(GetType(), theme.Name, ex.StackTrace);
+				Base.SendMessage(GetType(), name, ex.StackTrace);
+			}
+			return null;
+		}
+		public async Task<object> DeleteContextAsync<T>(T param) where T : struct
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.DELETE), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					switch (param)
+					{
+						case Privacies:
+							return (int)response.StatusCode;
+					}
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(param.GetType(), ex.StackTrace);
 			}
 			return null;
 		}

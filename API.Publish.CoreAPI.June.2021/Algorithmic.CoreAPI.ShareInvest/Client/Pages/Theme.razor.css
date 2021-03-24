@@ -1,4 +1,14 @@
-﻿.paragraph
+﻿img
+{
+	object-fit: cover
+}
+
+.image
+{
+	text-align: center
+}
+
+.paragraph
 {
 	border: 1px;
 	border-color: gainsboro;

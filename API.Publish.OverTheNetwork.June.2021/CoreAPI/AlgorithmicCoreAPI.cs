@@ -49,6 +49,7 @@ namespace ShareInvest
 					log = Path.Combine(Repository.R, "Log.txt");
 					script = @"C:\R\R-4.0.4\bin\x64\rscript --verbose ";
 					keywords = new BackgroundWorker();
+					server = GoblinBat.GetInstance(key);
 				}
 				if (Status is HttpStatusCode.OK)
 					big = new BackgroundWorker();
@@ -138,7 +139,7 @@ namespace ShareInvest
 					try
 					{
 						await Task.Delay(Base.IsDebug ? random.Next(0x400, 0x1000) : random.Next(0x32000, 0x64000));
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x1BD));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x1F9));
 					}
 					catch (Exception ex)
 					{
@@ -247,8 +248,10 @@ namespace ShareInvest
 							try
 							{
 								var keywords = new Dictionary<string, string>();
+								var json = string.Empty;
 
-								if (Base.IsDebug || await api.GetConfirmAsync(theme) is false)
+								if (await api.GetConfirmAsync(theme) is Url url)
+								{
 									foreach (var str in theme.Name.Split(')'))
 										if (string.IsNullOrEmpty(str) is false)
 											foreach (var name in str.Split('('))
@@ -272,7 +275,7 @@ namespace ShareInvest
 
 																			while (search.TryPop(out string pop))
 																			{
-																				if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(pop), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response && await api.PutContextAsync(now, theme, response) is > 0)
+																				if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(pop), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response)
 																					foreach (var kv in response)
 																						if (await new Naver.Search(key).BrowseTheSite(kv.Key) is Stack<string> stack)
 																						{
@@ -289,8 +292,10 @@ namespace ShareInvest
 																					sw.WriteLine(string.Concat(pop, '\t', "ncn"));
 																			}
 																		}
+									json = string.IsNullOrEmpty(url.Json) ? string.Empty : url.Json;
+								}
 								if (keywords.Count > 0)
-									WorkerProgress(theme.Index, keywords);
+									WorkerProgress(theme, keywords, json);
 							}
 							catch (Exception ex)
 							{
@@ -536,10 +541,22 @@ namespace ShareInvest
 			}
 			(sender as BackgroundWorker).Dispose();
 		}
-		void WorkerProgress(string theme, IEnumerable<KeyValuePair<string, string>> enumerable)
+		void WorkerProgress<T>(T param, IEnumerable<KeyValuePair<string, string>> enumerable, string json) where T : class
 		{
+			string fn, content;
+
+			switch (param)
+			{
+				case Catalog.Models.Theme theme:
+					fn = theme.Index;
+					content = theme.Name;
+					break;
+
+				default:
+					return;
+			}
 			foreach (var kv in enumerable)
-				using (var sw = new StreamWriter(Path.Combine(Repository.R, string.Concat(theme, ".txt")), true))
+				using (var sw = new StreamWriter(Path.Combine(Repository.R, string.Concat(fn, ".txt")), true))
 					sw.WriteLine(kv.Value);
 
 			new Task(async () =>
@@ -564,14 +581,23 @@ namespace ShareInvest
 						if (process.Start())
 						{
 							process.BeginErrorReadLine();
-							process.StandardInput.WriteLine(string.Concat(script, tags, ' ', theme, ' ', nameof(Codes)));
+							process.StandardInput.WriteLine(string.Concat(script, tags, ' ', fn, ' ', nameof(Codes)));
 							process.StandardInput.Close();
 							process.WaitForExit();
 						}
 						process.ErrorDataReceived -= SortOutputHandler;
 					}
-					var dic = new Dictionary<string, int>();
+					var dictionary = string.IsNullOrEmpty(json) || json.StartsWith("{\"http") ? new Dictionary<string, int>() : JsonConvert.DeserializeObject<Dictionary<string, int>>(json);
 
+					if (dictionary.Count > 0)
+					{
+						foreach (var kv in dictionary.Where(o => o.Value < 2))
+							if (dictionary.Remove(kv.Key))
+								continue;
+
+						foreach (var kv in dictionary)
+							dictionary[kv.Key] = kv.Value - 1;
+					}
 					using (var process = new Process
 					{
 						StartInfo = new ProcessStartInfo
@@ -585,7 +611,8 @@ namespace ShareInvest
 						}
 					})
 					{
-						using (var sr = new StreamReader(Path.Combine(Repository.R, string.Concat(theme, ".csv"))))
+						var tags = Path.Combine(Repository.R, string.Concat(fn, ".csv"));
+						using (var sr = new StreamReader(tags))
 							while (sr.EndOfStream is false)
 							{
 								var line = sr.ReadLine();
@@ -596,34 +623,75 @@ namespace ShareInvest
 
 									if (int.TryParse(param[^1], out int num))
 									{
-										if (dic.TryGetValue(param[0], out int count))
-											dic[param[0]] = count + num - 1;
+										if (dictionary.TryGetValue(param[0], out int count))
+											dictionary[param[0]] = count + num - 1;
 
 										else
-											dic[param[0]] = num;
+											dictionary[param[0]] = num;
 									}
 								}
 							}
+						int index = 0, division;
+						var enumerable = dictionary.OrderByDescending(o => o.Value).Take(0x90);
+						division = enumerable.Min(o => o.Value);
 						process.ErrorDataReceived += SortOutputHandler;
 
-						if (await api.PutContextAsync(dic) is null && process.Start())
+						foreach (var kv in enumerable)
+							if (kv.Value > 1 && index < 0x90 && division > 0)
+							{
+								using (var sw = new StreamWriter(tags, index > 0))
+								{
+									if (index++ == 0)
+									{
+										sw.WriteLine(string.Concat("word", ',', "freq"));
+										dictionary.Clear();
+									}
+									sw.WriteLine(string.Concat(kv.Key, ',', kv.Value / division));
+								}
+								dictionary[kv.Key] = kv.Value / division;
+							}
+						if (await api.PutContextAsync(DateTime.Now, param, dictionary) is > 0 && process.Start())
 						{
 							process.BeginErrorReadLine();
-							process.StandardInput.WriteLine(string.Concat(script, cloud, ' ', theme));
+							process.StandardInput.WriteLine(string.Concat(script, cloud, ' ', fn));
 							process.StandardInput.Close();
 							process.WaitForExit();
+							var files = new[] { "png", html, "json" };
+
+							for (index = 0; index < files.Length; index++)
+							{
+								if (index > 0)
+								{
+
+								}
+								else
+								{
+									string name = string.Concat(fn, '.', files[index]), info = Path.Combine(directory, name);
+
+									if (await server.PostContextAsync(new Files
+									{
+										ID = index == 0 ? null : string.Empty,
+										Path = string.Concat(index == 0 ? Path.Combine(directory[0..^2], @"server\wwwroot\Images") : directory, '\\'),
+										Name = name,
+										LastWriteTime = new FileInfo(info).LastWriteTime,
+										Contents = File.ReadAllBytes(info)
+
+									}) is 0xC8)
+										Base.SendMessage(param.GetType(), content);
+								}
+							}
 						}
 						process.ErrorDataReceived -= SortOutputHandler;
 					}
-					foreach (var file in Directory.GetFiles(directory, string.Concat(theme, ".*"), SearchOption.TopDirectoryOnly))
+					foreach (var file in Directory.GetFiles(directory, string.Concat(fn, ".*"), SearchOption.TopDirectoryOnly))
 						File.Delete(file);
 
-					if (Path.Combine(directory, string.Concat(theme, '_', "files")) is string path && new DirectoryInfo(path).Exists)
+					if (Path.Combine(directory, string.Concat(fn, '_', "files")) is string path && new DirectoryInfo(path).Exists)
 						Directory.Delete(path, true);
 				}
 				catch (Exception ex)
 				{
-					Base.SendMessage(GetType(), theme, ex.StackTrace);
+					Base.SendMessage(param.GetType(), content, ex.StackTrace);
 				}
 			}).Start();
 		}
@@ -685,6 +753,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		const string html = "html";
 		const string tags = "Tags.R";
 		const string cloud = "Cloud.R";
 		const string initialize = "initialize.R";
@@ -695,6 +764,7 @@ namespace ShareInvest
 		readonly API api;
 		readonly Pipe pipe;
 		readonly Random random;
+		readonly GoblinBat server;
 		readonly BackgroundWorker big;
 		readonly BackgroundWorker theme;
 		readonly BackgroundWorker search;

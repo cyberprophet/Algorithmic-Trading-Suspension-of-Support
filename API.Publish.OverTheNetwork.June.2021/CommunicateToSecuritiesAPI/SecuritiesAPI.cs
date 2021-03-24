@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -467,6 +468,7 @@ namespace ShareInvest
 								this.connect.Account[^1] = acc.Length > 1 && string.IsNullOrEmpty(acc[^1]) is false ? acc[^1] : string.Empty;
 								this.connect.Account[0] = acc[0];
 							}
+							Privacy = pri;
 						}
 						else
 						{
@@ -510,9 +512,8 @@ namespace ShareInvest
 
 					switch (error)
 					{
-						case -0x6A:
-						case -0xC8:
-						case -0x64:
+						case -0x6A or -0xC8 or -0x64:
+						case -0xCA when MessageBox.Show(ResetTheAccount(connect.Securities("ACCLIST").Split(';')), connect.Securities("USER_NAME"), MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1) is DialogResult.Yes && await api.DeleteContextAsync(Privacy) is 0xC8:
 							Dispose(connect as Control);
 							return;
 					}
@@ -801,7 +802,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x1BD));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x1F9));
 						}
 						catch (Exception ex)
 						{
@@ -1007,11 +1008,29 @@ namespace ShareInvest
 			}
 			(connect as OpenAPI.ConnectAPI).CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0xE11);
 		}
+		string ResetTheAccount(dynamic acc)
+		{
+			if (acc is string[] accounts && accounts.Length > 1)
+			{
+				var sb = new StringBuilder();
+
+				foreach (var param in accounts)
+					if (string.IsNullOrEmpty(param) is false)
+						sb.AppendLine(param.Substring(0, 8).Insert(4, "－"));
+
+				return $"{(connect.Securities("GetServerGubun").Equals("1") ? "Mock Investment" : connect.Securities("USER_ID"))}\n{sb}\nThere seems to be a problem with the Account registration process.\n\nAfter Initialization,\nproceed Again.";
+			}
+			return string.Empty;
+		}
 		Queue<string> Codes
 		{
 			get;
 		}
 		Reservation Reservation
+		{
+			get; set;
+		}
+		Catalog.Models.Privacies Privacy
 		{
 			get; set;
 		}

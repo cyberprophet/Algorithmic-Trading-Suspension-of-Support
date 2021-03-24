@@ -44,7 +44,18 @@ namespace ShareInvest.Controllers
 		{
 			try
 			{
-				return Ok(await context.Url.AsNoTracking().AnyAsync(o => o.Index.Equals(key) && o.Record.Equals(code)));
+				switch (key.Length)
+				{
+					case 6:
+
+						break;
+
+					default:
+						if (await context.Url.FindAsync(key) is Models.Url url && code.Equals(url.Record) is false)
+							return Ok(url);
+
+						break;
+				}
 			}
 			catch (Exception ex)
 			{

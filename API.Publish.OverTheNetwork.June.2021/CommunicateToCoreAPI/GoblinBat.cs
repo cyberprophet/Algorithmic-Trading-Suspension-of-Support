@@ -55,7 +55,7 @@ namespace ShareInvest.Client
 			try
 			{
 				var request = new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.POST);
-				var body = param is Balance ? request.AddHeader(Security.content_type, Security.json).AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody) : request.AddJsonBody(param, Security.content_type);
+				var body = param is Balance or Files ? request.AddHeader(Security.content_type, Security.json).AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody) : request.AddJsonBody(param, Security.content_type);
 				var response = await client.ExecuteAsync(body, source.Token);
 
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
@@ -67,9 +67,7 @@ namespace ShareInvest.Client
 						case Retention when string.IsNullOrEmpty(response.Content) is false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
 
-						case Message:
-						case Account:
-						case Balance:
+						case Message or Account or Balance or Files:
 							if (Base.IsDebug)
 								Base.SendMessage(GetType(), response.Content);
 
@@ -79,6 +77,25 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			return null;
+		}
+		public async Task<object> PutContextAsync<T>(T param) where T : struct
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param.GetType()), Method.PUT).AddHeader(Security.content_type, Security.json).AddParameter(Security.json, JsonConvert.SerializeObject(param), ParameterType.RequestBody), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					switch (param)
+					{
+						case Files:
+							return (int)response.StatusCode;
+					}
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(param.GetType(), ex.StackTrace);
 			}
 			return null;
 		}
