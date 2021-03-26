@@ -480,10 +480,10 @@ namespace ShareInvest.Client
 				if (response.StatusCode.Equals(HttpStatusCode.OK))
 					return param switch
 					{
-						Response when string.IsNullOrEmpty(response.Content) is false => JsonConvert.DeserializeObject<int>(response.Content),
+						Response or Catalog.Dart.Tags when string.IsNullOrEmpty(response.Content) is false => JsonConvert.DeserializeObject<int>(response.Content),
 						StocksStrategics => JsonConvert.DeserializeObject<double>(response.Content),
 						Catalog.Models.Consensus => (int)response.StatusCode,
-						_ => JsonConvert.DeserializeObject<string>(response.Content),
+						_ => JsonConvert.DeserializeObject<string>(response.Content)
 					};
 			}
 			catch (Exception ex)

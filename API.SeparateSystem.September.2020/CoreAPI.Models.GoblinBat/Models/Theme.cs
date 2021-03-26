@@ -44,6 +44,11 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
+		[ForeignKey("Index")]
+		public virtual ThemeTags Tags
+		{
+			get; set;
+		}
 		public Theme() => Groups = new HashSet<Group>();
 	}
 }

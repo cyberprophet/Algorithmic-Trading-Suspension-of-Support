@@ -12,10 +12,6 @@ namespace ShareInvest.Catalog.Models
 		{
 			get; set;
 		}
-		public string ID
-		{
-			get; set;
-		}
 		public byte[] Contents
 		{
 			get; set;

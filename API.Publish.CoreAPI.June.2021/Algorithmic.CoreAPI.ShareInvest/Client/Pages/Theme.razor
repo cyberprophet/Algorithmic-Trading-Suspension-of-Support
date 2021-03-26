@@ -99,7 +99,9 @@
 					<tr>
 						<td colspan="5" class="paragraph">
 							<p class="image">
-								<img src="/Images/@(theme.Index).png" alt="@theme.Name" />
+								<a href="/tags?index=@theme.Index&name=@System.Web.HttpUtility.UrlEncode(theme.Name)" target="_blank">
+									<img src="/Images/@(theme.Index).png" alt="@theme.Name" />
+								</a>
 							</p>
 							<table class="inner_table">
 								<thead>

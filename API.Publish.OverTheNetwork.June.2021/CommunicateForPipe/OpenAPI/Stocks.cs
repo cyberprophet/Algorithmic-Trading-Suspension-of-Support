@@ -115,7 +115,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 							HogaGb = ((int)HogaGb.지정가).ToString("D2"),
 							OrgOrderNo = string.Empty,
 							Price = Offer,
-							Qty = scenario.Short < Quantity ? scenario.Short : 1
+							Qty = OrderNumber is null ? 1 : (scenario.Short < Quantity - (OrderNumber.Any(o => o.Value >= e.Price) ? OrderNumber.Count(o => o.Value >= e.Price) : 0) ? scenario.Short : 1)
 						}));
 						if (Reservation.Item1.TryDequeue(out string next))
 							NextOrderStringTime = (e.Date.CompareTo(next) < 0 ? next : e.Date, NextOrderStringTime.Item2);

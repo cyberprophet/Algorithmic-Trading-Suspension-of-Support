@@ -107,8 +107,20 @@ namespace ShareInvest
 					if (keywords is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> shuffle)
 					{
 						if (new FileInfo(log).Exists)
+						{
 							File.Delete(log);
+							Base.SendMessage(sender.GetType(), log);
+						}
+						foreach (var path in Directory.GetDirectories(@"C:\R\R-4.0.4\library"))
+						{
+							if (path.Split('\\')[^1].StartsWith("00LOCK*") is false && Directory.GetFiles(path, "*", SearchOption.AllDirectories).Length > 0)
+								continue;
 
+							using (var sw = new StreamWriter(log, true))
+								sw.WriteLine(path);
+
+							Trace.WriteLine(path);
+						}
 						keywords.RunWorkerAsync(shuffle.OrderBy(o => Guid.NewGuid()));
 					}
 					if (search is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
@@ -213,19 +225,8 @@ namespace ShareInvest
 
 									return;
 								}
-						foreach (var package in new[] { "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
-							using (var process = new Process
-							{
-								StartInfo = new ProcessStartInfo
-								{
-									FileName = "cmd",
-									UseShellExecute = false,
-									RedirectStandardError = true,
-									RedirectStandardInput = true,
-									RedirectStandardOutput = true,
-									WorkingDirectory = directory
-								}
-							})
+						foreach (var package in new[] { "processx", "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
+							using (var process = new Process { StartInfo = StartInfo })
 							{
 								process.ErrorDataReceived += SortOutputHandler;
 
@@ -563,18 +564,7 @@ namespace ShareInvest
 			{
 				try
 				{
-					using (var process = new Process
-					{
-						StartInfo = new ProcessStartInfo
-						{
-							FileName = "cmd",
-							UseShellExecute = false,
-							RedirectStandardError = true,
-							RedirectStandardInput = true,
-							RedirectStandardOutput = true,
-							WorkingDirectory = directory
-						}
-					})
+					using (var process = new Process { StartInfo = StartInfo })
 					{
 						process.ErrorDataReceived += SortOutputHandler;
 
@@ -598,18 +588,7 @@ namespace ShareInvest
 						foreach (var kv in dictionary)
 							dictionary[kv.Key] = kv.Value - 1;
 					}
-					using (var process = new Process
-					{
-						StartInfo = new ProcessStartInfo
-						{
-							FileName = "cmd",
-							UseShellExecute = false,
-							RedirectStandardError = true,
-							RedirectStandardInput = true,
-							RedirectStandardOutput = true,
-							WorkingDirectory = directory
-						}
-					})
+					using (var process = new Process { StartInfo = StartInfo })
 					{
 						var tags = Path.Combine(Repository.R, string.Concat(fn, ".csv"));
 						using (var sr = new StreamReader(tags))
@@ -656,29 +635,46 @@ namespace ShareInvest
 							process.StandardInput.WriteLine(string.Concat(script, cloud, ' ', fn));
 							process.StandardInput.Close();
 							process.WaitForExit();
-							var files = new[] { "png", html, "json" };
+							string[] files = new[] { "png", html, "json" }, temp = new string[files.Length];
 
 							for (index = 0; index < files.Length; index++)
 							{
-								if (index > 0)
-								{
+								string name = string.Concat(fn, '.', files[index]), info = Path.Combine(directory, name);
 
+								if (index == 1)
+								{
+									var xml = new System.Xml.XmlDocument();
+									xml.Load(info);
+
+									foreach (System.Xml.XmlNode node in xml.GetElementsByTagName("script"))
+										if (string.IsNullOrEmpty(node.InnerText) is false)
+										{
+											foreach (System.Xml.XmlAttribute attributes in node.Attributes)
+												if (data.Equals(attributes.Name))
+													temp[0] = attributes.InnerText.Split('-')[^1];
+
+											temp[string.IsNullOrEmpty(temp[index]) ? index : ^1] = node.InnerText;
+										}
 								}
-								else
+								else if (await server.PostContextAsync(new Files
 								{
-									string name = string.Concat(fn, '.', files[index]), info = Path.Combine(directory, name);
-
-									if (await server.PostContextAsync(new Files
+									Path = string.Concat(Path.Combine(directory[0..^2], @"server\wwwroot", index == 0 ? "Images" : string.Concat(@"Tags\", (DateTime.Now is DateTime date && date.Hour < 9 ? date.AddDays(-1) : date).ToString(Base.DateFormat))), '\\'),
+									Name = name,
+									LastWriteTime = new FileInfo(info).LastWriteTime,
+									Contents = index == 0 ? File.ReadAllBytes(info) : Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(new Catalog.KRX.Tags
 									{
-										ID = index == 0 ? null : string.Empty,
-										Path = string.Concat(index == 0 ? Path.Combine(directory[0..^2], @"server\wwwroot\Images") : directory, '\\'),
-										Name = name,
-										LastWriteTime = new FileInfo(info).LastWriteTime,
-										Contents = File.ReadAllBytes(info)
-
-									}) is 0xC8)
-										Base.SendMessage(param.GetType(), content);
-								}
+										ID = temp[0],
+										Json = temp[1],
+										Size = temp[^1]
+									}))
+								}) is 0xC8 && string.IsNullOrEmpty(temp[index]) is false && await api.PutContextAsync(new Catalog.Dart.Tags
+								{
+									Key = fn,
+									ID = temp[0],
+									Json = temp[1],
+									Size = temp[^1]
+								}) is > 0)
+									Base.SendMessage(param.GetType(), content);
 							}
 						}
 						process.ErrorDataReceived -= SortOutputHandler;
@@ -700,8 +696,10 @@ namespace ShareInvest
 			if (string.IsNullOrEmpty(e.Data) is false && e.Data[0] is not '[')
 				try
 				{
-					using var sw = new StreamWriter(log, true);
-					sw.WriteLine(e.Data);
+					using (var sw = new StreamWriter(log, true))
+						sw.WriteLine(e.Data);
+
+					Trace.WriteLine(e.Data);
 				}
 				catch (Exception ex)
 				{
@@ -744,6 +742,17 @@ namespace ShareInvest
 				Dispose();
 			}
 		}
+		ProcessStartInfo StartInfo => new()
+		{
+			FileName = "cmd",
+			UseShellExecute = false,
+			RedirectStandardError = true,
+			RedirectStandardInput = true,
+			RedirectStandardOutput = true,
+			WorkingDirectory = directory,
+			WindowStyle = api.IsInsider && Base.IsDebug is false ? ProcessWindowStyle.Normal : ProcessWindowStyle.Hidden,
+			CreateNoWindow = api.IsInsider is false || Base.IsDebug
+		};
 		HttpStatusCode Status => new Maturity(key).GetContext();
 		bool Refuse
 		{
@@ -753,6 +762,7 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		const string data = "data-for";
 		const string html = "html";
 		const string tags = "Tags.R";
 		const string cloud = "Cloud.R";

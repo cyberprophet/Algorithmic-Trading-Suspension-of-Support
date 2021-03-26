@@ -32,6 +32,11 @@ namespace ShareInvest.Models
 			get; set;
 		}
 		[ForeignKey("Code")]
+		public virtual StockTags Tags
+		{
+			get; set;
+		}
+		[ForeignKey("Code")]
 		public virtual ICollection<Futures> Futures
 		{
 			get; set;

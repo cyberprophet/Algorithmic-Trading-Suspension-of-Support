@@ -136,33 +136,32 @@ namespace ShareInvest
 				case Catalog.OpenAPI.Order order:
 					if ((connect as OpenAPI.ConnectAPI).TryGetValue(order.Code, out Analysis oc) && oc.OrderNumber is not null && oc.Classification is not null)
 					{
-						if (oc.Quantity > 0 && oc.Quantity - oc.OrderNumber.Count(o => o.Value > order.Price) < 1)
+						if (oc.Quantity > 0 && oc.Quantity - oc.OrderNumber.Count(o => o.Value > order.Price) < (oc.Strategics is Strategics.Scenario ? oc.Classification.Short : 1))
 							connect.SendOrder(new Catalog.OpenAPI.Order
 							{
 								AccNo = order.AccNo,
 								OrderType = (int)OrderType.매도취소,
 								Code = order.Code,
-								Qty = order.Qty,
+								Qty = 1,
 								Price = order.Price,
 								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
 								OrgOrderNo = oc.OrderNumber.OrderByDescending(o => o.Value).First().Key
 							});
-						else if (Cash < order.Price && oc.OrderNumber.Any(o => o.Value < order.Price))
-							foreach (var kv in oc.OrderNumber.OrderBy(o => o.Value))
-								if (Cash < order.Price && oc.OrderNumber.Count > 1)
-								{
-									connect.SendOrder(new Catalog.OpenAPI.Order
-									{
-										AccNo = order.AccNo,
-										Code = order.Code,
-										HogaGb = order.HogaGb,
-										OrgOrderNo = kv.Key,
-										OrderType = (int)OrderType.매수취소,
-										Price = order.Price,
-										Qty = order.Qty
-									});
-									Cash += kv.Value;
-								}
+						else if (Cash < order.Price * (oc.Strategics is Strategics.Scenario ? oc.Classification.Long : 1) && oc.OrderNumber.Any(o => o.Value < order.Price))
+						{
+							var kv = oc.OrderNumber.OrderBy(o => o.Value).First();
+							connect.SendOrder(new Catalog.OpenAPI.Order
+							{
+								AccNo = order.AccNo,
+								Code = order.Code,
+								HogaGb = order.HogaGb,
+								OrgOrderNo = kv.Key,
+								OrderType = (int)OrderType.매수취소,
+								Price = order.Price,
+								Qty = 1
+							});
+							Cash += kv.Value;
+						}
 					}
 					connect.SendOrder(order);
 					return;

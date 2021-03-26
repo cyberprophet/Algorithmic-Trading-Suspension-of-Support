@@ -58,22 +58,20 @@ namespace ShareInvest.Pages
 					if (balance.Quantity.Length < 2 && balance.Quantity[0] is '0')
 					{
 						if (Balance.Remove(new Tuple<string, string>(balance.Kiwoom, balance.Code)))
+						{
 							StateHasChanged();
+
+							return;
+						}
 					}
 					else
-					{
 						Balance[new Tuple<string, string>(balance.Kiwoom, balance.Code)] = balance;
-						StateHasChanged();
-					}
+
 					break;
 
 				case Catalog.Models.Message message when Balance.Any(o => o.Key.Item2.Equals(message.Key)) && (message.Convey[0] is '-' or '+' ? message.Convey[1..] : message.Convey) is string convey:
-					var now = DateTime.Now;
-					var render = false;
-
 					foreach (var kv in Balance)
 						if (kv.Key.Item2.Equals(message.Key) && convey.Equals(kv.Value.Current.Replace(",", string.Empty)) is false && int.TryParse(kv.Value.Quantity, out int quantity) && quantity > 0 && int.TryParse(convey, out int price) && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
-						{
 							Balance[kv.Key] = new Catalog.Models.Balance
 							{
 								Kiwoom = kv.Value.Kiwoom,
@@ -86,15 +84,10 @@ namespace ShareInvest.Pages
 								Revenue = ((Math.Abs(price) - purchase) * quantity).ToString("C0"),
 								Rate = (price / (double)purchase - 1).ToString("P2")
 							};
-							render = true;
-						}
-					if (render && Second != now.Second)
-					{
-						Second = now.Second;
-						StateHasChanged();
-					}
 					break;
 			}
+			if (DateTime.Now.Millisecond is 0 or 0x40 or 0x100 or 0x200 or 0x300)
+				StateHasChanged();
 		}
 		int Second
 		{

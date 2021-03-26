@@ -15,18 +15,42 @@ namespace ShareInvest
 		{
 			base.OnModelCreating(builder);
 			builder.ConfigurePersistedGrantContext(store.Value);
-			builder.Entity<Days>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<Futures>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<Models.Options>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<Stocks>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<RevisedStockPrice>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<StocksStrategics>().HasKey(o => new { o.Code, o.Strategics });
-			builder.Entity<Consensus>().HasKey(o => new { o.Code, o.Date, o.Quarter });
-			builder.Entity<EstimatedPrice>().HasKey(o => new { o.Code, o.Strategics });
-			builder.Entity<FinancialStatement>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<QuarterlyFinancialStatements>().HasKey(o => new { o.Code, o.Date });
-			builder.Entity<Identify>().HasKey(o => new { o.Security, o.Code });
-			builder.Entity<Connection>().HasKey(o => new { o.Email, o.Kiwoom });
+			builder.Entity<Days>(o => o.HasKey(o => new { o.Code, o.Date }));
+			builder.Entity<Futures>(o => o.HasKey(o => new { o.Code, o.Date }));
+			builder.Entity<Models.Options>(o => o.HasKey(o => new { o.Code, o.Date }));
+			builder.Entity<Stocks>(o => o.HasKey(o => new { o.Code, o.Date }));
+			builder.Entity<RevisedStockPrice>(o => o.HasKey(o => new { o.Code, o.Date }));
+			builder.Entity<StocksStrategics>(o => o.HasKey(o => new { o.Code, o.Strategics }));
+			builder.Entity<Consensus>(o => o.HasKey(o => new { o.Code, o.Date, o.Quarter }));
+			builder.Entity<EstimatedPrice>(o => o.HasKey(o => new { o.Code, o.Strategics }));
+			builder.Entity<FinancialStatement>(o => o.HasKey(o => new { o.Code, o.Date }));
+			builder.Entity<QuarterlyFinancialStatements>(o => o.HasKey(o => new { o.Code, o.Date }));
+			builder.Entity<Identify>(o => o.HasKey(o => new { o.Security, o.Code }));
+			builder.Entity<Connection>(o => o.HasKey(o => new { o.Email, o.Kiwoom }));
+			builder.Entity<IncorporatedStocks>(o => o.HasKey(o => o.Code));
+			builder.Entity<StockTags>(o =>
+			{
+				o.ToTable(nameof(Codes));
+				o.HasKey(o => o.Code);
+			});
+			builder.Entity<Codes>(o =>
+			{
+				o.ToTable(nameof(Codes));
+				o.HasKey(o => o.Code);
+				o.HasOne(o => o.Tags).WithOne().HasForeignKey<StockTags>(o => o.Code);
+				o.HasMany(o => o.Days).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.Stocks).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.Futures).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.Options).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.Consensus).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.Estimate).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.Financials).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.RevisedStockPrices).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.StocksStrategics).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.Quarter).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.Securities).WithOne().HasForeignKey(o => o.Code);
+				o.HasMany(o => o.Incorporate).WithOne().HasForeignKey(o => o.Code);
+			});
 			builder.Entity<Tick>(o =>
 			{
 				o.ToTable(tick);
@@ -62,11 +86,17 @@ namespace ShareInvest
 				o.ToTable(nameof(Theme));
 				o.HasKey(o => o.Index);
 			});
+			builder.Entity<ThemeTags>(o =>
+			{
+				o.ToTable(nameof(Theme));
+				o.HasKey(o => o.Index);
+			});
 			builder.Entity<Theme>(o =>
 			{
 				o.ToTable(nameof(Theme));
 				o.HasKey(o => o.Index);
 				o.HasOne(o => o.Url).WithOne().HasForeignKey<Url>(o => o.Index);
+				o.HasOne(o => o.Tags).WithOne().HasForeignKey<ThemeTags>(o => o.Index);
 				o.HasMany(o => o.Groups).WithOne().HasForeignKey(o => o.Index);
 			});
 		}
@@ -95,6 +125,10 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		public DbSet<ThemeTags> ThemeTags
+		{
+			get; set;
+		}
 		public DbSet<Theme> Theme
 		{
 			get; set;
@@ -108,6 +142,10 @@ namespace ShareInvest
 			get; set;
 		}
 		public DbSet<Codes> Codes
+		{
+			get; set;
+		}
+		public DbSet<StockTags> StockTags
 		{
 			get; set;
 		}
