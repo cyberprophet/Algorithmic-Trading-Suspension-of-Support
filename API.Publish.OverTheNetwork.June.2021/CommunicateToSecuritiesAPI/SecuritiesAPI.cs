@@ -801,7 +801,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x1F9));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x253));
 						}
 						catch (Exception ex)
 						{
@@ -877,7 +877,7 @@ namespace ShareInvest
 
 				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12 && Base.IsDebug) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
 				{
-					foreach (var kill in new[] { "cmd", "chromedriver" })
+					foreach (var kill in new[] { "Rscript", "chromedriver" })
 						Base.SendMessage(kill);
 
 					GC.Collect();

@@ -99,7 +99,7 @@
 					<tr>
 						<td colspan="5" class="paragraph">
 							<p class="image">
-								<a href="/tags?index=@theme.Index&name=@System.Web.HttpUtility.UrlEncode(theme.Name)" target="_blank">
+								<a href="/tags?index=@theme.Index&name=@System.Web.HttpUtility.UrlEncode(theme.Name)&im=@System.Web.HttpUtility.UrlEncode(User)" target="_blank">
 									<img src="/Images/@(theme.Index).png" alt="@theme.Name" />
 								</a>
 							</p>
@@ -147,7 +147,9 @@
 												}
 												else
 												{
-													<span class="oi_search oi oi-magnifying-glass" @onclick="e => OnClick(e, tail.Code)" aria-hidden="true" />
+													<a href="@Base.GetUrl(new[] { FindByName(tail.Code), "주식", "테마", "무료" })" target="_blank">
+														<span class="oi_search oi oi-magnifying-glass" @onclick="e => OnClick(e, tail.Code)" aria-hidden="true" />
+													</a>
 												}
 												<div class="inner_inclination" style="color: @Base.ChangeColor(tail.Inclination[0])">
 													@Math.Abs(tail.Inclination[0]).ToString("N3")˚

@@ -72,6 +72,18 @@ namespace ShareInvest.Controllers
 							Date = th.Date
 						});
 					return theme.ToArray();
+
+				case nameof(Pages.Intro):
+					var intro = new Queue<Catalog.Dart.Theme>();
+
+					foreach (var index in context.ThemeTags.AsNoTracking().Where(o => string.IsNullOrEmpty(o.ID) == false).Select(o => o.Index))
+						if (context.Theme.Find(index) is Models.Theme tag)
+							intro.Enqueue(new Catalog.Dart.Theme
+							{
+								Index = tag.Index,
+								Name = tag.Name
+							});
+					return intro.ToArray();
 			}
 			return null;
 		}

@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.JSInterop;
@@ -178,6 +180,10 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
+		protected internal string User
+		{
+			get; private set;
+		}
 		protected internal string[] Inclination
 		{
 			get; private set;
@@ -209,6 +215,12 @@ namespace ShareInvest.Pages
 				Group = await Http.GetFromJsonAsync<GroupDetail[]>(Crypto.Security.GetRoute(nameof(Catalog.Dart.Theme), nameof(GroupDetail.Title)));
 				Inclination = Enum.GetNames(typeof(Interface.KRX.Line));
 				IsCheck = new bool[] { true, true, true, true, true, true };
+				var sb = new StringBuilder();
+
+				foreach (int str in (await OnReceiveLogUserInformation()).ToCharArray())
+					sb.Append(str.ToString("D3")).Append('/');
+
+				User = sb.Remove(sb.Length - 1, 1).ToString();
 			}
 			if (Group is GroupDetail[])
 				foreach (var detail in Group)
@@ -227,6 +239,17 @@ namespace ShareInvest.Pages
 			{
 				await WaitForTheScrollToMovement(index);
 			}
+		}
+		async Task<string> OnReceiveLogUserInformation()
+		{
+			var user = (await State).User;
+
+			return user.Identity.IsAuthenticated ? user.Identity.Name : string.Empty;
+		}
+		[CascadingParameter]
+		Task<AuthenticationState> State
+		{
+			get; set;
 		}
 		[Inject]
 		HttpClient Http

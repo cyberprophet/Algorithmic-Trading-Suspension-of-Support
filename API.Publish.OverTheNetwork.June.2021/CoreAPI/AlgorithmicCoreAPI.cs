@@ -111,15 +111,24 @@ namespace ShareInvest
 							File.Delete(log);
 							Base.SendMessage(sender.GetType(), log);
 						}
+						foreach (var path in Directory.GetDirectories(directory))
+						{
+							Directory.Delete(path, true);
+							Base.SendMessage(sender.GetType(), path);
+						}
+						foreach (var path in Directory.GetFiles(directory))
+							if (path.Split('.')[^1] is "csv" or "png" or html or "txt")
+							{
+								File.Delete(path);
+								Base.SendMessage(sender.GetType(), path);
+							}
 						foreach (var path in Directory.GetDirectories(@"C:\R\R-4.0.4\library"))
 						{
 							if (path.Split('\\')[^1].StartsWith("00LOCK*") is false && Directory.GetFiles(path, "*", SearchOption.AllDirectories).Length > 0)
 								continue;
 
-							using (var sw = new StreamWriter(log, true))
-								sw.WriteLine(path);
-
-							Trace.WriteLine(path);
+							using var sw = new StreamWriter(log, true);
+							sw.WriteLine(path);
 						}
 						keywords.RunWorkerAsync(shuffle.OrderBy(o => Guid.NewGuid()));
 					}
@@ -151,7 +160,7 @@ namespace ShareInvest
 					try
 					{
 						await Task.Delay(Base.IsDebug ? random.Next(0x400, 0x1000) : random.Next(0x32000, 0x64000));
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x1F9));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x253));
 					}
 					catch (Exception ex)
 					{
@@ -558,7 +567,8 @@ namespace ShareInvest
 			}
 			foreach (var kv in enumerable)
 				using (var sw = new StreamWriter(Path.Combine(Repository.R, string.Concat(fn, ".txt")), true))
-					sw.WriteLine(kv.Value);
+					if (string.IsNullOrEmpty(kv.Value) is false && kv.Value.Length > 1)
+						sw.WriteLine(kv.Value);
 
 			new Task(async () =>
 			{

@@ -191,6 +191,7 @@ namespace ShareInvest
 		public static DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);
 		public static DateTime MeasureTheDelayTime(int delay, DateTime time) => time.AddSeconds(delay);
 		public static string GetUrl(string code) => string.Concat(url, code);
+		public static string GetUrl(string[] param) => string.Concat(@"https://www.google.com/search?q=", param[0], '+', param[1], '+', param[2], '+', '-', param[^1]);
 		public static string ChangeFormat(double param) => Math.Abs(param).ToString("P2");
 		public static string ChangeFormat(string date, string format)
 		{

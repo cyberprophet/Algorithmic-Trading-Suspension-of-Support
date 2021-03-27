@@ -1,2 +1,26 @@
 ﻿@page "/"
 @inherits IntroBase
+
+@if (Click)
+{
+	if (Collection is Catalog.Dart.Theme[] && Pick is Catalog.Dart.Theme pick)
+	{
+		<p class="image">
+			<a href="/tags?index=@pick.Index&name=@System.Web.HttpUtility.UrlEncode(pick.Name)&im=@System.Web.HttpUtility.UrlEncode(User)" target="_blank" @onclick="OnClick">
+				<img src="/Images/@(pick.Index).png" alt="@pick.Name" />
+			</a>
+		</p>
+	}
+	else
+	{
+		<p>
+			<em>Loading...</em>
+		</p>
+	}
+}
+else
+{
+	<p class="image">
+		<img src="/Images/456.png" alt="K-뉴딜지수" />
+	</p>
+}

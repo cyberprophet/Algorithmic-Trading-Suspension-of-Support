@@ -15,14 +15,20 @@
 </head>
 
 <body>
-	<div id="htmlwidget_container">
-		@if (string.IsNullOrEmpty(Model.ID) is false)
-		{
+	@if (string.IsNullOrEmpty(Model.ID) is false)
+	{
+		<div id="htmlwidget_container">
 			<div id="htmlwidget-@Model.ID" class="wordcloud2 html-widget"></div>
-			<script type="application/json" data-for="htmlwidget-@Model.ID">@System.Web.HttpUtility.UrlDecode(Model.Json)</script>
+			<script type="application/json" data-for="htmlwidget-@Model.ID">@System.Web.HttpUtility.UrlEncode(Model.Json)</script>
 			<script type="application/htmlwidget-sizing" data-for="htmlwidget-@Model.ID">@Model.Size</script>
-		}
-	</div>
+		</div>
+	}
+	else
+	{
+		<p>
+			<em>Loading...</em>
+		</p>
+	}
 </body>
 
 </html>
