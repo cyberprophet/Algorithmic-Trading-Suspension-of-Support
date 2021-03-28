@@ -1,9 +1,10 @@
-function newlabel(el)
-{
+﻿"use strict";
+
+function newlabel(el) {
 	var newA = document.createElement("a");
 	var newDiv = document.createElement("div");
 	var newSpan = document.createElement("span");
-	var id = el.id
+	var id = el.id;
 	newA.id = id + "wcUrl";
 	newA.href = "https://www.google.com/search?q=";
 	newA.target = "_blank";
@@ -15,15 +16,13 @@ function newlabel(el)
 	document.getElementById(id + "wcUrl").appendChild(newDiv);
 	document.getElementById(id + "wcLabel").appendChild(newSpan);
 }
-function cv_handleHover(item, dimension, evt)
-{
-	var path = evt.path || (evt.composedPath && evt.composedPath());
-	var id = path[1].id
+function cv_handleHover(item, dimension, evt) {
+	var path = evt.path || evt.composedPath && evt.composedPath();
+	var id = path[1].id;
 	var el = document.getElementById(id + "wcLabel");
 	var target = evt.target || evt.srcElement;
 
-	if (!item)
-	{
+	if (!item) {
 		el.setAttribute('hidden', true);
 
 		return;
@@ -38,8 +37,7 @@ function cv_handleHover(item, dimension, evt)
 	document.getElementById(id + "wcSpan").innerHTML = item[0] + ":" + item[1];
 	document.getElementById(id + "wcUrl").setAttribute('href', "https://www.google.com/search?q=" + encodeURIComponent(item[0]) + '+' + '%EC%A3%BC%EC%8B%9D' + '+' + '%ED%85%8C%EB%A7%88' + '+' + '-' + '%EB%AC%B4%EB%A3%8C');
 }
-function maskInit(el, x)
-{
+function maskInit(el, x) {
 	str = x.figBase64;
 	var newImg = new Image();
 	newImg.src = str;
@@ -47,7 +45,7 @@ function maskInit(el, x)
 	newImg.style.left = 0;
 	newImg.width = el.clientWidth;
 	newImg.height = el.clientHeight;
-	vvalue = 128
+	vvalue = 128;
 	var maskCanvas = document.createElement('canvas');
 	maskCanvas.width = newImg.width;
 	maskCanvas.height = newImg.height;
@@ -56,18 +54,14 @@ function maskInit(el, x)
 	var imageData = ctx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
 	var newImageData = ctx.createImageData(imageData);
 
-	for (var i = 0; i < imageData.data.length; i += 4)
-	{
+	for (var i = 0; i < imageData.data.length; i += 4) {
 		var tone = imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2];
 		var alpha = imageData.data[i + 3];
 
-		if (alpha < vvalue || tone > vvalue * 3)
-		{
-			newImageData.data[i] = newImageData.data[i + 1] = newImageData.data[i + 2] = 255; newImageData.data[i + 3] = 0;
-		}
-		else
-		{
-			newImageData.data[i] = newImageData.data[i + 1] = newImageData.data[i + 2] = 0; newImageData.data[i + 3] = 255;
+		if (alpha < vvalue || tone > vvalue * 3) {
+			newImageData.data[i] = newImageData.data[i + 1] = newImageData.data[i + 2] = 255;newImageData.data[i + 3] = 0;
+		} else {
+			newImageData.data[i] = newImageData.data[i + 1] = newImageData.data[i + 2] = 0;newImageData.data[i + 3] = 255;
 		}
 	}
 	ctx.putImageData(newImageData, 0, 0);
@@ -83,21 +77,17 @@ function maskInit(el, x)
 	imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 	newImageData = ctx.createImageData(imageData);
 
-	for (var j = 0; j < imageData.data.length; j += 4)
-	{
-		if (imageData.data[j + 3] > vvalue)
-		{
+	for (var j = 0; j < imageData.data.length; j += 4) {
+		if (imageData.data[j + 3] > vvalue) {
 			newImageData.data[j] = bgPixel[0];
 			newImageData.data[j + 1] = bgPixel[1];
 			newImageData.data[j + 2] = bgPixel[2];
 			newImageData.data[j + 3] = bgPixel[3];
-		}
-		else
-		{
+		} else {
 			newImageData.data[j] = bgPixel[0];
 			newImageData.data[j + 1] = bgPixel[1];
 			newImageData.data[j + 2] = bgPixel[2];
-			newImageData.data[j + 3] = bgPixel[3] ? (bgPixel[3] - 1) : 0;
+			newImageData.data[j + 3] = bgPixel[3] ? bgPixel[3] - 1 : 0;
 		}
 	}
 	ctx.putImageData(newImageData, 0, 0);
@@ -124,3 +114,4 @@ function maskInit(el, x)
 		abortThreshold: 3000
 	});
 }
+
