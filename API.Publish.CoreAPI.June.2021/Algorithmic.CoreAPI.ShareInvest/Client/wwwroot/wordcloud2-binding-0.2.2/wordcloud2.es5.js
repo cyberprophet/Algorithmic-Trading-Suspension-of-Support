@@ -4,7 +4,8 @@ HTMLWidgets.widget({
 
 	name: 'wordcloud2',
 	type: 'output',
-	initialize: function initialize(el, width, height) {
+	initialize: function initialize(el, width, height)
+	{
 		var newCanvas = document.createElement("canvas");
 		newCanvas.height = height;
 		newCanvas.width = width;
@@ -14,16 +15,20 @@ HTMLWidgets.widget({
 
 		return el.firstChild;
 	},
-	renderValue: function renderValue(el, x, instance) {
+	renderValue: function renderValue(el, x, instance)
+	{
 		listData = [];
 
-		for (var i = 0; i < x.word.length; i++) {
+		for (var i = 0; i < x.word.length; i++)
+		{
 			listData.push([x.word[i], x.freq[i]]);
 		}
-		if (x.figBase64) {
+		if (x.figBase64)
+		{
 			maskInit(el, x);
 			console.log(3);
-		} else {
+		} else
+		{
 			WordCloud(el.firstChild, {
 				list: listData,
 				fontFamily: x.fontFamily,
@@ -46,6 +51,6 @@ HTMLWidgets.widget({
 			});
 		}
 	},
-	resize: function resize(el, width, height) {}
+	resize: function resize(el, width, height) { }
 });
 
