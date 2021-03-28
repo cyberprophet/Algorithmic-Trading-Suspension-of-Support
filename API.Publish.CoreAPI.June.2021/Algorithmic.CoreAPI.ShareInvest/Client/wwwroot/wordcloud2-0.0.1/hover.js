@@ -1,13 +1,18 @@
 function newlabel(el)
 {
+	var newA = document.createElement("a");
 	var newDiv = document.createElement("div");
 	var newSpan = document.createElement("span");
 	var id = el.id
+	newA.id = id + "wcUrl";
+	newA.href = "https://www.google.com/search?q=";
+	newA.target = "_blank";
 	newDiv.id = id + "wcLabel";
 	newDiv.className += "wcLabel";
 	newSpan.id = id + "wcSpan";
 	newSpan.className += "wcSpan";
-	el.appendChild(newDiv);
+	el.appendChild(newA);
+	document.getElementById(id + "wcUrl").appendChild(newDiv);
 	document.getElementById(id + "wcLabel").appendChild(newSpan);
 }
 function cv_handleHover(item, dimension, evt)
