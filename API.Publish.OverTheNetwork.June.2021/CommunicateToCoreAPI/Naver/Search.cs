@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using OpenQA.Selenium;
@@ -26,19 +28,28 @@ namespace ShareInvest.Naver
 
 				switch (url.Split('.')[0][^4..])
 				{
-					case blog when driver.FindElement(By.TagName(frame)) is IWebElement web:
-						var ds = driver.SwitchTo().Frame(web);
+					case blog:
+						if (driver.FindElement(By.TagName(frame)) is IWebElement web)
+						{
+							var ds = driver.SwitchTo().Frame(web);
 
-						foreach (var ct in ds.FindElements(By.Id($"post-view{url.Split('/')[^1]}")))
-							contents.Push(string.Concat(ds.Title.Split(':')[0].Replace("..", string.Empty).Trim(), '\n', ct.Text));
-
+							foreach (var ct in ds.FindElements(By.Id($"post-view{url.Split('/')[^1]}")))
+								contents.Push(string.Concat(ds.Title.Split(':')[0].Replace("..", string.Empty).Trim(), '\n', ct.Text));
+						}
 						break;
 
-					case cafe when driver.WindowHandles.Count == 1:
+					case cafe:
 
 						break;
 
 					case post:
+
+						break;
+
+					default:
+						foreach (var str in new Regex("[-~!@#$%^&*()_+|<>?:;{}.,·'\"+=`/\\n\\r\\t\\v\\s\\b]").Split(new Regex("<[^>]+>", RegexOptions.IgnoreCase).Replace(new Regex("<(script|style)[^>]*>[\\s\\S]*?</\\1>").Replace(driver.PageSource, string.Empty), string.Empty).Replace("\r\n", string.Empty).Replace("nbsp", string.Empty)))
+							if (string.IsNullOrWhiteSpace(str) is false && contents.Any(o => o.Equals(str)) is false)
+								contents.Push(str);
 
 						break;
 				}
@@ -208,39 +219,72 @@ namespace ShareInvest.Naver
 					timeout.PageLoad = TimeSpan.FromSeconds(0xC);
 					driver.Manage().Window.FullScreen();
 					var action = new Actions(driver).SendKeys(Keys.ArrowDown).Build();
-					var stack = new Stack<IWebElement>();
 
-					while (length-- > 0)
+					switch (i)
 					{
-						await Task.Delay(0x100);
-						action.Perform();
+						case 1:
+							var stack = new Stack<IWebElement>();
 
-						if ((driver as IJavaScriptExecutor).ExecuteScript(Base.Command) is 0x64L or > 1e+2)
-							break;
-					}
-					foreach (var x in driver.FindElementsByXPath(security.PathKeyword[i]))
-						foreach (var ul in x.FindElements(By.TagName("li")))
-							foreach (var div in ul.FindElements(By.TagName("div")))
+							while (length-- > 0)
 							{
-								var attribute = div.GetAttribute("data-cr-rank");
+								await Task.Delay(0x100);
+								action.Perform();
 
-								if (string.IsNullOrEmpty(attribute) is false)
-									stack.Push(div);
+								if ((driver as IJavaScriptExecutor).ExecuteScript(Base.Command) is 0x64L or > 1e+2)
+									break;
 							}
-					while (stack.TryPop(out IWebElement web))
-					{
-						var title = string.Empty;
+							foreach (var x in driver.FindElementsByXPath(security.PathKeyword[i]))
+								foreach (var ul in x.FindElements(By.TagName("li")))
+									foreach (var div in ul.FindElements(By.TagName("div")))
+									{
+										var attribute = div.GetAttribute("data-cr-rank");
 
-						foreach (var a in web.FindElements(By.TagName("a")))
-						{
-							var confirm = a.GetAttribute("class");
+										if (string.IsNullOrEmpty(attribute) is false)
+											stack.Push(div);
+									}
+							while (stack.TryPop(out IWebElement web))
+							{
+								var title = string.Empty;
 
-							if (security.Title.Equals(confirm))
-								title = a.Text.Trim();
+								foreach (var a in web.FindElements(By.TagName("a")))
+								{
+									var confirm = a.GetAttribute("class");
 
-							if (dsc.Equals(confirm) && string.IsNullOrEmpty(title) is false)
-								response[a.GetAttribute("href")] = title;
-						}
+									if (security.Title.Equals(confirm))
+										title = a.Text.Trim();
+
+									if (dsc.Equals(confirm) && string.IsNullOrEmpty(title) is false)
+										response[a.GetAttribute("href")] = title;
+								}
+							}
+							break;
+
+						case 0:
+							int page = driver.FindElementByXPath(security.PathKeyword[i]).FindElement(By.TagName("tbody")).FindElements(By.TagName("td")).Count, index = 0;
+
+							if (driver.FindElementByXPath($"//*[@id='{security.PathKeyword[i + 6]}']").FindElements(By.TagName("div")).Count > 0)
+								do
+								{
+									foreach (var div in driver.FindElementByXPath($"//*[@id='{security.PathKeyword[i + 3]}']").FindElements(By.TagName("div")))
+										if (security.PathKeyword[i + 5].Equals(div.GetAttribute("class")))
+										{
+											var a = div.FindElement(By.TagName("a"));
+											action.Perform();
+
+											foreach (var title in a.FindElements(By.TagName("div")))
+												if (security.PathKeyword[i + 4].Equals(title.GetAttribute("class")))
+													response[a.GetAttribute("href")] = title.Text.Trim();
+										}
+									if (page > 0 && index < page - 3)
+									{
+										driver.FindElementByXPath($"//*[@id='{security.PathKeyword[i + 2]}']").Click();
+										driver.Manage().Window.FullScreen();
+									}
+									await Task.Delay(0x100);
+								}
+								while (index++ < page - 3);
+
+							break;
 					}
 					new Actions(driver).SendKeys(Keys.Escape).Perform();
 				}

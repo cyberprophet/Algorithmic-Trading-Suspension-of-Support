@@ -307,7 +307,7 @@ namespace ShareInvest.Client
 				options.AddArguments("headless");
 
 			this.cn = cn;
-			resources = new List<byte[]> { Properties.Resources._20210311_Stocks, Properties.Resources._20210311_TagCloud, Properties.Resources._20210311_Portfolio, Properties.Resources._20210311_Theme };
+			resources = new List<byte[]> { Properties.Resources.SE_a3017409_6f36_4eca_ace3_f363af2a686c, Properties.Resources.SE_a8f95f48_320a_4e70_98d6_f4740b323222, Properties.Resources.SE_f927a675_1a0d_4f30_b62e_92efb8c15ad5, Properties.Resources.SE_8e9889e5_413d_4aee_978d_6247142755d3, Properties.Resources.SE_7d12c943_5220_47b3_b6d3_712164afb03f, Properties.Resources.SE_63a3542b_8637_4fed_ba9c_2bf970a6321d, Properties.Resources.SE_52af2672_5b2c_44ee_9d74_892136bde030, Properties.Resources.SE_46c4cbab_4d1a_4e17_a42d_31365b80f22f, Properties.Resources.SE_14a7635c_0d85_40e9_83a9_cbc7d85d36a7, Properties.Resources._20210311_Stocks, Properties.Resources._20210311_TagCloud, Properties.Resources._20210311_Portfolio, Properties.Resources._20210311_Theme };
 			random = new Random(Guid.NewGuid().GetHashCode());
 			driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
 		}

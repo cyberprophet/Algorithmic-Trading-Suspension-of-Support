@@ -234,20 +234,21 @@ namespace ShareInvest
 
 									return;
 								}
-						foreach (var package in new[] { "processx", "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
-							using (var process = new Process { StartInfo = StartInfo })
-							{
-								process.ErrorDataReceived += SortOutputHandler;
-
-								if (process.Start())
+						if (Base.IsDebug is false)
+							foreach (var package in new[] { "processx", "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
+								using (var process = new Process { StartInfo = StartInfo })
 								{
-									process.BeginErrorReadLine();
-									process.StandardInput.WriteLine(string.Concat(script, initialize, string.IsNullOrEmpty(package) ? string.Empty : string.Concat(' ', package)));
-									process.StandardInput.Close();
-									process.WaitForExit();
+									process.ErrorDataReceived += SortOutputHandler;
+
+									if (process.Start())
+									{
+										process.BeginErrorReadLine();
+										process.StandardInput.WriteLine(string.Concat(script, initialize, string.IsNullOrEmpty(package) ? string.Empty : string.Concat(' ', package)));
+										process.StandardInput.Close();
+										process.WaitForExit();
+									}
+									process.ErrorDataReceived -= SortOutputHandler;
 								}
-								process.ErrorDataReceived -= SortOutputHandler;
-							}
 						using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), false))
 							foreach (var param in list)
 								if (param.Name.Split(' ').Length == 1 && param.Name[^1] is not '우' && (param.Name[^1] is '호' && char.IsDigit(param.Name[^2])) is false && param.Name[^1] is not 'B' && param.Name[^1] is not ')' && param.Name.EndsWith("스팩") is false)
@@ -285,8 +286,12 @@ namespace ShareInvest
 
 																			while (search.TryPop(out string pop))
 																			{
+																				using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), true))
+																					if (pop.Split(' ').Length == 1)
+																						sw.WriteLine(string.Concat(pop, '\t', "ncn"));
+
 																				if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(pop), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response)
-																					foreach (var kv in response)
+																					foreach (var kv in response.OrderBy(o => Guid.NewGuid()))
 																						if (await new Naver.Search(key).BrowseTheSite(kv.Key) is Stack<string> stack)
 																						{
 																							var sb = new StringBuilder();
@@ -296,10 +301,6 @@ namespace ShareInvest
 
 																							keywords[kv.Key] = sb.Remove(sb.Length - 1, 1).ToString();
 																						}
-																				using var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), true);
-
-																				if (pop.Split(' ').Length == 1)
-																					sw.WriteLine(string.Concat(pop, '\t', "ncn"));
 																			}
 																		}
 									json = string.IsNullOrEmpty(url.Json) ? string.Empty : url.Json;
