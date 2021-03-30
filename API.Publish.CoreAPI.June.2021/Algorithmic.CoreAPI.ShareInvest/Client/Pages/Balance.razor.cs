@@ -58,40 +58,42 @@ namespace ShareInvest.Pages
 					if (balance.Quantity.Length < 2 && balance.Quantity[0] is '0')
 					{
 						if (Balance.Remove(new Tuple<string, string>(balance.Kiwoom, balance.Code)))
-						{
 							StateHasChanged();
 
-							return;
-						}
+						return;
 					}
-					else
-						Balance[new Tuple<string, string>(balance.Kiwoom, balance.Code)] = balance;
-
+					Balance[new Tuple<string, string>(balance.Kiwoom, balance.Code)] = balance;
 					break;
 
-				case Catalog.Models.Message message when Balance.Any(o => o.Key.Item2.Equals(message.Key)) && (message.Convey[0] is '-' or '+' ? message.Convey[1..] : message.Convey) is string convey:
+				case Catalog.Models.Message message when Balance.Any(o => o.Key.Item2.Equals(message.Key)):
 					foreach (var kv in Balance)
-						if (kv.Key.Item2.Equals(message.Key) && convey.Equals(kv.Value.Current.Replace(",", string.Empty)) is false && int.TryParse(kv.Value.Quantity, out int quantity) && quantity > 0 && int.TryParse(convey, out int price) && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
-							Balance[kv.Key] = new Catalog.Models.Balance
+						if (kv.Key.Item2.Equals(message.Key) && int.TryParse(kv.Value.Quantity.Replace(",", string.Empty), out int quantity))
+						{
+							if (quantity < 1)
 							{
-								Kiwoom = kv.Value.Kiwoom,
-								Account = kv.Value.Account,
-								Code = message.Key,
-								Name = kv.Value.Name,
-								Quantity = kv.Value.Quantity,
-								Purchase = kv.Value.Purchase,
-								Current = price.ToString("N0"),
-								Revenue = ((Math.Abs(price) - purchase) * quantity).ToString("C0"),
-								Rate = (price / (double)purchase - 1).ToString("P2")
-							};
+								if (Balance.Remove(kv.Key))
+									StateHasChanged();
+
+								return;
+							}
+							if (int.TryParse(message.Convey[0] is '-' ? message.Convey[1..] : message.Convey, out int price) && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
+								Balance[kv.Key] = new Catalog.Models.Balance
+								{
+									Kiwoom = kv.Value.Kiwoom,
+									Account = kv.Value.Account,
+									Code = message.Key,
+									Name = kv.Value.Name,
+									Quantity = kv.Value.Quantity,
+									Purchase = kv.Value.Purchase,
+									Current = price.ToString("N0"),
+									Revenue = ((price - purchase) * quantity).ToString("C0"),
+									Rate = (price / (double)purchase - 1).ToString("P2")
+								};
+						}
 					break;
 			}
-			if (DateTime.Now.Millisecond is 0 or 0x40 or 0x100 or 0x200 or 0x300)
+			if (DateTime.Now.Millisecond is 0 or 0x100 or 0x300)
 				StateHasChanged();
-		}
-		int Second
-		{
-			get; set;
 		}
 		[Inject]
 		IAccessTokenProvider TokenProvider
