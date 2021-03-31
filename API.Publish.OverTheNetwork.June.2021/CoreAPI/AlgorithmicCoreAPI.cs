@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
@@ -249,60 +250,55 @@ namespace ShareInvest
 									}
 									process.ErrorDataReceived -= SortOutputHandler;
 								}
+						var regex = new Regex("(\\)|\\(|/|,|&|＆)");
+						var search = new Dictionary<string, string>();
 						using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), false))
 							foreach (var param in list)
 								if (param.Name.Split(' ').Length == 1 && param.Name[^1] is not '우' && (param.Name[^1] is '호' && char.IsDigit(param.Name[^2])) is false && param.Name[^1] is not 'B' && param.Name[^1] is not ')' && param.Name.EndsWith("스팩") is false)
 									sw.WriteLine(string.Concat(param.Name.Replace("(Reg.S)", string.Empty), '\t', "ncn"));
 
+						foreach (var name in from o in enumerable select o.Name)
+							foreach (var separator in regex.Split(name))
+								if (regex.IsMatch(separator) is false && string.IsNullOrEmpty(separator) is false)
+								{
+									if (Array.Exists(exception, o => separator.EndsWith(o)) is false)
+									{
+										using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), true))
+											sw.WriteLine(string.Concat(separator.Replace(" ", string.Empty), '\t', "ncn"));
+
+										search[separator.Replace(" ", string.Empty)] = name;
+									}
+									if (separator.Split(' ') is string[] ws && ws.Length > 1)
+										foreach (var tn in ws)
+											if (string.IsNullOrEmpty(tn) is false && Array.Exists(exception, o => tn.EndsWith(o)) is false)
+											{
+												using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), true))
+													sw.WriteLine(string.Concat(tn, '\t', "ncn"));
+
+												search[tn] = name;
+											}
+								}
 						foreach (var theme in enumerable)
 						{
 							try
 							{
-								var keywords = new Dictionary<string, string>();
+								var keywords = new Queue<StringBuilder>();
 								var json = string.Empty;
 
 								if (await api.GetConfirmAsync(theme) is Url url)
 								{
-									foreach (var str in theme.Name.Split(')'))
-										if (string.IsNullOrEmpty(str) is false)
-											foreach (var name in str.Split('('))
-												if (string.IsNullOrEmpty(name) is false)
-													foreach (var sep in name.Split('/'))
-														if (string.IsNullOrEmpty(sep) is false)
-															foreach (var comma in sep.Split(','))
-																if (string.IsNullOrEmpty(comma) is false)
-																	foreach (var em in comma.Split('&'))
-																		if (string.IsNullOrEmpty(em) is false)
-																		{
-																			var search = new Stack<string>();
+									foreach (var item in from o in search where o.Value.Equals(theme.Name) select o.Key)
+										if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(item), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response)
+											foreach (var kv in response.OrderBy(o => Guid.NewGuid()))
+												if (await new Naver.Search(key).BrowseTheSite(kv.Key) is Stack<string> stack)
+												{
+													var sb = new StringBuilder();
 
-																			if (Array.Exists(exception, o => em.EndsWith(o)) is false)
-																				search.Push(em);
+													while (stack.TryPop(out string text))
+														sb.Append(text).Append(' ');
 
-																			if (em.Split(' ') is string[] ws && ws.Length > 1)
-																				foreach (var tn in ws)
-																					if (string.IsNullOrEmpty(tn) is false && Array.Exists(exception, o => tn.EndsWith(o)) is false)
-																						search.Push(tn);
-
-																			while (search.TryPop(out string pop))
-																			{
-																				using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), true))
-																					if (pop.Split(' ').Length == 1)
-																						sw.WriteLine(string.Concat(pop, '\t', "ncn"));
-
-																				if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(pop), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response)
-																					foreach (var kv in response.OrderBy(o => Guid.NewGuid()))
-																						if (await new Naver.Search(key).BrowseTheSite(kv.Key) is Stack<string> stack)
-																						{
-																							var sb = new StringBuilder();
-
-																							while (stack.TryPop(out string text))
-																								sb.Append(text).Append('\n');
-
-																							keywords[kv.Key] = sb.Remove(sb.Length - 1, 1).ToString();
-																						}
-																			}
-																		}
+													keywords.Enqueue(sb.Remove(sb.Length - 1, 1));
+												}
 									json = string.IsNullOrEmpty(url.Json) ? string.Empty : url.Json;
 								}
 								if (keywords.Count > 0)
@@ -552,7 +548,7 @@ namespace ShareInvest
 			}
 			(sender as BackgroundWorker).Dispose();
 		}
-		void WorkerProgress<T>(T param, IEnumerable<KeyValuePair<string, string>> enumerable, string json) where T : class
+		void WorkerProgress<T>(T param, Queue<StringBuilder> enumerable, string json) where T : class
 		{
 			string fn, content;
 
@@ -566,10 +562,10 @@ namespace ShareInvest
 				default:
 					return;
 			}
-			foreach (var kv in enumerable)
+			while (enumerable.TryDequeue(out StringBuilder sb))
 				using (var sw = new StreamWriter(Path.Combine(Repository.R, string.Concat(fn, ".txt")), true))
-					if (string.IsNullOrEmpty(kv.Value) is false && kv.Value.Length > 1)
-						sw.WriteLine(kv.Value);
+					if (string.IsNullOrEmpty(sb.ToString()) is false && sb.Length > 1)
+						sw.WriteLine(sb);
 
 			new Task(async () =>
 			{
@@ -622,12 +618,12 @@ namespace ShareInvest
 								}
 							}
 						int index = 0, division;
-						var enumerable = dictionary.OrderByDescending(o => o.Value).Take(0x90);
+						var enumerable = dictionary.OrderByDescending(o => o.Value).Take(0x40);
 						division = enumerable.Min(o => o.Value);
 						process.ErrorDataReceived += SortOutputHandler;
 
 						foreach (var kv in enumerable)
-							if (kv.Value > 1 && index < 0x90 && division > 0)
+							if (kv.Value > 1 && index < 0x40 && division > 0)
 							{
 								using (var sw = new StreamWriter(tags, index > 0))
 								{

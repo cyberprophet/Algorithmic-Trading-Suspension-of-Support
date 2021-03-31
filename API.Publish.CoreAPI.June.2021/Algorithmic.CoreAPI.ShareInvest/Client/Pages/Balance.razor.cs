@@ -52,6 +52,9 @@ namespace ShareInvest.Pages
 		}
 		void StateHasChanged<T>(T param) where T : struct
 		{
+			var now = DateTime.Now;
+			var render = false;
+
 			switch (param)
 			{
 				case Catalog.Models.Balance balance:
@@ -63,6 +66,7 @@ namespace ShareInvest.Pages
 						return;
 					}
 					Balance[new Tuple<string, string>(balance.Kiwoom, balance.Code)] = balance;
+					render = true;
 					break;
 
 				case Catalog.Models.Message message when Balance.Any(o => o.Key.Item2.Equals(message.Key)):
@@ -77,6 +81,7 @@ namespace ShareInvest.Pages
 								return;
 							}
 							if (int.TryParse(message.Convey[0] is '-' ? message.Convey[1..] : message.Convey, out int price) && int.TryParse(kv.Value.Purchase.Replace(",", string.Empty), out int purchase))
+							{
 								Balance[kv.Key] = new Catalog.Models.Balance
 								{
 									Kiwoom = kv.Value.Kiwoom,
@@ -89,11 +94,20 @@ namespace ShareInvest.Pages
 									Revenue = ((price - purchase) * quantity).ToString("C0"),
 									Rate = (price / (double)purchase - 1).ToString("P2")
 								};
+								render = true;
+							}
 						}
 					break;
 			}
-			if (DateTime.Now.Millisecond is 0 or 0x100 or 0x300)
+			if (render && now.CompareTo(Time) > 0)
+			{
+				Time = now.AddSeconds(3);
 				StateHasChanged();
+			}
+		}
+		DateTime Time
+		{
+			get; set;
 		}
 		[Inject]
 		IAccessTokenProvider TokenProvider

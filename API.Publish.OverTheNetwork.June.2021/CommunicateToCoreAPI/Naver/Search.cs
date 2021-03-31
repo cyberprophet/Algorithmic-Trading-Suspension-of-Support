@@ -23,6 +23,7 @@ namespace ShareInvest.Naver
 				timeout.ImplicitWait = TimeSpan.FromSeconds(0xC);
 				timeout.PageLoad = TimeSpan.FromSeconds(0xC);
 				var contents = new Stack<string>();
+				var context = string.Empty;
 				await Task.Delay(0x200);
 				driver.Manage().Window.FullScreen();
 
@@ -34,25 +35,60 @@ namespace ShareInvest.Naver
 							var ds = driver.SwitchTo().Frame(web);
 
 							foreach (var ct in ds.FindElements(By.Id($"post-view{url.Split('/')[^1]}")))
-								contents.Push(string.Concat(ds.Title.Split(':')[0].Replace("..", string.Empty).Trim(), '\n', ct.Text));
+							{
+								contents.Push(ds.Title.Split(':')[0].Replace("..", string.Empty).Trim());
+								context = ct.Text;
+							}
 						}
 						break;
 
 					case cafe:
-
-						break;
-
 					case post:
 
 						break;
 
 					default:
-						foreach (var str in new Regex("[-~!@#$%^&*()_+|<>?:;{}.,·'\"+=`/\\n\\r\\t\\v\\s\\b]").Split(new Regex("<[^>]+>", RegexOptions.IgnoreCase).Replace(new Regex("<(script|style)[^>]*>[\\s\\S]*?</\\1>").Replace(driver.PageSource, string.Empty), string.Empty).Replace("\r\n", string.Empty).Replace("nbsp", string.Empty)))
-							if (string.IsNullOrWhiteSpace(str) is false && contents.Any(o => o.Equals(str)) is false)
-								contents.Push(str);
-
+						context = driver.PageSource;
 						break;
 				}
+				if (string.IsNullOrEmpty(context) is false)
+					foreach (var str in new Regex(@"[-“”‘’…‧~!@#$%^&*()_+|<>?:;{}\]→[.,·'""+=`/\n\r\t\v\s\b]").Split(new Regex("<[^>]+>", RegexOptions.IgnoreCase).Replace(new Regex("<(script|style)[^>]*>[\\s\\S]*?</\\1>").Replace(context, string.Empty), string.Empty).Replace("\r\n", string.Empty).Replace("nbsp", string.Empty)))
+						if (string.IsNullOrWhiteSpace(str) is false && contents.Any(o => o.Equals(str)) is false && str.Length > 1 && Array.Exists(str.ToCharArray(), o => char.IsLetter(o)))
+						{
+							var remove = new Queue<char>();
+							var regex = str.Trim();
+
+							foreach (var symbol in str.ToCharArray())
+								if (char.IsLetterOrDigit(symbol) is false)
+									remove.Enqueue(symbol);
+
+							while (remove.TryDequeue(out char symbol))
+								regex = regex.Replace(symbol.ToString(), string.Empty);
+
+							foreach (Match match in new Regex("(은|는|이|가|에|께|의|을|를|와|과|습니|입니|님)").Matches(regex))
+								switch (match.Value)
+								{
+									case "습니":
+										if (match.Index == regex.Length - 3)
+											regex = regex.Remove(match.Index - 1);
+
+										break;
+
+									case "입니":
+										if (match.Index == regex.Length - 3)
+											regex = regex.Remove(match.Index);
+
+										break;
+
+									default:
+										if (match.Index == regex.Length - 1)
+											regex = regex.Replace(match.Value, string.Empty);
+
+										break;
+								}
+							if (regex.Length > 1)
+								contents.Push(regex);
+						}
 				new Actions(driver).SendKeys(Keys.Escape).Perform();
 
 				if (contents.Count > 0)
