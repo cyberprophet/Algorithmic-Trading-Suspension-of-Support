@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -18,11 +19,15 @@ namespace ShareInvest.Pages
 			get; private set;
 		}
 		protected internal Catalog.Dart.Theme Pick => Collection.OrderBy(o => Guid.NewGuid()).First();
+		protected internal DateTime[] Initialize
+		{
+			get; private set;
+		}
 		protected internal string User
 		{
 			get; private set;
 		}
-		protected internal bool Click
+		protected internal Dictionary<int, bool> IsClick
 		{
 			get; set;
 		}
@@ -30,9 +35,12 @@ namespace ShareInvest.Pages
 		{
 			if (await OnReceiveLogUserInformation() is string response)
 			{
-				Click = string.IsNullOrEmpty(response) is false;
+				IsClick = new Dictionary<int, bool>();
 
-				if (Click)
+				if (string.IsNullOrEmpty(response))
+					User = response;
+
+				else
 				{
 					var sb = new StringBuilder();
 
@@ -42,11 +50,42 @@ namespace ShareInvest.Pages
 					User = sb.Remove(sb.Length - 1, 1).ToString();
 					Collection = await Http.GetFromJsonAsync<Catalog.Dart.Theme[]>(Crypto.Security.GetRoute(nameof(Catalog.Dart.Theme), nameof(Intro)));
 				}
-				else
-					User = response;
 			}
 		}
-		protected internal void OnClick(MouseEventArgs _) => Click = Click is false;
+		protected override async Task OnAfterRenderAsync(bool firstRender)
+		{
+			if (firstRender)
+			{
+				var past = 0;
+				var now = DateTime.Now;
+				Initialize = new DateTime[0xC];
+
+				for (int pi = 0; pi < Initialize.Length - 1; pi++)
+				{
+					IsClick[pi] = false;
+
+					if (pi == 0)
+					{
+						Initialize[pi] = now;
+
+						continue;
+					}
+					while (Base.DisplayThePage(now.AddDays(past - pi)))
+						past--;
+
+					Initialize[pi] = now.AddDays(past - pi);
+				}
+				IsClick[Initialize.Length - 1] = true;
+				Initialize[^1] = DateTime.UnixEpoch;
+			}
+		}
+		protected internal void OnClick(int index, MouseEventArgs _)
+		{
+			for (int i = 0; i < Initialize.Length; i++)
+				IsClick[i] = false;
+
+			IsClick[index] = IsClick[index] is false;
+		}
 		async Task<string> OnReceiveLogUserInformation()
 		{
 			var user = (await State).User;

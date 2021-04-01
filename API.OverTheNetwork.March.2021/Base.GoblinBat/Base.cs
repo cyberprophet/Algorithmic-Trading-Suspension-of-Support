@@ -186,6 +186,7 @@ namespace ShareInvest
 		public static string IsServer(bool server) => server ? "210225" : "210224";
 		public static string TellTheClientConnectionStatus(string name, bool is_connected) => $"{name} is connected on {is_connected}";
 		public static string ConvertFormat(string account) => $"{account.Substring(0, 4)}­ ─ ­{account.Substring(4, 4)}";
+		public static bool DisplayThePage(DateTime now) => now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Holidays, o => o.Equals(now.ToString(DateFormat)));
 		public static bool CheckIfMarketDelay(DateTime now) => Array.Exists(SAT, o => o.Equals(now.ToString(DateFormat)));
 		public static bool CheckIfMarketDelay(DateTime now, int check) => Array.FindIndex(SAT, o => o.Equals(now.ToString(DateFormat))) % 2 == check;
 		public static DateTime MeasureTheDelayTime(double delay, DateTime time) => time.AddMilliseconds(delay);
