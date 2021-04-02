@@ -3,25 +3,55 @@
 
 @if (Initialize is DateTime[])
 {
-
 	<div>
 		@foreach (var kv in IsClick)
 		{
-			if (kv.Value && kv.Key == Initialize.Length - 1)
+			if (kv.Value)
 			{
-				if (Collection is Catalog.Dart.Theme[] && Pick is Catalog.Dart.Theme pick)
+				if (kv.Key == Initialize.Length - 1)
 				{
 					<p class="image">
-						<a href="/tags?index=@pick.Index&name=@System.Web.HttpUtility.UrlEncode(pick.Name)&im=@System.Web.HttpUtility.UrlEncode(User)" target="_blank">
-							<img src="/Images/@(pick.Index).png" alt="@pick.Name" />
-						</a>
+						@if (Collection is Catalog.Dart.Theme[] && Pick is Catalog.Dart.Theme pick)
+						{
+							<a href="/tags?index=@pick.Index&name=@System.Web.HttpUtility.UrlEncode(pick.Name)&im=@System.Web.HttpUtility.UrlEncode(User)" target="_blank">
+								<img src="/Images/@(pick.Index).png" alt="@pick.Name" />
+							</a>
+						}
+						else
+						{
+							<img src="/Images/456.png" alt="K-뉴딜지수" />
+						}
 					</p>
 				}
 				else
 				{
-					<p>
-						<em>Loading...</em>
-					</p>
+					if (kv.Key == Initialize.Length - 2 && Close)
+						continue;
+
+					if (Conditions is List<string>[] && Conditions[kv.Key] is List<string>)
+					{
+						if (Conditions[kv.Key].Count > 0)
+						{
+							<table class="table">
+								<tbody>
+									@foreach (var code in Conditions[kv.Key])
+									{
+										<tr>
+											<td>@(code)</td>
+										</tr>
+									}
+								</tbody>
+							</table>
+						}
+						else
+						{
+							<p><em>Empty...</em></p>
+						}
+					}
+					else
+					{
+						<p><em>Loading...</em></p>
+					}
 				}
 			}
 		}

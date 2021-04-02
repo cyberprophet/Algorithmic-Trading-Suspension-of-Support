@@ -35,6 +35,7 @@ namespace ShareInvest
 			Codes = new Queue<string>();
 			GetTheCorrectAnswer = new int[this.key.Length];
 			server = GoblinBat.GetInstance(key);
+			connect.IsServer = api.IsServer && api.IsAdministrator;
 			timer.Start();
 		}
 		async Task OnReceiveFinancialStatement(DateTime now, Retention retention)
@@ -355,11 +356,9 @@ namespace ShareInvest
 				case Queue<string[]> hold:
 					var name = sender.GetType().Name;
 					var bal = connect as OpenAPI.ConnectAPI;
-					var strategics = new string[hold.Count];
 					bal.RemoveValueRqData(name, string.Concat(connect.Account[name.EndsWith("Opw00005") ? 0 : ^1], password)).Send -= OnReceiveSecuritiesAPI;
 
 					while (hold.TryDequeue(out string[] ing))
-					{
 						if (ing[0].Length == 8 && int.TryParse(ing[4], out int quantity) && double.TryParse(ing[9], out double fRate) && long.TryParse(ing[8], out long fValuation) && double.TryParse(ing[6], out double fCurrent) && double.TryParse(ing[5], out double fPurchase) && await server.PostContextAsync(new Balance
 						{
 							Kiwoom = Security.Key,
@@ -403,17 +402,29 @@ namespace ShareInvest
 							}
 							Base.SendMessage(sender.GetType(), ing[4].Trim(), amount);
 						}
-						strategics[hold.Count] = (ing[0].Length == 8 ? ing[0] : ing[3][1..]).Trim();
-					}
-					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false && (api.IsAdministrator is false || Base.IsDebug))
-						worker.RunWorkerAsync(strategics);
-
 					return;
 
 				case Tuple<long, long> balance:
 					if (now.Hour is 8 or 0xF)
 						Reservation = new Reservation(balance.Item2, connect.Account);
 
+					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false)
+					{
+						if (api.IsAdministrator is false || Base.IsDebug)
+							worker.RunWorkerAsync(connect.Account);
+
+						if (api.IsAdministrator && api.IsServer || Base.IsDebug)
+						{
+							var hour = Base.CheckIfMarketDelay(now) ? 9 : 8;
+							var con = connect as OpenAPI.ConnectAPI;
+
+							for (int i = hour == now.Hour ? 1 : 0; i < (hour == now.Hour ? con.Conditions.Count : con.Conditions.Count - 1); i++)
+							{
+								name = con.Conditions[i];
+								con.SendCondition(i, name, name.Length == 2 ? 1 : 0);
+							}
+						}
+					}
 					Cash = balance.Item2;
 					return;
 

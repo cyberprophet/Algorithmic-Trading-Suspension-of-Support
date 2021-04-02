@@ -295,7 +295,7 @@ namespace ShareInvest
 													var sb = new StringBuilder();
 
 													while (stack.TryPop(out string text))
-														sb.Append(text).Append(' ');
+														sb.Append(text).Append('\n');
 
 													keywords.Enqueue(sb.Remove(sb.Length - 1, 1));
 												}

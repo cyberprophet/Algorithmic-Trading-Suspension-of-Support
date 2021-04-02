@@ -12,6 +12,7 @@ namespace ShareInvest.EventHandler
 	public class SendSecuritiesAPI : EventArgs
 	{
 		public SendSecuritiesAPI(int param) => Convey = param;
+		public SendSecuritiesAPI(char type, string param) => Convey = new Tuple<char, string>(type, param);
 		public SendSecuritiesAPI(short error) => Convey = error;
 		public SendSecuritiesAPI(Codes codes) => Convey = codes;
 		public SendSecuritiesAPI(Message message) => Convey = message;

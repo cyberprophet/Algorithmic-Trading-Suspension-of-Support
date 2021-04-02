@@ -149,6 +149,12 @@ namespace ShareInvest
 										Send?.Invoke(this, new SendSecuritiesAPI(Enum.GetName(typeof(Catalog.OpenAPI.Operation), op)));
 									}
 									break;
+
+								case 1:
+									if (char.TryParse(temp[0], out char type))
+										Send?.Invoke(this, new SendSecuritiesAPI(type, temp[1]));
+
+									break;
 							}
 						}
 					}

@@ -118,6 +118,9 @@ namespace ShareInvest.OpenAPI
 				foreach (var code in GetInformationOfCode(new List<string> { axAPI.GetFutureCodeByIndex(0) }, axAPI.GetCodeListByMarket(string.Empty).Split(';')))
 					Send?.Invoke(this, new SendSecuritiesAPI(code));
 
+				if ((IsServer || Base.IsDebug) && axAPI.GetConditionLoad() == 1)
+					Conditions = new Dictionary<int, string>();
+
 				Send?.Invoke(this, new SendSecuritiesAPI(axAPI.GetLoginInfo("ACCLIST").Split(';')));
 			}
 			else
@@ -130,6 +133,23 @@ namespace ShareInvest.OpenAPI
 			if (API.Chejan.TryGetValue(e.sGubun, out Chejan chejan))
 				chejan.OnReceiveChejanData(e);
 		}
+		void OnReceiveConditionVersion(object sender, _DKHOpenAPIEvents_OnReceiveConditionVerEvent e)
+		{
+			if (e.lRet == 1)
+			{
+				foreach (var condition in axAPI.GetConditionNameList().Split(';'))
+					if (string.IsNullOrEmpty(condition) is false)
+					{
+						var conditions = condition.Split('^');
+
+						if (int.TryParse(conditions[0], out int index))
+							Conditions[index++] = conditions[^1];
+					}
+			}
+			Base.SendMessage(sender.GetType(), e.sMsg);
+		}
+		void OnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e) => Writer.WriteLine(string.Concat(e.nIndex, '|', e.strCodeList));
+		void OnReceiveRealCondition(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e) => Writer.WriteLine(string.Concat(e.strType, '|', e.sTrCode));
 		public ConnectAPI()
 		{
 			InitializeComponent();
@@ -239,6 +259,13 @@ namespace ShareInvest.OpenAPI
 			axAPI.OnReceiveTrData += OnReceiveTrData;
 			axAPI.OnReceiveRealData += OnReceiveRealData;
 			axAPI.OnReceiveChejanData += OnReceiveChejanData;
+
+			if (IsServer || Base.IsDebug)
+			{
+				axAPI.OnReceiveConditionVer += OnReceiveConditionVersion;
+				axAPI.OnReceiveTrCondition += OnReceiveTrCondition;
+				axAPI.OnReceiveRealCondition += OnReceiveRealCondition;
+			}
 			await ConnectToReceiveRealTime.WaitForConnectionAsync();
 			Writer = new StreamWriter(ConnectToReceiveRealTime)
 			{
@@ -248,6 +275,7 @@ namespace ShareInvest.OpenAPI
 		}));
 		public Analysis Append(string key, Analysis value) => API.StocksHeld[key] = value;
 		public void SendOrder(ISendOrder order) => API?.SendOrder(order);
+		public void SendCondition(int index, string name, int search) => API?.SendCondition(name, index, search);
 		public int CorrectTheDelayMilliseconds(int milliseconds)
 		{
 			Delay.Milliseconds = milliseconds;
@@ -264,6 +292,14 @@ namespace ShareInvest.OpenAPI
 		public StreamWriter Writer
 		{
 			get; private set;
+		}
+		public Dictionary<int, string> Conditions
+		{
+			get; private set;
+		}
+		public bool IsServer
+		{
+			private get; set;
 		}
 		public IEnumerable<Analysis> Enumerator
 		{

@@ -50,11 +50,11 @@ namespace ShareInvest.Naver
 							break;
 					}
 					if (string.IsNullOrEmpty(context) is false)
-						foreach (var str in new Regex(@"[-“”‘’…‧~!@#$%^&*()_+|<>?:;{}\]→[.,·'""+=`/\n\r\t\v\s\b]").Split(new Regex("<[^>]+>", RegexOptions.IgnoreCase).Replace(new Regex("<(script|style)[^>]*>[\\s\\S]*?</\\1>").Replace(context, string.Empty), string.Empty).Replace("\r\n", string.Empty).Replace("nbsp", string.Empty)))
-							if (string.IsNullOrWhiteSpace(str) is false && contents.Any(o => o.Equals(str)) is false && str.Length > 1 && Array.Exists(str.ToCharArray(), o => char.IsLetter(o)))
+						foreach (var str in new Regex(@"[-“”‘’…‧~!@#$%^&*()_+|<>?:;{}\]→[.,·'""+=`/\n\r\t\v\s\b]").Split(new Regex("<[^>]+>", RegexOptions.IgnoreCase).Replace(new Regex("<(script|style)[^>]*>[\\s\\S]*?</\\1>").Replace(context, string.Empty), string.Empty)))
+							if (string.IsNullOrWhiteSpace(str) is false && str.Length > 1 && Array.Exists(str.ToCharArray(), o => char.IsLetter(o)))
 							{
 								var remove = new Queue<char>();
-								var regex = str.Replace("아주경제", string.Empty).Trim();
+								var regex = str.Replace("아주경제", string.Empty).Replace("\r\n", string.Empty).Replace("nbsp", string.Empty).Trim();
 
 								foreach (var symbol in str.ToCharArray())
 									if (char.IsLetterOrDigit(symbol) is false)

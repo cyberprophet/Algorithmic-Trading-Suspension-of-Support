@@ -57,6 +57,7 @@ namespace ShareInvest.OpenAPI
 			if (error < 0 && this.error.ContainsKey(error))
 				Send?.Invoke(this, new SendSecuritiesAPI((short)error));
 		}
+		internal void SendCondition(string name, int index, int search) => request.RequestTrData(new Task(() => ReceiveErrorMessage(axAPI.SendCondition(LookupScreenNo, name, index, search))));
 		internal void SendOrder(ISendOrder o) => request.RequestTrData(new Task(() => ReceiveErrorMessage(axAPI.SendOrder(axAPI.GetMasterCodeName(o.Code), LookupScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
 		internal string SendErrorMessage(short code) => error[code];
 		internal HashSet<TR> TR
