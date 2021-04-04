@@ -3,6 +3,22 @@
 
 @if (Initialize is DateTime[])
 {
+	<div role="navigation">
+		<table role="presentation" class="page">
+			<tbody>
+				<tr>
+					@foreach (var kv in IsClick)
+					{
+						<td class="click">
+							<button class="button" title="@((DateTime.UnixEpoch.Equals(Initialize[kv.Key]) ? Initialize[1] : Initialize[kv.Key]).ToLongDateString())" disabled="@kv.Value" @onclick="(e => OnClick(kv.Key, e))">
+								@(DateTime.UnixEpoch.Equals(Initialize[kv.Key]) ? "Tag" : (Initialize[kv.Key].Day).ToString("D2"))
+							</button>
+						</td>
+					}
+				</tr>
+			</tbody>
+		</table>
+	</div>
 	<div>
 		@foreach (var kv in IsClick)
 		{
@@ -23,22 +39,105 @@
 						}
 					</p>
 				}
-				else
+				else if (kv.Key == Initialize.Length - 2)
 				{
-					if (kv.Key == Initialize.Length - 2 && Close)
+					if (Close)
 						continue;
 
-					if (Conditions is List<string>[] && Conditions[kv.Key] is List<string>)
+					else
+					{
+						<p><em>Loading...</em></p>
+					}
+				}
+				else
+				{
+					if (Conditions is List<Catalog.Models.Intro>[] && Conditions[kv.Key] is List<Catalog.Models.Intro>)
 					{
 						if (Conditions[kv.Key].Count > 0)
 						{
 							<table class="table">
+								<thead>
+									<tr>
+										@for (int i = 0; i < Inclination.Length + 2; i++)
+										{
+											var param = i switch
+											{
+												0 => nameof(Catalog.Models.Intro.Code),
+												1 => nameof(Catalog.Models.Intro.Name),
+												_ => Inclination[i - 2]
+											};
+											<th>
+												<div>
+													@param
+
+													@if (IsSort.TryGetValue(param, out bool sort) && sort)
+													{
+														<span class="oi_search oi oi-sort-ascending" aria-hidden="true" @onclick="e => OnClick(kv.Key, param, e)" />
+													}
+													else
+													{
+														<span class="oi_search oi oi-sort-descending" aria-hidden="true" @onclick="e => OnClick(kv.Key, param, e)" />
+													}
+												</div>
+											</th>
+										}
+									</tr>
+								</thead>
 								<tbody>
-									@foreach (var code in Conditions[kv.Key])
+									@foreach (var intro in Conditions[kv.Key])
 									{
 										<tr>
-											<td>@(code)</td>
+											<td title="Code">
+												<div>
+													@intro.Code
+												</div>
+											</td>
+											<td title="Name">
+												<div class="name">
+													<a href="@Base.GetUrl(intro.Code)" target="_blank">
+														@intro.Name
+													</a>
+													<a href="@Base.GetUrl(new[] { intro.Name, "주식", "테마", "무료" })" target="_blank">
+														<span class="oi_search oi oi-magnifying-glass" aria-hidden="true" />
+													</a>
+												</div>
+											</td>
+											@if (intro.Inclination is double[])
+											{
+												for (int i = 0; i < Inclination.Length; i++)
+												{
+													<td title="@Inclination[i]">
+														<div style="color:@Base.ChangeColor(intro.Inclination[i])">
+															@Math.Abs(intro.Inclination[i]).ToString("N3")˚
+														</div>
+													</td>
+												}
+											}
+											else
+											{
+												<td colspan="5">
+													<div class="overview" />
+												</td>
+											}
 										</tr>
+										@if (string.IsNullOrEmpty(intro.Title) is false)
+										{
+											<tr>
+												<td title="Theme" colspan="2" class="middle">
+													<div class="name">
+														@intro.Theme
+														<a href="/tags?index=@intro.Index&name=@System.Web.HttpUtility.UrlEncode(intro.Theme)&im=@System.Web.HttpUtility.UrlEncode(User)" target="_blank">
+															<span class="oi_search oi oi-magnifying-glass" aria-hidden="true" />
+														</a>
+													</div>
+												</td>
+												<td title="Overview" colspan="5">
+													<div class="overview">
+														@intro.Title.Replace(". ", ".\n")
+													</div>
+												</td>
+											</tr>
+										}
 									}
 								</tbody>
 							</table>
@@ -55,22 +154,6 @@
 				}
 			}
 		}
-	</div>
-	<div role="navigation">
-		<table role="presentation" class="page">
-			<tbody>
-				<tr>
-					@foreach (var kv in IsClick)
-					{
-						<td class="click">
-							<button class="button" title="@((DateTime.UnixEpoch.Equals(Initialize[kv.Key]) ? Initialize[1] : Initialize[kv.Key]).ToLongDateString())" disabled="@kv.Value" @onclick="(e => OnClick(kv.Key, e))">
-								@(DateTime.UnixEpoch.Equals(Initialize[kv.Key]) ? "Tag" : (Initialize[kv.Key].Day).ToString("D2"))
-							</button>
-						</td>
-					}
-				</tr>
-			</tbody>
-		</table>
 	</div>
 }
 else

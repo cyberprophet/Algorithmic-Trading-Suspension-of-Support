@@ -16,6 +16,32 @@
 	width: auto
 }
 
+.name
+{
+	display: block;
+	font-weight: bolder;
+	white-space: nowrap;
+	text-align: center
+}
+
+.middle
+{
+	vertical-align: middle
+}
+
+.oi_search
+{
+	cursor: pointer;
+	color: dimgray;
+	font-size: x-small
+}
+
+.overview
+{
+	white-space: pre-line;
+	font-size: small
+}
+
 .button
 {
 	line-height: 2.5;

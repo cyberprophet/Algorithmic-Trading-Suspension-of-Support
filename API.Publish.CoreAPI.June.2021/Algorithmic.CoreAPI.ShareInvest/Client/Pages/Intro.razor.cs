@@ -23,7 +23,7 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
-		protected internal List<string>[] Conditions
+		protected internal List<Catalog.Models.Intro>[] Conditions
 		{
 			get; private set;
 		}
@@ -35,12 +35,64 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
+		protected internal string[] Inclination
+		{
+			get; private set;
+		}
+		protected internal Dictionary<string, bool> IsSort
+		{
+			get; private set;
+		}
 		protected internal Dictionary<int, bool> IsClick
 		{
 			get; set;
 		}
+		protected internal async void OnClick(int index, MouseEventArgs _)
+		{
+			OnClick(false);
+			IsClick[index] = IsClick[index] is false;
+
+			if (User.Length < 1)
+				Navigation.NavigateTo($"authentication/login?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
+
+			else if (index < Initialize.Length - 1)
+			{
+				if (Conditions is null)
+					Conditions = new List<Catalog.Models.Intro>[Initialize.Length - 1];
+
+				if (Conditions[index] is null || Conditions[index].Count == 0)
+				{
+					Conditions[index] = new List<Catalog.Models.Intro>();
+
+					foreach (var code in await Http.GetFromJsonAsync<List<string>>(Crypto.Security.GetRoute(nameof(Conditions), index.ToString("D2"))))
+						Conditions[index].Add(await Http.GetFromJsonAsync<Catalog.Models.Intro>(Crypto.Security.GetRoute(nameof(Conditions), code)));
+
+					StateHasChanged();
+				}
+			}
+		}
+		protected internal void OnClick(int index, string name, MouseEventArgs _)
+		{
+			if (Conditions[index] is List<Catalog.Models.Intro> model && model.Where(o => string.IsNullOrEmpty(o.Theme) is false) is IEnumerable<Catalog.Models.Intro> list)
+			{
+				IsSort[name] = IsSort.ContainsKey(name) && IsSort[name] is false;
+				Conditions[index] = (name switch
+				{
+					nameof(Catalog.Models.Intro.Code) => IsSort[name] ? list.OrderBy(o => o.Code) : list.OrderByDescending(o => o.Code),
+					nameof(Catalog.Models.Intro.Name) => IsSort[name] ? list.OrderBy(o => o.Name) : list.OrderByDescending(o => o.Name),
+					nameof(Interface.KRX.Line.Week) => IsSort[name] ? list.OrderBy(o => o.Inclination[0]) : list.OrderByDescending(o => o.Inclination[0]),
+					nameof(Interface.KRX.Line.Month) => IsSort[name] ? list.OrderBy(o => o.Inclination[1]) : list.OrderByDescending(o => o.Inclination[1]),
+					nameof(Interface.KRX.Line.Quarter) => IsSort[name] ? list.OrderBy(o => o.Inclination[2]) : list.OrderByDescending(o => o.Inclination[2]),
+					nameof(Interface.KRX.Line.Semiannual) => IsSort[name] ? list.OrderBy(o => o.Inclination[3]) : list.OrderByDescending(o => o.Inclination[3]),
+					nameof(Interface.KRX.Line.Annual) => IsSort[name] ? list.OrderBy(o => o.Inclination[^1]) : list.OrderByDescending(o => o.Inclination[^1]),
+					_ => list.OrderBy(o => Guid.NewGuid())
+
+				}).Union(model).ToList();
+			}
+		}
 		protected override async Task OnInitializedAsync()
 		{
+			IsSort = new Dictionary<string, bool>();
 			IsClick = new Dictionary<int, bool>();
 			User = await OnReceiveLogUserInformation();
 		}
@@ -60,6 +112,7 @@ namespace ShareInvest.Pages
 
 					User = sb.Remove(sb.Length - 1, 1).ToString();
 					Collection = await Http.GetFromJsonAsync<Catalog.Dart.Theme[]>(Crypto.Security.GetRoute(nameof(Catalog.Dart.Theme), nameof(Intro)));
+					Inclination = Enum.GetNames(typeof(Interface.KRX.Line));
 				}
 				for (int pi = 0; pi < Initialize.Length - 1; pi++)
 				{
@@ -80,26 +133,6 @@ namespace ShareInvest.Pages
 				StateHasChanged();
 			}
 		}
-		public async void OnClick(int index, MouseEventArgs _)
-		{
-			OnClick(false);
-			IsClick[index] = IsClick[index] is false;
-
-			if (User.Length < 1)
-				Navigation.NavigateTo($"authentication/login?returnUrl={Uri.EscapeDataString(Navigation.Uri)}");
-
-			else if (index < Initialize.Length - 1)
-			{
-				if (Conditions is null)
-					Conditions = new List<string>[Initialize.Length - 1];
-
-				if (Conditions[index] is null || Conditions[index].Count == 0)
-				{
-					Conditions[index] = await Http.GetFromJsonAsync<List<string>>(Crypto.Security.GetRoute(nameof(Conditions), index.ToString("D2")));
-					StateHasChanged();
-				}
-			}
-		}
 		void OnClick(bool render)
 		{
 			for (int i = 0; i < Initialize.Length; i++)
@@ -111,13 +144,7 @@ namespace ShareInvest.Pages
 					switch (Initialize[i].DayOfWeek)
 					{
 						case DayOfWeek.Saturday or DayOfWeek.Sunday:
-							Close = true;
-							continue;
-
 						case DayOfWeek.Monday when now.Hour < 8:
-							Close = true;
-							continue;
-
 						case DayOfWeek.Friday when now.Hour > 0xF:
 							Close = true;
 							continue;
