@@ -16,4 +16,8 @@
 		Semiannual = 0x78,
 		Annual = 0xF0
 	}
+	public enum News
+	{
+		Naver, AjuNews
+	}
 }

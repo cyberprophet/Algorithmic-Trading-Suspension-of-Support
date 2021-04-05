@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -19,7 +18,6 @@ namespace ShareInvest.Naver
 			try
 			{
 				var contents = new Stack<string>();
-				var context = string.Empty;
 
 				if (url.Split('.')[0][^4..] is string uri && cafe.Equals(uri) is false && post.Equals(uri) is false)
 				{
@@ -30,63 +28,41 @@ namespace ShareInvest.Naver
 					await Task.Delay(0x200);
 					driver.Manage().Window.FullScreen();
 
-					switch (uri)
-					{
-						case blog:
-							if (driver.FindElement(By.TagName(frame)) is IWebElement web)
-							{
-								var ds = driver.SwitchTo().Frame(web);
-
-								foreach (var ct in ds.FindElements(By.Id($"post-view{url.Split('/')[^1]}")))
+					if (Enum.TryParse(url.Split('.')[1], contents.Count == 0, out Interface.KRX.News news))
+						switch (news)
+						{
+							case Interface.KRX.News.Naver:
+								if (blog.Equals(uri) && driver.FindElement(By.TagName(frame)) is IWebElement web)
 								{
-									contents.Push(ds.Title.Split(':')[0].Replace("..", string.Empty).Trim());
-									context = ct.Text;
-								}
-							}
-							break;
+									var ds = driver.SwitchTo().Frame(web);
 
-						default:
-							context = driver.PageSource;
-							break;
-					}
-					if (string.IsNullOrEmpty(context) is false)
-						foreach (var str in new Regex(@"[-“”‘’…‧~!@#$%^&*()_+|<>?:;{}\]→[.,·'""+=`/\n\r\t\v\s\b]").Split(new Regex("<[^>]+>", RegexOptions.IgnoreCase).Replace(new Regex("<(script|style)[^>]*>[\\s\\S]*?</\\1>").Replace(context, string.Empty), string.Empty)))
-							if (string.IsNullOrWhiteSpace(str) is false && str.Length > 1 && Array.Exists(str.ToCharArray(), o => char.IsLetter(o)))
-							{
-								var remove = new Queue<char>();
-								var regex = str.Replace("아주경제", string.Empty).Replace("\r\n", string.Empty).Replace("nbsp", string.Empty).Trim();
-
-								foreach (var symbol in str.ToCharArray())
-									if (char.IsLetterOrDigit(symbol) is false)
-										remove.Enqueue(symbol);
-
-								while (remove.TryDequeue(out char symbol))
-									regex = regex.Replace(symbol.ToString(), string.Empty);
-
-								foreach (Match match in new Regex("(은|는|이|가|에|께|의|을|를|와|과|습니|입니|님)").Matches(regex))
-									switch (match.Value)
+									foreach (var ct in ds.FindElements(By.Id($"post-view{url.Split('/')[^1]}")))
 									{
-										case "습니":
-											if (match.Index == regex.Length - 3)
-												regex = regex.Remove(match.Index - 1);
+										var title = ds.Title.Split(':')[0].Replace("..", string.Empty).Trim();
+										contents.Push(title);
+										contents.Push(ct.Text);
 
-											break;
-
-										case "입니":
-											if (match.Index == regex.Length - 3)
-												regex = regex.Remove(match.Index);
-
-											break;
-
-										default:
-											if (match.Index == regex.Length - 1)
-												regex = regex.Replace(match.Value, string.Empty);
-
-											break;
+										if (Base.IsDebug)
+											Base.SendMessage(GetType(), title, ct.Text, news);
 									}
-								if (regex.Length > 1)
-									contents.Push(regex);
-							}
+								}
+								break;
+
+							case Interface.KRX.News.AjuNews:
+								foreach (var div in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^1]}']").FindElements(By.TagName("div")))
+								{
+									var text = Regex.Replace(div.Text, "(\\(|\\[)사진[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline);
+
+									if (string.IsNullOrEmpty(text) is false)
+									{
+										contents.Push(text);
+
+										if (Base.IsDebug)
+											Base.SendMessage(GetType(), text, news);
+									}
+								}
+								break;
+						}
 					new Actions(driver).SendKeys(Keys.Escape).Perform();
 				}
 				if (contents.Count > 0)

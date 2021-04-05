@@ -49,6 +49,7 @@ namespace ShareInvest
 					}
 					log = Path.Combine(Repository.R, "Log.txt");
 					script = @"C:\R\R-4.0.4\bin\x64\rscript --verbose ";
+					except = new[] { "조금씩", "단기적", "오늘", "전문" };
 					keywords = new BackgroundWorker();
 					server = GoblinBat.GetInstance(key);
 				}
@@ -252,21 +253,28 @@ namespace ShareInvest
 								}
 						var regex = new Regex("(\\)|\\(|/|,|&|＆)");
 						var search = new Dictionary<string, string>();
+						var exist = new List<string>();
 						using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), false))
 							foreach (var param in list)
 								if (param.Name.Split(' ').Length == 1 && param.Name[^1] is not '우' && (param.Name[^1] is '호' && char.IsDigit(param.Name[^2])) is false && param.Name[^1] is not 'B' && param.Name[^1] is not ')' && param.Name.EndsWith("스팩") is false)
-									sw.WriteLine(string.Concat(param.Name.Replace("(Reg.S)", string.Empty), '\t', "ncn"));
-
+								{
+									var code = param.Name.Replace("(Reg.S)", string.Empty);
+									sw.WriteLine(string.Concat(code, '\t', "ncn"));
+									exist.Add(code);
+								}
 						foreach (var name in from o in enumerable select o.Name)
 							foreach (var separator in regex.Split(name))
 								if (regex.IsMatch(separator) is false && string.IsNullOrEmpty(separator) is false)
 								{
 									if (Array.Exists(exception, o => separator.EndsWith(o)) is false)
 									{
-										using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), true))
-											sw.WriteLine(string.Concat(separator.Replace(" ", string.Empty), '\t', "ncn"));
+										var theme = separator.Replace(" ", string.Empty);
 
-										search[separator.Replace(" ", string.Empty)] = name;
+										using (var sw = new StreamWriter(Path.Combine(directory, "Codes.csv"), true))
+											sw.WriteLine(string.Concat(theme, '\t', "ncn"));
+
+										search[theme] = name;
+										exist.Add(theme);
 									}
 									if (separator.Split(' ') is string[] ws && ws.Length > 1)
 										foreach (var tn in ws)
@@ -276,13 +284,16 @@ namespace ShareInvest
 													sw.WriteLine(string.Concat(tn, '\t', "ncn"));
 
 												search[tn] = name;
+												exist.Add(tn);
 											}
 								}
+						Exist = exist.ToArray();
+
 						foreach (var theme in enumerable)
 						{
 							try
 							{
-								var keywords = new Queue<StringBuilder>();
+								var keywords = new Queue<string>();
 								var json = string.Empty;
 
 								if (await api.GetConfirmAsync(theme) is Url url)
@@ -291,14 +302,9 @@ namespace ShareInvest
 										if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(item), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response)
 											foreach (var kv in response.OrderBy(o => Guid.NewGuid()))
 												if (await new Naver.Search(key).BrowseTheSite(kv.Key) is Stack<string> stack)
-												{
-													var sb = new StringBuilder();
-
 													while (stack.TryPop(out string text))
-														sb.Append(text).Append('\n');
+														keywords.Enqueue(text);
 
-													keywords.Enqueue(sb.Remove(sb.Length - 1, 1));
-												}
 									json = string.IsNullOrEmpty(url.Json) ? string.Empty : url.Json;
 								}
 								if (keywords.Count > 0)
@@ -548,7 +554,7 @@ namespace ShareInvest
 			}
 			(sender as BackgroundWorker).Dispose();
 		}
-		void WorkerProgress<T>(T param, Queue<StringBuilder> enumerable, string json) where T : class
+		void WorkerProgress<T>(T param, Queue<string> enumerable, string json) where T : class
 		{
 			string fn, content;
 
@@ -562,10 +568,10 @@ namespace ShareInvest
 				default:
 					return;
 			}
-			while (enumerable.TryDequeue(out StringBuilder sb))
+			while (enumerable.TryDequeue(out string str))
 				using (var sw = new StreamWriter(Path.Combine(Repository.R, string.Concat(fn, ".txt")), true))
-					if (string.IsNullOrEmpty(sb.ToString()) is false && sb.Length > 1)
-						sw.WriteLine(sb);
+					if (string.IsNullOrEmpty(str) is false)
+						sw.WriteLine(str);
 
 			new Task(async () =>
 			{
@@ -584,7 +590,7 @@ namespace ShareInvest
 						}
 						process.ErrorDataReceived -= SortOutputHandler;
 					}
-					var dictionary = string.IsNullOrEmpty(json) || json.StartsWith("{\"http") ? new Dictionary<string, int>() : JsonConvert.DeserializeObject<Dictionary<string, int>>(json);
+					Dictionary<string, int> dictionary = string.IsNullOrEmpty(json) || json.StartsWith("{\"http") ? new Dictionary<string, int>() : JsonConvert.DeserializeObject<Dictionary<string, int>>(json), storage = new();
 
 					if (dictionary.Count > 0)
 					{
@@ -592,8 +598,10 @@ namespace ShareInvest
 							if (dictionary.Remove(kv.Key))
 								continue;
 
+						var division = dictionary.Min(o => o.Value);
+
 						foreach (var kv in dictionary)
-							dictionary[kv.Key] = kv.Value - 1;
+							dictionary[kv.Key] = kv.Value / division;
 					}
 					using (var process = new Process { StartInfo = StartInfo })
 					{
@@ -608,33 +616,50 @@ namespace ShareInvest
 									var param = line.Split(',');
 
 									if (int.TryParse(param[^1], out int num))
-									{
-										if (dictionary.TryGetValue(param[0], out int count))
-											dictionary[param[0]] = count + num - 1;
-
-										else
-											dictionary[param[0]] = num;
-									}
+										storage[param[0]] = num;
 								}
 							}
-						int index = 0, division;
-						var enumerable = dictionary.OrderByDescending(o => o.Value).Take(0x40);
-						division = enumerable.Min(o => o.Value);
+						foreach (var kv in storage)
+						{
+							string key = Regex.Replace(kv.Key, @"[^a-zA-Z0-9가-힣]", string.Empty, RegexOptions.Singleline);
+
+							foreach (Match match in new Regex("(은|는|이|가|에|께|의|을|를|와|과|습니|입니|님)").Matches(key))
+								switch (match.Value)
+								{
+									case "습니" or "입니":
+										key = string.Empty;
+										continue;
+
+									default:
+										if (match.Index == key.Length - match.Value.Length && Array.Exists(Exist, o => o.Equals(key)) is false)
+											key = key.Replace(match.Value, string.Empty);
+
+										break;
+								}
+							if (Array.Exists(except, o => o.Equals(key)))
+								key = string.Empty;
+
+							if (string.IsNullOrEmpty(key) is false)
+							{
+								if (dictionary.TryGetValue(key, out int count))
+									dictionary[key] = count + kv.Value;
+
+								else
+									dictionary[key] = kv.Value;
+							}
+						}
+						var index = 0;
 						process.ErrorDataReceived += SortOutputHandler;
 
-						foreach (var kv in enumerable)
-							if (kv.Value > 1 && index < 0x40 && division > 0)
+						foreach (var kv in dictionary.OrderByDescending(o => o.Value).Take(0x40))
+							using (var sw = new StreamWriter(tags, index > 0))
 							{
-								using (var sw = new StreamWriter(tags, index > 0))
+								if (index++ == 0)
 								{
-									if (index++ == 0)
-									{
-										sw.WriteLine(string.Concat("word", ',', "freq"));
-										dictionary.Clear();
-									}
-									sw.WriteLine(string.Concat(kv.Key, ',', kv.Value / division));
+									sw.WriteLine(string.Concat("word", ',', "freq"));
+									dictionary.Clear();
 								}
-								dictionary[kv.Key] = kv.Value / division;
+								sw.WriteLine(string.Concat(kv.Key, ',', kv.Value));
 							}
 						if (await api.PutContextAsync(DateTime.Now, param, dictionary) is > 0 && process.Start())
 						{
@@ -769,6 +794,10 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		string[] Exist
+		{
+			get; set;
+		}
 		const string data = "data-for";
 		const string html = "html";
 		const string tags = "Tags.R";
@@ -778,6 +807,7 @@ namespace ShareInvest
 		readonly string log;
 		readonly string key;
 		readonly string script;
+		readonly string[] except;
 		readonly API api;
 		readonly Pipe pipe;
 		readonly Random random;
