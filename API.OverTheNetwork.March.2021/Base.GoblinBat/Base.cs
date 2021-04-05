@@ -224,6 +224,7 @@ namespace ShareInvest
 		public static ConsoleColor ChangeColor(double param) => param > 0 ? ConsoleColor.Red : ConsoleColor.Blue;
 		public static string[] Contents => new[] { "Name", "Rate", "Average", "Major Stocks", "Base Date" };
 		public static string[] Title => new[] { "테마명", "전일대비", "최근3일\n등락률", "주도주", "기준일" };
+		public static string[] Head => new[] { "Code", "Name", "Price", "Rate", "Theme" };
 		public static string[] Stocks => new[] { "Code", "Name", "Price", "Rate", "Volume", "Location" };
 		public static string[] Explicate => new[] { "종목코드ㆍ체결시각ㆍ경사도", "기업개요", "체결가격", "전일대비\n등락률", "전일대비\n거래증감률", "볼린저밴드（σ :２）" };
 		public static double Tax => tax;

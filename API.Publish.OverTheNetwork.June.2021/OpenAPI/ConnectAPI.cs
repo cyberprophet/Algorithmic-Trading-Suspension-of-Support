@@ -148,8 +148,8 @@ namespace ShareInvest.OpenAPI
 			}
 			Base.SendMessage(sender.GetType(), e.sMsg);
 		}
-		void OnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e) => Writer.WriteLine(string.Concat(e.nIndex, '|', e.strCodeList));
-		void OnReceiveRealCondition(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e) => Writer.WriteLine(string.Concat(e.strType, '|', e.sTrCode));
+		void OnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e) => Writer.WriteLine(string.Concat(e.nIndex < 0xA ? e.nIndex : Enum.GetName(typeof(Index), e.nIndex), '|', e.strCodeList));
+		void OnReceiveRealCondition(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e) => Writer.WriteLine(string.Concat(e.strType, '|', e.strConditionIndex, ';', e.sTrCode));
 		public ConnectAPI()
 		{
 			InitializeComponent();

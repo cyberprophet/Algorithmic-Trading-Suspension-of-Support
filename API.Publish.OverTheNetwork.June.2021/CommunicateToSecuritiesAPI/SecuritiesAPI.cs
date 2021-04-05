@@ -408,21 +408,18 @@ namespace ShareInvest
 					if (now.Hour is 8 or 0xF)
 						Reservation = new Reservation(balance.Item2, connect.Account);
 
-					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false)
+					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false && (api.IsAdministrator is false || Base.IsDebug))
+						worker.RunWorkerAsync(connect.Account);
+
+					if (api.IsAdministrator && api.IsServer || Base.IsDebug)
 					{
-						if (api.IsAdministrator is false || Base.IsDebug)
-							worker.RunWorkerAsync(connect.Account);
+						var hour = Base.CheckIfMarketDelay(now) ? 9 : 8;
+						var con = connect as OpenAPI.ConnectAPI;
 
-						if (api.IsAdministrator && api.IsServer || Base.IsDebug)
+						for (int i = 0; i < con.Conditions.Count; i++)
 						{
-							var hour = Base.CheckIfMarketDelay(now) ? 9 : 8;
-							var con = connect as OpenAPI.ConnectAPI;
-
-							for (int i = hour == now.Hour ? 1 : 0; i < (hour == now.Hour ? con.Conditions.Count : con.Conditions.Count - 1); i++)
-							{
-								name = con.Conditions[i];
-								con.SendCondition(i, name, name.Length == 2 ? 1 : 0);
-							}
+							name = con.Conditions[con.Conditions.Count - i - 1];
+							con.SendCondition(con.Conditions.Count - i - 1, name, name.Length == 2 || name.Length == 5 && name[^1] is '0' ? 1 : 0);
 						}
 					}
 					Cash = balance.Item2;

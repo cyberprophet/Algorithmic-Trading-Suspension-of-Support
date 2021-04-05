@@ -118,4 +118,10 @@ namespace ShareInvest.OpenAPI
 		하이얼펀드 = 9,
 		K_OTC = 30
 	}
+	enum Index
+	{
+		A = 0xA,
+		B = 0xB,
+		C = 0xC
+	}
 }

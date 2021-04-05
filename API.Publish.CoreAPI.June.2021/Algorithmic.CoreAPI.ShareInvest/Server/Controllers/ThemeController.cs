@@ -73,7 +73,7 @@ namespace ShareInvest.Controllers
 						});
 					return theme.ToArray();
 
-				case nameof(Pages.Intro):
+				case nameof(Catalog.Models.Intro):
 					var intro = new Queue<Catalog.Dart.Theme>();
 
 					foreach (var index in context.ThemeTags.AsNoTracking().Where(o => string.IsNullOrEmpty(o.ID) == false).Select(o => o.Index))

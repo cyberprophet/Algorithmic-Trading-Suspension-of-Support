@@ -24,21 +24,55 @@ namespace ShareInvest.Hubs
 				case Tuple<char, string> condition:
 					switch (condition.Item1)
 					{
-						case 'I' when Security.Conditions[^1].Add(condition.Item2):
+						case 'I' when condition.Item2.Split(';') is string[] insert && int.TryParse(insert[0], out int append):
+							if (append > 9)
+							{
+								if (Security.Conditions[append].Add(insert[^1]))
+									await SendMessage(new Message
+									{
+										Key = condition.Item1.ToString(),
+										Convey = insert[^1]
+									});
+								return;
+							}
+							if (Security.Conditions[9 - append].Add(insert[^1]))
+								Base.SendMessage(sender.GetType(), condition.Item1, insert[0], insert[^1]);
 
 							break;
 
-						case 'D' when Security.Conditions[^1].Remove(condition.Item2):
+						case 'D' when condition.Item2.Split(';') is string[] delete && int.TryParse(delete[0], out int remove):
+							if (remove > 9)
+							{
+								if (Security.Conditions[remove].Remove(delete[^1]))
+									await SendMessage(new Message
+									{
+										Key = condition.Item1.ToString(),
+										Convey = delete[^1]
+									});
+								return;
+							}
+							if (Security.Conditions[9 - remove].Remove(delete[^1]))
+								Base.SendMessage(sender.GetType(), condition.Item1, delete[0], delete[^1]);
 
 							break;
 
-						case > (char)47 and < (char)58:
+						case > (char)0x2F and < (char)0x3A:
 							var index = 9 - condition.Item1 + 0x30;
 							Security.Conditions[index] = new HashSet<string>();
 
 							foreach (var code in condition.Item2.Split(';'))
 								if (string.IsNullOrEmpty(code) is false && Security.Conditions[index].Add(code))
 									Base.SendMessage(GetType(), index, code);
+
+							break;
+
+						case > (char)0x40 and < (char)0x5B:
+							var real = 0xA - condition.Item1 + 0x41;
+							Security.Conditions[real] = new HashSet<string>();
+
+							foreach (var code in condition.Item2.Split(';'))
+								if (string.IsNullOrEmpty(code) is false && Security.Conditions[real].Add(code))
+									Base.SendMessage(GetType(), real, code);
 
 							break;
 					}

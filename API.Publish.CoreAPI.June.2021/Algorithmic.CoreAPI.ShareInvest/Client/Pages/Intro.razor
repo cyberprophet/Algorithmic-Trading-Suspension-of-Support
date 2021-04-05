@@ -10,8 +10,8 @@
 					@foreach (var kv in IsClick)
 					{
 						<td class="click">
-							<button class="button" title="@((DateTime.UnixEpoch.Equals(Initialize[kv.Key]) ? Initialize[1] : Initialize[kv.Key]).ToLongDateString())" disabled="@kv.Value" @onclick="(e => OnClick(kv.Key, e))">
-								@(DateTime.UnixEpoch.Equals(Initialize[kv.Key]) ? "Tag" : (Initialize[kv.Key].Day).ToString("D2"))
+							<button class="button" title="@((DateTime.UnixEpoch.Equals(Initialize[kv.Key]) ? (Initialize[^3].Hour > 0x15 ? Initialize[^3] : Initialize[^4]) : Initialize[kv.Key]).ToLongDateString())" disabled="@kv.Value" @onclick="(e => OnClick(kv.Key, e))">
+								@(DateTime.UnixEpoch.Equals(Initialize[kv.Key]) ? "Tag" : (Initialize.Length - 2 == kv.Key ? "RT" : (Initialize[kv.Key].Day).ToString("D2")))
 							</button>
 						</td>
 					}
@@ -39,21 +39,134 @@
 						}
 					</p>
 				}
-				else if (kv.Key == Initialize.Length - 2)
+				else if (kv.Key == Initialize.Length - 2 && Close)
 				{
-					if (Close)
-						continue;
-
-					else
-					{
-						<p><em>Loading...</em></p>
-					}
+					continue;
 				}
 				else
 				{
-					if (Conditions is List<Catalog.Models.Intro>[] && Conditions[kv.Key] is List<Catalog.Models.Intro>)
+					if (Conditions is List<Catalog.Models.Intro>[] && Conditions[kv.Key] is List<Catalog.Models.Intro> && Conditions[kv.Key].Count > 0)
 					{
-						if (Conditions[kv.Key].Count > 0)
+						if (kv.Key == Initialize.Length - 2)
+						{
+							<table class="table">
+								<thead>
+									<tr>
+										@foreach (var head in Base.Head)
+										{
+											var index = Array.FindIndex(Base.Head, o => o.Equals(head));
+
+											@if (index is 0 or 2 or 3)
+											{
+												<th>
+													<div>
+														@head
+
+														@if (IsSort.TryGetValue(head, out bool sort) && sort)
+														{
+															<span class="oi_search oi oi-sort-ascending" aria-hidden="true" @onclick="e => OnClick(head, kv.Key, e)" />
+														}
+														else
+														{
+															<span class="oi_search oi oi-sort-descending" aria-hidden="true" @onclick="e => OnClick(head, kv.Key, e)" />
+														}
+													</div>
+												</th>
+											}
+											else if (index is 1)
+											{
+												<th colspan="2" class="head">
+													<div>
+														@head
+
+														@if (IsSort.TryGetValue(head, out bool sort) && sort)
+														{
+															<span class="oi_search oi oi-sort-ascending" aria-hidden="true" @onclick="e => OnClick(head, kv.Key, e)" />
+														}
+														else
+														{
+															<span class="oi_search oi oi-sort-descending" aria-hidden="true" @onclick="e => OnClick(head, kv.Key, e)" />
+														}
+													</div>
+												</th>
+											}
+											else
+											{
+												<th colspan="2" class="head">
+													<div>@head</div>
+												</th>
+											}
+										}
+									</tr>
+								</thead>
+								<tbody>
+									@foreach (var intro in Conditions[kv.Key])
+									{
+										var exist = Stocks.TryGetValue(intro.Code, out int current);
+										var parse = int.TryParse(intro.Price, out int price);
+										var mark = exist ? current : price;
+										var rate = exist ? (current > price ? current / (double)price - 1 : 1 - price / (double)current) : 0;
+										Sort[intro.Code] = new Tuple<int, double>(mark, rate);
+
+										<tr>
+											<td title="Code">
+												<div>
+													@intro.Code
+												</div>
+											</td>
+											<td title="Name" colspan="2">
+												<div class="name">
+													<a href="@Base.GetUrl(intro.Code)" target="_blank">
+														@intro.Name
+													</a>
+													<a href="@Base.GetUrl(new[] { intro.Name, "주식", "테마", "무료" })" target="_blank">
+														<span class="oi_search oi oi-magnifying-glass" aria-hidden="true" />
+													</a>
+												</div>
+											</td>
+											<td title="Current">
+												<div>@mark.ToString("N0")</div>
+											</td>
+											<td title="Rate">
+												@if (rate > 0)
+												{
+													if (current > price)
+													{
+														<div class="red">@rate.ToString("P3")</div>
+													}
+													else if (price > current)
+													{
+														<div class="blue">@rate.ToString("P3")</div>
+													}
+												}
+											</td>
+											<td title="Theme" colspan="2">
+												@if (string.IsNullOrEmpty(intro.Theme) is false)
+												{
+													<div class="name">
+														@intro.Theme
+														<a href="/tags?index=@intro.Index&name=@System.Web.HttpUtility.UrlEncode(intro.Theme)&im=@System.Web.HttpUtility.UrlEncode(User)" target="_blank">
+															<span class="oi_search oi oi-magnifying-glass" aria-hidden="true" />
+														</a>
+													</div>
+												}
+											</td>
+										</tr>
+										@if (string.IsNullOrEmpty(intro.Title) is false)
+										{
+											<tr>
+												<td title="Overview" colspan="7">
+													<div class="overview">
+														@intro.Title.Replace(". ", ".\n")
+													</div>
+												</td>
+											</tr>
+										}
+									}
+								</tbody>
+							</table>
+						}
+						else
 						{
 							<table class="table">
 								<thead>
@@ -141,10 +254,6 @@
 									}
 								</tbody>
 							</table>
-						}
-						else
-						{
-							<p><em>Empty...</em></p>
 						}
 					}
 					else

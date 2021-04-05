@@ -43,11 +43,6 @@ namespace ShareInvest.Pages
 			}
 		}
 		protected internal bool IsConnected => Hub.State == HubConnectionState.Connected;
-		[Inject]
-		protected internal NavigationManager Manager
-		{
-			get; set;
-		}
 		protected internal List<Tuple<uint, string, string>> Messages
 		{
 			get; private set;
@@ -75,6 +70,11 @@ namespace ShareInvest.Pages
 		}
 		[Inject]
 		IJSRuntime Runtime
+		{
+			get; set;
+		}
+		[Inject]
+		NavigationManager Manager
 		{
 			get; set;
 		}

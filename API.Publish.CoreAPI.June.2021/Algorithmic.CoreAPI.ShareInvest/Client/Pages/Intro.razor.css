@@ -16,12 +16,27 @@
 	width: auto
 }
 
+.head
+{
+	text-align: center
+}
+
 .name
 {
 	display: block;
 	font-weight: bolder;
 	white-space: nowrap;
 	text-align: center
+}
+
+.red
+{
+	color: red
+}
+
+.blue
+{
+	color: blue
 }
 
 .middle

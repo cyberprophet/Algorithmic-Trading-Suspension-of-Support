@@ -21,11 +21,6 @@ namespace ShareInvest.Pages
 			await Hub.DisposeAsync();
 			await Hermes.DisposeAsync();
 		}
-		[Inject]
-		protected internal NavigationManager Manager
-		{
-			get; set;
-		}
 		protected internal Dictionary<Tuple<string, string>, Catalog.Models.Balance> Balance
 		{
 			get; private set;
@@ -119,6 +114,11 @@ namespace ShareInvest.Pages
 			get; set;
 		}
 		HubConnection Hermes
+		{
+			get; set;
+		}
+		[Inject]
+		NavigationManager Manager
 		{
 			get; set;
 		}

@@ -30,14 +30,14 @@ namespace ShareInvest.Shared
 				await Hub.StartAsync();
 			}
 		}
-		[Inject]
-		protected internal NavigationManager Manager
-		{
-			get; set;
-		}
 		protected internal string Message
 		{
 			get; private set;
+		}
+		[Inject]
+		NavigationManager Manager
+		{
+			get; set;
 		}
 		HubConnection Hub
 		{
