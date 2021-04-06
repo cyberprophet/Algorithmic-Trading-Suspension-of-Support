@@ -74,7 +74,7 @@ namespace ShareInvest.Pages
 				if (Conditions is null)
 					Conditions = new List<Catalog.Models.Intro>[Initialize.Length - 1];
 
-				if (Conditions[index] is null || Conditions[index].Count == 0)
+				if (Conditions[index] is null || Conditions[index].Count == 0 || index == 9)
 				{
 					Conditions[index] = new List<Catalog.Models.Intro>();
 
@@ -108,12 +108,12 @@ namespace ShareInvest.Pages
 						if (IsSort[name])
 						{
 							foreach (var code in from o in Sort orderby o.Value.Item1 select o.Key)
-								if (model.Find(o => o.Code.Equals(code)) is Catalog.Models.Intro ps)
+								if (string.IsNullOrEmpty(code) is false && model.Find(o => o.Code.Equals(code)) is Catalog.Models.Intro ps)
 									list.Add(ps);
 						}
 						else
 							foreach (var code in from o in Sort orderby o.Value.Item1 descending select o.Key)
-								if (model.Find(o => o.Code.Equals(code)) is Catalog.Models.Intro ps)
+								if (string.IsNullOrEmpty(code) is false && model.Find(o => o.Code.Equals(code)) is Catalog.Models.Intro ps)
 									list.Add(ps);
 
 						break;
@@ -124,12 +124,12 @@ namespace ShareInvest.Pages
 						if (IsSort[name])
 						{
 							foreach (var code in from o in Sort orderby o.Value.Item2 select o.Key)
-								if (model.Find(o => o.Code.Equals(code)) is Catalog.Models.Intro ps)
+								if (string.IsNullOrEmpty(code) is false && model.Find(o => o.Code.Equals(code)) is Catalog.Models.Intro ps)
 									list.Add(ps);
 						}
 						else
 							foreach (var code in from o in Sort orderby o.Value.Item2 descending select o.Key)
-								if (model.Find(o => o.Code.Equals(code)) is Catalog.Models.Intro ps)
+								if (string.IsNullOrEmpty(code) is false && model.Find(o => o.Code.Equals(code)) is Catalog.Models.Intro ps)
 									list.Add(ps);
 
 						break;
@@ -243,26 +243,11 @@ namespace ShareInvest.Pages
 		{
 			for (int i = 0; i < Initialize.Length; i++)
 			{
-				if (i == Initialize.Length - 2 && render is false)
+				if (i == Initialize.Length - 2 && render is false && (Initialize[i].DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Initialize[i].Hour is < 8 or > 0xF || Array.Exists(Base.Holidays, o => o.Equals(Initialize[i].ToString(Base.DateFormat)))))
 				{
-					var now = DateTime.Now;
+					Close = true;
 
-					switch (Initialize[i].DayOfWeek)
-					{
-						case DayOfWeek.Saturday or DayOfWeek.Sunday:
-						case DayOfWeek.Monday when now.Hour < 8:
-							Close = true;
-							continue;
-
-						default:
-							if (now.Hour > 0xF || Array.Exists(Base.Holidays, o => o.Equals(Initialize[i].ToString(Base.DateFormat)) || o.Equals(Initialize[i].AddHours(-8).ToString(Base.DateFormat))))
-							{
-								Close = true;
-
-								continue;
-							}
-							break;
-					}
+					continue;
 				}
 				IsClick[i] = false;
 			}

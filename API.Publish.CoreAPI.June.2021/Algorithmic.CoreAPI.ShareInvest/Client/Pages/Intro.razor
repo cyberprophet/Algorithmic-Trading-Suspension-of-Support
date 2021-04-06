@@ -102,65 +102,68 @@
 								<tbody>
 									@foreach (var intro in Conditions[kv.Key])
 									{
-										var exist = Stocks.TryGetValue(intro.Code, out int current);
-										var parse = int.TryParse(intro.Price, out int price);
-										var mark = exist ? current : price;
-										var rate = exist ? (current > price ? current / (double)price - 1 : 1 - price / (double)current) : 0;
-										Sort[intro.Code] = new Tuple<int, double>(mark, rate);
+										@if (string.IsNullOrEmpty(intro.Code) is false)
+										{
+											var exist = Stocks.TryGetValue(intro.Code, out int current);
+											var parse = int.TryParse(intro.Price, out int price);
+											var mark = exist ? current : price;
+											var rate = exist ? (current > price ? current / (double)price - 1 : 1 - price / (double)current) : 0;
+											Sort[intro.Code] = new Tuple<int, double>(mark, rate);
 
-										<tr>
-											<td title="Code">
-												<div>
-													@intro.Code
-												</div>
-											</td>
-											<td title="Name" colspan="2">
-												<div class="name">
-													<a href="@Base.GetUrl(intro.Code)" target="_blank">
-														@intro.Name
-													</a>
-													<a href="@Base.GetUrl(new[] { intro.Name, "주식", "테마", "무료" })" target="_blank">
-														<span class="oi_search oi oi-magnifying-glass" aria-hidden="true" />
-													</a>
-												</div>
-											</td>
-											<td title="Current">
-												<div>@mark.ToString("N0")</div>
-											</td>
-											<td title="Rate">
-												@if (rate > 0)
-												{
-													if (current > price)
-													{
-														<div class="red">@rate.ToString("P3")</div>
-													}
-													else if (price > current)
-													{
-														<div class="blue">@rate.ToString("P3")</div>
-													}
-												}
-											</td>
-											<td title="Theme" colspan="2">
-												@if (string.IsNullOrEmpty(intro.Theme) is false)
-												{
+											<tr>
+												<td title="Code">
+													<div>
+														@intro.Code
+													</div>
+												</td>
+												<td title="Name" colspan="2">
 													<div class="name">
-														@intro.Theme
-														<a href="/tags?index=@intro.Index&name=@System.Web.HttpUtility.UrlEncode(intro.Theme)&im=@System.Web.HttpUtility.UrlEncode(User)" target="_blank">
+														<a href="@Base.GetUrl(intro.Code)" target="_blank">
+															@intro.Name
+														</a>
+														<a href="@Base.GetUrl(new[] { intro.Name, "주식", "테마", "무료" })" target="_blank">
 															<span class="oi_search oi oi-magnifying-glass" aria-hidden="true" />
 														</a>
 													</div>
-												}
-											</td>
-										</tr>
-										@if (string.IsNullOrEmpty(intro.Title) is false)
-										{
-											<tr>
-												<td title="Overview" colspan="7">
-													<div class="overview">
-														@intro.Title.Replace(". ", ".\n")
-													</div>
+												</td>
+												<td title="Current">
+													<div>@mark.ToString("N0")</div>
+												</td>
+												<td title="Rate">
+													@if (rate > 0)
+													{
+														if (current > price)
+														{
+															<div class="red">@rate.ToString("P2")</div>
+														}
+														else if (price > current)
+														{
+															<div class="blue">@rate.ToString("P2")</div>
+														}
+													}
+												</td>
+												<td title="Theme" colspan="2">
+													@if (string.IsNullOrEmpty(intro.Theme) is false)
+													{
+														<div class="name">
+															@intro.Theme
+															<a href="/tags?index=@intro.Index&name=@System.Web.HttpUtility.UrlEncode(intro.Theme)&im=@System.Web.HttpUtility.UrlEncode(User)" target="_blank">
+																<span class="oi_search oi oi-magnifying-glass" aria-hidden="true" />
+															</a>
+														</div>
+													}
 												</td>
 											</tr>
+											@if (string.IsNullOrEmpty(intro.Title) is false)
+											{
+												<tr>
+													<td title="Overview" colspan="7">
+														<div class="overview">
+															@intro.Title.Replace(". ", ".\n")
+														</div>
+													</td>
+												</tr>
+											}
 										}
 									}
 								</tbody>
