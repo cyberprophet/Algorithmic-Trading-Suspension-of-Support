@@ -135,8 +135,12 @@ namespace ShareInvest.Client
 			{
 				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(param), Method.GET), source.Token);
 
-				if (HttpStatusCode.OK.Equals(response.StatusCode))
-					return JsonConvert.DeserializeObject<Url>(response.Content);
+				return response.StatusCode switch
+				{
+					HttpStatusCode.OK => JsonConvert.DeserializeObject<Url>(response.Content),
+					HttpStatusCode.NoContent => (int)HttpStatusCode.NoContent,
+					_ => null
+				};
 			}
 			catch (Exception ex)
 			{

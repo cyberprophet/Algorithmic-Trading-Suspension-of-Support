@@ -49,7 +49,7 @@ namespace ShareInvest
 					}
 					log = Path.Combine(Repository.R, "Log.txt");
 					script = @"C:\R\R-4.0.4\bin\x64\rscript --verbose ";
-					except = new[] { "조금씩", "단기적", "오늘", "전문" };
+					except = new[] { "조금씩", "단기적", "오늘", "전문", "오토핫키", "리딩방", "지난달" };
 					keywords = new BackgroundWorker();
 					server = GoblinBat.GetInstance(key);
 				}
@@ -237,7 +237,7 @@ namespace ShareInvest
 									return;
 								}
 						if (Base.IsDebug is false)
-							foreach (var package in new[] { "processx", "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
+							foreach (var package in new[] { "processx", "multilinguer", "cli", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
 								using (var process = new Process { StartInfo = StartInfo })
 								{
 									process.ErrorDataReceived += SortOutputHandler;
@@ -294,10 +294,10 @@ namespace ShareInvest
 							try
 							{
 								var keywords = new Queue<string>();
-								var json = string.Empty;
+								var res = await api.GetConfirmAsync(theme);
+								var json = res is Url url && string.IsNullOrEmpty(url.Json) is false ? url.Json : string.Empty;
 
-								if (await api.GetConfirmAsync(theme) is Url url)
-								{
+								if (res is Url or 0xCC)
 									foreach (var item in from o in search where o.Value.Equals(theme.Name) select o.Key)
 										if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(item), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response)
 											foreach (var kv in response.OrderBy(o => Guid.NewGuid()))
@@ -305,8 +305,6 @@ namespace ShareInvest
 													while (stack.TryPop(out string text))
 														keywords.Enqueue(text);
 
-									json = string.IsNullOrEmpty(url.Json) ? string.Empty : url.Json;
-								}
 								if (keywords.Count > 0)
 									WorkerProgress(theme, keywords, json);
 							}
@@ -660,6 +658,7 @@ namespace ShareInvest
 									dictionary.Clear();
 								}
 								sw.WriteLine(string.Concat(kv.Key, ',', kv.Value));
+								dictionary[kv.Key] = kv.Value;
 							}
 						if (await api.PutContextAsync(DateTime.Now, param, dictionary) is > 0 && process.Start())
 						{

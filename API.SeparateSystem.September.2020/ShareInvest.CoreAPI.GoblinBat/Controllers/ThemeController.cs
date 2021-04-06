@@ -39,7 +39,7 @@ namespace ShareInvest.Controllers
 			}
 			return BadRequest();
 		}
-		[HttpGet(Security.routeStocks), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK)]
+		[HttpGet(Security.routeStocks), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status204NoContent)]
 		public async Task<IActionResult> GetContextAsync(string key, string code)
 		{
 			try
@@ -51,8 +51,13 @@ namespace ShareInvest.Controllers
 						break;
 
 					default:
-						if (await context.Url.FindAsync(key) is Models.Url url && code.Equals(url.Record) is false)
-							return Ok(url);
+						if (await context.Url.FindAsync(key) is Models.Url url)
+						{
+							if (code.Equals(url.Record) is false)
+								return Ok(url);
+						}
+						else
+							return NoContent();
 
 						break;
 				}
