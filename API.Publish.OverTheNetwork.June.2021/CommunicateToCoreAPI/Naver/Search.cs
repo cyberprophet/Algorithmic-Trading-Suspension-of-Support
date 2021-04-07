@@ -19,7 +19,7 @@ namespace ShareInvest.Naver
 			{
 				var contents = new Stack<string>();
 
-				if (url.Split('.')[0][^4..] is string uri && cafe.Equals(uri) is false && post.Equals(uri) is false)
+				if (url.Split('.')[0][^4..] is string uri && cafe.Equals(uri) is false && post.Equals(uri) is false && Enum.TryParse(url.Split('.')[1], contents.Count == 0, out Interface.KRX.News news) && Interface.KRX.News.SEdaily.Equals(news) is false && Interface.KRX.News.MT.Equals(news) is false)
 				{
 					driver.Navigate().GoToUrl(url);
 					var timeout = driver.Manage().Timeouts();
@@ -28,142 +28,212 @@ namespace ShareInvest.Naver
 					await Task.Delay(0x200);
 					driver.Manage().Window.FullScreen();
 
-					if (Enum.TryParse(url.Split('.')[1], contents.Count == 0, out Interface.KRX.News news))
-						switch (news)
-						{
-							case Interface.KRX.News.Naver:
-								if (blog.Equals(uri) && driver.FindElement(By.TagName(frame)) is IWebElement web)
+					switch (news)
+					{
+						case Interface.KRX.News.Naver:
+							if (blog.Equals(uri) && driver.FindElement(By.TagName(frame)) is IWebElement web)
+							{
+								var ds = driver.SwitchTo().Frame(web);
+
+								foreach (var ct in ds.FindElements(By.Id($"post-view{url.Split('/')[^1]}")))
 								{
-									var ds = driver.SwitchTo().Frame(web);
+									var title = ds.Title.Split(':')[0].Replace("..", string.Empty).Trim();
+									contents.Push(title);
+									contents.Push(ct.Text);
 
-									foreach (var ct in ds.FindElements(By.Id($"post-view{url.Split('/')[^1]}")))
-									{
-										var title = ds.Title.Split(':')[0].Replace("..", string.Empty).Trim();
-										contents.Push(title);
-										contents.Push(ct.Text);
-
-										if (Base.IsDebug)
-											Base.SendMessage(news.GetType(), title, ct.Text, news);
-									}
+									if (Base.IsDebug)
+										Base.SendMessage(news.GetType(), title, ct.Text, news);
 								}
-								break;
+							}
+							break;
 
-							case Interface.KRX.News.AjuNews:
-								foreach (var path in driver.FindElementsByXPath($"//*[@id='{security.PathToContents[^1]}']"))
-									if (string.IsNullOrEmpty(path.Text) is false)
-									{
-										contents.Push(Regex.Replace(Regex.Replace(Regex.Replace(Regex.Replace(path.Text, "(\\(|\\[)사진[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)그래픽[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)자료[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)이미지[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline));
-
-										if (Base.IsDebug)
-											Base.SendMessage(news.GetType(), path.Text, news);
-									}
-									else
-										foreach (var div in path.FindElements(By.TagName("div")))
-											if (string.IsNullOrEmpty(div.Text) is false)
-											{
-												contents.Push(Regex.Replace(Regex.Replace(Regex.Replace(Regex.Replace(div.Text, "(\\(|\\[)사진[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)그래픽[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)자료[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)이미지[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline));
-
-												if (Base.IsDebug)
-													Base.SendMessage(news.GetType(), div.Text, news);
-											}
-								break;
-
-							case Interface.KRX.News.MK:
-								if (uri[1..].Equals("vip"))
+						case Interface.KRX.News.AjuNews:
+							foreach (var path in driver.FindElementsByXPath($"//*[@id='{security.PathToContents[^1]}']"))
+								if (string.IsNullOrEmpty(path.Text) is false)
 								{
-									foreach (var table in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^2]}']").FindElements(By.TagName("table")))
-										if (security.PathToContents[^3].Equals(table.GetAttribute("class")))
-											if (string.IsNullOrEmpty(table.Text) is false)
-											{
-												contents.Push(table.Text);
+									contents.Push(Regex.Replace(Regex.Replace(Regex.Replace(Regex.Replace(path.Text, "(\\(|\\[)사진[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)그래픽[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)자료[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)이미지[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline));
 
-												if (Base.IsDebug)
-													Base.SendMessage(news.GetType(), table.Text, news);
-											}
+									if (Base.IsDebug)
+										Base.SendMessage(news.GetType(), path.Text, news);
 								}
 								else
-									foreach (var div in driver.FindElementsByXPath($"//*[@id='{security.PathToContents[^2]}']"))
-									{
+									foreach (var div in path.FindElements(By.TagName("div")))
 										if (string.IsNullOrEmpty(div.Text) is false)
+										{
+											contents.Push(Regex.Replace(Regex.Replace(Regex.Replace(Regex.Replace(div.Text, "(\\(|\\[)사진[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)그래픽[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)자료[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline), "(\\(|\\[)이미지[^)\\]]*(\\)|])", string.Empty, RegexOptions.Singleline));
+
+											if (Base.IsDebug)
+												Base.SendMessage(news.GetType(), div.Text, news);
+										}
+							break;
+
+						case Interface.KRX.News.MK:
+							if (uri[1..].Equals("vip"))
+							{
+								foreach (var table in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^2]}']").FindElements(By.TagName("table")))
+									if (security.PathToContents[^3].Equals(table.GetAttribute("class")))
+										if (string.IsNullOrEmpty(table.Text) is false)
+										{
+											contents.Push(table.Text);
+
+											if (Base.IsDebug)
+												Base.SendMessage(news.GetType(), table.Text, news);
+										}
+							}
+							else
+								foreach (var div in driver.FindElementsByXPath($"//*[@id='{security.PathToContents[^2]}']"))
+								{
+									if (string.IsNullOrEmpty(div.Text) is false)
+										contents.Push(div.Text);
+
+									foreach (var p in div.FindElements(By.TagName("p")))
+										if (string.IsNullOrEmpty(p.Text) is false)
+										{
+											contents.Push(p.Text);
+
+											if (Base.IsDebug)
+												Base.SendMessage(news.GetType(), p.Text, news);
+										}
+									if (Base.IsDebug)
+										Base.SendMessage(news.GetType(), div.Text, news);
+								}
+							break;
+
+						case Interface.KRX.News.TheKPM:
+							foreach (var div in driver.FindElements(By.TagName("div")))
+								if (security.PathToContents[^1].Equals(div.GetAttribute(security.PathToContents[^5])) && string.IsNullOrEmpty(div.Text) is false)
+								{
+									var text = Regex.Replace(div.Text, "(<|\\[)[^>\\]]*(>|])", string.Empty, RegexOptions.Singleline);
+									contents.Push(text);
+
+									if (Base.IsDebug)
+										Base.SendMessage(news.GetType(), text, news);
+								}
+							break;
+
+						case Interface.KRX.News.EconoNews:
+							foreach (var p in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^1]}']").FindElements(By.TagName("p")))
+								if (string.IsNullOrEmpty(p.Text) is false)
+								{
+									contents.Push(p.Text);
+
+									if (Base.IsDebug)
+										Base.SendMessage(news.GetType(), p.Text, news);
+								}
+							break;
+
+						case Interface.KRX.News.Asiae:
+							foreach (var div in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^6]}']").FindElements(By.TagName("div")))
+								if (security.PathToContents[^1].Equals(div.GetAttribute(security.PathToContents[^5])))
+									foreach (var p in div.FindElements(By.TagName("p")))
+										if (string.IsNullOrEmpty(p.Text) is false)
+										{
+											contents.Push(p.Text);
+
+											if (Base.IsDebug)
+												Base.SendMessage(news.GetType(), p.Text, news);
+										}
+							break;
+
+						case Interface.KRX.News.WOWTV:
+							var wow = driver.FindElementByXPath($"//*[@id='{security.PathToContents[^7]}']").Text;
+
+							if (string.IsNullOrEmpty(wow) is false)
+							{
+								contents.Push(wow);
+
+								if (Base.IsDebug)
+									Base.SendMessage(news.GetType(), wow, news);
+							}
+							break;
+
+						case Interface.KRX.News.MTN:
+							var mtn = driver.FindElementByXPath($"//*[@id='{security.PathToContents[^4]}']").Text;
+
+							if (string.IsNullOrEmpty(mtn) is false)
+							{
+								contents.Push(mtn);
+
+								if (Base.IsDebug)
+									Base.SendMessage(news.GetType(), mtn, news);
+							}
+							break;
+
+						case Interface.KRX.News.Edaily:
+							foreach (var section in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^8]}']").FindElements(By.TagName("section")))
+								if (security.PathToContents[^9].Equals(section.GetAttribute("class")))
+									foreach (var div in section.FindElements(By.TagName("div")))
+										if (security.PathToContents[^1].Equals(div.GetAttribute(security.PathToContents[^5])) && string.IsNullOrEmpty(div.Text) is false)
+										{
 											contents.Push(div.Text);
 
-										foreach (var p in div.FindElements(By.TagName("p")))
-											if (string.IsNullOrEmpty(p.Text) is false)
-											{
-												contents.Push(p.Text);
+											if (Base.IsDebug)
+												Base.SendMessage(news.GetType(), div.Text, news);
+										}
+							break;
 
-												if (Base.IsDebug)
-													Base.SendMessage(news.GetType(), p.Text, news);
-											}
-										if (Base.IsDebug)
-											Base.SendMessage(news.GetType(), div.Text, news);
-									}
-								break;
+						case Interface.KRX.News.EToday:
+							foreach (var div in driver.FindElementByTagName("body").FindElements(By.TagName("div")))
+								if ("wrap".Equals(div.GetAttribute("class")))
+									foreach (var article in div.FindElements(By.TagName("article")))
+										if ("containerWrap".Equals(article.GetAttribute("class")))
+											foreach (var section in article.FindElements(By.TagName("div")))
+												if ("view_body_moduleWrap".Equals(section.GetAttribute("class")))
+													foreach (var item in section.FindElements(By.TagName("div")))
+														if (security.PathToContents[^1].Equals(item.GetAttribute(security.PathToContents[^5])))
+															foreach (var p in item.FindElements(By.TagName("p")))
+																if (string.IsNullOrEmpty(p.Text) is false)
+																{
+																	contents.Push(p.Text);
 
-							case Interface.KRX.News.TheKPM:
-								foreach (var div in driver.FindElements(By.TagName("div")))
-									if (security.PathToContents[^1].Equals(div.GetAttribute(security.PathToContents[^5])) && string.IsNullOrEmpty(div.Text) is false)
-									{
-										var text = Regex.Replace(div.Text, "(<|\\[)[^>\\]]*(>|])", string.Empty, RegexOptions.Singleline);
-										contents.Push(text);
+																	if (Base.IsDebug)
+																		Base.SendMessage(news.GetType(), p.Text, news);
+																}
+							break;
 
-										if (Base.IsDebug)
-											Base.SendMessage(news.GetType(), text, news);
-									}
-								break;
-
-							case Interface.KRX.News.EconoNews:
-								foreach (var p in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^1]}']").FindElements(By.TagName("p")))
-									if (string.IsNullOrEmpty(p.Text) is false)
-									{
-										contents.Push(p.Text);
-
-										if (Base.IsDebug)
-											Base.SendMessage(news.GetType(), p.Text, news);
-									}
-								break;
-
-							case Interface.KRX.News.Asiae:
-								foreach (var div in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^6]}']").FindElements(By.TagName("div")))
-									if (security.PathToContents[^1].Equals(div.GetAttribute(security.PathToContents[^5])))
-										foreach (var p in div.FindElements(By.TagName("p")))
-											if (string.IsNullOrEmpty(p.Text) is false)
-											{
-												contents.Push(p.Text);
-
-												if (Base.IsDebug)
-													Base.SendMessage(news.GetType(), p.Text, news);
-											}
-								break;
-
-							case Interface.KRX.News.MTN:
-								var mtn = driver.FindElementByXPath($"//*[@id='{security.PathToContents[^4]}']").Text;
-
-								if (string.IsNullOrEmpty(mtn) is false)
+						case Interface.KRX.News.NewsPim:
+							if (uri[^1] is 'm' && url.Split('.') is string[] www)
+							{
+								driver.Navigate().GoToUrl(string.Concat(www[0].Replace("m", nameof(www)), '.', www[1], '.', www[^1]));
+								timeout = driver.Manage().Timeouts();
+								timeout.ImplicitWait = TimeSpan.FromSeconds(0xC);
+								timeout.PageLoad = TimeSpan.FromSeconds(0xC);
+								await Task.Delay(0x200);
+							}
+							foreach (var p in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^0xA]}']").FindElements(By.TagName("p")))
+								if (string.IsNullOrEmpty(p.Text) is false)
 								{
-									contents.Push(mtn);
+									contents.Push(p.Text);
 
 									if (Base.IsDebug)
-										Base.SendMessage(news.GetType(), mtn, news);
+										Base.SendMessage(news.GetType(), p.Text, news);
 								}
-								break;
+							break;
 
-							case Interface.KRX.News.WOWTV:
-								var wow = driver.FindElementByXPath($"//*[@id='{security.PathToContents[^7]}']").Text;
+						case Interface.KRX.News.NewsTomato:
+							foreach (var rn_container in driver.FindElementByXPath($"//*[@id='{security.PathToContents[^0xB]}']").FindElements(By.TagName("div")))
+								if (nameof(rn_container).Equals(rn_container.GetAttribute("class")))
+									foreach (var article in rn_container.FindElements(By.TagName("article")))
+										foreach (var rn_scontent in article.FindElements(By.TagName("div")))
+											if (nameof(rn_scontent).Equals(rn_scontent.GetAttribute("class")))
+												foreach (var section in rn_scontent.FindElements(By.TagName("section")))
+													foreach (var rns_text in section.FindElements(By.TagName("div")))
+														if (nameof(rns_text).Equals(rns_text.GetAttribute("class")) && string.IsNullOrEmpty(rns_text.Text) is false)
+														{
+															contents.Push(rns_text.Text);
 
-								if (string.IsNullOrEmpty(wow) is false)
-								{
-									contents.Push(wow);
-
-									if (Base.IsDebug)
-										Base.SendMessage(news.GetType(), wow, news);
-								}
-								break;
-						}
+															if (Base.IsDebug)
+																Base.SendMessage(news.GetType(), rns_text.Text, news);
+														}
+							break;
+					}
 					new Actions(driver).SendKeys(Keys.Escape).Perform();
+
+					if (contents.Count > 0)
+						return contents;
 				}
-				if (contents.Count > 0)
-					return contents;
+				else if (Base.IsDebug)
+					Base.SendMessage(GetType(), url);
 			}
 			catch (Exception ex)
 			{

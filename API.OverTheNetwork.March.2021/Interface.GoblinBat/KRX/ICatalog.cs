@@ -18,6 +18,6 @@
 	}
 	public enum News
 	{
-		Naver, AjuNews, MK, EconoNews, MTN, TheKPM, Asiae, WOWTV
+		Naver, AjuNews, MK, EconoNews, MTN, TheKPM, Asiae, WOWTV, Edaily, SEdaily, EToday, NewsPim, MT, NewsTomato
 	}
 }
