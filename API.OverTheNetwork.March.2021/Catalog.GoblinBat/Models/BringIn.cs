@@ -18,6 +18,10 @@
 		{
 			get; set;
 		}
+		public string Theme
+		{
+			get; set;
+		}
 		public long Date
 		{
 			get; set;

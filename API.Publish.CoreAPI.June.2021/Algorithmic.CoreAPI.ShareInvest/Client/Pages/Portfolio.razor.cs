@@ -60,27 +60,29 @@ namespace ShareInvest.Pages
 				Bring = new BringIn[enumerable.Length];
 
 				for (int i = 0; i < enumerable.Length; i++)
-				{
-					Bring[i] = new BringIn
+					if (await OnReceiveContextAsync(enumerable[i].Code) is Exposure response)
 					{
-						Code = enumerable[i].Code,
-						Date = enumerable[i].Date,
-						Methods = enumerable[i].Methods,
-						Strategics = enumerable[i].Strategics,
-						Contents = await OnReceiveContextAsync(enumerable[i].Code)
-					};
-					if (Enum.TryParse(enumerable[i].Strategics, out Interface.Strategics strategics))
-						switch (strategics)
+						Bring[i] = new BringIn
 						{
-							case Interface.Strategics.Long_Position:
-								Enumerable[i] = JsonConvert.DeserializeObject<Catalog.LongPosition>(enumerable[i].Contents);
-								break;
+							Code = enumerable[i].Code,
+							Date = enumerable[i].Date,
+							Methods = enumerable[i].Methods,
+							Strategics = enumerable[i].Strategics,
+							Contents = response.Ratio,
+							Theme = response.Theme
+						};
+						if (Enum.TryParse(enumerable[i].Strategics, out Interface.Strategics strategics))
+							switch (strategics)
+							{
+								case Interface.Strategics.Long_Position:
+									Enumerable[i] = JsonConvert.DeserializeObject<Catalog.LongPosition>(enumerable[i].Contents);
+									break;
 
-							case Interface.Strategics.Scenario:
-								Enumerable[i] = JsonConvert.DeserializeObject<Catalog.Scenario>(enumerable[i].Contents);
-								break;
-						}
-				}
+								case Interface.Strategics.Scenario:
+									Enumerable[i] = JsonConvert.DeserializeObject<Catalog.Scenario>(enumerable[i].Contents);
+									break;
+							}
+					}
 			}
 		}
 		protected internal void OnReceiveTheChoiceItem(string sender, ChangeEventArgs e) => ChosenStrategics[sender] = e.Value as string;
@@ -205,7 +207,7 @@ namespace ShareInvest.Pages
 		{
 			get; set;
 		}
-		async Task<string> OnReceiveContextAsync(string code) => await Http.GetFromJsonAsync<string>(Crypto.Security.GetRoute("Exposure", code));
+		async Task<Exposure> OnReceiveContextAsync(string code) => await Http.GetFromJsonAsync<Exposure>(Crypto.Security.GetRoute(nameof(Exposure), code));
 		async Task<string> OnReceiveLogUserInformation()
 		{
 			var user = (await State).User;

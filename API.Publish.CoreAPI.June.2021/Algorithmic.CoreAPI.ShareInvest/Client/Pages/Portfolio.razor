@@ -25,6 +25,7 @@
 								<th scope="col">Name</th>
 								<th scope="col">Strategics</th>
 								<th scope="col">Modified Date</th>
+								<th scope="col">Theme</th>
 								<th scope="col">Exposure</th>
 								<th scope="col">Remove</th>
 							</TableHeader>
@@ -33,6 +34,7 @@
 								<th>@Codes.FirstOrDefault(o => o.Code.Equals(e.Code)).Name</th>
 								<td>@(int.TryParse(e.Strategics, out int number) ? Enum.GetName(typeof(Interface.Strategics), number).Replace("_", " ") : string.Empty)</td>
 								<td>@(new DateTime(e.Date))</td>
+								<th>@e.Theme</th>
 								<td>@(e.Contents.Length > 9 ? string.Empty : e.Contents)</td>
 								<td class="button_remove"><button class="button_remove_style" @onclick="(o => RequestTheDeletionOfHoldings(string.Concat(e.Methods, ';', e.Code), o))">apply</button></td>
 							</RowTemplate>

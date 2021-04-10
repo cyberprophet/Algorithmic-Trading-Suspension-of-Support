@@ -30,7 +30,7 @@ namespace ShareInvest.Client
 		public Maturity(dynamic param)
 		{
 			security = new Security(param);
-			client = new RestClient(security.Kinds)
+			client = new RestClient(param is string ? security.Kinds : security.Url)
 			{
 				Timeout = -1
 			};

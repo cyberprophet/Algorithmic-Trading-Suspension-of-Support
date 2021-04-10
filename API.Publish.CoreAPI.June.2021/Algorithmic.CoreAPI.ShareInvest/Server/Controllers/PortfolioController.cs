@@ -28,6 +28,7 @@ namespace ShareInvest.Controllers
 							Contents = sk.Contents,
 							Methods = sk.Methods,
 							Strategics = sk.Strategics,
+							Theme = string.Empty,
 							Date = sk.Date
 						});
 				if (stack.Count > 0)

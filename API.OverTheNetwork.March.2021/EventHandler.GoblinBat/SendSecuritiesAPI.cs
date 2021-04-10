@@ -46,7 +46,7 @@ namespace ShareInvest.EventHandler
 				switch (temp[4])
 				{
 					case "미래에셋대우":
-						exists = "미래대우";
+						exists = "미래에셋증";
 						break;
 
 					case "LG디스플레이":

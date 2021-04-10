@@ -19,6 +19,7 @@ namespace ShareInvest
 				Visible = false;
 				ShowIcon = false;
 				notifyIcon.Visible = true;
+				notifyIcon.Icon = Properties.Resources.comics_avengers_97500;
 			}
 			else if (Visible == false && ShowIcon == false && notifyIcon.Visible && WindowState.Equals(FormWindowState.Minimized))
 			{

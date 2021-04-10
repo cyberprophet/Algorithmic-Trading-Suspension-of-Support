@@ -49,7 +49,7 @@ namespace ShareInvest
 					}
 					log = Path.Combine(Repository.R, "Log.txt");
 					script = @"C:\R\R-4.0.4\bin\x64\rscript --verbose ";
-					except = new[] { "조금씩", "단기적", "오늘", "전문", "오토핫키", "리딩방", "지난달" };
+					except = new[] { "조금씩", "단기적", "오늘", "전문", "오토핫키", "리딩방", "지난달", "한편" };
 					keywords = new BackgroundWorker();
 					server = GoblinBat.GetInstance(key);
 				}
@@ -592,14 +592,16 @@ namespace ShareInvest
 
 					if (dictionary.Count > 0)
 					{
-						foreach (var kv in dictionary.Where(o => o.Value < 2))
-							if (dictionary.Remove(kv.Key))
-								continue;
+						var division = 0;
 
-						var division = dictionary.Min(o => o.Value);
+						foreach (var kv in dictionary.OrderBy(o => o.Value))
+							if (kv.Value > 1)
+							{
+								if (division == 0)
+									division = kv.Value;
 
-						foreach (var kv in dictionary)
-							dictionary[kv.Key] = kv.Value / division;
+								dictionary[kv.Key] = kv.Value / division;
+							}
 					}
 					using (var process = new Process { StartInfo = StartInfo })
 					{
@@ -614,7 +616,7 @@ namespace ShareInvest
 									var param = line.Split(',');
 
 									if (int.TryParse(param[^1], out int num))
-										storage[param[0]] = num;
+										storage[param[0]] = Array.Exists(Exist, o => o.Equals(key)) ? num * 3 : num;
 								}
 							}
 						foreach (var kv in storage)
@@ -637,7 +639,7 @@ namespace ShareInvest
 							if (Array.Exists(except, o => o.Equals(key)))
 								key = string.Empty;
 
-							if (string.IsNullOrEmpty(key) is false)
+							if (string.IsNullOrEmpty(key) is false && key.Length > 1)
 							{
 								if (dictionary.TryGetValue(key, out int count))
 									dictionary[key] = count + kv.Value;
