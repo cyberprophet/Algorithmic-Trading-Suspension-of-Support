@@ -61,7 +61,6 @@ namespace ShareInvest.XingAPI.Catalog
 			if (double.TryParse(temp[0x3E], out double transactionMutiplier) && transactionMutiplier != 0xA)
 				Base.SendMessage(refresh.Name, refresh.MaturityMarketCap, GetType());
 		}
-		protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
-			=> base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+		protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
 	}
 }

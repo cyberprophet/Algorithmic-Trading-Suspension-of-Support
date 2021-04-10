@@ -57,7 +57,6 @@ namespace ShareInvest.XingAPI.Catalog
 				Price = temp[1]
 			}));
 		}
-		protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
-			=> base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+		protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
 	}
 }

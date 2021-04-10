@@ -57,8 +57,7 @@ namespace ShareInvest.XingAPI.Catalog
 			Repeat = false;
 			Send?.Invoke(this, new SendSecuritiesAPI(new Tuple<string, string, string>(code[0], name[0], price[0])));
 		}
-		protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
-			=> base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+		protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
 		internal override void QueryExcute()
 		{
 			Repeat = true;
@@ -78,7 +77,7 @@ namespace ShareInvest.XingAPI.Catalog
 		{
 			get; set;
 		}
-		readonly string[] gubun = new string[] { "MF", "MO", "WK", "SF" };
+		readonly string[] gubun = new[] { "MF", "MO", "WK", "SF" };
 		public override event EventHandler<SendSecuritiesAPI> Send;
 	}
 }

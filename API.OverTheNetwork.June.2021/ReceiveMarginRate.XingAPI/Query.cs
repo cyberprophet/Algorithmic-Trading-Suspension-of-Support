@@ -39,11 +39,10 @@ namespace ShareInvest.XingAPI
 				else if (str.Contains(separator))
 					continue;
 
-				var temp = str.Split(',');
 				queue.Enqueue(new InBlock
 				{
 					Block = block,
-					Field = temp[2],
+					Field = str.Split(',')[2],
 					Occurs = 0,
 					Data = secret?[i++]
 				});
@@ -101,8 +100,7 @@ namespace ShareInvest.XingAPI
 				Base.SendMessage(GetType(), nMessageCode, szMessage);
 		}
 		protected internal abstract void OnReceiveData(string szTrCode);
-		Dictionary<string, string[]> Data
-			=> new Dictionary<string, string[]>() { { t2101, null }, { t8402, null }, { t8435, Convert }, { t8401, new string[] { rec } }, { t8432, new string[] { rec } }, { mmdaq91200, new string[] { rec } } };
+		Dictionary<string, string[]> Data => new() { { t2101, null }, { t8402, null }, { t8435, Convert }, { t8401, new string[] { rec } }, { t8432, new string[] { rec } }, { mmdaq91200, new string[] { rec } } };
 		string[] Convert
 		{
 			get; set;

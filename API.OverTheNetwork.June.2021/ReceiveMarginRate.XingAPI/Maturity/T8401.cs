@@ -50,8 +50,7 @@ namespace ShareInvest.XingAPI.Catalog
 				}
 			}
 		}
-		protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage)
-			=> base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
+		protected internal override void OnReceiveMessage(bool bIsSystemError, string nMessageCode, string szMessage) => base.OnReceiveMessage(bIsSystemError, nMessageCode, szMessage);
 		internal override void QueryExcute()
 		{
 			if (LoadFromResFile(GetResFileName(GetType().Name)))

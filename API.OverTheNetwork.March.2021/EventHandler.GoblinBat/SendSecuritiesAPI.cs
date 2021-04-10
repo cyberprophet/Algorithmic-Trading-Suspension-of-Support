@@ -32,8 +32,7 @@ namespace ShareInvest.EventHandler
 			if (long.TryParse(sEvaluation, out long evaluation) && long.TryParse(sDeposit, out long deposit) && long.TryParse(sAvailable, out long available))
 				Convey = new Tuple<long, long>(evaluation + deposit, available);
 		}
-		public SendSecuritiesAPI(string code, string name, string retention, string price, int market)
-			=> Convey = new Tuple<string, string, string, string, int>(code, name, retention, price, market);
+		public SendSecuritiesAPI(string code, string name, string retention, string price, int market) => Convey = new Tuple<string, string, string, string, int>(code, name, retention, price, market);
 		public SendSecuritiesAPI(Stack<StringBuilder> stack)
 		{
 			var dic = new Dictionary<string, Tuple<string, string>>();
@@ -74,16 +73,13 @@ namespace ShareInvest.EventHandler
 							dic[key] = new Tuple<string, string>(name[^1], temp[5]);
 
 						else if (temp[4].Equals("KOSPI200"))
-							dic[Base.rename.First(o => o.Key.StartsWith("101") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key]
-								= new Tuple<string, string>(temp[4], temp[5]);
+							dic[Base.rename.First(o => o.Key.StartsWith("101") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
 
 						else if (temp[4].Equals("미니KOSPI200"))
-							dic[Base.rename.First(o => o.Key.StartsWith("105") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key]
-								= new Tuple<string, string>(temp[4], temp[5]);
+							dic[Base.rename.First(o => o.Key.StartsWith("105") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
 
 						else if (temp[4].Equals("코스닥150"))
-							dic[Base.rename.First(o => o.Key.StartsWith("106") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key]
-								= new Tuple<string, string>(temp[4], temp[5]);
+							dic[Base.rename.First(o => o.Key.StartsWith("106") && o.Key.Length == 8 && o.Key.EndsWith("000")).Key] = new Tuple<string, string>(temp[4], temp[5]);
 
 						else
 						{

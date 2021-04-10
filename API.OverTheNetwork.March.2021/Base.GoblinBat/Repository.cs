@@ -68,7 +68,7 @@ namespace ShareInvest
 							var name = file.FullName.Split('\\');
 							var info = name[^1].Replace(extension, string.Empty).Split('_');
 
-							if (name[^3].Length == 4 && Array.TrueForAll(name[^3].ToCharArray(), o => char.IsDigit(o)) && info.Length == 4 && name[^4].Length is 6 or 8 && name[^2].Length == 2 && Array.TrueForAll(name[^2].ToCharArray(), o => char.IsDigit(o)) && info[^3].Length == 9 && Array.TrueForAll(info[^3].ToCharArray(), o => char.IsDigit(o)) && info[^2].Length == 9 && Array.TrueForAll(info[^2].ToCharArray(), o => char.IsDigit(o)) && Array.TrueForAll(info[^1].ToCharArray(), o => char.IsDigit(o)) && info[0].Length == 2 && Array.TrueForAll(info[0].ToCharArray(), o => char.IsDigit(o)))
+							if (name[^3].Length == 4 && Array.TrueForAll(name[^3].ToCharArray(), o => char.IsDigit(o)) && info.Length == 4 && name[^2].Length == 2 && Array.TrueForAll(name[^2].ToCharArray(), o => char.IsDigit(o)) && info[^3].Length == 9 && Array.TrueForAll(info[^3].ToCharArray(), o => char.IsDigit(o)) && info[^2].Length == 9 && Array.TrueForAll(info[^2].ToCharArray(), o => char.IsDigit(o)) && (Array.TrueForAll(info[^1].ToCharArray(), o => char.IsDigit(o)) && name[^4].Length == 6 || name[^4].Length == 8) && info[0].Length == 2 && Array.TrueForAll(info[0].ToCharArray(), o => char.IsDigit(o)))
 							{
 								var date = string.Concat(name[^3], name[^2], info[0]);
 
