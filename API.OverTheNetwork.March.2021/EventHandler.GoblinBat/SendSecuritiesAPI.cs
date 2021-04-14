@@ -12,11 +12,13 @@ namespace ShareInvest.EventHandler
 	public class SendSecuritiesAPI : EventArgs
 	{
 		public SendSecuritiesAPI(int param) => Convey = param;
+		public SendSecuritiesAPI(int index, string list) => Convey = new Tuple<int, string[]>(index, list.Split(';'));
 		public SendSecuritiesAPI(char type, string param) => Convey = new Tuple<char, string>(type, param);
 		public SendSecuritiesAPI(short error) => Convey = error;
 		public SendSecuritiesAPI(Codes codes) => Convey = codes;
 		public SendSecuritiesAPI(Message message) => Convey = message;
 		public SendSecuritiesAPI(Catalog.Models.Balance balance) => Convey = balance;
+		public SendSecuritiesAPI(Queue<Stocks> stocks) => Convey = stocks;
 		public SendSecuritiesAPI(ISendOrder order) => Convey = order;
 		public SendSecuritiesAPI(Queue<string[]> hold) => Convey = hold;
 		public SendSecuritiesAPI(Tuple<string, string> tuple) => Convey = tuple;

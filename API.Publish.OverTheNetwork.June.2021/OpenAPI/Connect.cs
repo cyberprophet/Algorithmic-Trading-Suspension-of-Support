@@ -64,6 +64,10 @@ namespace ShareInvest.OpenAPI
 		}));
 		internal void SendOrder(ISendOrder o) => request.RequestTrData(new Task(() => ReceiveErrorMessage(axAPI.SendOrder(axAPI.GetMasterCodeName(o.Code), LookupScreenNo, o.AccNo, o.OrderType, o.Code, o.Qty, o.Price, o.HogaGb, o.OrgOrderNo))));
 		internal string SendErrorMessage(short code) => error[code];
+		internal bool IsServer
+		{
+			get; set;
+		}
 		internal HashSet<TR> TR
 		{
 			get; private set;

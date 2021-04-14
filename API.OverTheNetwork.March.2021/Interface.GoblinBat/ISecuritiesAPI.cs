@@ -23,6 +23,10 @@ namespace ShareInvest.Interface
 		{
 			set;
 		}
+		bool IsAdministrator
+		{
+			set;
+		}
 		NamedPipeServerStream ConnectToReceiveRealTime
 		{
 			get;

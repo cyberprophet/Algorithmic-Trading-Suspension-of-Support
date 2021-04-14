@@ -47,11 +47,14 @@ namespace ShareInvest
 						else
 							search = new BackgroundWorker();
 					}
-					log = Path.Combine(Repository.R, "Log.txt");
-					script = @"C:\R\R-4.0.4\bin\x64\rscript --verbose ";
-					except = new[] { "조금씩", "단기적", "오늘", "전문", "오토핫키", "리딩방", "지난달", "한편" };
-					keywords = new BackgroundWorker();
-					server = GoblinBat.GetInstance(key);
+					if (Base.IsDebug is false)
+					{
+						log = Path.Combine(Repository.R, "Log.txt");
+						script = string.Concat(Path.Combine(r, @"bin\x64\rscript"), " --verbose ");
+						except = new[] { "조금씩", "단기적", "오늘", "전문", "오토핫키", "리딩방", "지난달", "한편" };
+						keywords = new BackgroundWorker();
+						server = GoblinBat.GetInstance(key);
+					}
 				}
 				if (Status is HttpStatusCode.OK)
 					big = new BackgroundWorker();
@@ -124,7 +127,7 @@ namespace ShareInvest
 								File.Delete(path);
 								Base.SendMessage(sender.GetType(), path);
 							}
-						foreach (var path in Directory.GetDirectories(@"C:\R\R-4.0.4\library"))
+						foreach (var path in Directory.GetDirectories(Path.Combine(r, "library")))
 						{
 							if (path.Split('\\')[^1].StartsWith("00LOCK*") is false && Directory.GetFiles(path, "*", SearchOption.AllDirectories).Length > 0)
 								continue;
@@ -162,7 +165,7 @@ namespace ShareInvest
 					try
 					{
 						await Task.Delay(Base.IsDebug ? random.Next(0x400, 0x1000) : random.Next(0x32000, 0x64000));
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x2E9));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x30B));
 					}
 					catch (Exception ex)
 					{
@@ -223,7 +226,7 @@ namespace ShareInvest
 							File.WriteAllBytes(Path.Combine(directory, tags), Properties.Resources.Tags);
 							File.WriteAllBytes(Path.Combine(directory, cloud), Properties.Resources.Cloud);
 						}
-						foreach (var file in new[] { (@"C:\R\R-4.0.4", @"bin\x64\Rscript.exe", @"https://cran.r-project.org/bin/windows/base"), (@"C:\rtools40", @"usr\bin\make.exe", @"https://cran.r-project.org/bin/windows/Rtools") })
+						foreach (var file in new[] { (r, @"bin\x64\Rscript.exe", @"https://cran.r-project.org/bin/windows/base"), (@"C:\rtools40", @"usr\bin\make.exe", @"https://cran.r-project.org/bin/windows/Rtools") })
 							if (new FileInfo(Path.Combine(file.Item1, file.Item2)).Exists is false)
 								using (var process = new Process { StartInfo = new ProcessStartInfo(file.Item3) { UseShellExecute = true } })
 								{
@@ -236,21 +239,20 @@ namespace ShareInvest
 
 									return;
 								}
-						if (Base.IsDebug is false)
-							foreach (var package in new[] { "processx", "multilinguer", "cli", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
-								using (var process = new Process { StartInfo = StartInfo })
-								{
-									process.ErrorDataReceived += SortOutputHandler;
+						foreach (var package in new[] { "processx", "multilinguer", "cli", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
+							using (var process = new Process { StartInfo = StartInfo })
+							{
+								process.ErrorDataReceived += SortOutputHandler;
 
-									if (process.Start())
-									{
-										process.BeginErrorReadLine();
-										process.StandardInput.WriteLine(string.Concat(script, initialize, string.IsNullOrEmpty(package) ? string.Empty : string.Concat(' ', package)));
-										process.StandardInput.Close();
-										process.WaitForExit();
-									}
-									process.ErrorDataReceived -= SortOutputHandler;
+								if (process.Start())
+								{
+									process.BeginErrorReadLine();
+									process.StandardInput.WriteLine(string.Concat(script, initialize, string.IsNullOrEmpty(package) ? string.Empty : string.Concat(' ', package)));
+									process.StandardInput.Close();
+									process.WaitForExit();
 								}
+								process.ErrorDataReceived -= SortOutputHandler;
+							}
 						var regex = new Regex("(\\)|\\(|/|,|&|＆)");
 						var search = new Dictionary<string, string>();
 						var exist = new List<string>();
@@ -297,7 +299,7 @@ namespace ShareInvest
 								var res = await api.GetConfirmAsync(theme);
 								var json = res is Url url && string.IsNullOrEmpty(url.Json) is false ? url.Json : string.Empty;
 
-								if (res is Url or 0xCC)
+								if (res is Url or 0xCC || Base.IsDebug)
 									foreach (var item in from o in search where o.Value.Equals(theme.Name) select o.Key)
 										if (await new Naver.Search(key).SearchForKeyword(HttpUtility.UrlEncode(item), (int)Math.Pow(key.Length, theme.Index.Length)) is Dictionary<string, string> response)
 											foreach (var kv in response.OrderBy(o => Guid.NewGuid()))
@@ -805,6 +807,7 @@ namespace ShareInvest
 		const string cloud = "Cloud.R";
 		const string initialize = "initialize.R";
 		const string directory = @"C:\Algorithmic Trading\Res\R";
+		const string r = @"C:\R\R-4.0.5";
 		readonly string log;
 		readonly string key;
 		readonly string script;

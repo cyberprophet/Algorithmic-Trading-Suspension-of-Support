@@ -36,6 +36,7 @@ namespace ShareInvest
 			GetTheCorrectAnswer = new int[this.key.Length];
 			server = GoblinBat.GetInstance(key);
 			connect.IsServer = api.IsServer && api.IsAdministrator;
+			connect.IsAdministrator = api.IsAdministrator;
 			timer.Start();
 		}
 		async Task OnReceiveFinancialStatement(DateTime now, Retention retention)
@@ -115,6 +116,7 @@ namespace ShareInvest
 			else
 				Dispose(connect as Control);
 		}));
+		void CheckTheInformationReceivedOnTheDay(string code) => (connect as OpenAPI.ConnectAPI).InputValueRqData(string.Concat(instance, "Opt10081"), string.Concat(code, ';', DateTime.Now.ToString(Base.LongDateFormat))).Send += OnReceiveSecuritiesAPI;
 		void CheckTheInformationReceivedOnTheDay()
 		{
 			if (Codes.TryDequeue(out string code))
@@ -411,7 +413,7 @@ namespace ShareInvest
 					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false && (api.IsAdministrator is false || Base.IsDebug))
 						worker.RunWorkerAsync(connect.Account);
 
-					if (api.IsAdministrator && api.IsServer || Base.IsDebug)
+					if (api.IsAdministrator)
 					{
 						var hour = Base.CheckIfMarketDelay(now) ? 9 : 8;
 						var con = connect as OpenAPI.ConnectAPI;
@@ -526,6 +528,99 @@ namespace ShareInvest
 					}
 					return;
 
+				case Tuple<int, string[]> conditions when connect is OpenAPI.ConnectAPI api:
+					if (Conditions is null)
+					{
+						Conditions = new Dictionary<string, Catalog.OpenAPI.Condition[]>();
+						api.CorrectTheDelayMilliseconds(Base.IsDebug ? 0x259 : 0xE11);
+					}
+					if (conditions.Item1 < 0xA)
+					{
+						var past = now;
+						int index;
+
+						for (index = 0; index < conditions.Item1 + 1; index++)
+						{
+							if (index > 0)
+								past = past.AddDays(-1);
+
+							while (Base.DisplayThePage(past))
+								past = past.AddDays(-1);
+
+							if (index == conditions.Item1)
+								Conditions[past.ToString(Base.DateFormat)] = new Catalog.OpenAPI.Condition[conditions.Item2.Length - 1];
+						}
+						for (index = 0; index < conditions.Item2.Length - 1; index++)
+						{
+							if (Conditions.TryGetValue(past.ToString(Base.DateFormat), out Catalog.OpenAPI.Condition[] position))
+								position[index] = new Catalog.OpenAPI.Condition
+								{
+									Code = conditions.Item2[index],
+									Name = api.GetMasterCodeName(conditions.Item2[index]),
+									Date = new string[conditions.Item1 + 1],
+									High = new int[conditions.Item1 + 1],
+									Low = new int[conditions.Item1 + 1]
+								};
+							CheckTheInformationReceivedOnTheDay(conditions.Item2[index]);
+						}
+					}
+					return;
+
+				case Queue<Stocks> stocks when stocks.TryPeek(out Stocks condition):
+					foreach (var kv in Conditions)
+						if (kv.Value.Any(o => o.Code.Equals(condition.Code)))
+						{
+							var position = kv.Value.Single(o => o.Code.Equals(condition.Code));
+
+							for (int i = 0; i < position.Date.Length; i++)
+								if (string.IsNullOrEmpty(position.Date[i]) && stocks.TryDequeue(out Stocks deq) && int.TryParse(deq.Price, out int high) && int.TryParse(deq.Retention, out int low))
+								{
+									position.Date[i] = deq.Date;
+									position.High[i] = high;
+									position.Low[i] = low;
+								}
+						}
+					stocks.Clear();
+					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, condition.Code).Send -= OnReceiveSecuritiesAPI;
+
+					if (Base.IsDebug || api.IsAdministrator && api.IsServer is false && now.Hour > 0x11)
+					{
+						foreach (var kv in Conditions)
+							foreach (var v in kv.Value)
+								for (int i = 0; i < v.Date.Length; i++)
+									if (string.IsNullOrEmpty(v.Date[i]) && Codes.Any(o => o.Equals(v.Code)))
+										return;
+
+									else
+										continue;
+
+						foreach (var kv in Conditions)
+						{
+							var empty = false;
+
+							foreach (var v in kv.Value)
+							{
+								empty = v.Date.Any(o => string.IsNullOrEmpty(o));
+
+								if (empty)
+								{
+									if (Base.IsDebug)
+										Base.SendMessage(GetType(), kv.Key, v.Code);
+
+									break;
+								}
+							}
+							if (empty)
+								continue;
+
+							if (await new Advertise(kv.Key, key).WriteStatistics(kv.Value) is null)
+							{
+
+							}
+						}
+					}
+					return;
+
 				case Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>> models when connect is OpenAPI.ConnectAPI ca:
 					ca.RemoveValueRqData(sender.GetType().Name, models.Item1).Send -= OnReceiveSecuritiesAPI;
 					var restore = DateTime.TryParseExact(Base.End, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime store) ? store : DateTime.UnixEpoch;
@@ -587,30 +682,31 @@ namespace ShareInvest
 						else
 							notifyIcon.Text = $"Still {Codes.Count:N0} Futures to be Collect.";
 
-					while (fo.CompareTo(now) < 0)
-					{
-						if (fo.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(fo.ToString(Base.DateFormat))) is false)
+					if (Base.IsDebug)
+						while (fo.CompareTo(now) < 0)
 						{
-							var str = fo.ToString(Base.LongDateFormat);
-
-							if (rs.Any(o => o.Date.Equals(str)) && rs.First(o => o.Date.Equals(str)) is Tick my)
+							if (fo.DayOfWeek is not DayOfWeek.Saturday or DayOfWeek.Sunday && Array.Exists(Base.Holidays, o => o.Equals(fo.ToString(Base.DateFormat))) is false)
 							{
-								if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && (my.Open.Equals(server.Open) && my.Close.Equals(server.Close) && my.Price.Equals(server.Price)) is false && int.TryParse(my.Open, out int mo) && int.TryParse(server.Open, out int so) && int.TryParse(my.Close, out int mc) && int.TryParse(server.Close, out int sc))
-								{
-									if ((mo < so || mc > sc) && Repository.RetrieveSavedMaterial(my) is string contents && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res"), Contents = contents }) is 0xC8)
-										notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
+								var str = fo.ToString(Base.LongDateFormat);
 
-									else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
-										Repository.KeepOrganizedInStorage(tick);
+								if (rs.Any(o => o.Date.Equals(str)) && rs.First(o => o.Date.Equals(str)) is Tick my)
+								{
+									if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && (my.Open.Equals(server.Open) && my.Close.Equals(server.Close) && my.Price.Equals(server.Price)) is false && int.TryParse(my.Open, out int mo) && int.TryParse(server.Open, out int so) && int.TryParse(my.Close, out int mc) && int.TryParse(server.Close, out int sc))
+									{
+										if ((mo < so || mc > sc) && Repository.RetrieveSavedMaterial(my) is string contents && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res"), Contents = contents }) is 0xC8)
+											notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
+
+										else if ((mo > so || mc < sc || my.Price.Equals(Base.PriceEmpty)) && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick && Repository.Delete(my))
+											Repository.KeepOrganizedInStorage(tick);
+									}
+									else if ((ss is null || ss.Any(o => o.Date.Equals(str)) is false) && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
+										notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
 								}
-								else if ((ss is null || ss.Any(o => o.Date.Equals(str)) is false) && Repository.RetrieveSavedMaterial(my) is string file && await api.PostContextAsync(new Tick { Code = my.Code, Date = my.Date, Open = my.Open, Close = my.Close, Price = my.Price, Contents = file, Path = Path.Combine($"F:\\{key}", my.Code, my.Date.Substring(0, 4), my.Date.Substring(4, 2), $"{my.Date[6..]}.res") }) is 0xC8)
-									notifyIcon.Text = $"Modify the {my.Code} stored on the Server.";
+								else if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
+									Repository.KeepOrganizedInStorage(tick);
 							}
-							else if (ss is IEnumerable<Tick> && ss.Any(o => o.Date.Equals(str)) && ss.First(o => o.Date.Equals(str)) is Tick server && await api.GetContextAsync(new Tick { Code = confirm.Item1, Date = server.Date, Open = server.Open, Close = server.Close, Price = server.Price, Path = string.Empty, Contents = server.Contents }) is Tick tick)
-								Repository.KeepOrganizedInStorage(tick);
+							fo = fo.AddDays(1);
 						}
-						fo = fo.AddDays(1);
-					}
 					CheckTheInformationReceivedOnTheDay();
 					return;
 			}
@@ -809,7 +905,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x2E9));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x30B));
 						}
 						catch (Exception ex)
 						{
@@ -883,7 +979,7 @@ namespace ShareInvest
 				var remain = new DateTime(now.Year, now.Month, now.Day, sat ? 0xA : 9, 0, 0) - DateTime.Now;
 				notifyIcon.Text = Base.GetRemainingTime(remain);
 
-				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12 && Base.IsDebug) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
+				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12 && api.IsServer is false) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
 				{
 					foreach (var kill in new[] { "Rscript", "chromedriver", "cmd" })
 						Base.SendMessage(kill);
@@ -1037,7 +1133,11 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		Catalog.Models.Privacies Privacy
+		Dictionary<string, Catalog.OpenAPI.Condition[]> Conditions
+		{
+			get; set;
+		}
+		Privacies Privacy
 		{
 			get; set;
 		}

@@ -118,9 +118,11 @@ namespace ShareInvest.OpenAPI
 				foreach (var code in GetInformationOfCode(new List<string> { axAPI.GetFutureCodeByIndex(0) }, axAPI.GetCodeListByMarket(string.Empty).Split(';')))
 					Send?.Invoke(this, new SendSecuritiesAPI(code));
 
-				if ((IsServer || Base.IsDebug) && axAPI.GetConditionLoad() == 1)
+				if (IsAdministrator && axAPI.GetConditionLoad() == 1)
+				{
 					Conditions = new Dictionary<int, string>();
-
+					API.IsServer = IsServer;
+				}
 				Send?.Invoke(this, new SendSecuritiesAPI(axAPI.GetLoginInfo("ACCLIST").Split(';')));
 			}
 			else
@@ -136,7 +138,6 @@ namespace ShareInvest.OpenAPI
 		void OnReceiveConditionVersion(object sender, _DKHOpenAPIEvents_OnReceiveConditionVerEvent e)
 		{
 			if (e.lRet == 1)
-			{
 				foreach (var condition in axAPI.GetConditionNameList().Split(';'))
 					if (string.IsNullOrEmpty(condition) is false)
 					{
@@ -145,11 +146,21 @@ namespace ShareInvest.OpenAPI
 						if (int.TryParse(conditions[0], out int index))
 							Conditions[index++] = conditions[^1];
 					}
-			}
 			Base.SendMessage(sender.GetType(), e.sMsg);
 		}
-		void OnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e) => Writer.WriteLine(string.Concat(e.nIndex < 0xA ? e.nIndex : Enum.GetName(typeof(Index), e.nIndex), '|', e.strCodeList));
-		void OnReceiveRealCondition(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e) => Writer.WriteLine(string.Concat(e.strType, '|', e.strConditionIndex, ';', e.sTrCode));
+		void OnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e)
+		{
+			if (IsServer)
+				Writer.WriteLine(string.Concat(e.nIndex < 0xA ? e.nIndex : Enum.GetName(typeof(Index), e.nIndex), '|', e.strCodeList));
+
+			else
+				Send?.Invoke(this, new SendSecuritiesAPI(e.nIndex, e.strCodeList));
+		}
+		void OnReceiveRealCondition(object sender, _DKHOpenAPIEvents_OnReceiveRealConditionEvent e)
+		{
+			if (IsServer)
+				Writer.WriteLine(string.Concat(e.strType, '|', e.strConditionIndex, ';', e.sTrCode));
+		}
 		public ConnectAPI()
 		{
 			InitializeComponent();
@@ -171,6 +182,7 @@ namespace ShareInvest.OpenAPI
 		{
 			get; private set;
 		}
+		public string GetMasterCodeName(string code) => axAPI.GetMasterCodeName(code);
 		public string SendErrorMessage(short error) => API.SendErrorMessage(error);
 		public string Securities(string param) => axAPI.GetLoginInfo(param).Trim();
 		public ISendSecuritiesAPI<SendSecuritiesAPI> InputValueRqData(string name, string param)
@@ -260,7 +272,7 @@ namespace ShareInvest.OpenAPI
 			axAPI.OnReceiveRealData += OnReceiveRealData;
 			axAPI.OnReceiveChejanData += OnReceiveChejanData;
 
-			if (IsServer || Base.IsDebug)
+			if (IsAdministrator)
 			{
 				axAPI.OnReceiveConditionVer += OnReceiveConditionVersion;
 				axAPI.OnReceiveTrCondition += OnReceiveTrCondition;
@@ -298,6 +310,10 @@ namespace ShareInvest.OpenAPI
 			get; private set;
 		}
 		public bool IsServer
+		{
+			private get; set;
+		}
+		public bool IsAdministrator
 		{
 			private get; set;
 		}
