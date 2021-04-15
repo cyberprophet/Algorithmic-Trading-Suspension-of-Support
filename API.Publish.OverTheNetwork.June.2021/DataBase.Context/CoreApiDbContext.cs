@@ -28,6 +28,7 @@ namespace ShareInvest
 			builder.Entity<Identify>(o => o.HasKey(o => new { o.Security, o.Code }));
 			builder.Entity<Connection>(o => o.HasKey(o => new { o.Email, o.Kiwoom }));
 			builder.Entity<IncorporatedStocks>(o => o.HasKey(o => o.Code));
+			builder.Entity<Rotation>(o => o.HasKey(o => new { o.Date, o.Code }));
 			builder.Entity<StockTags>(o =>
 			{
 				o.ToTable(nameof(Codes));
@@ -38,6 +39,7 @@ namespace ShareInvest
 				o.ToTable(nameof(Codes));
 				o.HasKey(o => o.Code);
 				o.HasOne(o => o.Tags).WithOne().HasForeignKey<StockTags>(o => o.Code);
+				o.HasMany(o => o.Rotations).WithOne().HasForeignKey(o => o.Code);
 				o.HasMany(o => o.Days).WithOne().HasForeignKey(o => o.Code);
 				o.HasMany(o => o.Stocks).WithOne().HasForeignKey(o => o.Code);
 				o.HasMany(o => o.Futures).WithOne().HasForeignKey(o => o.Code);
@@ -101,6 +103,10 @@ namespace ShareInvest
 			});
 		}
 		public CoreApiDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> store) : base(options, store) => this.store = store;
+		public DbSet<Rotation> Rotations
+		{
+			get; set;
+		}
 		public DbSet<Connection> User
 		{
 			get; set;

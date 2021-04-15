@@ -54,7 +54,7 @@ namespace ShareInvest
 					})
 						if (process.Start())
 						{
-							process.StandardInput.WriteLine(string.Concat(@"C:\R\R-4.0.4\bin\x64\rscript ", initialize, ' ', package));
+							process.StandardInput.WriteLine(string.Concat(@"C:\R\R-4.0.5\bin\x64\rscript ", initialize, ' ', package));
 							process.StandardInput.Close();
 							Console.WriteLine(process.StandardOutput.ReadToEnd());
 							process.WaitForExit();
@@ -84,8 +84,8 @@ namespace ShareInvest
 		{
 			get; set;
 		}
-		static string[] Packages => new[] { "multilinguer", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "htmlwidgets", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "remotes" };
-		static (string, string, string)[] Files => new[] { (@"C:\OpenAPI", "opstarter.exe", @"https://www2.kiwoom.com/nkw.templateFrameSet.do?m=m1408000000"), (@"C:\Program Files (x86)\ESTsoft\ALZip", "ALZipCon.exe", @"https://www.altools.co.kr/download/alzip.aspx"), (@"C:\R\R-4.0.4", @"bin\x64\Rscript.exe", @"https://cran.r-project.org/bin/windows/base"), (@"C:\rtools40", @"usr\bin\make.exe", @"https://cran.r-project.org/bin/windows/Rtools") };
+		static string[] Packages => new[] { "processx", "multilinguer", "cli", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty };
+		static (string, string, string)[] Files => new[] { (@"C:\OpenAPI", "opstarter.exe", @"https://www2.kiwoom.com/nkw.templateFrameSet.do?m=m1408000000"), (@"C:\Program Files (x86)\ESTsoft\ALZip", "ALZipCon.exe", @"https://www.altools.co.kr/download/alzip.aspx"), (@"C:\R\R-4.0.5", @"bin\x64\Rscript.exe", @"https://cran.r-project.org/bin/windows/base"), (@"C:\rtools40", @"usr\bin\make.exe", @"https://cran.r-project.org/bin/windows/Rtools") };
 		const string cmd = "cmd";
 		const string initialize = "initialize.R";
 		const string directory = @"C:\Algorithmic Trading\Res\R";

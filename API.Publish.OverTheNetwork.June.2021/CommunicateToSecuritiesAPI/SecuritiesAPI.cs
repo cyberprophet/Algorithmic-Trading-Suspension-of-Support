@@ -218,6 +218,12 @@ namespace ShareInvest
 									if (Reservation is not null)
 										Reservation.Clear();
 
+									if (api.IsAdministrator && api.IsServer is false && this.connect is OpenAPI.ConnectAPI connect)
+										for (int i = 0; i < connect.Conditions.Count; i++)
+										{
+											var cn = connect.Conditions[connect.Conditions.Count - i - 1];
+											connect.SendCondition(connect.Conditions.Count - i - 1, cn, cn.Length == 2 || cn.Length == 5 && cn[^1] is '0' ? 1 : 0);
+										}
 									RequestBalanceInquiry();
 									return;
 
@@ -225,7 +231,7 @@ namespace ShareInvest
 									if (Reservation is not null)
 										foreach (var order in Reservation.Stocks)
 										{
-											connect.SendOrder(order.Value);
+											this.connect.SendOrder(order.Value);
 											Base.SendMessage(sender.GetType(), order.Key.ToString("N0"), order.Value.Code);
 										}
 									return;
@@ -413,17 +419,12 @@ namespace ShareInvest
 					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false && (api.IsAdministrator is false || Base.IsDebug))
 						worker.RunWorkerAsync(connect.Account);
 
-					if (api.IsAdministrator)
-					{
-						var hour = Base.CheckIfMarketDelay(now) ? 9 : 8;
-						var con = connect as OpenAPI.ConnectAPI;
-
+					if (api.IsAdministrator && (api.IsServer || Base.IsDebug) && connect is OpenAPI.ConnectAPI con)
 						for (int i = 0; i < con.Conditions.Count; i++)
 						{
 							name = con.Conditions[con.Conditions.Count - i - 1];
 							con.SendCondition(con.Conditions.Count - i - 1, name, name.Length == 2 || name.Length == 5 && name[^1] is '0' ? 1 : 0);
 						}
-					}
 					Cash = balance.Item2;
 					return;
 
@@ -581,9 +582,10 @@ namespace ShareInvest
 								}
 						}
 					stocks.Clear();
+					var occur = 0;
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, condition.Code).Send -= OnReceiveSecuritiesAPI;
 
-					if (Base.IsDebug || api.IsAdministrator && api.IsServer is false && now.Hour > 0x11)
+					if (api.IsAdministrator && api.IsServer is false && now.Hour is 0xF or 0x10)
 					{
 						foreach (var kv in Conditions)
 							foreach (var v in kv.Value)
@@ -613,10 +615,34 @@ namespace ShareInvest
 							if (empty)
 								continue;
 
-							if (await new Advertise(kv.Key, key).WriteStatistics(kv.Value) is null)
+							switch (await new Advertise(kv.Key, key).WriteStatistics(kv.Value))
 							{
+								case Stack<Catalog.Strategics.TiStory> tistory:
+									while (tistory.TryPop(out Catalog.Strategics.TiStory pop))
+										occur += await api.PostContextAsync(new Rotation
+										{
+											Date = kv.Key,
+											Code = pop.Code,
+											Purchase = pop.Purchase,
+											High = pop.High,
+											MaxReturn = pop.HighRate,
+											Low = pop.Low,
+											MaxLoss = pop.LowRate,
+											Close = pop.Close,
+											Liquidation = pop.RemainRate
 
+										}) is int ok ? ok : 1;
+									break;
+
+								case 0x196:
+									notifyIcon.Text = "Account cann´t be Link.";
+									return;
 							}
+						}
+						if (occur > 0 && occur % 0xC8 == 0)
+						{
+							if (Base.IsDebug)
+								Base.SendMessage(sender.GetType(), occur.ToString("N0"));
 						}
 					}
 					return;
@@ -979,7 +1005,7 @@ namespace ShareInvest
 				var remain = new DateTime(now.Year, now.Month, now.Day, sat ? 0xA : 9, 0, 0) - DateTime.Now;
 				notifyIcon.Text = Base.GetRemainingTime(remain);
 
-				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || api.IsAdministrator && now.Hour == 0x12 && api.IsServer is false) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
+				if (connect.Start is false && (remain.TotalMinutes < 0x1F && now.Hour == (sat ? 9 : 8) && now.Minute > 0x1E || now.Hour == 0x12 && Base.IsDebug) && (remain.TotalMinutes < 0x15 || Array.Exists(GetTheCorrectAnswer, o => o == random.Next(0, 0x4B2))))
 				{
 					foreach (var kill in new[] { "Rscript", "chromedriver", "cmd" })
 						Base.SendMessage(kill);

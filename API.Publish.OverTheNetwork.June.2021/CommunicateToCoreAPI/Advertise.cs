@@ -328,7 +328,6 @@ namespace ShareInvest.Client
 							HighRate = high / (double)purchase - 1,
 							Low = low,
 							LowRate = low / (double)purchase - 1,
-							Recommand = date,
 							Close = close,
 							RemainRate = close / (double)purchase - 1
 						});
@@ -341,8 +340,7 @@ namespace ShareInvest.Client
 							High = high,
 							HighRate = high / (double)purchase - 1,
 							Low = low,
-							LowRate = low / (double)purchase - 1,
-							Recommand = date
+							LowRate = low / (double)purchase - 1
 						});
 					index = 1;
 				}
@@ -555,7 +553,14 @@ namespace ShareInvest.Client
 								break;
 							}
 						}
-				return length == 0xA ? storage : stack;
+				switch (response.StatusCode)
+				{
+					case HttpStatusCode.OK:
+						return length == 0xA ? storage : stack;
+
+					case HttpStatusCode.NotAcceptable:
+						return (int)HttpStatusCode.NotAcceptable;
+				}
 			}
 			catch (Exception ex)
 			{

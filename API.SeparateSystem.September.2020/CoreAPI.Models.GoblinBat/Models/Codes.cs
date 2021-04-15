@@ -37,6 +37,11 @@ namespace ShareInvest.Models
 			get; set;
 		}
 		[ForeignKey("Code")]
+		public virtual ICollection<Rotation> Rotations
+		{
+			get; set;
+		}
+		[ForeignKey("Code")]
 		public virtual ICollection<Futures> Futures
 		{
 			get; set;
@@ -110,6 +115,7 @@ namespace ShareInvest.Models
 			Quarter = new HashSet<QuarterlyFinancialStatements>();
 			Incorporate = new HashSet<IncorporatedStocks>();
 			Securities = new HashSet<Identify>();
+			Rotations = new HashSet<Rotation>();
 		}
 	}
 }

@@ -10,10 +10,6 @@
 		{
 			get; set;
 		}
-		public string Recommand
-		{
-			get; set;
-		}
 		public int Purchase
 		{
 			get; set;

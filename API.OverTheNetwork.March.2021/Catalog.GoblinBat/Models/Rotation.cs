@@ -1,12 +1,12 @@
-﻿namespace ShareInvest.Catalog.Strategics
+﻿namespace ShareInvest.Catalog.Models
 {
-	public struct TiStory
+	public struct Rotation
 	{
-		public string Code
+		public string Date
 		{
 			get; set;
 		}
-		public string Name
+		public string Code
 		{
 			get; set;
 		}
@@ -18,7 +18,7 @@
 		{
 			get; set;
 		}
-		public double HighRate
+		public double MaxReturn
 		{
 			get; set;
 		}
@@ -26,7 +26,7 @@
 		{
 			get; set;
 		}
-		public double LowRate
+		public double MaxLoss
 		{
 			get; set;
 		}
@@ -34,7 +34,7 @@
 		{
 			get; set;
 		}
-		public double RemainRate
+		public double Liquidation
 		{
 			get; set;
 		}
