@@ -590,7 +590,7 @@ namespace ShareInvest
 					var occur = 0;
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, condition.Code).Send -= OnReceiveSecuritiesAPI;
 
-					if (api.IsAdministrator && api.IsServer is false && (now.Hour is 0xF or 0x10 || Base.IsDebug))
+					if (api.IsAdministrator && api.IsServer is false)
 					{
 						foreach (var kv in Conditions)
 							foreach (var v in kv.Value)
@@ -603,54 +603,55 @@ namespace ShareInvest
 
 						if (await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
 						{
-							foreach (var kv in Conditions)
-							{
-								var empty = false;
-
-								foreach (var v in kv.Value)
+							if (api.IsAdministrator && api.IsServer is false && now.Hour is 0xF or 0x10)
+								foreach (var kv in Conditions)
 								{
-									empty = v.Date.Any(o => string.IsNullOrEmpty(o));
+									var empty = false;
 
-									if (empty)
+									foreach (var v in kv.Value)
 									{
-										if (Base.IsDebug)
-											Base.SendMessage(GetType(), kv.Key, v.Code);
+										empty = v.Date.Any(o => string.IsNullOrEmpty(o));
 
-										break;
+										if (empty)
+										{
+											if (Base.IsDebug)
+												Base.SendMessage(GetType(), kv.Key, v.Code);
+
+											break;
+										}
+									}
+									if (empty)
+										continue;
+
+									switch (await new Advertise(kv.Key, key).WriteStatistics(kv.Value, list))
+									{
+										case Stack<Catalog.Strategics.TiStory> tistory:
+											while (tistory.TryPop(out Catalog.Strategics.TiStory pop))
+												occur += await api.PostContextAsync(new Catalog.Models.Rotation
+												{
+													Date = kv.Key,
+													Code = pop.Code,
+													Purchase = pop.Purchase,
+													High = pop.High,
+													MaxReturn = pop.HighRate,
+													Low = pop.Low,
+													MaxLoss = pop.LowRate,
+													Close = pop.Close,
+													Liquidation = pop.RemainRate
+
+												}) is int ok ? ok : 1;
+											break;
+
+										case 0x196:
+											notifyIcon.Text = "Account cann´t be Link.";
+											return;
 									}
 								}
-								if (empty)
-									continue;
-
-								switch (await new Advertise(kv.Key, key).WriteStatistics(kv.Value, list))
-								{
-									case Stack<Catalog.Strategics.TiStory> tistory:
-										while (tistory.TryPop(out Catalog.Strategics.TiStory pop))
-											occur += await api.PostContextAsync(new Catalog.Models.Rotation
-											{
-												Date = kv.Key,
-												Code = pop.Code,
-												Purchase = pop.Purchase,
-												High = pop.High,
-												MaxReturn = pop.HighRate,
-												Low = pop.Low,
-												MaxLoss = pop.LowRate,
-												Close = pop.Close,
-												Liquidation = pop.RemainRate
-
-											}) is int ok ? ok : 1;
-										break;
-
-									case 0x196:
-										notifyIcon.Text = "Account cann´t be Link.";
-										return;
-								}
-							}
-							if (occur > 0 && occur % 0xC8 == 0)
+							if (occur > 0 && occur % 0xC8 == 0 || Base.IsDebug)
 							{
 								var initiate = new DateTime(0x7E5, 4, 5);
 								var dictionary = new Dictionary<string, Catalog.Models.Rotation>(0x20);
-								var contents = new Dictionary<string, Catalog.Dart.TiStory>(0x20);
+								var contents = new Dictionary<string, Tuple<string, Catalog.Dart.TiStory>>(0x20);
 
 								while (initiate.CompareTo(now) < 0)
 								{
@@ -662,9 +663,9 @@ namespace ShareInvest
 												for (int i = 0; i < 0xC; i++)
 												{
 													while (Base.DisplayThePage(compare))
-														compare.AddDays(1);
+														compare = compare.AddDays(1);
 
-													compare.AddDays(1);
+													compare = compare.AddDays(1);
 												}
 												if (ro.Date.CompareTo(compare.ToString(Base.DateFormat)) < 0)
 													dictionary[ro.Code] = new Catalog.Models.Rotation
@@ -700,16 +701,15 @@ namespace ShareInvest
 											else
 											{
 												dictionary[ro.Code] = ro;
+												contents[ro.Code] = new Tuple<string, Catalog.Dart.TiStory>((connect as OpenAPI.ConnectAPI).GetMasterCodeName(ro.Code), await api.GetThemeIndexAsync(ro.Code) is Catalog.Dart.TiStory story ? new Catalog.Dart.TiStory
+												{
+													Index = list.Find(o => o.Index.Equals(story.Index)).Name,
+													Title = story.Title
 
-												if (await api.GetThemeIndexAsync(ro.Code) is Catalog.Dart.TiStory ts)
-													contents[ro.Code] = new Catalog.Dart.TiStory
-													{
-														Index = list.Find(o => o.Index.Equals(ts.Index)).Name,
-														Title = ts.Title
-													};
+												} : null);
 											}
 										}
-									initiate.AddDays(1);
+									initiate = initiate.AddDays(1);
 								}
 								if (dictionary.Count > 0)
 									await new Advertise(key).WriteStatistics(dictionary.Values.OrderByDescending(o => o.MaxReturn), contents);

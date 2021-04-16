@@ -55,82 +55,24 @@ namespace ShareInvest.Client
 		{
 			try
 			{
-				await LogIn();
-				var client = new RestClient(story)
+				StringBuilder tag = new(), contents = new(security.Cloud[0]);
+				var now = DateTime.Now;
+				var index = 0;
+				now = now.Hour < 9 ? now.AddDays(-1) : now;
+
+				foreach (var word in cloud.OrderByDescending(o => o.Frequency))
 				{
-					Timeout = -1
-				};
-				var source = new CancellationTokenSource();
-				var response = await client.ExecuteAsync(new RestRequest(security.GetToken(Url), Method.GET), source.Token);
+					if (index++ < 0xA)
+						tag.Append(word.Text).Append(',');
 
-				if (HttpStatusCode.OK.Equals(response.StatusCode))
-				{
-					(string, string) token = (null, null);
-
-					foreach (var kv in JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content))
-						if (string.IsNullOrEmpty(kv.Value) is false)
-						{
-							Url = string.Concat(kv.Key, '=', kv.Value);
-							token = (kv.Key, kv.Value);
-						}
-					response = await client.ExecuteAsync(new RestRequest(security.GetInfomation(Url), Method.GET), source.Token);
-
-					if (HttpStatusCode.OK.Equals(response.StatusCode))
-					{
-						response = await client.ExecuteAsync(new RestRequest("apis/post/attach", Method.POST).AddParameter(token.Item1, token.Item2).AddParameter("blogName", "sharecompany").AddFileBytes("uploadedfile", resources[random.Next(0, resources.Count)], "main.png"), source.Token);
-
-						if (HttpStatusCode.OK.Equals(response.StatusCode))
-						{
-							StringBuilder tag = new(), content = new(security.Cloud[0]);
-							var now = DateTime.Now;
-							var index = 0;
-							now = now.Hour < 9 ? now.AddDays(-1) : now;
-							var image = string.Empty;
-							var xml = new System.Xml.XmlDocument();
-							xml.LoadXml(response.Content);
-
-							foreach (var replace in xml.GetElementsByTagName("replacer"))
-								if (replace is System.Xml.XmlNode node && string.IsNullOrEmpty(node.InnerText) is false)
-									image = node.InnerText;
-
-							foreach (var word in cloud.OrderByDescending(o => o.Frequency))
-							{
-								if (index++ < 0xA)
-									tag.Append(word.Text).Append(',');
-
-								content.Append(security.Cloud[1]).Append($"'{word.Anchor}'").Append(security.Cloud[2]).Append($"'{word.Transform}'").Append(security.Cloud[3]).Append($"'{word.Style}'").Append(security.Cloud[^3]).Append(word.Text).Append(security.Cloud[^2]);
-							}
-							content.Append(security.Cloud[^1]).Append(@"<br />").Append(image).Append(@"<div>").Append("<figure contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-source-url='https://coreapi.shareinvest.net' data-og-url='https://coreapi.shareinvest.net'><a href='https://coreapi.shareinvest.net' target='_blank' rel='noopener' data-source-url='https://coreapi.shareinvest.net'><p style='text-align: center'><b><span style='font-family: Noto Serif KR'>Algorithmic Trading</span></b></p></a></figure>");
-
-							foreach (var ns in news)
-								content.Append($"<figure contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-source-url='{ns.Key}' data-og-url='{ns.Key}'>").Append($"<a href='{ns.Key}' target='_blank' rel='noopener' data-source-url='{ns.Key}'>").Append($"<p style='text-align: center'><b><span style='font-family: Noto Serif KR'>{ns.Value}</span></b></p>").Append(@"</a>").Append(@"</figure>");
-
-							response = await client.ExecuteAsync(new RestRequest("apis/post/write", Method.POST).AddJsonBody(JsonConvert.SerializeObject(new Catalog.Models.Tistory
-							{
-								Token = token.Item2,
-								Type = Security.json.Split('/')[^1],
-								Name = "sharecompany",
-								Title = string.Concat(cn.Name, " WordCloud Tag.", cn.Code, now.ToString(Base.DateFormat)),
-								Visibility = "3",
-								Category = "710553",
-								Publish = string.Empty,
-								Slogan = string.Concat(cn.Code, cn.Name, now.ToString(Base.DateFormat)),
-								Tag = tag.Remove(tag.Length - 1, 1).ToString(),
-								Comment = "1",
-								Password = string.Empty,
-								Content = content.Append(@"</div>").ToString()
-
-							}), Security.content_type), source.Token);
-						}
-					}
+					contents.Append(security.Cloud[1]).Append($"'{word.Anchor}'").Append(security.Cloud[2]).Append($"'{word.Transform}'").Append(security.Cloud[3]).Append($"'{word.Style}'").Append(security.Cloud[^3]).Append(word.Text).Append(security.Cloud[^2]);
 				}
-				driver.Navigate().GoToUrl(System.IO.Path.Combine(tistory, 0x32.ToString()));
-				Url = JObject.Parse(response.Content)[nameof(tistory)].ToString();
-				source.Dispose();
-				client.ClearHandlers();
-				await LogOut();
+				contents.Append(security.Cloud[^1]).Append(@"<br />").Append(@"<div>").Append("<figure contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-source-url='https://coreapi.shareinvest.net' data-og-url='https://coreapi.shareinvest.net'><a href='https://coreapi.shareinvest.net' target='_blank' rel='noopener' data-source-url='https://coreapi.shareinvest.net'><p style='text-align: center'><b><span style='font-family: Noto Serif KR'>Algorithmic Trading</span></b></p></a></figure>");
 
-				switch (response.StatusCode)
+				foreach (var ns in news)
+					contents.Append($"<figure contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-source-url='{ns.Key}' data-og-url='{ns.Key}'>").Append($"<a href='{ns.Key}' target='_blank' rel='noopener' data-source-url='{ns.Key}'>").Append($"<p style='text-align: center'><b><span style='font-family: Noto Serif KR'>{ns.Value}</span></b></p>").Append(@"</a>").Append(@"</figure>");
+
+				switch ((await PostTiStory(contents.Append(@"</div>"), tag, "replacer", string.Concat(cn.Code, cn.Name, now.ToString(Base.DateFormat)), string.Concat(cn.Name, " WordCloud Tag.", cn.Code, now.ToString(Base.DateFormat)))).StatusCode)
 				{
 					case HttpStatusCode.OK:
 						return JsonConvert.DeserializeObject<Catalog.Models.Response>(Url);
@@ -249,56 +191,8 @@ namespace ShareInvest.Client
 							context.Append("<hr contenteditable='false' data-ke-type='horizontalRule' data-ke-style='style6'/>");
 					}
 				context.Append("<hr contenteditable='false' data-ke-type='horizontalRule' data-ke-style='style1'/>").Append($"<p data-ke-size='size18'><b>☞{date}</b></p>").Append($"<figure id='og_1618408583729' contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-title='Algorithmic Trading' data-og-description='the profit-generating model using Algorithms.' data-og-host='coreapi.shareinvest.net' data-og-source-url='https://coreapi.shareinvest.net' data-og-url='https://coreapi.shareinvest.net' data-og-image='https://scrap.kakaocdn.net/dn/cGYG7I/hyJSmdXhpa/r7rd0tlAsaOJiKWEvo49q0/img.jpg?width=320&amp;height=290&amp;face=61_24_196_171'><a href='https://coreapi.shareinvest.net' target='_blank' rel='noopener' data-source-url='https://coreapi.shareinvest.net'><div class='og-image' style='background-image:url({net});'>&nbsp;</div><div class='og-text'><p class='og-title'>Algorithmic Trading</p><p class='og-desc'>the profit-generating model using Algorithms.</p><p class='og-host'>coreapi.shareinvest.net</p></div></a></figure><blockquote data-ke-size='size14' data-ke-style='style2'>매수 가격은 추천 익일 고가로 산정하며 최대 보유기간은 매수일로부터 9일로 한다.</blockquote>");
-				await LogIn();
-				var client = new RestClient(story)
-				{
-					Timeout = -1
-				};
-				var source = new CancellationTokenSource();
-				var response = await client.ExecuteAsync(new RestRequest(security.GetToken(Url), Method.GET), source.Token);
 
-				if (HttpStatusCode.OK.Equals(response.StatusCode))
-				{
-					(string, string) token = (null, null);
-
-					foreach (var kv in JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content))
-						if (string.IsNullOrEmpty(kv.Value) is false)
-						{
-							Url = string.Concat(kv.Key, '=', kv.Value);
-							token = (kv.Key, kv.Value);
-						}
-					response = await client.ExecuteAsync(new RestRequest(security.GetInfomation(Url), Method.GET), source.Token);
-
-					if (HttpStatusCode.OK.Equals(response.StatusCode))
-					{
-						response = await client.ExecuteAsync(new RestRequest("apis/post/attach", Method.POST).AddParameter(token.Item1, token.Item2).AddParameter("blogName", "sharecompany").AddFileBytes("uploadedfile", resources[random.Next(0, resources.Count)], "main.png"), source.Token);
-
-						if (HttpStatusCode.OK.Equals(response.StatusCode))
-							response = await client.ExecuteAsync(new RestRequest("apis/post/write", Method.POST).AddJsonBody(JsonConvert.SerializeObject(new Catalog.Models.Tistory
-							{
-								Token = token.Item2,
-								Type = Security.json.Split('/')[^1],
-								Name = "sharecompany",
-								Title = string.Concat("알고리즘 트레이딩 수익률 Tag.", date),
-								Visibility = "3",
-								Category = "710553",
-								Publish = string.Empty,
-								Slogan = "Algorithmic Trading",
-								Tag = tag.Remove(tag.Length - 1, 1).ToString(),
-								Comment = "1",
-								Password = string.Empty,
-								Content = context.ToString()
-
-							}), Security.content_type), source.Token);
-					}
-				}
-				driver.Navigate().GoToUrl(System.IO.Path.Combine(tistory, 0x32.ToString()));
-				Url = JObject.Parse(response.Content)[nameof(tistory)].ToString();
-				source.Dispose();
-				client.ClearHandlers();
-				await LogOut();
-
-				switch (response.StatusCode)
+				switch ((await PostTiStory(context, tag, string.Empty, "Algorithmic Trading", string.Concat("알고리즘 트레이딩 수익률 Tag.", date))).StatusCode)
 				{
 					case HttpStatusCode.OK:
 						return length == 0xA ? storage : stack;
@@ -319,13 +213,40 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
-		public async Task WriteStatistics(IEnumerable<Catalog.Models.Rotation> param, Dictionary<string, Catalog.Dart.TiStory> theme)
+		public async Task WriteStatistics(IEnumerable<Catalog.Models.Rotation> param, Dictionary<string, Tuple<string, Catalog.Dart.TiStory>> theme)
 		{
 			try
 			{
-				await LogIn();
+				StringBuilder contents = new(), tags = new();
+				var index = 1;
+				contents.Append("<hr contenteditable='false' data-ke-type='horizontalRule' data-ke-style='style1'/>").Append($"<figure id='og_1618408583729' contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-title='Algorithmic Trading' data-og-description='the profit-generating model using Algorithms.' data-og-host='coreapi.shareinvest.net' data-og-source-url='https://coreapi.shareinvest.net' data-og-url='https://coreapi.shareinvest.net' data-og-image='https://scrap.kakaocdn.net/dn/cGYG7I/hyJSmdXhpa/r7rd0tlAsaOJiKWEvo49q0/img.jpg?width=320&amp;height=290&amp;face=61_24_196_171'><a href='https://coreapi.shareinvest.net' target='_blank' rel='noopener' data-source-url='https://coreapi.shareinvest.net'><div class='og-image' style='background-image:url({net});'>&nbsp;</div><div class='og-text'><p class='og-title'>Algorithmic Trading</p><p class='og-desc'>the profit-generating model using Algorithms.</p><p class='og-host'>coreapi.shareinvest.net</p></div></a></figure>");
 
-				await LogOut();
+				foreach (var story in param)
+				{
+					contents.Append($"<p data-ke-size='size16'>{index}.<b>{theme[story.Code].Item1}</b><span style='font-size:small;'>({story.Code})</span></p><p data-ke-size='size14'>&nbsp;Purchase_{story.Purchase:C0}</p><p data-ke-size='size14'>&nbsp;High_{story.High:C0}</p><p data-ke-size='size14'>&nbsp;Maximum_Return_<span style='color:{(story.MaxReturn > 0 ? "#FF0000" : "#0000FF")};'>{Math.Abs(story.MaxReturn):P2}</span></p><p data-ke-size='size14'>&nbsp;Low_{story.Low:C0}</p><p data-ke-size='size14'>&nbsp;Maximum_Loss_Rate_<span style='color:{(story.MaxLoss > 0 ? "#FF0000" : "#0000FF")};'>{Math.Abs(story.MaxLoss):P2}</span></p><p data-ke-size='size14'>&nbsp;Remain_{story.Close:C0}</p><p data-ke-size='size14'>&nbsp;Liquidation_Return_Rate_<span style='color:{(story.Liquidation > 0 ? "#FF0000" : "#0000FF")};'>{Math.Abs(story.Liquidation):P2}</span></p>");
+
+					if (theme[story.Code].Item2 is Catalog.Dart.TiStory ts)
+						contents.Append($"<p data-ke-size='size14'>&nbsp;<strong>{ts.Index}</strong></p>").Append($"<p data-ke-size='size14' style='white-space:pre-line;'>&nbsp;{ts.Title.Replace(". ", ".\n&nbsp;")}</p>");
+
+					if (index < 0xB)
+						tags.Append(theme[story.Code].Item1).Append(',');
+
+					var sb = new StringBuilder();
+
+					foreach (var date in story.Date.Split(';'))
+						if (DateTime.TryParseExact(date, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime time))
+							sb.Append(time.ToLongDateString()).Append('，').Append("&nbsp;");
+
+					contents.Append($"<p data-ke-size='size18'><b>☞{sb.Remove(sb.Length - 7, 7)}</b></p>");
+
+					if (index > 0x31)
+						break;
+
+					if (index++ < theme.Count)
+						contents.Append("<hr contenteditable='false' data-ke-type='horizontalRule' data-ke-style='style6'/>");
+				}
+				contents.Append("<hr contenteditable='false' data-ke-type='horizontalRule' data-ke-style='style1'/>").Append("<blockquote data-ke-size='size14' data-ke-style='style2'>매수 가격은 추천 익일 고가로 산정하며 최대 보유기간은 매수일로부터 9일로 한다.</blockquote>");
+				await PostTiStory(contents, tags, string.Empty, "Data Analytics", $"알고리즘 시스템 트레이딩 수익률 통계 Tag.{DateTime.Now.ToLongDateString()}");
 			}
 			catch (Exception ex)
 			{
@@ -376,8 +297,71 @@ namespace ShareInvest.Client
 			this.cn = cn;
 			driver = new ChromeDriver(service, options, TimeSpan.FromSeconds(0x21));
 		}
+		async Task<IRestResponse> PostTiStory(StringBuilder contents, StringBuilder tag, string image, string slogan, string title)
+		{
+			await LogIn();
+			var client = new RestClient(story)
+			{
+				Timeout = -1
+			};
+			var source = new CancellationTokenSource();
+			var response = await client.ExecuteAsync(new RestRequest(security.GetToken(Url), Method.GET), source.Token);
+
+			if (HttpStatusCode.OK.Equals(response.StatusCode))
+			{
+				(string, string) token = (null, null);
+
+				foreach (var kv in JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content))
+					if (string.IsNullOrEmpty(kv.Value) is false)
+					{
+						Url = string.Concat(kv.Key, '=', kv.Value);
+						token = (kv.Key, kv.Value);
+					}
+				response = await client.ExecuteAsync(new RestRequest(security.GetInfomation(Url), Method.GET), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+				{
+					response = await client.ExecuteAsync(new RestRequest("apis/post/attach", Method.POST).AddParameter(token.Item1, token.Item2).AddParameter("blogName", "sharecompany").AddFileBytes("uploadedfile", resources[random.Next(0, resources.Count)], "main.png"), source.Token);
+
+					if (string.IsNullOrEmpty(image) is false)
+					{
+						var xml = new System.Xml.XmlDocument();
+						xml.LoadXml(response.Content);
+
+						foreach (var replace in xml.GetElementsByTagName(image))
+							if (replace is System.Xml.XmlNode node && string.IsNullOrEmpty(node.InnerText) is false)
+								image = node.InnerText;
+					}
+					if (HttpStatusCode.OK.Equals(response.StatusCode))
+						response = await client.ExecuteAsync(new RestRequest("apis/post/write", Method.POST).AddJsonBody(JsonConvert.SerializeObject(new Catalog.Models.Tistory
+						{
+							Token = token.Item2,
+							Type = Security.json.Split('/')[^1],
+							Name = "sharecompany",
+							Title = title,
+							Visibility = "3",
+							Category = "710553",
+							Publish = string.Empty,
+							Slogan = slogan,
+							Tag = tag.Remove(tag.Length - 1, 1).ToString(),
+							Comment = "1",
+							Password = string.Empty,
+							Content = (string.IsNullOrEmpty(image) ? contents : contents.Append(image)).ToString()
+
+						}), Security.content_type), source.Token);
+				}
+			}
+			Url = JObject.Parse(response.Content)[nameof(tistory)].ToString();
+			source.Dispose();
+			client.ClearHandlers();
+			await LogOut();
+
+			return response;
+		}
 		async Task LogOut()
 		{
+			driver.Navigate().GoToUrl(System.IO.Path.Combine(tistory, 0x32.ToString()));
+
 			foreach (var header in driver.FindElementsByXPath(security.Transmit[^1]))
 				foreach (var button in header.FindElements(By.TagName("button")))
 				{
@@ -413,9 +397,18 @@ namespace ShareInvest.Client
 
 											if (string.IsNullOrEmpty(value) is false && true.ToString().ToLower().Equals(value))
 											{
-												log.Click();
-												await Task.Delay(0x400);
-
+												try
+												{
+													log.Click();
+												}
+												catch (Exception ex)
+												{
+													Base.SendMessage(GetType(), nameof(this.LogOut), ex.StackTrace);
+												}
+												finally
+												{
+													await Task.Delay(0x400);
+												}
 												break;
 											}
 										}
