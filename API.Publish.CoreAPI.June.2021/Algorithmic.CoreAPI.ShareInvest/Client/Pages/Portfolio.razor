@@ -47,6 +47,112 @@
 						<table class="table">
 							@switch (name)
 							{
+								case Interface.Strategics.Rotation:
+									<thead>
+										<tr name="@((int)name)">
+											<th scope="col">
+												<div class="context rotation_name">@Enum.GetName(typeof(Interface.Strategics), name).Replace("_", " ")</div>
+											</th>
+											<th scope="col">
+												<div class="title rotation_name" title="매수가격범위">Price per Share</div>
+											</th>
+											<th scope="col">
+												<div class="title rotation_name" title="Price per Share 상단에서 목표수익률 도달시 3차례에 걸쳐 수익실현">Revenue</div>
+											</th>
+											<th scope="col">
+												<div class="title rotation_name" title="Price per Share 하단에서 일정비율이상으로 하락시 3차례에 걸쳐 손절">Stop Loss</div>
+											</th>
+											<th scope="col">
+												<div class="title rotation_name" title="최대보유기간">Liquidation</div>
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<th scope="row" title="@(string.IsNullOrEmpty((retrieve as Tuple<string, Catalog.Rotation, string>)?.Item1) ? "Data doesn′t Exist." : (retrieve as Tuple<string, Catalog.Rotation, string>).Item1)">
+												<div class="sub_context rotation_name">@Codes.First(o => o.Code.Equals(code)).Name</div>
+											</th>
+											<td>
+												<span class="rotation_name">
+													<input class="scenario_input rotation_input_division" type="text" required onchange="number(this)" onkeyup="number(this)" id="@account.Insert(8, ((char)name).ToString())" />
+													<small>∼</small>
+													<input class="scenario_input rotation_input_division" type="text" required onchange="number(this)" onkeyup="number(this)" id="@account.Insert(9, ((char)name).ToString())" />
+													<small>won</small>
+												</span>
+											</td>
+											<td>
+												<span class="rotation_name">
+													<small class="rotation_context">①</small>
+													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(1, ((char)name).ToString())" />
+													<small>％</small>
+												</span>
+											</td>
+											<td>
+												<span class="rotation_name">
+													<small class="rotation_context">①</small>
+													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(4, ((char)name).ToString())" />
+													<small>％</small>
+												</span>
+											</td>
+											<td rowspan="3">
+												<span>
+													<input type="date" required autocomplete="on" id="@account.Insert(7, ((char)name).ToString())" value="@((retrieve as Tuple<string, Catalog.Rotation, string>)?.Item3)" />
+												</span>
+											</td>
+										</tr>
+										<tr>
+											<td scope="row">
+												<div class="sub_context rotation_name" title="일최대매수금액">Maximum per Day</div>
+											</td>
+											<td>
+												<span class="rotation_name">
+													<input class="scenario_input rotation_input_text" type="text" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat((char)name, account)" />
+													<small>won</small>
+												</span>
+											</td>
+											<td>
+												<span class="rotation_name">
+													<small class="rotation_context">②</small>
+													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(2, ((char)name).ToString())" />
+													<small>％</small>
+												</span>
+											</td>
+											<td>
+												<span class="rotation_name">
+													<small class="rotation_context">②</small>
+													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(5, ((char)name).ToString())" />
+													<small>％</small>
+												</span>
+											</td>
+										</tr>
+										<tr>
+											<td scope="row">
+												<div class="sub_context rotation_name" title="최대매수금액">Accumulate</div>
+											</td>
+											<td>
+												<span class="rotation_name">
+													<input class="scenario_input rotation_input_text" type="text" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat(account, (char)name)" />
+													<small>won</small>
+												</span>
+											</td>
+											<td>
+												<span class="rotation_name">
+													<small class="rotation_context">③</small>
+													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(3, ((char)name).ToString())" />
+													<small>％</small>
+												</span>
+											</td>
+											<td>
+												<span class="rotation_name">
+													<small class="rotation_context">③</small>
+													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(6, ((char)name).ToString())" />
+													<small>％</small>
+												</span>
+											</td>
+										</tr>
+									</tbody>
+									break;
+
 								case Interface.Strategics.Long_Position:
 									<thead>
 										<tr name="@((int)name)">

@@ -138,6 +138,11 @@
 	font-style: italic
 }
 
+.rotation_context
+{
+	color: gainsboro
+}
+
 .sub_context
 {
 	color: slategrey;
@@ -219,6 +224,26 @@
 .scenario_input_single
 {
 	width: 82.5%
+}
+
+.rotation_input_text
+{
+	width: 50%
+}
+
+.rotation_input_number
+{
+	width: 75%
+}
+
+.rotation_input_division
+{
+	width: 30%
+}
+
+.rotation_name
+{
+	white-space: nowrap
 }
 
 .search

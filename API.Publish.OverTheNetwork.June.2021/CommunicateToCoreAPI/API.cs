@@ -78,6 +78,21 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		public async Task<object> GetThemeIndexAsync(string code)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(typeof(Catalog.Dart.TiStory), code), Method.GET), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					return JsonConvert.DeserializeObject<Catalog.Dart.TiStory>(response.Content);
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), nameof(this.GetThemeIndexAsync), code, ex.StackTrace);
+			}
+			return null;
+		}
 		public async Task<object> GetPageAsync(string code)
 		{
 			try
@@ -188,6 +203,25 @@ namespace ShareInvest.Client
 			catch (Exception ex)
 			{
 				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			return null;
+		}
+		public async Task<object> GetContextAsync(Type type, string param)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheIntegratedAddress(type, param), Method.GET), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					switch (type.Name)
+					{
+						case nameof(Catalog.Models.Rotation):
+							return JsonConvert.DeserializeObject<IEnumerable<Catalog.Models.Rotation>>(response.Content);
+					}
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(type, type.Name, ex.StackTrace);
 			}
 			return null;
 		}
@@ -459,7 +493,7 @@ namespace ShareInvest.Client
 						case Retention when string.IsNullOrEmpty(response.Content) is false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
 
-						case Tick or Message or Account or Catalog.Models.RevisedStockPrice or Response or Rotation:
+						case Tick or Message or Account or Catalog.Models.RevisedStockPrice or Response or Catalog.Models.Rotation:
 							return (int)response.StatusCode;
 
 						case Stocks:
@@ -560,7 +594,7 @@ namespace ShareInvest.Client
 		API(dynamic key)
 		{
 			security = new Security(key);
-			client = new RestClient(security.Url)
+			client = new RestClient(Base.IsDebug ? @"http://localhost:5528/" : security.Url)
 			{
 				Timeout = -1
 			};

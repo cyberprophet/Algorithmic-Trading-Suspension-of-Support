@@ -30,6 +30,9 @@ namespace ShareInvest.Pages
 
 					switch (find)
 					{
+						case Catalog.Rotation ro when ro.Account.Equals(account):
+							return new Tuple<string, Catalog.Rotation, string>(ro.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty, ro, ro.Date > 0 ? string.Concat(20, ro.Liquidation.Insert(4, "-").Insert(2, "-")) : string.Empty);
+
 						case Catalog.LongPosition lp when lp.Account.Equals(account):
 							return new Tuple<string, string, string>(lp.Underweight.ToString("P5").Replace("%", string.Empty), lp.Overweight.ToString("N0"), lp.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty);
 
@@ -81,6 +84,10 @@ namespace ShareInvest.Pages
 								case Interface.Strategics.Scenario:
 									Enumerable[i] = JsonConvert.DeserializeObject<Catalog.Scenario>(enumerable[i].Contents);
 									break;
+
+								case Interface.Strategics.Rotation:
+									Enumerable[i] = JsonConvert.DeserializeObject<Catalog.Rotation>(enumerable[i].Contents);
+									break;
 							}
 					}
 			}
@@ -90,7 +97,9 @@ namespace ShareInvest.Pages
 		protected internal async void RequestSave(int name, string sender, MouseEventArgs _)
 		{
 			IsClicked[sender] = true;
+			int index;
 			string json = null;
+			string[] response;
 
 			switch (Enum.ToObject(typeof(Interface.Strategics), name))
 			{
@@ -107,10 +116,10 @@ namespace ShareInvest.Pages
 					break;
 
 				case Interface.Strategics.Scenario:
-					var response = new string[5];
+					response = new string[5];
 					var location = new[] { 0, 1, 3, 5, sender.Length };
 
-					for (int index = 0; index < location.Length; index++)
+					for (index = 0; index < location.Length; index++)
 						response[index] = await Runtime.InvokeAsync<string>(string.Concat(interop, recall), sender.Insert(location[index], name.ToString("D2")));
 
 					if (double.TryParse(response[^2], out double rate) && int.TryParse(response[location.Length - 1].Replace(",", string.Empty), out int price) && long.TryParse(response[0].Replace(",", string.Empty), out long max) && int.TryParse(response[1], out int sell) && int.TryParse(response[2], out int buy) && buy > 0 && sell > 0 && price > 0 && max > 0 && double.IsNaN(rate) is false)
@@ -125,6 +134,33 @@ namespace ShareInvest.Pages
 							Maximum = max,
 							Hope = price,
 							Target = rate * 1e-2
+						});
+					break;
+
+				case Interface.Strategics.Rotation:
+					response = new string[0xB];
+
+					for (index = 0; index < response.Length; index++)
+						response[index] = await Runtime.InvokeAsync<string>(string.Concat(interop, recall), sender.Insert(index, ((char)name).ToString()));
+
+					if (double.TryParse(response[6], out double gl) && double.TryParse(response[5], out double bl) && double.TryParse(response[4], out double al) && double.TryParse(response[3], out double gr) && double.TryParse(response[2], out double br) && double.TryParse(response[1], out double ar) && int.TryParse(response[^3].Replace(",", string.Empty), out int min_price) && int.TryParse(response[^2].Replace(",", string.Empty), out int max_price) && long.TryParse(response[^1].Replace(",", string.Empty), out long accumulate) && long.TryParse(response[0].Replace(",", string.Empty), out long per) && min_price < max_price && ar < br && br < gr && al < bl && bl < gl && accumulate > per)
+						json = JsonConvert.SerializeObject(new Catalog.Rotation
+						{
+							Account = sender,
+							Code = ChosenCodes[sender],
+							Date = DateTime.Now.Ticks,
+							Accumulate = accumulate,
+							PerDay = per,
+							Liquidation = response[^4].Replace("-", string.Empty)[2..],
+							Short = min_price,
+							Long = max_price,
+							AlphaRevenue = ar * 1e-2,
+							BetaRevenue = br * 1e-2,
+							Revenue = gr * 1e-2,
+							AlphaStopLoss = al * 1e-2,
+							BetaStopLoss = bl * 1e-2,
+							StopLoss = gl * 1e-2,
+							Trend = name
 						});
 					break;
 			}

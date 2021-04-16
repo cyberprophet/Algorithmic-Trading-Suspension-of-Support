@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
@@ -10,6 +11,23 @@ namespace ShareInvest.Controllers
 	[ApiController, Route(Security.route), Produces(Security.produces)]
 	public class RotationController : ControllerBase
 	{
+		[HttpGet(Security.date), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status204NoContent), ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> GetContextAsync(string date)
+		{
+			try
+			{
+				if (await context.Rotations.AsNoTracking().AnyAsync(o => o.Date.Equals(date)))
+					return Ok(from o in context.Rotations.AsNoTracking() where o.Date.Equals(date) select o);
+
+				else
+					return NoContent();
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"{GetType()}\n{date}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
+			}
+			return BadRequest();
+		}
 		[HttpPost, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest), ProducesResponseType(StatusCodes.Status204NoContent)]
 		public async Task<IActionResult> PostContextAsync([FromBody] Catalog.Models.Rotation rotation)
 		{

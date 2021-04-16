@@ -554,14 +554,19 @@ namespace ShareInvest
 						for (index = 0; index < conditions.Item2.Length - 1; index++)
 						{
 							if (Conditions.TryGetValue(past.ToString(Base.DateFormat), out Catalog.OpenAPI.Condition[] position))
+							{
+								var theme = await this.api.GetThemeIndexAsync(conditions.Item2[index]) as Catalog.Dart.TiStory;
 								position[index] = new Catalog.OpenAPI.Condition
 								{
 									Code = conditions.Item2[index],
 									Name = api.GetMasterCodeName(conditions.Item2[index]),
+									Theme = theme is null || string.IsNullOrEmpty(theme.Index) ? string.Empty : theme.Index,
+									Title = theme is null || string.IsNullOrEmpty(theme.Title) ? string.Empty : theme.Title,
 									Date = new string[conditions.Item1 + 1],
 									High = new int[conditions.Item1 + 1],
 									Low = new int[conditions.Item1 + 1]
 								};
+							}
 							CheckTheInformationReceivedOnTheDay(conditions.Item2[index]);
 						}
 					}
@@ -585,7 +590,7 @@ namespace ShareInvest
 					var occur = 0;
 					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, condition.Code).Send -= OnReceiveSecuritiesAPI;
 
-					if (api.IsAdministrator && api.IsServer is false && now.Hour is 0xF or 0x10)
+					if (api.IsAdministrator && api.IsServer is false && (now.Hour is 0xF or 0x10 || Base.IsDebug))
 					{
 						foreach (var kv in Conditions)
 							foreach (var v in kv.Value)
@@ -596,53 +601,119 @@ namespace ShareInvest
 									else
 										continue;
 
-						foreach (var kv in Conditions)
+						if (await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
 						{
-							var empty = false;
-
-							foreach (var v in kv.Value)
+							foreach (var kv in Conditions)
 							{
-								empty = v.Date.Any(o => string.IsNullOrEmpty(o));
+								var empty = false;
 
-								if (empty)
+								foreach (var v in kv.Value)
 								{
-									if (Base.IsDebug)
-										Base.SendMessage(GetType(), kv.Key, v.Code);
+									empty = v.Date.Any(o => string.IsNullOrEmpty(o));
 
-									break;
+									if (empty)
+									{
+										if (Base.IsDebug)
+											Base.SendMessage(GetType(), kv.Key, v.Code);
+
+										break;
+									}
+								}
+								if (empty)
+									continue;
+
+								switch (await new Advertise(kv.Key, key).WriteStatistics(kv.Value, list))
+								{
+									case Stack<Catalog.Strategics.TiStory> tistory:
+										while (tistory.TryPop(out Catalog.Strategics.TiStory pop))
+											occur += await api.PostContextAsync(new Catalog.Models.Rotation
+											{
+												Date = kv.Key,
+												Code = pop.Code,
+												Purchase = pop.Purchase,
+												High = pop.High,
+												MaxReturn = pop.HighRate,
+												Low = pop.Low,
+												MaxLoss = pop.LowRate,
+												Close = pop.Close,
+												Liquidation = pop.RemainRate
+
+											}) is int ok ? ok : 1;
+										break;
+
+									case 0x196:
+										notifyIcon.Text = "Account cann´t be Link.";
+										return;
 								}
 							}
-							if (empty)
-								continue;
-
-							switch (await new Advertise(kv.Key, key).WriteStatistics(kv.Value))
+							if (occur > 0 && occur % 0xC8 == 0)
 							{
-								case Stack<Catalog.Strategics.TiStory> tistory:
-									while (tistory.TryPop(out Catalog.Strategics.TiStory pop))
-										occur += await api.PostContextAsync(new Rotation
+								var initiate = new DateTime(0x7E5, 4, 5);
+								var dictionary = new Dictionary<string, Catalog.Models.Rotation>(0x20);
+								var contents = new Dictionary<string, Catalog.Dart.TiStory>(0x20);
+
+								while (initiate.CompareTo(now) < 0)
+								{
+									if (Base.DisplayThePage(initiate) is false && await api.GetContextAsync(typeof(Catalog.Models.Rotation), initiate.ToString(Base.DateFormat)) is IEnumerable<Catalog.Models.Rotation> enumerable)
+										foreach (var ro in enumerable)
 										{
-											Date = kv.Key,
-											Code = pop.Code,
-											Purchase = pop.Purchase,
-											High = pop.High,
-											MaxReturn = pop.HighRate,
-											Low = pop.Low,
-											MaxLoss = pop.LowRate,
-											Close = pop.Close,
-											Liquidation = pop.RemainRate
+											if (dictionary.TryGetValue(ro.Code, out Catalog.Models.Rotation rotation) && DateTime.TryParseExact(rotation.Date.Split(';') is string[] rote && rote.Length > 1 ? rote[^1] : rotation.Date, Base.DateFormat, CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime compare))
+											{
+												for (int i = 0; i < 0xC; i++)
+												{
+													while (Base.DisplayThePage(compare))
+														compare.AddDays(1);
 
-										}) is int ok ? ok : 1;
-									break;
+													compare.AddDays(1);
+												}
+												if (ro.Date.CompareTo(compare.ToString(Base.DateFormat)) < 0)
+													dictionary[ro.Code] = new Catalog.Models.Rotation
+													{
+														Code = ro.Code,
+														Date = rotation.Date,
+														High = ro.High > rotation.High ? ro.High : rotation.High,
+														MaxReturn = ro.MaxReturn > rotation.MaxReturn ? ro.MaxReturn : rotation.MaxReturn,
+														Low = ro.Low > rotation.Low ? rotation.Low : ro.Low,
+														MaxLoss = ro.MaxLoss > rotation.MaxLoss ? rotation.MaxLoss : ro.MaxLoss,
+														Close = ro.Close,
+														Liquidation = ro.Liquidation,
+														Purchase = rotation.Purchase
+													};
+												else
+												{
+													var gather = string.Concat(rotation.Date, ';', ro.Date);
+													var count = gather.Split(';').Length;
+													dictionary[ro.Code] = new Catalog.Models.Rotation
+													{
+														Code = ro.Code,
+														Date = gather,
+														Purchase = (int)SecondaryIndicators.EMA.Make(count, ro.Purchase, rotation.Purchase),
+														High = (int)SecondaryIndicators.EMA.Make(count, ro.High, rotation.High),
+														MaxReturn = SecondaryIndicators.EMA.Make(count, ro.MaxReturn, rotation.MaxReturn),
+														Low = (int)SecondaryIndicators.EMA.Make(count, ro.Low, rotation.Low),
+														MaxLoss = SecondaryIndicators.EMA.Make(count, ro.MaxLoss, rotation.MaxLoss),
+														Close = (int)SecondaryIndicators.EMA.Make(count, ro.Close, rotation.Close),
+														Liquidation = SecondaryIndicators.EMA.Make(count, ro.Liquidation, rotation.Liquidation)
+													};
+												}
+											}
+											else
+											{
+												dictionary[ro.Code] = ro;
 
-								case 0x196:
-									notifyIcon.Text = "Account cann´t be Link.";
-									return;
+												if (await api.GetThemeIndexAsync(ro.Code) is Catalog.Dart.TiStory ts)
+													contents[ro.Code] = new Catalog.Dart.TiStory
+													{
+														Index = list.Find(o => o.Index.Equals(ts.Index)).Name,
+														Title = ts.Title
+													};
+											}
+										}
+									initiate.AddDays(1);
+								}
+								if (dictionary.Count > 0)
+									await new Advertise(key).WriteStatistics(dictionary.Values.OrderByDescending(o => o.MaxReturn), contents);
 							}
-						}
-						if (occur > 0 && occur % 0xC8 == 0)
-						{
-							if (Base.IsDebug)
-								Base.SendMessage(sender.GetType(), occur.ToString("N0"));
 						}
 					}
 					return;

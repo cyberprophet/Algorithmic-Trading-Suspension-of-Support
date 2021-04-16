@@ -10,6 +10,14 @@
 		{
 			get; set;
 		}
+		public string Theme
+		{
+			get; set;
+		}
+		public string Title
+		{
+			get; set;
+		}
 		public int Purchase
 		{
 			get; set;

@@ -44,6 +44,7 @@
 	{
 		Long_Position = 'L',
 		Scenario = 'N',
+		Rotation = 'R',
 		TC = 'C',
 		TF = 'F',
 		TS = 'T',

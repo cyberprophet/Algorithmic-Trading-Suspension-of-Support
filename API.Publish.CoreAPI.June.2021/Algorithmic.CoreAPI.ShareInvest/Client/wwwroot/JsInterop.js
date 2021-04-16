@@ -36,6 +36,11 @@
 	recall: function (param)
 	{
 		return document.getElementById(param).value;
+	},
+	liquidation: function (param)
+	{
+		var dateControl = document.querySelector('input[type="date"]');
+		dateControl.value = param;
 	}
 };
 function number(obj)
