@@ -647,7 +647,7 @@ namespace ShareInvest
 											return;
 									}
 								}
-							if (occur > 0 && occur % 0xC8 == 0 || Base.IsDebug)
+							if (occur > 0 && occur % 0xC8 == 0)
 							{
 								var initiate = new DateTime(0x7E5, 4, 5);
 								var dictionary = new Dictionary<string, Catalog.Models.Rotation>(0x20);
@@ -831,19 +831,20 @@ namespace ShareInvest
 				analysis.Wait = false;
 				analysis.Consecutive -= analysis.OnReceiveDrawChart;
 				analysis.Send -= OnReceiveSecuritiesAPI;
+				analysis.Reservation = new Tuple<Queue<string>, Queue<string>>(new Queue<string>(0x20), new Queue<string>(0x20));
+				DateTime now = DateTime.Now, time = new(now.Year, now.Month, now.Day, Base.CheckIfMarketDelay(now) ? 0xA : 9, 0, 0);
+				int amount, remain, order;
 
 				switch (strategics)
 				{
 					case Strategics.Long_Position when JsonConvert.DeserializeObject<LongPosition>(bring.Contents) is LongPosition json && analysis.Code.Equals(json.Code):
-						analysis.Account = json.Account;
 						analysis.Classification = json;
-						analysis.Strategics = strategics;
+						analysis.Account = json.Account;
 						break;
 
 					case Strategics.Scenario when JsonConvert.DeserializeObject<Scenario>(bring.Contents) is Scenario json && analysis.Code.Equals(json.Code):
-						int amount = (int)(json.Maximum / json.Long / analysis.Current), remain = (int)(json.Maximum / json.Short / json.Hope), order = 0;
-						DateTime now = DateTime.Now, time = new(now.Year, now.Month, now.Day, Base.CheckIfMarketDelay(now) ? 0xA : 9, 0, 0);
-						analysis.Reservation = new Tuple<Queue<string>, Queue<string>>(new Queue<string>(0x20), new Queue<string>(0x20));
+						amount = (int)(json.Maximum / json.Long / analysis.Current);
+						remain = (int)(json.Maximum / json.Short / json.Hope);
 						analysis.Classification = new Scenario
 						{
 							Account = json.Account,
@@ -863,18 +864,33 @@ namespace ShareInvest
 							analysis.Reservation.Item1.Enqueue(time.AddSeconds(order).ToString(Base.TimeFormat));
 
 						analysis.Account = json.Account;
-						analysis.Strategics = strategics;
+						break;
+
+					case Strategics.Rotation when JsonConvert.DeserializeObject<Catalog.Rotation>(bring.Contents) is Catalog.Rotation json && analysis.Code.Equals(json.Code):
+						amount = (int)(json.PerDay / json.Long);
+						remain = (int)(json.Accumulate / 3 / json.Long);
+						analysis.Amount = (remain > Base.Tradable ? remain / Base.Tradable + 1 : 1, amount > Base.Tradable ? amount / Base.Tradable + 1 : 1);
+						analysis.Classification = json;
+
+						for (order = 0; order < Base.Tradable * 0x19; order += Base.Tradable * 0x19 / (amount / analysis.Amount.Item2))
+							analysis.Reservation.Item2.Enqueue(time.AddSeconds(order).ToString(Base.TimeFormat));
+
+						for (order = 0; order < Base.Tradable * 0x19; order += Base.Tradable * 0x19 / (remain / analysis.Amount.Item1))
+							analysis.Reservation.Item1.Enqueue(time.AddSeconds(order).ToString(Base.TimeFormat));
+
+						analysis.Account = json.Account;
 						break;
 
 					default:
 						return;
 				}
+				analysis.Strategics = strategics;
 				analysis.Wait = DateTime.Now.Hour > 8;
 				analysis.Send += OnReceiveSecuritiesAPI;
 				analysis.Consecutive += analysis.OnReceiveDrawChart;
 
-				if (Base.IsDebug && analysis.Reservation is Tuple<Queue<string>, Queue<string>>)
-					Base.SendMessage(bring.GetType(), analysis.Name, analysis.Quantity, analysis.Reservation.Item1.Count, analysis.Reservation.Item2.Count, analysis.Purchase, analysis.Current as object, analysis.Classification);
+				if (Base.IsDebug)
+					Base.SendMessage(strategics.GetType(), (connect as OpenAPI.ConnectAPI).GetMasterCodeName(analysis.Code), strategics);
 			}
 		}
 		void ExceptInStrategics(IEnumerable<string> enumerable)
@@ -1002,7 +1018,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x30B));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x322));
 						}
 						catch (Exception ex)
 						{

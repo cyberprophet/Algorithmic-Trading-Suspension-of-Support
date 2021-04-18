@@ -594,7 +594,7 @@ namespace ShareInvest.Client
 		API(dynamic key)
 		{
 			security = new Security(key);
-			client = new RestClient(Base.IsDebug ? @"http://localhost:5528/" : security.Url)
+			client = new RestClient(security.Url)
 			{
 				Timeout = -1
 			};

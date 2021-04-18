@@ -103,6 +103,70 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			switch (Classification)
 			{
+				case Catalog.Rotation rotation when Wait:
+					var now = DateTime.Now.ToString(Base.DateFormat);
+
+					if (Offer > 0 && Quantity > 0 && e.Date.CompareTo(NextOrderStringTime.Item1) > 0 && (rotation.Liquidation.CompareTo(now) < 0 || Bid < rotation.Short * (1 - rotation.AlphaStopLoss) || Offer > rotation.Long * (1 + rotation.AlphaRevenue + Base.Tax)))
+					{
+						var multiple = OrderNumber is null || OrderNumber.Any(o => o.Value >= e.Price) is false ? 1 : 0;
+
+						if (multiple == 0)
+						{
+							multiple += Amount.Item1;
+
+							if (Bid < rotation.Short * (1 - rotation.BetaStopLoss) || Offer > rotation.Long * (1 + rotation.BetaRevenue + Base.Tax) || rotation.Liquidation.CompareTo(now) < 0)
+								multiple += Amount.Item1;
+
+							if (Bid < rotation.Short * (1 - rotation.StopLoss) || Offer > rotation.Long * (1 + rotation.Revenue + Base.Tax) || rotation.Liquidation.CompareTo(now) < 0)
+								multiple += Amount.Item1;
+
+							multiple = Quantity - OrderNumber.Count(o => o.Value >= e.Price) * multiple > multiple ? multiple : 1;
+						}
+						if (multiple > 0)
+						{
+							Wait = false;
+							Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+							{
+								AccNo = rotation.Account,
+								Code = rotation.Code,
+								OrderType = (int)OrderType.신규매도,
+								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+								OrgOrderNo = string.Empty,
+								Price = Offer,
+								Qty = multiple
+							}));
+							if (Reservation.Item1.TryDequeue(out string next))
+								NextOrderStringTime = (e.Date.CompareTo(next) < 0 ? next : e.Date, NextOrderStringTime.Item2);
+
+							else
+								NextOrderStringTime = (rotation.Account, NextOrderStringTime.Item2);
+
+							return;
+						}
+					}
+					if (Bid > 0 && Bid < rotation.Long && Bid > rotation.Short && now.CompareTo(rotation.Liquidation) < 0 && e.Date.CompareTo(NextOrderStringTime.Item2) > 0 && rotation.Accumulate * (1 - Base.Tax) > (long)e.Price * (OrderNumber is null || OrderNumber.Any(o => o.Value <= e.Price) is false ? Quantity : Quantity + Amount.Item2 * OrderNumber.Count(o => o.Value <= e.Price)))
+					{
+						Wait = false;
+						Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+						{
+							AccNo = rotation.Account,
+							Code = rotation.Code,
+							OrderType = (int)OrderType.신규매수,
+							HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+							OrgOrderNo = string.Empty,
+							Price = Bid,
+							Qty = Amount.Item2
+						}));
+						if (Reservation.Item2.TryDequeue(out string next))
+							NextOrderStringTime = (NextOrderStringTime.Item1, e.Date.CompareTo(next) < 0 ? next : e.Date);
+
+						else
+							NextOrderStringTime = (NextOrderStringTime.Item1, rotation.Account);
+
+						return;
+					}
+					break;
+
 				case Catalog.Scenario scenario when Wait:
 					if (Offer > 0 && Quantity > 0 && scenario.Hope * (1 + scenario.Target + Base.Tax) < Offer && e.Date.CompareTo(NextOrderStringTime.Item1) > 0 && (OrderNumber is null || OrderNumber.Any(o => o.Value >= e.Price) is false || Quantity > OrderNumber.Count(o => o.Value >= e.Price) * scenario.Short))
 					{
@@ -348,6 +412,10 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 			get; set;
 		}
 		public override Interface.IStrategics Classification
+		{
+			get; set;
+		}
+		public override (int, int) Amount
 		{
 			get; set;
 		}

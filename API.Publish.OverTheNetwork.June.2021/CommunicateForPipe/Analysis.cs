@@ -71,6 +71,10 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		public abstract (int, int) Amount
+		{
+			get; set;
+		}
 		public abstract Dictionary<string, dynamic> OrderNumber
 		{
 			get; set;

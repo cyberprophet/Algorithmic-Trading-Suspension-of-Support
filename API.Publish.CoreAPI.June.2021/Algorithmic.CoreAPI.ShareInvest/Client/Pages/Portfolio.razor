@@ -69,34 +69,34 @@
 									</thead>
 									<tbody>
 										<tr>
-											<th scope="row" title="@(string.IsNullOrEmpty((retrieve as Tuple<string, Catalog.Rotation, string>)?.Item1) ? "Data doesn′t Exist." : (retrieve as Tuple<string, Catalog.Rotation, string>).Item1)">
+											<th scope="row" title="@(string.IsNullOrEmpty((retrieve as Tuple<string, string[], string, string[]>)?.Item1) ? "Data doesn′t Exist." : (retrieve as Tuple<string, string[], string, string[]>).Item1)">
 												<div class="sub_context rotation_name">@Codes.First(o => o.Code.Equals(code)).Name</div>
 											</th>
 											<td>
 												<span class="rotation_name">
-													<input class="scenario_input rotation_input_division" type="text" required onchange="number(this)" onkeyup="number(this)" id="@account.Insert(8, ((char)name).ToString())" />
+													<input class="scenario_input rotation_input_division" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item2[0])" type="text" required onchange="number(this)" onkeyup="number(this)" id="@account.Insert(8, ((char)name).ToString())" />
 													<small>∼</small>
-													<input class="scenario_input rotation_input_division" type="text" required onchange="number(this)" onkeyup="number(this)" id="@account.Insert(9, ((char)name).ToString())" />
+													<input class="scenario_input rotation_input_division" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item2[1])" type="text" required onchange="number(this)" onkeyup="number(this)" id="@account.Insert(9, ((char)name).ToString())" />
 													<small>won</small>
 												</span>
 											</td>
 											<td>
 												<span class="rotation_name">
 													<small class="rotation_context">①</small>
-													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(1, ((char)name).ToString())" />
+													<input class="scenario_input rotation_input_number" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item4[0])" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(1, ((char)name).ToString())" />
 													<small>％</small>
 												</span>
 											</td>
 											<td>
 												<span class="rotation_name">
 													<small class="rotation_context">①</small>
-													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(4, ((char)name).ToString())" />
+													<input class="scenario_input rotation_input_number" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item4[3])" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(4, ((char)name).ToString())" />
 													<small>％</small>
 												</span>
 											</td>
 											<td rowspan="3">
 												<span>
-													<input type="date" required autocomplete="on" id="@account.Insert(7, ((char)name).ToString())" value="@((retrieve as Tuple<string, Catalog.Rotation, string>)?.Item3)" />
+													<input type="date" required autocomplete="on" id="@account.Insert(7, ((char)name).ToString())" value="@((retrieve as Tuple<string, string[], string, string[]>)?.Item3)" />
 												</span>
 											</td>
 										</tr>
@@ -106,21 +106,21 @@
 											</td>
 											<td>
 												<span class="rotation_name">
-													<input class="scenario_input rotation_input_text" type="text" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat((char)name, account)" />
+													<input class="scenario_input rotation_input_text" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item2[2])" type="text" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat((char)name, account)" />
 													<small>won</small>
 												</span>
 											</td>
 											<td>
 												<span class="rotation_name">
 													<small class="rotation_context">②</small>
-													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(2, ((char)name).ToString())" />
+													<input class="scenario_input rotation_input_number" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item4[1])" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(2, ((char)name).ToString())" />
 													<small>％</small>
 												</span>
 											</td>
 											<td>
 												<span class="rotation_name">
 													<small class="rotation_context">②</small>
-													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(5, ((char)name).ToString())" />
+													<input class="scenario_input rotation_input_number" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item4[4])" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(5, ((char)name).ToString())" />
 													<small>％</small>
 												</span>
 											</td>
@@ -131,21 +131,21 @@
 											</td>
 											<td>
 												<span class="rotation_name">
-													<input class="scenario_input rotation_input_text" type="text" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat(account, (char)name)" />
+													<input class="scenario_input rotation_input_text" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item2[^1])" type="text" required onchange="number(this)" onkeyup="number(this)" id="@string.Concat(account, (char)name)" />
 													<small>won</small>
 												</span>
 											</td>
 											<td>
 												<span class="rotation_name">
 													<small class="rotation_context">③</small>
-													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(3, ((char)name).ToString())" />
+													<input class="scenario_input rotation_input_number" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item4[2])" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(3, ((char)name).ToString())" />
 													<small>％</small>
 												</span>
 											</td>
 											<td>
 												<span class="rotation_name">
 													<small class="rotation_context">③</small>
-													<input class="scenario_input rotation_input_number" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(6, ((char)name).ToString())" />
+													<input class="scenario_input rotation_input_number" placeholder="@((retrieve as Tuple<string, string[], string, string[]>)?.Item4[^1])" type="number" step="0.25" min="0.25" max="999" required id="@account.Insert(6, ((char)name).ToString())" />
 													<small>％</small>
 												</span>
 											</td>

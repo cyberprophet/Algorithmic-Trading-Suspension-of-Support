@@ -31,7 +31,40 @@ namespace ShareInvest.Pages
 					switch (find)
 					{
 						case Catalog.Rotation ro when ro.Account.Equals(account):
-							return new Tuple<string, Catalog.Rotation, string>(ro.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty, ro, ro.Date > 0 ? string.Concat(20, ro.Liquidation.Insert(4, "-").Insert(2, "-")) : string.Empty);
+							string[] comma = new string[4], percent = new string[6];
+
+							for (int i = 0; i < percent.Length; i++)
+								switch (i)
+								{
+									case 0:
+										comma[i] = ro.Short.ToString("N0");
+										percent[i] = ro.AlphaRevenue.ToString("P3").Replace("%", string.Empty);
+										continue;
+
+									case 1:
+										comma[i] = ro.Long.ToString("N0");
+										percent[i] = ro.BetaRevenue.ToString("P3").Replace("%", string.Empty);
+										continue;
+
+									case 2:
+										comma[i] = ro.PerDay.ToString("N0");
+										percent[i] = ro.Revenue.ToString("P3").Replace("%", string.Empty);
+										continue;
+
+									case 3:
+										comma[i] = ro.Accumulate.ToString("N0");
+										percent[i] = ro.AlphaStopLoss.ToString("P3").Replace("%", string.Empty);
+										continue;
+
+									case 4:
+										percent[i] = ro.BetaStopLoss.ToString("P3").Replace("%", string.Empty);
+										continue;
+
+									case 5:
+										percent[i] = ro.StopLoss.ToString("P3").Replace("%", string.Empty);
+										continue;
+								}
+							return new Tuple<string, string[], string, string[]>(ro.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty, comma, ro.Date > 0 ? string.Concat(20, ro.Liquidation.Insert(4, "-").Insert(2, "-")) : string.Empty, percent);
 
 						case Catalog.LongPosition lp when lp.Account.Equals(account):
 							return new Tuple<string, string, string>(lp.Underweight.ToString("P5").Replace("%", string.Empty), lp.Overweight.ToString("N0"), lp.Date > 0 ? string.Concat(date.ToLongDateString(), " ", date.ToLongTimeString()) : string.Empty);

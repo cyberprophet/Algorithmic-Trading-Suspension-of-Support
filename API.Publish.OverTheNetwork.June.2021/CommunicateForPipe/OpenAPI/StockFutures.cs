@@ -105,6 +105,10 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		{
 			get; set;
 		}
+		public override (int, int) Amount
+		{
+			get; set;
+		}
 		public override Dictionary<string, dynamic> OrderNumber
 		{
 			get; set;
