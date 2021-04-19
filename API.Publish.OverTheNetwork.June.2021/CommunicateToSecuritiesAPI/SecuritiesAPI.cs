@@ -419,7 +419,7 @@ namespace ShareInvest
 					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false && (api.IsAdministrator is false || Base.IsDebug))
 						worker.RunWorkerAsync(connect.Account);
 
-					if (api.IsAdministrator && (api.IsServer || Base.IsDebug) && connect is OpenAPI.ConnectAPI con)
+					if (Base.IsDebug && connect is OpenAPI.ConnectAPI con && con.Count < 0x200)
 						for (int i = 0; i < con.Conditions.Count; i++)
 						{
 							name = con.Conditions[con.Conditions.Count - i - 1];
