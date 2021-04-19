@@ -572,9 +572,12 @@ namespace ShareInvest
 					}
 					return;
 
-				case Queue<Stocks> stocks when stocks.TryPeek(out Stocks condition):
+				case Queue<Stocks> stocks when stocks.TryPeek(out Stocks condition) && connect is OpenAPI.ConnectAPI statistics:
+					statistics.RemoveValueRqData(sender.GetType().Name, condition.Code).Send -= OnReceiveSecuritiesAPI;
+					var occur = 0;
+
 					foreach (var kv in Conditions)
-						if (kv.Value.Any(o => o.Code.Equals(condition.Code)))
+						if (kv.Value.Any(o => o.Code.Equals(condition.Code) && Array.Exists(o.Date, o => string.IsNullOrEmpty(o))) && stocks.Count > 0)
 						{
 							var position = kv.Value.Single(o => o.Code.Equals(condition.Code));
 
@@ -585,22 +588,20 @@ namespace ShareInvest
 									position.High[i] = high;
 									position.Low[i] = low;
 								}
+							stocks.Clear();
 						}
-					stocks.Clear();
-					var occur = 0;
-					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, condition.Code).Send -= OnReceiveSecuritiesAPI;
-
 					if (api.IsAdministrator && api.IsServer is false)
 					{
 						foreach (var kv in Conditions)
 							foreach (var v in kv.Value)
 								for (int i = 0; i < v.Date.Length; i++)
-									if (string.IsNullOrEmpty(v.Date[i]) && Codes.Any(o => o.Equals(v.Code)))
+									if (string.IsNullOrEmpty(v.Date[i]))
+									{
+										if (Base.IsDebug)
+											Base.SendMessage(sender.GetType(), v.Code, v.Name, i > 0 ? v.Date[i - 1] : kv.Key);
+
 										return;
-
-									else
-										continue;
-
+									}
 						if (await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> list)
 						{
 							if (api.IsAdministrator && api.IsServer is false && now.Hour is 0xF or 0x10)
@@ -701,7 +702,7 @@ namespace ShareInvest
 											else
 											{
 												dictionary[ro.Code] = ro;
-												contents[ro.Code] = new Tuple<string, Catalog.Dart.TiStory>((connect as OpenAPI.ConnectAPI).GetMasterCodeName(ro.Code), await api.GetThemeIndexAsync(ro.Code) is Catalog.Dart.TiStory story ? new Catalog.Dart.TiStory
+												contents[ro.Code] = new Tuple<string, Catalog.Dart.TiStory>(statistics.GetMasterCodeName(ro.Code), await api.GetThemeIndexAsync(ro.Code) is Catalog.Dart.TiStory story ? new Catalog.Dart.TiStory
 												{
 													Index = list.Find(o => o.Index.Equals(story.Index)).Name,
 													Title = story.Title
@@ -1018,7 +1019,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x322));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x339));
 						}
 						catch (Exception ex)
 						{

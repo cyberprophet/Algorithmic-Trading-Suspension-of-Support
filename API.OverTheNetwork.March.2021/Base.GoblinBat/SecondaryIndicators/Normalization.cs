@@ -39,6 +39,19 @@ namespace ShareInvest.SecondaryIndicators
 			Min = enumerable.Where(o => o > uint.MinValue).Min();
 			Max = enumerable.Max();
 		}
+		public Normalization(double max, double min)
+		{
+			if (max > Math.Abs(min))
+			{
+				Max = max;
+				Min = -max;
+			}
+			else
+			{
+				Max = Math.Abs(min);
+				Min = min;
+			}
+		}
 		public double Max
 		{
 			get;
