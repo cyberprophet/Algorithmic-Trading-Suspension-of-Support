@@ -648,7 +648,7 @@ namespace ShareInvest
 											return;
 									}
 								}
-							if (occur > 0 && occur % 0xC8 == 0)
+							if (occur > 0 && occur % 0xC8 == 0 || Base.IsDebug)
 							{
 								var initiate = new DateTime(0x7E5, 4, 5);
 								var dictionary = new Dictionary<string, Catalog.Models.Rotation>(0x20);
@@ -1019,7 +1019,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x339));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x349));
 						}
 						catch (Exception ex)
 						{

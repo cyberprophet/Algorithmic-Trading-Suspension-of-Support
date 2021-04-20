@@ -219,21 +219,38 @@ namespace ShareInvest.Client
 			{
 				double max = param.Max(o => o.MaxReturn), min = param.Min(o => o.MaxLoss);
 				int index = 0, mark = (int)(0x64 * (max > Math.Abs(min) ? max : Math.Abs(min)));
+				var gather = new int[0x14];
 				var nor = new SecondaryIndicators.Normalization(max, min);
 				StringBuilder contents = new("<table style='border-collapse: collapse; width: 100%; border: 1px solid #dcdcdc'><thead>"), tags = new();
-				contents.Append("<tr>").Append("<th style='color: gainsboro; font-size: small; font-style: italic; width: 15%'>Distribution</th>").Append("<th style='background: linear-gradient(to right, blue 0%, black 50%, red 100%) border-box' colspan='10'>").Append($"<span style='color: #ffffff; display: inline-block; text-align: left; width:33%'>{mark}％←</span>").Append("<span style='color: #ffffff; display: inline-block; text-align: center; width:30%'>0％</span>").Append($"<span style='color: #ffffff; display: inline-block; text-align: right; width:33%'>→{mark}％</span>").Append("</th>").Append("</tr>").Append("</thead>").Append("<tbody>");
+				contents.Append("<tr>").Append("<th style='color: gainsboro; font-size: small; font-style: italic; width: 12%'>Distribution</th>").Append("<th style='background: linear-gradient(to right, blue 0%, black 50%, red 100%) border-box' colspan='20'>").Append($"<span style='color: #ffffff; display: inline-block; text-align: left; width:33%'>{mark}％&nbsp;←</span>").Append("<span style='color: #ffffff; display: inline-block; text-align: center; width:30%'>0％</span>").Append($"<span style='color: #ffffff; display: inline-block; text-align: right; width:33%'>→&nbsp;{mark}％</span>").Append("</th>").Append("</tr>").Append("</thead>").Append("<tbody>");
 
-				foreach (var ro in param)
+				foreach (var ro in param.Where(o => o.MaxReturn > 0).Union(param.Where(o => o.MaxReturn == 0).OrderByDescending(o => o.MaxLoss)))
 				{
 					double loss = nor.Normalize(ro.MaxLoss), liquidation = nor.Normalize(ro.Liquidation), revenue = nor.Normalize(ro.MaxReturn);
-					contents.Append("<tr>").Append($"<th title='{theme[ro.Code].Item1}' style='width: 15%'>{ro.Code}</th>").Append("<td colspan='10' style='border-top: 1px solid #ffffff'>").Append($"<span style='color: rgb(0, 0, 255); display: inline-block; text-align: right; width: {loss:P9}' title='{Math.Abs(ro.MaxLoss):P2}'>↑</span>").Append($"<span style='color: rgb(0, 0, 0); display: inline-block; text-align: right; width: {liquidation - loss:P9}' title='{Math.Abs(ro.Liquidation):P2}'>↑</span>").Append($"<span style='color: rgb(255, 0, 0); display: inline-block; text-align: right; width: {revenue - liquidation:P9}' title='{ro.MaxReturn:P2}'>↑</span>");
+					contents.Append("<tr>").Append($"<th title='{string.Concat("No.", index + 1, ' ', theme[ro.Code].Item1)}' style='width: 12%'>{ro.Code}</th>").Append($"<td colspan='20' style='border-top: 1px solid {(index > 0 && index % 5 == 0 ? (index % 0x14 == 0 ? "#778899" : "#dcdcdc") : "#ffffff")}'>");
+
+					if (index > 0)
+						contents.Append($"<span title='{(theme[ro.Code].Item2 is Catalog.Dart.TiStory ti ? string.Concat(ti.Index, '\n', ti.Title.Replace(". ", ".\n")) : string.Empty)}' style='cursor: help; color: rgb(255, 255, 255); display: inline-block; text-align: left; width: {loss:P9}'>&nbsp;</span>").Append($"<span style='cursor: help; color: rgb(0, 0, 255); display: inline-block; text-align: left; width: {liquidation - loss:P9}' title='{ro.MaxLoss:P2}'>↑</span>").Append($"<span style='cursor: help; color: rgb(0, 0, 0); display: inline-block; text-align: left; width: {revenue - liquidation:P9}' title='{ro.Liquidation:P2}'>↑</span>");
+
+					else
+						contents.Append($"<span style='color: rgb(0, 0, 255); display: inline-block; text-align: right; cursor: help; width: {loss:P9}' title='{ro.MaxLoss:P2}'>↑</span>").Append($"<span style='cursor: help; color: rgb(0, 0, 0); display: inline-block; text-align: right; width: {liquidation - loss:P9}' title='{ro.Liquidation:P2}'>↑</span>").Append($"<span style='cursor: help; color: rgb(255, 0, 0); display: inline-block; text-align: right; width: {revenue - liquidation:P9}' title='{ro.MaxReturn:P2}'>↑</span>");
 
 					if (index++ > 0)
-						contents.Append($"<span style='cursor: pointer; color: rgb(255, 255, 255); display: inline-block; text-align: left' title='{(theme[ro.Code].Item2 is Catalog.Dart.TiStory ti ? ti.Index : string.Empty)}'>&nbsp;</span>");
+						contents.Append($"<span style='color: rgb(255, 0, 0); display: inline-block; cursor: help; text-align: left' title='{ro.MaxReturn:P2}'>↑</span>");
 
+					if (int.TryParse(loss.ToString("P0").Replace("%", string.Empty), out int lc) && int.TryParse(revenue.ToString("P0").Replace("%", string.Empty), out int rc))
+					{
+						gather[lc / 5] += 1;
+						gather[rc == 0x64 ? gather.Length - 1 : rc / 5] += 1;
+					}
 					contents.Append("</td>").Append("</tr>");
 				}
-				contents.Append("</tbody>").Append("</table>").Append("<hr contenteditable='false' data-ke-type='horizontalRule' data-ke-style='style1'/>").Append($"<figure id='og_1618408583729' contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-title='Algorithmic Trading' data-og-description='the profit-generating model using Algorithms.' data-og-host='coreapi.shareinvest.net' data-og-source-url='https://coreapi.shareinvest.net' data-og-url='https://coreapi.shareinvest.net' data-og-image='https://scrap.kakaocdn.net/dn/cGYG7I/hyJSmdXhpa/r7rd0tlAsaOJiKWEvo49q0/img.jpg?width=320&amp;height=290&amp;face=61_24_196_171'><a href='https://coreapi.shareinvest.net' target='_blank' rel='noopener' data-source-url='https://coreapi.shareinvest.net'><div class='og-image' style='background-image:url({net});'>&nbsp;</div><div class='og-text'><p class='og-title'>Algorithmic Trading</p><p class='og-desc'>the profit-generating model using Algorithms.</p><p class='og-host'>coreapi.shareinvest.net</p></div></a></figure>");
+				contents.Append($"<tr><th title='{index:N0}' style='color: #696969; font-size: small; font-style: italic; width: 12%'>Total</th>");
+
+				for (index = 0; index < gather.Length; index++)
+					contents.Append($"<td style='text-align: center; color: {(gather[index] == 0 ? "#ffffff" : (index < 0xA ? "rgb(0, 0, 255)" : "rgb(255, 0, 0)"))}; font-size: x-small; padding: 1px; width: {(0x64 - 0xC) / (double)(gather.Length * 0x64):P3}'>").Append($"<span title='{string.Concat((nor.Min + nor.Max * index / 0xA).ToString("P0"), ' ', '~', ' ', (nor.Min + nor.Max * (index + 1) / 0xA).ToString("P0"))}'>{(gather[index] > 0 ? gather[index].ToString("N0") : string.Empty)}</span>").Append("</td>");
+
+				contents.Append("</tr>").Append("</tbody>").Append("</table>").Append("<hr contenteditable='false' data-ke-type='horizontalRule' data-ke-style='style1'/>").Append($"<figure id='og_1618408583729' contenteditable='false' data-ke-type='opengraph' data-og-type='website' data-og-title='Algorithmic Trading' data-og-description='the profit-generating model using Algorithms.' data-og-host='coreapi.shareinvest.net' data-og-source-url='https://coreapi.shareinvest.net' data-og-url='https://coreapi.shareinvest.net' data-og-image='https://scrap.kakaocdn.net/dn/cGYG7I/hyJSmdXhpa/r7rd0tlAsaOJiKWEvo49q0/img.jpg?width=320&amp;height=290&amp;face=61_24_196_171'><a href='https://coreapi.shareinvest.net' target='_blank' rel='noopener' data-source-url='https://coreapi.shareinvest.net'><div class='og-image' style='background-image:url({net});'>&nbsp;</div><div class='og-text'><p class='og-title'>Algorithmic Trading</p><p class='og-desc'>the profit-generating model using Algorithms.</p><p class='og-host'>coreapi.shareinvest.net</p></div></a></figure>");
 				index = 1;
 
 				foreach (var story in param)

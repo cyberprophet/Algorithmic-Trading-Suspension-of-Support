@@ -210,7 +210,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 						else
 							NextOrderStringTime = (NextOrderStringTime.Item1, scenario.Account);
 
-						if (Strategics is Interface.Strategics.HFT_Scenario && Quantity > scenario.Long)
+						if (Strategics is Interface.Strategics.HFT_Scenario && Quantity > scenario.Long + (OrderNumber is null || OrderNumber.Any(o => o.Value >= e.Price) is false ? 0 : scenario.Long / 2 * OrderNumber.Count(o => o.Value >= e.Price)))
 							Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
 							{
 								AccNo = scenario.Account,
