@@ -45,7 +45,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 		}
 		public override int OnReceiveConclusion(Dictionary<int, string> on)
 		{
-			string price = on[0xA], state = on[0x391], number = on[0x23F3], classification = on[0x389], original = on[0x388];
+			string price = on[0xA], number = on[0x23F3], classification = on[0x389], original = on[0x388];
 			var cash = 0;
 
 			if (int.TryParse(price[0] is '-' ? price[1..] : price, out int current))
@@ -53,7 +53,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 				var remove = true;
 				Current = current;
 
-				switch (state)
+				switch (on[0x391])
 				{
 					case conclusion:
 						if (OrderNumber.Remove(number))
@@ -65,7 +65,9 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 						if (int.TryParse(on[0x385], out int op) && op > 0)
 						{
 							OrderNumber[number] = op;
-							cash -= op;
+
+							if (int.TryParse(on[0x384], out int amount))
+								cash = (on[0x38B].Equals("1") ? op : -op) * amount;
 						}
 						if (string.IsNullOrEmpty(Name))
 							Name = on[0x12E].Trim();
@@ -208,6 +210,17 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 						else
 							NextOrderStringTime = (NextOrderStringTime.Item1, scenario.Account);
 
+						if (Strategics is Interface.Strategics.HFT_Scenario && Quantity > scenario.Long)
+							Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.OpenAPI.Order
+							{
+								AccNo = scenario.Account,
+								Code = scenario.Code,
+								OrderType = (int)OrderType.신규매도,
+								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
+								OrgOrderNo = string.Empty,
+								Price = Base.GetStartingPrice((int)(Offer * (1 + 1e-2)), MarketMarginRate == 1),
+								Qty = scenario.Long % 2 == 0 ? scenario.Long / 2 : scenario.Long - 1
+							}));
 						return;
 					}
 					break;

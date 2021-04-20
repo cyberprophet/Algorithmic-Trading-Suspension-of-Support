@@ -115,6 +115,7 @@ namespace ShareInvest.Pages
 									break;
 
 								case Interface.Strategics.Scenario:
+								case Interface.Strategics.HFT_Scenario:
 									Enumerable[i] = JsonConvert.DeserializeObject<Catalog.Scenario>(enumerable[i].Contents);
 									break;
 
@@ -149,6 +150,7 @@ namespace ShareInvest.Pages
 					break;
 
 				case Interface.Strategics.Scenario:
+				case Interface.Strategics.HFT_Scenario:
 					response = new string[5];
 					var location = new[] { 0, 1, 3, 5, sender.Length };
 

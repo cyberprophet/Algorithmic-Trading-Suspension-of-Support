@@ -21,8 +21,7 @@ namespace ShareInvest
 
 					switch (r.Strategics)
 					{
-						case Strategics.Long_Position:
-						case Strategics.Scenario:
+						case Strategics.Scenario or Strategics.HFT_Scenario or Strategics.Long_Position or Strategics.Rotation:
 							continue;
 
 						case Strategics.SC when r.Classification is Catalog.SatisfyConditionsAccordingToTrends sc:

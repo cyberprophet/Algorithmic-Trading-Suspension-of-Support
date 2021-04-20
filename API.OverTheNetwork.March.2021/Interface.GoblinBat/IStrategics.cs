@@ -43,6 +43,7 @@
 	public enum Strategics
 	{
 		Long_Position = 'L',
+		HFT_Scenario = 'H',
 		Scenario = 'N',
 		Rotation = 'R',
 		TC = 'C',

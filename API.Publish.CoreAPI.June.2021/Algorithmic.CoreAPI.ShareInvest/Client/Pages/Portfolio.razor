@@ -185,9 +185,10 @@
 									break;
 
 								case Interface.Strategics.Scenario:
+								case Interface.Strategics.HFT_Scenario:
 									<thead>
 										<tr name="@((int)name)">
-											<th scope="col" title="매도ㆍ매수 ( 日 : Unit )">
+											<th scope="col" title="@(name is Interface.Strategics.HFT_Scenario ? "In the Scenario,\ndouble the number of purchases to make some of them High-Frequency-Trading." : "매도ㆍ매수 ( 日 : Unit )")">
 												<div class="context">@Enum.GetName(typeof(Interface.Strategics), name)</div>
 											</th>
 											<th>
@@ -230,7 +231,7 @@
 											</td>
 											<td>
 												<span>
-													<input class="scenario_input scenario_input_single" type="number" placeholder="@((retrieve as Tuple<int, int, string, string, string, string>)?.Item5)" step="0.5" min="0.25" max="999" id="@account.Insert(5, ((int)name).ToString("D2"))" required />
+													<input class="scenario_input scenario_input_single" type="number" placeholder="@((retrieve as Tuple<int, int, string, string, string, string>)?.Item5)" step="0.25" min="0.25" max="999" id="@account.Insert(5, ((int)name).ToString("D2"))" required />
 													<small> ％</small>
 												</span>
 											</td>

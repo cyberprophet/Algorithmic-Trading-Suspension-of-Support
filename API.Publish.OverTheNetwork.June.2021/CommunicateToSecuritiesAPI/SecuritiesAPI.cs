@@ -843,7 +843,7 @@ namespace ShareInvest
 						analysis.Account = json.Account;
 						break;
 
-					case Strategics.Scenario when JsonConvert.DeserializeObject<Scenario>(bring.Contents) is Scenario json && analysis.Code.Equals(json.Code):
+					case Strategics.Scenario or Strategics.HFT_Scenario when JsonConvert.DeserializeObject<Scenario>(bring.Contents) is Scenario json && analysis.Code.Equals(json.Code):
 						amount = (int)(json.Maximum / json.Long / analysis.Current);
 						remain = (int)(json.Maximum / json.Short / json.Hope);
 						analysis.Classification = new Scenario
@@ -856,7 +856,7 @@ namespace ShareInvest
 							Target = json.Target,
 							Trend = json.Trend,
 							Short = remain > Base.Tradable ? remain / Base.Tradable + 1 : 1,
-							Long = amount > Base.Tradable ? amount / Base.Tradable + 1 : 1
+							Long = (strategics is Strategics.HFT_Scenario ? 2 : 1) * (amount > Base.Tradable ? amount / Base.Tradable + 1 : 1)
 						};
 						for (order = 0; order < Base.Tradable * 0x19; order += Base.Tradable * 0x19 / (amount / analysis.Classification.Long))
 							analysis.Reservation.Item2.Enqueue(time.AddSeconds(order).ToString(Base.TimeFormat));
