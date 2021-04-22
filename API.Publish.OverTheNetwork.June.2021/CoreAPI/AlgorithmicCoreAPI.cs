@@ -55,6 +55,11 @@ namespace ShareInvest
 						keywords = new BackgroundWorker();
 						server = GoblinBat.GetInstance(key);
 					}
+					else
+					{
+						if (api.IsServer)
+							volume = new BackgroundWorker();
+					}
 				}
 				if (Status is HttpStatusCode.OK)
 					big = new BackgroundWorker();
@@ -93,6 +98,9 @@ namespace ShareInvest
 				if (big is BackgroundWorker)
 					big.DoWork += new DoWorkEventHandler(WorkerDoWork);
 
+				if (volume is BackgroundWorker)
+					volume.DoWork += new DoWorkEventHandler(WorkerDoWork);
+
 				if (keywords is BackgroundWorker)
 					keywords.DoWork += new DoWorkEventHandler(WorkerDoWork);
 			}
@@ -108,6 +116,9 @@ namespace ShareInvest
 
 					if (big is BackgroundWorker)
 						big.RunWorkerAsync(Status);
+
+					if (volume is BackgroundWorker && await api.GetContextAsync(typeof(Identify)) is string[] identify)
+						volume.RunWorkerAsync(identify);
 
 					if (keywords is BackgroundWorker && await api.GetConfirmAsync(new Catalog.Dart.Theme()) is List<Catalog.Models.Theme> shuffle)
 					{
@@ -179,6 +190,47 @@ namespace ShareInvest
 
 				switch (e.Argument)
 				{
+					case string[] stocks:
+						foreach (var vol in stocks)
+						{
+							try
+							{
+								var date = now.Hour < 0x12 ? now.AddDays(-1) : now;
+								var dic = new Dictionary<int, long>();
+
+								if (await api.GetContextAsync(new Charts { Code = vol, Start = date.ToString(Base.DateFormat), End = date.AddDays(1).ToString(Base.DateFormat) }, string.Empty) is Stack<Catalog.Strategics.Charts> stack)
+								{
+									while (stack.TryPop(out Catalog.Strategics.Charts ch) && int.TryParse(ch.Price, out int price))
+									{
+										if (dic.TryGetValue(price, out long volume))
+											dic[price] = ch.Volume + volume;
+
+										else
+											dic[price] = ch.Volume;
+									}
+									if (Base.IsDebug)
+										foreach (var kv in dic.OrderByDescending(o => o.Key))
+											Base.SendMessage(GetType(), vol, kv.Key, kv.Value);
+								}
+							}
+							catch (Exception ex)
+							{
+								Base.SendMessage(sender.GetType(), list.Find(o => o.Code.Equals(vol)).Name, ex.StackTrace);
+							}
+							finally
+							{
+								now = DateTime.Now;
+							}
+							if (now.Hour == 8)
+							{
+								if (now.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday || Array.Exists(Base.Holidays, o => o.Equals(now.ToString(Base.DateFormat))))
+									continue;
+
+								break;
+							}
+						}
+						break;
+
 					case List<Catalog.Models.Theme> theme:
 						foreach (var cn in list.OrderBy(o => Guid.NewGuid()))
 						{
@@ -819,6 +871,7 @@ namespace ShareInvest
 		readonly BackgroundWorker big;
 		readonly BackgroundWorker theme;
 		readonly BackgroundWorker search;
+		readonly BackgroundWorker volume;
 		readonly BackgroundWorker keywords;
 		readonly Icon[] icon;
 	}

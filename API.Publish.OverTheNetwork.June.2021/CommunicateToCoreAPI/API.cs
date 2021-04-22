@@ -225,28 +225,6 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
-		public async Task<object> GetContextAsync<T>(T type, string param) where T : struct
-		{
-			try
-			{
-				if (string.IsNullOrEmpty(param) is false)
-				{
-					var response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param, type), Method.GET), source.Token);
-
-					if (HttpStatusCode.OK.Equals(response.StatusCode))
-						switch (type)
-						{
-							case Tick:
-								return JsonConvert.DeserializeObject<Stack<Tick>>(response.Content).OrderBy(o => o.Date);
-						}
-				}
-			}
-			catch (Exception ex)
-			{
-				Base.SendMessage(GetType(), ex.StackTrace);
-			}
-			return null;
-		}
 		public async Task<Retention> GetContextAsync(string param)
 		{
 			try
@@ -274,6 +252,60 @@ namespace ShareInvest.Client
 				Code = null,
 				LastDate = null
 			};
+		}
+		public async Task<object> GetContextAsync(Type param)
+		{
+			try
+			{
+				var response = await client.ExecuteAsync(new RestRequest(security.RequestTheChangeOfAddress(param), Method.GET), source.Token);
+
+				if (HttpStatusCode.OK.Equals(response.StatusCode))
+					switch (param.Name)
+					{
+						case nameof(Identify):
+							return JsonConvert.DeserializeObject<string[]>(response.Content);
+					}
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), param.Name, ex.StackTrace);
+			}
+			return null;
+		}
+		public async Task<object> GetContextAsync<T>(T type, string param) where T : struct
+		{
+			try
+			{
+				IRestResponse response;
+
+				if (string.IsNullOrEmpty(param))
+					switch (type)
+					{
+						case Charts:
+							response = await client.ExecuteAsync(new RestRequest(security.RequestTheAddressForNewRegistration(type), Method.GET), source.Token);
+
+							if (HttpStatusCode.OK.Equals(response.StatusCode))
+								return JsonConvert.DeserializeObject<Stack<Catalog.Strategics.Charts>>(response.Content);
+
+							break;
+					}
+				else
+				{
+					response = await client.ExecuteAsync(new RestRequest(Security.RequestTheIntegratedAddress(param, type), Method.GET), source.Token);
+
+					if (HttpStatusCode.OK.Equals(response.StatusCode))
+						switch (type)
+						{
+							case Tick:
+								return JsonConvert.DeserializeObject<Stack<Tick>>(response.Content).OrderBy(o => o.Date);
+						}
+				}
+			}
+			catch (Exception ex)
+			{
+				Base.SendMessage(GetType(), ex.StackTrace);
+			}
+			return null;
 		}
 		[SupportedOSPlatform("windows")]
 		public async Task<object> GetContextAsync<T>(T param) where T : struct

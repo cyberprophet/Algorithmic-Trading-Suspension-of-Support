@@ -419,7 +419,7 @@ namespace ShareInvest
 					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false && (api.IsAdministrator is false || Base.IsDebug))
 						worker.RunWorkerAsync(connect.Account);
 
-					if (Base.IsDebug && connect is OpenAPI.ConnectAPI con && con.Count < 0x200)
+					if ((Base.IsDebug || api.IsAdministrator && api.IsServer) && connect is OpenAPI.ConnectAPI con && con.Count < 0x200)
 						for (int i = 0; i < con.Conditions.Count; i++)
 						{
 							name = con.Conditions[con.Conditions.Count - i - 1];
@@ -648,7 +648,7 @@ namespace ShareInvest
 											return;
 									}
 								}
-							if (occur > 0 && occur % 0xC8 == 0 || Base.IsDebug)
+							if (occur > 0 && occur % 0xC8 == 0)
 							{
 								var initiate = new DateTime(0x7E5, 4, 5);
 								var dictionary = new Dictionary<string, Catalog.Models.Rotation>(0x20);
