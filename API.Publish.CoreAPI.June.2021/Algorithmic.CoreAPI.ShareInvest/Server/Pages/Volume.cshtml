@@ -1,0 +1,76 @@
+﻿@page
+@model ShareInvest.Pages.VolumeModel
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<link href="~/css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+	<link href="~/css/app.css" rel="stylesheet" />
+	<link href="~/css/volume.css" rel="stylesheet" />
+	<link href="~/css/open-iconic/font/css/open-iconic-bootstrap.min.css" rel="stylesheet" />
+	<title>@(string.IsNullOrEmpty(Model.Title) ? nameof(ShareInvest.Pages.VolumeModel).Substring(0, 6) : Model.Title)</title>
+</head>
+
+<body>
+	<div class="main">
+		<div class="content px-4">
+			<h3>
+				<strong>@Model.Title</strong>
+			</h3>
+			@if (string.IsNullOrEmpty(Model.Name) is false)
+			{
+				<p>
+					<strong>@Model.Name</strong>
+					@Model.Summary
+				</p>
+			}
+			@if (Model.Enumerable is IEnumerable<KeyValuePair<int, long>> enumerable)
+			{
+				<table class="table separate">
+					<thead>
+						<tr>
+							<th class="separate fix" scope="col" title="￦">Price</th>
+							<th class="separate center" scope="col">Volume</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var kv in enumerable)
+						{
+							<tr>
+								<th class="separate fix" scope="row">@kv.Key.ToString("N0")</th>
+								<td class="merge">
+									@{
+										var percent = kv.Value / Model.Sum;
+										<span class="graph" style="background: linear-gradient(to right, @(percent < Model.Past ? "#800000" : "#000800") 0%, @(percent < Model.Past ? "#ff0000" : "#0000ff") 100%); width: @Model.Normalize.Normalize(1e-1, kv.Value).ToString("P9")">@kv.Value.ToString("N0")</span>
+										<small>@percent.ToString("P2")</small>
+										Model.Past = percent;
+									}
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			}
+			else
+			{
+				<p>
+					<em>Loading...</em>
+				</p>
+			}
+			<h5>
+				<span class="oi oi-calendar">@Model.Start</span>
+
+				@if (string.IsNullOrEmpty(Model.End) is false)
+				{
+					<span class="oi oi-graph">&nbsp;@Model.End</span>
+				}
+			</h5>
+			<br />
+		</div>
+	</div>
+</body>
+
+</html>

@@ -57,6 +57,12 @@
 	font-size: small
 }
 
+.submit_form
+{
+	text-align: center;
+	padding: 3rem 1.5rem 5rem 1.5rem
+}
+
 .button
 {
 	line-height: 2.5;
@@ -83,4 +89,23 @@
 	.button:disabled
 	{
 		background: #ccc
+	}
+
+.search_input
+{
+	background-color: transparent;
+	color: dimgray;
+	border: 0.75px ridge;
+	border-style: solid;
+	border-color: azure;
+	font-size: small;
+	width: 20%;
+	height: 25px;
+	text-align: center
+}
+
+	.search_input::placeholder
+	{
+		color: lightgrey;
+		font-style: italic
 	}

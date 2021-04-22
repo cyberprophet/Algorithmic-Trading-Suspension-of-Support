@@ -36,12 +36,16 @@ namespace ShareInvest.Pages
 		protected internal string User
 		{
 			get; private set;
-		}
+		}	
 		protected internal bool Close
 		{
 			get; private set;
 		}
 		protected internal string[] Inclination
+		{
+			get; private set;
+		}
+		protected internal Catalog.Models.Codes[] Codes
 		{
 			get; private set;
 		}
@@ -183,6 +187,7 @@ namespace ShareInvest.Pages
 					Hermes.On<Catalog.Models.Message>("ReceiveCurrentMessage", async (current) => await StateHasChanged(current));
 					User = sb.Remove(sb.Length - 1, 1).ToString();
 					Collection = await Http.GetFromJsonAsync<Catalog.Dart.Theme[]>(Crypto.Security.GetRoute(nameof(Catalog.Dart.Theme), nameof(Catalog.Models.Intro)));
+					Codes = await Http.GetFromJsonAsync<Catalog.Models.Codes[]>(Crypto.Security.GetRoute("Confirm", "Stocks"));
 					Inclination = Enum.GetNames(typeof(Interface.KRX.Line));
 					await Hermes.StartAsync();
 				}

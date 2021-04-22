@@ -267,10 +267,29 @@
 			}
 		}
 	</div>
+	@if (string.IsNullOrEmpty(User) is false && DateTime.Now is DateTime now && (now.Hour < 0x12 ? now.AddDays(-1) : now).ToString("yyyy-MM-dd") is string date)
+	{
+		<div class="submit_form">
+			<form action=@(Base.IsDebug ? "https://localhost:44393/volume" : "https://coreapi.shareinvest.net/volume") method="get" target="_blank">
+				<input class="search_input" name="code" id="search" type="text" placeholder="Search for the Stocks." autocomplete="on" list="search-list" required>
+				<input type="date" name="start" class="search_input" required autocomplete="on" value="@date" max="@date">
+				<input type="date" name="end" class="search_input" required autocomplete="on" value="@date" max="@date">
+				<input type="submit" class="search_input" value="Submit">
+			</form>
+			<datalist id="search-list">
+				@foreach (var search in Codes.OrderBy(o => o.Name))
+				{
+					<option value="@search.Code">@search.Name</option>
+				}
+			</datalist>
+		</div>
+	}
 }
 else
 {
 	<p class="image">
 		<img src="/Images/456.png" alt="K-뉴딜지수" />
+		<br />
+		<em>various Functions are available after LogIn.</em>
 	</p>
 }

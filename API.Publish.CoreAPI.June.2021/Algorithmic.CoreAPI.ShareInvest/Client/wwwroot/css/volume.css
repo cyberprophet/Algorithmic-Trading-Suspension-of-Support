@@ -1,0 +1,45 @@
+﻿td
+{
+	vertical-align: middle !important;
+	padding: 0.15rem !important;
+	border-top: 1px solid #ffffff !important
+}
+
+th
+{
+	padding: 0.25rem !important;
+}
+
+p
+{
+	white-space: pre-line !important
+}
+
+.separate
+{
+	border: 1px solid #dcdcdc
+}
+
+.fix
+{
+	width: 10%;
+	text-align: center !important
+}
+
+.graph
+{
+	display: inline-block;
+	text-align: right;
+	color: whitesmoke;
+	padding-right: 0.5rem
+}
+
+.merge
+{
+	text-align: left
+}
+
+.center
+{
+	text-align: center
+}

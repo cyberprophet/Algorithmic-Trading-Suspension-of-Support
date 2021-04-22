@@ -6,6 +6,7 @@ namespace ShareInvest.SecondaryIndicators
 {
 	public class Normalization
 	{
+		public double Normalize(double end, long param) => end + (param - min) * (9e-1 - end) / (max - min);
 		public double Normalize(long param)
 		{
 			double end = 0D, top = 1D;
@@ -51,6 +52,11 @@ namespace ShareInvest.SecondaryIndicators
 				Max = Math.Abs(min);
 				Min = min;
 			}
+		}
+		public Normalization(long max, long min)
+		{
+			this.max = max;
+			this.min = min;
 		}
 		public double Max
 		{

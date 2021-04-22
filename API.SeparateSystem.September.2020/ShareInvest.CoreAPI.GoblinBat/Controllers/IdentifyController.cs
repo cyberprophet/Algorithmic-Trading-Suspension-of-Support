@@ -11,13 +11,26 @@ namespace ShareInvest.Controllers
 	[ApiController, Route(Security.route), Produces(Security.produces)]
 	public class IdentifyController : ControllerBase
 	{
+		[HttpGet, ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> GetContextAsync()
+		{
+			try
+			{
+				return Ok(await context.Securities.AsNoTracking().Select(o => o.Code).ToArrayAsync());
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"{GetType()}\n{ex.Message}\n{nameof(this.GetContextAsync)}");
+			}
+			return BadRequest();
+		}
 		[HttpGet(Security.routeKey), ProducesResponseType(StatusCodes.Status200OK), ProducesResponseType(StatusCodes.Status400BadRequest)]
 		public async Task<IActionResult> GetContextAsync(string key)
 		{
 			try
 			{
-				if (await context.Securities.AnyAsync(o => o.Security.Equals(key)))
-					return Ok(context.Securities.Where(o => o.Security.Equals(key)).Select(o => new
+				if (await context.Securities.AsNoTracking().AnyAsync(o => o.Security.Equals(key)))
+					return Ok(context.Securities.AsNoTracking().Where(o => o.Security.Equals(key)).Select(o => new
 					{
 						o.Strategics,
 						o.Contents,
@@ -38,8 +51,8 @@ namespace ShareInvest.Controllers
 		{
 			try
 			{
-				if (await context.Securities.AnyAsync(o => o.Security.Equals(key) && o.Code.Equals(code)))
-					return Ok(context.Securities.First(o => o.Code.Equals(code) && o.Security.Equals(key)));
+				if (await context.Securities.AsNoTracking().AnyAsync(o => o.Security.Equals(key) && o.Code.Equals(code)))
+					return Ok(context.Securities.AsNoTracking().First(o => o.Code.Equals(code) && o.Security.Equals(key)));
 			}
 			catch (Exception ex)
 			{
