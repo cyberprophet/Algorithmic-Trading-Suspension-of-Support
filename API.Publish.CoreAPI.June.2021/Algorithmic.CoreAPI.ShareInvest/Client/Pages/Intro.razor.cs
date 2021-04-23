@@ -36,7 +36,7 @@ namespace ShareInvest.Pages
 		protected internal string User
 		{
 			get; private set;
-		}	
+		}
 		protected internal bool Close
 		{
 			get; private set;

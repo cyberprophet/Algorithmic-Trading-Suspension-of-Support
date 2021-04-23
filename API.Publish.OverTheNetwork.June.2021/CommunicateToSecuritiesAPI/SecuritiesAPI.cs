@@ -1019,7 +1019,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x349));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x36A));
 						}
 						catch (Exception ex)
 						{
@@ -1102,7 +1102,7 @@ namespace ShareInvest
 					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
 				}
-				else if (api.IsAdministrator && api.IsServer && connect.Start is false && now.Hour == 0 && now.Minute > 0x10 && DateTime.Now.DayOfWeek is not DayOfWeek.Sunday and not DayOfWeek.Monday)
+				else if (api.IsAdministrator && api.IsServer && connect.Start is false && now.Hour == 1 && now.Minute > 0x10 && DateTime.Now.DayOfWeek is not DayOfWeek.Sunday and not DayOfWeek.Monday)
 				{
 					var worker = new BackgroundWorker();
 					notifyIcon.Icon = icons[^2];

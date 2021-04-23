@@ -33,7 +33,7 @@
 					<thead>
 						<tr>
 							<th class="separate fix" scope="col" title="￦">Price</th>
-							<th class="separate center" scope="col">Volume</th>
+							<th class="separate center" scope="col" title="@($"μ {Model.Mean.ToString("C0")}\nσ {Model.Sigma.ToString("N0")}\n∠ {Math.Abs(Model.Slope).ToString("N0")}° {(Model.Slope > 0 ? "↗" : "↘")}")">Volume</th>
 						</tr>
 					</thead>
 					<tbody>

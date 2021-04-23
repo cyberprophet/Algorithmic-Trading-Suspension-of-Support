@@ -274,7 +274,7 @@
 				<input class="search_input" name="code" id="search" type="text" placeholder="Search for the Stocks." autocomplete="on" list="search-list" required>
 				<input type="date" name="start" class="search_input" required autocomplete="on" value="@date" max="@date">
 				<input type="date" name="end" class="search_input" required autocomplete="on" value="@date" max="@date">
-				<input type="submit" class="search_input" value="Submit">
+				<input type="submit" class="search_input" value="Distribute">
 			</form>
 			<datalist id="search-list">
 				@foreach (var search in Codes.OrderBy(o => o.Name))
