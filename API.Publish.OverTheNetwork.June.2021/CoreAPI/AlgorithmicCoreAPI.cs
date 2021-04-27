@@ -508,7 +508,7 @@ namespace ShareInvest
 									}
 									finally
 									{
-										await Task.Delay(0xC00);
+										await Task.Delay(0x400);
 										now = DateTime.Now;
 									}
 							if (now.Hour == 8)

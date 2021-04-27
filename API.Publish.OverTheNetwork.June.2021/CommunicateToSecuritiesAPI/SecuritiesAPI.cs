@@ -858,7 +858,7 @@ namespace ShareInvest
 							Short = remain > Base.Tradable ? remain / Base.Tradable + 1 : 1,
 							Long = (strategics is Strategics.HFT_Scenario ? 2 : 1) * (amount > Base.Tradable ? amount / Base.Tradable + 1 : 1)
 						};
-						for (order = 0; order < Base.Tradable * 0x19; order += Base.Tradable * 0x19 / (amount / analysis.Classification.Long))
+						for (order = 0; order < Base.Tradable * 0x19; order += Base.Tradable * 0x19 / (amount / (analysis.Classification.Long / (analysis.Classification.Long > 1 && strategics is Strategics.HFT_Scenario ? 2 : 1))))
 							analysis.Reservation.Item2.Enqueue(time.AddSeconds(order).ToString(Base.TimeFormat));
 
 						for (order = 0; order < Base.Tradable * 0x19; order += Base.Tradable * 0x19 / (remain / analysis.Classification.Short))
@@ -1102,7 +1102,7 @@ namespace ShareInvest
 					notifyIcon.Icon = icons[^2];
 					StartProgress(connect as Control);
 				}
-				else if (api.IsAdministrator && api.IsServer && connect.Start is false && now.Hour == 1 && now.Minute > 0x10 && DateTime.Now.DayOfWeek is not DayOfWeek.Sunday and not DayOfWeek.Monday)
+				else if (api.IsAdministrator && api.IsServer && connect.Start is false && now.Hour == 1 && now.Minute > 0x20 && DateTime.Now.DayOfWeek is not DayOfWeek.Sunday and not DayOfWeek.Monday)
 				{
 					var worker = new BackgroundWorker();
 					notifyIcon.Icon = icons[^2];
