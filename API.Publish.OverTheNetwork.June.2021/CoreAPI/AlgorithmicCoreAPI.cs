@@ -176,7 +176,7 @@ namespace ShareInvest
 					try
 					{
 						await Task.Delay(Base.IsDebug ? random.Next(0x400, 0x1000) : random.Next(0x32000, 0x64000));
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x36A));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x3A1));
 					}
 					catch (Exception ex)
 					{
@@ -291,20 +291,21 @@ namespace ShareInvest
 
 									return;
 								}
-						foreach (var package in new[] { "processx", "multilinguer", "cli", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
-							using (var process = new Process { StartInfo = StartInfo })
-							{
-								process.ErrorDataReceived += SortOutputHandler;
-
-								if (process.Start())
+						if (Base.IsDebug)
+							foreach (var package in new[] { "processx", "multilinguer", "cli", "hash", "tau", "Sejong", "RSQLite", "devtools", "bit", "rex", "lazyeval", "crosstalk", "promises", "later", "sessioninfo", "xopen", "bit64", "blob", "DBI", "memoise", "plogr", "covr", "DT", "rcmdcheck", "rversions", "wordcloud", "RColorBrewer", "tm", "stringr", "SnowballC", "webshot", "remotes", "htmlwidgets", string.Empty })
+								using (var process = new Process { StartInfo = StartInfo })
 								{
-									process.BeginErrorReadLine();
-									process.StandardInput.WriteLine(string.Concat(script, initialize, string.IsNullOrEmpty(package) ? string.Empty : string.Concat(' ', package)));
-									process.StandardInput.Close();
-									process.WaitForExit();
+									process.ErrorDataReceived += SortOutputHandler;
+
+									if (process.Start())
+									{
+										process.BeginErrorReadLine();
+										process.StandardInput.WriteLine(string.Concat(script, initialize, string.IsNullOrEmpty(package) ? string.Empty : string.Concat(' ', package)));
+										process.StandardInput.Close();
+										process.WaitForExit();
+									}
+									process.ErrorDataReceived -= SortOutputHandler;
 								}
-								process.ErrorDataReceived -= SortOutputHandler;
-							}
 						var regex = new Regex("(\\)|\\(|/|,|&|＆)");
 						var search = new Dictionary<string, string>();
 						var exist = new List<string>();

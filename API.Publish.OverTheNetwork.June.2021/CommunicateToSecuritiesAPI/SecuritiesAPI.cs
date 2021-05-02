@@ -79,26 +79,19 @@ namespace ShareInvest
 						{
 							if (retention.Code.Length == 6)
 							{
-								if (api.IsInsider)
-									await OnReceiveFinancialStatement(now, retention);
+								switch (Operation)
+								{
+									case Catalog.OpenAPI.Operation.장마감 or Catalog.OpenAPI.Operation.시간외_종가매매_시작 or Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_시작 or Catalog.OpenAPI.Operation.장종료_예상지수종료 or Catalog.OpenAPI.Operation.장종료_시간외종료:
+										if (api.IsInsider is false && await new KRX.Incorporate(Interface.KRX.Catalog.지수구성종목, key).GetConstituentStocks(now, Codes.Count) is Stack<Catalog.IncorporatedStocks> stack && await api.PostContextAsync(stack) == 0xC8)
+											await Task.Delay(0x100);
 
-								else
-									switch (Operation)
-									{
-										case Catalog.OpenAPI.Operation.장마감 or Catalog.OpenAPI.Operation.시간외_종가매매_시작 or Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_시작 or Catalog.OpenAPI.Operation.장종료_예상지수종료 or Catalog.OpenAPI.Operation.장종료_시간외종료:
-											if (await new KRX.Incorporate(Interface.KRX.Catalog.지수구성종목, key).GetConstituentStocks(now, Codes.Count) is Stack<Catalog.IncorporatedStocks> stack && await api.PostContextAsync(stack) == 0xC8)
-												await Task.Delay(0x100);
+										break;
 
-											break;
-
-										case Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_종료 or Catalog.OpenAPI.Operation.시간외_종가매매_종료 when await api.GetPageAsync(retention.Code) is int page:
-											await new Advertise(key).StartAdvertisingInTheDataCollectionSection(page);
-											break;
-
-										default:
-											await OnReceiveFinancialStatement(now, retention);
-											break;
-									}
+									case Catalog.OpenAPI.Operation.선옵_장마감전_동시호가_종료 or Catalog.OpenAPI.Operation.시간외_종가매매_종료 when await api.GetPageAsync(retention.Code) is int page:
+										await new Advertise(key).StartAdvertisingInTheDataCollectionSection(page);
+										break;
+								}
+								await OnReceiveFinancialStatement(now, retention);
 							}
 						}
 						catch (Exception ex)
@@ -1019,7 +1012,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x36A));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x3A1));
 						}
 						catch (Exception ex)
 						{

@@ -218,7 +218,7 @@ namespace ShareInvest.SecondaryIndicators.OpenAPI
 								OrderType = (int)OrderType.신규매도,
 								HogaGb = ((int)HogaGb.지정가).ToString("D2"),
 								OrgOrderNo = string.Empty,
-								Price = Base.GetStartingPrice((int)(Offer * (1 + 1e-2)), MarketMarginRate == 1),
+								Price = Base.GetStartingPrice((int)(Offer * (1 + 1e-2)), MarketMarginRate == 1) is int offer && offer > Purchase * (1 + Base.Tax) ? offer : Base.GetStartingPrice((int)(Purchase * (1 + Base.Tax)), MarketMarginRate == 1),
 								Qty = scenario.Long % 2 == 0 ? scenario.Long / 2 : scenario.Long - 1
 							}));
 						return;
