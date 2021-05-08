@@ -150,7 +150,7 @@ namespace ShareInvest.OpenAPI
 		}
 		void OnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e)
 		{
-			if (IsServer)
+			if (IsServer || Base.IsDebug)
 				Writer.WriteLine(string.Concat(e.nIndex < 0xA ? e.nIndex : Enum.GetName(typeof(Index), e.nIndex), '|', e.strCodeList));
 
 			else
@@ -182,6 +182,7 @@ namespace ShareInvest.OpenAPI
 		{
 			get; private set;
 		}
+		public string GetFunctions(string function, string param) => axAPI.KOA_Functions(function, param);
 		public string GetMasterCodeName(string code) => axAPI.GetMasterCodeName(code);
 		public string SendErrorMessage(short error) => API.SendErrorMessage(error);
 		public string Securities(string param) => axAPI.GetLoginInfo(param).Trim();

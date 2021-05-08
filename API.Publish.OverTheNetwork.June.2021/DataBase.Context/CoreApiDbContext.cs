@@ -100,9 +100,15 @@ namespace ShareInvest
 				o.HasOne(o => o.Url).WithOne().HasForeignKey<Url>(o => o.Index);
 				o.HasOne(o => o.Tags).WithOne().HasForeignKey<ThemeTags>(o => o.Index);
 				o.HasMany(o => o.Groups).WithOne().HasForeignKey(o => o.Index);
+				o.HasMany(o => o.Classifications).WithOne().HasForeignKey(o => o.Index);
 			});
+			builder.Entity<Classification>(o => o.HasKey(o => new { o.Code, o.Index }));
 		}
 		public CoreApiDbContext(DbContextOptions options, IOptions<OperationalStoreOptions> store) : base(options, store) => this.store = store;
+		public DbSet<Classification> Classifications
+		{
+			get; set;
+		}
 		public DbSet<Rotation> Rotations
 		{
 			get; set;

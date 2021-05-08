@@ -197,6 +197,11 @@
 												</div>
 											</th>
 										}
+										<th>
+											<div>
+												Classification
+											</div>
+										</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -235,6 +240,19 @@
 													<div class="overview" />
 												</td>
 											}
+											<td>
+												<div>
+													@if (Link.TryGetValue(intro.Code, out Catalog.Models.News[] story) && story.Length > 0)
+													{
+														foreach (var link in story)
+														{
+															<a href="https://finance.naver.com/sise/sise_group_detail.nhn?type=theme&no=@link.Link" target="_blank" title="@link.Title">
+																<span class="oi_search oi oi-external-link" aria-hidden="true" />
+															</a>
+														}
+													}
+												</div>
+											</td>
 										</tr>
 										@if (string.IsNullOrEmpty(intro.Title) is false)
 										{
@@ -247,7 +265,7 @@
 														</a>
 													</div>
 												</td>
-												<td title="Overview" colspan="5">
+												<td title="Overview" colspan="6">
 													<div class="overview">
 														@intro.Title.Replace(". ", ".\n")
 													</div>

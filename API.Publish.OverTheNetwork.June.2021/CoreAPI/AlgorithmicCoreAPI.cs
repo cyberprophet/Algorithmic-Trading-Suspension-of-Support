@@ -47,18 +47,18 @@ namespace ShareInvest
 						else
 							search = new BackgroundWorker();
 					}
-					if (Base.IsDebug is false)
+					if (Base.IsDebug)
+					{
+						if (api.IsServer)
+							volume = new BackgroundWorker();
+					}
+					else
 					{
 						log = Path.Combine(Repository.R, "Log.txt");
 						script = string.Concat(Path.Combine(r, @"bin\x64\rscript"), " --verbose ");
 						except = new[] { "조금씩", "단기적", "오늘", "전문", "오토핫키", "리딩방", "지난달", "한편" };
 						keywords = new BackgroundWorker();
 						server = GoblinBat.GetInstance(key);
-					}
-					else
-					{
-						if (api.IsServer)
-							volume = new BackgroundWorker();
 					}
 				}
 				if (Status is HttpStatusCode.OK)
@@ -176,7 +176,7 @@ namespace ShareInvest
 					try
 					{
 						await Task.Delay(Base.IsDebug ? random.Next(0x400, 0x1000) : random.Next(0x32000, 0x64000));
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x3A1));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x3CC));
 					}
 					catch (Exception ex)
 					{
@@ -470,7 +470,7 @@ namespace ShareInvest
 									{
 										if (await api.PostContextAsync(theme) is Catalog.Dart.Theme st && new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
 											while (queue.TryDequeue(out GroupDetail detail))
-												if (list.Any(o => o.Code.Equals(detail.Code) && o.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && o.MarginRate > 0) && await api.GetConfirmAsync(detail) is string index && detail.Index.Equals(index) is false)
+												if (await api.PostContextAsync(new Classification { Code = detail.Code, Index = st.Index, Title = detail.Title }) is 0xC8 or 0xCC && list.Any(o => o.Code.Equals(detail.Code) && o.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && o.MarginRate > 0) && await api.GetConfirmAsync(detail) is string index && detail.Index.Equals(index) is false)
 												{
 													var find = list.First(o => o.Code.Equals(detail.Code));
 													var bring = new Indicators.BringInTheme(key, api, detail, find);

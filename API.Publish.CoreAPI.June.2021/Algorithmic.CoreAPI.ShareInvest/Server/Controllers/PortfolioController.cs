@@ -16,7 +16,7 @@ namespace ShareInvest.Controllers
 		[HttpGet]
 		public IEnumerable<Catalog.Models.BringIn> GetContextAsync(string key)
 		{
-			if (context.User.Any(o => o.Email.Equals(key)))
+			if (context.User.AsNoTracking().Any(o => o.Email.Equals(key)))
 			{
 				var stack = new Stack<Catalog.Models.BringIn>();
 

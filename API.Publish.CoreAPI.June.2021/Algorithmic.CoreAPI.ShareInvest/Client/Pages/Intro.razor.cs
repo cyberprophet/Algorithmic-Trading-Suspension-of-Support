@@ -33,6 +33,10 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
+		protected internal Dictionary<string, Catalog.Models.News[]> Link
+		{
+			get; private set;
+		}
 		protected internal string User
 		{
 			get; private set;
@@ -76,15 +80,21 @@ namespace ShareInvest.Pages
 			else if (index < Initialize.Length - 1)
 			{
 				if (Conditions is null)
+				{
 					Conditions = new List<Catalog.Models.Intro>[Initialize.Length - 1];
-
+					Link = new Dictionary<string, Catalog.Models.News[]>();
+				}
 				if (Conditions[index] is null || Conditions[index].Count == 0 || index == 9)
 				{
 					Conditions[index] = new List<Catalog.Models.Intro>();
 
 					foreach (var code in await Http.GetFromJsonAsync<List<string>>(Crypto.Security.GetRoute(nameof(Conditions), index.ToString("D2"))))
+					{
 						Conditions[index].Add(await Http.GetFromJsonAsync<Catalog.Models.Intro>(Crypto.Security.GetRoute(nameof(Conditions), code)));
 
+						if (Link.ContainsKey(code) is false)
+							Link[code] = await Http.GetFromJsonAsync<Catalog.Models.News[]>(Crypto.Security.GetRoute(nameof(Catalog.Models.Classification), code));
+					}
 					StateHasChanged();
 				}
 			}

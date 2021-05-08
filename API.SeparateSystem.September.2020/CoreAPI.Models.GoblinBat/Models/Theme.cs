@@ -40,6 +40,11 @@ namespace ShareInvest.Models
 			get; set;
 		}
 		[ForeignKey("Index")]
+		public virtual ICollection<Classification> Classifications
+		{
+			get; set;
+		}
+		[ForeignKey("Index")]
 		public virtual Url Url
 		{
 			get; set;
@@ -49,6 +54,10 @@ namespace ShareInvest.Models
 		{
 			get; set;
 		}
-		public Theme() => Groups = new HashSet<Group>();
+		public Theme()
+		{
+			Groups = new HashSet<Group>();
+			Classifications = new HashSet<Classification>();
+		}
 	}
 }

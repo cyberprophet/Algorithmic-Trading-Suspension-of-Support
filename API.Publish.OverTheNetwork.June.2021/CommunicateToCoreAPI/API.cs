@@ -525,12 +525,14 @@ namespace ShareInvest.Client
 						case Retention when string.IsNullOrEmpty(response.Content) is false:
 							return JsonConvert.DeserializeObject<Retention>(response.Content);
 
-						case Tick or Message or Account or Catalog.Models.RevisedStockPrice or Response or Catalog.Models.Rotation:
+						case Tick or Message or Account or Catalog.Models.RevisedStockPrice or Response or Catalog.Models.Rotation or Classification:
 							return (int)response.StatusCode;
 
 						case Stocks:
 							return JsonConvert.DeserializeObject<string>(response.Content);
 					}
+				if (param is Classification && response.StatusCode.Equals(HttpStatusCode.NoContent))
+					return (int)response.StatusCode;
 			}
 			catch (Exception ex)
 			{
