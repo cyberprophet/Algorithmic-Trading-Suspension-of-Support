@@ -150,7 +150,7 @@ namespace ShareInvest.OpenAPI
 		}
 		void OnReceiveTrCondition(object sender, _DKHOpenAPIEvents_OnReceiveTrConditionEvent e)
 		{
-			if (IsServer || Base.IsDebug)
+			if (IsServer)
 				Writer.WriteLine(string.Concat(e.nIndex < 0xA ? e.nIndex : Enum.GetName(typeof(Index), e.nIndex), '|', e.strCodeList));
 
 			else

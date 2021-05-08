@@ -58,27 +58,30 @@ namespace ShareInvest.Pages
 								}
 						date = date.AddDays(1);
 					}
-					var cal = SecondaryIndicators.Bollinger.Calculate(dic);
-					Mean = cal.Item1;
-					Sigma = cal.Item2;
-					Normalize = new SecondaryIndicators.Normalization(dic.Max(o => o.Value), dic.Min(o => o.Value));
-
-					if (dic.OrderBy(o => o.Key) is IEnumerable<KeyValuePair<int, long>> enumerable)
+					if (dic.Count > 0)
 					{
-						double[] my = new double[dic.Count], mx = new double[dic.Count];
-						var nor = new SecondaryIndicators.Normalization(enumerable.Last().Key, enumerable.First().Key);
-						var index = 0;
+						var cal = SecondaryIndicators.Bollinger.Calculate(dic);
+						Mean = cal.Item1;
+						Sigma = cal.Item2;
+						Normalize = new SecondaryIndicators.Normalization(dic.Max(o => o.Value), dic.Min(o => o.Value));
 
-						foreach (var kv in enumerable)
+						if (dic.OrderBy(o => o.Key) is IEnumerable<KeyValuePair<int, long>> enumerable)
 						{
-							mx[index] = nor.Normalize((long)kv.Key);
-							my[index++] = Normalize.Normalize(kv.Value);
-						}
-						Slope = new SecondaryIndicators.LinearRegressionLine(mx, my).Slope;
-					}
-					Enumerable = dic.OrderByDescending(o => o.Key);
+							double[] my = new double[dic.Count], mx = new double[dic.Count];
+							var nor = new SecondaryIndicators.Normalization(enumerable.Last().Key, enumerable.First().Key);
+							var index = 0;
 
-					return Page();
+							foreach (var kv in enumerable)
+							{
+								mx[index] = nor.Normalize((long)kv.Key);
+								my[index++] = Normalize.Normalize(kv.Value);
+							}
+							Slope = new SecondaryIndicators.LinearRegressionLine(mx, my).Slope;
+						}
+						Enumerable = dic.OrderByDescending(o => o.Key);
+
+						return Page();
+					}
 				}
 				else
 					return BadRequest();

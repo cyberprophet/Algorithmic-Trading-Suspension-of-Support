@@ -246,7 +246,7 @@
 													{
 														foreach (var link in story)
 														{
-															<a href="https://finance.naver.com/sise/sise_group_detail.nhn?type=theme&no=@link.Link" target="_blank" title="@link.Title">
+															<a class="link" href="https://finance.naver.com/sise/sise_group_detail.nhn?type=theme&no=@link.Link" target="_blank" title="@link.Title">
 																<span class="oi_search oi oi-external-link" aria-hidden="true" />
 															</a>
 														}
@@ -288,8 +288,37 @@
 	@if (string.IsNullOrEmpty(User) is false && DateTime.Now is DateTime now && (now.Hour < 0x12 ? now.AddDays(-1) : now).ToString("yyyy-MM-dd") is string date)
 	{
 		<div class="submit_form">
+			@if (Title is Stack<Catalog.Models.News>)
+			{
+				while (Title.TryPop(out Catalog.Models.News link))
+				{
+					var title = link.Title.Split('\n');
+
+					<p>
+						@for (int i = 0; i < title.Length; i++)
+						{
+							if (i == 0)
+							{
+								<div class="name">
+									@title[i]
+									<a href="https://finance.naver.com/sise/sise_group_detail.nhn?type=theme&no=@link.Link" target="_blank">
+										<span class="oi_search oi oi-external-link" aria-hidden="true" />
+									</a>
+								</div>
+							}
+							else
+							{
+								<div class="context">
+									@title[i]
+								</div>
+							}
+						}
+					</p>
+					<br />
+				}
+			}
 			<form action=@(Base.IsDebug ? "https://localhost:44393/volume" : "https://coreapi.shareinvest.net/volume") method="get" target="_blank">
-				<input class="search_input" name="code" id="search" type="text" placeholder="Search for the Stocks." autocomplete="on" list="search-list" required>
+				<input class="search_input" name="code" id="search" type="text" placeholder="Search for the Stocks." autocomplete="on" list="search-list" required @onchange="e => OnChange(e)">
 				<input type="date" name="start" class="search_input" required autocomplete="on" value="@date" max="@date">
 				<input type="date" name="end" class="search_input" required autocomplete="on" value="@date" max="@date">
 				<input type="submit" class="search_input" value="Distribute">

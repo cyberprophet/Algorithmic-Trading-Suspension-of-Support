@@ -33,7 +33,7 @@ namespace ShareInvest.Pages
 		{
 			get; private set;
 		}
-		protected internal Dictionary<string, Catalog.Models.News[]> Link
+		protected internal Stack<Catalog.Models.News> Title
 		{
 			get; private set;
 		}
@@ -50,6 +50,10 @@ namespace ShareInvest.Pages
 			get; private set;
 		}
 		protected internal Catalog.Models.Codes[] Codes
+		{
+			get; private set;
+		}
+		protected internal Dictionary<string, Catalog.Models.News[]> Link
 		{
 			get; private set;
 		}
@@ -169,6 +173,20 @@ namespace ShareInvest.Pages
 
 				}).Union(model).ToList();
 			}
+		}
+		protected internal async void OnChange(ChangeEventArgs e)
+		{
+			if (e.Value is string code && code.Length == 6)
+			{
+				if (Link is Dictionary<string, Catalog.Models.News[]> && Link.TryGetValue(code, out Catalog.Models.News[] link))
+					Title = new Stack<Catalog.Models.News>(link);
+
+				else if (await Http.GetFromJsonAsync<Catalog.Models.News[]>(Crypto.Security.GetRoute(nameof(Catalog.Models.Classification), code)) is Catalog.Models.News[] title && title.Length > 0)
+					Title = new Stack<Catalog.Models.News>(title);
+
+			}
+			if (Title is Stack<Catalog.Models.News> && Title.Count > 0)
+				StateHasChanged();
 		}
 		protected override async Task OnInitializedAsync()
 		{

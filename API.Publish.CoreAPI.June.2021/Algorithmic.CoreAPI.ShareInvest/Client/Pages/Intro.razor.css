@@ -29,6 +29,11 @@
 	text-align: center
 }
 
+.link
+{
+	margin-right: 0.25em
+}
+
 .red
 {
 	color: red
@@ -42,6 +47,13 @@
 .middle
 {
 	vertical-align: middle
+}
+
+.context
+{
+	padding: 0.5em 5em 0.5em 5em;
+	color: dimgray;
+	font-size: small
 }
 
 .oi_search
