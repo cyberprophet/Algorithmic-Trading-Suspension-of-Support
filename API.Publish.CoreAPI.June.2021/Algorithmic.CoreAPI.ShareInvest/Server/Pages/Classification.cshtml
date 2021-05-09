@@ -1,0 +1,54 @@
+﻿@page
+@model ShareInvest.Pages.ClassificationModel
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://coreapi.shareinvest.net" />
+	<meta property="og:site_name" content="Algorithmic Trading" />
+	<meta property="og:description" content="the profit-generating model using Algorithms." />
+	<meta property="og:image" content="https://tistory2.daumcdn.net/tistory/2409563/attach/4e01fb0e4ea34d458afd1f429d7f2ad7">
+	<link href="~/css/classification.css" rel="stylesheet" />
+	<title>@(string.IsNullOrEmpty(Model.Title) ? nameof(ShareInvest.Pages.ClassificationModel).Substring(0, 0xE) : Model.Title)</title>
+	<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+	<script type="text/javascript" data-value="@Model.Datum" data-count="@Model.Statistics.Count" id="datum">
+		google.charts.load('current', { 'packages': ['corechart'] });
+		google.charts.setOnLoadCallback(drawChart);
+
+		function drawChart()
+		{
+			var input = document.querySelector('#datum');
+			var json = JSON.parse(input.dataset.value);
+			var data = new google.visualization.DataTable();
+			data.addColumn('string', 'Theme');
+			data.addColumn('number', 'Count');
+			data.addRows(Number(input.dataset.count));
+			var index = 0;
+
+			for (var key in json)
+			{
+				data.setValue(index, 0, key);
+				data.setValue(index++, 1, json[key]);
+			}
+			new google.visualization.PieChart(document.getElementById('piechart')).draw(data,
+				{
+					'title': 'Theme Classification',
+					'titleTextStyle': { color: '#696969', fontName: 'consolas', bold: true, italic: true },
+					'pieSliceTextStyle': { color: '#f4f5e2', fontName: 'consolas' },
+					'pieHole': 3e-1,
+					'width': window.innerWidth * 8.5e-1,
+					'height': window.innerHeight * 7e-1
+				});
+		}
+	</script>
+</head>
+
+<body>
+	<div id="piechart"></div>
+</body>
+
+</html>

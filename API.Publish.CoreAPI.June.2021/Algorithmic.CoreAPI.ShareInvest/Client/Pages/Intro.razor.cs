@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 
+using Newtonsoft.Json;
+
 namespace ShareInvest.Pages
 {
 	public partial class IntroBase : ComponentBase, IAsyncDisposable
@@ -34,6 +36,10 @@ namespace ShareInvest.Pages
 			get; private set;
 		}
 		protected internal Stack<Catalog.Models.News> Title
+		{
+			get; private set;
+		}
+		protected internal string Json
 		{
 			get; private set;
 		}
@@ -91,14 +97,28 @@ namespace ShareInvest.Pages
 				if (Conditions[index] is null || Conditions[index].Count == 0 || index == 9)
 				{
 					Conditions[index] = new List<Catalog.Models.Intro>();
+					var classification = new Dictionary<string, uint>();
 
 					foreach (var code in await Http.GetFromJsonAsync<List<string>>(Crypto.Security.GetRoute(nameof(Conditions), index.ToString("D2"))))
 					{
 						Conditions[index].Add(await Http.GetFromJsonAsync<Catalog.Models.Intro>(Crypto.Security.GetRoute(nameof(Conditions), code)));
 
 						if (Link.ContainsKey(code) is false)
-							Link[code] = await Http.GetFromJsonAsync<Catalog.Models.News[]>(Crypto.Security.GetRoute(nameof(Catalog.Models.Classification), code));
+						{
+							var models = await Http.GetFromJsonAsync<Catalog.Models.News[]>(Crypto.Security.GetRoute(nameof(Catalog.Models.Classification), code));
+							Link[code] = models;
+
+							foreach (var m in models)
+							{
+								if (classification.TryGetValue(m.Link, out uint count))
+									classification[m.Link] = ++count;
+
+								else
+									classification[m.Link] = 1 + uint.MinValue;
+							}
+						}
 					}
+					Json = JsonConvert.SerializeObject(classification);
 					StateHasChanged();
 				}
 			}
@@ -183,7 +203,6 @@ namespace ShareInvest.Pages
 
 				else if (await Http.GetFromJsonAsync<Catalog.Models.News[]>(Crypto.Security.GetRoute(nameof(Catalog.Models.Classification), code)) is Catalog.Models.News[] title && title.Length > 0)
 					Title = new Stack<Catalog.Models.News>(title);
-
 			}
 			if (Title is Stack<Catalog.Models.News> && Title.Count > 0)
 				StateHasChanged();
