@@ -34,11 +34,11 @@ namespace ShareInvest.OpenAPI.Catalog
 					break;
 
 				case Operation.선옵_장마감전_동시호가_종료:
-					Delay.Milliseconds = 0xE01;
+					Delay.Milliseconds = 0xE80;
 					break;
 
 				case Operation.장마감:
-					Delay.Milliseconds = 0xE11;
+					Delay.Milliseconds = 0xE80;
 					break;
 			}
 			if (string.IsNullOrEmpty(param[2]) is false && string.IsNullOrEmpty(param[1]) is false && string.IsNullOrEmpty(param[0]) is false)

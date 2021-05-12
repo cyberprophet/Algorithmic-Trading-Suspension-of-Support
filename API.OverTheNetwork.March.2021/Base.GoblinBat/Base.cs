@@ -230,6 +230,7 @@ namespace ShareInvest
 		public static double Tax => tax;
 		public static string FullDateFormat => "yyMMddHHmmss";
 		public static string DateFormat => "yyMMdd";
+		public static string LongYearMonthFormat => "yyyyMM";
 		public static string LongDateFormat => "yyyyMMdd";
 		public static string TimeFormat => "HHmmss";
 		public static string TransactionSuspension => transaction_suspension;

@@ -13,7 +13,7 @@ namespace ShareInvest.OpenAPI.Catalog
 	{
 		protected internal override (string[], Queue<string[]>) OnReceiveTrData(string[] single, string[] multi, _DKHOpenAPIEvents_OnReceiveTrDataEvent e)
 		{
-			var sTemp = single != null ? new string[single.Length] : null;
+			var sTemp = single is null ? null : new string[single.Length];
 
 			if (single != null)
 				for (int i = 0; i < single.Length; i++)
@@ -35,7 +35,7 @@ namespace ShareInvest.OpenAPI.Catalog
 						for (y = 0; y <= ly; y++)
 							str[y] = (string)((object[,])temp)[x, y];
 
-						if (string.IsNullOrEmpty(e.sRQName) == false && (e.sRQName.Equals(rqName) || string.Compare(str[2][2..], e.sRQName) > 0))
+						if (string.IsNullOrEmpty(e.sRQName) is false && (e.sRQName.Equals(rqName) || string.Compare(str[2][2..], e.sRQName) > 0))
 							catalog.Enqueue(str);
 
 						else
@@ -53,12 +53,12 @@ namespace ShareInvest.OpenAPI.Catalog
 				var temp = OnReceiveTrData(opSingle, opMutiple, e);
 				var tr = Connect.GetInstance().TR.First(o => o.GetType().Name[1..].Equals(e.sTrCode[1..]) && o.RQName.Equals(e.sRQName));
 
-				while (temp.Item2 != null && temp.Item2?.Count > 0)
+				while (temp.Item2 is not null && temp.Item2?.Count > 0)
 				{
 					var param = temp.Item2.Dequeue();
 					storage.Push(string.Concat(param[2][2..], ";", param[0], ";", param[1]));
 				}
-				if (next > 0 && temp.Item1[1].Equals(e.sRQName) == false)
+				if (next > 0 && temp.Item1[1].Equals(e.sRQName) is false)
 				{
 					tr.PrevNext = next;
 					Base.SendMessage(GetType(), e.sScrNo, e.sRQName);
@@ -92,7 +92,7 @@ namespace ShareInvest.OpenAPI.Catalog
 		{
 			get; set;
 		}
-		readonly Stack<string> storage = new Stack<string>();
+		readonly Stack<string> storage = new();
 		readonly string[] opSingle = { "종목코드", "마지막틱갯수" };
 		readonly string[] opMutiple
 			= { "현재가", "거래량", "체결시간", "시가", "고가", "저가", "수정주가구분", "수정비율", "대업종구분", "소업종구분", "종목정보", "수정주가이벤트", "전일종가" };

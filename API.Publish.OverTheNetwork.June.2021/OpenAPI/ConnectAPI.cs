@@ -243,6 +243,11 @@ namespace ShareInvest.OpenAPI
 						ctor.RQName = param[9..];
 						API?.InputValueRqData(ctor);
 						break;
+
+					case CatalogTR.Opt50020:
+						ctor.Value = param;
+						API?.InputValueRqData(ctor);
+						break;
 				}
 				Count++;
 			}

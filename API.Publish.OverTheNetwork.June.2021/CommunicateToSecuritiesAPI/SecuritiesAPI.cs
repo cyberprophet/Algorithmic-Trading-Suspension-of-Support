@@ -50,7 +50,7 @@ namespace ShareInvest
 				queue = await consensus.GetContextAsync(i, retention.Code);
 				int status = int.MinValue;
 
-				if (queue != null && queue.Count > 0)
+				if (queue != null && (queue.Count > 0 || context is not null))
 				{
 					status = await api.PostContextAsync(queue);
 
@@ -60,7 +60,7 @@ namespace ShareInvest
 					if (i == 1 && context != null)
 						status = await api.PostContextAsync(context);
 				}
-				Base.SendMessage(retention.Code, status, GetType());
+				Base.SendMessage(retention.GetType(), retention.Code, status);
 			}
 		}
 		void OnReceiveInformationTheDay() => BeginInvoke(new Action(async () =>
@@ -412,7 +412,7 @@ namespace ShareInvest
 					if (worker.WorkerSupportsCancellation is false && worker.IsBusy is false && (api.IsAdministrator is false || Base.IsDebug))
 						worker.RunWorkerAsync(connect.Account);
 
-					if ((Base.IsDebug || api.IsAdministrator && api.IsServer) && connect is OpenAPI.ConnectAPI con && con.Count < 0x200)
+					if (api.IsAdministrator && api.IsServer && connect is OpenAPI.ConnectAPI con && con.Count < 0x200)
 						for (int i = 0; i < con.Conditions.Count; i++)
 						{
 							name = con.Conditions[con.Conditions.Count - i - 1];
@@ -425,7 +425,7 @@ namespace ShareInvest
 					var receive = connect as OpenAPI.ConnectAPI;
 					receive.RemoveValueRqData(sender.GetType().Name, charts.Item1).Send -= OnReceiveSecuritiesAPI;
 
-					if ((charts.Item1.Length == 8 ? (charts.Item1[0] > '1' ? await api.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2)) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2))) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
+					if (charts.Item2.Count > 0 && (charts.Item1.Length == 8 ? (charts.Item1[0] > '1' ? await api.PostContextAsync(Catalog.Models.Convert.ToStoreInOptions(charts.Item1, charts.Item2)) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInFutures(charts.Item1, charts.Item2))) : await api.PostContextAsync(Catalog.Models.Convert.ToStoreInStocks(charts.Item1, charts.Item2))) > 0xC7)
 					{
 						var message = $"Collecting Datum on {(charts.Item1.Length == 6 && receive.TryGetValue(charts.Item1, out Analysis analysis) ? analysis.Name : charts.Item1)}.\nStill {Codes.Count:N0} Stocks to be Collect.";
 						notifyIcon.Text = message.Length < 0x40 ? message : $"Still {Codes.Count:N0} Stocks to be Collect.";
@@ -1014,7 +1014,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x3CC));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x3EE));
 						}
 						catch (Exception ex)
 						{
