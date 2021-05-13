@@ -209,8 +209,7 @@ namespace ShareInvest.OpenAPI
 						API?.InputValueRqData(ctor);
 						break;
 
-					case CatalogTR.Opt50028:
-					case CatalogTR.Opt50066:
+					case CatalogTR.Opt50028 or CatalogTR.Opt50066:
 						if (param.Length == 0x18)
 							ctor.RQName = param.Substring(9, 0xC);
 
@@ -230,22 +229,14 @@ namespace ShareInvest.OpenAPI
 						API?.InputValueRqData(ctor);
 						break;
 
-					case CatalogTR.Opw00005:
-					case CatalogTR.OPW20007:
-					case CatalogTR.OPW20010:
+					case CatalogTR.Opw00005 or CatalogTR.OPW20007 or CatalogTR.OPW20010 or CatalogTR.OPT50022 or CatalogTR.OPT50021 or CatalogTR.Opt50020:
 						ctor.Value = param;
 						API?.InputValueRqData(ctor);
 						break;
 
-					case CatalogTR.OPT50030:
-					case CatalogTR.Opt50068:
+					case CatalogTR.OPT50030 or CatalogTR.Opt50068:
 						ctor.Value = param;
 						ctor.RQName = param[9..];
-						API?.InputValueRqData(ctor);
-						break;
-
-					case CatalogTR.Opt50020:
-						ctor.Value = param;
 						API?.InputValueRqData(ctor);
 						break;
 				}

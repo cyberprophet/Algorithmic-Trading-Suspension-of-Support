@@ -19,7 +19,7 @@ namespace ShareInvest.OpenAPI.Catalog
 			var response = base.OnReceiveTrData(null, multiple, e);
 
 			if (response.Item2 is Queue<string[]> && response.Item2.Count > 0)
-				Send?.Invoke(this, new SendSecuritiesAPI(new Queue<string[]>()));
+				Send?.Invoke(this, new SendSecuritiesAPI(response.Item2, name));
 		}
 		internal override string ID => id;
 		internal override string Value

@@ -17,10 +17,12 @@ namespace ShareInvest.EventHandler
 		public SendSecuritiesAPI(short error) => Convey = error;
 		public SendSecuritiesAPI(Codes codes) => Convey = codes;
 		public SendSecuritiesAPI(Message message) => Convey = message;
+		public SendSecuritiesAPI(Catalog.Strategics.Options options) => Convey = options;
 		public SendSecuritiesAPI(Catalog.Models.Balance balance) => Convey = balance;
-		public SendSecuritiesAPI(Queue<Stocks> stocks) => Convey = stocks;
 		public SendSecuritiesAPI(ISendOrder order) => Convey = order;
+		public SendSecuritiesAPI(Queue<Stocks> stocks) => Convey = stocks;
 		public SendSecuritiesAPI(Queue<string[]> hold) => Convey = hold;
+		public SendSecuritiesAPI(Queue<string[]> options, string name) => Convey = new Tuple<Queue<string[]>, string>(options, name);
 		public SendSecuritiesAPI(Tuple<string, string> tuple) => Convey = tuple;
 		public SendSecuritiesAPI(Operation operation, string time, string remain) => Convey = new Tuple<Operation, string, string>(operation, time, remain);
 		public SendSecuritiesAPI(Dictionary<string, string> param) => Convey = param;

@@ -195,6 +195,11 @@ namespace ShareInvest
 									}
 									RequestBalanceInquiry();
 									return;
+
+								case "4000" when api.IsServer && api.IsAdministrator && this.connect is OpenAPI.ConnectAPI connect:
+									connect.InputValueRqData(string.Concat(instance, "OPT50021"), now.ToString(Base.LongYearMonthFormat)).Send += OnReceiveSecuritiesAPI;
+									connect.InputValueRqData(string.Concat(instance, "OPT50022"), now.ToString(Base.LongYearMonthFormat)).Send += OnReceiveSecuritiesAPI;
+									break;
 							}
 							break;
 
@@ -433,7 +438,7 @@ namespace ShareInvest
 					OnReceiveInformationTheDay();
 					return;
 
-				case string[] accounts:
+				case string[] accounts when this.connect is OpenAPI.ConnectAPI connect:
 					if (await server.PostContextAsync(Crypto.Security.Encrypt(new Account
 					{
 						Length = accounts.Length,
@@ -445,7 +450,6 @@ namespace ShareInvest
 					}, accounts.Length > 0)) is 0xC8 && ulong.TryParse(now.ToString(Base.FullDateFormat), out ulong date))
 					{
 						this.connect.Account = new string[2];
-						var connect = this.connect as OpenAPI.ConnectAPI;
 						connect.Real.Send += OnReceiveSecuritiesAPI;
 						((ISendSecuritiesAPI<SendSecuritiesAPI>)connect.API).Send += OnReceiveSecuritiesAPI;
 						string encrypt = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")), server = this.connect.Securities("GetServerGubun"), length = (accounts.Length % 0xA).ToString("D1");
@@ -503,6 +507,11 @@ namespace ShareInvest
 						}
 						Security.SetKey(encrypt);
 						RequestBalanceInquiry();
+					}
+					if (Base.IsDebug || api.IsServer && api.IsAdministrator)
+					{
+						connect.InputValueRqData(string.Concat(instance, "OPT50021"), now.ToString(Base.LongYearMonthFormat)).Send += OnReceiveSecuritiesAPI;
+						connect.InputValueRqData(string.Concat(instance, "OPT50022"), now.ToString(Base.LongYearMonthFormat)).Send += OnReceiveSecuritiesAPI;
 					}
 					return;
 
@@ -801,6 +810,13 @@ namespace ShareInvest
 							fo = fo.AddDays(1);
 						}
 					CheckTheInformationReceivedOnTheDay();
+					return;
+
+				case Tuple<Queue<string[]>, string> options:
+					while (options.Item1.TryDequeue(out string[] dequeue))
+						connect.Writer.WriteLine(string.Concat(options.Item2, '|', dequeue[2], ';', dequeue[3], ';', dequeue[4], ';', dequeue[^8], ';', dequeue[^7], ';', dequeue[^6], ';', dequeue[^5], ';', dequeue[^4], ';', dequeue[^3], ';', dequeue[^2], ';', dequeue[^1]));
+
+					(connect as OpenAPI.ConnectAPI).RemoveValueRqData(sender.GetType().Name, options.Item2).Send -= OnReceiveSecuritiesAPI;
 					return;
 			}
 		}));

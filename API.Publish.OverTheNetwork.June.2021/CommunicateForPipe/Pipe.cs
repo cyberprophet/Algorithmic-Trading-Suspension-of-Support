@@ -155,6 +155,23 @@ namespace ShareInvest
 										Send?.Invoke(this, new SendSecuritiesAPI(type, temp[1]));
 
 									break;
+
+								case 0xB when temp[^1].Split(';') is string[] response:
+									Send?.Invoke(this, new SendSecuritiesAPI(new Catalog.Strategics.Options
+									{
+										Code = response[0],
+										StrikePrice = response[1],
+										Current = response[2],
+										ImpliedVolatility = response[3],
+										IntrinsicValue = response[4],
+										TimeValue = response[5],
+										Delta = response[6],
+										Gamma = response[7],
+										Theta = response[8],
+										Vega = response[9],
+										Rho = response[^1]
+									}));
+									break;
 							}
 						}
 					}

@@ -12,13 +12,36 @@ namespace ShareInvest.Hubs
 {
 	public class HermesHub : Hub
 	{
-		public async Task SendMessage(Message message) => await Clients.All.SendAsync("ReceiveCurrentMessage", message);
+		public async Task SendMessage(object message)
+		{
+			string request;
+
+			switch (message)
+			{
+				case Message:
+					request = "ReceiveCurrentMessage";
+					break;
+
+				case Catalog.Strategics.Options:
+					request = "ReceiveOptionsMessage";
+					break;
+
+				default:
+
+					return;
+			}
+			await Clients.All.SendAsync(request, message);
+		}
 		public async void OnReceiveSecuritiesAPI(object sender, SendSecuritiesAPI e)
 		{
 			switch (e.Convey)
 			{
-				case Message message when Clients is not null:
+				case Message message when Clients is IHubCallerClients:
 					await SendMessage(message);
+					return;
+
+				case Catalog.Strategics.Options options when Clients is IHubCallerClients:
+					await SendMessage(options);
 					return;
 
 				case Tuple<char, string> condition:
@@ -27,7 +50,7 @@ namespace ShareInvest.Hubs
 						case 'I' when condition.Item2.Split(';') is string[] insert && int.TryParse(insert[0], out int append):
 							if (append > 9)
 							{
-								if (Security.Conditions[append].Add(insert[^1]) && Clients is not null)
+								if (Security.Conditions[append].Add(insert[^1]) && Clients is IHubCallerClients)
 									await SendMessage(new Message
 									{
 										Key = condition.Item1.ToString(),
@@ -43,7 +66,7 @@ namespace ShareInvest.Hubs
 						case 'D' when condition.Item2.Split(';') is string[] delete && int.TryParse(delete[0], out int remove):
 							if (remove > 9)
 							{
-								if (Security.Conditions[remove].Remove(delete[^1]) && Clients is not null)
+								if (Security.Conditions[remove].Remove(delete[^1]) && Clients is IHubCallerClients)
 									await SendMessage(new Message
 									{
 										Key = condition.Item1.ToString(),
