@@ -22,7 +22,6 @@ namespace Waynehills
 
 			var engine = new Engine(ffmpeg);
 			var data = new List<MetaData>();
-			var files = new List<MediaFile>();
 
 			foreach (var file in Directory.GetFiles(Environment.CurrentDirectory, "*.mp4", SearchOption.AllDirectories))
 				if (new FileInfo(file) is FileInfo info && info.Name is string name && name.StartsWith("._") is false)
@@ -37,8 +36,6 @@ namespace Waynehills
 			foreach (var con in data)
 			{
 				var convert = await engine.ConvertAsync(new MediaFile(con.FileInfo), new MediaFile(con.FileInfo.FullName.Replace(".mp4", "r.mp4")), options);
-				files.Add(convert);
-
 				using (var sw = new StreamWriter(Path.Combine(convert.FileInfo.DirectoryName, list), true))
 				{
 					sw.WriteLine($"file {convert.FileInfo.Name}");
