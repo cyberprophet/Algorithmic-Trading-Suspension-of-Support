@@ -1,0 +1,60 @@
+﻿@page
+@model ShareInvest.Pages.ConcatModel
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<link href="~/css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+	<link href="~/css/app.css" rel="stylesheet" />
+	<link href="~/css/concat.css" rel="stylesheet" />
+	<link href="~/css/open-iconic/font/css/open-iconic-bootstrap.min.css" rel="stylesheet" />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://coreapi.shareinvest.net" />
+	<meta property="og:site_name" content="Algorithmic Trading" />
+	<meta property="og:description" content="the profit-generating model using Algorithms." />
+	<meta property="og:image" content="https://tistory2.daumcdn.net/tistory/2409563/attach/4e01fb0e4ea34d458afd1f429d7f2ad7">
+	<title>@nameof(ShareInvest.Pages.ConcatModel).Substring(0, 6)</title>
+</head>
+
+<body>
+	<div class="main">
+		<div class="content px-4">
+			<table class="table">
+				<thead>
+					<tr>
+						<th>
+							<div>Name</div>
+						</th>
+						<th>
+							<div>Up</div>
+						</th>
+						<th>
+							<div>Down</div>
+						</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var file in Model.Files)
+					{
+						<tr>
+							<td>
+								<div>@file.Item1</div>
+							</td>
+							<td>
+								<div class="oi oi-caret-top cursor" aria-hidden="true" ></div>
+							</td>
+							<td>
+								<div class="oi oi-caret-bottom cursor" aria-hidden="true"></div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</body>
+
+</html>
