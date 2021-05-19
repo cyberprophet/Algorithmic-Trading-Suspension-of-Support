@@ -20,12 +20,12 @@ namespace ShareInvest.Controllers
 		{
 			if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
 			{
-				var context = await this.context.Codes.FindAsync(code);
+				var context = this.context.Codes.Find(code);
 
-				if (context != null)
-					return Ok(context);
+				if (context is null)
+					return NotFound(code);
 
-				return NotFound(code);
+				return Ok(context);
 			}
 			return BadRequest();
 		}

@@ -18,7 +18,7 @@ namespace ShareInvest.Controllers
 		{
 			if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
 			{
-				var context = await this.context.Privacies.FindAsync(security);
+				var context = this.context.Privacies.Find(security);
 
 				if (context is null)
 					return NotFound();
@@ -84,7 +84,7 @@ namespace ShareInvest.Controllers
 		{
 			if (await context.Privacies.AnyAsync(o => o.Security.Equals(Security.GetGrantAccess(key))))
 			{
-				var context = await this.context.Privacies.FindAsync(security);
+				var context = this.context.Privacies.Find(security);
 
 				if (context is not null)
 				{

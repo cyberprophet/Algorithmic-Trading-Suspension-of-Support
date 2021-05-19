@@ -29,8 +29,8 @@ namespace ShareInvest.Controllers
 				return Ok(new Retention
 				{
 					Code = code,
-					LastDate = await date.MaxAsync(o => o.Date),
-					FirstDate = await date.MinAsync(o => o.Date)
+					LastDate = date.Max(o => o.Date),
+					FirstDate = date.Min(o => o.Date)
 				});
 			}
 			return BadRequest();

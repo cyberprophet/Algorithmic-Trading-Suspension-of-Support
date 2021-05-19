@@ -22,12 +22,7 @@ namespace ShareInvest.Controllers
 						return NoContent();
 
 					else
-						context.Classifications.Find(new
-						{
-							model.Code,
-							model.Index
-
-						}).Title = model.Title;
+						context.Classifications.Find(model.Code, model.Index).Title = model.Title;
 				}
 				else
 					context.Classifications.Add(model);

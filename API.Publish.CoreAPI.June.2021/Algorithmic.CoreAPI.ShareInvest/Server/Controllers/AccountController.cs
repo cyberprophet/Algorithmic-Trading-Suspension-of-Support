@@ -105,7 +105,7 @@ namespace ShareInvest.Controllers
 							var tick = double.NaN;
 
 							foreach (var privacy in from o in context.Privacies.AsNoTracking() where o.CodeStrategics.Equals(user.Kiwoom) select o)
-								if (double.IsNaN(tick) || privacy.Commission > tick)
+								if (double.IsNaN(tick) || privacy.Commission / 0xE8D4A51000 == 0 && privacy.Commission > tick)
 								{
 									tick = privacy.Commission;
 

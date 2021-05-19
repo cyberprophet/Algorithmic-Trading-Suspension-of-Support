@@ -107,7 +107,12 @@ namespace ShareInvest
 					OnReceiveInformationTheDay();
 			}
 			else
+			{
+				if (await server.PostContextAsync(new Catalog.Models.Message { Convey = $"[{Enum.GetName(typeof(Catalog.OpenAPI.Operation), Operation)}] Collecting Datum on {(Codes.Count > 0 && Codes.TryPeek(out string peek) ? peek : "Complete")}.({Codes.Count:D4})", Key = Security.Key }) is int)
+					notifyIcon.Text = Enum.GetName(typeof(Catalog.OpenAPI.Operation), Operation);
+
 				Dispose(connect as Control);
+			}
 		}));
 		void CheckTheInformationReceivedOnTheDay(string code) => (connect as OpenAPI.ConnectAPI).InputValueRqData(string.Concat(instance, "Opt10081"), string.Concat(code, ';', DateTime.Now.ToString(Base.LongDateFormat))).Send += OnReceiveSecuritiesAPI;
 		void CheckTheInformationReceivedOnTheDay()
@@ -248,6 +253,9 @@ namespace ShareInvest
 							break;
 
 						case Catalog.OpenAPI.Operation.장종료_시간외종료:
+							if (await server.PostContextAsync(new Catalog.Models.Message { Convey = $"[{Enum.GetName(typeof(Catalog.OpenAPI.Operation), operation.Item1)}] Collecting Datum on {(Codes.Count > 0 && Codes.TryPeek(out string peek) ? peek : "Complete")}.({Codes.Count:D4})", Key = Security.Key }) is int)
+								notifyIcon.Text = Enum.GetName(typeof(Catalog.OpenAPI.Operation), operation.Item1);
+
 							Dispose(connect as Control);
 							return;
 					}

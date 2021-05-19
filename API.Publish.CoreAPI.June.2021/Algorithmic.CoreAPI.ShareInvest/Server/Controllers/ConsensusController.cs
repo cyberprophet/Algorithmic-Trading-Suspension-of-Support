@@ -24,7 +24,7 @@ namespace ShareInvest.Controllers
 			{
 				var find = string.Concat("TC.", st);
 				var where = context.Estimate.AsNoTracking().Where(o => o.Strategics.Equals(find));
-				var max = await where.MaxAsync(o => o.Date);
+				var max = where.Max(o => o.Date);
 
 				foreach (var con in await where.Where(o => o.Date.Equals(max)).Select(o => new { o.Code, o.FirstQuarter, o.SecondQuarter, o.ThirdQuarter, o.Quarter, o.TheNextYear, o.TheYearAfterNext }).ToListAsync())
 				{

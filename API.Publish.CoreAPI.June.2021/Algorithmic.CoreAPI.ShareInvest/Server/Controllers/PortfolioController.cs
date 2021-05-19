@@ -41,10 +41,11 @@ namespace ShareInvest.Controllers
 		{
 			if (await context.Privacies.AsNoTracking().AnyAsync(o => o.CodeStrategics.Equals(bring.Methods)))
 			{
+				var pri = context.Privacies.AsNoTracking().Where(o => o.CodeStrategics.Equals(bring.Methods) && (long)o.Commission / 0xE8D4A51000 == 0);
 				var identity = new Models.Identify
 				{
 					Code = bring.Code,
-					Security = context.Privacies.First(o => o.CodeStrategics.Equals(bring.Methods)).Security,
+					Security = pri.Single(o => o.Commission.Equals(pri.Max(o => o.Commission))).Security,
 					Methods = bring.Methods,
 					Contents = bring.Contents,
 					Strategics = bring.Strategics,
