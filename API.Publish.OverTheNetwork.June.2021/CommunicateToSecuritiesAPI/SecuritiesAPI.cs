@@ -1,4 +1,13 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+
+using ShareInvest.Catalog;
+using ShareInvest.Catalog.Models;
+using ShareInvest.Client;
+using ShareInvest.EventHandler;
+using ShareInvest.Interface;
+using ShareInvest.Interface.OpenAPI;
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -9,15 +18,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using Newtonsoft.Json;
-
-using ShareInvest.Catalog;
-using ShareInvest.Catalog.Models;
-using ShareInvest.Client;
-using ShareInvest.EventHandler;
-using ShareInvest.Interface;
-using ShareInvest.Interface.OpenAPI;
 
 namespace ShareInvest
 {
@@ -1038,7 +1038,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x3EE));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x465));
 						}
 						catch (Exception ex)
 						{
