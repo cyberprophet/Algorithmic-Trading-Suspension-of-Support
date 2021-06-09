@@ -1,13 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using OpenQA.Selenium;
@@ -15,6 +6,15 @@ using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
 
 using RestSharp;
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ShareInvest.Client
 {
