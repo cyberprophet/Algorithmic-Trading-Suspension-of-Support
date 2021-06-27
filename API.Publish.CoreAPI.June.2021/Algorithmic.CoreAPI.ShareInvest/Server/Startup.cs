@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
+using Newtonsoft.Json;
+
 using ShareInvest.Hubs;
 
 using System;
@@ -111,6 +113,14 @@ namespace ShareInvest
 						{
 							case WebSocketMessageType.Text when result.Count > 0:
 								message = Encoding.UTF8.GetString(seg.Array, seg.Offset, result.Count);
+
+								if (string.IsNullOrEmpty(message) is false)
+								{
+									var token = JsonConvert.DeserializeObject<Catalog.Models.Token>(message);
+
+									if (Security.User.TryGetValue(token.Password, out Catalog.Models.User user))
+										user.Message = token.Email;
+								}
 								break;
 
 							case WebSocketMessageType.Close when result.Count == 0 && Security.User.TryGetValue(result.CloseStatusDescription, out Catalog.Models.User user):

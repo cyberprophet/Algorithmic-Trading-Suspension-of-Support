@@ -201,7 +201,7 @@ namespace ShareInvest
 										Cash = Reservation.Cash;
 										Reservation.Clear();
 									}
-									RequestBalanceInquiry();
+									RequestBalanceInquiry(false);
 									return;
 
 								case "4000" when api.IsServer && api.IsAdministrator && this.connect is OpenAPI.ConnectAPI connect:
@@ -230,7 +230,7 @@ namespace ShareInvest
 											var cn = connect.Conditions[connect.Conditions.Count - i - 1];
 											connect.SendCondition(connect.Conditions.Count - i - 1, cn, cn.Length == 2 || cn.Length == 5 && cn[^1] is '0' ? 1 : 0);
 										}
-									RequestBalanceInquiry();
+									RequestBalanceInquiry(false);
 									return;
 
 								case market_closing_reservation:
@@ -525,7 +525,7 @@ namespace ShareInvest
 							ctor.Send += OnReceiveSecuritiesAPI;
 						}
 						Security.SetKey(encrypt);
-						RequestBalanceInquiry();
+						RequestBalanceInquiry(false);
 					}
 					if (Base.IsDebug || api.IsServer && api.IsAdministrator)
 					{
@@ -839,8 +839,10 @@ namespace ShareInvest
 					return;
 			}
 		}));
-		void RequestBalanceInquiry()
+		void RequestBalanceInquiry(bool socket)
 		{
+			Base.IsSocket = socket;
+
 			if (connect.Account is not null)
 				if (connect is OpenAPI.ConnectAPI o)
 				{
@@ -1049,6 +1051,9 @@ namespace ShareInvest
 							{
 								var message = Encoding.UTF8.GetString(seg.Array, seg.Offset, result.Count);
 
+								if (Array.Exists(connect.Account, o => o.Equals(message)))
+									RequestBalanceInquiry(true);
+
 								if (Base.IsDebug)
 									Base.SendMessage(GetType(), identify, message);
 							}
@@ -1200,7 +1205,7 @@ namespace ShareInvest
 							break;
 
 						case DialogResult.Retry:
-							RequestBalanceInquiry();
+							RequestBalanceInquiry(false);
 							break;
 
 						case DialogResult.Ignore:

@@ -1,11 +1,11 @@
-﻿using System;
+﻿using ShareInvest.Catalog.Models;
+using ShareInvest.Catalog.OpenAPI;
+using ShareInvest.Interface;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
-using ShareInvest.Catalog.Models;
-using ShareInvest.Catalog.OpenAPI;
-using ShareInvest.Interface;
 
 namespace ShareInvest.EventHandler
 {
@@ -28,7 +28,15 @@ namespace ShareInvest.EventHandler
 		public SendSecuritiesAPI(Dictionary<string, string> param) => Convey = param;
 		public SendSecuritiesAPI(string code, Stack<string> stack) => Convey = new Tuple<string, Stack<string>>(code, stack);
 		public SendSecuritiesAPI(string message) => Convey = message;
-		public SendSecuritiesAPI(string[] accounts) => Convey = accounts;
+		public SendSecuritiesAPI(string[] accounts)
+		{
+			if (accounts.Length == 0x1F)
+			{
+
+			}
+			else
+				Convey = accounts;
+		}
 		public SendSecuritiesAPI(string code, Queue<Stocks> day) => Convey = new Tuple<string, Queue<Stocks>>(code, day);
 		public SendSecuritiesAPI(string code, Stack<Catalog.Models.RevisedStockPrice> revise, Queue<Stocks> day) => Convey = new Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>>(code, revise, day);
 		public SendSecuritiesAPI(string sEvaluation, string sDeposit, string sAvailable)

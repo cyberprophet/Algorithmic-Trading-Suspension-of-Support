@@ -5,6 +5,10 @@ namespace ShareInvest.Catalog.Models
 {
 	public class User
 	{
+		public string Message
+		{
+			get; set;
+		}
 		public Account Account
 		{
 			get; set;

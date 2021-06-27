@@ -116,3 +116,11 @@ ul
 	font-size: 1rem;
 	color: red
 }
+
+.oi_search
+{
+	cursor: pointer;
+	color: dimgray;
+	font-size: smaller;
+	margin-left: 3px
+}

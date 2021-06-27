@@ -1,10 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -13,6 +7,13 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Newtonsoft.Json;
 
 using ShareInvest.Catalog.Models;
+
+using System;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace ShareInvest.Pages
 {
@@ -35,6 +36,14 @@ namespace ShareInvest.Pages
 			catch (Exception ex)
 			{
 				Base.SendMessage(ex.StackTrace, GetType());
+			}
+		}
+		protected internal async Task OnClick(object account, MouseEventArgs _)
+		{
+			if (account is string str && Information.Single(o => (o.Check.StartsWith(str) || o.Check.EndsWith(str)) && Array.Exists(o.Account, x => x.Equals(str))) is UserInformation info)
+			{
+
+				var response = await Http.GetFromJsonAsync<string>(Crypto.Security.GetRoute("Circular", info.Key, str));
 			}
 		}
 		protected internal async Task Send(object sender, object param, MouseEventArgs _)
@@ -118,7 +127,7 @@ namespace ShareInvest.Pages
 				}
 				IsClicked = true;
 			}
-		}		
+		}
 		protected internal bool IsClicked
 		{
 			get; private set;

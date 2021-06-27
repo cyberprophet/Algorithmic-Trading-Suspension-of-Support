@@ -1,9 +1,9 @@
-﻿using System;
-
-using AxKHOpenAPILib;
+﻿using AxKHOpenAPILib;
 
 using ShareInvest.EventHandler;
 using ShareInvest.Interface.OpenAPI;
+
+using System;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
@@ -14,8 +14,13 @@ namespace ShareInvest.OpenAPI.Catalog
 			var temp = base.OnReceiveTrData(opSingle, opMultiple, e);
 
 			if (temp.Item1 != null)
-				Send?.Invoke(this, new SendSecuritiesAPI(temp.Item1[15], temp.Item1[2], temp.Item1[7]));
+			{
+				if (Base.IsSocket)
+					Send?.Invoke(this, new SendSecuritiesAPI(temp.Item1));
 
+				else
+					Send?.Invoke(this, new SendSecuritiesAPI(temp.Item1[15], temp.Item1[2], temp.Item1[7]));
+			}
 			if (temp.Item2 != null && temp.Item2.Count > 0)
 				Send?.Invoke(this, new SendSecuritiesAPI(temp.Item2));
 		}
