@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Net.WebSockets;
 
 namespace ShareInvest.Catalog.Models
 {
@@ -9,6 +10,10 @@ namespace ShareInvest.Catalog.Models
 			get; set;
 		}
 		public Queue<Log> Logs
+		{
+			get; set;
+		}
+		public WebSocket Socket
 		{
 			get; set;
 		}

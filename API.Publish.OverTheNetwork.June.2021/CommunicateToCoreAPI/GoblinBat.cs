@@ -1,14 +1,14 @@
-﻿using System;
-using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 using RestSharp;
 
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.Models;
+
+using System;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ShareInvest.Client
 {
@@ -102,7 +102,7 @@ namespace ShareInvest.Client
 		GoblinBat(dynamic key)
 		{
 			security = new Security(key);
-			client = new RestClient(security.Uri)
+			client = new RestClient(Base.IsDebug ? @"https://localhost:44393/" : security.Uri)
 			{
 				Timeout = -1
 			};

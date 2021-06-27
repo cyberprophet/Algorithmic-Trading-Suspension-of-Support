@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
-using System.Web;
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Catalog.Models;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+using System.Web;
 
 namespace ShareInvest.Controllers
 {
@@ -40,7 +40,8 @@ namespace ShareInvest.Controllers
 							Number = temp
 						},
 						Logs = new Queue<Log>(),
-						Balance = new Dictionary<string, Balance>()
+						Balance = new Dictionary<string, Balance>(),
+						Socket = null
 					};
 					return Ok(temp[^1]);
 				}

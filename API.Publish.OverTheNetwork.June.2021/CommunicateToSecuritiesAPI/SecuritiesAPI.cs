@@ -15,7 +15,9 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -32,6 +34,7 @@ namespace ShareInvest
 			this.key = key;
 			api = API.GetInstance(key);
 			random = new Random(Guid.NewGuid().GetHashCode());
+			socket = new BackgroundWorker();
 			Codes = new Queue<string>();
 			GetTheCorrectAnswer = new int[this.key.Length];
 			server = GoblinBat.GetInstance(key);
@@ -462,6 +465,14 @@ namespace ShareInvest
 						((ISendSecuritiesAPI<SendSecuritiesAPI>)connect.API).Send += OnReceiveSecuritiesAPI;
 						string encrypt = Crypto.Security.Encrypt(this.connect.Securities("USER_ID")), server = this.connect.Securities("GetServerGubun"), length = (accounts.Length % 0xA).ToString("D1");
 
+						if (socket is BackgroundWorker)
+						{
+							Token = new CancellationToken();
+							Socket = new ClientWebSocket();
+							await Socket.ConnectAsync(new Uri("wss://localhost:44393/socket"), Token);
+							await Socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(encrypt)), WebSocketMessageType.Text, true, Token);
+							socket.RunWorkerAsync(encrypt);
+						}
 						if (await api.GetSecurityAsync(key) is Privacies pri && char.TryParse(pri.SecuritiesAPI, out char initial) && string.IsNullOrEmpty(pri.CodeStrategics) is false)
 						{
 							if (char.IsLetter(initial) && await api.PutContextAsync(new Privacies
@@ -1027,6 +1038,27 @@ namespace ShareInvest
 					}
 					break;
 
+				case string identify:
+					while (WebSocketState.Open.Equals(Socket.State))
+						try
+						{
+							var seg = new ArraySegment<byte>(new byte[0x400 * 4]);
+							var result = await Socket.ReceiveAsync(seg, Token);
+
+							if (result.Count > 0 && result.EndOfMessage && WebSocketMessageType.Text.Equals(result.MessageType))
+							{
+								var message = Encoding.UTF8.GetString(seg.Array, seg.Offset, result.Count);
+
+								if (Base.IsDebug)
+									Base.SendMessage(GetType(), identify, message);
+							}
+						}
+						catch (Exception ex)
+						{
+							Base.SendMessage(GetType(), ex.StackTrace);
+						}
+					break;
+
 				case uint page:
 					while (page++ < 0x80)
 						try
@@ -1038,7 +1070,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x4BC));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x532));
 						}
 						catch (Exception ex)
 						{
@@ -1081,6 +1113,9 @@ namespace ShareInvest
 						}
 					notifyIcon.Icon = icons[^1];
 				}));
+				if (socket is BackgroundWorker)
+					socket.DoWork += new DoWorkEventHandler(WorkerDoWork);
+
 				WindowState = FormWindowState.Minimized;
 			}
 			else if (connect.Start)
@@ -1266,7 +1301,15 @@ namespace ShareInvest
 		{
 			get; set;
 		}
+		ClientWebSocket Socket
+		{
+			get; set;
+		}
 		Dictionary<string, Catalog.OpenAPI.Condition[]> Conditions
+		{
+			get; set;
+		}
+		CancellationToken Token
 		{
 			get; set;
 		}
@@ -1292,6 +1335,7 @@ namespace ShareInvest
 		readonly API api;
 		readonly GoblinBat server;
 		readonly Icon[] icons;
+		readonly BackgroundWorker socket;
 		readonly ISecuritiesAPI<SendSecuritiesAPI> connect;
 		[Conditional("DEBUG")]
 		static void PreventsFromRunningAgain(FormClosingEventArgs e) => e.Cancel = true;
