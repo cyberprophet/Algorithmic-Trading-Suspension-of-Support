@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using AxKHOpenAPILib;
+﻿using AxKHOpenAPILib;
 
 using ShareInvest.EventHandler;
 using ShareInvest.Interface.OpenAPI;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ShareInvest.OpenAPI.Catalog
 {
@@ -92,7 +92,7 @@ namespace ShareInvest.OpenAPI.Catalog
 		{
 			get; set;
 		}
-		readonly Stack<string> storage = new Stack<string>();
+		readonly Stack<string> storage = new();
 		readonly string[] opSingle = { "종목코드", "마지막틱갯수" };
 		readonly string[] opMutiple = { "현재가", "거래량", "체결시간", "시가", "고가", "저가", "전일종가" };
 		const string code = "opt50066";

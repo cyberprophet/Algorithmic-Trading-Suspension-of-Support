@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using Microsoft.AspNetCore.SignalR.Client;
 
 using Newtonsoft.Json;
 
 using ShareInvest.Catalog.Models;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -18,12 +20,18 @@ using System.Threading.Tasks;
 namespace ShareInvest.Pages
 {
 	[Authorize]
-	public partial class IndexBase : ComponentBase
+	public partial class IndexBase : ComponentBase, IAsyncDisposable
 	{
+		public async ValueTask DisposeAsync()
+		{
+			if (Hub is not null)
+				await Hub.DisposeAsync();
+		}
 		protected async override Task OnInitializedAsync()
 		{
 			try
 			{
+				Connection = new Dictionary<string, bool>();
 				Information = await Http.GetFromJsonAsync<UserInformation[]>(Crypto.Security.GetRoute("Account", await OnReceiveLogUserInformation()));
 
 				if (Information is null || Information.Length == 0)
@@ -42,8 +50,60 @@ namespace ShareInvest.Pages
 		{
 			if (account is string str && Information.Single(o => (o.Check.StartsWith(str) || o.Check.EndsWith(str)) && Array.Exists(o.Account, x => x.Equals(str))) is UserInformation info)
 			{
+				if (Hub is null)
+				{
+					Hub = new HubConnectionBuilder().WithUrl(Manager.ToAbsoluteUri("/hub/account"), o => o.AccessTokenProvider = async () =>
+					{
+						(await TokenProvider.RequestAccessToken()).TryGetToken(out var accessToken);
 
-				var response = await Http.GetFromJsonAsync<string>(Crypto.Security.GetRoute("Circular", info.Key, str));
+						return accessToken.Value;
+
+					}).Build();
+					Hub.On<string>("ReceiveAccountMessage", (message) =>
+					{
+						try
+						{
+							if (Count == 0)
+							{
+								var dictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(message);
+
+								if (dictionary.Remove(nameof(account), out string acc) && acc.Equals(str) && int.TryParse(dictionary["출력건수"], out int count))
+								{
+
+
+									Count = count;
+								}
+							}
+							else
+							{
+								var balance = JsonConvert.DeserializeObject<Catalog.OpenAPI.OPW00004>(message);
+
+								if (balance.Account.Equals(str))
+								{
+
+
+									Count--;
+								}
+							}
+							if (Count == 0)
+							{
+								Connection[str] = true;
+								StateHasChanged();
+							}
+						}
+						catch (Exception ex)
+						{
+							Console.WriteLine(ex.Message);
+						}
+					});
+					await Hub.StartAsync();
+				}
+				if (Connection.ContainsKey(str) is false || Connection[str])
+				{
+					Count = 0;
+					Connection[str] = false;
+					await Hub.SendAsync("SendMessage", info.Key, str);
+				}
 			}
 		}
 		protected internal async Task Send(object sender, object param, MouseEventArgs _)
@@ -148,13 +208,35 @@ namespace ShareInvest.Pages
 		{
 			get; set;
 		}
+		protected internal Dictionary<string, bool> Connection
+		{
+			get; private set;
+		}
+		[Inject]
+		IAccessTokenProvider TokenProvider
+		{
+			get; set;
+		}
 		[Inject]
 		HttpClient Http
 		{
 			get; set;
 		}
+		[Inject]
+		NavigationManager Manager
+		{
+			get; set;
+		}
+		HubConnection Hub
+		{
+			get; set;
+		}
 		[CascadingParameter]
 		Task<AuthenticationState> State
+		{
+			get; set;
+		}
+		int Count
 		{
 			get; set;
 		}

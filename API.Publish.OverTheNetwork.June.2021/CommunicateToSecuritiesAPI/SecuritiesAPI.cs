@@ -550,6 +550,22 @@ namespace ShareInvest
 					}
 					return;
 
+				case Dictionary<string, long> dictionary when long.TryParse(connect.Account[dictionary.Count == 0x1F ? 0 : ^1], out long account):
+					dictionary[nameof(account)] = account;
+					await Socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dictionary))), WebSocketMessageType.Text, true, Token);
+					return;
+
+				case Dictionary<string, string> dictionary:
+					dictionary["account"] = connect.Account[dictionary.Count == 0x13 ? 0 : ^1];
+					await Socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dictionary))), WebSocketMessageType.Text, true, Token);
+					return;
+
+				case Queue<Catalog.OpenAPI.OPW00004> queue:
+					while (queue.TryDequeue(out Catalog.OpenAPI.OPW00004 dequeue))
+						await Socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dequeue))), WebSocketMessageType.Text, true, Token);
+
+					return;
+
 				case Tuple<int, string[]> conditions when connect is OpenAPI.ConnectAPI api:
 					if (Conditions is null)
 					{
@@ -839,10 +855,8 @@ namespace ShareInvest
 					return;
 			}
 		}));
-		void RequestBalanceInquiry(bool socket)
+		void RequestBalanceInquiry()
 		{
-			Base.IsSocket = socket;
-
 			if (connect.Account is not null)
 				if (connect is OpenAPI.ConnectAPI o)
 				{
@@ -850,7 +864,23 @@ namespace ShareInvest
 					{
 
 					}
-					o.InputValueRqData(string.Concat(instance, "Opw00005"), string.Concat(connect.Account[0], password)).Send += OnReceiveSecuritiesAPI;
+					o.InputValueRqData(string.Concat(instance, "OPW00004"), $"{connect.Account[0]};;0;00").Send += OnReceiveSecuritiesAPI;
+				}
+				else
+				{
+
+				}
+		}
+		void RequestBalanceInquiry(bool socket)
+		{
+			if (connect.Account is not null)
+				if (connect is OpenAPI.ConnectAPI o)
+				{
+					if (Array.Exists(connect.Account, o => string.IsNullOrEmpty(o)) is false && string.IsNullOrEmpty(connect.Account[^1]) is false && connect.Account[^1].Length == 0xA && connect.Account[^1][^2..].Equals("31"))
+					{
+
+					}
+					o.InputValueRqData(string.Concat(instance, "Opw00005"), socket ? string.Concat(connect.Account[0], password, nameof(socket)) : string.Concat(connect.Account[0], password)).Send += OnReceiveSecuritiesAPI;
 				}
 				else
 				{
@@ -1051,11 +1081,8 @@ namespace ShareInvest
 							{
 								var message = Encoding.UTF8.GetString(seg.Array, seg.Offset, result.Count);
 
-								if (Array.Exists(connect.Account, o => o.Equals(message)))
-									RequestBalanceInquiry(true);
-
-								if (Base.IsDebug)
-									Base.SendMessage(GetType(), identify, message);
+								if (Array.Exists(connect.Account, o => o.Equals(message)) && "31".Equals(message[^2..]) is false)
+									RequestBalanceInquiry();
 							}
 						}
 						catch (Exception ex)

@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Catalog.Models;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace ShareInvest.Controllers
 {

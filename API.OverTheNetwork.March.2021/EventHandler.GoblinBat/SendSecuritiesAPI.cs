@@ -3,6 +3,7 @@ using ShareInvest.Catalog.OpenAPI;
 using ShareInvest.Interface;
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -28,15 +29,34 @@ namespace ShareInvest.EventHandler
 		public SendSecuritiesAPI(Dictionary<string, string> param) => Convey = param;
 		public SendSecuritiesAPI(string code, Stack<string> stack) => Convey = new Tuple<string, Stack<string>>(code, stack);
 		public SendSecuritiesAPI(string message) => Convey = message;
-		public SendSecuritiesAPI(string[] accounts)
+		public SendSecuritiesAPI(string[] accounts) => Convey = accounts;
+		public SendSecuritiesAPI(string[] key, string[] value)
 		{
-			if (accounts.Length == 0x1F)
-			{
+			IDictionary dictionary = null;
+			int i;
 
+			switch (key.Length)
+			{
+				case 0x13:
+					dictionary = new Dictionary<string, string>();
+
+					for (i = 0; i < key.Length; i++)
+						dictionary[key[i]] = value[i];
+
+					break;
+
+				case 0x1F:
+					dictionary = new Dictionary<string, long>();
+
+					for (i = 0; i < key.Length; i++)
+						if (long.TryParse(value[i], out long money))
+							dictionary[key[i]] = money;
+
+					break;
 			}
-			else
-				Convey = accounts;
+			Convey = dictionary;
 		}
+		public SendSecuritiesAPI(Queue<OPW00004> queue) => Convey = queue;
 		public SendSecuritiesAPI(string code, Queue<Stocks> day) => Convey = new Tuple<string, Queue<Stocks>>(code, day);
 		public SendSecuritiesAPI(string code, Stack<Catalog.Models.RevisedStockPrice> revise, Queue<Stocks> day) => Convey = new Tuple<string, Stack<Catalog.Models.RevisedStockPrice>, Queue<Stocks>>(code, revise, day);
 		public SendSecuritiesAPI(string sEvaluation, string sDeposit, string sAvailable)

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -11,6 +6,11 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Hubs;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ShareInvest.Controllers
 {
@@ -26,9 +26,14 @@ namespace ShareInvest.Controllers
 				{
 					user.Balance[balance.Code] = balance;
 
-					if (hub is not null)
-						foreach (var email in from o in context.User.AsNoTracking() where o.Kiwoom.Equals(balance.Kiwoom) select o.Email)
-							await hub.Clients.User(context.Users.AsNoTracking().First(o => o.Email.Equals(email)).Id).SendAsync(message, balance);
+					if (hub is not null && user.Id.Length > 0)
+					{
+						if (user.Id.Length == 1)
+							await hub.Clients.User(user.Id[0]).SendAsync(message, balance);
+
+						else
+							await hub.Clients.Users(user.Id).SendAsync(message, balance);
+					}
 				}
 			}
 			catch (Exception ex)

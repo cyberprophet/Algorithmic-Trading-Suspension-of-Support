@@ -1,4 +1,12 @@
-﻿using System;
+﻿using AxKHOpenAPILib;
+
+using ShareInvest.Catalog.Models;
+using ShareInvest.DelayRequest;
+using ShareInvest.EventHandler;
+using ShareInvest.Interface;
+using ShareInvest.Interface.OpenAPI;
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,14 +15,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
-
-using AxKHOpenAPILib;
-
-using ShareInvest.Catalog.Models;
-using ShareInvest.DelayRequest;
-using ShareInvest.EventHandler;
-using ShareInvest.Interface;
-using ShareInvest.Interface.OpenAPI;
 
 namespace ShareInvest.OpenAPI
 {
@@ -229,7 +229,19 @@ namespace ShareInvest.OpenAPI
 						API?.InputValueRqData(ctor);
 						break;
 
-					case CatalogTR.Opw00005 or CatalogTR.OPW20007 or CatalogTR.OPW20010 or CatalogTR.OPT50022 or CatalogTR.OPT50021 or CatalogTR.Opt50020:
+					case CatalogTR.Opw00005:
+						if (param.Length > 0xE)
+						{
+							ctor.Value = param.Substring(0, 0xE);
+							ctor.RQName = param[0xE..].ToUpper();
+						}
+						else
+							ctor.Value = param;
+
+						API?.InputValueRqData(ctor);
+						break;
+
+					case CatalogTR.OPW20007 or CatalogTR.OPW20010 or CatalogTR.OPT50022 or CatalogTR.OPT50021 or CatalogTR.Opt50020 or CatalogTR.OPW00004:
 						ctor.Value = param;
 						API?.InputValueRqData(ctor);
 						break;

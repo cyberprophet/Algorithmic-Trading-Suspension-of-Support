@@ -25,9 +25,13 @@ namespace ShareInvest.Controllers
 				if (param.Length > 0)
 				{
 					var temp = new string[param.Length];
+					var stack = new Stack<string>();
 
 					for (int i = 0; i < param.Length; i++)
 						temp[i] = Crypto.Security.Decipher(param.Number[i]);
+
+					foreach (var email in from o in context.User.AsNoTracking() where o.Kiwoom.Equals(param.Identity) select o.Email)
+						stack.Push(context.Users.AsNoTracking().Single(o => o.Email.Equals(email)).Id);
 
 					Security.User[param.Identity] = new User
 					{
@@ -41,7 +45,7 @@ namespace ShareInvest.Controllers
 						},
 						Logs = new Queue<Log>(),
 						Balance = new Dictionary<string, Balance>(),
-						Socket = null
+						Id = stack.ToArray()
 					};
 					return Ok(temp[^1]);
 				}

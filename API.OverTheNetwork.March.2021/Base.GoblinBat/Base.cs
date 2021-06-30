@@ -221,10 +221,6 @@ namespace ShareInvest
 				return ToDebug;
 			}
 		}
-		public static bool IsSocket
-		{
-			get; set;
-		}
 		public static ConsoleColor ChangeColor(double param) => param > 0 ? ConsoleColor.Red : ConsoleColor.Blue;
 		public static string[] Contents => new[] { "Name", "Rate", "Average", "Major Stocks", "Base Date" };
 		public static string[] Title => new[] { "테마명", "전일대비", "최근3일\n등락률", "주도주", "기준일" };

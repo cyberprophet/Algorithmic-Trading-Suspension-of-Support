@@ -51,7 +51,7 @@
 														<input type="radio" id="stocks" name="@i" value="@string.Concat(str, ';', i)" @onchange="e => OnReceiveTheSelectedButton(e)" checked="@check">
 														@Base.ConvertFormat(str)
 
-														if (check)
+														if (check && (Connection.ContainsKey(str) is false || Connection[str]))
 														{
 															<span class="oi_search oi oi-loop-circular" aria-hidden="true" @onclick="e => OnClick(str, e)" />
 														}
@@ -79,7 +79,7 @@
 														<input type="radio" id="futures" name="@string.Concat("31", i)" value="@string.Concat(str, ';', i)" @onchange="e => OnReceiveTheSelectedButton(e)" checked="@check">
 														@Base.ConvertFormat(str)
 
-														if (check)
+														if (check && (Connection.ContainsKey(str) is false || Connection[str]))
 														{
 															<span class="oi_search oi oi-loop-circular" aria-hidden="true" @onclick="e => OnClick(str, e)" />
 														}

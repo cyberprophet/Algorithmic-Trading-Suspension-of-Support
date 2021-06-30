@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-
-using AxKHOpenAPILib;
+﻿using AxKHOpenAPILib;
 
 using ShareInvest.EventHandler;
 using ShareInvest.Interface.OpenAPI;
+
+using System;
+using System.Collections.Generic;
 
 namespace ShareInvest.OpenAPI
 {
@@ -101,6 +101,7 @@ namespace ShareInvest.OpenAPI
 		Opt50066,
 		Opt50068,
 		OPTKWFID,
+		OPW00004,
 		Opw00005,
 		OPW20007,
 		OPW20010,

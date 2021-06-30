@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -12,6 +6,12 @@ using Microsoft.EntityFrameworkCore;
 
 using ShareInvest.Catalog.Models;
 using ShareInvest.Hubs;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Web;
 
 namespace ShareInvest.Controllers
 {
@@ -35,10 +35,14 @@ namespace ShareInvest.Controllers
 						Screen = log[^1].Remove(log[^1].Length - 1),
 						Name = user.Account.Name
 					});
-					if (hub is not null)
-						foreach (var email in from o in context.User.AsNoTracking() where o.Kiwoom.Equals(param.Key) select o.Email)
-							await hub.Clients.User(context.Users.First(o => o.Email.Equals(email)).Id).SendAsync(method, log[0].Trim());
+					if (hub is not null && user.Id.Length > 0)
+					{
+						if (user.Id.Length == 1)
+							await hub.Clients.User(user.Id[0]).SendAsync(method, log[0].Trim());
 
+						else
+							await hub.Clients.Users(user.Id).SendAsync(method, log[0].Trim());
+					}
 					return Ok(param.Convey);
 				}
 			}

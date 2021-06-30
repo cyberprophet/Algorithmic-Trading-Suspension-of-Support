@@ -15,11 +15,11 @@ namespace ShareInvest.OpenAPI.Catalog
 
 			if (temp.Item1 != null)
 			{
-				if (Base.IsSocket)
-					Send?.Invoke(this, new SendSecuritiesAPI(temp.Item1));
+				if (e.sRQName.Equals(name))
+					Send?.Invoke(this, new SendSecuritiesAPI(temp.Item1[15], temp.Item1[2], temp.Item1[7]));
 
 				else
-					Send?.Invoke(this, new SendSecuritiesAPI(temp.Item1[15], temp.Item1[2], temp.Item1[7]));
+					Send?.Invoke(this, new SendSecuritiesAPI(opSingle, temp.Item1));
 			}
 			if (temp.Item2 != null && temp.Item2.Count > 0)
 				Send?.Invoke(this, new SendSecuritiesAPI(temp.Item2));
@@ -31,12 +31,8 @@ namespace ShareInvest.OpenAPI.Catalog
 		}
 		internal override string RQName
 		{
-			set
-			{
-
-			}
-			get => name;
-		}
+			set; get;
+		} = name;
 		internal override string TrCode => code;
 		internal override int PrevNext
 		{
