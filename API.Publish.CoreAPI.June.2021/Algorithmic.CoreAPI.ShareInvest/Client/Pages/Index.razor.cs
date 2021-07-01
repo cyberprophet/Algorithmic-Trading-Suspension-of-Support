@@ -63,14 +63,16 @@ namespace ShareInvest.Pages
 					{
 						try
 						{
-							if (Count == 0)
+							if (Count == int.MaxValue)
 							{
-								var dictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(message);
+								var account = JsonConvert.DeserializeObject<Dictionary<string, string>>(message);
 
-								if (dictionary.Remove(nameof(account), out string acc) && acc.Equals(str) && int.TryParse(dictionary["출력건수"], out int count))
+								if (str.Equals(account[nameof(account)]) && int.TryParse(account["출력건수"], out int count))
 								{
+									if (Accounts is null)
+										Accounts = new Dictionary<string, string>[Information.Length];
 
-
+									Accounts[Array.FindIndex(Information, o => o.Key.Equals(info.Key))] = account;
 									Count = count;
 								}
 							}
@@ -78,14 +80,14 @@ namespace ShareInvest.Pages
 							{
 								var balance = JsonConvert.DeserializeObject<Catalog.OpenAPI.OPW00004>(message);
 
-								if (balance.Account.Equals(str))
+								if (str.Equals(balance.Account))
 								{
 
 
 									Count--;
 								}
 							}
-							if (Count == 0)
+							if (Count == 0 && Connection.ContainsKey(str))
 							{
 								Connection[str] = true;
 								StateHasChanged();
@@ -100,7 +102,7 @@ namespace ShareInvest.Pages
 				}
 				if (Connection.ContainsKey(str) is false || Connection[str])
 				{
-					Count = 0;
+					Count = int.MaxValue;
 					Connection[str] = false;
 					await Hub.SendAsync("SendMessage", info.Key, str);
 				}
@@ -209,6 +211,10 @@ namespace ShareInvest.Pages
 			get; set;
 		}
 		protected internal Dictionary<string, bool> Connection
+		{
+			get; private set;
+		}
+		protected internal Dictionary<string, string>[] Accounts
 		{
 			get; private set;
 		}

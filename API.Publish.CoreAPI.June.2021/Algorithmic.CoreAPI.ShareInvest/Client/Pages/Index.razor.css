@@ -124,3 +124,13 @@ ul
 	font-size: smaller;
 	margin-left: 3px
 }
+
+.separate
+{
+	border: 1px solid #dcdcdc
+}
+
+.account
+{
+	color: gainsboro
+}

@@ -855,22 +855,6 @@ namespace ShareInvest
 					return;
 			}
 		}));
-		void RequestBalanceInquiry()
-		{
-			if (connect.Account is not null)
-				if (connect is OpenAPI.ConnectAPI o)
-				{
-					if (Array.Exists(connect.Account, o => string.IsNullOrEmpty(o)) is false && string.IsNullOrEmpty(connect.Account[^1]) is false && connect.Account[^1].Length == 0xA && connect.Account[^1][^2..].Equals("31"))
-					{
-
-					}
-					o.InputValueRqData(string.Concat(instance, "OPW00004"), $"{connect.Account[0]};;0;00").Send += OnReceiveSecuritiesAPI;
-				}
-				else
-				{
-
-				}
-		}
 		void RequestBalanceInquiry(bool socket)
 		{
 			if (connect.Account is not null)
@@ -880,7 +864,7 @@ namespace ShareInvest
 					{
 
 					}
-					o.InputValueRqData(string.Concat(instance, "Opw00005"), socket ? string.Concat(connect.Account[0], password, nameof(socket)) : string.Concat(connect.Account[0], password)).Send += OnReceiveSecuritiesAPI;
+					o.InputValueRqData(string.Concat(instance, socket ? "OPW00004" : "Opw00005"), socket ? $"{connect.Account[0]};;0;00" : string.Concat(connect.Account[0], password)).Send += OnReceiveSecuritiesAPI;
 				}
 				else
 				{
@@ -1080,9 +1064,7 @@ namespace ShareInvest
 							if (result.Count > 0 && result.EndOfMessage && WebSocketMessageType.Text.Equals(result.MessageType))
 							{
 								var message = Encoding.UTF8.GetString(seg.Array, seg.Offset, result.Count);
-
-								if (Array.Exists(connect.Account, o => o.Equals(message)) && "31".Equals(message[^2..]) is false)
-									RequestBalanceInquiry();
+								RequestBalanceInquiry(Array.Exists(connect.Account, o => o.Equals(message)) && "31".Equals(message[^2..]) is false);
 							}
 						}
 						catch (Exception ex)
