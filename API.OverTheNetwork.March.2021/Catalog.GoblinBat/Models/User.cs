@@ -9,6 +9,10 @@ namespace ShareInvest.Catalog.Models
 {
 	public class User
 	{
+		public int Count
+		{
+			get; set;
+		}
 		public string[] Id
 		{
 			get; set;

@@ -176,7 +176,7 @@ namespace ShareInvest
 					try
 					{
 						await Task.Delay(Base.IsDebug ? random.Next(0x400, 0x1000) : random.Next(0x32000, 0x64000));
-						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x532));
+						await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x568));
 					}
 					catch (Exception ex)
 					{
@@ -470,7 +470,7 @@ namespace ShareInvest
 									{
 										if (await api.PostContextAsync(theme) is Catalog.Dart.Theme st && new Client.Theme(key).GetDetailsFromGroup(st.Index, 4) is Queue<GroupDetail> queue)
 											while (queue.TryDequeue(out GroupDetail detail))
-												if (await api.PostContextAsync(new Classification { Code = detail.Code, Index = st.Index, Title = detail.Title }) is 0xC8 or 0xCC && list.Any(o => o.Code.Equals(detail.Code) && o.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && o.MarginRate > 0) && await api.GetConfirmAsync(detail) is string index && detail.Index.Equals(index) is false)
+												if (await api.PostContextAsync(new Classification { Code = detail.Code, Index = st.Index, Title = detail.Title }) is 0xC8 or 0xCC && list.Any(o => o.Code.Equals(detail.Code) && o.MaturityMarketCap.Contains(Base.TransactionSuspension) is false && o.MarginRate > 0) && await api.GetConfirmAsync(detail) is Tuple<int, string> response && (response.Item1 is 0xCC || detail.Index.Equals(response.Item2) is false))
 												{
 													var find = list.First(o => o.Code.Equals(detail.Code));
 													var bring = new Indicators.BringInTheme(key, api, detail, find);

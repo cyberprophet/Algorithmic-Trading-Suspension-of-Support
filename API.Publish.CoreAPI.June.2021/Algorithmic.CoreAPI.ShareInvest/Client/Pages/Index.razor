@@ -15,61 +15,139 @@
 					{
 						<thead>
 							<tr class="separate">
-								<th>보유종목</th>
-								<th>유가잔고</th>
-								<th>예탁자산</th>
-								<th>추정예탁자산</th>
+								<th colspan="3">보유종목</th>
+								<th colspan="3">유가잔고</th>
+								<th colspan="3">예탁자산</th>
+								<th colspan="3">추정예탁자산</th>
 							</tr>
 							<tr class="separate">
-								<td>@(Accounts is not null && Accounts[i] is not null && int.TryParse(Accounts[i]["출력건수"], out int hold) && hold > 0 ? hold.ToString("N0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["유가잔고평가액"], out long balance) && balance != 0 ? balance.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["예탁자산평가액"], out long assets) && assets != 0 ? assets.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["추정예탁자산"], out long estimation) && estimation != 0 ? estimation.ToString("C0") : string.Empty)</td>
+								@foreach (var hold in Holds)
+								{
+									switch (OnClick(i, hold))
+									{
+										case string response:
+											<td colspan="3">@response</td>
+											break;
+
+										case Tuple<ConsoleColor, string> tuple:
+											<td colspan="3" style="color: @tuple.Item1">@tuple.Item2</td>
+											break;
+									}
+								}
 							</tr>
 							<tr class="separate">
-								<th>예수금</th>
-								<th>D+2추정예수금</th>
-								<th>총매입</th>
-								<th>매도담보대출</th>
+								<th colspan="3">예수금</th>
+								<th colspan="3">D+2추정예수금</th>
+								<th colspan="3">총매입</th>
+								<th colspan="3">매도담보대출</th>
 							</tr>
 							<tr class="separate">
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["예수금"], out long deposit) && deposit != 0 ? deposit.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["D+2추정예수금"], out long d2) && d2 != 0 ? d2.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["총매입금액"], out long purchase) && purchase != 0 ? purchase.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["매도담보대출금"], out long collateral) && collateral != 0 ? collateral.ToString("C0") : string.Empty)</td>
+								@foreach (var depo in Deposit)
+								{
+									switch (OnClick(i, depo))
+									{
+										case string response:
+											<td colspan="3">@response</td>
+											break;
+
+										case Tuple<ConsoleColor, string> tuple:
+											<td colspan="3" style="color: @tuple.Item1">@tuple.Item2</td>
+											break;
+									}
+								}
 							</tr>
-							<tr class="separate">
-								<th class="account" title="@(Accounts is null ? string.Empty : $"{Accounts[i]["계좌명"]}\n{Accounts[i]["지점명"]}")">@(Accounts is not null && Accounts[i] is not null && "31".Equals(Accounts[i]["account"][^2..]) ? "선물옵션" : "위탁종합")</th>
-								<th>투자원금</th>
-								<th>수익금</th>
-								<th>수익률</th>
-							</tr>
+							@if (OnClick(i, string.Empty) is false)
+							{
+								<tr class="separate">
+									<th colspan="3" class="account" title="@(Accounts is null ? string.Empty : $"{Accounts[i]["계좌명"]}\n{Accounts[i]["지점명"]}")">@(Accounts is not null && Accounts[i] is not null && "31".Equals(Accounts[i]["account"][^2..]) ? "선물옵션" : "위탁종합")</th>
+									<th colspan="3">투자원금</th>
+									<th colspan="3">수익금</th>
+									<th colspan="3">수익률</th>
+								</tr>
+							}
 						</thead>
 					}
 					<tbody>
-						@if (string.IsNullOrEmpty(Information[i].Name) is false)
+						@if (string.IsNullOrEmpty(Information[i].Name) is false && OnClick(i, string.Empty) is false)
 						{
-							<tr class="separate">
-								<th>당일</th>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["당일투자원금"], out long principal) && principal != 0 ? principal.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["당일투자손익"], out long profit) && profit != 0 ? profit.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && double.TryParse(Accounts[i]["당일손익율"], out double rate) && rate != 0 ? rate.ToString("P2") : string.Empty)</td>
-							</tr>
-							<tr class="separate">
-								<th>당월</th>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["당월투자원금"], out long month_principal) && month_principal != 0 ? month_principal.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["당월투자손익"], out long month_profit) && month_profit != 0 ? month_profit.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && double.TryParse(Accounts[i]["당월손익율"], out double month_rate) && month_rate != 0 ? month_rate.ToString("P2") : string.Empty)</td>
-							</tr>
-							<tr class="separate">
-								<th>누적</th>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["누적투자원금"], out long cumulative_principal) && cumulative_principal != 0 ? cumulative_principal.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && long.TryParse(Accounts[i]["누적투자손익"], out long cumulative_profit) && cumulative_profit != 0 ? cumulative_profit.ToString("C0") : string.Empty)</td>
-								<td>@(Accounts is not null && Accounts[i] is not null && double.TryParse(Accounts[i]["누적손익율"], out double cumulative_rate) && cumulative_rate != 0 ? cumulative_rate.ToString("P2") : string.Empty)</td>
-							</tr>
+							foreach (var prefix in Prefix)
+							{
+								<tr class="separate">
+									<th colspan="3">@prefix</th>
+
+									@foreach (var suffix in Suffix)
+									{
+										switch (OnClick(i, string.Concat(prefix, suffix)))
+										{
+											case string response:
+												<td colspan="3">@response</td>
+												break;
+
+											case Tuple<ConsoleColor, string> tuple:
+												<td colspan="3" style="color: @tuple.Item1">@tuple.Item2</td>
+												break;
+										}
+									}
+								</tr>
+							}
+							if (Balances[i].Length > 0)
+							{
+								<tr class="separate">
+									<th>종목명</th>
+									<th>보유량</th>
+									<th>결제잔고</th>
+									<th>전일</th>
+									<th>금일</th>
+									<th>매입가</th>
+									<th>현재가</th>
+									<th>평가손익</th>
+									<th>수익률</th>
+									<th>매입금액</th>
+									<th>평가금액</th>
+									<th>대출일</th>
+								</tr>
+
+								@foreach (var balance in Balances[i])
+								{
+									<tr class="separate">
+										<td>@balance.Name</td>
+										<td>@balance.Quantity.ToString("N0")</td>
+										<td>@balance.Balance.ToString("N0")</td>
+
+										@{
+											var pre = balance.PreviousPurchaseQuantity - balance.PreviousSalesQuantity;
+											var today = balance.PurchaseQuantity - balance.SalesQuantity;
+
+											if (pre < 0)
+											{
+												<td style="color: #00F">@Math.Abs(pre).ToString("N0")</td>
+											}
+											else
+											{
+												<td>@pre.ToString("N0")</td>
+											}
+											if (today < 0)
+											{
+												<td style="color: #00F">@Math.Abs(today).ToString("N0")</td>
+											}
+											else
+											{
+												<td>@today.ToString("N0")</td>
+											}
+										}
+										<td>@balance.Average.ToString("N0")</td>
+										<td>@balance.Current.ToString("N0")</td>
+										<td style="@(balance.Amount > 0 ? "#F00" : "#00F")">@Math.Abs(balance.Amount).ToString("N0")</td>
+										<td style="@(balance.Rate > 0 ? "#F00" : "#00F")">@Math.Abs(balance.Rate).ToString("P2")</td>
+										<td>@balance.Purchase.ToString("C0")</td>
+										<td>@balance.Evaluation.ToString("C0")</td>
+										<td>@balance.Loan</td>
+									</tr>
+								}
+							}
 						}
 						<tr>
-							<td colspan="4">
+							<td colspan="12">
 								<fieldset class="flex-container">
 									<legend class="legend">
 										<strong>@(string.IsNullOrEmpty(Information[i].Name) ? "It is not possible to check the current Connection." : Information[i].Name)</strong>

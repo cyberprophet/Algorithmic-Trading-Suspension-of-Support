@@ -1,18 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Runtime.Versioning;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using RestSharp;
 
 using ShareInvest.Catalog;
 using ShareInvest.Catalog.Models;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Runtime.Versioning;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ShareInvest.Client
 {
@@ -191,7 +191,7 @@ namespace ShareInvest.Client
 				switch (param)
 				{
 					case GroupDetail:
-						return HttpStatusCode.OK.Equals(response.StatusCode) ? JsonConvert.DeserializeObject<string>(response.Content) : string.Empty;
+						return HttpStatusCode.OK.Equals(response.StatusCode) ? new Tuple<int, string>((int)response.StatusCode, JsonConvert.DeserializeObject<string>(response.Content)) : new Tuple<int, string>((int)response.StatusCode, string.Empty);
 
 					case Tick when HttpStatusCode.NoContent.Equals(response.StatusCode):
 						return param;

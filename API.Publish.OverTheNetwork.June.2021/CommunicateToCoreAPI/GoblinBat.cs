@@ -102,7 +102,7 @@ namespace ShareInvest.Client
 		GoblinBat(dynamic key)
 		{
 			security = new Security(key);
-			client = new RestClient(Base.IsDebug ? @"https://localhost:44393/" : security.Uri)
+			client = new RestClient(security.Uri)
 			{
 				Timeout = -1
 			};

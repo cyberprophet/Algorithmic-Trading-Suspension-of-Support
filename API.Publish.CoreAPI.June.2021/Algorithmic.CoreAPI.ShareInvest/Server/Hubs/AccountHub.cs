@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
+using Newtonsoft.Json.Linq;
+
 using System;
 using System.Net.WebSockets;
 using System.Text;
@@ -32,7 +34,14 @@ namespace ShareInvest.Hubs
 				else
 					await hub.Clients.Users(user.Id).SendAsync("ReceiveAccountMessage", message);
 
-				user.Send -= OnReceiveMessage;
+				if (user.Count == 0)
+					user.Count = (int)JToken.Parse(message)["출력건수"];
+
+				else
+					user.Count--;
+
+				if (user.Count == 0)
+					user.Send -= OnReceiveMessage;
 			}
 		}
 		readonly IHubContext<AccountHub> hub;

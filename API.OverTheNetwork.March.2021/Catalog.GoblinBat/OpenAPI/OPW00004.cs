@@ -14,7 +14,7 @@ namespace ShareInvest.Catalog.OpenAPI
 		[DataMember, JsonProperty("종목코드")]
 		public string Code
 		{
-			get; set;
+			get => code; set => code = value[0].Equals('A') ? value[1..] : value;
 		}
 		[DataMember, JsonProperty("종목명")]
 		public string Name
@@ -22,32 +22,32 @@ namespace ShareInvest.Catalog.OpenAPI
 			get; set;
 		}
 		[DataMember, JsonProperty("보유수량")]
-		public string Quantity
+		public int Quantity
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("평균단가")]
-		public string Average
+		public int Average
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("현재가")]
-		public string Current
+		public int Current
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("평가금액")]
-		public string Evaluation
+		public long Evaluation
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("손익금액")]
-		public string Amount
+		public long Amount
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("손익율")]
-		public string Rate
+		public double Rate
 		{
 			get; set;
 		}
@@ -57,34 +57,35 @@ namespace ShareInvest.Catalog.OpenAPI
 			get; set;
 		}
 		[DataMember, JsonProperty("매입금액")]
-		public string Purchase
+		public long Purchase
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("결제잔고")]
-		public string Balance
+		public long Balance
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("전일매수수량")]
-		public string PreviousPurchaseQuantity
+		public int PreviousPurchaseQuantity
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("전일매도수량")]
-		public string PreviousSalesQuantity
+		public int PreviousSalesQuantity
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("금일매수수량")]
-		public string PurchaseQuantity
+		public int PurchaseQuantity
 		{
 			get; set;
 		}
 		[DataMember, JsonProperty("금일매도수량")]
-		public string SalesQuantity
+		public int SalesQuantity
 		{
 			get; set;
 		}
+		string code;
 	}
 }

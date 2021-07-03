@@ -365,7 +365,7 @@ namespace ShareInvest
 					return;
 
 				case string message:
-					if (await server.PostContextAsync(new Catalog.Models.Message { Convey = message, Key = Security.Key }) is int)
+					if (await server.PostContextAsync(new Catalog.Models.Message { Convey = message, Key = Security.Key }) is int && message.Length < 0x40)
 						notifyIcon.Text = string.Concat(DateTime.Now.ToLongTimeString(), " ", message);
 
 					return;
@@ -469,7 +469,7 @@ namespace ShareInvest
 						{
 							Token = new CancellationToken();
 							Socket = new ClientWebSocket();
-							await Socket.ConnectAsync(new Uri("wss://localhost:44393/socket"), Token);
+							await Socket.ConnectAsync(new Uri("wss://coreapi.shareinvest.net/socket"), Token);
 							await Socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(encrypt)), WebSocketMessageType.Text, true, Token);
 							socket.RunWorkerAsync(encrypt);
 						}
@@ -1084,7 +1084,7 @@ namespace ShareInvest
 								await Task.Delay(0x1400);
 
 							if (Base.IsDebug is false)
-								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x532));
+								await new Advertise(key).StartAdvertisingInTheDataCollectionSection(random.Next(7 + now.Hour, 0x568));
 						}
 						catch (Exception ex)
 						{

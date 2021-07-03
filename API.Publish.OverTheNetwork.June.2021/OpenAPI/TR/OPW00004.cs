@@ -22,25 +22,26 @@ namespace ShareInvest.OpenAPI.Catalog
 				var queue = new Queue<ShareInvest.Catalog.OpenAPI.OPW00004>();
 
 				while (temp.Item2.TryDequeue(out string[] dequeue))
-					queue.Enqueue(new ShareInvest.Catalog.OpenAPI.OPW00004
-					{
-						Account = Value.Split(';')[0],
-						Code = dequeue[0],
-						Name = dequeue[1],
-						Quantity = dequeue[2],
-						Average = dequeue[3],
-						Current = dequeue[4],
-						Evaluation = dequeue[5],
-						Amount = dequeue[6],
-						Rate = dequeue[7],
-						Loan = dequeue[8],
-						Purchase = dequeue[9],
-						Balance = dequeue[0xA],
-						PreviousPurchaseQuantity = dequeue[0xB],
-						PreviousSalesQuantity = dequeue[0xC],
-						PurchaseQuantity = dequeue[0xD],
-						SalesQuantity = dequeue[0xE]
-					});
+					if (int.TryParse(dequeue[0xE], out int sales) && int.TryParse(dequeue[0xD], out int pur) && int.TryParse(dequeue[0xC], out int pre_sales) && int.TryParse(dequeue[0xB], out int pre_purchase) && long.TryParse(dequeue[0xA], out long balance) && long.TryParse(dequeue[9], out long purchase) && double.TryParse(dequeue[7].Insert(dequeue[7].Length - 4, "."), out double rate) && long.TryParse(dequeue[6], out long amount) && long.TryParse(dequeue[5], out long evaluation) && int.TryParse(dequeue[4], out int current) && int.TryParse(dequeue[3], out int average) && int.TryParse(dequeue[2], out int quantity))
+						queue.Enqueue(new ShareInvest.Catalog.OpenAPI.OPW00004
+						{
+							Account = Value.Split(';')[0],
+							Code = dequeue[0],
+							Name = dequeue[1],
+							Quantity = quantity,
+							Average = average,
+							Current = current,
+							Evaluation = evaluation,
+							Amount = amount,
+							Rate = rate,
+							Loan = dequeue[8],
+							Purchase = purchase,
+							Balance = balance,
+							PreviousPurchaseQuantity = pre_purchase,
+							PreviousSalesQuantity = pre_sales,
+							PurchaseQuantity = pur,
+							SalesQuantity = sales
+						});
 				if (queue.Count > 0)
 					Send?.Invoke(this, new SendSecuritiesAPI(queue));
 			}
