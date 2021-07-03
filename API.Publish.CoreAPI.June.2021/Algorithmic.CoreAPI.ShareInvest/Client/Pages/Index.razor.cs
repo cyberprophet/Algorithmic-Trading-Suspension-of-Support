@@ -81,7 +81,7 @@ namespace ShareInvest.Pages
 							if (principal < 0)
 								return new Tuple<ConsoleColor, string>(ConsoleColor.Blue, Math.Abs(principal).ToString("C0"));
 
-							return principal.ToString("C0");
+							return principal == 0 ? string.Empty : principal.ToString("C0");
 						}
 						return true;
 				}

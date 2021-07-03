@@ -15,7 +15,7 @@ namespace ShareInvest.Hubs
 	{
 		public async Task SendMessage(string user, string account)
 		{
-			if (Security.User.TryGetValue(user, out Catalog.Models.User model) && WebSocketState.Open.Equals(model.Socket.State))
+			if (Security.User.TryGetValue(user, out Catalog.Models.User model) && model.Socket is WebSocket && WebSocketState.Open.Equals(model.Socket.State))
 			{
 				model.Send += OnReceiveMessage;
 				await model.Socket.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(account)), WebSocketMessageType.Text, true, model.Token);

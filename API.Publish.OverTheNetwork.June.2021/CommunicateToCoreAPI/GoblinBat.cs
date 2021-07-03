@@ -99,6 +99,9 @@ namespace ShareInvest.Client
 			}
 			return null;
 		}
+		///	<summary>
+		/// Base.IsDebug ? @"https://localhost:44393/" :
+		///	</summary>
 		GoblinBat(dynamic key)
 		{
 			security = new Security(key);
@@ -113,6 +116,3 @@ namespace ShareInvest.Client
 		readonly IRestClient client;
 	}
 }
-///	<summary>
-/// Base.IsDebug ? @"https://localhost:44393/" :
-///	</summary>

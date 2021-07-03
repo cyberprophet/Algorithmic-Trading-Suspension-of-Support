@@ -68,29 +68,32 @@
 						</thead>
 					}
 					<tbody>
-						@if (string.IsNullOrEmpty(Information[i].Name) is false && OnClick(i, string.Empty) is false)
+						@if (string.IsNullOrEmpty(Information[i].Name) is false)
 						{
-							foreach (var prefix in Prefix)
+							if (OnClick(i, string.Empty) is false)
 							{
-								<tr class="separate">
-									<th colspan="3">@prefix</th>
+								foreach (var prefix in Prefix)
+								{
+									<tr class="separate">
+										<th colspan="3">@prefix</th>
 
-									@foreach (var suffix in Suffix)
-									{
-										switch (OnClick(i, string.Concat(prefix, suffix)))
+										@foreach (var suffix in Suffix)
 										{
-											case string response:
-												<td colspan="3">@response</td>
-												break;
+											switch (OnClick(i, string.Concat(prefix, suffix)))
+											{
+												case string response:
+													<td colspan="3">@response</td>
+													break;
 
-											case Tuple<ConsoleColor, string> tuple:
-												<td colspan="3" style="color: @tuple.Item1">@tuple.Item2</td>
-												break;
+												case Tuple<ConsoleColor, string> tuple:
+													<td colspan="3" style="color: @tuple.Item1">@tuple.Item2</td>
+													break;
+											}
 										}
-									}
-								</tr>
+									</tr>
+								}
 							}
-							if (Balances[i].Length > 0)
+							if (Balances is Catalog.OpenAPI.OPW00004[][] && Balances[i] is Catalog.OpenAPI.OPW00004[] && Balances[i].Length > 0)
 							{
 								<tr class="separate">
 									<th>종목명</th>
@@ -109,40 +112,93 @@
 
 								@foreach (var balance in Balances[i])
 								{
-									<tr class="separate">
-										<td>@balance.Name</td>
-										<td>@balance.Quantity.ToString("N0")</td>
-										<td>@balance.Balance.ToString("N0")</td>
+									if (balance.Code.Length is 6 or 8)
+									{
+										<tr class="separate">
+											<td>@balance.Name</td>
+											<td>@balance.Quantity.ToString("N0")</td>
+											<td>@balance.Balance.ToString("N0")</td>
 
-										@{
-											var pre = balance.PreviousPurchaseQuantity - balance.PreviousSalesQuantity;
-											var today = balance.PurchaseQuantity - balance.SalesQuantity;
+											@{
+												var pre = balance.PreviousPurchaseQuantity - balance.PreviousSalesQuantity;
+												var today = balance.PurchaseQuantity - balance.SalesQuantity;
 
-											if (pre < 0)
+												if (pre < 0)
+												{
+													<td style="color: #00F">@Math.Abs(pre).ToString("N0")</td>
+												}
+												else if (pre > 0)
+												{
+													<td style="color: #F00">@pre.ToString("N0")</td>
+												}
+												else
+												{
+													<td>@string.Empty</td>
+												}
+												if (today < 0)
+												{
+													<td style="color: #00F">@Math.Abs(today).ToString("N0")</td>
+												}
+												else if (today > 0)
+												{
+													<td style="color: #F00">@today.ToString("N0")</td>
+												}
+												else
+												{
+													<td>@string.Empty</td>
+												}
+											}
+											@if (balance.Average == 0)
 											{
-												<td style="color: #00F">@Math.Abs(pre).ToString("N0")</td>
+												<td>@string.Empty</td>
 											}
 											else
 											{
-												<td>@pre.ToString("N0")</td>
+												<td>@balance.Average.ToString("N0")</td>
 											}
-											if (today < 0)
+											@if (balance.Current == 0)
 											{
-												<td style="color: #00F">@Math.Abs(today).ToString("N0")</td>
+												<td>@string.Empty</td>
 											}
 											else
 											{
-												<td>@today.ToString("N0")</td>
+												<td>@balance.Current.ToString("N0")</td>
 											}
-										}
-										<td>@balance.Average.ToString("N0")</td>
-										<td>@balance.Current.ToString("N0")</td>
-										<td style="@(balance.Amount > 0 ? "#F00" : "#00F")">@Math.Abs(balance.Amount).ToString("N0")</td>
-										<td style="@(balance.Rate > 0 ? "#F00" : "#00F")">@Math.Abs(balance.Rate).ToString("P2")</td>
-										<td>@balance.Purchase.ToString("C0")</td>
-										<td>@balance.Evaluation.ToString("C0")</td>
-										<td>@balance.Loan</td>
-									</tr>
+											@if (balance.Amount == 0)
+											{
+												<td>@string.Empty</td>
+											}
+											else
+											{
+												<td style="color: @(balance.Amount > 0 ? "#F00" : "#00F")">@Math.Abs(balance.Amount).ToString("C0")</td>
+											}
+											@if (balance.Rate == 0)
+											{
+												<td>@string.Empty</td>
+											}
+											else
+											{
+												<td style="color: @(balance.Rate > 0 ? "#F00" : "#00F")">@Math.Abs(balance.Rate).ToString("P2")</td>
+											}
+											@if (balance.Purchase == 0)
+											{
+												<td>@string.Empty</td>
+											}
+											else
+											{
+												<td>@balance.Purchase.ToString("C0")</td>
+											}
+											@if (balance.Evaluation == 0)
+											{
+												<td>@string.Empty</td>
+											}
+											else
+											{
+												<td>@balance.Evaluation.ToString("C0")</td>
+											}
+											<td>@balance.Loan</td>
+										</tr>
+									}
 								}
 							}
 						}

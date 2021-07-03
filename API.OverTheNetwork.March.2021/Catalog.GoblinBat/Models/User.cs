@@ -46,15 +46,11 @@ namespace ShareInvest.Catalog.Models
 			{
 				result = await socket.ReceiveAsync(seg, token);
 
-				if (result.EndOfMessage)
-				{
-					if (WebSocketMessageType.Text.Equals(result.MessageType) && result.Count > 0)
-						Send?.Invoke(this, Encoding.UTF8.GetString(seg.Array, seg.Offset, result.Count));
-
-					else if (WebSocketMessageType.Close.Equals(result.MessageType) && result.Count == 0)
-						await socket.CloseOutputAsync(result.CloseStatus.Value, result.CloseStatusDescription, token);
-				}
+				if (result.EndOfMessage && WebSocketMessageType.Text.Equals(result.MessageType) && result.Count > 0)
+					Send?.Invoke(this, Encoding.UTF8.GetString(seg.Array, seg.Offset, result.Count));
 			}
+			await socket.CloseOutputAsync(result.CloseStatus.Value, result.CloseStatusDescription, token);
+			socket.Dispose();
 		}
 		public void Dispose() => Socket.Dispose();
 		public event EventHandler<string> Send;

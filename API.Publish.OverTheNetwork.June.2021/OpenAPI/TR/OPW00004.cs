@@ -22,7 +22,7 @@ namespace ShareInvest.OpenAPI.Catalog
 				var queue = new Queue<ShareInvest.Catalog.OpenAPI.OPW00004>();
 
 				while (temp.Item2.TryDequeue(out string[] dequeue))
-					if (int.TryParse(dequeue[0xE], out int sales) && int.TryParse(dequeue[0xD], out int pur) && int.TryParse(dequeue[0xC], out int pre_sales) && int.TryParse(dequeue[0xB], out int pre_purchase) && long.TryParse(dequeue[0xA], out long balance) && long.TryParse(dequeue[9], out long purchase) && double.TryParse(dequeue[7].Insert(dequeue[7].Length - 4, "."), out double rate) && long.TryParse(dequeue[6], out long amount) && long.TryParse(dequeue[5], out long evaluation) && int.TryParse(dequeue[4], out int current) && int.TryParse(dequeue[3], out int average) && int.TryParse(dequeue[2], out int quantity))
+					if (int.TryParse(dequeue[0xE], out int sales) && int.TryParse(dequeue[0xD], out int pur) && int.TryParse(dequeue[0xC], out int pre_sales) && int.TryParse(dequeue[0xB], out int pre_purchase) && long.TryParse(dequeue[0xA], out long balance) && long.TryParse(dequeue[9], out long purchase) && double.TryParse(dequeue[7].Insert(dequeue[7].Length - 6, "."), out double rate) && long.TryParse(dequeue[6], out long amount) && long.TryParse(dequeue[5], out long evaluation) && int.TryParse(dequeue[4], out int current) && int.TryParse(dequeue[3], out int average) && int.TryParse(dequeue[2], out int quantity))
 						queue.Enqueue(new ShareInvest.Catalog.OpenAPI.OPW00004
 						{
 							Account = Value.Split(';')[0],

@@ -625,6 +625,9 @@ namespace ShareInvest.Client
 		{
 			get; set;
 		}
+		///	<summary>
+		/// Base.IsDebug ? @"http://localhost:5528/" :
+		///	</summary>
 		API(dynamic key)
 		{
 			security = new Security(key);
@@ -639,6 +642,3 @@ namespace ShareInvest.Client
 		readonly IRestClient client;
 	}
 }
-///	<summary>
-/// Base.IsDebug ? @"http://localhost:5528/" :
-///	</summary>
