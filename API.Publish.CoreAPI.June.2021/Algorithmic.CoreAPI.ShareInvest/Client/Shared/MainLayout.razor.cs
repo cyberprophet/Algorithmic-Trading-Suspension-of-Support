@@ -1,10 +1,11 @@
-﻿using System;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.JSInterop;
+
+using System;
+using System.Threading.Tasks;
 
 namespace ShareInvest.Shared
 {
@@ -29,17 +30,23 @@ namespace ShareInvest.Shared
 				});
 				await Hub.StartAsync();
 			}
+			await Runtime.InvokeVoidAsync(string.Concat(interop, "show"), "none");
 		}
 		protected internal string Message
 		{
 			get; private set;
+		}
+		HubConnection Hub
+		{
+			get; set;
 		}
 		[Inject]
 		NavigationManager Manager
 		{
 			get; set;
 		}
-		HubConnection Hub
+		[Inject]
+		IJSRuntime Runtime
 		{
 			get; set;
 		}
@@ -54,5 +61,6 @@ namespace ShareInvest.Shared
 			get; set;
 		}
 		async Task<bool> OnReceiveLogUserInformation() => (await State).User.Identity.IsAuthenticated;
+		const string interop = "JsFunctions.";
 	}
 }

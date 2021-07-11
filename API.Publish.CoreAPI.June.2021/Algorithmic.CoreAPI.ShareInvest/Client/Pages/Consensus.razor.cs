@@ -1,20 +1,22 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using Microsoft.JSInterop;
+
+using ShareInvest.Components;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
-using Microsoft.JSInterop;
-
 namespace ShareInvest.Pages
 {
 	[Authorize]
-	public partial class ConsensusBase : ComponentBase
+	public partial class ConsensusBase : LoadingFragment
 	{
 		protected override async Task OnInitializedAsync()
 		{

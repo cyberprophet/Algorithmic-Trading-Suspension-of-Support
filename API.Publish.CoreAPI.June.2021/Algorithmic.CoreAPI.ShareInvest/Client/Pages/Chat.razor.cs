@@ -9,10 +9,12 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.JSInterop;
 
+using ShareInvest.Components;
+
 namespace ShareInvest.Pages
 {
 	[Authorize]
-	public partial class ChatBase : ComponentBase, IAsyncDisposable
+	public partial class ChatBase : LoadingFragment, IAsyncDisposable
 	{
 		public async ValueTask DisposeAsync() => await Hub.DisposeAsync();
 		protected override async Task OnInitializedAsync()

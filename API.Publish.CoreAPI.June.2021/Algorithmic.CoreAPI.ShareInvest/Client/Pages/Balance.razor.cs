@@ -11,10 +11,12 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 
+using ShareInvest.Components;
+
 namespace ShareInvest.Pages
 {
 	[Authorize]
-	public partial class BalanceBase : ComponentBase, IAsyncDisposable
+	public partial class BalanceBase : LoadingFragment, IAsyncDisposable
 	{
 		public async ValueTask DisposeAsync()
 		{

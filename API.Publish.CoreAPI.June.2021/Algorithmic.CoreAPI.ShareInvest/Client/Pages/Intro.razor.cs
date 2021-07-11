@@ -1,4 +1,13 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.SignalR.Client;
+
+using Newtonsoft.Json;
+
+using ShareInvest.Components;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -6,16 +15,9 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.SignalR.Client;
-
-using Newtonsoft.Json;
-
 namespace ShareInvest.Pages
 {
-	public partial class IntroBase : ComponentBase, IAsyncDisposable
+	public partial class IntroBase : LoadingFragment, IAsyncDisposable
 	{
 		public async ValueTask DisposeAsync()
 		{

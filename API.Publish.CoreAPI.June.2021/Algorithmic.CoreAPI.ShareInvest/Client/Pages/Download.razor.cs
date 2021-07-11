@@ -1,11 +1,11 @@
-﻿using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
+
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace ShareInvest.Pages
 {

@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -14,11 +6,20 @@ using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.JSInterop;
 
 using ShareInvest.Catalog.Models;
+using ShareInvest.Components;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ShareInvest.Pages
 {
 	[Authorize]
-	public class ThemeBase : ComponentBase
+	public class ThemeBase : LoadingFragment
 	{
 		protected internal string FindByName(string code) => Array.Exists(Codes, o => o.Code.Equals(code)) ? Array.Find(Codes, o => o.Code.Equals(code)).Name : string.Empty;
 		protected internal Tuple<string, string> ChangeFormat(string[] param)

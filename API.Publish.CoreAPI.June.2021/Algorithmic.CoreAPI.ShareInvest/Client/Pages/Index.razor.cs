@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using ShareInvest.Catalog.Models;
+using ShareInvest.Components;
 
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ using System.Threading.Tasks;
 namespace ShareInvest.Pages
 {
 	[Authorize]
-	public partial class IndexBase : ComponentBase, IAsyncDisposable
+	public partial class IndexBase : LoadingFragment, IAsyncDisposable
 	{
 		public async ValueTask DisposeAsync()
 		{

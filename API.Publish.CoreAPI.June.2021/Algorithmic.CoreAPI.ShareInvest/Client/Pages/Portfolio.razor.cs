@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -15,11 +7,20 @@ using Microsoft.JSInterop;
 using Newtonsoft.Json;
 
 using ShareInvest.Catalog.Models;
+using ShareInvest.Components;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
 namespace ShareInvest.Pages
 {
 	[Authorize]
-	public partial class PortfolioBase : ComponentBase
+	public partial class PortfolioBase : LoadingFragment
 	{
 		internal object RetrieveRecordedInformation(Interface.Strategics strategics, string account, string code)
 		{
