@@ -240,7 +240,7 @@ namespace ShareInvest
 		public static string Empty => empty;
 		public static string End => end;
 		public static string PriceEmpty => price_empty;
-		public static string[] Holidays => new[] { "211231", "210922", "210921", "210920", "210519", "210505", "210301", "210212", "210211", "210101", "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
+		public static string[] Holidays => new[] { "211231", "211011", "211004", "210922", "210921", "210920", "210816", "210519", "210505", "210301", "210212", "210211", "210101", "201231", "201225", "201009", "201002", "201001", "200930", "200817", "200505", "200501", "200430", "200415" };
 		public static int Tradable => 0x5910 / 0x19;
 		static string ConvertDateTime(int length) => length switch
 		{
