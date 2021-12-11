@@ -1,0 +1,10 @@
+{
+  "profiles":
+  {
+    "ShareInvest.Models":
+    {
+      "commandName": "Project",
+      "sqlDebugging": true
+    }
+  }
+}

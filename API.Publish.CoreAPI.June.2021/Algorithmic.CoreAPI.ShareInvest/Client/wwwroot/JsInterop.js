@@ -1,61 +1,61 @@
 ﻿window.JsFunctions =
 {
-	move: function (param) {
-		window.scrollBy({
-			behavior: "smooth",
-			left: 0,
-			top: param
-		});
-	},
-	scroll: function () {
-		window.scrollBy({
-			left: 0,
-			top: document.body.scrollHeight,
-			behavior: "auto"
-		});
-	},
-	selector: function (param) {
-		var element = document.getElementById(param);
-		element.scrollIntoView({
-			behavior: "smooth",
-			block: "center",
-			inline: "start"
-		});
-	},
-	download: function (param) {
-		var link = document.createElement('a');
-		link.href = param;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-	},
-	recall: function (param) {
-		return document.getElementById(param).value;
-	},
-	liquidation: function (param) {
-		var dateControl = document.querySelector('input[type="date"]');
-		dateControl.value = param;
-	},
-	show: function (param) {
-		document.getElementById('loader').style.display = param;
-	}
+    move: function (param) {
+        window.scrollBy({
+            behavior: "smooth",
+            left: 0,
+            top: param
+        });
+    },
+    scroll: function () {
+        window.scrollBy({
+            left: 0,
+            top: document.body.scrollHeight,
+            behavior: "auto"
+        });
+    },
+    selector: function (param) {
+        var element = document.getElementById(param);
+        element.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "start"
+        });
+    },
+    download: function (param) {
+        var link = document.createElement('a');
+        link.href = param;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    },
+    recall: function (param) {
+        return document.getElementById(param).value;
+    },
+    liquidation: function (param) {
+        var dateControl = document.querySelector('input[type="date"]');
+        dateControl.value = param;
+    },
+    show: function (param) {
+        document.getElementById('loader').style.display = param;
+    }
 };
 function number(obj) {
-	var rgx1 = /\D/g;
-	var num01;
-	var num02;
-	num01 = obj.value;
-	num02 = num01.replace(rgx1, "");
-	num01 = comma(num02);
-	obj.value = num01;
+    var rgx1 = /\D/g;
+    var num01;
+    var num02;
+    num01 = obj.value;
+    num02 = num01.replace(rgx1, "");
+    num01 = comma(num02);
+    obj.value = num01;
 };
 function comma(inNum) {
-	var rgx2 = /(\d+)(\d{3})/;
-	var outNum;
-	outNum = inNum;
+    var rgx2 = /(\d+)(\d{3})/;
+    var outNum;
+    outNum = inNum;
 
-	while (rgx2.test(outNum)) {
-		outNum = outNum.replace(rgx2, '$1' + ',' + '$2');
-	}
-	return outNum;
+    while (rgx2.test(outNum)) {
+        outNum = outNum.replace(rgx2, '$1' + ',' + '$2');
+    }
+    return outNum;
 };

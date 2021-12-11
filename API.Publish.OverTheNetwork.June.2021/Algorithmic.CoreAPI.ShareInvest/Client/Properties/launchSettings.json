@@ -21,6 +21,7 @@
 			{
 				"ASPNETCORE_ENVIRONMENT": "Development"
 			},
+			"applicationUrl": "https://localhost:44304",
 			"sqlDebugging": true,
 			"nativeDebugging": false,
 			"use64Bit": true

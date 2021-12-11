@@ -5,40 +5,40 @@
 @inject UserManager<CoreUser> UserManager
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
-	var returnUrl = "/";
+    var returnUrl = "/";
 
-	if (Context.Request.Query.TryGetValue("returnUrl", out var existingUrl))
-	{
-		returnUrl = existingUrl;
-	}
+    if (Context.Request.Query.TryGetValue("returnUrl", out var existingUrl))
+    {
+        returnUrl = existingUrl;
+    }
 }
 <ul class="navbar-nav">
-	@if (SignInManager.IsSignedIn(User))
-	{
-		var user = await UserManager.FindByNameAsync(User.Identity.Name);
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var user = await UserManager.FindByNameAsync(User.Identity.Name);
 
-		<li class="nav-item">
-			<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">@User.Identity.Name</a>
-		</li>
-		<li class="nav-item">
-			<form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
-				<button type="submit" class="nav-link btn btn-link text-dark">LogOut</button>
-			</form>
-		</li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">@User.Identity.Name</a>
+        </li>
+        <li class="nav-item">
+            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post">
+                <button type="submit" class="nav-link btn btn-link text-dark">LogOut</button>
+            </form>
+        </li>
 
-		@if ((await UserManager.GetClaimsAsync(user)).Count == 0)
-		{
-			await UserManager.AddClaimAsync(user, new Claim(ClaimTypes.Name, user.Email));
-			await UserManager.AddClaimAsync(user, new Claim(ClaimTypes.Email, user.Email));
-		}
-	}
-	else
-	{
-		<li class="nav-item">
-			<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register" asp-route-returnUrl="@returnUrl">Register</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@returnUrl">LogIn</a>
-		</li>
-	}
+        @if ((await UserManager.GetClaimsAsync(user)).Count == 0)
+        {
+            await UserManager.AddClaimAsync(user, new Claim(ClaimTypes.Name, user.Email));
+            await UserManager.AddClaimAsync(user, new Claim(ClaimTypes.Email, user.Email));
+        }
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register" asp-route-returnUrl="@returnUrl">Register</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="@returnUrl">LogIn</a>
+        </li>
+    }
 </ul>
